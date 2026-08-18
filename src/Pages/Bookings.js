@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
+import { useNavigate } from "react-router-dom";
 import {
   Calendar,
   Clock,
@@ -24,7 +25,10 @@ import {
   Edit,
   IndianRupee,
   PlusCircle,
-  CreditCard
+  CreditCard,
+  Plus,
+  ReceiptText,
+  FileText
 } from "lucide-react";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -46,7 +50,20 @@ const formatDateToDDMMYYYY = (dateString) => {
   }
 };
 
+// Status color mapping
+const getStatusColors = (status) => {
+  const statusMap = {
+    booked: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", hover: "hover:bg-blue-200", icon: Clock },
+    completed: { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200", hover: "hover:bg-emerald-200", icon: CheckCircle2 },
+    consulting: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200", hover: "hover:bg-purple-200", icon: User },
+    cancelled: { bg: "bg-red-100", text: "text-red-800", border: "border-red-200", hover: "hover:bg-red-200", icon: XCircle }
+  };
+  return statusMap[status?.toLowerCase()] || statusMap.booked;
+};
+
 const Bookings = () => {
+  const navigate = useNavigate();
+  
   const [bookings, setBookings] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,8 +91,23 @@ const Bookings = () => {
   const [selectedServiceFromBooking, setSelectedServiceFromBooking] = useState(null);
   const [updateServicePaymentStatus, setUpdateServicePaymentStatus] = useState("Pending");
   
-  const [updateStatus, setUpdateStatus] = useState("");
-  const [updatePaymentStatus, setUpdatePaymentStatus] = useState("");
+  // State for inline dropdowns
+  const [openStatusDropdown, setOpenStatusDropdown] = useState(null);
+  const [openPaymentDropdown, setOpenPaymentDropdown] = useState(null);
+
+  // State for Billing Modal
+  const [showBillingModal, setShowBillingModal] = useState(false);
+  const [billingData, setBillingData] = useState({
+    consultationFee: 0,
+    serviceFees: [],
+    totalAmount: 0,
+    paidAmount: 0,
+    dueAmount: 0,
+    paymentStatus: "Pending",
+    billDate: "",
+    billNumber: "",
+    items: []
+  });
 
   const invoiceRef = useRef(null);
 
@@ -92,9 +124,26 @@ const Bookings = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
+  // Navigate to OP Management
+  const handleAddOP = () => {
+    navigate('/op-management');
+  };
+
   useEffect(() => {
     fetchBookings();
     fetchServices();
+  }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.status-dropdown') && !e.target.closest('.payment-dropdown')) {
+        setOpenStatusDropdown(null);
+        setOpenPaymentDropdown(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const fetchBookings = async () => {
@@ -104,7 +153,7 @@ const Bookings = () => {
 
       if (res && res.data && res.data.success) {
         const bookedSlots = res.data.bookings.filter(
-          (s) => (s.status === "booked" || s.status === "completed" || s.patientName) && s.type !== "break"
+          (s) => (s.status === "booked" || s.status === "completed" || s.status === "consulting" || s.status === "cancelled" || s.patientName) && s.type !== "break"
         );
         setBookings(bookedSlots);
       } else {
@@ -138,15 +187,447 @@ const Bookings = () => {
     }
   };
 
+  // =============================================
+  // HANDLE ROW CLICK - Open Patient Details
+  // =============================================
+  const handleRowClick = (booking) => {
+    setSelectedBooking(booking);
+    setShowTicketModal(true);
+  };
+
+  // =============================================
+  // HANDLE ACTION BUTTON CLICK - Prevent Row Click
+  // =============================================
+  const handleActionClick = (e) => {
+    e.stopPropagation();
+  };
+
+  // =============================================
+  // OPEN BILLING MODAL
+  // =============================================
+  const openBillingModal = (booking) => {
+    setSelectedBooking(booking);
+    
+    // Calculate billing data
+    const consultationFee = booking.consultationFee || 0;
+    const serviceFees = (booking.services || []).map(s => ({
+      name: s.name,
+      price: s.price || 0,
+      paymentStatus: s.paymentStatus || "Pending"
+    }));
+    const totalServiceFee = getTotalServiceFee(booking);
+    const totalAmount = consultationFee + totalServiceFee;
+    const isPaid = booking.paymentStatus === "Paid";
+    const paidAmount = isPaid ? totalAmount : 0;
+    const dueAmount = isPaid ? 0 : totalAmount;
+    
+    // Generate bill number
+    const today = new Date();
+    const billNumber = `BILL-${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}-${String(booking._id).slice(-6)}`;
+    
+    // Prepare items for bill
+    const items = [
+      {
+        id: 'consultation',
+        name: 'Consultation Fee',
+        description: 'OPD Consultation',
+        quantity: 1,
+        unitPrice: consultationFee,
+        total: consultationFee,
+        type: 'consultation'
+      },
+      ...(booking.services || []).map((s, idx) => ({
+        id: `service-${idx}`,
+        name: s.name,
+        description: s.description || 'Additional Service',
+        quantity: 1,
+        unitPrice: s.price || 0,
+        total: s.price || 0,
+        type: 'service',
+        serviceId: s.serviceId || s._id
+      }))
+    ];
+
+    setBillingData({
+      consultationFee,
+      serviceFees,
+      totalAmount,
+      paidAmount,
+      dueAmount,
+      paymentStatus: booking.paymentStatus || "Pending",
+      billDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      billNumber,
+      items
+    });
+    
+    setShowBillingModal(true);
+  };
+
+  // =============================================
+  // HANDLE BILLING - Mark as Paid
+  // =============================================
+  const handleMarkAsPaid = async () => {
+    if (!selectedBooking) return;
+    
+    try {
+      // Update booking payment status
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${selectedBooking._id}`, {
+        paymentStatus: "Paid"
+      });
+      
+      if (res && res.data && res.data.success) {
+        // Update local state
+        setBookings((prev) =>
+          prev.map((b) =>
+            b._id === selectedBooking._id ? { ...b, paymentStatus: "Paid" } : b
+          )
+        );
+        
+        // Update billing data
+        setBillingData(prev => ({
+          ...prev,
+          paymentStatus: "Paid",
+          paidAmount: prev.totalAmount,
+          dueAmount: 0
+        }));
+        
+        showToast(`Payment marked as Paid for ${selectedBooking.patientName}!`, "success");
+      }
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      showToast("Failed to update payment status", "error");
+    }
+  };
+
+  // =============================================
+  // HANDLE BILLING - Print Bill
+  // =============================================
+  const printBill = () => {
+    const billContent = document.getElementById('bill-content');
+    if (!billContent) return;
+    
+    const win = window.open('', '_blank', 'width=800,height=900');
+    if (win) {
+      win.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8" />
+            <title>Bill - ${billingData.billNumber}</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { 
+                font-family: 'Times New Roman', Times, serif;
+                background: #ffffff;
+                padding: 40px;
+                color: #222222;
+              }
+              .bill-container {
+                max-width: 800px;
+                margin: 0 auto;
+                border: 1px solid #cccccc;
+                padding: 40px;
+              }
+              .bill-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 2px solid #222222;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+              }
+              .bill-title {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+              }
+              .bill-title .logo {
+                width: 50px;
+                height: 50px;
+                object-fit: contain;
+              }
+              .bill-title .title-group h1 {
+                font-size: 28px;
+                font-weight: normal;
+                letter-spacing: 2px;
+                color: #222222;
+                margin: 0;
+              }
+              .bill-title .title-group .sub {
+                font-size: 12px;
+                color: #666666;
+                letter-spacing: 1px;
+              }
+              .bill-number {
+                text-align: right;
+              }
+              .bill-number .label {
+                font-size: 11px;
+                color: #888888;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+              }
+              .bill-number .value {
+                font-size: 18px;
+                font-weight: bold;
+                color: #222222;
+              }
+              .bill-number .date {
+                font-size: 12px;
+                color: #666666;
+                margin-top: 4px;
+              }
+              .patient-info {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 30px;
+                padding: 15px;
+                background: #f8fafc;
+                border-radius: 8px;
+              }
+              .patient-info .info-group {
+                display: flex;
+                flex-direction: column;
+              }
+              .patient-info .info-group .label {
+                font-size: 10px;
+                color: #888888;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+              }
+              .patient-info .info-group .value {
+                font-size: 14px;
+                font-weight: bold;
+                color: #222222;
+                margin-top: 2px;
+              }
+              .table-section {
+                margin: 20px 0;
+              }
+              .bill-table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+              .bill-table th {
+                text-align: left;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: #888888;
+                border-bottom: 1px solid #dddddd;
+                padding: 10px 0;
+                font-weight: normal;
+              }
+              .bill-table td {
+                padding: 12px 0;
+                border-bottom: 1px solid #eeeeee;
+                font-size: 14px;
+                color: #333333;
+              }
+              .bill-table .text-right {
+                text-align: right;
+              }
+              .totals-section {
+                margin: 20px 0 10px 0;
+                padding: 15px 0;
+                border-top: 2px solid #222222;
+                border-bottom: 2px solid #222222;
+                display: flex;
+                justify-content: flex-end;
+              }
+              .totals-section .total-box {
+                text-align: right;
+              }
+              .totals-section .total-box .label {
+                font-size: 14px;
+                color: #666666;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+              }
+              .totals-section .total-box .amount {
+                font-size: 24px;
+                font-weight: bold;
+                color: #222222;
+                margin-top: 2px;
+              }
+              .payment-status-section {
+                display: flex;
+                justify-content: space-between;
+                padding: 15px 0;
+                margin: 10px 0;
+                border-top: 1px solid #eeeeee;
+                border-bottom: 1px solid #eeeeee;
+              }
+              .payment-status-section .status-label {
+                font-size: 12px;
+                color: #666666;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+              }
+              .payment-status-section .status-value {
+                font-size: 14px;
+                font-weight: bold;
+                color: ${billingData.paymentStatus === 'Paid' ? '#166534' : '#b45309'};
+              }
+              .footer-section {
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 1px solid #dddddd;
+                display: flex;
+                justify-content: space-between;
+                font-size: 11px;
+                color: #888888;
+              }
+              .footer-section .thankyou {
+                text-align: center;
+                font-size: 13px;
+                color: #666666;
+                letter-spacing: 1px;
+                width: 100%;
+                margin-top: 10px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="bill-container">
+              <div class="bill-header">
+                <div class="bill-title">
+                  <img src="${logo}" alt="TimelyHealth" class="logo" />
+                  <div class="title-group">
+                    <h1>BILL</h1>
+                    <div class="sub">TimelyHealth</div>
+                  </div>
+                </div>
+                <div class="bill-number">
+                  <div class="label">Bill Number</div>
+                  <div class="value">${billingData.billNumber}</div>
+                  <div class="date">${billingData.billDate}</div>
+                </div>
+              </div>
+
+              <div class="patient-info">
+                <div class="info-group">
+                  <span class="label">Patient Name</span>
+                  <span class="value">${selectedBooking?.patientName || 'N/A'}</span>
+                </div>
+                <div class="info-group">
+                  <span class="label">Phone</span>
+                  <span class="value">${selectedBooking?.patientPhone || 'N/A'}</span>
+                </div>
+                <div class="info-group">
+                  <span class="label">Age / Gender</span>
+                  <span class="value">${selectedBooking?.patientAge || 'N/A'} yrs / ${selectedBooking?.patientGender || 'N/A'}</span>
+                </div>
+                <div class="info-group">
+                  <span class="label">Appointment Date</span>
+                  <span class="value">${formatDateToDDMMYYYY(selectedBooking?.date)}</span>
+                </div>
+              </div>
+
+              <div class="table-section">
+                <table class="bill-table">
+                  <thead>
+                    <tr>
+                      <th style="width:50%;">Description</th>
+                      <th style="width:20%;text-align:center;">Qty</th>
+                      <th style="width:30%;text-align:right;">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${billingData.items.map(item => `
+                      <tr>
+                        <td>
+                          ${item.name}
+                          ${item.description && item.name !== 'Consultation Fee' ? `<div style="font-size:11px;color:#888888;">${item.description}</div>` : ''}
+                        </td>
+                        <td class="text-right">${item.quantity}</td>
+                        <td class="text-right">₹ ${item.total.toFixed(2)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="totals-section">
+                <div class="total-box">
+                  <div class="label">Grand Total</div>
+                  <div class="amount">₹ ${billingData.totalAmount.toFixed(2)}</div>
+                </div>
+              </div>
+
+              <div class="payment-status-section">
+                <span class="status-label">Payment Status</span>
+                <span class="status-value">${billingData.paymentStatus}</span>
+              </div>
+
+              <div class="footer-section">
+                <div class="thankyou">Thank you for your visit</div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      setTimeout(() => {
+        win.print();
+      }, 500);
+    }
+  };
+
+  // Inline status update handler with 4 options
+  const handleInlineStatusUpdate = async (bookingId, newStatus, patientName) => {
+    try {
+      setBookings((prev) =>
+        prev.map((b) =>
+          b._id === bookingId ? { ...b, status: newStatus } : b
+        )
+      );
+
+      if (bookingId && !bookingId.startsWith("demo_")) {
+        await axios.put(`${API_BASE_URL}/appointment-slots/${bookingId}`, {
+          status: newStatus
+        });
+      }
+      showToast(`Appointment status updated to '${newStatus}' for ${patientName}!`, "success");
+      setOpenStatusDropdown(null);
+    } catch (e) {
+      console.error("Error updating status:", e);
+      showToast("Failed to update status. Please try again.", "error");
+      fetchBookings();
+    }
+  };
+
+  // Inline payment status update handler
+  const handleInlinePaymentUpdate = async (bookingId, newPaymentStatus, patientName) => {
+    try {
+      setBookings((prev) =>
+        prev.map((b) =>
+          b._id === bookingId ? { ...b, paymentStatus: newPaymentStatus } : b
+        )
+      );
+
+      if (bookingId && !bookingId.startsWith("demo_")) {
+        await axios.put(`${API_BASE_URL}/appointment-slots/${bookingId}`, {
+          paymentStatus: newPaymentStatus
+        });
+      }
+      showToast(`Payment status updated to '${newPaymentStatus}' for ${patientName}!`, "success");
+      setOpenPaymentDropdown(null);
+    } catch (e) {
+      console.error("Error updating payment status:", e);
+      showToast("Failed to update payment status. Please try again.", "error");
+      fetchBookings();
+    }
+  };
+
   const openStatusModal = (booking) => {
     setSelectedBooking(booking);
-    setUpdateStatus(booking.status || "booked");
     setShowStatusModal(true);
   };
 
   const openPaymentModal = (booking) => {
     setSelectedBooking(booking);
-    setUpdatePaymentStatus(booking.paymentStatus || "Pending");
     setShowPaymentModal(true);
   };
 
@@ -431,9 +912,9 @@ const Bookings = () => {
               font-weight: bold;
               text-transform: uppercase;
               letter-spacing: 1px;
-              background: ${bookingStatus === 'completed' ? '#dcfce7' : '#dbeafe'};
-              color: ${bookingStatus === 'completed' ? '#166534' : '#1e40af'};
-              border: 1px solid ${bookingStatus === 'completed' ? '#86efac' : '#93c5fd'};
+              background: ${bookingStatus === 'completed' ? '#dcfce7' : bookingStatus === 'consulting' ? '#f3e8ff' : bookingStatus === 'cancelled' ? '#fee2e2' : '#dbeafe'};
+              color: ${bookingStatus === 'completed' ? '#166534' : bookingStatus === 'consulting' ? '#6b21a8' : bookingStatus === 'cancelled' ? '#991b1b' : '#1e40af'};
+              border: 1px solid ${bookingStatus === 'completed' ? '#86efac' : bookingStatus === 'consulting' ? '#d8b4fe' : bookingStatus === 'cancelled' ? '#fca5a5' : '#93c5fd'};
             }
           </style>
         </head>
@@ -707,56 +1188,6 @@ const Bookings = () => {
     }
   };
 
-  const handleUpdateStatusFromModal = async () => {
-    if (!selectedBooking) return;
-    const newStatus = updateStatus;
-    const booking = selectedBooking;
-
-    try {
-      setBookings((prev) =>
-        prev.map((b) => (b._id === booking._id ? { ...b, status: newStatus } : b))
-      );
-
-      setSelectedBooking((prev) => ({ ...prev, status: newStatus }));
-
-      if (booking._id && !booking._id.startsWith("demo_")) {
-        await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, {
-          status: newStatus
-        });
-      }
-      showToast(`Appointment status updated to '${newStatus}'!`, "success");
-      setShowStatusModal(false);
-    } catch (e) {
-      console.error("Error updating status:", e);
-      showToast("Failed to update status. Please try again.", "error");
-    }
-  };
-
-  const handleUpdatePaymentFromModal = async () => {
-    if (!selectedBooking) return;
-    const newPaymentStatus = updatePaymentStatus;
-    const booking = selectedBooking;
-
-    try {
-      setBookings((prev) =>
-        prev.map((b) => (b._id === booking._id ? { ...b, paymentStatus: newPaymentStatus } : b))
-      );
-
-      setSelectedBooking((prev) => ({ ...prev, paymentStatus: newPaymentStatus }));
-
-      if (booking._id && !booking._id.startsWith("demo_")) {
-        await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, {
-          paymentStatus: newPaymentStatus
-        });
-      }
-      showToast(`Payment status updated to '${newPaymentStatus}' for ${booking.patientName}!`, "success");
-      setShowPaymentModal(false);
-    } catch (e) {
-      console.error("Error updating payment status:", e);
-      showToast("Failed to update payment status. Please try again.", "error");
-    }
-  };
-
   const handleCancelBooking = async (booking) => {
     try {
       setBookings((prev) => prev.filter((b) => b._id !== booking._id));
@@ -835,6 +1266,8 @@ const Bookings = () => {
     const totalCount = bookings.length;
     const bookedCount = bookings.filter((b) => b.status === "booked").length;
     const completedCount = bookings.filter((b) => b.status === "completed").length;
+    const consultingCount = bookings.filter((b) => b.status === "consulting").length;
+    const cancelledCount = bookings.filter((b) => b.status === "cancelled").length;
     const pendingPayment = bookings.filter((b) => b.paymentStatus === "Pending").length;
     const paidCount = bookings.filter((b) => b.paymentStatus === "Paid").length;
     const maleCount = bookings.filter((b) => b.patientGender === "Male").length;
@@ -845,6 +1278,8 @@ const Bookings = () => {
       totalCount,
       bookedCount,
       completedCount,
+      consultingCount,
+      cancelledCount,
       pendingPayment,
       paidCount,
       maleCount,
@@ -961,7 +1396,9 @@ const Bookings = () => {
           </div>
         </div>
         <div className="emp-dash__stat-value">{stats.totalCount}</div>
-        <div className="emp-dash__stat-meta">patients registered</div>
+        <div className="emp-dash__stat-meta">
+          {stats.bookedCount} Booked · {stats.consultingCount} Consulting · {stats.completedCount} Completed
+        </div>
       </div>
 
       <div className="emp-dash__stat">
@@ -1041,7 +1478,9 @@ const Bookings = () => {
               >
                 <option value="All">All Statuses</option>
                 <option value="booked">Booked</option>
+                <option value="consulting">Consulting</option>
                 <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
               </select>
             </div>
 
@@ -1139,7 +1578,9 @@ const Bookings = () => {
               >
                 <option value="All">All Statuses</option>
                 <option value="booked">Booked</option>
+                <option value="consulting">Consulting</option>
                 <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
               </select>
             </div>
 
@@ -1215,6 +1656,13 @@ const Bookings = () => {
           </div>
           <div className="flex items-center gap-3">
             <button
+              onClick={handleAddOP}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-md hover:shadow-lg"
+            >
+              <Plus className="w-4 h-4" />
+              OP
+            </button>
+            <button
               onClick={fetchBookings}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
             >
@@ -1274,7 +1722,8 @@ const Bookings = () => {
                 <tbody>
                   {currentRecords.map((booking) => {
                     const isPaid = (booking.paymentStatus || "Pending") === "Paid";
-                    const isCompleted = booking.status === "completed";
+                    const statusColors = getStatusColors(booking.status);
+                    const StatusIcon = statusColors.icon;
                     const totalServiceFee = getTotalServiceFee(booking);
                     const totalFee = (booking.consultationFee || 0) + totalServiceFee;
                     const hasServices = booking.services && booking.services.length > 0;
@@ -1283,7 +1732,11 @@ const Bookings = () => {
                     const appointmentDate = booking.date;
 
                     return (
-                      <tr key={booking._id} className="transition-colors hover:bg-slate-50/50">
+                      <tr 
+                        key={booking._id} 
+                        className="transition-colors hover:bg-blue-50/50 cursor-pointer group"
+                        onClick={() => handleRowClick(booking)}
+                      >
                         <td className="px-3 py-3">
                           <div className="font-semibold text-slate-800 text-xs">{booking.patientName || "N/A"}</div>
                           {booking.patientPhone && (
@@ -1372,26 +1825,107 @@ const Bookings = () => {
                           ₹{totalFee}
                         </td>
 
-                        <td className="px-3 py-3">
-                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider w-fit ${isPaid ? "bg-emerald-100 text-emerald-800 border border-emerald-200" : "bg-amber-100 text-amber-800 border border-amber-200"}`}>
-                            {isPaid ? <CheckCircle2 className="w-3 h-3 text-emerald-600" /> : <Clock className="w-3 h-3 text-amber-600" />}
-                            {booking.paymentStatus || "Pending"}
-                          </span>
+                        {/* INLINE PAYMENT STATUS DROPDOWN */}
+                        <td className="px-3 py-3 payment-dropdown" onClick={handleActionClick}>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenPaymentDropdown(openPaymentDropdown === booking._id ? null : booking._id);
+                                setOpenStatusDropdown(null);
+                              }}
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider w-fit transition-all hover:scale-105 ${
+                                isPaid 
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200" 
+                                  : "bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200"
+                              }`}
+                            >
+                              {isPaid ? <CheckCircle2 className="w-3 h-3 text-emerald-600" /> : <Clock className="w-3 h-3 text-amber-600" />}
+                              {booking.paymentStatus || "Pending"}
+                              <ChevronDown className="w-3 h-3 ml-0.5 opacity-70" />
+                            </button>
+
+                            {openPaymentDropdown === booking._id && (
+                              <div className="absolute left-0 mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1">
+                                <button
+                                  onClick={() => handleInlinePaymentUpdate(booking._id, "Paid", booking.patientName)}
+                                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-emerald-50 text-emerald-700 font-medium flex items-center gap-2 transition-colors"
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  Paid
+                                </button>
+                                <button
+                                  onClick={() => handleInlinePaymentUpdate(booking._id, "Pending", booking.patientName)}
+                                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-amber-50 text-amber-700 font-medium flex items-center gap-2 transition-colors"
+                                >
+                                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                  Pending
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </td>
 
-                        <td className="px-3 py-3">
-                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full capitalize w-fit ${isCompleted ? "bg-emerald-100 text-emerald-800 border border-emerald-200" : "bg-blue-100 text-blue-800 border border-blue-200"}`}>
-                            {isCompleted ? <CheckCircle2 className="w-3 h-3 text-emerald-600" /> : <Clock className="w-3 h-3 text-blue-600" />}
-                            {booking.status || "booked"}
-                          </span>
+                        {/* INLINE STATUS DROPDOWN WITH 4 OPTIONS */}
+                        <td className="px-3 py-3 status-dropdown" onClick={handleActionClick}>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenStatusDropdown(openStatusDropdown === booking._id ? null : booking._id);
+                                setOpenPaymentDropdown(null);
+                              }}
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full capitalize w-fit transition-all hover:scale-105 ${statusColors.bg} ${statusColors.text} border ${statusColors.border} ${statusColors.hover}`}
+                            >
+                              <StatusIcon className={`w-3 h-3 ${statusColors.text}`} />
+                              {booking.status || "booked"}
+                              <ChevronDown className="w-3 h-3 ml-0.5 opacity-70" />
+                            </button>
+
+                            {openStatusDropdown === booking._id && (
+                              <div className="absolute left-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1">
+                                <button
+                                  onClick={() => handleInlineStatusUpdate(booking._id, "booked", booking.patientName)}
+                                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 text-blue-700 font-medium flex items-center gap-2 transition-colors"
+                                >
+                                  <Clock className="w-3.5 h-3.5 text-blue-600" />
+                                  Booked
+                                </button>
+                                <button
+                                  onClick={() => handleInlineStatusUpdate(booking._id, "consulting", booking.patientName)}
+                                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 text-purple-700 font-medium flex items-center gap-2 transition-colors"
+                                >
+                                  <User className="w-3.5 h-3.5 text-purple-600" />
+                                  Consulting
+                                </button>
+                                <button
+                                  onClick={() => handleInlineStatusUpdate(booking._id, "completed", booking.patientName)}
+                                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-emerald-50 text-emerald-700 font-medium flex items-center gap-2 transition-colors"
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  Completed
+                                </button>
+                                <button
+                                  onClick={() => handleInlineStatusUpdate(booking._id, "cancelled", booking.patientName)}
+                                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-red-50 text-red-700 font-medium flex items-center gap-2 transition-colors border-t border-gray-100"
+                                >
+                                  <XCircle className="w-3.5 h-3.5 text-red-600" />
+                                  Cancelled
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </td>
 
-                        {/* ✅ Actions with Tooltips */}
-                        <td className="px-3 py-3 text-right">
+                        {/* Actions */}
+                        <td className="px-3 py-3 text-right" onClick={handleActionClick}>
                           <div className="flex items-center justify-end gap-1.5">
-                            {/* View Details */}
                             <button 
-                              onClick={() => { setSelectedBooking(booking); setShowTicketModal(true); }} 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedBooking(booking);
+                                setShowTicketModal(true);
+                              }} 
                               className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group relative"
                               title="View Details"
                             >
@@ -1401,9 +1935,11 @@ const Bookings = () => {
                               </span>
                             </button>
                             
-                            {/* Add Service */}
                             <button 
-                              onClick={() => openAddServiceModal(booking)} 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openAddServiceModal(booking);
+                              }} 
                               className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors group relative"
                               title="Add Service"
                             >
@@ -1413,9 +1949,11 @@ const Bookings = () => {
                               </span>
                             </button>
                             
-                            {/* Update Service Payment */}
                             <button 
-                              onClick={() => openServicePaymentModal(booking)} 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openServicePaymentModal(booking);
+                              }} 
                               className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors group relative"
                               title="Update Service Payment"
                             >
@@ -1424,34 +1962,27 @@ const Bookings = () => {
                                 Update Service Payment
                               </span>
                             </button>
-                            
-                            {/* Update Status */}
+
+                            {/* ✅ BILLING BUTTON - NEW */}
                             <button 
-                              onClick={() => openStatusModal(booking)} 
-                              className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors group relative"
-                              title="Update Status"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openBillingModal(booking);
+                              }} 
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors group relative"
+                              title="View Bill"
                             >
-                              <Edit className="w-4 h-4" />
+                              <ReceiptText className="w-4 h-4" />
                               <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                Update Status
-                              </span>
-                            </button>
-                            
-                            {/* Update Payment */}
-                            <button 
-                              onClick={() => openPaymentModal(booking)} 
-                              className={`p-1.5 rounded-lg transition-colors group relative ${isPaid ? "text-emerald-600 hover:bg-emerald-50" : "text-amber-600 hover:bg-amber-50"}`}
-                              title="Update Payment"
-                            >
-                              <IndianRupee className="w-4 h-4" />
-                              <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                Update Payment
+                                View Bill
                               </span>
                             </button>
 
-                            {/* Download Invoice */}
                             <button 
-                              onClick={() => openInvoiceModal(booking)} 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openInvoiceModal(booking);
+                              }} 
                               className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors group relative"
                               title="Download Invoice"
                             >
@@ -1461,9 +1992,11 @@ const Bookings = () => {
                               </span>
                             </button>
                             
-                            {/* Cancel Appointment */}
                             <button 
-                              onClick={() => handleCancelBooking(booking)} 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCancelBooking(booking);
+                              }} 
                               className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors group relative"
                               title="Cancel Appointment"
                             >
@@ -1479,6 +2012,10 @@ const Bookings = () => {
                   })}
                 </tbody>
               </table>
+              <div className="mt-2 text-xs text-gray-400 flex items-center gap-2 px-3 py-2 border-t border-gray-100">
+                <span className="text-blue-500">💡 Tip:</span>
+                <span>Click anywhere on a row to view patient's complete appointment details</span>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
@@ -1518,7 +2055,140 @@ const Bookings = () => {
           </div>
         )}
 
-        {/* All Modals - Same as before */}
+        {/* ============================================= */}
+        {/* BILLING MODAL - NEW */}
+        {/* ============================================= */}
+        {showBillingModal && selectedBooking && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
+                    <ReceiptText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base">Patient Bill</h3>
+                    <p className="text-xs text-gray-500">
+                      {selectedBooking.patientName} • {billingData.billNumber}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => { setShowBillingModal(false); setSelectedBooking(null); }} className="text-gray-400 hover:text-gray-600">
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div id="bill-content" className="mt-5">
+                {/* Patient Info */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Patient Name</div>
+                      <div className="text-sm font-bold text-gray-900">{selectedBooking.patientName || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Phone</div>
+                      <div className="text-sm font-bold text-gray-900">{selectedBooking.patientPhone || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Age / Gender</div>
+                      <div className="text-sm font-bold text-gray-900">
+                        {selectedBooking.patientAge || "N/A"} yrs / {selectedBooking.patientGender || "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Appointment Date</div>
+                      <div className="text-sm font-bold text-gray-900">
+                        {formatDateToDDMMYYYY(selectedBooking.date)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bill Items */}
+                <div className="overflow-x-auto mb-4">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2 border-gray-200">
+                        <th className="text-left py-2 text-[11px] font-bold uppercase text-gray-500">Description</th>
+                        <th className="text-center py-2 text-[11px] font-bold uppercase text-gray-500">Qty</th>
+                        <th className="text-right py-2 text-[11px] font-bold uppercase text-gray-500">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {billingData.items.map((item, idx) => (
+                        <tr key={idx} className="border-b border-gray-100">
+                          <td className="py-2.5 text-sm font-medium text-gray-800">
+                            {item.name}
+                            {item.description && item.name !== 'Consultation Fee' && (
+                              <div className="text-[11px] text-gray-400">{item.description}</div>
+                            )}
+                          </td>
+                          <td className="py-2.5 text-sm text-center text-gray-700">{item.quantity}</td>
+                          <td className="py-2.5 text-sm text-right font-medium text-gray-800">₹{item.total}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Totals */}
+                <div className="border-t-2 border-gray-300 pt-4">
+                  <div className="flex justify-end">
+                    <div className="w-64">
+                      <div className="flex justify-between py-1.5">
+                        <span className="text-sm text-gray-600">Sub Total</span>
+                        <span className="text-sm font-bold text-gray-800">₹{billingData.totalAmount}</span>
+                      </div>
+                      <div className="flex justify-between py-1.5 border-t border-gray-200">
+                        <span className="text-base font-bold text-gray-800">Grand Total</span>
+                        <span className="text-base font-bold text-emerald-700">₹{billingData.totalAmount}</span>
+                      </div>
+                      <div className="flex justify-between py-1.5 border-t border-gray-200 mt-1">
+                        <span className="text-sm text-gray-600">Payment Status</span>
+                        <span className={`text-sm font-bold ${billingData.paymentStatus === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {billingData.paymentStatus}
+                        </span>
+                      </div>
+                      {billingData.paymentStatus === "Pending" && (
+                        <div className="flex justify-between py-1.5">
+                          <span className="text-sm text-gray-600">Due Amount</span>
+                          <span className="text-sm font-bold text-red-600">₹{billingData.dueAmount}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                  {billingData.paymentStatus === "Pending" && (
+                    <button
+                      onClick={handleMarkAsPaid}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> Mark as Paid
+                    </button>
+                  )}
+                  <button
+                    onClick={printBill}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    <Printer className="w-4 h-4" /> Print Bill
+                  </button>
+                  <button
+                    onClick={() => { setShowBillingModal(false); setSelectedBooking(null); }}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Invoice Modal */}
         {showInvoiceModal && selectedBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
@@ -1609,9 +2279,9 @@ const Bookings = () => {
                               fontWeight: 'bold',
                               textTransform: 'uppercase',
                               letterSpacing: '1px',
-                              background: (selectedBooking?.status || 'booked') === 'completed' ? '#dcfce7' : '#dbeafe',
-                              color: (selectedBooking?.status || 'booked') === 'completed' ? '#166534' : '#1e40af',
-                              border: `1px solid ${(selectedBooking?.status || 'booked') === 'completed' ? '#86efac' : '#93c5fd'}`
+                              background: (selectedBooking?.status || 'booked') === 'completed' ? '#dcfce7' : (selectedBooking?.status || 'booked') === 'consulting' ? '#f3e8ff' : (selectedBooking?.status || 'booked') === 'cancelled' ? '#fee2e2' : '#dbeafe',
+                              color: (selectedBooking?.status || 'booked') === 'completed' ? '#166534' : (selectedBooking?.status || 'booked') === 'consulting' ? '#6b21a8' : (selectedBooking?.status || 'booked') === 'cancelled' ? '#991b1b' : '#1e40af',
+                              border: `1px solid ${(selectedBooking?.status || 'booked') === 'completed' ? '#86efac' : (selectedBooking?.status || 'booked') === 'consulting' ? '#d8b4fe' : (selectedBooking?.status || 'booked') === 'cancelled' ? '#fca5a5' : '#93c5fd'}`
                             }}>
                               {selectedBooking?.status || 'booked'}
                             </span>
@@ -1903,109 +2573,7 @@ const Bookings = () => {
           </div>
         )}
 
-        {/* Status Modal */}
-        {showStatusModal && selectedBooking && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-gray-200">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
-                    <Edit className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base">Update Status</h3>
-                    <p className="text-xs text-gray-500">{selectedBooking.patientName}</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowStatusModal(false)} className="text-gray-400 hover:text-gray-600">
-                  <XCircle className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="my-5 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Current Status</label>
-                  <div className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm font-medium">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold capitalize ${selectedBooking.status === "completed" ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"}`}>
-                      {selectedBooking.status === "completed" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                      {selectedBooking.status || "booked"}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Select New Status</label>
-                  <select value={updateStatus} onChange={(e) => setUpdateStatus(e.target.value)} className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white">
-                    <option value="booked">Booked</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3">
-                <button onClick={() => setShowStatusModal(false)} className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">
-                  Cancel
-                </button>
-                <button onClick={handleUpdateStatusFromModal} className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-all flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4" /> Update Status
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Payment Modal */}
-        {showPaymentModal && selectedBooking && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-gray-200">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
-                    <IndianRupee className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base">Update Payment</h3>
-                    <p className="text-xs text-gray-500">{selectedBooking.patientName}</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-600">
-                  <XCircle className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="my-5 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Current Payment Status</label>
-                  <div className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm font-medium">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase ${(selectedBooking.paymentStatus || "Pending") === "Paid" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                      {(selectedBooking.paymentStatus || "Pending") === "Paid" ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Clock className="w-3.5 h-3.5 text-amber-600" />}
-                      {selectedBooking.paymentStatus || "Pending"}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Select New Payment Status</label>
-                  <select value={updatePaymentStatus} onChange={(e) => setUpdatePaymentStatus(e.target.value)} className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white">
-                    <option value="Pending">Pending</option>
-                    <option value="Paid">Paid</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3">
-                <button onClick={() => setShowPaymentModal(false)} className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">
-                  Cancel
-                </button>
-                <button onClick={handleUpdatePaymentFromModal} className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4" /> Update Payment
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Ticket Modal - with Print Invoice */}
+        {/* Ticket Modal - Patient Details */}
         {showTicketModal && selectedBooking && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative">

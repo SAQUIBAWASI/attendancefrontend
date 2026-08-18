@@ -1900,7 +1900,8 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       name: "OP Management",
       dropdown: [
         { name: "OP Dashboard", path: "/op-dashboard" },
-        { name: "Patient Records", path: "/op-management" },
+        { name: "Doctors", path: "/doctor-management" },
+        { name: "OP Records", path: "/op-management" },
           { name: "Appointments Slots", path: "/appointment-slots" },
           { name: "Services", path: "/services" },
         { name: "Bookings", path: "/bookings" },

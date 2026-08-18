@@ -27,10 +27,15 @@ import {
   Users,
   ChevronDown,
   X,
-  History
+  History,
+  Stethoscope,
+  CalendarDays,
+  UserCheck,
+  ReceiptText
 } from "lucide-react";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
+import logo from "../Images/logo2.png";
 
 const GENDER_OPTIONS = [
   { value: "Male", label: "Male" },
@@ -61,6 +66,7 @@ const EMPTY_FORM = {
 
 const OpManagement = () => {
   const [patients, setPatients] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [editingId, setEditingId] = useState(null);
@@ -79,8 +85,26 @@ const OpManagement = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [patientHistory, setPatientHistory] = useState([]);
+  const [patientBookings, setPatientBookings] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Billing Modal State
+  const [showBillingModal, setShowBillingModal] = useState(false);
+  const [billingData, setBillingData] = useState({
+    patientName: "",
+    patientPhone: "",
+    patientAge: "",
+    patientGender: "",
+    billNumber: "",
+    billDate: "",
+    items: [],
+    totalAmount: 0,
+    paymentStatus: "Pending",
+    paidAmount: 0,
+    dueAmount: 0,
+    bookingServices: []
+  });
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -89,6 +113,7 @@ const OpManagement = () => {
 
   useEffect(() => {
     fetchPatients();
+    fetchBookings();
   }, []);
 
   const fetchPatients = async () => {
@@ -106,33 +131,513 @@ const OpManagement = () => {
     }
   };
 
+  const fetchBookings = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings`);
+      if (res && res.data && res.data.success) {
+        const bookedSlots = res.data.bookings.filter(
+          (s) => (s.status === "booked" || s.status === "completed" || s.status === "consulting" || s.status === "cancelled" || s.patientName) && s.type !== "break"
+        );
+        setBookings(bookedSlots);
+      }
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+    }
+  };
+
   // =============================================
-  // FETCH PATIENT HISTORY
+  // FETCH PATIENT HISTORY WITH BOOKINGS
   // =============================================
   const fetchPatientHistory = async (patient) => {
     setHistoryLoading(true);
     setSelectedPatient(patient);
     try {
-      // Fetch all patients with same phone number or name
       const res = await axios.get(`${API_BASE_URL}/patients`);
       if (res.data && res.data.success) {
         const allPatients = res.data.data || [];
-        // Filter by phone number (primary) or name (secondary)
         const history = allPatients.filter(p => 
           p.phone === patient.phone || 
           (p.name && patient.name && p.name.toLowerCase() === patient.name.toLowerCase())
         );
-        // Sort by date (newest first)
         history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setPatientHistory(history);
-        setShowHistoryModal(true);
       }
+
+      const patientBookingsList = bookings.filter(b => 
+        b.patientPhone === patient.phone || 
+        (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase())
+      );
+      patientBookingsList.sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+      setPatientBookings(patientBookingsList);
+
+      setShowHistoryModal(true);
     } catch (err) {
       console.error("Error fetching patient history:", err);
       showToast("Failed to fetch patient history", "error");
     } finally {
       setHistoryLoading(false);
     }
+  };
+
+  // =============================================
+  // OPEN BILLING MODAL - WITH BOOKING SERVICES
+  // =============================================
+  const openBillingModal = (patient) => {
+    // Generate bill number
+    const today = new Date();
+    const billNumber = `BILL-${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}-${String(patient._id).slice(-6)}`;
+    
+    // Prepare items - Start with consultation fee
+    const items = [
+      {
+        id: 'consultation',
+        name: 'Consultation Fee',
+        description: 'OPD Consultation',
+        quantity: 1,
+        unitPrice: patient.feeAmount || 300,
+        total: patient.feeAmount || 300,
+        type: 'consultation'
+      }
+    ];
+
+    // ✅ FETCH BOOKING SERVICES FOR THIS PATIENT
+    const patientBookingsList = bookings.filter(b => 
+      b.patientPhone === patient.phone || 
+      (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase())
+    );
+
+    let bookingServices = [];
+    let totalServiceAmount = 0;
+
+    // Collect all services from all bookings
+    patientBookingsList.forEach(booking => {
+      if (booking.services && booking.services.length > 0) {
+        booking.services.forEach(service => {
+          // Check if service already added (by name or id)
+          const existing = bookingServices.find(s => 
+            s.serviceId === service.serviceId || 
+            (s.name === service.name && s.price === service.price)
+          );
+          
+          if (!existing) {
+            bookingServices.push({
+              id: `service-${Date.now()}-${Math.random()}`,
+              name: service.name,
+              description: service.description || 'Additional Service',
+              quantity: 1,
+              unitPrice: service.price || 0,
+              total: service.price || 0,
+              type: 'service',
+              serviceId: service.serviceId || service._id,
+              bookingDate: booking.date,
+              bookingId: booking._id
+            });
+          }
+        });
+      }
+    });
+
+    // Add lab fee if applicable
+    if (patient.feeType === 'lab' && patient.feeAmount) {
+      const labExists = items.find(i => i.name === 'Lab Fee');
+      if (!labExists) {
+        items.push({
+          id: 'lab',
+          name: 'Lab Fee',
+          description: 'Laboratory Investigation',
+          quantity: 1,
+          unitPrice: patient.feeAmount || 300,
+          total: patient.feeAmount || 300,
+          type: 'lab'
+        });
+      }
+    }
+
+    // Add booking services to items
+    bookingServices.forEach(service => {
+      items.push(service);
+      totalServiceAmount += service.total;
+    });
+
+    const totalAmount = items.reduce((sum, item) => sum + item.total, 0);
+    const isPaid = patient.paymentStatus === "paid";
+    const paidAmount = isPaid ? totalAmount : 0;
+    const dueAmount = isPaid ? 0 : totalAmount;
+
+    setBillingData({
+      patientName: patient.name || "N/A",
+      patientPhone: patient.phone || "N/A",
+      patientAge: patient.age || "N/A",
+      patientGender: patient.gender || "N/A",
+      billNumber: billNumber,
+      billDate: today.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      items: items,
+      totalAmount: totalAmount,
+      paymentStatus: patient.paymentStatus || "Pending",
+      paidAmount: paidAmount,
+      dueAmount: dueAmount,
+      bookingServices: bookingServices
+    });
+
+    setSelectedPatient(patient);
+    setShowBillingModal(true);
+  };
+
+  // =============================================
+  // HANDLE BILLING - Mark as Paid
+  // =============================================
+  const handleMarkAsPaid = async () => {
+    if (!selectedPatient) return;
+    
+    try {
+      const res = await axios.put(`${API_BASE_URL}/patients/${selectedPatient._id}`, {
+        paymentStatus: "paid"
+      });
+      
+      if (res.data.success) {
+        setPatients((prev) =>
+          prev.map((p) =>
+            p._id === selectedPatient._id ? { ...p, paymentStatus: "paid" } : p
+          )
+        );
+        
+        setBillingData(prev => ({
+          ...prev,
+          paymentStatus: "Paid",
+          paidAmount: prev.totalAmount,
+          dueAmount: 0
+        }));
+        
+        showToast(`Payment marked as Paid for ${selectedPatient.name}!`, "success");
+      }
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      showToast("Failed to update payment status", "error");
+    }
+  };
+
+  // =============================================
+  // PRINT BILL - WITH BOOKING SERVICES
+  // =============================================
+  const printBill = () => {
+    const win = window.open('', '_blank', 'width=800,height=900');
+    if (!win) return;
+
+    // Group services by booking date
+    const groupedServices = billingData.bookingServices.reduce((acc, svc) => {
+      const date = svc.bookingDate || 'N/A';
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(svc);
+      return acc;
+    }, {});
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <title>Bill - ${billingData.billNumber}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: 'Times New Roman', Times, serif;
+              background: #ffffff;
+              padding: 40px;
+              color: #222222;
+            }
+            .bill-container {
+              max-width: 800px;
+              margin: 0 auto;
+              border: 1px solid #cccccc;
+              padding: 40px;
+            }
+            .bill-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #222222;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .bill-title {
+              display: flex;
+              align-items: center;
+              gap: 15px;
+            }
+            .bill-title .logo {
+              width: 50px;
+              height: 50px;
+              object-fit: contain;
+            }
+            .bill-title .title-group h1 {
+              font-size: 28px;
+              font-weight: normal;
+              letter-spacing: 2px;
+              color: #222222;
+              margin: 0;
+            }
+            .bill-title .title-group .sub {
+              font-size: 12px;
+              color: #666666;
+              letter-spacing: 1px;
+            }
+            .bill-number {
+              text-align: right;
+            }
+            .bill-number .label {
+              font-size: 11px;
+              color: #888888;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            .bill-number .value {
+              font-size: 18px;
+              font-weight: bold;
+              color: #222222;
+            }
+            .bill-number .date {
+              font-size: 12px;
+              color: #666666;
+              margin-top: 4px;
+            }
+            .patient-info {
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr 1fr;
+              gap: 15px;
+              margin-bottom: 30px;
+              padding: 15px;
+              background: #f8fafc;
+              border-radius: 8px;
+            }
+            .patient-info .info-group .label {
+              font-size: 10px;
+              color: #888888;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            .patient-info .info-group .value {
+              font-size: 14px;
+              font-weight: bold;
+              color: #222222;
+              margin-top: 2px;
+            }
+            .table-section {
+              margin: 20px 0;
+            }
+            .bill-table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            .bill-table th {
+              text-align: left;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              color: #888888;
+              border-bottom: 1px solid #dddddd;
+              padding: 10px 0;
+              font-weight: normal;
+            }
+            .bill-table td {
+              padding: 12px 0;
+              border-bottom: 1px solid #eeeeee;
+              font-size: 14px;
+              color: #333333;
+            }
+            .bill-table .text-right {
+              text-align: right;
+            }
+            .bill-table .text-center {
+              text-align: center;
+            }
+            .bill-table .service-desc {
+              font-size: 11px;
+              color: #888888;
+              font-style: italic;
+            }
+            .totals-section {
+              margin: 20px 0 10px 0;
+              padding: 15px 0;
+              border-top: 2px solid #222222;
+              border-bottom: 2px solid #222222;
+              display: flex;
+              justify-content: flex-end;
+            }
+            .totals-section .total-box {
+              text-align: right;
+            }
+            .totals-section .total-box .label {
+              font-size: 14px;
+              color: #666666;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            .totals-section .total-box .amount {
+              font-size: 24px;
+              font-weight: bold;
+              color: #222222;
+              margin-top: 2px;
+            }
+            .payment-status-section {
+              display: flex;
+              justify-content: space-between;
+              padding: 15px 0;
+              margin: 10px 0;
+              border-top: 1px solid #eeeeee;
+              border-bottom: 1px solid #eeeeee;
+            }
+            .payment-status-section .status-label {
+              font-size: 12px;
+              color: #666666;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            .payment-status-section .status-value {
+              font-size: 14px;
+              font-weight: bold;
+              color: ${billingData.paymentStatus === 'Paid' ? '#166534' : '#b45309'};
+            }
+            .footer-section {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #dddddd;
+              display: flex;
+              justify-content: space-between;
+              font-size: 11px;
+              color: #888888;
+            }
+            .footer-section .thankyou {
+              text-align: center;
+              font-size: 13px;
+              color: #666666;
+              letter-spacing: 1px;
+              width: 100%;
+              margin-top: 10px;
+            }
+            .amount-words {
+              font-size: 12px;
+              color: #666666;
+              font-style: italic;
+              margin-top: 4px;
+            }
+            .service-group-title {
+              font-size: 12px;
+              font-weight: bold;
+              color: #4b5563;
+              padding: 8px 0 4px 0;
+              border-top: 1px dashed #e5e7eb;
+              margin-top: 4px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="bill-container">
+            <div class="bill-header">
+              <div class="bill-title">
+                <img src="${logo}" alt="TimelyHealth" class="logo" />
+                <div class="title-group">
+                  <h1>BILL</h1>
+                  <div class="sub">TimelyHealth</div>
+                </div>
+              </div>
+              <div class="bill-number">
+                <div class="label">Bill Number</div>
+                <div class="value">${billingData.billNumber}</div>
+                <div class="date">${billingData.billDate}</div>
+              </div>
+            </div>
+
+            <div class="patient-info">
+              <div class="info-group">
+                <span class="label">Patient Name</span>
+                <span class="value">${billingData.patientName}</span>
+              </div>
+              <div class="info-group">
+                <span class="label">Phone</span>
+                <span class="value">${billingData.patientPhone}</span>
+              </div>
+              <div class="info-group">
+                <span class="label">Age</span>
+                <span class="value">${billingData.patientAge} yrs</span>
+              </div>
+              <div class="info-group">
+                <span class="label">Gender</span>
+                <span class="value">${billingData.patientGender}</span>
+              </div>
+            </div>
+
+            <div class="table-section">
+              <table class="bill-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%;">Description</th>
+                    <th style="width:20%;text-align:center;">Qty</th>
+                    <th style="width:30%;text-align:right;">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${billingData.items.map(item => `
+                    <tr>
+                      <td>
+                        ${item.name}
+                        ${item.description ? `<div class="service-desc">${item.description}</div>` : ''}
+                        ${item.bookingDate ? `<div class="service-desc">📅 Booking: ${new Date(item.bookingDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>` : ''}
+                      </td>
+                      <td class="text-center">${item.quantity}</td>
+                      <td class="text-right">₹ ${item.total}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="totals-section">
+              <div class="total-box">
+                <div class="label">Grand Total</div>
+                <div class="amount">₹ ${billingData.totalAmount}</div>
+                <div class="amount-words">${numberToWords(billingData.totalAmount)}</div>
+              </div>
+            </div>
+
+            <div class="payment-status-section">
+              <span class="status-label">Payment Status</span>
+              <span class="status-value">${billingData.paymentStatus}</span>
+            </div>
+
+            <div class="footer-section">
+              <div class="thankyou">Thank you for your visit</div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    win.document.write(htmlContent);
+    win.document.close();
+    win.focus();
+    setTimeout(() => {
+      win.print();
+    }, 500);
+  };
+
+  // =============================================
+  // NUMBER TO WORDS
+  // =============================================
+  const numberToWords = (num) => {
+    if (num === 0) return 'Zero';
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    
+    const convert = (n) => {
+      if (n < 20) return ones[n];
+      if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+      if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' and ' + convert(n % 100) : '');
+      if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '');
+      if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '');
+      return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
+    };
+    
+    return convert(num) + ' Rupees Only';
   };
 
   const handleInputChange = (e) => {
@@ -260,16 +765,11 @@ const OpManagement = () => {
     setSelectedMonth("");
   };
 
-  // Filtered patients
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
-      // Payment status filter
       if (statusFilter !== "All" && p.paymentStatus !== statusFilter) return false;
-      
-      // Fee type filter
       if (feeTypeFilter !== "All" && p.feeType !== feeTypeFilter) return false;
 
-      // Date Range & Month Filters
       if (p.createdAt) {
         const recordDate = new Date(p.createdAt);
 
@@ -291,7 +791,6 @@ const OpManagement = () => {
         }
       }
 
-      // Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchName = (p.name || "").toLowerCase().includes(q);
@@ -304,7 +803,6 @@ const OpManagement = () => {
     });
   }, [patients, statusFilter, feeTypeFilter, searchQuery, fromDate, toDate, selectedMonth]);
 
-  // Export CSV Handler
   const downloadCSV = () => {
     if (filteredPatients.length === 0) {
       showToast("No patient records available to export!", "error");
@@ -312,20 +810,9 @@ const OpManagement = () => {
     }
 
     const headers = [
-      "#",
-      "Patient ID",
-      "Patient Name",
-      "Age",
-      "Gender",
-      "Phone Number",
-      "Address",
-      "Fee Type",
-      "Fee Amount (Rs)",
-      "Payment Type",
-      "Payment Status",
-      "Reason for Consultation",
-      "Registered Date",
-      "Registered Time"
+      "#", "Patient ID", "Patient Name", "Age", "Gender", "Phone Number",
+      "Address", "Fee Type", "Fee Amount (Rs)", "Payment Type", "Payment Status",
+      "Reason for Consultation", "Registered Date", "Registered Time"
     ];
 
     const csvRows = [
@@ -363,7 +850,6 @@ const OpManagement = () => {
     showToast(`Exported ${filteredPatients.length} patient records to CSV!`);
   };
 
-  // Stats
   const stats = useMemo(() => {
     const total = filteredPatients.length;
     const paid = filteredPatients.filter((p) => p.paymentStatus === "paid").length;
@@ -392,18 +878,40 @@ const OpManagement = () => {
     });
   };
 
+  const formatDateToDDMMYYYY = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "N/A";
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return "N/A";
+    }
+  };
+
   const isFilterActive =
-    searchQuery ||
-    statusFilter !== "All" ||
-    feeTypeFilter !== "All" ||
-    fromDate ||
-    toDate ||
-    selectedMonth;
+    searchQuery || statusFilter !== "All" || feeTypeFilter !== "All" ||
+    fromDate || toDate || selectedMonth;
+
+  const handleRowClick = (patient) => {
+    fetchPatientHistory(patient);
+  };
+
+  const handleActionClick = (e) => {
+    e.stopPropagation();
+  };
+
+  const getTotalServiceFee = (booking) => {
+    if (!booking.services || booking.services.length === 0) return 0;
+    return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
+  };
 
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
-        {/* Toast */}
         {toast && (
           <div
             className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
@@ -419,7 +927,6 @@ const OpManagement = () => {
           </div>
         )}
 
-        {/* Header */}
         <div className="emp-dash__header">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
@@ -428,7 +935,7 @@ const OpManagement = () => {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={fetchPatients}
+              onClick={() => { fetchPatients(); fetchBookings(); }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Refresh
@@ -493,7 +1000,7 @@ const OpManagement = () => {
           </div>
         </div>
 
-        {/* Add/Edit Form Modal */}
+        {/* Add/Edit Form Modal - Same as before */}
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
@@ -515,7 +1022,7 @@ const OpManagement = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-                {/* Row 1: Name, Age */}
+                {/* Form fields - same as before */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -555,7 +1062,6 @@ const OpManagement = () => {
                   </div>
                 </div>
 
-                {/* Row: Gender */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Gender <span className="text-blue-600">*</span>
@@ -580,7 +1086,6 @@ const OpManagement = () => {
                   </div>
                 </div>
 
-                {/* Row 2: Phone, Address */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -617,7 +1122,6 @@ const OpManagement = () => {
                   </div>
                 </div>
 
-                {/* Row 3: Fee Type, Fee Amount */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -659,7 +1163,6 @@ const OpManagement = () => {
                   </div>
                 </div>
 
-                {/* Row 4: Payment Type, Payment Status */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -713,7 +1216,6 @@ const OpManagement = () => {
                   </div>
                 </div>
 
-                {/* Row 5: Reason */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Reason for Consultation
@@ -731,7 +1233,6 @@ const OpManagement = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
                   <button
                     type="button"
@@ -764,7 +1265,6 @@ const OpManagement = () => {
         <div className="emp-dash__card mb-6">
           <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200 flex-wrap">
             <div className="flex items-center gap-2.5 flex-1 min-w-0 flex-wrap">
-              {/* Search */}
               <div className="relative min-w-[150px] flex-1 max-w-[220px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs w-3.5 h-3.5" />
                 <input
@@ -776,7 +1276,6 @@ const OpManagement = () => {
                 />
               </div>
 
-              {/* Status filter */}
               <div className="flex items-center gap-1">
                 <Filter className="w-3.5 h-3.5 text-gray-400" />
                 <select
@@ -790,7 +1289,6 @@ const OpManagement = () => {
                 </select>
               </div>
 
-              {/* Fee type filter */}
               <div className="flex items-center gap-1">
                 <select
                   value={feeTypeFilter}
@@ -803,7 +1301,6 @@ const OpManagement = () => {
                 </select>
               </div>
 
-              {/* Date From */}
               <div className="relative">
                 <input
                   type="date"
@@ -815,7 +1312,6 @@ const OpManagement = () => {
                 />
               </div>
 
-              {/* Date To */}
               <div className="relative">
                 <input
                   type="date"
@@ -827,7 +1323,6 @@ const OpManagement = () => {
                 />
               </div>
 
-              {/* Month Picker */}
               <div className="relative">
                 <input
                   type="month"
@@ -840,7 +1335,6 @@ const OpManagement = () => {
               </div>
             </div>
 
-            {/* Right Action Buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
               {isFilterActive && (
                 <button
@@ -910,7 +1404,11 @@ const OpManagement = () => {
                   {filteredPatients.map((patient, idx) => {
                     const isPaid = patient.paymentStatus === "paid";
                     return (
-                      <tr key={patient._id} className="transition-colors hover:bg-slate-50/50">
+                      <tr 
+                        key={patient._id} 
+                        className="transition-colors hover:bg-blue-50/50 cursor-pointer group"
+                        onClick={() => handleRowClick(patient)}
+                      >
                         <td className="px-3 py-3 font-semibold text-gray-400 text-[11px]">{idx + 1}</td>
                         <td className="px-3 py-3">
                           <div className="font-semibold text-slate-800 text-xs">{patient.name || "N/A"}</div>
@@ -963,21 +1461,6 @@ const OpManagement = () => {
                               {isPaid ? <CheckCircle2 className="w-3 h-3 text-emerald-600" /> : <Clock className="w-3 h-3 text-amber-600" />}
                               {patient.paymentStatus || "pending"}
                             </span>
-                            {!isPaid ? (
-                              <button
-                                onClick={() => handlePaymentToggle(patient)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow-xs transition-all flex items-center gap-1 w-fit"
-                              >
-                                <Check className="w-3 h-3" /> Mark Paid
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handlePaymentToggle(patient)}
-                                className="text-gray-400 hover:text-amber-600 text-[10px] underline font-medium w-fit"
-                              >
-                                Mark Pending
-                              </button>
-                            )}
                           </div>
                         </td>
                         <td className="px-3 py-3 max-w-[180px]">
@@ -989,33 +1472,43 @@ const OpManagement = () => {
                           <div className="font-medium text-slate-800 text-[11px]">{formatDate(patient.createdAt)}</div>
                           <div className="text-[10px] text-gray-400">{formatTime(patient.createdAt)}</div>
                         </td>
-                        <td className="px-3 py-3 text-right">
+                        <td className="px-3 py-3 text-right" onClick={handleActionClick}>
                           <div className="flex items-center justify-end gap-1">
                             {/* View Details */}
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setSelectedPatient(patient);
                                 setShowDetailModal(true);
                               }}
-                              className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                              className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors group relative"
                               title="View Details"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
                             
-                            {/* Patient History - NEW */}
+                            {/* ✅ BILLING BUTTON */}
                             <button
-                              onClick={() => fetchPatientHistory(patient)}
-                              className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                              title="View Patient History"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openBillingModal(patient);
+                              }}
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors group relative"
+                              title="View Bill"
                             >
-                              <History className="w-4 h-4" />
+                              <ReceiptText className="w-4 h-4" />
+                              <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                View Bill
+                              </span>
                             </button>
                             
                             {/* Edit */}
                             <button
-                              onClick={() => handleEdit(patient)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(patient);
+                              }}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group relative"
                               title="Edit"
                             >
                               <Edit2 className="w-4 h-4" />
@@ -1023,8 +1516,11 @@ const OpManagement = () => {
                             
                             {/* Delete */}
                             <button
-                              onClick={() => handleDelete(patient._id)}
-                              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(patient._id);
+                              }}
+                              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors group relative"
                               title="Delete"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1036,16 +1532,169 @@ const OpManagement = () => {
                   })}
                 </tbody>
               </table>
+              <div className="mt-2 text-xs text-gray-400 flex items-center gap-2 px-3 py-2 border-t border-gray-100">
+                <span className="text-blue-500">💡 Tip:</span>
+                <span>Click anywhere on a row to view patient's complete history (OP visits + Bookings)</span>
+              </div>
             </div>
           )}
         </div>
 
         {/* ============================================= */}
-        {/* PATIENT HISTORY MODAL */}
+        {/* BILLING MODAL - WITH BOOKING SERVICES */}
         {/* ============================================= */}
+        {showBillingModal && selectedPatient && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
+                    <ReceiptText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base">Patient Bill</h3>
+                    <p className="text-xs text-gray-500">
+                      {selectedPatient.name} • {billingData.billNumber}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => { setShowBillingModal(false); setSelectedPatient(null); }} className="text-gray-400 hover:text-gray-600">
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div id="bill-content" className="mt-5">
+                {/* Patient Info */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Patient Name</div>
+                      <div className="text-sm font-bold text-gray-900">{billingData.patientName}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Phone</div>
+                      <div className="text-sm font-bold text-gray-900">{billingData.patientPhone}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Age</div>
+                      <div className="text-sm font-bold text-gray-900">{billingData.patientAge} yrs</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Gender</div>
+                      <div className="text-sm font-bold text-gray-900">{billingData.patientGender}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bill Items */}
+                <div className="overflow-x-auto mb-4">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2 border-gray-200">
+                        <th className="text-left py-2 text-[11px] font-bold uppercase text-gray-500">Description</th>
+                        <th className="text-center py-2 text-[11px] font-bold uppercase text-gray-500">Qty</th>
+                        <th className="text-right py-2 text-[11px] font-bold uppercase text-gray-500">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {billingData.items.map((item, idx) => (
+                        <tr key={idx} className="border-b border-gray-100">
+                          <td className="py-2.5 text-sm font-medium text-gray-800">
+                            {item.name}
+                            {item.description && (
+                              <div className="text-[11px] text-gray-400">{item.description}</div>
+                            )}
+                            {/* ✅ Show booking date for services */}
+                            {item.bookingDate && (
+                              <div className="text-[10px] text-blue-500">
+                                📅 Booking: {new Date(item.bookingDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2.5 text-sm text-center text-gray-700">{item.quantity}</td>
+                          <td className="py-2.5 text-sm text-right font-medium text-gray-800">₹{item.total}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* ✅ Show Booking Services Summary */}
+                {billingData.bookingServices.length > 0 && (
+                  <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="text-[10px] font-bold uppercase text-blue-700 mb-2">
+                      📋 Booking Services ({billingData.bookingServices.length})
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {billingData.bookingServices.map((svc, idx) => (
+                        <span key={idx} className="text-[10px] font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full border border-blue-200">
+                          {svc.name} (₹{svc.total})
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Totals */}
+                <div className="border-t-2 border-gray-300 pt-4">
+                  <div className="flex justify-end">
+                    <div className="w-64">
+                      <div className="flex justify-between py-1.5">
+                        <span className="text-sm text-gray-600">Sub Total</span>
+                        <span className="text-sm font-bold text-gray-800">₹{billingData.totalAmount}</span>
+                      </div>
+                      <div className="flex justify-between py-1.5 border-t border-gray-200">
+                        <span className="text-base font-bold text-gray-800">Grand Total</span>
+                        <span className="text-base font-bold text-emerald-700">₹{billingData.totalAmount}</span>
+                      </div>
+                      <div className="flex justify-between py-1.5 border-t border-gray-200 mt-1">
+                        <span className="text-sm text-gray-600">Payment Status</span>
+                        <span className={`text-sm font-bold ${billingData.paymentStatus === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {billingData.paymentStatus}
+                        </span>
+                      </div>
+                      {billingData.paymentStatus === "Pending" && (
+                        <div className="flex justify-between py-1.5">
+                          <span className="text-sm text-gray-600">Due Amount</span>
+                          <span className="text-sm font-bold text-red-600">₹{billingData.dueAmount}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                  {billingData.paymentStatus === "Pending" && (
+                    <button
+                      onClick={handleMarkAsPaid}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> Mark as Paid
+                    </button>
+                  )}
+                  <button
+                    onClick={printBill}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    <Printer className="w-4 h-4" /> Print Bill
+                  </button>
+                  <button
+                    onClick={() => { setShowBillingModal(false); setSelectedPatient(null); }}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* History Modal - Same as before */}
         {showHistoryModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+            <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
               <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center gap-2">
                   <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center">
@@ -1060,12 +1709,13 @@ const OpManagement = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                    {patientHistory.length} visits
+                    {patientHistory.length} OP Visits • {patientBookings.length} Bookings
                   </span>
                   <button 
                     onClick={() => {
                       setShowHistoryModal(false);
                       setPatientHistory([]);
+                      setPatientBookings([]);
                       setSelectedPatient(null);
                     }} 
                     className="text-gray-400 hover:text-gray-600"
@@ -1081,104 +1731,209 @@ const OpManagement = () => {
                     <RefreshCw className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-3" />
                     <p className="text-sm font-medium text-gray-500">Loading patient history...</p>
                   </div>
-                ) : patientHistory.length === 0 ? (
-                  <div className="py-12 text-center text-gray-500">
-                    <History className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <h3 className="text-base font-bold text-gray-700">No History Found</h3>
-                    <p className="text-xs text-gray-500 mt-1">This patient has no previous visits.</p>
-                  </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="emp-dash__table">
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>Date</th>
-                          <th>Time</th>
-                          <th>Fee Type</th>
-                          <th>Fee Amount</th>
-                          <th>Payment Type</th>
-                          <th>Payment Status</th>
-                          <th>Reason</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {patientHistory.map((record, idx) => (
-                          <tr 
-                            key={record._id} 
-                            className={`transition-colors hover:bg-slate-50/50 ${
-                              record._id === selectedPatient._id ? "bg-purple-50/50 border-l-2 border-purple-500" : ""
-                            }`}
-                          >
-                            <td className="px-3 py-3 font-semibold text-gray-400 text-[11px]">{idx + 1}</td>
-                            <td className="px-3 py-3 font-medium text-slate-800 text-xs">
-                              {formatDate(record.createdAt)}
-                            </td>
-                            <td className="px-3 py-3 text-xs text-gray-500">
-                              {formatTime(record.createdAt)}
-                            </td>
-                            <td className="px-3 py-3">
-                              <span
-                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                                  record.feeType === "lab"
-                                    ? "bg-purple-100 text-purple-800 border border-purple-200"
-                                    : "bg-blue-100 text-blue-800 border border-blue-200"
-                                }`}
-                              >
-                                {record.feeType === "lab" ? "Lab" : "Consult"}
-                              </span>
-                            </td>
-                            <td className="px-3 py-3 font-bold text-slate-800 text-xs">
-                              ₹{record.feeAmount ?? 300}
-                            </td>
-                            <td className="px-3 py-3">
-                              <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 capitalize">
-                                {record.paymentType === "online" ? (
-                                  <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
-                                ) : (
-                                  <Banknote className="w-3.5 h-3.5 text-green-600" />
-                                )}
-                                {record.paymentType || "cash"}
-                              </span>
-                            </td>
-                            <td className="px-3 py-3">
-                              <span
-                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider w-fit ${
-                                  record.paymentStatus === "paid"
-                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                    : "bg-amber-100 text-amber-800 border border-amber-200"
-                                }`}
-                              >
-                                {record.paymentStatus === "paid" ? (
-                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                ) : (
-                                  <Clock className="w-3 h-3 text-amber-600" />
-                                )}
-                                {record.paymentStatus || "pending"}
-                              </span>
-                            </td>
-                            <td className="px-3 py-3 max-w-[200px]">
-                              <div className="truncate text-xs text-slate-700 font-medium" title={record.reason}>
-                                {record.reason || "General Consultation"}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {/* Current visit indicator */}
-                    <div className="mt-4 text-xs text-gray-500 flex items-center gap-2">
-                      <span className="inline-block w-3 h-3 bg-purple-500 rounded"></span>
-                      <span>Current visit</span>
+                  <>
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <UserCheck className="w-4 h-4 text-blue-600" />
+                        <h4 className="font-bold text-blue-800 text-sm">OP Visits ({patientHistory.length})</h4>
+                      </div>
+                      {patientHistory.length === 0 ? (
+                        <div className="text-center py-4 text-gray-400 text-xs bg-gray-50 rounded-lg">
+                          No OP visit history found
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="emp-dash__table">
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Fee Type</th>
+                                <th>Fee Amount</th>
+                                <th>Payment Type</th>
+                                <th>Payment Status</th>
+                                <th>Reason</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {patientHistory.map((record, idx) => (
+                                <tr 
+                                  key={record._id} 
+                                  className={`transition-colors hover:bg-slate-50/50 ${
+                                    record._id === selectedPatient._id ? "bg-blue-50/50 border-l-2 border-blue-500" : ""
+                                  }`}
+                                >
+                                  <td className="px-3 py-2.5 font-semibold text-gray-400 text-[11px]">{idx + 1}</td>
+                                  <td className="px-3 py-2.5 font-medium text-slate-800 text-xs">
+                                    {formatDate(record.createdAt)}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-xs text-gray-500">
+                                    {formatTime(record.createdAt)}
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <span
+                                      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                        record.feeType === "lab"
+                                          ? "bg-purple-100 text-purple-800 border border-purple-200"
+                                          : "bg-blue-100 text-blue-800 border border-blue-200"
+                                      }`}
+                                    >
+                                      {record.feeType === "lab" ? "Lab" : "Consult"}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5 font-bold text-slate-800 text-xs">
+                                    ₹{record.feeAmount ?? 300}
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 capitalize">
+                                      {record.paymentType === "online" ? (
+                                        <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
+                                      ) : (
+                                        <Banknote className="w-3.5 h-3.5 text-green-600" />
+                                      )}
+                                      {record.paymentType || "cash"}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <span
+                                      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider w-fit ${
+                                        record.paymentStatus === "paid"
+                                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                          : "bg-amber-100 text-amber-800 border border-amber-200"
+                                      }`}
+                                    >
+                                      {record.paymentStatus === "paid" ? (
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                      ) : (
+                                        <Clock className="w-3 h-3 text-amber-600" />
+                                      )}
+                                      {record.paymentStatus || "pending"}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5 max-w-[200px]">
+                                    <div className="truncate text-xs text-slate-700 font-medium" title={record.reason}>
+                                      {record.reason || "General Consultation"}
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                     </div>
-                  </div>
+
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Calendar className="w-4 h-4 text-amber-600" />
+                        <h4 className="font-bold text-amber-800 text-sm">Appointment Bookings ({patientBookings.length})</h4>
+                      </div>
+                      {patientBookings.length === 0 ? (
+                        <div className="text-center py-4 text-gray-400 text-xs bg-gray-50 rounded-lg">
+                          No appointment bookings found
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="emp-dash__table">
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>Booking Date</th>
+                                <th>Appt. Date</th>
+                                <th>Day</th>
+                                <th>Time Slot</th>
+                                <th>Services</th>
+                                <th>Total Fee</th>
+                                <th>Payment Status</th>
+                                <th>Booking Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {patientBookings.map((booking, idx) => (
+                                <tr key={booking._id} className="transition-colors hover:bg-slate-50/50">
+                                  <td className="px-3 py-2.5 font-semibold text-gray-400 text-[11px]">{idx + 1}</td>
+                                  <td className="px-3 py-2.5 font-medium text-slate-800 text-xs">
+                                    {formatDateToDDMMYYYY(booking.createdAt || booking.updatedAt || booking.date)}
+                                  </td>
+                                  <td className="px-3 py-2.5 font-medium text-blue-700 text-xs">
+                                    {formatDateToDDMMYYYY(booking.date)}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-xs font-medium text-blue-700">
+                                    {booking.dayOfWeek || "N/A"}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-xs font-medium text-slate-800">
+                                    {booking.startTime} – {booking.endTime}
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    {booking.services && booking.services.length > 0 ? (
+                                      <div className="flex flex-wrap gap-1">
+                                        {booking.services.map((svc, sIdx) => (
+                                          <span key={sIdx} className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
+                                            {svc.name}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-[10px] text-gray-400">None</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2.5 font-bold text-slate-800 text-xs">
+                                    ₹{(booking.consultationFee || 0) + getTotalServiceFee(booking)}
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <span
+                                      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider w-fit ${
+                                        (booking.paymentStatus || "Pending") === "Paid"
+                                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                          : "bg-amber-100 text-amber-800 border border-amber-200"
+                                      }`}
+                                    >
+                                      {booking.paymentStatus || "Pending"}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <span
+                                      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full capitalize w-fit ${
+                                        booking.status === "completed"
+                                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                          : booking.status === "consulting"
+                                          ? "bg-purple-100 text-purple-800 border border-purple-200"
+                                          : booking.status === "cancelled"
+                                          ? "bg-red-100 text-red-800 border border-red-200"
+                                          : "bg-blue-100 text-blue-800 border border-blue-200"
+                                      }`}
+                                    >
+                                      {booking.status || "booked"}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4 text-xs text-gray-500 flex items-center gap-4">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="inline-block w-3 h-3 bg-blue-500 rounded"></span>
+                        <span>Current OP Visit</span>
+                      </span>
+                      <span className="text-gray-300">|</span>
+                      <span className="text-gray-400">Total OP Visits: {patientHistory.length}</span>
+                      <span className="text-gray-300">|</span>
+                      <span className="text-gray-400">Total Bookings: {patientBookings.length}</span>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Patient Detail Modal */}
+        {/* Detail Modal - Same as before */}
         {showDetailModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative">

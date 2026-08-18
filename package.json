@@ -27,11 +27,8 @@
     "docx": "^9.7.1",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.34.3",
-
     "html-docx-js": "^0.3.1",
-
     "html5-qrcode": "^2.3.8",
-
     "jspdf": "^3.0.0",
     "jspdf-autotable": "^5.0.2",
     "jszip": "^3.10.1",
@@ -48,6 +45,7 @@
     "react-router-dom": "^7.2.0",
     "react-scripts": "5.0.1",
     "react-select": "^5.10.2",
+    "react-time-picker": "^8.1.0",
     "react-toastify": "^11.0.5",
     "reactstrap": "^9.2.3",
     "recharts": "^2.15.1",

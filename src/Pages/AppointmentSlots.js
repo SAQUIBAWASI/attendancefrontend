@@ -16,9 +16,9 @@ import {
   Users,
   Sun,
   Moon,
-  Save,
-  Sliders,
-  Info
+  User,
+  Stethoscope,
+  ChevronDown
 } from "lucide-react";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -51,43 +51,16 @@ const minutesTo24Hour = (mins) => {
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-// Default weekly schedule definition
-const DEFAULT_SCHEDULES = DAYS_OF_WEEK.map((day) => {
-  if (day === "Sunday") {
-    return {
-      dayOfWeek: day,
-      isWorking: true,
-      shifts: [{ name: "Morning Shift", startTime: "09:00", endTime: "14:00" }],
-      breaks: []
-    };
-  } else {
-    return {
-      dayOfWeek: day,
-      isWorking: true,
-      shifts: [
-        { name: "Morning Shift", startTime: "09:00", endTime: "14:00" },
-        { name: "Evening Shift", startTime: "15:00", endTime: "21:00" }
-      ],
-      breaks: [
-        { name: "Afternoon Break", startTime: "14:00", endTime: "15:00" }
-      ]
-    };
-  }
-});
-
 const AppointmentSlots = () => {
   // Config States
-  const [opDuration, setOpDuration] = useState(20); // 20 Mins default
-  const [opGap, setOpGap] = useState(5);           // 5 Mins gap default
-  const [consultationFee, setConsultationFee] = useState(300); // 300 Rs default consultation fee
-  const [weeklySchedules, setWeeklySchedules] = useState(DEFAULT_SCHEDULES);
+  const [opDuration, setOpDuration] = useState(20);
+  const [opGap, setOpGap] = useState(5);
+  const [consultationFee, setConsultationFee] = useState(300);
   
   // UI & Data States
   const [slots, setSlots] = useState([]);
   const [selectedDay, setSelectedDay] = useState("Monday");
-  const [loading, setLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   // Filters & Search
   const [shiftFilter, setShiftFilter] = useState("All");
@@ -101,12 +74,19 @@ const AppointmentSlots = () => {
   const [patientNameInput, setPatientNameInput] = useState("");
   const [patientPhoneInput, setPatientPhoneInput] = useState("");
   
-  // New Custom Slot Inputs
-  const [newSlotDay, setNewSlotDay] = useState("Monday");
+  // Doctors List
+  const [doctors, setDoctors] = useState([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  
+  // New Custom Slot Inputs - Multiple Days
+  const [newSlotDoctor, setNewSlotDoctor] = useState("");
+  const [newSlotDays, setNewSlotDays] = useState([]);
   const [newSlotStartTime, setNewSlotStartTime] = useState("09:00");
   const [newSlotEndTime, setNewSlotEndTime] = useState("09:20");
+  const [newSlotGap, setNewSlotGap] = useState(5);
   const [newSlotShift, setNewSlotShift] = useState("Morning Shift");
-  const [newSlotType, setNewSlotType] = useState("op");
+  const [newSlotConsultationFee, setNewSlotConsultationFee] = useState(300);
+  const [newSlotDuration, setNewSlotDuration] = useState(20);
 
   // Notification Toast State
   const [toast, setToast] = useState(null);
@@ -116,141 +96,48 @@ const AppointmentSlots = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Fetch slot configuration and slots from backend API
+  // Fetch doctors on mount
   useEffect(() => {
-    fetchConfigAndSlots();
+    fetchDoctors();
   }, []);
 
-  const fetchConfigAndSlots = async () => {
-    setLoading(true);
+  const fetchDoctors = async () => {
+    setDoctorsLoading(true);
     try {
-      // 1. Fetch Config
-      const configRes = await axios.get(`${API_BASE_URL}/appointment-slots/config`).catch(() => null);
-      if (configRes && configRes.data && configRes.data.success && configRes.data.config) {
-        const { opDuration: d, opGap: g, consultationFee: f, weeklySchedules: scheds } = configRes.data.config;
-        if (d) setOpDuration(d);
-        if (g !== undefined) setOpGap(g);
-        if (f !== undefined) setConsultationFee(f);
-        if (scheds && scheds.length > 0) setWeeklySchedules(scheds);
-      }
-
-      // 2. Fetch Slots
-      const slotsRes = await axios.get(`${API_BASE_URL}/appointment-slots`).catch(() => null);
-      if (slotsRes && slotsRes.data && slotsRes.data.slots && slotsRes.data.slots.length > 0) {
-        setSlots(slotsRes.data.slots);
+      const res = await axios.get(`${API_BASE_URL}/doctors/getalldoctors`);
+      if (res.data && res.data.success) {
+        setDoctors(res.data.data || []);
       } else {
-        // Fallback: Generate slots on client side if backend empty
-        generateLocalSlots(opDuration, opGap, weeklySchedules, consultationFee);
+        setDoctors([]);
       }
-    } catch (error) {
-      console.error("Error connecting to API:", error);
-      generateLocalSlots(opDuration, opGap, weeklySchedules, consultationFee);
+    } catch (err) {
+      console.error("Error fetching doctors:", err);
+      setDoctors([]);
     } finally {
-      setLoading(false);
+      setDoctorsLoading(false);
     }
   };
 
-  // Client-side instant slot generator
-  const generateLocalSlots = (duration, gap, schedules, fee = consultationFee) => {
-    let allGenerated = [];
+  // Fetch slots from backend - NO DUMMY DATA
+  useEffect(() => {
+    fetchSlots();
+  }, []);
 
-    (schedules || DEFAULT_SCHEDULES).forEach((daySched) => {
-      if (!daySched.isWorking) return;
-      const day = daySched.dayOfWeek;
-      let slotIdx = 1;
-
-      // Shifts
-      (daySched.shifts || []).forEach((sh) => {
-        const startMins = timeToMinutes(sh.startTime);
-        const endMins = timeToMinutes(sh.endTime);
-        let curr = startMins;
-
-        while (curr + duration <= endMins) {
-          const sStart = curr;
-          const sEnd = curr + duration;
-
-          allGenerated.push({
-            _id: `local_${day}_${sh.name}_${slotIdx}`,
-            slotId: `${day.substring(0,3).toLowerCase()}_${slotIdx}`,
-            dayOfWeek: day,
-            startTime: minutesTo12Hour(sStart),
-            endTime: minutesTo12Hour(sEnd),
-            startTime24: minutesTo24Hour(sStart),
-            endTime24: minutesTo24Hour(sEnd),
-            duration: duration,
-            gap: gap,
-            consultationFee: fee,
-            paymentStatus: "Pending",
-            shift: sh.name,
-            type: "op",
-            status: "available",
-            slotNumber: slotIdx++
-          });
-
-          curr = sEnd + gap;
-        }
-      });
-
-      // Breaks
-      (daySched.breaks || []).forEach((brk) => {
-        const bStartMins = timeToMinutes(brk.startTime);
-        const bEndMins = timeToMinutes(brk.endTime);
-
-        allGenerated.push({
-          _id: `local_break_${day}_${bStartMins}`,
-          slotId: `break_${day.substring(0,3).toLowerCase()}`,
-          dayOfWeek: day,
-          startTime: minutesTo12Hour(bStartMins),
-          endTime: minutesTo12Hour(bEndMins),
-          startTime24: brk.startTime,
-          endTime24: brk.endTime,
-          duration: bEndMins - bStartMins,
-          gap: 0,
-          shift: "Break",
-          type: "break",
-          status: "break",
-          slotNumber: 0
-        });
-      });
-    });
-
-    setSlots(allGenerated);
-  };
-
-  // Save Configuration & Trigger Full Backend Slot Generation
-  const handleSaveAndGenerate = async () => {
-    setIsGenerating(true);
-    setIsSaving(true);
+  const fetchSlots = async () => {
+    setLoading(true);
     try {
-      // 1. Save Config
-      await axios.post(`${API_BASE_URL}/appointment-slots/config`, {
-        opDuration,
-        opGap,
-        consultationFee,
-        weeklySchedules
-      }).catch(() => null);
-
-      // 2. Generate Slots on Server
-      const genRes = await axios.post(`${API_BASE_URL}/appointment-slots/generate`, {
-        opDuration,
-        opGap,
-        consultationFee,
-        weeklySchedules
-      }).catch(() => null);
-
-      if (genRes && genRes.data && genRes.data.success) {
-        setSlots(genRes.data.slots);
-        showToast(`Successfully generated ${genRes.data.slots.length} appointment slots!`, "success");
+      const slotsRes = await axios.get(`${API_BASE_URL}/appointment-slots`);
+      if (slotsRes && slotsRes.data && slotsRes.data.success) {
+        const slotsData = slotsRes.data.slots || [];
+        setSlots(slotsData);
       } else {
-        generateLocalSlots(opDuration, opGap, weeklySchedules, consultationFee);
-        showToast("Generated appointment slots locally!", "info");
+        setSlots([]);
       }
-    } catch (e) {
-      console.error("Error saving slot configuration:", e);
-      showToast("Error updating slot configuration", "error");
+    } catch (error) {
+      console.error("Error fetching slots:", error);
+      setSlots([]);
     } finally {
-      setIsGenerating(false);
-      setIsSaving(false);
+      setLoading(false);
     }
   };
 
@@ -263,7 +150,6 @@ const AppointmentSlots = () => {
     else if (slot.status === "blocked") newStatus = "available";
     else if (slot.status === "booked") newStatus = "available";
 
-    // Optimistic UI update
     setSlots((prev) =>
       prev.map((s) => (s.slotId === slot.slotId ? { ...s, status: newStatus, patientName: "" } : s))
     );
@@ -271,13 +157,13 @@ const AppointmentSlots = () => {
     try {
       if (slot._id && !slot._id.startsWith("local_")) {
         await axios.put(`${API_BASE_URL}/appointment-slots/${slot._id}`, {
-          status: newStatus,
-          patientName: newStatus === "available" ? "" : slot.patientName
+          status: newStatus
         }).catch(() => null);
       }
       showToast(`Slot status changed to '${newStatus}'`, "info");
     } catch (e) {
       console.error("Error updating slot status:", e);
+      fetchSlots();
     }
   };
 
@@ -296,7 +182,6 @@ const AppointmentSlots = () => {
       patientPhone: patientPhoneInput
     };
 
-    // Optimistic UI update
     setSlots((prev) =>
       prev.map((s) => (s.slotId === selectedSlotForBook.slotId ? { ...s, ...updated } : s))
     );
@@ -308,6 +193,7 @@ const AppointmentSlots = () => {
       showToast(`Booked appointment for ${patientNameInput}!`, "success");
     } catch (e) {
       console.error("Error booking slot:", e);
+      fetchSlots();
     } finally {
       setShowBookModal(false);
       setPatientNameInput("");
@@ -326,11 +212,36 @@ const AppointmentSlots = () => {
       showToast("Slot deleted successfully", "info");
     } catch (e) {
       console.error("Error deleting slot:", e);
+      fetchSlots();
     }
   };
 
-  // Add custom slot manually
+  // =============================================
+  // TOGGLE DAY SELECTION
+  // =============================================
+  const toggleDaySelection = (day) => {
+    setNewSlotDays(prev => 
+      prev.includes(day) 
+        ? prev.filter(d => d !== day) 
+        : [...prev, day]
+    );
+  };
+
+  // =============================================
+  // ADD CUSTOM SLOT WITH MULTIPLE DAYS
+  // =============================================
   const handleAddCustomSlot = async () => {
+    // Validation
+    if (!newSlotDoctor) {
+      showToast("Please select a doctor", "error");
+      return;
+    }
+
+    if (newSlotDays.length === 0) {
+      showToast("Please select at least one day", "error");
+      return;
+    }
+
     const sStartMins = timeToMinutes(newSlotStartTime);
     const sEndMins = timeToMinutes(newSlotEndTime);
 
@@ -339,59 +250,107 @@ const AppointmentSlots = () => {
       return;
     }
 
-    const newSlotObj = {
-      slotId: `custom_${Date.now()}`,
-      dayOfWeek: newSlotDay,
-      startTime: minutesTo12Hour(sStartMins),
-      endTime: minutesTo12Hour(sEndMins),
-      startTime24: minutesTo24Hour(sStartMins),
-      endTime24: minutesTo24Hour(sEndMins),
-      duration: sEndMins - sStartMins,
-      gap: 0,
-      shift: newSlotShift,
-      type: newSlotType,
-      status: newSlotType === "break" ? "break" : "available",
-      notes: "Manually Added Slot"
-    };
+    // Find selected doctor
+    const selectedDoctor = doctors.find(d => d._id === newSlotDoctor);
+    if (!selectedDoctor) {
+      showToast("Selected doctor not found", "error");
+      return;
+    }
+
+    // Generate slots for each selected day
+    const allNewSlots = [];
+
+    for (const day of newSlotDays) {
+      let curr = sStartMins;
+      let slotIdx = 1;
+
+      while (curr + newSlotDuration <= sEndMins) {
+        const sStart = curr;
+        const sEnd = curr + newSlotDuration;
+
+        allNewSlots.push({
+          dayOfWeek: day,
+          startTime: minutesTo12Hour(sStart),
+          endTime: minutesTo12Hour(sEnd),
+          startTime24: minutesTo24Hour(sStart),
+          endTime24: minutesTo24Hour(sEnd),
+          duration: newSlotDuration,
+          gap: newSlotGap || 0,
+          shift: newSlotShift,
+          type: "op",
+          status: "available",
+          consultationFee: newSlotConsultationFee,
+          doctorId: selectedDoctor._id,
+          doctorName: selectedDoctor.name,
+          doctorSpecialization: selectedDoctor.specialization,
+          slotNumber: slotIdx++
+        });
+
+        curr = sEnd + (newSlotGap || 0);
+      }
+    }
+
+    if (allNewSlots.length === 0) {
+      showToast("No slots could be generated in the given time range", "error");
+      return;
+    }
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/appointment-slots`, newSlotObj).catch(() => null);
-      if (res && res.data && res.data.slot) {
-        setSlots((prev) => [...prev, res.data.slot]);
-      } else {
-        newSlotObj._id = `local_custom_${Date.now()}`;
-        setSlots((prev) => [...prev, newSlotObj]);
+      // Send each slot to backend
+      const savedSlots = [];
+      for (const slot of allNewSlots) {
+        const res = await axios.post(`${API_BASE_URL}/appointment-slots`, slot).catch(() => null);
+        if (res && res.data && res.data.slot) {
+          savedSlots.push(res.data.slot);
+        }
       }
-      showToast(`Added custom slot (${newSlotObj.startTime} - ${newSlotObj.endTime}) for ${newSlotDay}`, "success");
+
+      if (savedSlots.length > 0) {
+        setSlots((prev) => [...prev, ...savedSlots]);
+        showToast(`Added ${savedSlots.length} slots for ${selectedDoctor.name} on ${newSlotDays.length} day(s)!`, "success");
+      } else {
+        showToast("Failed to create slots. Please try again.", "error");
+      }
+      
       setShowAddModal(false);
+      
+      // Reset form
+      setNewSlotDoctor("");
+      setNewSlotDays([]);
+      setNewSlotStartTime("09:00");
+      setNewSlotEndTime("09:20");
+      setNewSlotGap(5);
+      setNewSlotShift("Morning Shift");
+      setNewSlotConsultationFee(300);
+      setNewSlotDuration(20);
+      
     } catch (e) {
-      console.error("Error adding slot:", e);
+      console.error("Error adding slots:", e);
+      showToast("Error adding slots. Please try again.", "error");
     }
   };
 
   // Filter slots for current selected day
   const currentDaySlots = useMemo(() => {
-    return slots.filter((s) => s.dayOfWeek.toLowerCase() === selectedDay.toLowerCase());
+    return slots.filter((s) => s.dayOfWeek?.toLowerCase() === selectedDay.toLowerCase());
   }, [slots, selectedDay]);
 
   // Apply shift, status, and search filters
   const filteredSlots = useMemo(() => {
     return currentDaySlots.filter((slot) => {
-      // Shift filter
       if (shiftFilter !== "All") {
-        if (shiftFilter === "Morning" && !slot.shift.toLowerCase().includes("morning")) return false;
-        if (shiftFilter === "Evening" && !slot.shift.toLowerCase().includes("evening")) return false;
+        if (shiftFilter === "Morning" && !slot.shift?.toLowerCase().includes("morning")) return false;
+        if (shiftFilter === "Evening" && !slot.shift?.toLowerCase().includes("evening")) return false;
         if (shiftFilter === "Break" && slot.type !== "break") return false;
       }
-      // Status filter
       if (statusFilter !== "All" && slot.status !== statusFilter) return false;
-      // Search filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
-        const matchTime = slot.startTime.toLowerCase().includes(query) || slot.endTime.toLowerCase().includes(query);
+        const matchTime = (slot.startTime || "").toLowerCase().includes(query) || (slot.endTime || "").toLowerCase().includes(query);
         const matchPatient = (slot.patientName || "").toLowerCase().includes(query);
-        const matchStatus = slot.status.toLowerCase().includes(query);
-        if (!matchTime && !matchPatient && !matchStatus) return false;
+        const matchStatus = (slot.status || "").toLowerCase().includes(query);
+        const matchDoctor = (slot.doctorName || "").toLowerCase().includes(query);
+        if (!matchTime && !matchPatient && !matchStatus && !matchDoctor) return false;
       }
       return true;
     });
@@ -405,10 +364,9 @@ const AppointmentSlots = () => {
     const dayBookedSlots = currentDaySlots.filter((s) => s.status === "booked").length;
     const dayBlockedSlots = currentDaySlots.filter((s) => s.status === "blocked").length;
     
-    // Total OP hours on current day
     const opTotalMins = currentDaySlots
       .filter((s) => s.type !== "break")
-      .reduce((acc, curr) => acc + (curr.duration || opDuration), 0);
+      .reduce((acc, curr) => acc + (curr.duration || 20), 0);
     const opHoursStr = (opTotalMins / 60).toFixed(1);
 
     return {
@@ -419,11 +377,11 @@ const AppointmentSlots = () => {
       dayBlockedSlots,
       opHoursStr
     };
-  }, [slots, currentDaySlots, opDuration]);
+  }, [slots, currentDaySlots]);
 
-  // Group filtered slots by shift for clean visual presentation
-  const morningShiftSlots = filteredSlots.filter((s) => s.shift.toLowerCase().includes("morning"));
-  const eveningShiftSlots = filteredSlots.filter((s) => s.shift.toLowerCase().includes("evening"));
+  // Group filtered slots by shift
+  const morningShiftSlots = filteredSlots.filter((s) => s.shift?.toLowerCase().includes("morning"));
+  const eveningShiftSlots = filteredSlots.filter((s) => s.shift?.toLowerCase().includes("evening"));
 
   return (
     <div className="emp-dash">
@@ -440,7 +398,7 @@ const AppointmentSlots = () => {
           </div>
         )}
 
-        {/* Clean HRMS Header matching OpManagement */}
+        {/* Header */}
         <div className="emp-dash__header">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
@@ -449,27 +407,31 @@ const AppointmentSlots = () => {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+              onClick={() => {
+                setNewSlotDoctor("");
+                setNewSlotDays([]);
+                setNewSlotStartTime("09:00");
+                setNewSlotEndTime("09:20");
+                setNewSlotGap(5);
+                setNewSlotShift("Morning Shift");
+                setNewSlotConsultationFee(300);
+                setNewSlotDuration(20);
+                setShowAddModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-md"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Custom Slot
+              <Plus className="w-3.5 h-3.5" /> Add Slots
             </button>
             <button
-              onClick={handleSaveAndGenerate}
-              disabled={isGenerating}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-md disabled:opacity-50"
+              onClick={fetchSlots}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all shadow-md"
             >
-              {isGenerating ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="w-3.5 h-3.5" />
-              )}
-              {isGenerating ? "Generating..." : "Save & Generate Slots"}
+              <RefreshCw className="w-3.5 h-3.5" /> Refresh
             </button>
           </div>
         </div>
 
-        {/* Stat Summary Cards matching OpManagement */}
+        {/* Stat Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
@@ -527,146 +489,12 @@ const AppointmentSlots = () => {
           </div>
         </div>
 
-        {/* Main Settings Control Box Card */}
-        <div className="emp-dash__card p-4 md:p-5 mb-6">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
-            <div className="flex items-center gap-2 text-gray-800 font-bold text-sm md:text-base">
-              <Sliders className="w-4 h-4 text-blue-600" />
-              <span>OP Duration, Fee &amp; Gap Configuration</span>
-            </div>
-            <span className="text-xs text-gray-500">
-              Configure parameters to automatically generate daily OPD slots
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* OP Duration Field */}
-            <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-200">
-              <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                OP Duration (Consultation)
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="5"
-                  max="120"
-                  step="5"
-                  value={opDuration}
-                  onChange={(e) => setOpDuration(Math.max(5, parseInt(e.target.value) || 5))}
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-gray-800 font-bold text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-                <span className="text-xs font-semibold text-gray-500">Mins</span>
-              </div>
-              <div className="flex items-center gap-1 mt-2">
-                {[15, 20, 25, 30].map((mins) => (
-                  <button
-                    key={mins}
-                    onClick={() => setOpDuration(mins)}
-                    className={`text-xs px-2 py-0.5 rounded font-semibold transition-all ${
-                      opDuration === mins
-                        ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-300"
-                    }`}
-                  >
-                    {mins}m
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Gap After OP Field */}
-            <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-200">
-              <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                Turnaround Gap
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  max="60"
-                  step="1"
-                  value={opGap}
-                  onChange={(e) => setOpGap(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-gray-800 font-bold text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-                <span className="text-xs font-semibold text-gray-500">Mins</span>
-              </div>
-              <div className="flex items-center gap-1 mt-2">
-                {[0, 5, 10, 15].map((gap) => (
-                  <button
-                    key={gap}
-                    onClick={() => setOpGap(gap)}
-                    className={`text-xs px-2 py-0.5 rounded font-semibold transition-all ${
-                      opGap === gap
-                        ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-300"
-                    }`}
-                  >
-                    {gap}m
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Consultation Fee Field */}
-            <div className="bg-emerald-50/80 p-3.5 rounded-xl border border-emerald-200">
-              <label className="block text-[11px] font-bold text-emerald-800 uppercase tracking-wider mb-1.5">
-                Consultation Fee (₹)
-              </label>
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold text-emerald-700">₹</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="50"
-                  value={consultationFee}
-                  onChange={(e) => setConsultationFee(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-full bg-white border border-emerald-300 rounded-lg px-3 py-1.5 text-gray-800 font-bold text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                />
-              </div>
-              <div className="flex items-center gap-1 mt-2">
-                {[200, 300, 500, 1000].map((fee) => (
-                  <button
-                    key={fee}
-                    onClick={() => setConsultationFee(fee)}
-                    className={`text-xs px-2 py-0.5 rounded font-semibold transition-all ${
-                      consultationFee === fee
-                        ? "bg-emerald-600 text-white"
-                        : "bg-white text-emerald-800 hover:bg-emerald-100 border border-emerald-200"
-                    }`}
-                  >
-                    ₹{fee}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Combined Cycle Summary */}
-            <div className="bg-blue-50/70 p-3.5 rounded-xl border border-blue-100 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block mb-1">
-                  Effective Slot Cycle
-                </span>
-                <div className="text-xl font-extrabold text-blue-950">
-                  {opDuration + opGap} <span className="text-xs font-semibold text-blue-700">Mins</span>
-                </div>
-                <p className="text-[11px] text-blue-700 mt-0.5">
-                  {opDuration}m consultation + {opGap}m gap
-                </p>
-              </div>
-              <div className="text-[11px] text-blue-600 mt-2 font-medium flex items-center gap-1">
-                <Info className="w-3.5 h-3.5" /> Next slot every {opDuration + opGap}m
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Day Selector Pills Card */}
+        {/* Day Selector Pills */}
         <div className="emp-dash__card p-2 mb-6 flex overflow-x-auto gap-1">
           {DAYS_OF_WEEK.map((day) => {
             const isSelected = selectedDay.toLowerCase() === day.toLowerCase();
             const daySlotsCount = slots.filter(
-              (s) => s.dayOfWeek.toLowerCase() === day.toLowerCase() && s.type !== "break"
+              (s) => s.dayOfWeek?.toLowerCase() === day.toLowerCase() && s.type !== "break"
             ).length;
 
             return (
@@ -693,10 +521,9 @@ const AppointmentSlots = () => {
           })}
         </div>
 
-        {/* Filters Bar Card */}
+        {/* Filters Bar */}
         <div className="emp-dash__card p-3 mb-6 flex flex-col sm:flex-row gap-3 items-center justify-between">
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            {/* Shift Filter */}
             <div className="flex items-center gap-1.5">
               <Filter className="w-3.5 h-3.5 text-gray-400" />
               <select
@@ -705,13 +532,12 @@ const AppointmentSlots = () => {
                 className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               >
                 <option value="All">All Shifts</option>
-                <option value="Morning">Morning Shift (09:00 AM - 02:00 PM)</option>
-                <option value="Break">Break Period (02:00 PM - 03:00 PM)</option>
-                <option value="Evening">Evening Shift (03:00 PM - 09:00 PM)</option>
+                <option value="Morning">Morning Shift</option>
+                <option value="Break">Break Period</option>
+                <option value="Evening">Evening Shift</option>
               </select>
             </div>
 
-            {/* Status Filter */}
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -725,12 +551,11 @@ const AppointmentSlots = () => {
             </select>
           </div>
 
-          {/* Search */}
           <div className="relative w-full sm:w-64">
             <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search by time, status..."
+              placeholder="Search by time, patient, doctor..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
@@ -738,7 +563,7 @@ const AppointmentSlots = () => {
           </div>
         </div>
 
-        {/* Slots Timeline Layout */}
+        {/* Slots Timeline Layout - ONLY REAL DATA */}
         {loading ? (
           <div className="emp-dash__card p-12 text-center text-gray-500">
             <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
@@ -749,19 +574,31 @@ const AppointmentSlots = () => {
             <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <h3 className="text-base font-bold text-gray-700">No Slots Found for {selectedDay}</h3>
             <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto mb-4">
-              No appointment slots match your current filter selection.
+              {slots.length === 0 
+                ? "No appointment slots available. Click 'Add Slots' to create new slots."
+                : "No slots found for this day. Try selecting another day."}
             </p>
             <button
-              onClick={handleSaveAndGenerate}
+              onClick={() => {
+                setNewSlotDoctor("");
+                setNewSlotDays([]);
+                setNewSlotStartTime("09:00");
+                setNewSlotEndTime("09:20");
+                setNewSlotGap(5);
+                setNewSlotShift("Morning Shift");
+                setNewSlotConsultationFee(300);
+                setNewSlotDuration(20);
+                setShowAddModal(true);
+              }}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-xs shadow-md"
             >
-              Generate Default Slots
+              <Plus className="w-3.5 h-3.5 inline mr-1" /> Add Slots
             </button>
           </div>
         ) : (
           <div className="space-y-6">
-            {/* 1. MORNING SHIFT SECTION */}
-            {(shiftFilter === "All" || shiftFilter === "Morning") && (
+            {/* Morning Shift */}
+            {(shiftFilter === "All" || shiftFilter === "Morning") && morningShiftSlots.length > 0 && (
               <div className="emp-dash__card p-4 md:p-5">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
                   <div className="flex items-center gap-2 text-amber-700 font-bold text-sm md:text-base">
@@ -776,28 +613,24 @@ const AppointmentSlots = () => {
                   </span>
                 </div>
 
-                {morningShiftSlots.length === 0 ? (
-                  <p className="text-xs text-gray-400 italic py-2">No morning slots matching filters.</p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-                    {morningShiftSlots.map((slot) => (
-                      <SlotCard
-                        key={slot._id || slot.slotId}
-                        slot={slot}
-                        onToggleStatus={() => handleToggleStatus(slot)}
-                        onBook={() => {
-                          setSelectedSlotForBook(slot);
-                          setShowBookModal(true);
-                        }}
-                        onDelete={() => handleDeleteSlot(slot.slotId, slot._id)}
-                      />
-                    ))}
-                  </div>
-                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                  {morningShiftSlots.map((slot) => (
+                    <SlotCard
+                      key={slot._id || slot.slotId}
+                      slot={slot}
+                      onToggleStatus={() => handleToggleStatus(slot)}
+                      onBook={() => {
+                        setSelectedSlotForBook(slot);
+                        setShowBookModal(true);
+                      }}
+                      onDelete={() => handleDeleteSlot(slot.slotId, slot._id)}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* 2. BREAK PERIOD SECTION */}
+            {/* Break Period */}
             {(shiftFilter === "All" || shiftFilter === "Break") && (
               <div className="bg-purple-50/70 rounded-2xl p-4 border border-purple-200/70 shadow-sm">
                 <div className="flex items-center justify-between">
@@ -825,8 +658,8 @@ const AppointmentSlots = () => {
               </div>
             )}
 
-            {/* 3. EVENING SHIFT SECTION */}
-            {(shiftFilter === "All" || shiftFilter === "Evening") && (
+            {/* Evening Shift */}
+            {(shiftFilter === "All" || shiftFilter === "Evening") && eveningShiftSlots.length > 0 && (
               <div className="emp-dash__card p-4 md:p-5">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
                   <div className="flex items-center gap-2 text-indigo-700 font-bold text-sm md:text-base">
@@ -841,34 +674,320 @@ const AppointmentSlots = () => {
                   </span>
                 </div>
 
-                {selectedDay === "Sunday" ? (
-                  <div className="bg-gray-50 p-5 rounded-xl text-center border border-gray-200">
-                    <Moon className="w-7 h-7 text-gray-300 mx-auto mb-1.5" />
-                    <h4 className="text-sm font-bold text-gray-700">Evening OP Closed on Sundays</h4>
-                    <p className="text-xs text-gray-500 mt-1">
-                      According to operational rules, Sunday OP runs only from 09:00 AM to 02:00 PM.
-                    </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                  {eveningShiftSlots.map((slot) => (
+                    <SlotCard
+                      key={slot._id || slot.slotId}
+                      slot={slot}
+                      onToggleStatus={() => handleToggleStatus(slot)}
+                      onBook={() => {
+                        setSelectedSlotForBook(slot);
+                        setShowBookModal(true);
+                      }}
+                      onDelete={() => handleDeleteSlot(slot.slotId, slot._id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Show message if no slots match filters */}
+            {morningShiftSlots.length === 0 && eveningShiftSlots.length === 0 && (
+              <div className="emp-dash__card p-8 text-center text-gray-500">
+                <p className="text-sm">No slots match your current filters.</p>
+                <button
+                  onClick={() => {
+                    setShiftFilter("All");
+                    setStatusFilter("All");
+                    setSearchQuery("");
+                  }}
+                  className="mt-2 text-blue-600 hover:text-blue-800 text-xs font-semibold underline"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ============================================= */}
+        {/* ADD SLOT MODAL */}
+        {/* ============================================= */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                    <Plus className="w-5 h-5" />
                   </div>
-                ) : eveningShiftSlots.length === 0 ? (
-                  <p className="text-xs text-gray-400 italic py-2">No evening slots matching filters.</p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-                    {eveningShiftSlots.map((slot) => (
-                      <SlotCard
-                        key={slot._id || slot.slotId}
-                        slot={slot}
-                        onToggleStatus={() => handleToggleStatus(slot)}
-                        onBook={() => {
-                          setSelectedSlotForBook(slot);
-                          setShowBookModal(true);
-                        }}
-                        onDelete={() => handleDeleteSlot(slot.slotId, slot._id)}
-                      />
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base">Add New Slots</h3>
+                    <p className="text-xs text-gray-500">Create multiple slots for a doctor</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="my-5 space-y-4">
+                {/* Doctor Selection */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Select Doctor <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Stethoscope className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                    <select
+                      value={newSlotDoctor}
+                      onChange={(e) => setNewSlotDoctor(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none"
+                    >
+                      <option value="">Select a doctor</option>
+                      {doctorsLoading ? (
+                        <option value="" disabled>Loading doctors...</option>
+                      ) : doctors.length === 0 ? (
+                        <option value="" disabled>No doctors available</option>
+                      ) : (
+                        doctors.map((doc) => (
+                          <option key={doc._id} value={doc._id}>
+                            {doc.name} - {doc.specialization}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-2.5 pointer-events-none" />
+                  </div>
+                  {newSlotDoctor && (
+                    <div className="mt-1.5 text-xs text-emerald-600">
+                      ✓ Selected: {doctors.find(d => d._id === newSlotDoctor)?.name}
+                    </div>
+                  )}
+                </div>
+
+                {/* Multiple Days Selection */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Select Days <span className="text-red-500">*</span>
+                    <span className="text-[10px] text-gray-400 font-normal ml-1">(Select multiple days)</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS_OF_WEEK.map((day) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleDaySelection(day)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 transition-all ${
+                          newSlotDays.includes(day)
+                            ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
+                            : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {day.substring(0, 3)}
+                      </button>
                     ))}
+                  </div>
+                  {newSlotDays.length > 0 && (
+                    <div className="mt-1.5 text-xs text-emerald-600">
+                      ✓ Selected: {newSlotDays.join(", ")}
+                    </div>
+                  )}
+                </div>
+
+                {/* Start Time & End Time */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Start Time <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Clock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                      <input
+                        type="time"
+                        value={newSlotStartTime}
+                        onChange={(e) => setNewSlotStartTime(e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      End Time <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Clock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                      <input
+                        type="time"
+                        value={newSlotEndTime}
+                        onChange={(e) => setNewSlotEndTime(e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Duration */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Slot Duration (Minutes)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="5"
+                      max="120"
+                      step="5"
+                      value={newSlotDuration}
+                      onChange={(e) => setNewSlotDuration(Math.max(5, parseInt(e.target.value) || 20))}
+                      className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                    />
+                    <span className="text-xs text-gray-500">minutes</span>
+                    <div className="flex items-center gap-1 ml-2">
+                      {[15, 20, 25, 30].map((dur) => (
+                        <button
+                          key={dur}
+                          onClick={() => setNewSlotDuration(dur)}
+                          className={`text-[10px] px-2 py-0.5 rounded font-semibold transition-all ${
+                            newSlotDuration === dur
+                              ? "bg-blue-600 text-white"
+                              : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-300"
+                          }`}
+                        >
+                          {dur}m
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gap Between Slots */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Gap Between Slots (Minutes)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="0"
+                      max="30"
+                      value={newSlotGap}
+                      onChange={(e) => setNewSlotGap(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                    />
+                    <span className="text-xs text-gray-500">minutes</span>
+                    <div className="flex items-center gap-1 ml-2">
+                      {[0, 5, 10, 15].map((gap) => (
+                        <button
+                          key={gap}
+                          onClick={() => setNewSlotGap(gap)}
+                          className={`text-[10px] px-2 py-0.5 rounded font-semibold transition-all ${
+                            newSlotGap === gap
+                              ? "bg-blue-600 text-white"
+                              : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-300"
+                          }`}
+                        >
+                          {gap}m
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Consultation Fee */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Consultation Fee (₹)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="0"
+                      step="50"
+                      value={newSlotConsultationFee}
+                      onChange={(e) => setNewSlotConsultationFee(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                    />
+                    <span className="text-xs text-gray-500">₹</span>
+                    <div className="flex items-center gap-1 ml-2">
+                      {[200, 300, 500, 1000].map((fee) => (
+                        <button
+                          key={fee}
+                          onClick={() => setNewSlotConsultationFee(fee)}
+                          className={`text-[10px] px-2 py-0.5 rounded font-semibold transition-all ${
+                            newSlotConsultationFee === fee
+                              ? "bg-emerald-600 text-white"
+                              : "bg-white text-emerald-800 hover:bg-emerald-100 border border-emerald-200"
+                          }`}
+                        >
+                          ₹{fee}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shift Category */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Shift Category <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Sun className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                    <select
+                      value={newSlotShift}
+                      onChange={(e) => setNewSlotShift(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none"
+                    >
+                      <option value="Morning Shift">Morning Shift</option>
+                      <option value="Evening Shift">Evening Shift</option>
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-2.5 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Summary Preview */}
+                {newSlotDoctor && newSlotDays.length > 0 && newSlotStartTime && newSlotEndTime && (
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <div className="text-[10px] font-bold uppercase text-blue-700 mb-1">📋 Summary</div>
+                    <div className="text-sm font-medium text-gray-800">
+                      {doctors.find(d => d._id === newSlotDoctor)?.name}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Days: {newSlotDays.join(", ")}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {newSlotStartTime} – {newSlotEndTime} • Duration: {newSlotDuration}m • Gap: {newSlotGap}m • {newSlotShift}
+                    </div>
+                    <div className="text-xs text-emerald-600 font-semibold mt-1">
+                      💰 Fee: ₹{newSlotConsultationFee}
+                    </div>
+                    <div className="text-xs text-blue-600 font-semibold mt-1">
+                      📊 Total slots: {newSlotDays.length * Math.floor((timeToMinutes(newSlotEndTime) - timeToMinutes(newSlotStartTime)) / (newSlotDuration + newSlotGap))}
+                    </div>
                   </div>
                 )}
               </div>
-            )}
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddCustomSlot}
+                  disabled={!newSlotDoctor || newSlotDays.length === 0 || !newSlotStartTime || !newSlotEndTime}
+                  className="px-5 py-2 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="w-4 h-4" /> Generate Slots
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -893,6 +1012,11 @@ const AppointmentSlots = () => {
                   {selectedSlotForBook.dayOfWeek} — {selectedSlotForBook.startTime} to {selectedSlotForBook.endTime}
                 </div>
                 <div>Duration: {selectedSlotForBook.duration} Mins (OP)</div>
+                {selectedSlotForBook.doctorName && (
+                  <div className="text-emerald-700 font-semibold mt-0.5">
+                    👨‍⚕️ {selectedSlotForBook.doctorName} ({selectedSlotForBook.doctorSpecialization})
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -935,99 +1059,6 @@ const AppointmentSlots = () => {
                   className="px-5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md"
                 >
                   Confirm Appointment
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ADD CUSTOM SLOT MODAL */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-blue-600" /> Create Custom Slot
-                </h3>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
-                >
-                  <XCircle className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="my-4 space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">
-                    Day of Week
-                  </label>
-                  <select
-                    value={newSlotDay}
-                    onChange={(e) => setNewSlotDay(e.target.value)}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  >
-                    {DAYS_OF_WEEK.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      value={newSlotStartTime}
-                      onChange={(e) => setNewSlotStartTime(e.target.value)}
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">
-                      End Time
-                    </label>
-                    <input
-                      type="time"
-                      value={newSlotEndTime}
-                      onChange={(e) => setNewSlotEndTime(e.target.value)}
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">
-                    Shift Category
-                  </label>
-                  <select
-                    value={newSlotShift}
-                    onChange={(e) => setNewSlotShift(e.target.value)}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  >
-                    <option value="Morning Shift">Morning Shift</option>
-                    <option value="Evening Shift">Evening Shift</option>
-                    <option value="Break">Break Period</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mt-6 flex items-center justify-end gap-2">
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddCustomSlot}
-                  className="px-5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                >
-                  Add Slot
                 </button>
               </div>
             </div>
@@ -1083,7 +1114,14 @@ const SlotCard = ({ slot, onToggleStatus, onBook, onDelete }) => {
           {slot.startTime} – {slot.endTime}
         </div>
 
-        {/* OP Duration & Gap Tag */}
+        {/* Doctor Name */}
+        {slot.doctorName && (
+          <div className="text-[10px] font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded mb-1 truncate">
+            👨‍⚕️ {slot.doctorName}
+          </div>
+        )}
+
+        {/* OP Duration & Fee */}
         <div className="text-[11px] text-gray-500 font-medium mb-1.5 flex items-center justify-between">
           <span>⏱ {slot.duration} Mins {slot.gap > 0 ? `(+${slot.gap}m)` : ""}</span>
           {!isBreak && (

@@ -241,8 +241,7 @@ import Bookings from './Pages/Bookings.js';
 import OpManagement from './Pages/OpManagement.js';
 import OpDashboard from './Pages/OpDashboard.js';
 import Services from "./Pages/Services.js";
-
-
+import DoctorManagement from "./Pages/DoctorManagement.js";
 
 function App() {
   return (
@@ -532,6 +531,7 @@ function App() {
               <Route path="/appointment-slots" element={<AppointmentSlots />} />
               <Route path="/bookings" element={<Bookings />} />
                <Route path="/op-management" element={<OpManagement />} />
+              <Route path="/doctor-management" element={<DoctorManagement />} />
               <Route path="/op-dashboard" element={<OpDashboard />} />
               <Route path="/services" element={<Services />} />
 

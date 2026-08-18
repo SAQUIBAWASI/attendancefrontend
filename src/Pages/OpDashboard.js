@@ -19,7 +19,11 @@ import {
   User,
   Phone,
   FileText,
-  Sliders
+  Sliders,
+  UserPlus,
+  CalendarDays,
+  Stethoscope,
+  BookOpen
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -84,6 +88,11 @@ const OpDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Quick Action Handlers
+  const handleQuickAction = (path) => {
+    navigate(path);
   };
 
   // Filtered patients based on selected timeframe
@@ -186,19 +195,18 @@ const OpDashboard = () => {
     return Object.values(map).sort((a, b) => a.rawDate - b.rawDate);
   }, [filteredPatients]);
 
-  // Day-by-Day Monthly Trend Calculation for Selected Month (e.g. July, August)
+  // Day-by-Day Monthly Trend Calculation for Selected Month
   const monthlyDailyTrend = useMemo(() => {
     if (!selectedTrendMonth) return { daysData: [], monthLabel: "", totalMonthPatients: 0, totalMonthRevenue: 0, peakDay: "-" };
 
     const [yearStr, monthStr] = selectedTrendMonth.split("-");
     const year = parseInt(yearStr, 10);
-    const monthIdx = parseInt(monthStr, 10) - 1; // 0-indexed month
+    const monthIdx = parseInt(monthStr, 10) - 1;
 
     const dateObj = new Date(year, monthIdx, 1);
     const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
     const monthLabel = dateObj.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 
-    // Map patient records for this specific month by day of month (1 to daysInMonth)
     const dayMap = {};
     for (let day = 1; day <= daysInMonth; day++) {
       const formattedDay = String(day).padStart(2, "0");
@@ -335,7 +343,7 @@ const OpDashboard = () => {
     return null;
   };
 
-  // Render Daily Trend Chart depending on Graph Type selected (Using ComposedChart for all modes to guarantee dual Y-axis & SVG stability)
+  // Render Daily Trend Chart depending on Graph Type selected
   const renderTrendGraph = () => {
     const data = monthlyDailyTrend.daysData;
 
@@ -373,7 +381,6 @@ const OpDashboard = () => {
         />
         <Tooltip content={<DailyTrendTooltip />} />
 
-        {/* 1. AREA MODE */}
         {trendChartType === "area" && (
           <>
             <Area 
@@ -400,7 +407,6 @@ const OpDashboard = () => {
           </>
         )}
 
-        {/* 2. BAR MODE */}
         {trendChartType === "bar" && (
           <>
             <Bar yAxisId="left" dataKey="patients" name="Patients Registered" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={16} />
@@ -408,7 +414,6 @@ const OpDashboard = () => {
           </>
         )}
 
-        {/* 3. LINE MODE */}
         {trendChartType === "line" && (
           <>
             <Line yAxisId="left" type="monotone" dataKey="patients" name="Patients Registered" stroke="#2563eb" strokeWidth={3} dot={{ fill: '#2563eb', stroke: '#fff', strokeWidth: 1.5, r: 4 }} activeDot={{ r: 6, fill: '#2563eb', stroke: '#fff', strokeWidth: 2 }} />
@@ -416,7 +421,6 @@ const OpDashboard = () => {
           </>
         )}
 
-        {/* 4. COMPOSED MODE (Default) */}
         {trendChartType === "composed" && (
           <>
             <Bar yAxisId="left" dataKey="patients" name="Patients Registered" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
@@ -506,14 +510,70 @@ const OpDashboard = () => {
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
-
-            <button
-              onClick={() => navigate("/op-management")}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-md"
-            >
-              OP Management <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </div>
+        </div>
+
+        {/* ✅ QUICK ACTION BUTTONS - 4 Buttons */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          {/* Doctors */}
+          <button
+            onClick={() => handleQuickAction("/doctors")}
+            className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+              <Stethoscope className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Quick Action</div>
+              <div className="text-sm font-bold text-gray-800">Doctors</div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+          </button>
+
+          {/* Slots */}
+          <button
+            onClick={() => handleQuickAction("/slots")}
+            className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-purple-300 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+              <CalendarDays className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Quick Action</div>
+              <div className="text-sm font-bold text-gray-800">Slots</div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+          </button>
+
+          {/* OP */}
+          <button
+            onClick={() => handleQuickAction("/op-management")}
+            className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-300 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+              <UserPlus className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Quick Action</div>
+              <div className="text-sm font-bold text-gray-800">OP</div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
+          </button>
+
+          {/* Bookings */}
+          <button
+            onClick={() => handleQuickAction("/bookings")}
+            className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-amber-300 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+              <BookOpen className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Quick Action</div>
+              <div className="text-sm font-bold text-gray-800">Bookings</div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-amber-600 group-hover:translate-x-1 transition-all" />
+          </button>
         </div>
 
         {/* KPI Stats Cards Grid */}
