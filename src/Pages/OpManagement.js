@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import {
@@ -29,9 +29,10 @@ import {
   X,
   History,
   Stethoscope,
-  CalendarDays,
   UserCheck,
-  ReceiptText
+  ReceiptText,
+  CalendarDays,
+  AlertCircle
 } from "lucide-react";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -51,6 +52,11 @@ const PAYMENT_TYPE_OPTIONS = [
   { value: "online", label: "Online" }
 ];
 
+const PAYMENT_STATUS_OPTIONS = [
+  { value: "Pending", label: "Pending" },
+  { value: "Paid", label: "Paid" }
+];
+
 const EMPTY_FORM = {
   name: "",
   age: "",
@@ -61,18 +67,34 @@ const EMPTY_FORM = {
   feeAmount: 300,
   paymentType: "cash",
   reason: "",
-  paymentStatus: "pending"
+  paymentStatus: "Pending",
+  doctorId: "",
+  slotId: "",
+  appointmentDate: ""
+};
+
+const getDayNameFromDate = (dateStr) => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { weekday: 'long' });
 };
 
 const OpManagement = () => {
   const [patients, setPatients] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [allSlots, setAllSlots] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  
+  const [existingPatient, setExistingPatient] = useState(null);
+  const [showExistingPatientPopup, setShowExistingPatientPopup] = useState(false);
+  const [searchingPatient, setSearchingPatient] = useState(false);
 
-  // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [feeTypeFilter, setFeeTypeFilter] = useState("All");
@@ -88,8 +110,11 @@ const OpManagement = () => {
   const [patientBookings, setPatientBookings] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  
+  const phoneInputRef = useRef(null);
+  const nameInputRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
 
-  // Billing Modal State
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [billingData, setBillingData] = useState({
     patientName: "",
@@ -114,6 +139,10 @@ const OpManagement = () => {
   useEffect(() => {
     fetchPatients();
     fetchBookings();
+    fetchDoctors();
+    fetchAllSlots();
+    const today = new Date().toISOString().split('T')[0];
+    setFormData(prev => ({ ...prev, appointmentDate: today }));
   }, []);
 
   const fetchPatients = async () => {
@@ -135,19 +164,581 @@ const OpManagement = () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings`);
       if (res && res.data && res.data.success) {
-        const bookedSlots = res.data.bookings.filter(
-          (s) => (s.status === "booked" || s.status === "completed" || s.status === "consulting" || s.status === "cancelled" || s.patientName) && s.type !== "break"
-        );
-        setBookings(bookedSlots);
+        const bookingsData = res.data.bookings || [];
+        
+        const transformedBookings = bookingsData.map((b) => {
+          const slotDetails = b.slotDetails || {};
+          
+          return {
+            _id: b._id || b.id,
+            slotId: b.slotId || b._id,
+            patientName: b.patientName || "",
+            patientAge: b.patientAge || "",
+            patientGender: b.patientGender || "Male",
+            patientPhone: b.patientPhone || "",
+            patientAddress: b.patientAddress || "",
+            patientEmail: b.patientEmail || "",
+            dayOfWeek: slotDetails.dayOfWeek || b.dayOfWeek || "",
+            date: slotDetails.date || b.appointmentDate || b.date || "",
+            startTime: slotDetails.startTime || b.startTime || "",
+            endTime: slotDetails.endTime || b.endTime || "",
+            startTime24: slotDetails.startTime24 || b.startTime24 || "",
+            endTime24: slotDetails.endTime24 || b.endTime24 || "",
+            doctorId: slotDetails.doctorId || b.doctorId || "",
+            doctorName: slotDetails.doctorName || b.doctorName || "",
+            doctorSpecialization: slotDetails.doctorSpecialization || b.doctorSpecialization || "",
+            purpose: b.purpose || "",
+            symptoms: b.symptoms || "",
+            appointmentType: b.appointmentType || "Consultation",
+            priority: b.priority || "Normal",
+            consultationFee: b.consultationFee || 300,
+            paymentType: b.paymentType || "cash",
+            paymentStatus: b.paymentStatus || "Pending",
+            totalAmount: b.totalAmount || b.consultationFee || 300,
+            amountPaid: b.amountPaid || 0,
+            balanceAmount: b.balanceAmount || 0,
+            status: b.status || "confirmed",
+            services: b.services || [],
+            createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
+            updatedAt: b.updatedAt || b.createdAt || new Date().toISOString(),
+            bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
+            shift: b.shift || slotDetails.shift || "Morning Shift",
+            appointmentDate: b.appointmentDate || slotDetails.date || "",
+            totalFee: b.totalFee || b.consultationFee || 300,
+            servicesTotal: b.servicesTotal || 0,
+            grandTotal: b.grandTotal || b.consultationFee || 300,
+            isCompleted: b.isCompleted || false,
+            isCancelled: b.isCancelled || false,
+            isActive: b.isActive || true
+          };
+        });
+
+        setBookings(transformedBookings);
+      } else {
+        setBookings([]);
       }
     } catch (error) {
       console.error("Error fetching bookings:", error);
     }
   };
 
-  // =============================================
-  // FETCH PATIENT HISTORY WITH BOOKINGS
-  // =============================================
+  const fetchDoctors = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/doctors/getalldoctors`);
+      if (res.data && res.data.success) {
+        setDoctors(res.data.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
+      setDoctors([]);
+    }
+  };
+
+  const fetchAllSlots = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/appointment-slots`);
+      if (res.data && res.data.success) {
+        setAllSlots(res.data.slots || []);
+      }
+    } catch (error) {
+      console.error("Error fetching all slots:", error);
+    }
+  };
+
+  // ✅ FIXED: Filter slots with deduplication
+  const filterSlotsByDoctorAndDate = (doctorId, date) => {
+    if (!doctorId || !date) {
+      setAvailableSlots([]);
+      return;
+    }
+
+    setSlotsLoading(true);
+    setAvailableSlots([]);
+    setFormData(prev => ({ ...prev, slotId: "" }));
+
+    try {
+      const selectedDay = getDayNameFromDate(date);
+      
+      // ✅ Filter slots by doctor, day, and exclude 'break' type
+      let filtered = allSlots.filter(slot => {
+        const isSameDoctor = slot.doctorId === doctorId;
+        const isSameDay = slot.dayOfWeek === selectedDay;
+        const isNotBreak = slot.type !== 'break';
+        return isSameDoctor && isSameDay && isNotBreak;
+      });
+
+      // ✅ DEDUPLICATE: Remove duplicate slots based on startTime
+      const seenTimes = new Set();
+      filtered = filtered.filter(slot => {
+        const key = slot.startTime;
+        if (seenTimes.has(key)) {
+          return false;
+        }
+        seenTimes.add(key);
+        return true;
+      });
+
+      // ✅ Sort by start time
+      filtered.sort((a, b) => {
+        return a.startTime.localeCompare(b.startTime);
+      });
+
+      setAvailableSlots(filtered);
+    } catch (error) {
+      console.error("Error filtering slots:", error);
+      setAvailableSlots([]);
+      showToast("Failed to filter slots", "error");
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const checkExistingPatient = (value, field) => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (editingId) {
+      setExistingPatient(null);
+      setShowExistingPatientPopup(false);
+      return;
+    }
+
+    if (!value || value.length < 2) {
+      setExistingPatient(null);
+      setShowExistingPatientPopup(false);
+      return;
+    }
+
+    setSearchingPatient(true);
+
+    searchTimeoutRef.current = setTimeout(() => {
+      let found = null;
+
+      if (field === 'phone') {
+        found = patients.find(p => p.phone === value);
+      } else if (field === 'name') {
+        const searchTerm = value.toLowerCase().trim();
+        found = patients.find(p => 
+          p.name && p.name.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      if (found) {
+        setExistingPatient(found);
+        setShowExistingPatientPopup(true);
+      } else {
+        setExistingPatient(null);
+        setShowExistingPatientPopup(false);
+      }
+      setSearchingPatient(false);
+    }, 500);
+  };
+
+  const autoFillPatientDetails = () => {
+    if (!existingPatient) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      name: existingPatient.name || "",
+      age: existingPatient.age ?? "",
+      gender: existingPatient.gender || "",
+      phone: existingPatient.phone || "",
+      address: existingPatient.address || "",
+      feeType: existingPatient.feeType || "consultation",
+      feeAmount: existingPatient.feeAmount ?? 300,
+      paymentType: existingPatient.paymentType || "cash",
+      reason: existingPatient.reason || "",
+      paymentStatus: existingPatient.paymentStatus || "Pending"
+    }));
+    
+    setEditingId(existingPatient._id);
+    setShowExistingPatientPopup(false);
+    showToast(`Patient ${existingPatient.name} details auto-filled!`, "info");
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    if (name === 'phone') {
+      checkExistingPatient(value, 'phone');
+    } else if (name === 'name') {
+      checkExistingPatient(value, 'name');
+    }
+    
+    if (name === 'doctorId' || name === 'appointmentDate') {
+      const doctorId = name === 'doctorId' ? value : formData.doctorId;
+      const date = name === 'appointmentDate' ? value : formData.appointmentDate;
+      
+      if (doctorId && date) {
+        filterSlotsByDoctorAndDate(doctorId, date);
+      } else {
+        setAvailableSlots([]);
+      }
+    }
+  };
+
+  const handleSlotSelect = (slotId) => {
+    setFormData((prev) => ({ ...prev, slotId }));
+  };
+
+  const handleBookNow = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.phone || formData.age === "" || !formData.gender) {
+      showToast("Please fill all required fields (Name, Age, Gender, Phone)", "error");
+      return;
+    }
+    
+    if (!formData.doctorId) {
+      showToast("Please select a doctor", "error");
+      return;
+    }
+    
+    if (!formData.slotId) {
+      showToast("Please select a slot for booking", "error");
+      return;
+    }
+    
+    setSubmitting(true);
+    
+    try {
+      let patientData;
+      if (editingId) {
+        const res = await axios.put(`${API_BASE_URL}/patients/${editingId}`, {
+          name: formData.name,
+          age: formData.age,
+          gender: formData.gender,
+          phone: formData.phone,
+          address: formData.address,
+          feeType: formData.feeType,
+          feeAmount: formData.feeAmount,
+          paymentType: formData.paymentType,
+          reason: formData.reason,
+          paymentStatus: formData.paymentStatus
+        });
+        if (res.data.success) {
+          patientData = res.data.data;
+          setPatients((prev) =>
+            prev.map((p) => (p._id === editingId ? patientData : p))
+          );
+        }
+      } else {
+        const res = await axios.post(`${API_BASE_URL}/patients`, {
+          name: formData.name,
+          age: formData.age,
+          gender: formData.gender,
+          phone: formData.phone,
+          address: formData.address,
+          feeType: formData.feeType,
+          feeAmount: formData.feeAmount,
+          paymentType: formData.paymentType,
+          reason: formData.reason,
+          paymentStatus: formData.paymentStatus
+        });
+        if (res.data.success) {
+          patientData = res.data.data;
+          setPatients((prev) => [patientData, ...prev]);
+        }
+      }
+      
+      if (!patientData) {
+        showToast("Failed to save patient data", "error");
+        setSubmitting(false);
+        return;
+      }
+      
+      const bookingPayload = {
+        slotId: formData.slotId,
+        patientId: patientData._id,
+        patientName: formData.name,
+        patientPhone: formData.phone,
+        patientAge: formData.age,
+        patientGender: formData.gender,
+        patientAddress: formData.address,
+        purpose: formData.reason,
+        consultationFee: formData.feeAmount,
+        paymentType: formData.paymentType,
+        paymentStatus: formData.paymentStatus,
+        doctorId: formData.doctorId,
+        appointmentDate: formData.appointmentDate
+      };
+      
+      const slotRes = await axios.post(
+        `${API_BASE_URL}/appointment-slots/book`,
+        bookingPayload
+      );
+      
+      if (slotRes.data.success) {
+        showToast(`✅ Appointment booked successfully for ${formData.name}!`, "success");
+        
+        fetchBookings();
+        fetchAllSlots();
+        filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
+        
+        const today = new Date().toISOString().split('T')[0];
+        setFormData({ ...EMPTY_FORM, appointmentDate: today });
+        setEditingId(null);
+        setShowForm(false);
+        setAvailableSlots([]);
+        setExistingPatient(null);
+        setShowExistingPatientPopup(false);
+      } else {
+        showToast(slotRes.data.message || "Failed to book appointment", "error");
+      }
+      
+    } catch (err) {
+      console.error("Error booking appointment:", err);
+      showToast(err.response?.data?.message || "Failed to book appointment", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEdit = (patient) => {
+    const today = new Date().toISOString().split('T')[0];
+    setFormData({
+      name: patient.name || "",
+      age: patient.age ?? "",
+      gender: patient.gender || "",
+      phone: patient.phone || "",
+      address: patient.address || "",
+      feeType: patient.feeType || "consultation",
+      feeAmount: patient.feeAmount ?? 300,
+      paymentType: patient.paymentType || "cash",
+      reason: patient.reason || "",
+      paymentStatus: patient.paymentStatus || "Pending",
+      doctorId: "",
+      slotId: "",
+      appointmentDate: today
+    });
+    setEditingId(patient._id);
+    setShowForm(true);
+    setAvailableSlots([]);
+    setExistingPatient(null);
+    setShowExistingPatientPopup(false);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this patient record?")) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/patients/${id}`);
+      setPatients((prev) => prev.filter((p) => p._id !== id));
+      showToast("Patient record deleted", "info");
+    } catch (err) {
+      console.error("Error deleting:", err);
+      showToast("Failed to delete patient record", "error");
+    }
+  };
+
+  const handlePaymentToggle = async (patient) => {
+    const newStatus = patient.paymentStatus === "Paid" ? "Pending" : "Paid";
+    try {
+      const res = await axios.put(`${API_BASE_URL}/patients/${patient._id}`, {
+        paymentStatus: newStatus
+      });
+      if (res.data.success) {
+        setPatients((prev) =>
+          prev.map((p) => (p._id === patient._id ? { ...p, paymentStatus: newStatus } : p))
+        );
+        if (selectedPatient && selectedPatient._id === patient._id) {
+          setSelectedPatient((prev) => ({ ...prev, paymentStatus: newStatus }));
+        }
+        showToast(`Payment marked as '${newStatus}' for ${patient.name}!`);
+      }
+    } catch (err) {
+      console.error("Error toggling payment:", err);
+      showToast("Failed to update payment status", "error");
+    }
+  };
+
+  const cancelForm = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setFormData({ ...EMPTY_FORM, appointmentDate: today });
+    setEditingId(null);
+    setShowForm(false);
+    setAvailableSlots([]);
+    setExistingPatient(null);
+    setShowExistingPatientPopup(false);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+  };
+
+  const handleFromDateChange = (e) => {
+    setFromDate(e.target.value);
+    if (e.target.value) {
+      setSelectedMonth("");
+    }
+  };
+
+  const handleToDateChange = (e) => {
+    setToDate(e.target.value);
+    if (e.target.value) {
+      setSelectedMonth("");
+    }
+  };
+
+  const handleMonthChange = (e) => {
+    setSelectedMonth(e.target.value);
+    setFromDate("");
+    setToDate("");
+  };
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("All");
+    setFeeTypeFilter("All");
+    setFromDate("");
+    setToDate("");
+    setSelectedMonth("");
+  };
+
+  const filteredPatients = useMemo(() => {
+    return patients.filter((p) => {
+      if (statusFilter !== "All" && p.paymentStatus !== statusFilter) return false;
+      if (feeTypeFilter !== "All" && p.feeType !== feeTypeFilter) return false;
+
+      if (p.createdAt) {
+        const recordDate = new Date(p.createdAt);
+
+        if (fromDate && toDate) {
+          const from = new Date(fromDate);
+          from.setHours(0, 0, 0, 0);
+          const to = new Date(toDate);
+          to.setHours(23, 59, 59, 999);
+          if (recordDate < from || recordDate > to) return false;
+        } else if (fromDate && !toDate) {
+          const from = new Date(fromDate);
+          from.setHours(0, 0, 0, 0);
+          const to = new Date(fromDate);
+          to.setHours(23, 59, 59, 999);
+          if (recordDate < from || recordDate > to) return false;
+        } else if (selectedMonth) {
+          const recordMonth = recordDate.toISOString().slice(0, 7);
+          if (recordMonth !== selectedMonth) return false;
+        }
+      }
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchName = (p.name || "").toLowerCase().includes(q);
+        const matchPhone = (p.phone || "").toLowerCase().includes(q);
+        const matchAddress = (p.address || "").toLowerCase().includes(q);
+        const matchReason = (p.reason || "").toLowerCase().includes(q);
+        if (!matchName && !matchPhone && !matchAddress && !matchReason) return false;
+      }
+      return true;
+    });
+  }, [patients, statusFilter, feeTypeFilter, searchQuery, fromDate, toDate, selectedMonth]);
+
+  const downloadCSV = () => {
+    if (filteredPatients.length === 0) {
+      showToast("No patient records available to export!", "error");
+      return;
+    }
+
+    const headers = [
+      "#", "Patient ID", "Patient Name", "Age", "Gender", "Phone Number",
+      "Address", "Fee Type", "Fee Amount (Rs)", "Payment Type", "Payment Status",
+      "Reason for Consultation", "Registered Date", "Registered Time"
+    ];
+
+    const csvRows = [
+      headers.join(","),
+      ...filteredPatients.map((p, idx) => {
+        const regDate = p.createdAt ? formatDate(p.createdAt) : "N/A";
+        const regTime = p.createdAt ? formatTime(p.createdAt) : "N/A";
+        return [
+          idx + 1,
+          `"${p._id}"`,
+          `"${(p.name || "").replace(/"/g, '""')}"`,
+          p.age ?? "",
+          `"${p.gender || ""}"`,
+          `"${p.phone || ""}"`,
+          `"${(p.address || "").replace(/"/g, '""')}"`,
+          `"${p.feeType === "lab" ? "Lab Fee" : "Consultation Fee"}"`,
+          p.feeAmount ?? 300,
+          `"${p.paymentType || "cash"}"`,
+          `"${p.paymentStatus || "Pending"}"`,
+          `"${(p.reason || "").replace(/"/g, '""')}"`,
+          `"${regDate}"`,
+          `"${regTime}"`
+        ].join(",");
+      })
+    ];
+
+    const csvData = csvRows.join("\n");
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `OP_Patient_Records_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Exported ${filteredPatients.length} patient records to CSV!`);
+  };
+
+  const stats = useMemo(() => {
+    const total = filteredPatients.length;
+    const paid = filteredPatients.filter((p) => p.paymentStatus === "Paid").length;
+    const pending = filteredPatients.filter((p) => p.paymentStatus === "Pending").length;
+    const totalRevenue = filteredPatients
+      .filter((p) => p.paymentStatus === "Paid")
+      .reduce((sum, p) => sum + (p.feeAmount || 0), 0);
+    return { total, paid, pending, totalRevenue };
+  }, [filteredPatients]);
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  };
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
+  };
+
+  const formatDateToDDMMYYYY = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "N/A";
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      return "N/A";
+    }
+  };
+
+  const isFilterActive =
+    searchQuery || statusFilter !== "All" || feeTypeFilter !== "All" ||
+    fromDate || toDate || selectedMonth;
+
+  const handleRowClick = (patient) => {
+    fetchPatientHistory(patient);
+  };
+
+  const handleActionClick = (e) => {
+    e.stopPropagation();
+  };
+
+  const getTotalServiceFee = (booking) => {
+    if (!booking.services || booking.services.length === 0) return 0;
+    return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
+  };
+
   const fetchPatientHistory = async (patient) => {
     setHistoryLoading(true);
     setSelectedPatient(patient);
@@ -179,15 +770,10 @@ const OpManagement = () => {
     }
   };
 
-  // =============================================
-  // OPEN BILLING MODAL - WITH BOOKING SERVICES
-  // =============================================
   const openBillingModal = (patient) => {
-    // Generate bill number
     const today = new Date();
     const billNumber = `BILL-${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}-${String(patient._id).slice(-6)}`;
     
-    // Prepare items - Start with consultation fee
     const items = [
       {
         id: 'consultation',
@@ -200,7 +786,6 @@ const OpManagement = () => {
       }
     ];
 
-    // ✅ FETCH BOOKING SERVICES FOR THIS PATIENT
     const patientBookingsList = bookings.filter(b => 
       b.patientPhone === patient.phone || 
       (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase())
@@ -209,11 +794,9 @@ const OpManagement = () => {
     let bookingServices = [];
     let totalServiceAmount = 0;
 
-    // Collect all services from all bookings
     patientBookingsList.forEach(booking => {
       if (booking.services && booking.services.length > 0) {
         booking.services.forEach(service => {
-          // Check if service already added (by name or id)
           const existing = bookingServices.find(s => 
             s.serviceId === service.serviceId || 
             (s.name === service.name && s.price === service.price)
@@ -229,7 +812,7 @@ const OpManagement = () => {
               total: service.price || 0,
               type: 'service',
               serviceId: service.serviceId || service._id,
-              bookingDate: booking.date,
+              bookingDate: booking.date || booking.appointmentDate || booking.slotDetails?.date,
               bookingId: booking._id
             });
           }
@@ -237,7 +820,6 @@ const OpManagement = () => {
       }
     });
 
-    // Add lab fee if applicable
     if (patient.feeType === 'lab' && patient.feeAmount) {
       const labExists = items.find(i => i.name === 'Lab Fee');
       if (!labExists) {
@@ -253,14 +835,13 @@ const OpManagement = () => {
       }
     }
 
-    // Add booking services to items
     bookingServices.forEach(service => {
       items.push(service);
       totalServiceAmount += service.total;
     });
 
     const totalAmount = items.reduce((sum, item) => sum + item.total, 0);
-    const isPaid = patient.paymentStatus === "paid";
+    const isPaid = patient.paymentStatus === "Paid";
     const paidAmount = isPaid ? totalAmount : 0;
     const dueAmount = isPaid ? 0 : totalAmount;
 
@@ -283,21 +864,18 @@ const OpManagement = () => {
     setShowBillingModal(true);
   };
 
-  // =============================================
-  // HANDLE BILLING - Mark as Paid
-  // =============================================
   const handleMarkAsPaid = async () => {
     if (!selectedPatient) return;
     
     try {
       const res = await axios.put(`${API_BASE_URL}/patients/${selectedPatient._id}`, {
-        paymentStatus: "paid"
+        paymentStatus: "Paid"
       });
       
       if (res.data.success) {
         setPatients((prev) =>
           prev.map((p) =>
-            p._id === selectedPatient._id ? { ...p, paymentStatus: "paid" } : p
+            p._id === selectedPatient._id ? { ...p, paymentStatus: "Paid" } : p
           )
         );
         
@@ -316,20 +894,9 @@ const OpManagement = () => {
     }
   };
 
-  // =============================================
-  // PRINT BILL - WITH BOOKING SERVICES
-  // =============================================
   const printBill = () => {
     const win = window.open('', '_blank', 'width=800,height=900');
     if (!win) return;
-
-    // Group services by booking date
-    const groupedServices = billingData.bookingServices.reduce((acc, svc) => {
-      const date = svc.bookingDate || 'N/A';
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(svc);
-      return acc;
-    }, {});
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -520,14 +1087,6 @@ const OpManagement = () => {
               font-style: italic;
               margin-top: 4px;
             }
-            .service-group-title {
-              font-size: 12px;
-              font-weight: bold;
-              color: #4b5563;
-              padding: 8px 0 4px 0;
-              border-top: 1px dashed #e5e7eb;
-              margin-top: 4px;
-            }
           </style>
         </head>
         <body>
@@ -620,9 +1179,6 @@ const OpManagement = () => {
     }, 500);
   };
 
-  // =============================================
-  // NUMBER TO WORDS
-  // =============================================
   const numberToWords = (num) => {
     if (num === 0) return 'Zero';
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
@@ -638,275 +1194,6 @@ const OpManagement = () => {
     };
     
     return convert(num) + ' Rupees Only';
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.phone || formData.age === "" || !formData.gender) {
-      showToast("Please fill all required fields (Name, Age, Gender, Phone)", "error");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      if (editingId) {
-        const res = await axios.put(`${API_BASE_URL}/patients/${editingId}`, formData);
-        if (res.data.success) {
-          setPatients((prev) =>
-            prev.map((p) => (p._id === editingId ? res.data.data : p))
-          );
-          showToast("Patient record updated successfully!");
-        }
-      } else {
-        const res = await axios.post(`${API_BASE_URL}/patients`, formData);
-        if (res.data.success) {
-          setPatients((prev) => [res.data.data, ...prev]);
-          showToast("Patient added successfully!");
-        }
-      }
-      setFormData({ ...EMPTY_FORM });
-      setEditingId(null);
-      setShowForm(false);
-    } catch (err) {
-      console.error("Error saving patient:", err);
-      showToast(err.response?.data?.message || "Failed to save patient", "error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleEdit = (patient) => {
-    setFormData({
-      name: patient.name || "",
-      age: patient.age ?? "",
-      gender: patient.gender || "",
-      phone: patient.phone || "",
-      address: patient.address || "",
-      feeType: patient.feeType || "consultation",
-      feeAmount: patient.feeAmount ?? 300,
-      paymentType: patient.paymentType || "cash",
-      reason: patient.reason || "",
-      paymentStatus: patient.paymentStatus || "pending"
-    });
-    setEditingId(patient._id);
-    setShowForm(true);
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this patient record?")) return;
-    try {
-      await axios.delete(`${API_BASE_URL}/patients/${id}`);
-      setPatients((prev) => prev.filter((p) => p._id !== id));
-      showToast("Patient record deleted", "info");
-    } catch (err) {
-      console.error("Error deleting:", err);
-      showToast("Failed to delete patient record", "error");
-    }
-  };
-
-  const handlePaymentToggle = async (patient) => {
-    const newStatus = patient.paymentStatus === "paid" ? "pending" : "paid";
-    try {
-      const res = await axios.put(`${API_BASE_URL}/patients/${patient._id}`, {
-        paymentStatus: newStatus
-      });
-      if (res.data.success) {
-        setPatients((prev) =>
-          prev.map((p) => (p._id === patient._id ? { ...p, paymentStatus: newStatus } : p))
-        );
-        if (selectedPatient && selectedPatient._id === patient._id) {
-          setSelectedPatient((prev) => ({ ...prev, paymentStatus: newStatus }));
-        }
-        showToast(`Payment marked as '${newStatus}' for ${patient.name}!`);
-      }
-    } catch (err) {
-      console.error("Error toggling payment:", err);
-      showToast("Failed to update payment status", "error");
-    }
-  };
-
-  const cancelForm = () => {
-    setFormData({ ...EMPTY_FORM });
-    setEditingId(null);
-    setShowForm(false);
-  };
-
-  // Date Filter Handlers
-  const handleFromDateChange = (e) => {
-    setFromDate(e.target.value);
-    if (e.target.value) {
-      setSelectedMonth("");
-    }
-  };
-
-  const handleToDateChange = (e) => {
-    setToDate(e.target.value);
-    if (e.target.value) {
-      setSelectedMonth("");
-    }
-  };
-
-  const handleMonthChange = (e) => {
-    setSelectedMonth(e.target.value);
-    setFromDate("");
-    setToDate("");
-  };
-
-  const clearFilters = () => {
-    setSearchQuery("");
-    setStatusFilter("All");
-    setFeeTypeFilter("All");
-    setFromDate("");
-    setToDate("");
-    setSelectedMonth("");
-  };
-
-  const filteredPatients = useMemo(() => {
-    return patients.filter((p) => {
-      if (statusFilter !== "All" && p.paymentStatus !== statusFilter) return false;
-      if (feeTypeFilter !== "All" && p.feeType !== feeTypeFilter) return false;
-
-      if (p.createdAt) {
-        const recordDate = new Date(p.createdAt);
-
-        if (fromDate && toDate) {
-          const from = new Date(fromDate);
-          from.setHours(0, 0, 0, 0);
-          const to = new Date(toDate);
-          to.setHours(23, 59, 59, 999);
-          if (recordDate < from || recordDate > to) return false;
-        } else if (fromDate && !toDate) {
-          const from = new Date(fromDate);
-          from.setHours(0, 0, 0, 0);
-          const to = new Date(fromDate);
-          to.setHours(23, 59, 59, 999);
-          if (recordDate < from || recordDate > to) return false;
-        } else if (selectedMonth) {
-          const recordMonth = recordDate.toISOString().slice(0, 7);
-          if (recordMonth !== selectedMonth) return false;
-        }
-      }
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchName = (p.name || "").toLowerCase().includes(q);
-        const matchPhone = (p.phone || "").toLowerCase().includes(q);
-        const matchAddress = (p.address || "").toLowerCase().includes(q);
-        const matchReason = (p.reason || "").toLowerCase().includes(q);
-        if (!matchName && !matchPhone && !matchAddress && !matchReason) return false;
-      }
-      return true;
-    });
-  }, [patients, statusFilter, feeTypeFilter, searchQuery, fromDate, toDate, selectedMonth]);
-
-  const downloadCSV = () => {
-    if (filteredPatients.length === 0) {
-      showToast("No patient records available to export!", "error");
-      return;
-    }
-
-    const headers = [
-      "#", "Patient ID", "Patient Name", "Age", "Gender", "Phone Number",
-      "Address", "Fee Type", "Fee Amount (Rs)", "Payment Type", "Payment Status",
-      "Reason for Consultation", "Registered Date", "Registered Time"
-    ];
-
-    const csvRows = [
-      headers.join(","),
-      ...filteredPatients.map((p, idx) => {
-        const regDate = p.createdAt ? formatDate(p.createdAt) : "N/A";
-        const regTime = p.createdAt ? formatTime(p.createdAt) : "N/A";
-        return [
-          idx + 1,
-          `"${p._id}"`,
-          `"${(p.name || "").replace(/"/g, '""')}"`,
-          p.age ?? "",
-          `"${p.gender || ""}"`,
-          `"${p.phone || ""}"`,
-          `"${(p.address || "").replace(/"/g, '""')}"`,
-          `"${p.feeType === "lab" ? "Lab Fee" : "Consultation Fee"}"`,
-          p.feeAmount ?? 300,
-          `"${p.paymentType || "cash"}"`,
-          `"${p.paymentStatus || "pending"}"`,
-          `"${(p.reason || "").replace(/"/g, '""')}"`,
-          `"${regDate}"`,
-          `"${regTime}"`
-        ].join(",");
-      })
-    ];
-
-    const csvData = csvRows.join("\n");
-    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `OP_Patient_Records_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast(`Exported ${filteredPatients.length} patient records to CSV!`);
-  };
-
-  const stats = useMemo(() => {
-    const total = filteredPatients.length;
-    const paid = filteredPatients.filter((p) => p.paymentStatus === "paid").length;
-    const pending = filteredPatients.filter((p) => p.paymentStatus === "pending").length;
-    const totalRevenue = filteredPatients
-      .filter((p) => p.paymentStatus === "paid")
-      .reduce((sum, p) => sum + (p.feeAmount || 0), 0);
-    return { total, paid, pending, totalRevenue };
-  }, [filteredPatients]);
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
-  };
-
-  const formatTime = (dateStr) => {
-    if (!dateStr) return "";
-    return new Date(dateStr).toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true
-    });
-  };
-
-  const formatDateToDDMMYYYY = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "N/A";
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    } catch {
-      return "N/A";
-    }
-  };
-
-  const isFilterActive =
-    searchQuery || statusFilter !== "All" || feeTypeFilter !== "All" ||
-    fromDate || toDate || selectedMonth;
-
-  const handleRowClick = (patient) => {
-    fetchPatientHistory(patient);
-  };
-
-  const handleActionClick = (e) => {
-    e.stopPropagation();
-  };
-
-  const getTotalServiceFee = (booking) => {
-    if (!booking.services || booking.services.length === 0) return 0;
-    return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
   };
 
   return (
@@ -935,16 +1222,20 @@ const OpManagement = () => {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => { fetchPatients(); fetchBookings(); }}
+              onClick={() => { fetchPatients(); fetchBookings(); fetchAllSlots(); fetchDoctors(); }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Refresh
             </button>
             <button
               onClick={() => {
-                setFormData({ ...EMPTY_FORM });
+                const today = new Date().toISOString().split('T')[0];
+                setFormData({ ...EMPTY_FORM, appointmentDate: today });
                 setEditingId(null);
                 setShowForm(true);
+                setAvailableSlots([]);
+                setExistingPatient(null);
+                setShowExistingPatientPopup(false);
               }}
               className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-md"
             >
@@ -953,7 +1244,6 @@ const OpManagement = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
@@ -1000,7 +1290,6 @@ const OpManagement = () => {
           </div>
         </div>
 
-        {/* Add/Edit Form Modal - Same as before */}
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
@@ -1021,8 +1310,39 @@ const OpManagement = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-                {/* Form fields - same as before */}
+              {showExistingPatientPopup && existingPatient && !editingId && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-blue-800">Existing Patient Found!</p>
+                      <div className="mt-1 text-xs text-blue-700 space-y-0.5">
+                        <p><span className="font-semibold">Name:</span> {existingPatient.name}</p>
+                        <p><span className="font-semibold">Phone:</span> {existingPatient.phone}</p>
+                        <p><span className="font-semibold">Age:</span> {existingPatient.age} yrs | <span className="font-semibold">Gender:</span> {existingPatient.gender}</p>
+                        {existingPatient.address && <p><span className="font-semibold">Address:</span> {existingPatient.address}</p>}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={autoFillPatientDetails}
+                        className="mt-2 px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        Auto-Fill Details
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowExistingPatientPopup(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleBookNow} className="mt-5 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -1031,6 +1351,7 @@ const OpManagement = () => {
                     <div className="relative">
                       <User className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
                       <input
+                        ref={nameInputRef}
                         type="text"
                         name="name"
                         value={formData.name}
@@ -1040,6 +1361,12 @@ const OpManagement = () => {
                         required
                       />
                     </div>
+                    {searchingPatient && (
+                      <div className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        Searching...
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -1094,6 +1421,7 @@ const OpManagement = () => {
                     <div className="relative">
                       <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
                       <input
+                        ref={phoneInputRef}
                         type="tel"
                         name="phone"
                         value={formData.phone}
@@ -1103,6 +1431,12 @@ const OpManagement = () => {
                         required
                       />
                     </div>
+                    {formData.phone && formData.phone.length >= 10 && !existingPatient && !editingId && (
+                      <p className="text-[10px] text-gray-400 mt-1">No existing patient found with this number</p>
+                    )}
+                    {editingId && (
+                      <p className="text-[10px] text-blue-500 mt-1">Editing existing patient record</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -1121,6 +1455,129 @@ const OpManagement = () => {
                     </div>
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                    Select Doctor <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Stethoscope className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                    <select
+                      name="doctorId"
+                      value={formData.doctorId}
+                      onChange={handleInputChange}
+                      className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none"
+                      required
+                    >
+                      <option value="">Select Doctor</option>
+                      {doctors && doctors.length > 0 ? (
+                        doctors.map((doc) => (
+                          <option key={doc._id || doc.id} value={doc._id || doc.id}>
+                            {doc.name || "Unnamed Doctor"} - {doc.specialization || "General"}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="" disabled>No doctors available</option>
+                      )}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-2.5 pointer-events-none" />
+                  </div>
+                  {doctors && doctors.length === 0 && (
+                    <p className="text-[10px] text-amber-600 mt-1">⚠️ No doctors found. Please add doctors first.</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                    Appointment Date <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <CalendarDays className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                    <input
+                      type="date"
+                      name="appointmentDate"
+                      value={formData.appointmentDate}
+                      onChange={handleInputChange}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {formData.doctorId && formData.appointmentDate && (
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                      Select Available Slot <span className="text-red-500">*</span>
+                    </label>
+                    {slotsLoading ? (
+                      <div className="flex items-center gap-2 text-gray-500 text-sm">
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Loading slots...
+                      </div>
+                    ) : availableSlots.length === 0 ? (
+                      <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                        No slots available for this doctor on {formData.appointmentDate ? new Date(formData.appointmentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'selected date'} ({getDayNameFromDate(formData.appointmentDate)}). 
+                        Please try another doctor or date.
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 border border-gray-200 rounded-lg">
+                          {availableSlots.map((slot) => {
+                            const isSelected = formData.slotId === slot._id;
+                            // ✅ Check if slot is booked
+                            const isBooked = slot.status === 'booked';
+                            
+                            return (
+                              <button
+                                key={slot._id}
+                                type="button"
+                                onClick={() => !isBooked && handleSlotSelect(slot._id)}
+                                className={`relative px-3 py-2 text-xs font-semibold rounded-lg border-2 transition-all ${
+                                  isSelected
+                                    ? "border-blue-500 bg-blue-50 text-blue-700 shadow-md ring-2 ring-blue-200"
+                                    : isBooked
+                                    ? "border-red-300 bg-red-50 text-red-500 cursor-not-allowed opacity-60"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-blue-300 hover:bg-blue-50"
+                                }`}
+                                disabled={isBooked}
+                              >
+                                {isSelected && !isBooked && (
+                                  <div className="absolute -top-2 -right-2 bg-blue-500 rounded-full p-0.5 shadow-lg">
+                                    <Check className="w-3.5 h-3.5 text-white" />
+                                  </div>
+                                )}
+                                {isBooked && (
+                                  <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-0.5 shadow-lg">
+                                    <XCircle className="w-3.5 h-3.5 text-white" />
+                                  </div>
+                                )}
+                                <div className={`font-bold ${isSelected ? 'text-blue-700' : isBooked ? 'text-red-500' : 'text-gray-700'}`}>
+                                  {slot.startTime} – {slot.endTime}
+                                </div>
+                                <div className="text-[9px] text-gray-400">{slot.dayOfWeek}</div>
+                                <div className="text-[8px] font-bold text-emerald-600 mt-0.5">
+                                  ₹{slot.consultationFee || 300}
+                                </div>
+                                {isBooked && (
+                                  <div className="mt-1 text-[8px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full border border-red-300">
+                                    🔒 Booked
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {formData.slotId && (
+                          <div className="mt-2 text-xs text-emerald-600 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Slot selected successfully!</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -1195,21 +1652,21 @@ const OpManagement = () => {
                       Payment Status
                     </label>
                     <div className="flex gap-3">
-                      {["pending", "paid"].map((st) => (
+                      {PAYMENT_STATUS_OPTIONS.map((st) => (
                         <button
-                          key={st}
+                          key={st.value}
                           type="button"
-                          onClick={() => setFormData((prev) => ({ ...prev, paymentStatus: st }))}
-                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-bold transition-all capitalize ${
-                            formData.paymentStatus === st
-                              ? st === "paid"
+                          onClick={() => setFormData((prev) => ({ ...prev, paymentStatus: st.value }))}
+                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${
+                            formData.paymentStatus === st.value
+                              ? st.value === "Paid"
                                 ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
                                 : "border-amber-500 bg-amber-50 text-amber-700 shadow-sm"
                               : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                           }`}
                         >
-                          {st === "paid" ? <CheckCircle2 className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-                          {st}
+                          {st.value === "Paid" ? <CheckCircle2 className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                          {st.label}
                         </button>
                       ))}
                     </div>
@@ -1243,17 +1700,15 @@ const OpManagement = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={submitting}
-                    className="px-6 py-2.5 rounded-xl text-xs font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+                    disabled={submitting || !formData.slotId || !formData.doctorId}
+                    className="px-6 py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {submitting ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : editingId ? (
-                      <Check className="w-4 h-4" />
                     ) : (
-                      <Plus className="w-4 h-4" />
+                      <Calendar className="w-4 h-4" />
                     )}
-                    {editingId ? "Update Patient" : "Add Patient"}
+                    {submitting ? "Booking..." : "📅 Book Now"}
                   </button>
                 </div>
               </form>
@@ -1261,7 +1716,7 @@ const OpManagement = () => {
           </div>
         )}
 
-        {/* Filter & Search Toolbar */}
+        {/* Filter Section */}
         <div className="emp-dash__card mb-6">
           <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200 flex-wrap">
             <div className="flex items-center gap-2.5 flex-1 min-w-0 flex-wrap">
@@ -1284,8 +1739,8 @@ const OpManagement = () => {
                   className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
                   <option value="All">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="paid">Paid</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Paid">Paid</option>
                 </select>
               </div>
 
@@ -1306,8 +1761,6 @@ const OpManagement = () => {
                   type="date"
                   value={fromDate}
                   onChange={handleFromDateChange}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  title="From Date"
                   className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                 />
               </div>
@@ -1317,8 +1770,6 @@ const OpManagement = () => {
                   type="date"
                   value={toDate}
                   onChange={handleToDateChange}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  title="To Date"
                   className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                 />
               </div>
@@ -1328,8 +1779,6 @@ const OpManagement = () => {
                   type="month"
                   value={selectedMonth}
                   onChange={handleMonthChange}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  title="Select Month"
                   className="w-[130px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
                 />
               </div>
@@ -1349,7 +1798,6 @@ const OpManagement = () => {
               <button
                 onClick={downloadCSV}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-md whitespace-nowrap"
-                title="Export patient records to CSV"
               >
                 <Download className="w-3.5 h-3.5" />
                 Export CSV
@@ -1358,7 +1806,7 @@ const OpManagement = () => {
           </div>
         </div>
 
-        {/* Patient Records Table */}
+        {/* Table Section */}
         <div className="emp-dash__card">
           {loading ? (
             <div className="py-12 text-center text-gray-500">
@@ -1402,7 +1850,7 @@ const OpManagement = () => {
                 </thead>
                 <tbody>
                   {filteredPatients.map((patient, idx) => {
-                    const isPaid = patient.paymentStatus === "paid";
+                    const isPaid = patient.paymentStatus === "Paid";
                     return (
                       <tr 
                         key={patient._id} 
@@ -1459,7 +1907,7 @@ const OpManagement = () => {
                               }`}
                             >
                               {isPaid ? <CheckCircle2 className="w-3 h-3 text-emerald-600" /> : <Clock className="w-3 h-3 text-amber-600" />}
-                              {patient.paymentStatus || "pending"}
+                              {patient.paymentStatus || "Pending"}
                             </span>
                           </div>
                         </td>
@@ -1474,53 +1922,46 @@ const OpManagement = () => {
                         </td>
                         <td className="px-3 py-3 text-right" onClick={handleActionClick}>
                           <div className="flex items-center justify-end gap-1">
-                            {/* View Details */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedPatient(patient);
                                 setShowDetailModal(true);
                               }}
-                              className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors group relative"
+                              className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                               title="View Details"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
                             
-                            {/* ✅ BILLING BUTTON */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 openBillingModal(patient);
                               }}
-                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors group relative"
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                               title="View Bill"
                             >
                               <ReceiptText className="w-4 h-4" />
-                              <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                View Bill
-                              </span>
                             </button>
                             
-                            {/* Edit */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEdit(patient);
                               }}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group relative"
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="Edit"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             
-                            {/* Delete */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDelete(patient._id);
                               }}
-                              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors group relative"
+                              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                               title="Delete"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1540,9 +1981,7 @@ const OpManagement = () => {
           )}
         </div>
 
-        {/* ============================================= */}
-        {/* BILLING MODAL - WITH BOOKING SERVICES */}
-        {/* ============================================= */}
+        {/* Billing Modal */}
         {showBillingModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
@@ -1564,7 +2003,6 @@ const OpManagement = () => {
               </div>
 
               <div id="bill-content" className="mt-5">
-                {/* Patient Info */}
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div>
@@ -1586,7 +2024,6 @@ const OpManagement = () => {
                   </div>
                 </div>
 
-                {/* Bill Items */}
                 <div className="overflow-x-auto mb-4">
                   <table className="w-full">
                     <thead>
@@ -1604,7 +2041,6 @@ const OpManagement = () => {
                             {item.description && (
                               <div className="text-[11px] text-gray-400">{item.description}</div>
                             )}
-                            {/* ✅ Show booking date for services */}
                             {item.bookingDate && (
                               <div className="text-[10px] text-blue-500">
                                 📅 Booking: {new Date(item.bookingDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -1619,7 +2055,6 @@ const OpManagement = () => {
                   </table>
                 </div>
 
-                {/* ✅ Show Booking Services Summary */}
                 {billingData.bookingServices.length > 0 && (
                   <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="text-[10px] font-bold uppercase text-blue-700 mb-2">
@@ -1635,7 +2070,6 @@ const OpManagement = () => {
                   </div>
                 )}
 
-                {/* Totals */}
                 <div className="border-t-2 border-gray-300 pt-4">
                   <div className="flex justify-end">
                     <div className="w-64">
@@ -1663,7 +2097,6 @@ const OpManagement = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                   {billingData.paymentStatus === "Pending" && (
                     <button
@@ -1691,7 +2124,7 @@ const OpManagement = () => {
           </div>
         )}
 
-        {/* History Modal - Same as before */}
+        {/* History Modal */}
         {showHistoryModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
@@ -1799,17 +2232,17 @@ const OpManagement = () => {
                                   <td className="px-3 py-2.5">
                                     <span
                                       className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider w-fit ${
-                                        record.paymentStatus === "paid"
+                                        record.paymentStatus === "Paid"
                                           ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                                           : "bg-amber-100 text-amber-800 border border-amber-200"
                                       }`}
                                     >
-                                      {record.paymentStatus === "paid" ? (
+                                      {record.paymentStatus === "Paid" ? (
                                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                                       ) : (
                                         <Clock className="w-3 h-3 text-amber-600" />
                                       )}
-                                      {record.paymentStatus || "pending"}
+                                      {record.paymentStatus || "Pending"}
                                     </span>
                                   </td>
                                   <td className="px-3 py-2.5 max-w-[200px]">
@@ -1858,13 +2291,13 @@ const OpManagement = () => {
                                     {formatDateToDDMMYYYY(booking.createdAt || booking.updatedAt || booking.date)}
                                   </td>
                                   <td className="px-3 py-2.5 font-medium text-blue-700 text-xs">
-                                    {formatDateToDDMMYYYY(booking.date)}
+                                    {formatDateToDDMMYYYY(booking.appointmentDate || booking.date || booking.slotDetails?.date)}
                                   </td>
                                   <td className="px-3 py-2.5 text-xs font-medium text-blue-700">
-                                    {booking.dayOfWeek || "N/A"}
+                                    {booking.dayOfWeek || booking.slotDetails?.dayOfWeek || "N/A"}
                                   </td>
                                   <td className="px-3 py-2.5 text-xs font-medium text-slate-800">
-                                    {booking.startTime} – {booking.endTime}
+                                    {booking.startTime || booking.slotDetails?.startTime || "N/A"} – {booking.endTime || booking.slotDetails?.endTime || "N/A"}
                                   </td>
                                   <td className="px-3 py-2.5">
                                     {booking.services && booking.services.length > 0 ? (
@@ -1905,7 +2338,7 @@ const OpManagement = () => {
                                           : "bg-blue-100 text-blue-800 border border-blue-200"
                                       }`}
                                     >
-                                      {booking.status || "booked"}
+                                      {booking.status || "confirmed"}
                                     </span>
                                   </td>
                                 </tr>
@@ -1933,7 +2366,7 @@ const OpManagement = () => {
           </div>
         )}
 
-        {/* Detail Modal - Same as before */}
+        {/* Detail Modal */}
         {showDetailModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative">
@@ -2006,15 +2439,15 @@ const OpManagement = () => {
                       <div className="text-[10px] font-bold uppercase text-gray-400">Payment Status</div>
                       <span
                         className={`inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${
-                          selectedPatient.paymentStatus === "paid"
+                          selectedPatient.paymentStatus === "Paid"
                             ? "bg-emerald-100 text-emerald-800 border-emerald-300"
                             : "bg-amber-100 text-amber-900 border-amber-300"
                         }`}
                       >
-                        {selectedPatient.paymentStatus || "pending"}
+                        {selectedPatient.paymentStatus || "Pending"}
                       </span>
                     </div>
-                    {selectedPatient.paymentStatus !== "paid" && (
+                    {selectedPatient.paymentStatus !== "Paid" && (
                       <button
                         onClick={() => handlePaymentToggle(selectedPatient)}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2 py-1 rounded shadow-xs transition-all"
