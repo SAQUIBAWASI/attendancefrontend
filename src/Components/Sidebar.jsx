@@ -1905,6 +1905,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
           { name: "Appointments Slots", path: "/appointment-slots" },
           { name: "Services", path: "/services" },
         { name: "Bookings", path: "/bookings" },
+        { name: "Letter Head", path: "/letterhead" },
        
         
       ],

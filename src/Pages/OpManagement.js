@@ -32,7 +32,9 @@ import {
   UserCheck,
   ReceiptText,
   CalendarDays,
-  AlertCircle
+  AlertCircle,
+  PlusCircle,
+  ChevronUp
 } from "lucide-react";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -57,6 +59,15 @@ const PAYMENT_STATUS_OPTIONS = [
   { value: "Paid", label: "Paid" }
 ];
 
+// Booking Status Options
+const BOOKING_STATUS_OPTIONS = [
+  { value: "pending", label: "Pending" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "consulting", label: "Consulting" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" }
+];
+
 const EMPTY_FORM = {
   name: "",
   age: "",
@@ -79,6 +90,18 @@ const getDayNameFromDate = (dateStr) => {
   return date.toLocaleDateString('en-US', { weekday: 'long' });
 };
 
+const getStatusColors = (status) => {
+  const statusMap = {
+    booked: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", hover: "hover:bg-blue-200" },
+    completed: { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200", hover: "hover:bg-emerald-200" },
+    consulting: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200", hover: "hover:bg-purple-200" },
+    cancelled: { bg: "bg-red-100", text: "text-red-800", border: "border-red-200", hover: "hover:bg-red-200" },
+    pending: { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200", hover: "hover:bg-gray-200" },
+    confirmed: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", hover: "hover:bg-blue-200" }
+  };
+  return statusMap[status?.toLowerCase()] || statusMap.booked;
+};
+
 const OpManagement = () => {
   const [patients, setPatients] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -90,6 +113,31 @@ const OpManagement = () => {
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  
+  const [services, setServices] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  
+  const [showAddServiceModal, setShowAddServiceModal] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState("");
+  const [serviceDropdownOpen, setServiceDropdownOpen] = useState(false);
+  const [selectedServiceForBooking, setSelectedServiceForBooking] = useState(null);
+  const [selectedBookingForService, setSelectedBookingForService] = useState(null);
+  
+  const [showServicePaymentModal, setShowServicePaymentModal] = useState(false);
+  const [selectedServiceFromBooking, setSelectedServiceFromBooking] = useState(null);
+  const [updateServicePaymentStatus, setUpdateServicePaymentStatus] = useState("Pending");
+  
+  // ✅ Status Update Modal
+  const [showStatusUpdateModal, setShowStatusUpdateModal] = useState(false);
+  const [selectedBookingForStatus, setSelectedBookingForStatus] = useState(null);
+  const [newBookingStatus, setNewBookingStatus] = useState("");
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  
+  // ✅ Payment Status Update Modal
+  const [showPaymentUpdateModal, setShowPaymentUpdateModal] = useState(false);
+  const [selectedBookingForPayment, setSelectedBookingForPayment] = useState(null);
+  const [newPaymentStatus, setNewPaymentStatus] = useState("");
+  const [paymentUpdating, setPaymentUpdating] = useState(false);
   
   const [existingPatient, setExistingPatient] = useState(null);
   const [showExistingPatientPopup, setShowExistingPatientPopup] = useState(false);
@@ -141,6 +189,7 @@ const OpManagement = () => {
     fetchBookings();
     fetchDoctors();
     fetchAllSlots();
+    fetchServices();
     const today = new Date().toISOString().split('T')[0];
     setFormData(prev => ({ ...prev, appointmentDate: today }));
   }, []);
@@ -245,7 +294,23 @@ const OpManagement = () => {
     }
   };
 
-  // ✅ FIXED: Filter slots with deduplication
+  const fetchServices = async () => {
+    setServicesLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/services/allservices`);
+      if (res && res.data && res.data.success) {
+        setServices(res.data.services || []);
+      } else {
+        setServices([]);
+      }
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      setServices([]);
+    } finally {
+      setServicesLoading(false);
+    }
+  };
+
   const filterSlotsByDoctorAndDate = (doctorId, date) => {
     if (!doctorId || !date) {
       setAvailableSlots([]);
@@ -259,7 +324,6 @@ const OpManagement = () => {
     try {
       const selectedDay = getDayNameFromDate(date);
       
-      // ✅ Filter slots by doctor, day, and exclude 'break' type
       let filtered = allSlots.filter(slot => {
         const isSameDoctor = slot.doctorId === doctorId;
         const isSameDay = slot.dayOfWeek === selectedDay;
@@ -267,7 +331,6 @@ const OpManagement = () => {
         return isSameDoctor && isSameDay && isNotBreak;
       });
 
-      // ✅ DEDUPLICATE: Remove duplicate slots based on startTime
       const seenTimes = new Set();
       filtered = filtered.filter(slot => {
         const key = slot.startTime;
@@ -278,7 +341,6 @@ const OpManagement = () => {
         return true;
       });
 
-      // ✅ Sort by start time
       filtered.sort((a, b) => {
         return a.startTime.localeCompare(b.startTime);
       });
@@ -493,6 +555,300 @@ const OpManagement = () => {
       showToast(err.response?.data?.message || "Failed to book appointment", "error");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // ✅ Open Add Service Modal
+  const openAddServiceModal = (booking) => {
+    setSelectedBookingForService(booking);
+    setSelectedServiceId("");
+    setSelectedServiceForBooking(null);
+    setServiceDropdownOpen(false);
+    setShowAddServiceModal(true);
+  };
+
+  const handleServiceSelect = (service) => {
+    setSelectedServiceId(service._id);
+    setSelectedServiceForBooking(service);
+    setServiceDropdownOpen(false);
+  };
+
+  const handleAddServiceToBooking = async () => {
+    if (!selectedBookingForService) {
+      showToast("No booking selected!", "error");
+      return;
+    }
+    
+    if (!selectedServiceForBooking) {
+      showToast("Please select a service!", "error");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/services/addservicestobooking/${selectedBookingForService._id}`,
+        {
+          serviceId: selectedServiceForBooking._id,
+          name: selectedServiceForBooking.name,
+          price: selectedServiceForBooking.price,
+          description: selectedServiceForBooking.description || ""
+        }
+      );
+
+      if (res && res.data && res.data.success) {
+        setBookings((prev) =>
+          prev.map((b) =>
+            b._id === selectedBookingForService._id
+              ? {
+                  ...b,
+                  services: res.data.data.services,
+                  consultationFee: res.data.data.totalFee + (b.consultationFee || 0)
+                }
+              : b
+          )
+        );
+
+        setPatientBookings((prev) =>
+          prev.map((b) =>
+            b._id === selectedBookingForService._id
+              ? {
+                  ...b,
+                  services: res.data.data.services,
+                  consultationFee: res.data.data.totalFee + (b.consultationFee || 0)
+                }
+              : b
+          )
+        );
+
+        showToast(res.data.message, "success");
+        setShowAddServiceModal(false);
+        setSelectedServiceId("");
+        setSelectedServiceForBooking(null);
+        setSelectedBookingForService(null);
+        fetchBookings();
+      }
+    } catch (error) {
+      console.error("Error adding service:", error);
+      showToast(
+        error.response?.data?.message || "Failed to add service. Please try again.",
+        "error"
+      );
+    }
+  };
+
+  const handleRemoveService = async (booking, serviceId, serviceName) => {
+    if (!window.confirm(`Remove "${serviceName}" from this booking?`)) {
+      return;
+    }
+
+    try {
+      const res = await axios.delete(
+        `${API_BASE_URL}/services/deleteservicestobooking/${booking._id}/${serviceId}`
+      );
+
+      if (res && res.data && res.data.success) {
+        setBookings((prev) =>
+          prev.map((b) =>
+            b._id === booking._id
+              ? { ...b, services: res.data.data.services }
+              : b
+          )
+        );
+        
+        setPatientBookings((prev) =>
+          prev.map((b) =>
+            b._id === booking._id
+              ? { ...b, services: res.data.data.services }
+              : b
+          )
+        );
+        
+        showToast(res.data.message, "info");
+        fetchBookings();
+      }
+    } catch (error) {
+      console.error("Error removing service:", error);
+      showToast(
+        error.response?.data?.message || "Failed to remove service",
+        "error"
+      );
+    }
+  };
+
+  const openServicePaymentModal = (booking) => {
+    setSelectedBookingForService(booking);
+    if (booking.services && booking.services.length > 0) {
+      setSelectedServiceFromBooking(booking.services[0]);
+      setUpdateServicePaymentStatus(booking.services[0].paymentStatus || "Pending");
+    } else {
+      setSelectedServiceFromBooking(null);
+      setUpdateServicePaymentStatus("Pending");
+    }
+    setShowServicePaymentModal(true);
+  };
+
+  const handleUpdateServicePayment = async () => {
+    if (!selectedBookingForService || !selectedServiceFromBooking) {
+      showToast("No service selected!", "error");
+      return;
+    }
+
+    const serviceId = selectedServiceFromBooking.serviceId || selectedServiceFromBooking._id;
+    
+    if (!serviceId) {
+      showToast("Invalid service ID!", "error");
+      return;
+    }
+
+    try {
+      const res = await axios.put(
+        `${API_BASE_URL}/services/updateservicepayment/${selectedBookingForService._id}/${serviceId}`,
+        { paymentStatus: updateServicePaymentStatus }
+      );
+
+      if (res && res.data && res.data.success) {
+        setBookings((prev) =>
+          prev.map((b) =>
+            b._id === selectedBookingForService._id
+              ? { ...b, services: res.data.data.services }
+              : b
+          )
+        );
+        
+        setPatientBookings((prev) =>
+          prev.map((b) =>
+            b._id === selectedBookingForService._id
+              ? { ...b, services: res.data.data.services }
+              : b
+          )
+        );
+        
+        showToast(res.data.message, "success");
+        setShowServicePaymentModal(false);
+        setSelectedServiceFromBooking(null);
+        setSelectedBookingForService(null);
+        fetchBookings();
+      }
+    } catch (error) {
+      console.error("Error updating service payment:", error);
+      showToast(
+        error.response?.data?.message || "Failed to update service payment",
+        "error"
+      );
+    }
+  };
+
+  // ✅ Open Status Update Modal
+  const openStatusUpdateModal = (booking) => {
+    setSelectedBookingForStatus(booking);
+    setNewBookingStatus(booking.status || "confirmed");
+    setShowStatusUpdateModal(true);
+  };
+
+  // ✅ Handle Status Update
+  const handleStatusUpdate = async () => {
+    if (!selectedBookingForStatus || !newBookingStatus) {
+      showToast("Please select a status", "error");
+      return;
+    }
+
+    if (newBookingStatus === selectedBookingForStatus.status) {
+      showToast("Status is already set to this value", "info");
+      setShowStatusUpdateModal(false);
+      return;
+    }
+
+    setStatusUpdating(true);
+    try {
+      const res = await axios.put(
+        `${API_BASE_URL}/appointment-slots/${selectedBookingForStatus._id}`,
+        { status: newBookingStatus }
+      );
+
+      if (res && res.data && res.data.success) {
+        // Update local state
+        setBookings((prev) =>
+          prev.map((b) =>
+            b._id === selectedBookingForStatus._id
+              ? { ...b, status: newBookingStatus }
+              : b
+          )
+        );
+        setPatientBookings((prev) =>
+          prev.map((b) =>
+            b._id === selectedBookingForStatus._id
+              ? { ...b, status: newBookingStatus }
+              : b
+          )
+        );
+        showToast(`Booking status updated to ${newBookingStatus}!`, "success");
+        setShowStatusUpdateModal(false);
+        fetchBookings();
+      } else {
+        showToast(res.data.message || "Failed to update status", "error");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      showToast(error.response?.data?.message || "Failed to update status", "error");
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
+  // ✅ Open Payment Update Modal
+  const openPaymentUpdateModal = (booking) => {
+    setSelectedBookingForPayment(booking);
+    setNewPaymentStatus(booking.paymentStatus || "Pending");
+    setShowPaymentUpdateModal(true);
+  };
+
+  // ✅ Handle Payment Status Update
+  const handlePaymentUpdate = async () => {
+    if (!selectedBookingForPayment || !newPaymentStatus) {
+      showToast("Please select a payment status", "error");
+      return;
+    }
+
+    if (newPaymentStatus === selectedBookingForPayment.paymentStatus) {
+      showToast("Payment status is already set to this value", "info");
+      setShowPaymentUpdateModal(false);
+      return;
+    }
+
+    setPaymentUpdating(true);
+    try {
+      const res = await axios.put(
+        `${API_BASE_URL}/appointment-slots/${selectedBookingForPayment._id}`,
+        { paymentStatus: newPaymentStatus }
+      );
+
+      if (res && res.data && res.data.success) {
+        // Update local state
+        setBookings((prev) =>
+          prev.map((b) =>
+            b._id === selectedBookingForPayment._id
+              ? { ...b, paymentStatus: newPaymentStatus }
+              : b
+          )
+        );
+        setPatientBookings((prev) =>
+          prev.map((b) =>
+            b._id === selectedBookingForPayment._id
+              ? { ...b, paymentStatus: newPaymentStatus }
+              : b
+          )
+        );
+        showToast(`Payment status updated to ${newPaymentStatus}!`, "success");
+        setShowPaymentUpdateModal(false);
+        fetchBookings();
+      } else {
+        showToast(res.data.message || "Failed to update payment status", "error");
+      }
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      showToast(error.response?.data?.message || "Failed to update payment status", "error");
+    } finally {
+      setPaymentUpdating(false);
     }
   };
 
@@ -1222,7 +1578,7 @@ const OpManagement = () => {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => { fetchPatients(); fetchBookings(); fetchAllSlots(); fetchDoctors(); }}
+              onClick={() => { fetchPatients(); fetchBookings(); fetchAllSlots(); fetchDoctors(); fetchServices(); }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Refresh
@@ -1525,7 +1881,6 @@ const OpManagement = () => {
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 border border-gray-200 rounded-lg">
                           {availableSlots.map((slot) => {
                             const isSelected = formData.slotId === slot._id;
-                            // ✅ Check if slot is booked
                             const isBooked = slot.status === 'booked';
                             
                             return (
@@ -1925,11 +2280,11 @@ const OpManagement = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedPatient(patient);
-                                setShowDetailModal(true);
+                                // OPEN FULL HISTORY INSTEAD OF BASIC DETAIL
+                                fetchPatientHistory(patient);
                               }}
                               className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                              title="View Details"
+                              title="View Full History"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
@@ -2124,7 +2479,7 @@ const OpManagement = () => {
           </div>
         )}
 
-        {/* History Modal */}
+        {/* ✅ PATIENT HISTORY MODAL with Add Service, Update Status, Update Payment */}
         {showHistoryModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
@@ -2166,6 +2521,29 @@ const OpManagement = () => {
                   </div>
                 ) : (
                   <>
+                    {/* Patient Basic Info Card */}
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <div className="text-[10px] font-bold uppercase text-gray-400">Name</div>
+                          <div className="text-sm font-bold text-gray-900">{selectedPatient.name}</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-bold uppercase text-gray-400">Phone</div>
+                          <div className="text-sm font-bold text-gray-900">{selectedPatient.phone}</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-bold uppercase text-gray-400">Age</div>
+                          <div className="text-sm font-bold text-gray-900">{selectedPatient.age} yrs</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-bold uppercase text-gray-400">Gender</div>
+                          <div className="text-sm font-bold text-gray-900 capitalize">{selectedPatient.gender}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* OP Visits Section */}
                     <div className="mb-6">
                       <div className="flex items-center gap-2 mb-3">
                         <UserCheck className="w-4 h-4 text-blue-600" />
@@ -2258,10 +2636,13 @@ const OpManagement = () => {
                       )}
                     </div>
 
+                    {/* ✅ APPOINTMENT BOOKINGS WITH Add Service, Update Status, Update Payment */}
                     <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Calendar className="w-4 h-4 text-amber-600" />
-                        <h4 className="font-bold text-amber-800 text-sm">Appointment Bookings ({patientBookings.length})</h4>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-amber-600" />
+                          <h4 className="font-bold text-amber-800 text-sm">Appointment Bookings ({patientBookings.length})</h4>
+                        </div>
                       </div>
                       {patientBookings.length === 0 ? (
                         <div className="text-center py-4 text-gray-400 text-xs bg-gray-50 rounded-lg">
@@ -2281,68 +2662,126 @@ const OpManagement = () => {
                                 <th>Total Fee</th>
                                 <th>Payment Status</th>
                                 <th>Booking Status</th>
+                                <th style={{ textAlign: "center" }}>Actions</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {patientBookings.map((booking, idx) => (
-                                <tr key={booking._id} className="transition-colors hover:bg-slate-50/50">
-                                  <td className="px-3 py-2.5 font-semibold text-gray-400 text-[11px]">{idx + 1}</td>
-                                  <td className="px-3 py-2.5 font-medium text-slate-800 text-xs">
-                                    {formatDateToDDMMYYYY(booking.createdAt || booking.updatedAt || booking.date)}
-                                  </td>
-                                  <td className="px-3 py-2.5 font-medium text-blue-700 text-xs">
-                                    {formatDateToDDMMYYYY(booking.appointmentDate || booking.date || booking.slotDetails?.date)}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-xs font-medium text-blue-700">
-                                    {booking.dayOfWeek || booking.slotDetails?.dayOfWeek || "N/A"}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-xs font-medium text-slate-800">
-                                    {booking.startTime || booking.slotDetails?.startTime || "N/A"} – {booking.endTime || booking.slotDetails?.endTime || "N/A"}
-                                  </td>
-                                  <td className="px-3 py-2.5">
-                                    {booking.services && booking.services.length > 0 ? (
-                                      <div className="flex flex-wrap gap-1">
-                                        {booking.services.map((svc, sIdx) => (
-                                          <span key={sIdx} className="text-[10px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
-                                            {svc.name}
+                              {patientBookings.map((booking, idx) => {
+                                const bookingStatusColors = getStatusColors(booking.status);
+                                const hasServices = booking.services && booking.services.length > 0;
+                                
+                                return (
+                                  <tr key={booking._id} className="transition-colors hover:bg-slate-50/50">
+                                    <td className="px-3 py-2.5 font-semibold text-gray-400 text-[11px]">{idx + 1}</td>
+                                    <td className="px-3 py-2.5 font-medium text-slate-800 text-xs">
+                                      {formatDateToDDMMYYYY(booking.createdAt || booking.updatedAt || booking.date)}
+                                    </td>
+                                    <td className="px-3 py-2.5 font-medium text-blue-700 text-xs">
+                                      {formatDateToDDMMYYYY(booking.appointmentDate || booking.date || booking.slotDetails?.date)}
+                                    </td>
+                                    <td className="px-3 py-2.5 text-xs font-medium text-blue-700">
+                                      {booking.dayOfWeek || booking.slotDetails?.dayOfWeek || "N/A"}
+                                    </td>
+                                    <td className="px-3 py-2.5 text-xs font-medium text-slate-800">
+                                      {booking.startTime || booking.slotDetails?.startTime || "N/A"} – {booking.endTime || booking.slotDetails?.endTime || "N/A"}
+                                    </td>
+                                    <td className="px-3 py-2.5">
+                                      {hasServices ? (
+                                        <div className="flex flex-wrap gap-1">
+                                          {booking.services.map((svc, sIdx) => {
+                                            const isServicePaid = svc.paymentStatus === "Paid";
+                                            return (
+                                              <span key={sIdx} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${isServicePaid ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-amber-100 text-amber-800 border-amber-300"}`}>
+                                                {isServicePaid ? <CheckCircle2 className="w-3 h-3 text-emerald-600" /> : <Clock className="w-3 h-3 text-amber-600" />}
+                                                {svc.name}
+                                                <span className="text-[8px] uppercase opacity-70 ml-0.5">({svc.paymentStatus})</span>
+                                                <span className="text-[10px] font-bold ml-0.5">₹{svc.price}</span>
+                                                <button
+                                                  onClick={() => {
+                                                    const serviceId = svc.serviceId || svc._id;
+                                                    if (serviceId) handleRemoveService(booking, serviceId, svc.name);
+                                                  }}
+                                                  className="ml-0.5 text-red-500 hover:text-red-700 hover:scale-110 transition-transform"
+                                                >
+                                                  <XCircle className="w-3 h-3" />
+                                                </button>
+                                              </span>
+                                            );
+                                          })}
+                                        </div>
+                                      ) : (
+                                        <span className="text-[10px] text-gray-400 italic">No services</span>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2.5 font-bold text-slate-800 text-xs">
+                                      ₹{(booking.consultationFee || 0) + getTotalServiceFee(booking)}
+                                    </td>
+                                    <td className="px-3 py-2.5">
+                                      <span
+                                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider w-fit ${
+                                          (booking.paymentStatus || "Pending") === "Paid"
+                                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                            : "bg-amber-100 text-amber-800 border border-amber-200"
+                                        }`}
+                                      >
+                                        {booking.paymentStatus || "Pending"}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2.5">
+                                      <span
+                                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full capitalize w-fit ${
+                                          booking.status === "completed"
+                                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                            : booking.status === "consulting"
+                                            ? "bg-purple-100 text-purple-800 border border-purple-200"
+                                            : booking.status === "cancelled"
+                                            ? "bg-red-100 text-red-800 border border-red-200"
+                                            : "bg-blue-100 text-blue-800 border border-blue-200"
+                                        }`}
+                                      >
+                                        {booking.status || "confirmed"}
+                                      </span>
+                                    </td>
+                                    {/* ✅ Actions - Add Service, Update Status, Update Payment */}
+                                    <td className="px-3 py-2.5 text-center">
+                                      <div className="flex items-center justify-center gap-1">
+                                        <button
+                                          onClick={() => openAddServiceModal(booking)}
+                                          className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors group relative"
+                                          title="Add Service"
+                                        >
+                                          <PlusCircle className="w-3.5 h-3.5" />
+                                          <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                            Add Service
                                           </span>
-                                        ))}
+                                        </button>
+                                        
+                                        <button
+                                          onClick={() => openStatusUpdateModal(booking)}
+                                          className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group relative"
+                                          title="Update Status"
+                                        >
+                                          <CheckCircle2 className="w-3.5 h-3.5" />
+                                          <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                            Update Status
+                                          </span>
+                                        </button>
+                                        
+                                        <button
+                                          onClick={() => openPaymentUpdateModal(booking)}
+                                          className="p-1 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors group relative"
+                                          title="Update Payment"
+                                        >
+                                          <CreditCard className="w-3.5 h-3.5" />
+                                          <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                            Update Payment
+                                          </span>
+                                        </button>
                                       </div>
-                                    ) : (
-                                      <span className="text-[10px] text-gray-400">None</span>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2.5 font-bold text-slate-800 text-xs">
-                                    ₹{(booking.consultationFee || 0) + getTotalServiceFee(booking)}
-                                  </td>
-                                  <td className="px-3 py-2.5">
-                                    <span
-                                      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider w-fit ${
-                                        (booking.paymentStatus || "Pending") === "Paid"
-                                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                          : "bg-amber-100 text-amber-800 border border-amber-200"
-                                      }`}
-                                    >
-                                      {booking.paymentStatus || "Pending"}
-                                    </span>
-                                  </td>
-                                  <td className="px-3 py-2.5">
-                                    <span
-                                      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full capitalize w-fit ${
-                                        booking.status === "completed"
-                                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                          : booking.status === "consulting"
-                                          ? "bg-purple-100 text-purple-800 border border-purple-200"
-                                          : booking.status === "cancelled"
-                                          ? "bg-red-100 text-red-800 border border-red-200"
-                                          : "bg-blue-100 text-blue-800 border border-blue-200"
-                                      }`}
-                                    >
-                                      {booking.status || "confirmed"}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
@@ -2366,111 +2805,286 @@ const OpManagement = () => {
           </div>
         )}
 
-        {/* Detail Modal */}
-        {showDetailModal && selectedPatient && (
+        {/* ✅ STATUS UPDATE MODAL */}
+        {showStatusUpdateModal && selectedBookingForStatus && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200">
               <div className="flex items-center justify-between pb-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">
-                    <User className="w-5 h-5" />
+                  <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-base">Patient Details</h3>
-                    <p className="text-xs text-gray-500">ID: {selectedPatient._id}</p>
+                    <h3 className="font-bold text-gray-900 text-base">Update Booking Status</h3>
+                    <p className="text-xs text-gray-500">
+                      {selectedBookingForStatus.patientName} • {selectedBookingForStatus.dayOfWeek}
+                    </p>
                   </div>
                 </div>
-                <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg">
+                <button onClick={() => setShowStatusUpdateModal(false)} className="text-gray-400 hover:text-gray-600">
                   <XCircle className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="my-5 bg-gray-50 p-5 rounded-xl border border-gray-200 space-y-3">
-                <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                  <div>
-                    <div className="text-[10px] font-bold uppercase text-gray-400">Patient Name</div>
-                    <div className="text-base font-bold text-gray-900">{selectedPatient.name}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-bold uppercase text-gray-400">Age</div>
-                    <div className="text-sm font-bold text-gray-800">{selectedPatient.age} Years</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] font-bold uppercase text-gray-400">Gender</div>
-                    <div className="text-sm font-bold text-gray-800 capitalize">{selectedPatient.gender || "N/A"}</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <div className="text-[10px] font-bold uppercase text-gray-400">Phone</div>
-                    <div className="text-xs font-bold text-blue-900">{selectedPatient.phone}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-bold uppercase text-gray-400">Registered On</div>
-                    <div className="text-xs font-bold text-blue-900">{formatDate(selectedPatient.createdAt)}</div>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-gray-200">
-                  <div className="text-[10px] font-bold uppercase text-gray-400">Address</div>
-                  <div className="text-xs font-medium text-gray-700">{selectedPatient.address || "N/A"}</div>
-                </div>
-
-                <div className="pt-1">
-                  <div className="text-[10px] font-bold uppercase text-gray-400">Reason for Consultation</div>
-                  <div className="text-xs font-medium text-gray-700">{selectedPatient.reason || "General Consultation"}</div>
-                </div>
-
-                <div className="pt-2 border-t border-gray-200 flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] font-bold uppercase text-gray-400">Fee ({selectedPatient.feeType})</div>
-                    <div className="text-sm font-extrabold text-blue-950">₹{selectedPatient.feeAmount ?? 300}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-bold uppercase text-gray-400">Payment Type</div>
-                    <div className="text-xs font-bold text-gray-700 capitalize flex items-center gap-1">
-                      {selectedPatient.paymentType === "online" ? <CreditCard className="w-3 h-3" /> : <Banknote className="w-3 h-3" />}
-                      {selectedPatient.paymentType}
-                    </div>
-                  </div>
-                  <div className="text-right flex items-center gap-2">
+              <div className="my-5 space-y-4">
+                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="text-[10px] font-bold uppercase text-gray-400">Payment Status</div>
-                      <span
-                        className={`inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${
-                          selectedPatient.paymentStatus === "Paid"
-                            ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                            : "bg-amber-100 text-amber-900 border-amber-300"
-                        }`}
-                      >
-                        {selectedPatient.paymentStatus || "Pending"}
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Patient</div>
+                      <div className="text-sm font-bold text-gray-900">{selectedBookingForStatus.patientName}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Current Status</div>
+                      <span className={`inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${getStatusColors(selectedBookingForStatus.status).bg} ${getStatusColors(selectedBookingForStatus.status).text} border ${getStatusColors(selectedBookingForStatus.status).border}`}>
+                        {selectedBookingForStatus.status || "confirmed"}
                       </span>
                     </div>
-                    {selectedPatient.paymentStatus !== "Paid" && (
-                      <button
-                        onClick={() => handlePaymentToggle(selectedPatient)}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2 py-1 rounded shadow-xs transition-all"
-                      >
-                        Mark Paid
-                      </button>
-                    )}
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Select New Status <span className="text-red-500">*</span></label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {BOOKING_STATUS_OPTIONS.map((st) => {
+                      const isSelected = newBookingStatus === st.value;
+                      const colors = getStatusColors(st.value);
+                      return (
+                        <button
+                          key={st.value}
+                          onClick={() => setNewBookingStatus(st.value)}
+                          className={`px-3 py-2.5 rounded-lg text-xs font-bold border-2 transition-all ${isSelected ? `${colors.bg} ${colors.text} border-${colors.text} shadow-sm` : "border-gray-300 bg-white text-gray-600 hover:border-gray-400 hover:bg-gray-50"}`}
+                        >
+                          {st.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {newBookingStatus && newBookingStatus !== selectedBookingForStatus.status && (
+                  <div className={`p-3 rounded-lg border-2 ${getStatusColors(newBookingStatus).bg}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-bold uppercase text-gray-500">Selected Status</div>
+                        <div className={`text-sm font-bold ${getStatusColors(newBookingStatus).text}`}>
+                          {BOOKING_STATUS_OPTIONS.find(s => s.value === newBookingStatus)?.label}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">Current</div>
+                        <div className="text-xs font-bold text-gray-500 line-through">
+                          {BOOKING_STATUS_OPTIONS.find(s => s.value === selectedBookingForStatus.status)?.label}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-3">
-                <button
-                  onClick={() => window.print()}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center gap-1.5"
-                >
-                  <Printer className="w-4 h-4" /> Print
+                <button onClick={() => setShowStatusUpdateModal(false)} className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">
+                  Cancel
                 </button>
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                >
-                  Close
+                <button onClick={handleStatusUpdate} disabled={statusUpdating || !newBookingStatus || newBookingStatus === selectedBookingForStatus.status} className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 ${statusUpdating || !newBookingStatus || newBookingStatus === selectedBookingForStatus.status ? "bg-gray-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}>
+                  {statusUpdating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  {statusUpdating ? "Updating..." : "Update Status"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ PAYMENT UPDATE MODAL */}
+        {showPaymentUpdateModal && selectedBookingForPayment && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base">Update Payment Status</h3>
+                    <p className="text-xs text-gray-500">
+                      {selectedBookingForPayment.patientName} • {selectedBookingForPayment.dayOfWeek}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setShowPaymentUpdateModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="my-5 space-y-4">
+                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Patient</div>
+                      <div className="text-sm font-bold text-gray-900">{selectedBookingForPayment.patientName}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Total Fee</div>
+                      <div className="text-sm font-bold text-emerald-700">₹{(selectedBookingForPayment.consultationFee || 0) + getTotalServiceFee(selectedBookingForPayment)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Current Payment</div>
+                      <span className={`inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${selectedBookingForPayment.paymentStatus === "Paid" ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-amber-100 text-amber-900 border-amber-300"}`}>
+                        {selectedBookingForPayment.paymentStatus || "Pending"}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400">Due Amount</div>
+                      <div className="text-sm font-bold text-red-600">
+                        ₹{selectedBookingForPayment.paymentStatus === "Paid" ? 0 : (selectedBookingForPayment.consultationFee || 0) + getTotalServiceFee(selectedBookingForPayment)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Select Payment Status <span className="text-red-500">*</span></label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {PAYMENT_STATUS_OPTIONS.map((st) => {
+                      const isSelected = newPaymentStatus === st.value;
+                      return (
+                        <button
+                          key={st.value}
+                          onClick={() => setNewPaymentStatus(st.value)}
+                          className={`px-4 py-2.5 rounded-lg text-sm font-bold border-2 transition-all ${isSelected ? st.value === "Paid" ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm" : "border-amber-500 bg-amber-50 text-amber-700 shadow-sm" : "border-gray-300 bg-white text-gray-600 hover:border-gray-400 hover:bg-gray-50"}`}
+                        >
+                          {st.value === "Paid" ? <CheckCircle2 className="w-4 h-4 inline mr-1 text-emerald-600" /> : <Clock className="w-4 h-4 inline mr-1 text-amber-600" />}
+                          {st.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {newPaymentStatus && newPaymentStatus !== selectedBookingForPayment.paymentStatus && (
+                  <div className={`p-3 rounded-lg border-2 ${newPaymentStatus === "Paid" ? "bg-emerald-50 border-emerald-300" : "bg-amber-50 border-amber-300"}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-bold uppercase text-gray-500">Selected Status</div>
+                        <div className={`text-sm font-bold ${newPaymentStatus === "Paid" ? "text-emerald-700" : "text-amber-700"}`}>
+                          {newPaymentStatus === "Paid" ? "✅ Paid" : "⏳ Pending"}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">Current</div>
+                        <div className="text-xs font-bold text-gray-500 line-through">
+                          {selectedBookingForPayment.paymentStatus === "Paid" ? "Paid" : "Pending"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button onClick={() => setShowPaymentUpdateModal(false)} className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">
+                  Cancel
+                </button>
+                <button onClick={handlePaymentUpdate} disabled={paymentUpdating || !newPaymentStatus || newPaymentStatus === selectedBookingForPayment.paymentStatus} className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 ${paymentUpdating || !newPaymentStatus || newPaymentStatus === selectedBookingForPayment.paymentStatus ? "bg-gray-300 cursor-not-allowed" : newPaymentStatus === "Paid" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-amber-600 hover:bg-amber-700"}`}>
+                  {paymentUpdating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  {paymentUpdating ? "Updating..." : "Update Payment"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ ADD SERVICE MODAL */}
+        {showAddServiceModal && selectedBookingForService && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-gray-200">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
+                    <PlusCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base">Add Service</h3>
+                    <p className="text-xs text-gray-500">
+                      {selectedBookingForService.patientName} • {selectedBookingForService.dayOfWeek}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => { setShowAddServiceModal(false); setServiceDropdownOpen(false); }} className="text-gray-400 hover:text-gray-600">
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="my-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Current Services</label>
+                  <div className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm font-medium">
+                    {selectedBookingForService.services && selectedBookingForService.services.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {selectedBookingForService.services.map((svc, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                            {svc.name} (₹{svc.price}) - {svc.paymentStatus}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-xs">No services assigned</span>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Select Service <span className="text-red-500">*</span></label>
+                  
+                  <button onClick={() => setServiceDropdownOpen(!serviceDropdownOpen)} className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white flex items-center justify-between">
+                    <span className={selectedServiceForBooking ? "text-gray-900 font-medium" : "text-gray-400"}>
+                      {selectedServiceForBooking ? `${selectedServiceForBooking.name} (₹${selectedServiceForBooking.price})` : "Select a service..."}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${serviceDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {serviceDropdownOpen && (
+                    <div className="mt-1 border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto bg-white">
+                      {servicesLoading ? (
+                        <div className="px-4 py-3 text-center text-gray-500 text-sm">
+                          <RefreshCw className="w-4 h-4 animate-spin inline mr-2" /> Loading services...
+                        </div>
+                      ) : services.length === 0 ? (
+                        <div className="px-4 py-3 text-center text-gray-400 text-sm">No services available</div>
+                      ) : (
+                        services.map((service) => {
+                          const alreadyAdded = (selectedBookingForService.services || []).some(s => s.serviceId === service._id);
+                          return (
+                            <button key={service._id} onClick={() => !alreadyAdded && handleServiceSelect(service)} className={`w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between ${alreadyAdded ? "opacity-50 cursor-not-allowed bg-gray-50" : ""} ${selectedServiceId === service._id ? "bg-emerald-50" : ""}`} disabled={alreadyAdded}>
+                              <span className="font-medium text-gray-800">{service.name}</span>
+                              <span className="text-xs font-bold text-emerald-700">{alreadyAdded ? "✓ Added" : `₹${service.price}`}</span>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {selectedServiceForBooking && (
+                  <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200 flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-emerald-800">Selected Service</div>
+                      <div className="text-sm font-bold text-gray-900">{selectedServiceForBooking.name}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">Fee</div>
+                      <div className="text-sm font-bold text-emerald-700">₹{selectedServiceForBooking.price}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button onClick={() => { setShowAddServiceModal(false); setServiceDropdownOpen(false); }} className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">
+                  Cancel
+                </button>
+                <button onClick={handleAddServiceToBooking} disabled={!selectedServiceForBooking} className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 ${selectedServiceForBooking ? "bg-emerald-600 hover:bg-emerald-700" : "bg-gray-300 cursor-not-allowed"}`}>
+                  <PlusCircle className="w-4 h-4" /> Add Service
                 </button>
               </div>
             </div>

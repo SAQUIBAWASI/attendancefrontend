@@ -242,6 +242,7 @@ import OpManagement from './Pages/OpManagement.js';
 import OpDashboard from './Pages/OpDashboard.js';
 import Services from "./Pages/Services.js";
 import DoctorManagement from "./Pages/DoctorManagement.js";
+import LetterHeadDesigner from "./Pages/LetterHeadDesigner.js";
 
 function App() {
   return (
@@ -534,6 +535,7 @@ function App() {
               <Route path="/doctor-management" element={<DoctorManagement />} />
               <Route path="/op-dashboard" element={<OpDashboard />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/letterhead" element={<LetterHeadDesigner />} />
 
 
            
