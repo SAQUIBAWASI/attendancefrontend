@@ -1,7 +1,7 @@
 import { Facebook, FileText, Globe, Instagram, Linkedin, Mail, MapPin, Phone, Twitter, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import logo from "../Images/logo2.png"
+import logo from "../Images/Timelyhealth logo.png"
 
 const TimelyFooter = () => {
   const [isChatOpen, setIsChatOpen] = useState(false)
@@ -26,14 +26,18 @@ const TimelyFooter = () => {
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* Company Info */}
           <div className="col-span-1 lg:col-span-2">
-            <div className="flex items-center mb-4 space-x-3">
-              <div className="flex items-center justify-center w-32 h-32">
+            <div className="flex flex-col items-start mb-4 space-y-2">
+              <div className="flex items-center justify-center w-40 h-40">
                 <img
                   src={logo}
                   alt="Timely Health Logo"
                   className="object-contain w-full h-full"
                 />
               </div>
+              {/* Company Name Below Logo */}
+              <h2 className="text-2xl font-bold text-white tracking-wide">
+                Timely Health Tech Pvt Ltd.
+              </h2>
             </div>
             <p className="max-w-md mb-6 text-gray-300 leading-relaxed text-base">
               Care You Can Trust. Right Where You Are. We believe healthcare should be simple, local, and always within reach — for everyone.
@@ -118,9 +122,10 @@ const TimelyFooter = () => {
           </div>
         </div>
 
-        <div className="pt-10 mt-10 text-center border-t border-gray-700/50">
+        {/* Footer Bottom Section */}
+        <div className="pt-8 mt-10 text-center border-t border-gray-700/50">
           <p className="text-gray-400 text-base tracking-wide">
-            © 2024 Timely Health. All rights reserved. | Trusted Healthcare, Just Around the Corner.
+            © 2024 Timely Health Tech Pvt Ltd. All rights reserved. | Trusted Healthcare, Just Around the Corner.
           </p>
         </div>
       </div>

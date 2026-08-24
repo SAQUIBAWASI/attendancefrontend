@@ -511,7 +511,7 @@
 import { Menu, User, Phone, X, Users, Heart, ChevronDown, Calendar } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import logo from "../Images/logo2.png"
+import logo from "../Images/Timelyhealth logo.png"
 
 const TimelyNavbar = () => {
     const [isOpen, setIsOpen] = useState(false)
