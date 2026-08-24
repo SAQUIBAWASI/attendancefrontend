@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Printer,
   Download,
@@ -13,10 +13,17 @@ import {
   Trash2,
   Calendar,
   FileText,
-  FileDown
+  FileDown,
+  RefreshCw,
+  Save,
+  Plus,
+  X,
+  Maximize2
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 const LetterHeadDesigner = () => {
   const [formData, setFormData] = useState({
@@ -59,8 +66,44 @@ const LetterHeadDesigner = () => {
   const [activeTab, setActiveTab] = useState('design');
   const [isDownloading, setIsDownloading] = useState(false);
   const [showPrintTip, setShowPrintTip] = useState(false);
+  const [letterheads, setLetterheads] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [selectedLetterhead, setSelectedLetterhead] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewLetterhead, setViewLetterhead] = useState(null);
+
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
+
+  // Show Toast
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // Fetch all letterheads
+  const fetchLetterheads = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/letterheads/getallheaders`);
+      if (res.data.success) {
+        setLetterheads(res.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching letterheads:', error);
+      showToast('Failed to fetch letterheads', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLetterheads();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -91,8 +134,13 @@ const LetterHeadDesigner = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  // Preview Letterhead
+  const handlePreview = (e) => {
     e.preventDefault();
+    if (!formData.logo) {
+      showToast('Please upload a logo image first!', 'error');
+      return;
+    }
     setShowPreview(true);
     setIsEditing(false);
   };
@@ -102,79 +150,274 @@ const LetterHeadDesigner = () => {
     setShowPreview(false);
   };
 
-  // Download PDF - Perfect A4 with no extra space
+  // ===== CAPTURE LETTERHEAD AS IMAGE - FIXED =====
+  const captureLetterhead = async () => {
+    if (!previewRef.current) {
+      showToast('Please preview first!', 'error');
+      return null;
+    }
+
+    const element = previewRef.current;
+
+    // Get the actual rendered dimensions
+    const rect = element.getBoundingClientRect();
+    const actualWidth = rect.width;
+    const actualHeight = rect.height;
+
+    // Scale factor - we want exactly 794x1123
+    const scaleX = 794 / actualWidth;
+    const scaleY = 1123 / actualHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    const canvas = await html2canvas(element, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: 794,
+      height: 1123,
+      windowWidth: 794,
+      windowHeight: 1123,
+      onclone: (clonedDoc) => {
+        const clonedEl = clonedDoc.getElementById('letterhead-preview');
+        if (clonedEl) {
+          clonedEl.style.width = '794px';
+          clonedEl.style.maxWidth = '794px';
+          clonedEl.style.minHeight = '1123px';
+          clonedEl.style.margin = '0';
+          clonedEl.style.padding = '0';
+          clonedEl.style.boxSizing = 'border-box';
+          clonedEl.style.overflow = 'hidden';
+          clonedEl.style.transform = 'none';
+          clonedEl.style.position = 'relative';
+          clonedEl.style.left = '0';
+          clonedEl.style.top = '0';
+        }
+      }
+    });
+
+    return canvas;
+  };
+
+  // Save Letterhead - Capture preview as PDF
+  const handleSaveLetterhead = async () => {
+    if (!previewRef.current) {
+      showToast('Please preview the letter head first!', 'error');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const canvas = await captureLetterhead();
+      if (!canvas) {
+        setIsSaving(false);
+        return;
+      }
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      
+      // Calculate to fit exactly in A4
+      const scaleX = pdfWidth / imgWidth;
+      const scaleY = pdfHeight / imgHeight;
+      const scale = Math.min(scaleX, scaleY);
+      
+      const finalWidth = imgWidth * scale;
+      const finalHeight = imgHeight * scale;
+      
+      const xOffset = (pdfWidth - finalWidth) / 2;
+      const yOffset = (pdfHeight - finalHeight) / 2;
+      
+      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+      
+      const pdfBlob = pdf.output('blob');
+      const file = new File([pdfBlob], `letterhead-${Date.now()}.pdf`, { type: 'application/pdf' });
+
+      const formDataToSend = new FormData();
+      formDataToSend.append('letterhead', file);
+      formDataToSend.append('name', formData.companyName);
+
+      const isDefault = letterheads.length === 0 ? 'true' : 'false';
+      formDataToSend.append('isDefault', isDefault);
+
+      const res = await axios.post(
+        `${API_BASE_URL}/letterheads/addheaders`,
+        formDataToSend,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      );
+
+      if (res.data.success) {
+        showToast('Letterhead saved successfully!', 'success');
+        fetchLetterheads();
+        setSelectedLetterhead(res.data.data);
+        setShowPreview(true);
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error('Error saving letterhead:', error);
+      showToast(error.response?.data?.message || 'Failed to save letterhead', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Update Letterhead - as PDF
+  const handleUpdateLetterhead = async () => {
+    if (!selectedLetterhead) {
+      showToast('No letterhead selected to update', 'error');
+      return;
+    }
+
+    if (!previewRef.current) {
+      showToast('Please preview the letter head first!', 'error');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const canvas = await captureLetterhead();
+      if (!canvas) {
+        setIsSaving(false);
+        return;
+      }
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      
+      const scaleX = pdfWidth / imgWidth;
+      const scaleY = pdfHeight / imgHeight;
+      const scale = Math.min(scaleX, scaleY);
+      
+      const finalWidth = imgWidth * scale;
+      const finalHeight = imgHeight * scale;
+      
+      const xOffset = (pdfWidth - finalWidth) / 2;
+      const yOffset = (pdfHeight - finalHeight) / 2;
+      
+      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+      
+      const pdfBlob = pdf.output('blob');
+      const file = new File([pdfBlob], `letterhead-${Date.now()}.pdf`, { type: 'application/pdf' });
+
+      const formDataToSend = new FormData();
+      formDataToSend.append('letterhead', file);
+      formDataToSend.append('name', formData.companyName);
+      formDataToSend.append('isDefault', selectedLetterhead.isDefault ? 'true' : 'false');
+
+      const res = await axios.put(
+        `${API_BASE_URL}/letterheads/updateheader/${selectedLetterhead._id}`,
+        formDataToSend,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      );
+
+      if (res.data.success) {
+        showToast('Letterhead updated successfully!', 'success');
+        fetchLetterheads();
+        setSelectedLetterhead(res.data.data);
+        setShowPreview(true);
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error('Error updating letterhead:', error);
+      showToast(error.response?.data?.message || 'Failed to update letterhead', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Delete Letterhead
+  const handleDeleteLetterhead = async () => {
+    if (!deleteId) return;
+
+    setIsSaving(true);
+    try {
+      const res = await axios.delete(
+        `${API_BASE_URL}/letterheads/deleteheader/${deleteId}`
+      );
+
+      if (res.data.success) {
+        showToast('Letterhead deleted successfully!', 'success');
+        fetchLetterheads();
+        setShowDeleteModal(false);
+        setDeleteId(null);
+        if (selectedLetterhead?._id === deleteId) {
+          setSelectedLetterhead(null);
+          setShowPreview(false);
+          setIsEditing(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting letterhead:', error);
+      showToast(error.response?.data?.message || 'Failed to delete letterhead', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Load Letterhead for editing
+  const loadLetterheadForEdit = (letterhead) => {
+    setSelectedLetterhead(letterhead);
+    setFormData(prev => ({
+      ...prev,
+      logo: letterhead.letterheadUrl,
+      companyName: letterhead.name || prev.companyName
+    }));
+    setShowPreview(true);
+    setIsEditing(false);
+  };
+
+  // View Letterhead in Popup
+  const handleViewLetterhead = (letterhead) => {
+    setViewLetterhead(letterhead);
+    setShowViewModal(true);
+  };
+
+  // Download PDF - from preview
   const handleDownloadPDF = async () => {
     if (!previewRef.current) {
-      alert('Please preview the letter head first!');
+      showToast('Please preview the letter head first!', 'error');
       return;
     }
 
     setIsDownloading(true);
 
     try {
-      const element = previewRef.current;
-
-      const canvas = await html2canvas(element, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        width: 794,
-        height: 1123,
-        windowWidth: 794,
-        windowHeight: 1123,
-        onclone: (clonedDoc) => {
-          const clonedEl = clonedDoc.getElementById('letterhead-preview');
-          if (clonedEl) {
-            clonedEl.style.width = '794px';
-            clonedEl.style.maxWidth = '794px';
-            clonedEl.style.minHeight = '1123px';
-            clonedEl.style.margin = '0';
-            clonedEl.style.padding = '0';
-            clonedEl.style.boxSizing = 'border-box';
-            clonedEl.style.overflow = 'hidden';
-            clonedEl.style.transform = 'none';
-          }
-        }
-      });
-
-      const ctx = canvas.getContext('2d');
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-      let top = canvas.height;
-      let bottom = 0;
-      let left = canvas.width;
-      let right = 0;
-
-      const data = imageData.data;
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const index = (y * canvas.width + x) * 4;
-          if (data[index] < 250 || data[index + 1] < 250 || data[index + 2] < 250) {
-            if (y < top) top = y;
-            if (y > bottom) bottom = y;
-            if (x < left) left = x;
-            if (x > right) right = x;
-          }
-        }
+      const canvas = await captureLetterhead();
+      if (!canvas) {
+        setIsDownloading(false);
+        return;
       }
 
-      const padding = 10;
-      top = Math.max(0, top - padding);
-      bottom = Math.min(canvas.height, bottom + padding);
-      left = Math.max(0, left - padding);
-      right = Math.min(canvas.width, right + padding);
-
-      const croppedCanvas = document.createElement('canvas');
-      const cropWidth = right - left;
-      const cropHeight = bottom - top;
-      croppedCanvas.width = cropWidth;
-      croppedCanvas.height = cropHeight;
-      const cropCtx = croppedCanvas.getContext('2d');
-      cropCtx.drawImage(canvas, left, top, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-
-      const imgData = croppedCanvas.toDataURL('image/jpeg', 1.0);
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -186,8 +429,8 @@ const LetterHeadDesigner = () => {
       const pdfWidth = 210;
       const pdfHeight = 297;
 
-      const imgWidth = croppedCanvas.width;
-      const imgHeight = croppedCanvas.height;
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
 
       const scaleX = pdfWidth / imgWidth;
       const scaleY = pdfHeight / imgHeight;
@@ -201,25 +444,21 @@ const LetterHeadDesigner = () => {
 
       pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
       pdf.save(`LetterHead_${formData.companyName.replace(/\s+/g, '_')}.pdf`);
+      showToast('PDF downloaded successfully!', 'success');
     } catch (error) {
       console.error('PDF download error:', error);
-      alert('Error generating PDF. Please try again.');
+      showToast('Error generating PDF. Please try again.', 'error');
     } finally {
       setIsDownloading(false);
     }
   };
 
-  // Direct browser print — uses the same #letterhead-preview node
-  // that's on screen, so print output = preview output.
-  // Shows a one-time reminder about the browser's own Margins dropdown,
-  // since that setting lives outside CSS and can add whitespace even
-  // when @page { margin: 0 } is set correctly.
   const handlePrint = () => {
     setShowPrintTip(true);
     window.print();
   };
 
-  // ---------- Preview Component - Perfect A4 ----------
+  // Preview Component - PERFECT A4
   const LetterHeadPreview = () => {
     const pageStyles = {
       boxShadow: formData.shadow ? '0 4px 24px rgba(0,0,0,0.12)' : 'none',
@@ -230,7 +469,7 @@ const LetterHeadDesigner = () => {
       width: '794px',
       maxWidth: '794px',
       minHeight: '1123px',
-      margin: '0',
+      margin: '0 auto',
       padding: '0',
       display: 'flex',
       flexDirection: 'column',
@@ -472,10 +711,10 @@ const LetterHeadDesigner = () => {
     );
   };
 
-  // ---------- Form ----------
+  // Form Component
   const LetterHeadForm = () => (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex gap-2 border-b border-gray-200 pb-3">
+    <form onSubmit={handlePreview} className="space-y-6">
+      <div className="flex gap-2 border-b border-gray-200 pb-3 flex-wrap">
         <button
           type="button"
           onClick={() => setActiveTab('design')}
@@ -498,13 +737,24 @@ const LetterHeadDesigner = () => {
         >
           Letter Content
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('saved')}
+          className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+            activeTab === 'saved'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Saved Letterheads
+        </button>
       </div>
 
-      {activeTab === 'design' ? (
+      {activeTab === 'design' && (
         <>
           <div>
             <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
-              Company Logo
+              Company Logo <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center gap-4">
               <div className="flex-1">
@@ -739,7 +989,9 @@ const LetterHeadDesigner = () => {
             </label>
           </div>
         </>
-      ) : (
+      )}
+
+      {activeTab === 'content' && (
         <>
           <div>
             <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -791,9 +1043,115 @@ const LetterHeadDesigner = () => {
         </>
       )}
 
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+      {activeTab === 'saved' && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+              Saved Letterheads ({letterheads.length})
+            </h4>
+            <button
+              type="button"
+              onClick={fetchLetterheads}
+              className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <RefreshCw size={14} />
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-8">
+              <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
+              <p className="text-xs text-gray-400 mt-2">Loading...</p>
+            </div>
+          ) : letterheads.length === 0 ? (
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-sm text-gray-500">No saved letterheads</p>
+              <p className="text-xs text-gray-400">Create and save your first letterhead!</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {letterheads.map((item) => (
+                <div
+                  key={item._id}
+                  className={`flex items-center justify-between p-3 border rounded-lg transition-all ${
+                    selectedLetterhead?._id === item._id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-800 truncate">{item.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                      {item.isDefault && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-700 rounded-full">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleViewLetterhead(item)}
+                      className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                      title="View"
+                    >
+                      <Eye size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => loadLetterheadForEdit(item)}
+                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Edit"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteId(item._id);
+                        setShowDeleteModal(true);
+                      }}
+                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 flex-wrap">
+        {selectedLetterhead ? (
+          <button
+            type="button"
+            onClick={handleUpdateLetterhead}
+            disabled={isSaving || !showPreview}
+            className="px-6 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+          >
+            {isSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+            {isSaving ? 'Updating...' : 'Update Letterhead'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSaveLetterhead}
+            disabled={isSaving || !showPreview}
+            className="px-6 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+          >
+            {isSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+            {isSaving ? 'Saving...' : 'Save Letterhead'}
+          </button>
+        )}
         <button
           type="submit"
+          onClick={handlePreview}
           className="px-6 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-2"
         >
           <Eye size={16} />
@@ -805,42 +1163,6 @@ const LetterHeadDesigner = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/*
-        PRINT CSS — HARDENED
-
-        Two independent sources of left/right whitespace on a printed
-        letterhead, and how each is handled below:
-
-        1. STICKY CONTAINING BLOCK BUG
-           The right-side preview panel uses Tailwind's `sticky` class.
-           `position: sticky` creates a containing block for any
-           `position: fixed`/`absolute` descendant, so without
-           neutralizing it, the letterhead anchors to that panel
-           instead of the real page. Fixed by forcing `.sticky` to
-           `position: static !important` during print.
-
-        2. BROWSER "MARGINS" DROPDOWN (outside CSS's control)
-           Chrome/Edge's print dialog has its own Margins selector
-           (Default / None / Custom / Minimum). When it's on "Default",
-           some browser versions add their own page margin on top of
-           whatever @page specifies, regardless of `margin: 0 !important`
-           in @page. This is a browser UI setting, not a CSS bug — CSS
-           can't force it. The fix here is defense in depth: (a) set
-           @page margin to 0 so browsers that do respect it print
-           edge-to-edge automatically, and (b) surface a one-time
-           on-screen tip after Print is clicked telling the user to pick
-           "Margins: None" if they still see white borders.
-
-        Additional hardening added below:
-        - html/body hard-locked to exact A4 mm size during print so the
-          browser can't auto-scale-to-fit and shrink the page inside
-          a blank canvas.
-        - Scrollbars/overflow suppressed so no extra reserved space
-          sneaks in on the print render.
-        - print-color-adjust: exact everywhere so the teal footer bar
-          and watermark aren't silently stripped to white by the
-          browser's print color optimizer.
-      */}
       <style>{`
         @media print {
           html, body {
@@ -860,8 +1182,6 @@ const LetterHeadDesigner = () => {
             print-color-adjust: exact !important;
           }
 
-          /* Neutralize the sticky panel so it stops being a
-             containing block for the fixed/absolute letterhead */
           .sticky {
             position: static !important;
           }
@@ -893,7 +1213,6 @@ const LetterHeadDesigner = () => {
             transform: none !important;
           }
 
-          /* Anything rendered by the print-tip banner should never print */
           .no-print {
             display: none !important;
             visibility: hidden !important;
@@ -906,9 +1225,152 @@ const LetterHeadDesigner = () => {
         }
       `}</style>
 
-      {/* One-time reminder, shown after the first Print click, about the
-          browser's own Margins dropdown. Screen-only — hidden on print
-          via .no-print above. */}
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
+            toast.type === 'error'
+              ? 'bg-red-600'
+              : toast.type === 'info'
+              ? 'bg-cyan-600'
+              : 'bg-emerald-600'
+          }`}
+        >
+          <span className="font-medium text-sm">{toast.message}</span>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200">
+            <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-base">Delete Letterhead</h3>
+                <p className="text-xs text-gray-500">This action cannot be undone</p>
+              </div>
+            </div>
+            <div className="my-5">
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete this letterhead? All associated data will be permanently removed.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteLetterhead}
+                disabled={isSaving}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {isSaving ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                {isSaving ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {showViewModal && viewLetterhead && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl border border-gray-200">
+            <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
+                  <Maximize2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-base">Letterhead Preview</h3>
+                  <p className="text-xs text-gray-500">{viewLetterhead.name}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    setViewLetterhead(null);
+                  }}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 flex items-center justify-center bg-gray-50 min-h-[400px]">
+              {viewLetterhead.letterheadUrl && (
+                <div className="w-full flex justify-center">
+                  {viewLetterhead.letterheadUrl.endsWith('.pdf') ? (
+                    <iframe
+                      src={viewLetterhead.letterheadUrl}
+                      className="w-full max-w-3xl h-[600px] rounded-lg border border-gray-200"
+                      title="Letterhead PDF"
+                    />
+                  ) : (
+                    <img
+                      src={viewLetterhead.letterheadUrl}
+                      alt="Letterhead"
+                      className="max-w-full max-h-[600px] rounded-lg border border-gray-200 shadow-lg"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-4 text-xs text-gray-500">
+                <span>Created: {new Date(viewLetterhead.createdAt).toLocaleDateString()}</span>
+                {viewLetterhead.isDefault && (
+                  <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-700 rounded-full">
+                    Default
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    window.open(viewLetterhead.letterheadUrl, '_blank');
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-2"
+                >
+                  <Download size={14} />
+                  Open
+                </button>
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    setViewLetterhead(null);
+                    loadLetterheadForEdit(viewLetterhead);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-2"
+                >
+                  <Edit2 size={14} />
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    setViewLetterhead(null);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Print Tip */}
       {showPrintTip && (
         <div className="no-print fixed bottom-4 right-4 z-50 max-w-sm bg-amber-50 border border-amber-200 rounded-xl shadow-lg p-4">
           <p className="text-xs font-bold text-amber-800 mb-1">Still seeing white borders in print?</p>
@@ -928,7 +1390,7 @@ const LetterHeadDesigner = () => {
 
       <main className="p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
             <div className="flex items-center gap-3">
               <Building2 className="w-8 h-8 text-blue-600" />
               <div>
@@ -950,22 +1412,7 @@ const LetterHeadDesigner = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                {isEditing ? (
-                  <LetterHeadForm />
-                ) : (
-                  <div className="text-center py-8">
-                    <Check className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-                    <h3 className="text-base font-bold text-gray-900">Letter Head Ready!</h3>
-                    <p className="text-xs text-gray-500 mt-1">Preview is shown on the right side</p>
-                    <button
-                      onClick={handleEdit}
-                      className="mt-4 px-6 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all inline-flex items-center gap-2"
-                    >
-                      <Edit2 size={14} />
-                      Edit Design
-                    </button>
-                  </div>
-                )}
+                <LetterHeadForm />
               </div>
             </div>
 
@@ -976,7 +1423,7 @@ const LetterHeadDesigner = () => {
                     <Eye size={16} className="text-blue-600" />
                     Preview (A4 Size)
                   </h3>
-                  {!isEditing && (
+                  {showPreview && (
                     <div className="flex items-center gap-2">
                       <button
                         onClick={handlePrint}
@@ -1000,7 +1447,7 @@ const LetterHeadDesigner = () => {
                 </div>
 
                 <div className="bg-gray-100 rounded-xl p-4 min-h-[600px] flex items-center justify-center overflow-auto">
-                  {showPreview || !isEditing ? (
+                  {showPreview ? (
                     <div className="w-full flex justify-center">
                       <div
                         className="print-scale-wrapper"
@@ -1017,13 +1464,13 @@ const LetterHeadDesigner = () => {
                   ) : (
                     <div className="text-center text-gray-400">
                       <FileText className="w-16 h-16 mx-auto mb-3 opacity-20" />
-                      <p className="text-sm font-medium">Fill in the details and click</p>
-                      <p className="text-xs">"Preview Letter Head" to see your design</p>
+                      <p className="text-sm font-medium">Design your letterhead</p>
+                      <p className="text-xs">Fill in the details and click "Preview Letter Head"</p>
                     </div>
                   )}
                 </div>
 
-                {!isEditing && (
+                {showPreview && (
                   <div className="mt-4 flex items-center gap-3">
                     <button
                       onClick={handlePrint}
