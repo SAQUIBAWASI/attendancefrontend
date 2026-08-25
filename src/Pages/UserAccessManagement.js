@@ -4558,28 +4558,23 @@ import { isEmployeeHidden } from "../utils/employeeStatus";
 import "../index.css";
 import "./EmployeeDashboard.css";
 
-// Use relative path for proxy to handle it, or environment variable
 const API_BASE_URL = "https://api.timelyhealth.in/api"; 
 
 const UserAccessManagement = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  // Selection State
   const [selectedRole, setSelectedRole] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [permissions, setPermissions] = useState([]);
 
-  // UI State - Main Filter
   const [searchTerm, setSearchTerm] = useState("");
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isEmployeeDropdownOpen, setIsEmployeeDropdownOpen] = useState(false);
 
-  // UI State - Global Search
   const [globalSearchTerm, setGlobalSearchTerm] = useState("");
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
 
-  // UI State - Mobile Filters
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const roleDropdownRef = useRef(null);
@@ -4670,7 +4665,7 @@ const UserAccessManagement = () => {
         { id: "events_register_participants", name: "Register Participants" },
       ]
     },
-    // ✅ EMPLOYEE ISSUES SECTION - NEWLY ADDED
+    // EMPLOYEE ISSUES SECTION
     {
       title: "Admin: Employee Issues Management",
       type: "toggleable",
@@ -4683,7 +4678,7 @@ const UserAccessManagement = () => {
         { id: "employee_issues_reply", name: "Reply to Issues" },
       ]
     },
-    // ✅ ADMIN ISSUE MANAGEMENT SECTION
+    // ADMIN ISSUE MANAGEMENT SECTION
     {
       title: "Admin: Issue Management System",
       type: "toggleable",
@@ -4695,6 +4690,21 @@ const UserAccessManagement = () => {
         { id: "admin_issue_delete", name: "Delete Admin Issues" },
         { id: "admin_issue_priority", name: "Set Issue Priority" },
         { id: "admin_issue_status", name: "Update Issue Status" },
+      ]
+    },
+    // 🔥 OP MANAGEMENT SECTION - NEWLY ADDED
+    {
+      title: "Admin: OP Management",
+      type: "toggleable",
+      items: [
+        { id: "op_dashboard_view", name: "OP Dashboard View" },
+        { id: "op_patient_records_view", name: "View OP Patient Records" },
+        { id: "op_patient_add_edit", name: "Add/Edit OP Patients" },
+        { id: "op_patient_delete", name: "Delete OP Patients" },
+        { id: "op_appointment_slots_manage", name: "Manage Appointment Slots" },
+        { id: "op_bookings_view", name: "View OP Bookings" },
+        { id: "op_payment_status_update", name: "Update Payment Status" },
+        { id: "op_export_csv", name: "Export OP Data (CSV)" },
       ]
     },
     {
@@ -4718,17 +4728,13 @@ const UserAccessManagement = () => {
   useEffect(() => {
     fetchEmployees();
     
-    // Click outside handler
     const handleClickOutside = (event) => {
-      // Role Dropdown
       if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target)) {
         setIsRoleDropdownOpen(false);
       }
-      // Employee Dropdown
       if (employeeDropdownRef.current && !employeeDropdownRef.current.contains(event.target)) {
         setIsEmployeeDropdownOpen(false);
       }
-      // Global Search Dropdown
       if (globalSearchRef.current && !globalSearchRef.current.contains(event.target)) {
         setIsGlobalSearchOpen(false);
       }
@@ -4752,7 +4758,6 @@ const UserAccessManagement = () => {
   };
 
   // --- Derived Data ---
-  // Get unique roles with counts
   const roleStats = employees.reduce((acc, emp) => {
     const role = emp.role || "No Role";
     acc[role] = (acc[role] || 0) + 1;
@@ -4760,7 +4765,6 @@ const UserAccessManagement = () => {
   }, {});
   const availableRoles = Object.keys(roleStats).sort();
 
-  // Filter employees based on Role AND Search Term (Main Filter)
   const filteredEmployees = employees.filter((e) => {
     const matchesRole = selectedRole ? (e.role || "No Role") === selectedRole : true;
     const term = searchTerm.toLowerCase();
@@ -4771,7 +4775,6 @@ const UserAccessManagement = () => {
     return matchesRole && matchesSearch;
   });
 
-  // Global Search Filter (Any Role)
   const filteredGlobalEmployees = employees.filter((e) => {
     if (!globalSearchTerm) return false;
     const term = globalSearchTerm.toLowerCase();
@@ -4785,7 +4788,7 @@ const UserAccessManagement = () => {
   const handleSelectRole = (role) => {
     setSelectedRole(role);
     setIsRoleDropdownOpen(false);
-    setSelectedEmployee(null); // Reset employee when role changes
+    setSelectedEmployee(null);
     setSearchTerm("");
   };
 
@@ -4797,14 +4800,15 @@ const UserAccessManagement = () => {
   };
 
   const handleGlobalSelectEmployee = (emp) => {
-    setSelectedRole(emp.role || ""); // Auto-switch context to employee's role
+    setSelectedRole(emp.role || "");
     setSelectedEmployee(emp);
     setPermissions(emp.permissions || []);
-    setSearchTerm(emp.name); // Sync main search
+    setSearchTerm(emp.name);
     setIsGlobalSearchOpen(false);
-    setGlobalSearchTerm(""); // Clear global search
+    setGlobalSearchTerm("");
   };
 
+  // 🔥 OP Management Permission Toggle Logic
   const handleTogglePermission = (permId) => {
     // Special handling for "Manage Job Recruitment"
     if (permId === "job_recruitment_manage") {
@@ -4817,9 +4821,7 @@ const UserAccessManagement = () => {
         "documents_view"
       ];
       
-      // If "Manage Job Recruitment" is being checked
       if (!permissions.includes("job_recruitment_manage")) {
-        // Add all recruitment permissions
         setPermissions(prev => {
           const newPermissions = [...prev];
           recruitmentPermissions.forEach(p => {
@@ -4830,26 +4832,21 @@ const UserAccessManagement = () => {
           return newPermissions;
         });
       } else {
-        // If "Manage Job Recruitment" is being unchecked, remove all recruitment permissions
         setPermissions(prev => prev.filter(p => !recruitmentPermissions.includes(p)));
       }
     } 
-    // Special handling for individual recruitment permissions
     else if (["job_posts_view", "job_applicants_view", "score_board_view", "assessments_view", "documents_view"].includes(permId)) {
       setPermissions(prev => {
         const newPermissions = prev.includes(permId) 
           ? prev.filter(p => p !== permId)
           : [...prev, permId];
         
-        // Check if all individual recruitment permissions are checked
         const individualPerms = ["job_posts_view", "job_applicants_view", "score_board_view", "assessments_view", "documents_view"];
         const allChecked = individualPerms.every(p => newPermissions.includes(p));
         
-        // If all are checked, add manage permission
         if (allChecked && !newPermissions.includes("job_recruitment_manage")) {
           return [...newPermissions, "job_recruitment_manage"];
         }
-        // If any is unchecked, remove manage permission
         else if (!allChecked && newPermissions.includes("job_recruitment_manage")) {
           return newPermissions.filter(p => p !== "job_recruitment_manage");
         }
@@ -4868,9 +4865,7 @@ const UserAccessManagement = () => {
         "events_register_participants"
       ];
       
-      // If "Manage Events" is being checked
       if (!permissions.includes("events_manage")) {
-        // Add all events permissions
         setPermissions(prev => {
           const newPermissions = [...prev];
           eventsPermissions.forEach(p => {
@@ -4881,26 +4876,21 @@ const UserAccessManagement = () => {
           return newPermissions;
         });
       } else {
-        // If "Manage Events" is being unchecked, remove all events permissions
         setPermissions(prev => prev.filter(p => !eventsPermissions.includes(p)));
       }
     }
-    // Special handling for individual events permissions
     else if (["events_create", "events_edit", "events_delete", "events_view_all", "events_register_participants"].includes(permId)) {
       setPermissions(prev => {
         const newPermissions = prev.includes(permId) 
           ? prev.filter(p => p !== permId)
           : [...prev, permId];
         
-        // Check if all individual events permissions are checked
         const individualPerms = ["events_create", "events_edit", "events_delete", "events_view_all", "events_register_participants"];
         const allChecked = individualPerms.every(p => newPermissions.includes(p));
         
-        // If all are checked, add manage permission
         if (allChecked && !newPermissions.includes("events_manage")) {
           return [...newPermissions, "events_manage"];
         }
-        // If any is unchecked, remove manage permission
         else if (!allChecked && newPermissions.includes("events_manage")) {
           return newPermissions.filter(p => p !== "events_manage");
         }
@@ -4908,7 +4898,7 @@ const UserAccessManagement = () => {
         return newPermissions;
       });
     }
-    // ✅ Special handling for Employee Issues Management
+    // Employee Issues Management
     else if (permId === "employee_issues_manage") {
       const employeeIssuesPermissions = [
         "employee_issues_manage",
@@ -4919,9 +4909,7 @@ const UserAccessManagement = () => {
         "employee_issues_reply"
       ];
       
-      // If "Manage Employee Issues" is being checked
       if (!permissions.includes("employee_issues_manage")) {
-        // Add all employee issues permissions
         setPermissions(prev => {
           const newPermissions = [...prev];
           employeeIssuesPermissions.forEach(p => {
@@ -4932,26 +4920,21 @@ const UserAccessManagement = () => {
           return newPermissions;
         });
       } else {
-        // If "Manage Employee Issues" is being unchecked, remove all employee issues permissions
         setPermissions(prev => prev.filter(p => !employeeIssuesPermissions.includes(p)));
       }
     }
-    // Special handling for individual employee issues permissions
     else if (["employee_issues_view", "employee_issues_resolve", "employee_issues_assign", "employee_issues_delete", "employee_issues_reply"].includes(permId)) {
       setPermissions(prev => {
         const newPermissions = prev.includes(permId) 
           ? prev.filter(p => p !== permId)
           : [...prev, permId];
         
-        // Check if all individual employee issues permissions are checked
         const individualPerms = ["employee_issues_view", "employee_issues_resolve", "employee_issues_assign", "employee_issues_delete", "employee_issues_reply"];
         const allChecked = individualPerms.every(p => newPermissions.includes(p));
         
-        // If all are checked, add manage permission
         if (allChecked && !newPermissions.includes("employee_issues_manage")) {
           return [...newPermissions, "employee_issues_manage"];
         }
-        // If any is unchecked, remove manage permission
         else if (!allChecked && newPermissions.includes("employee_issues_manage")) {
           return newPermissions.filter(p => p !== "employee_issues_manage");
         }
@@ -4959,7 +4942,7 @@ const UserAccessManagement = () => {
         return newPermissions;
       });
     }
-    // ✅ Special handling for Admin Issue Management
+    // Admin Issue Management
     else if (permId === "admin_issue_manage") {
       const adminIssuePermissions = [
         "admin_issue_manage",
@@ -4971,9 +4954,7 @@ const UserAccessManagement = () => {
         "admin_issue_status"
       ];
       
-      // If "Manage Admin Issues" is being checked
       if (!permissions.includes("admin_issue_manage")) {
-        // Add all admin issue permissions
         setPermissions(prev => {
           const newPermissions = [...prev];
           adminIssuePermissions.forEach(p => {
@@ -4984,32 +4965,72 @@ const UserAccessManagement = () => {
           return newPermissions;
         });
       } else {
-        // If "Manage Admin Issues" is being unchecked, remove all admin issue permissions
         setPermissions(prev => prev.filter(p => !adminIssuePermissions.includes(p)));
       }
     }
-    // Special handling for individual admin issue permissions
     else if (["admin_issue_view", "admin_issue_resolve", "admin_issue_assign", "admin_issue_delete", "admin_issue_priority", "admin_issue_status"].includes(permId)) {
       setPermissions(prev => {
         const newPermissions = prev.includes(permId) 
           ? prev.filter(p => p !== permId)
           : [...prev, permId];
         
-        // Check if all individual admin issue permissions are checked
         const individualPerms = ["admin_issue_view", "admin_issue_resolve", "admin_issue_assign", "admin_issue_delete", "admin_issue_priority", "admin_issue_status"];
         const allChecked = individualPerms.every(p => newPermissions.includes(p));
         
-        // If all are checked, add manage permission
         if (allChecked && !newPermissions.includes("admin_issue_manage")) {
           return [...newPermissions, "admin_issue_manage"];
         }
-        // If any is unchecked, remove manage permission
         else if (!allChecked && newPermissions.includes("admin_issue_manage")) {
           return newPermissions.filter(p => p !== "admin_issue_manage");
         }
         
         return newPermissions;
       });
+    }
+    // 🔥 OP MANAGEMENT TOGGLE LOGIC
+    else if (permId === "op_dashboard_view") {
+      // Dashboard view is independent - normal toggle
+      setPermissions(prev =>
+        prev.includes(permId) ? prev.filter(p => p !== permId) : [...prev, permId]
+      );
+    }
+    else if (permId === "op_patient_records_view") {
+      setPermissions(prev => {
+        const newPermissions = prev.includes(permId) 
+          ? prev.filter(p => p !== permId)
+          : [...prev, permId];
+        
+        // If view is checked and add/edit is also checked, enable manage
+        if (newPermissions.includes("op_patient_records_view") && newPermissions.includes("op_patient_add_edit")) {
+          if (!newPermissions.includes("op_patient_add_edit")) {
+            // already there
+          }
+        }
+        return newPermissions;
+      });
+    }
+    else if (permId === "op_patient_add_edit") {
+      setPermissions(prev => {
+        const newPermissions = prev.includes(permId) 
+          ? prev.filter(p => p !== permId)
+          : [...prev, permId];
+        
+        // If add/edit is unchecked, also remove delete if it exists
+        if (!newPermissions.includes("op_patient_add_edit")) {
+          return newPermissions.filter(p => p !== "op_patient_delete");
+        }
+        return newPermissions;
+      });
+    }
+    else if (permId === "op_patient_delete") {
+      // Can only delete if add/edit is enabled
+      if (!permissions.includes("op_patient_add_edit") && !permissions.includes(permId)) {
+        toast.warning("Please enable 'Add/Edit OP Patients' first to enable delete");
+        return;
+      }
+      setPermissions(prev =>
+        prev.includes(permId) ? prev.filter(p => p !== permId) : [...prev, permId]
+      );
     }
     else {
       // Normal toggle for other permissions
@@ -5039,7 +5060,7 @@ const UserAccessManagement = () => {
     }
   };
 
-  // Loading screen matching other components
+  // Loading screen
   if (loading && employees.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
@@ -5064,9 +5085,6 @@ const UserAccessManagement = () => {
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
               User <span>Access Management</span>
             </h1>
-            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Configure platform-wide permissions and access controls
-            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FiCalendar />
@@ -5155,12 +5173,12 @@ const UserAccessManagement = () => {
             </span>
           </div>
 
-          {/* Filter Content - Toggle on Mobile */}
+          {/* Filter Content */}
           <div className={`${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
             <div className="emp-dash__card-body p-4 bg-gray-50/50">
               <div className="flex flex-col items-start gap-3 md:flex-row md:items-end">
                 
-                {/* Global Search - First */}
+                {/* Global Search */}
                 <div className="relative w-full md:w-72" ref={globalSearchRef}>
                   <label className="block mb-1 text-xs font-medium text-gray-600">Search Employee</label>
                   <div className="relative">
@@ -5209,7 +5227,7 @@ const UserAccessManagement = () => {
                   )}
                 </div>
                 
-                {/* 1. Role Selector - Second */}
+                {/* Role Selector */}
                 <div className="relative w-full md:w-48" ref={roleDropdownRef}>
                   <label className="block mb-1 text-xs font-medium text-gray-600">Role</label>
                   <div 
@@ -5227,7 +5245,6 @@ const UserAccessManagement = () => {
                     <FiChevronDown className={`text-gray-500 text-xs transition-transform ${isRoleDropdownOpen ? "rotate-180" : ""}`} />
                   </div>
 
-                  {/* Role Dropdown */}
                   {isRoleDropdownOpen && (
                     <div className="absolute z-20 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg max-h-60">
                       <div 
@@ -5254,7 +5271,7 @@ const UserAccessManagement = () => {
                   )}
                 </div>
 
-                {/* 2. Employee Selector - Third */}
+                {/* Employee Selector */}
                 <div className="flex-[2] relative w-full" ref={employeeDropdownRef}>
                   <label className="block mb-1 text-xs font-medium text-gray-600">Employee</label>
                   <div className="relative">
@@ -5278,7 +5295,6 @@ const UserAccessManagement = () => {
                     </div>
                   </div>
 
-                  {/* Employee Dropdown */}
                   {isEmployeeDropdownOpen && filteredEmployees.length > 0 && (
                     <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg max-h-60">
                       {filteredEmployees.map((emp) => (
@@ -5370,7 +5386,7 @@ const UserAccessManagement = () => {
             )}
           </div>
           <div className="emp-dash__card-body bg-gray-50/50">
-            {/* Selected Employee Info - Shows when employee is selected */}
+            {/* Selected Employee Info */}
             {selectedEmployee && (
               <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50 flex items-center gap-3">
                 <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">

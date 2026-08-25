@@ -32,7 +32,8 @@ import {
   Lock,
   EyeOff,
   Eye as EyeOpen,
-  Key
+  Key,
+  UserPlus
 } from "lucide-react";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -55,7 +56,6 @@ const SPECIALIZATION_OPTIONS = [
   { value: "Urologist", label: "Urologist" }
 ];
 
-// Time options from 5:00 AM to 12:00 AM (midnight)
 const TIME_OPTIONS = [
   "5:00 AM", "5:30 AM", "6:00 AM", "6:30 AM",
   "7:00 AM", "7:30 AM", "8:00 AM", "8:30 AM",
@@ -89,12 +89,13 @@ const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "S
 
 const DoctorManagement = () => {
   const [doctors, setDoctors] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [specializationFilter, setSpecializationFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -106,6 +107,9 @@ const DoctorManagement = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordInModal, setShowPasswordInModal] = useState(false);
 
+  const [employeeDropdownOpen, setEmployeeDropdownOpen] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -113,10 +117,51 @@ const DoctorManagement = () => {
 
   useEffect(() => {
     fetchDoctors();
+    fetchEmployees();
   }, []);
 
   // =============================================
-  // GET ALL DOCTORS - /api/doctors/getalldoctors
+  // FETCH ALL EMPLOYEES
+  // =============================================
+  const fetchEmployees = async () => {
+    setEmployeesLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/employees/get-employees`);
+      
+      let allEmployees = [];
+      
+      if (Array.isArray(res.data)) {
+        allEmployees = res.data;
+      } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
+        allEmployees = res.data.data;
+      } else if (res.data && res.data.success && Array.isArray(res.data.data)) {
+        allEmployees = res.data.data;
+      } else if (res.data && res.data.success && Array.isArray(res.data.employees)) {
+        allEmployees = res.data.employees;
+      } else if (res.data && res.data.employees && Array.isArray(res.data.employees)) {
+        allEmployees = res.data.employees;
+      } else {
+        allEmployees = [];
+      }
+      
+      setEmployees(allEmployees);
+    } catch (err) {
+      console.error("Error fetching employees:", err);
+      setEmployees([]);
+    } finally {
+      setEmployeesLoading(false);
+    }
+  };
+
+  // 🔥 Filter employees with department "Medical"
+  const medicalEmployees = useMemo(() => {
+    return employees.filter(emp => 
+      emp.department && emp.department.toLowerCase() === "medical"
+    );
+  }, [employees]);
+
+  // =============================================
+  // GET ALL DOCTORS
   // =============================================
   const fetchDoctors = async () => {
     setLoading(true);
@@ -149,6 +194,30 @@ const DoctorManagement = () => {
   const deleteDoctor = async (id) => {
     const res = await axios.delete(`${API_BASE_URL}/doctors/deletedoctor/${id}`);
     return res;
+  };
+
+  // 🔥 Handle employee selection
+  const handleEmployeeSelect = (employee) => {
+    setSelectedEmployeeId(employee._id);
+    setEmployeeDropdownOpen(false);
+    
+    setFormData((prev) => ({
+      ...prev,
+      name: employee.name || "",
+      email: employee.email || "",
+      phone: employee.phone || "",
+      address: employee.address || employee.addressLine1 || "",
+      specialization: prev.specialization || "",
+      qualification: prev.qualification || "",
+      experience: prev.experience || "",
+      consultationFee: prev.consultationFee || "",
+      availableDays: prev.availableDays || [],
+      availableTimeStart: prev.availableTimeStart || "",
+      availableTimeEnd: prev.availableTimeEnd || "",
+      status: prev.status || "active"
+    }));
+    
+    showToast(`Employee ${employee.name} details loaded!`, "success");
   };
 
   const handleInputChange = (e) => {
@@ -216,6 +285,7 @@ const DoctorManagement = () => {
       setFormData({ ...EMPTY_FORM });
       setEditingId(null);
       setShowForm(false);
+      setSelectedEmployeeId("");
     } catch (err) {
       console.error("Error saving doctor:", err);
       showToast(err.response?.data?.message || "Failed to save doctor", "error");
@@ -254,6 +324,7 @@ const DoctorManagement = () => {
     });
     setEditingId(doctor._id);
     setShowForm(true);
+    setSelectedEmployeeId("");
   };
 
   const handleDelete = async (id) => {
@@ -292,6 +363,8 @@ const DoctorManagement = () => {
     setEditingId(null);
     setShowForm(false);
     setShowPassword(false);
+    setSelectedEmployeeId("");
+    setEmployeeDropdownOpen(false);
   };
 
   const clearFilters = () => {
@@ -416,13 +489,13 @@ const DoctorManagement = () => {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={fetchDoctors} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
+            <button onClick={() => { fetchDoctors(); fetchEmployees(); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
               <RefreshCw className="w-3.5 h-3.5" /> Refresh
             </button>
             <button onClick={downloadCSV} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-md">
               <Download className="w-3.5 h-3.5" /> Export CSV
             </button>
-            <button onClick={() => { setFormData({ ...EMPTY_FORM }); setEditingId(null); setShowForm(true); }} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-md">
+            <button onClick={() => { setFormData({ ...EMPTY_FORM }); setEditingId(null); setSelectedEmployeeId(""); setShowForm(true); }} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-md">
               <Plus className="w-3.5 h-3.5" /> Add Doctor
             </button>
           </div>
@@ -485,6 +558,72 @@ const DoctorManagement = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+                {/* 🔥 EMPLOYEE DROPDOWN - ONLY Medical department employees */}
+                {!editingId && (
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                      Select from Medical Employees <span className="text-blue-600">(Optional)</span>
+                    </label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setEmployeeDropdownOpen(!employeeDropdownOpen)}
+                        className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white flex items-center justify-between"
+                      >
+                        <span className={selectedEmployeeId ? "text-gray-900 font-medium" : "text-gray-400"}>
+                          {selectedEmployeeId 
+                            ? medicalEmployees.find(e => e._id === selectedEmployeeId)?.name || "Select employee..."
+                            : medicalEmployees.length > 0 
+                              ? "Select an employee from Medical department..." 
+                              : "No Medical employees found"}
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${employeeDropdownOpen ? "rotate-180" : ""}`} />
+                      </button>
+                      {employeeDropdownOpen && (
+                        <div className="absolute left-0 right-0 mt-1 border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto bg-white z-10">
+                          {employeesLoading ? (
+                            <div className="px-4 py-3 text-center text-gray-500 text-sm">
+                              <RefreshCw className="w-4 h-4 animate-spin inline mr-2" /> Loading employees...
+                            </div>
+                          ) : medicalEmployees.length === 0 ? (
+                            <div className="px-4 py-3 text-center text-gray-400 text-sm">
+                              <div>No employees found in Medical department</div>
+                              <div className="text-[10px] text-gray-400 mt-1">
+                                Total employees: {employees.length}
+                              </div>
+                            </div>
+                          ) : (
+                            medicalEmployees.map((emp) => (
+                              <button
+                                key={emp._id}
+                                type="button"
+                                onClick={() => handleEmployeeSelect(emp)}
+                                className="w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 transition-colors flex items-center justify-between border-b border-gray-100 last:border-0"
+                              >
+                                <div>
+                                  <div className="font-medium text-gray-800">{emp.name || "N/A"}</div>
+                                  <div className="text-[10px] text-gray-500">
+                                    {emp.email || "No email"} • {emp.phone || "No phone"}
+                                  </div>
+                                  <div className="text-[9px] text-blue-500 font-medium">
+                                    {emp.department} → {emp.role || "No role"}
+                                  </div>
+                                </div>
+                                <UserPlus className="w-4 h-4 text-blue-500" />
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {selectedEmployeeId && (
+                      <p className="text-[10px] text-emerald-600 mt-1 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Employee details loaded! Fill remaining fields below.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Row 1: Name, Email */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -1003,7 +1142,7 @@ const DoctorManagement = () => {
           )}
         </div>
 
-        {/* Doctor Detail Modal - WITH PASSWORD DISPLAY */}
+        {/* Doctor Detail Modal */}
         {showDetailModal && selectedDoctor && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative">
@@ -1101,7 +1240,7 @@ const DoctorManagement = () => {
                   <div className="text-xs font-medium text-gray-700">{selectedDoctor.availableTime || "Not set"}</div>
                 </div>
 
-                {/* ✅ PASSWORD DISPLAY SECTION */}
+                {/* Password Display */}
                 <div className="pt-3 border-t-2 border-blue-200 bg-blue-50/50 -mx-5 px-5 py-3 rounded-b-xl">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

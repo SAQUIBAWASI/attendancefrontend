@@ -18,9 +18,56 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAnyAdminPermission, setHasAnyAdminPermission] = useState(false);
+  const [employeeRole, setEmployeeRole] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  // 🔥 OP Management related roles
+  const OP_MANAGEMENT_ROLES = [
+    "Phlebotomist",
+    "Doctor",
+    "Nurse",
+    "Receptionist",
+    "Lab Technician",
+    "Pharmacist",
+    "Radiologist",
+    "Physiotherapist",
+    "Optometrist",
+    "Audiologist",
+    "Dentist",
+    "Veterinarian",
+    "Surgeon",
+    "Anesthesiologist",
+    "Cardiologist",
+    "Dermatologist",
+    "Endocrinologist",
+    "Gastroenterologist",
+    "Gynecologist",
+    "Hematologist",
+    "Nephrologist",
+    "Neurologist",
+    "Oncologist",
+    "Ophthalmologist",
+    "Orthopedic",
+    "ENT Specialist",
+    "Pediatrician",
+    "Psychiatrist",
+    "Pulmonologist",
+    "Rheumatologist",
+    "Urologist",
+    "General Physician",
+    "Medical Officer",
+    "Chief Medical Officer",
+    "Medical Superintendent",
+    "Hospital Administrator",
+    "Clinic Manager",
+    "OP Manager",
+    "Patient Coordinator",
+    "Medical Assistant",
+    "Clinical Assistant",
+    "Healthcare Administrator"
+  ];
 
   const ADMIN_PERMISSIONS = [
     "dashboard_view", "attendance_view_all", "shifts_manage", "leave_approve",
@@ -80,10 +127,27 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/emp-events": "Events",
       "/emp-issues": "Issues",
       "/emp-tasks": "Tasks",
-      "/employee-visits-data": "My Visits", // ✅ Added for visits page
-      "/relieving-letters": "Relieving Letters"
+      "/employee-visits-data": "My Visits",
+      "/relieving-letters": "Relieving Letters",
+      // 🔥 OP Management paths - Employee ke liye /employee/ prefix
+      "/employee/op-dashboard": "OP Dashboard",
+      "/employee/doctor-management": "Doctors",
+      "/employee/op-management": "OP Records",
+      "/employee/appointment-slots": "Appointments Slots",
+      "/employee/services": "Services",
+      "/employee/bookings": "Bookings",
+      "/employee/letterhead": "Letter Head"
     };
     return pathMap[path] || "Dashboard";
+  };
+
+  // 🔥 Check if user has OP Management access based on role
+  const hasOPManagementAccess = (role) => {
+    if (!role) return false;
+    return OP_MANAGEMENT_ROLES.some(r => 
+      role.toLowerCase().includes(r.toLowerCase()) || 
+      r.toLowerCase().includes(role.toLowerCase())
+    );
   };
 
   const handleMouseEnterSidebar = () => {
@@ -223,6 +287,10 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
         const dataToUse = response.data.data || response.data || empLocal;
 
+        // 🔥 Get employee role
+        const role = dataToUse.role || dataToUse.designation || "";
+        setEmployeeRole(role);
+
         const isManagerUser = checkManagerStatus(dataToUse);
         const isHRManagement = checkHRManagementStatus(dataToUse);
 
@@ -253,6 +321,11 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       } catch (error) {
         let localPermissions = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
+        
+        // 🔥 Get employee role from localStorage
+        const role = empLocal.role || empLocal.designation || "";
+        setEmployeeRole(role);
+
         const isManagerUser = checkManagerStatus(empLocal);
         const isHRManagement = checkHRManagementStatus(empLocal);
 
@@ -289,9 +362,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     if (loading) return false;
     return permissions.includes(permission);
   };
-
-
-  // ─── Employee Menu ───
 
   // ─── Navigate to Ingrain Hire ───
   const navigateToIngrainHire = () => {
@@ -345,7 +415,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     window.location.href = url;
   };
 
-
+  // ─── Employee Menu ───
   const buildEmployeeMenu = () => {
     const employeeId = localStorage.getItem("employeeId") || '';
     const tasksUrl = `https://taskmanagement.iryax.com?employeeId=${employeeId}`;
@@ -367,8 +437,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       { icon: <i className="ri-money-rupee-circle-fill"></i>, name: "Payslips", path: "/mysalary" },
       { icon: <i className="ri-funds-fill"></i>, name: "Expenses", path: "/expense-management" },
       { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
-      {icon: <i className="ri-file-paper-2-line"></i>,name: "Relieving Letters",path: "/relieving-letters"},
-        { 
+      { icon: <i className="ri-file-paper-2-line"></i>, name: "Relieving Letters", path: "/relieving-letters" },
+      { 
         icon: <i className="ri-map-pin-user-fill"></i>, 
         name: "My Visits", 
         path: "/employee-visits-data",
@@ -394,23 +464,40 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         isExternal: true,
         badge: "HIRE"
       },
-      
-      // ✅ My Visits - Employee Side
-   
-
-
-
-
-
       { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
     ];
+
+    // 🔥 Insert OP Management section if user has access based on role
+    const hasOPAccess = hasOPManagementAccess(employeeRole);
+    
+    if (hasOPAccess) {
+      const dashboardIndex = menu.findIndex(item => item.path === "/employeedashboard");
+      
+      const opManagementSection = {
+        icon: <i className="ri-hospital-line"></i>,
+        name: "OP Management",
+        dropdown: [
+          { name: "OP Dashboard", path: "/employee/op-dashboard" },
+          { name: "Doctors", path: "/employee/doctor-management" },
+          { name: "OP Records", path: "/employee/op-management" },
+          { name: "Appointments Slots", path: "/employee/appointment-slots" },
+          { name: "Services", path: "/employee/services" },
+          { name: "Bookings", path: "/employee/bookings" },
+          { name: "Letter Head", path: "/employee/letterhead" },
+        ]
+      };
+
+      if (dashboardIndex !== -1) {
+        menu.splice(dashboardIndex + 1, 0, opManagementSection);
+      } else {
+        menu.splice(1, 0, opManagementSection);
+      }
+    }
+
     return menu;
   };
 
-
   // ─── Admin Menu ───
-
-
   const buildAdminMenu = () => {
     const employeeId = localStorage.getItem("employeeId") || '';
     const tasksUrl = `https://taskmanagement.iryax.com?employeeId=${employeeId}`;
@@ -429,7 +516,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-user-add-fill"></i>, name: "Add Employee", path: "/emp-add-employee" });
     }
 
-    // Admin Attendance - Sirf admin-specific items
     const attendanceDropdown = [];
 
     if (hasPermission("attendance_view_all")) {
@@ -530,7 +616,26 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
     }
 
-    // ✅ My Visits - Admin Side bhi add karte hain
+    // 🔥 OP Management in Admin Menu - based on role (WITH /employee/ prefix for employee admin view)
+    const hasOPAccess = hasOPManagementAccess(employeeRole);
+    
+    if (hasOPAccess) {
+      menu.push({
+        icon: <i className="ri-hospital-line"></i>,
+        name: "OP Management",
+        dropdown: [
+          { name: "OP Dashboard", path: "/employee/op-dashboard" },
+          { name: "Doctors", path: "/employee/doctor-management" },
+          { name: "OP Records", path: "/employee/op-management" },
+          { name: "Appointments Slots", path: "/employee/appointment-slots" },
+          { name: "Services", path: "/employee/services" },
+          { name: "Bookings", path: "/employee/bookings" },
+          { name: "Letter Head", path: "/employee/letterhead" },
+        ]
+      });
+    }
+
+    // My Visits - Admin Side
     menu.push({ 
       icon: <i className="ri-map-pin-user-fill"></i>, 
       name: "My Visits", 
@@ -538,7 +643,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       badge: "NEW"
     });
 
-    // ─── Ingrain Hire in Admin Menu ───
+    // Ingrain Hire in Admin Menu
     menu.push({ 
       icon: <i className="ri-building-fill"></i>, 
       name: "Ingrain Hire", 

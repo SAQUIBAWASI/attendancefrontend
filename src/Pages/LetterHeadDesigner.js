@@ -78,6 +78,7 @@ const LetterHeadDesigner = () => {
 
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
+  const previewContainerRef = useRef(null);
 
   // Show Toast
   const showToast = (message, type = 'success') => {
@@ -150,57 +151,175 @@ const LetterHeadDesigner = () => {
     setShowPreview(false);
   };
 
-  // ===== CAPTURE LETTERHEAD AS IMAGE - FIXED =====
-  const captureLetterhead = async () => {
+  // Wait for images to load
+  const waitForImagesAndFonts = async (container) => {
+    const imgs = Array.from(container.querySelectorAll('img'));
+    await Promise.all(
+      imgs.map((img) => {
+        if (img.complete && img.naturalWidth !== 0) {
+          return img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+        }
+        return new Promise((resolve) => {
+          img.onload = () => {
+            if (img.decode) {
+              img.decode().then(resolve).catch(resolve);
+            } else {
+              resolve();
+            }
+          };
+          img.onerror = resolve;
+        });
+      })
+    );
+
+    if (document.fonts && document.fonts.ready) {
+      try {
+        await document.fonts.ready;
+      } catch (e) {}
+    }
+
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    );
+  };
+
+  // ===== CAPTURE LETTERHEAD AS PNG =====
+  const captureLetterheadAsPNG = async () => {
     if (!previewRef.current) {
       showToast('Please preview first!', 'error');
       return null;
     }
 
     const element = previewRef.current;
+    
+    // Wait for images and fonts
+    await waitForImagesAndFonts(element);
 
-    // Get the actual rendered dimensions
-    const rect = element.getBoundingClientRect();
-    const actualWidth = rect.width;
-    const actualHeight = rect.height;
+    // Create a clone of the element to capture
+    const clone = element.cloneNode(true);
+    clone.id = 'capture-clone';
+    clone.style.position = 'fixed';
+    clone.style.top = '-9999px';
+    clone.style.left = '0';
+    clone.style.width = '794px';
+    clone.style.height = '1123px';
+    clone.style.transform = 'none';
+    clone.style.margin = '0';
+    clone.style.padding = '0';
+    clone.style.boxShadow = 'none';
+    clone.style.border = 'none';
+    clone.style.zIndex = '-9999';
+    clone.style.visibility = 'visible';
+    clone.style.opacity = '1';
+    clone.style.pointerEvents = 'none';
+    clone.style.backgroundColor = '#ffffff';
+    
+    // Append clone to body
+    document.body.appendChild(clone);
 
-    // Scale factor - we want exactly 794x1123
-    const scaleX = 794 / actualWidth;
-    const scaleY = 1123 / actualHeight;
-    const scale = Math.min(scaleX, scaleY);
+    // Wait for clone to render
+    await new Promise(resolve => setTimeout(resolve, 200));
 
-    const canvas = await html2canvas(element, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      width: 794,
-      height: 1123,
-      windowWidth: 794,
-      windowHeight: 1123,
-      onclone: (clonedDoc) => {
-        const clonedEl = clonedDoc.getElementById('letterhead-preview');
-        if (clonedEl) {
-          clonedEl.style.width = '794px';
-          clonedEl.style.maxWidth = '794px';
-          clonedEl.style.minHeight = '1123px';
-          clonedEl.style.margin = '0';
-          clonedEl.style.padding = '0';
-          clonedEl.style.boxSizing = 'border-box';
-          clonedEl.style.overflow = 'hidden';
-          clonedEl.style.transform = 'none';
-          clonedEl.style.position = 'relative';
-          clonedEl.style.left = '0';
-          clonedEl.style.top = '0';
+    let canvas = null;
+    try {
+      canvas = await html2canvas(clone, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+        width: 794,
+        height: 1123,
+        onclone: (clonedDoc) => {
+          const clonedEl = clonedDoc.getElementById('capture-clone');
+          if (clonedEl) {
+            clonedEl.style.position = 'static';
+            clonedEl.style.top = '0';
+            clonedEl.style.left = '0';
+            clonedEl.style.width = '794px';
+            clonedEl.style.height = '1123px';
+            clonedEl.style.transform = 'none';
+            clonedEl.style.margin = '0';
+            clonedEl.style.padding = '0';
+            clonedEl.style.backgroundColor = '#ffffff';
+          }
+          
+          clonedDoc.body.style.margin = '0';
+          clonedDoc.body.style.padding = '0';
+          clonedDoc.body.style.width = '794px';
+          clonedDoc.body.style.height = '1123px';
+          clonedDoc.body.style.background = '#ffffff';
+          clonedDoc.body.style.overflow = 'hidden';
         }
+      });
+    } catch (error) {
+      console.error('html2canvas error:', error);
+      showToast('Error capturing letterhead. Please try again.', 'error');
+      throw error;
+    } finally {
+      // Remove the clone
+      if (document.body.contains(clone)) {
+        document.body.removeChild(clone);
       }
-    });
+    }
 
     return canvas;
   };
 
-  // Save Letterhead - Capture preview as PDF
+  // Convert canvas to PNG Blob
+  const canvasToPNGBlob = (canvas) => {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob);
+      }, 'image/png', 1.0);
+    });
+  };
+
+  // ===== BUILD LETTERHEAD PNG BLOB =====
+  const buildLetterheadPNGBlob = async () => {
+    const canvas = await captureLetterheadAsPNG();
+    if (!canvas) return null;
+
+    return await canvasToPNGBlob(canvas);
+  };
+
+  // ===== BUILD LETTERHEAD PDF FOR DOWNLOAD (only for download, not storage) =====
+  const buildLetterheadPdfForDownload = async () => {
+    const canvas = await captureLetterheadAsPNG();
+    if (!canvas) return null;
+
+    const imgData = canvas.toDataURL('image/png', 1.0);
+
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
+
+    const pdfWidth = 210;
+    const pdfHeight = 297;
+
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+
+    const scaleX = pdfWidth / imgWidth;
+    const scaleY = pdfHeight / imgHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    const finalWidth = imgWidth * scale;
+    const finalHeight = imgHeight * scale;
+
+    const xOffset = (pdfWidth - finalWidth) / 2;
+    const yOffset = (pdfHeight - finalHeight) / 2;
+
+    pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
+
+    return pdf;
+  };
+
+  // Save Letterhead as PNG
   const handleSaveLetterhead = async () => {
     if (!previewRef.current) {
       showToast('Please preview the letter head first!', 'error');
@@ -209,42 +328,13 @@ const LetterHeadDesigner = () => {
 
     setIsSaving(true);
     try {
-      const canvas = await captureLetterhead();
-      if (!canvas) {
+      const pngBlob = await buildLetterheadPNGBlob();
+      if (!pngBlob) {
         setIsSaving(false);
         return;
       }
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-      });
-
-      const pdfWidth = 210;
-      const pdfHeight = 297;
-      
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      
-      // Calculate to fit exactly in A4
-      const scaleX = pdfWidth / imgWidth;
-      const scaleY = pdfHeight / imgHeight;
-      const scale = Math.min(scaleX, scaleY);
-      
-      const finalWidth = imgWidth * scale;
-      const finalHeight = imgHeight * scale;
-      
-      const xOffset = (pdfWidth - finalWidth) / 2;
-      const yOffset = (pdfHeight - finalHeight) / 2;
-      
-      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
-      
-      const pdfBlob = pdf.output('blob');
-      const file = new File([pdfBlob], `letterhead-${Date.now()}.pdf`, { type: 'application/pdf' });
+      const file = new File([pngBlob], `letterhead-${Date.now()}.png`, { type: 'image/png' });
 
       const formDataToSend = new FormData();
       formDataToSend.append('letterhead', file);
@@ -276,7 +366,7 @@ const LetterHeadDesigner = () => {
     }
   };
 
-  // Update Letterhead - as PDF
+  // Update Letterhead as PNG
   const handleUpdateLetterhead = async () => {
     if (!selectedLetterhead) {
       showToast('No letterhead selected to update', 'error');
@@ -290,41 +380,13 @@ const LetterHeadDesigner = () => {
 
     setIsSaving(true);
     try {
-      const canvas = await captureLetterhead();
-      if (!canvas) {
+      const pngBlob = await buildLetterheadPNGBlob();
+      if (!pngBlob) {
         setIsSaving(false);
         return;
       }
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-      });
-
-      const pdfWidth = 210;
-      const pdfHeight = 297;
-      
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      
-      const scaleX = pdfWidth / imgWidth;
-      const scaleY = pdfHeight / imgHeight;
-      const scale = Math.min(scaleX, scaleY);
-      
-      const finalWidth = imgWidth * scale;
-      const finalHeight = imgHeight * scale;
-      
-      const xOffset = (pdfWidth - finalWidth) / 2;
-      const yOffset = (pdfHeight - finalHeight) / 2;
-      
-      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
-      
-      const pdfBlob = pdf.output('blob');
-      const file = new File([pdfBlob], `letterhead-${Date.now()}.pdf`, { type: 'application/pdf' });
+      const file = new File([pngBlob], `letterhead-${Date.now()}.png`, { type: 'image/png' });
 
       const formDataToSend = new FormData();
       formDataToSend.append('letterhead', file);
@@ -386,13 +448,16 @@ const LetterHeadDesigner = () => {
   // Load Letterhead for editing
   const loadLetterheadForEdit = (letterhead) => {
     setSelectedLetterhead(letterhead);
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      logo: letterhead.letterheadUrl,
       companyName: letterhead.name || prev.companyName
     }));
     setShowPreview(true);
     setIsEditing(false);
+    showToast(
+      'Note: only the final PNG is stored, not the original logo/colors — re-upload the logo if needed.',
+      'info'
+    );
   };
 
   // View Letterhead in Popup
@@ -401,7 +466,7 @@ const LetterHeadDesigner = () => {
     setShowViewModal(true);
   };
 
-  // Download PDF - from preview
+  // Download PDF (for user download only, not storage)
   const handleDownloadPDF = async () => {
     if (!previewRef.current) {
       showToast('Please preview the letter head first!', 'error');
@@ -411,38 +476,12 @@ const LetterHeadDesigner = () => {
     setIsDownloading(true);
 
     try {
-      const canvas = await captureLetterhead();
-      if (!canvas) {
+      const pdf = await buildLetterheadPdfForDownload();
+      if (!pdf) {
         setIsDownloading(false);
         return;
       }
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-      });
-
-      const pdfWidth = 210;
-      const pdfHeight = 297;
-
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-
-      const scaleX = pdfWidth / imgWidth;
-      const scaleY = pdfHeight / imgHeight;
-      const scale = Math.min(scaleX, scaleY);
-
-      const finalWidth = imgWidth * scale;
-      const finalHeight = imgHeight * scale;
-
-      const xOffset = (pdfWidth - finalWidth) / 2;
-      const yOffset = (pdfHeight - finalHeight) / 2;
-
-      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
       pdf.save(`LetterHead_${formData.companyName.replace(/\s+/g, '_')}.pdf`);
       showToast('PDF downloaded successfully!', 'success');
     } catch (error) {
@@ -458,7 +497,7 @@ const LetterHeadDesigner = () => {
     window.print();
   };
 
-  // Preview Component - PERFECT A4
+  // Preview Component - With Logo Watermark
   const LetterHeadPreview = () => {
     const pageStyles = {
       boxShadow: formData.shadow ? '0 4px 24px rgba(0,0,0,0.12)' : 'none',
@@ -477,6 +516,43 @@ const LetterHeadDesigner = () => {
       overflow: 'hidden',
       fontFamily: '"Georgia", "Times New Roman", serif',
       boxSizing: 'border-box'
+    };
+
+    // Unicode symbols for icons
+    const mailIcon = '✉';
+    const phoneIcon = '✆';
+    const globeIcon = '🌐';
+
+    const footerItemStyle = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '4px',
+      fontSize: '11px',
+      fontWeight: 700,
+      lineHeight: '20px',
+      verticalAlign: 'middle'
+    };
+
+    const iconStyle = {
+      fontSize: '13px',
+      lineHeight: 1,
+      display: 'inline-block',
+      verticalAlign: 'middle'
+    };
+
+    // Watermark style - using logo image
+    const watermarkStyle = {
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      opacity: parseFloat(formData.watermarkOpacity),
+      pointerEvents: 'none',
+      maxWidth: '300px',
+      maxHeight: '300px',
+      width: 'auto',
+      height: 'auto',
+      objectFit: 'contain'
     };
 
     return (
@@ -551,7 +627,7 @@ const LetterHeadDesigner = () => {
           </div>
         )}
 
-        {/* BODY */}
+        {/* BODY - with Logo Watermark */}
         <div
           style={{
             flex: 1,
@@ -562,7 +638,18 @@ const LetterHeadDesigner = () => {
             boxSizing: 'border-box'
           }}
         >
-          {formData.showWatermark && (
+          {/* LOGO WATERMARK - Using uploaded logo */}
+          {formData.showWatermark && formData.logo && (
+            <img
+              src={formData.logo}
+              alt="Watermark"
+              style={watermarkStyle}
+              crossOrigin="anonymous"
+            />
+          )}
+
+          {/* Fallback SVG watermark if no logo */}
+          {formData.showWatermark && !formData.logo && (
             <svg
               width="220"
               height="220"
@@ -686,23 +773,24 @@ const LetterHeadDesigner = () => {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              flexWrap: 'wrap',
+              flexWrap: 'nowrap',
               gap: '10px',
               fontFamily: '"Arial", sans-serif',
               width: '100%',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              minHeight: '38px'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700 }}>
-              <Mail size={13} />
+            <div style={footerItemStyle}>
+              <span style={iconStyle}>{mailIcon}</span>
               <span>Mail: {formData.email}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700 }}>
-              <Phone size={13} />
+            <div style={footerItemStyle}>
+              <span style={iconStyle}>{phoneIcon}</span>
               <span>Mobile: {formData.mobile}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700 }}>
-              <Globe size={13} />
+            <div style={footerItemStyle}>
+              <span style={iconStyle}>{globeIcon}</span>
               <span>{formData.website}</span>
             </div>
           </div>
@@ -923,6 +1011,27 @@ const LetterHeadDesigner = () => {
                   className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+              Watermark Opacity
+            </label>
+            <input
+              type="range"
+              name="watermarkOpacity"
+              min="0.05"
+              max="0.5"
+              step="0.01"
+              value={formData.watermarkOpacity}
+              onChange={handleChange}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>Light</span>
+              <span>{parseFloat(formData.watermarkOpacity) * 100}%</span>
+              <span>Dark</span>
             </div>
           </div>
 
@@ -1446,10 +1555,14 @@ const LetterHeadDesigner = () => {
                   )}
                 </div>
 
-                <div className="bg-gray-100 rounded-xl p-4 min-h-[600px] flex items-center justify-center overflow-auto">
+                <div 
+                  className="bg-gray-100 rounded-xl p-4 min-h-[600px] flex items-center justify-center overflow-auto"
+                  ref={previewContainerRef}
+                >
                   {showPreview ? (
                     <div className="w-full flex justify-center">
                       <div
+                        id="print-scale-wrapper"
                         className="print-scale-wrapper"
                         style={{
                           transform: 'scale(0.85)',

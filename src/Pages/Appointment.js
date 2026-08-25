@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import {
@@ -20,7 +20,13 @@ import {
   Home,
   UserRound,
   Smartphone,
-  CheckCircle2
+  CheckCircle2,
+  ChevronDown,
+  User,
+  Phone,
+  MapPin,
+  Calendar,
+  IndianRupee
 } from "lucide-react";
 import TimelyFooter from './TimelyFooter';
 import TimelyNavbar from '../Components/TimelyNavbar';
@@ -56,6 +62,7 @@ const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "F
 const Appointment = () => {
   const todayStr = new Date().toISOString().split("T")[0];
 
+  // ===== STATE =====
   // Form state
   const [patientName, setPatientName] = useState("");
   const [patientAge, setPatientAge] = useState("");
@@ -65,6 +72,11 @@ const Appointment = () => {
   const [patientAddress, setPatientAddress] = useState("");
   const [purpose, setPurpose] = useState("");
   const [selectedDate, setSelectedDate] = useState(todayStr);
+
+  // 🔥 NEW: Doctors state
+  const [doctors, setDoctors] = useState([]);
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
 
   // Slots state
   const [allSlots, setAllSlots] = useState([]);
@@ -89,17 +101,38 @@ const Appointment = () => {
     return DAYS_OF_WEEK[dateObj.getDay()];
   }, [selectedDate]);
 
-  useEffect(() => {
-    fetchSlotsForDay(dayOfWeekName);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, dayOfWeekName]);
+  // ===== FETCH DOCTORS =====
+  const fetchDoctors = async () => {
+    setDoctorsLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/doctors/getalldoctors`);
+      if (res.data && res.data.success) {
+        setDoctors(res.data.data || []);
+        // Auto-select first doctor if available
+        if (res.data.data && res.data.data.length > 0) {
+          setSelectedDoctorId(res.data.data[0]._id || res.data.data[0].id);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
+      setDoctors([]);
+      showToast("Failed to load doctors list", "error");
+    } finally {
+      setDoctorsLoading(false);
+    }
+  };
 
-  const fetchSlotsForDay = async (dayName) => {
+  // ===== FETCH SLOTS =====
+  const fetchSlotsForDay = async (dayName, doctorId) => {
     setLoadingSlots(true);
     setSelectedSlot(null);
 
     try {
-      const res = await axios.get(`${API_BASE_URL}/appointment-slots?dayOfWeek=${dayName}`).catch(() => null);
+      let url = `${API_BASE_URL}/appointment-slots?dayOfWeek=${dayName}`;
+      if (doctorId) {
+        url += `&doctorId=${doctorId}`;
+      }
+      const res = await axios.get(url).catch(() => null);
 
       if (res && res.data && res.data.slots && res.data.slots.length > 0) {
         setAllSlots(res.data.slots);
@@ -114,6 +147,7 @@ const Appointment = () => {
     }
   };
 
+  // ===== GENERATE FALLBACK SLOTS =====
   const generateFallbackSlots = (dayName) => {
     const isSunday = dayName === "Sunday";
     const slots = [];
@@ -202,6 +236,18 @@ const Appointment = () => {
     return slots;
   };
 
+  // ===== EFFECTS =====
+  useEffect(() => {
+    fetchDoctors();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDoctorId) {
+      fetchSlotsForDay(dayOfWeekName, selectedDoctorId);
+    }
+  }, [selectedDate, dayOfWeekName, selectedDoctorId]);
+
+  // ===== UTILITY FUNCTIONS =====
   const isToday = useMemo(() => selectedDate === todayStr, [selectedDate, todayStr]);
 
   const getSlotStartMinutes = (slot) => {
@@ -242,6 +288,7 @@ const Appointment = () => {
     [allSlots]
   );
 
+  // ===== HANDLE SUBMIT =====
   const handleSubmitBooking = async (e) => {
     e.preventDefault();
 
@@ -250,6 +297,7 @@ const Appointment = () => {
     if (!patientPhone.trim() || patientPhone.length < 10) return showToast("Please enter a valid 10-digit phone number.", "error");
     if (!patientAddress.trim()) return showToast("Please enter the patient's address.", "error");
     if (!purpose.trim()) return showToast("Please enter the purpose of the appointment.", "error");
+    if (!selectedDoctorId) return showToast("Please select a doctor.", "error");
     if (!selectedSlot) return showToast("Please select an available appointment slot.", "error");
 
     setIsSubmitting(true);
@@ -269,7 +317,9 @@ const Appointment = () => {
       patientAddress: patientAddress.trim(),
       purpose: purpose.trim(),
       consultationFee: selectedSlot.consultationFee !== undefined ? selectedSlot.consultationFee : 300,
-      paymentStatus: "Pending"
+      paymentStatus: "Pending",
+      doctorId: selectedDoctorId,
+      doctorName: doctors.find(d => d._id === selectedDoctorId || d.id === selectedDoctorId)?.name || ""
     };
 
     try {
@@ -302,7 +352,9 @@ const Appointment = () => {
         shift: selectedSlot.shift,
         duration: selectedSlot.duration,
         consultationFee: selectedSlot.consultationFee !== undefined ? selectedSlot.consultationFee : 300,
-        paymentStatus: "Pending"
+        paymentStatus: "Pending",
+        doctorName: doctors.find(d => d._id === selectedDoctorId || d.id === selectedDoctorId)?.name || "",
+        doctorSpecialization: doctors.find(d => d._id === selectedDoctorId || d.id === selectedDoctorId)?.specialization || ""
       });
 
       showToast(`Appointment confirmed for ${patientName}.`, "success");
@@ -346,7 +398,7 @@ const Appointment = () => {
             Schedule your consultation
           </h1>
           <p className="mt-3 text-sm text-[#5B6B65] max-w-2xl leading-relaxed">
-            Enter patient details, choose a date, and select an available slot to complete your OPD booking.
+            Enter patient details, choose a doctor, select a date, and pick an available slot to complete your OPD booking.
           </p>
         </div>
 
@@ -376,14 +428,17 @@ const Appointment = () => {
                       <label className="block text-xs font-medium text-[#3F4A45] mb-1.5">
                         Full name <span className="text-[#B3261E]">*</span>
                       </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Patient's full name"
-                        value={patientName}
-                        onChange={(e) => setPatientName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg focus:ring-2 focus:ring-[#0F5C4D]/20 focus:border-[#0F5C4D] transition-colors text-sm text-[#1A2421] outline-none"
-                      />
+                      <div className="relative">
+                        <User className="w-4 h-4 text-[#8A948F] absolute left-3 top-2.5" />
+                        <input
+                          type="text"
+                          required
+                          placeholder="Patient's full name"
+                          value={patientName}
+                          onChange={(e) => setPatientName(e.target.value)}
+                          className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg focus:ring-2 focus:ring-[#0F5C4D]/20 focus:border-[#0F5C4D] transition-colors text-sm text-[#1A2421] outline-none"
+                        />
+                      </div>
                     </div>
 
                     {/* Age / Gender */}
@@ -392,30 +447,37 @@ const Appointment = () => {
                         <label className="block text-xs font-medium text-[#3F4A45] mb-1.5">
                           Age <span className="text-[#B3261E]">*</span>
                         </label>
-                        <input
-                          type="number"
-                          required
-                          min="1"
-                          max="120"
-                          placeholder="28"
-                          value={patientAge}
-                          onChange={(e) => setPatientAge(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg focus:ring-2 focus:ring-[#0F5C4D]/20 focus:border-[#0F5C4D] transition-colors text-sm text-[#1A2421] outline-none"
-                        />
+                        <div className="relative">
+                          <Calendar className="w-4 h-4 text-[#8A948F] absolute left-3 top-2.5" />
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            max="120"
+                            placeholder="28"
+                            value={patientAge}
+                            onChange={(e) => setPatientAge(e.target.value)}
+                            className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg focus:ring-2 focus:ring-[#0F5C4D]/20 focus:border-[#0F5C4D] transition-colors text-sm text-[#1A2421] outline-none"
+                          />
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-[#3F4A45] mb-1.5">
                           Gender <span className="text-[#B3261E]">*</span>
                         </label>
-                        <select
-                          value={patientGender}
-                          onChange={(e) => setPatientGender(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg focus:ring-2 focus:ring-[#0F5C4D]/20 focus:border-[#0F5C4D] transition-colors text-sm text-[#1A2421] outline-none"
-                        >
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Others">Others</option>
-                        </select>
+                        <div className="relative">
+                          <UserRound className="w-4 h-4 text-[#8A948F] absolute left-3 top-2.5" />
+                          <select
+                            value={patientGender}
+                            onChange={(e) => setPatientGender(e.target.value)}
+                            className="w-full pl-9 pr-8 py-2.5 bg-white border border-[#D7DCD9] rounded-lg focus:ring-2 focus:ring-[#0F5C4D]/20 focus:border-[#0F5C4D] transition-colors text-sm text-[#1A2421] outline-none appearance-none"
+                          >
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Others">Others</option>
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-[#8A948F] absolute right-3 top-2.5 pointer-events-none" />
+                        </div>
                       </div>
                     </div>
 
@@ -456,14 +518,17 @@ const Appointment = () => {
                         <Home className="w-3.5 h-3.5 text-[#8A948F]" />
                         Address <span className="text-[#B3261E]">*</span>
                       </label>
-                      <textarea
-                        required
-                        rows={2}
-                        placeholder="Residential address"
-                        value={patientAddress}
-                        onChange={(e) => setPatientAddress(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg focus:ring-2 focus:ring-[#0F5C4D]/20 focus:border-[#0F5C4D] transition-colors text-sm text-[#1A2421] resize-none outline-none"
-                      />
+                      <div className="relative">
+                        <MapPin className="w-4 h-4 text-[#8A948F] absolute left-3 top-2.5" />
+                        <textarea
+                          required
+                          rows={2}
+                          placeholder="Residential address"
+                          value={patientAddress}
+                          onChange={(e) => setPatientAddress(e.target.value)}
+                          className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg focus:ring-2 focus:ring-[#0F5C4D]/20 focus:border-[#0F5C4D] transition-colors text-sm text-[#1A2421] resize-none outline-none"
+                        />
+                      </div>
                     </div>
 
                     {/* Purpose */}
@@ -482,8 +547,39 @@ const Appointment = () => {
                       />
                     </div>
 
+                    {/* 🔥 NEW: Doctor Selection */}
+                    <div>
+                      <label className="block text-xs font-medium text-[#3F4A45] mb-1.5 flex items-center gap-1.5">
+                        <Stethoscope className="w-3.5 h-3.5 text-[#8A948F]" />
+                        Select Doctor <span className="text-[#B3261E]">*</span>
+                      </label>
+                      <div className="relative">
+                        <User className="w-4 h-4 text-[#8A948F] absolute left-3 top-2.5" />
+                        <select
+                          value={selectedDoctorId}
+                          onChange={(e) => setSelectedDoctorId(e.target.value)}
+                          className="w-full pl-9 pr-8 py-2.5 bg-white border border-[#D7DCD9] rounded-lg focus:ring-2 focus:ring-[#0F5C4D]/20 focus:border-[#0F5C4D] transition-colors text-sm text-[#1A2421] outline-none appearance-none"
+                          required
+                        >
+                          <option value="">Select Doctor</option>
+                          {doctorsLoading ? (
+                            <option value="" disabled>Loading doctors...</option>
+                          ) : doctors.length === 0 ? (
+                            <option value="" disabled>No doctors available</option>
+                          ) : (
+                            doctors.map((doc) => (
+                              <option key={doc._id || doc.id} value={doc._id || doc.id}>
+                                {doc.name || "Unnamed Doctor"} - {doc.specialization || "General"}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-[#8A948F] absolute right-3 top-2.5 pointer-events-none" />
+                      </div>
+                    </div>
+
                     {/* Date */}
-                    <div className="pt-1">
+                    <div>
                       <label className="block text-xs font-medium text-[#3F4A45] mb-1.5 flex items-center gap-1.5">
                         <CalendarDays className="w-3.5 h-3.5 text-[#8A948F]" />
                         Appointment date <span className="text-[#B3261E]">*</span>
@@ -526,16 +622,16 @@ const Appointment = () => {
                     ) : (
                       <div className="bg-[#FDF3DA] border border-[#F0DFA8] p-3.5 rounded-lg text-xs text-[#7A5300] flex items-center gap-2.5">
                         <AlertCircle className="w-4 h-4 shrink-0" />
-                        <span>Select an available appointment slot from the panel on the right.</span>
+                        <span>Select a doctor, date, and an available appointment slot from the panel on the right.</span>
                       </div>
                     )}
 
                     {/* Submit */}
                     <button
                       type="submit"
-                      disabled={isSubmitting || !selectedSlot}
+                      disabled={isSubmitting || !selectedSlot || !selectedDoctorId}
                       className={`w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-colors ${
-                        selectedSlot && !isSubmitting
+                        selectedSlot && selectedDoctorId && !isSubmitting
                           ? "bg-[#0F5C4D] text-white hover:bg-[#0C4A3E]"
                           : "bg-[#E4E7E4] text-[#8A948F] cursor-not-allowed"
                       }`}
@@ -565,6 +661,11 @@ const Appointment = () => {
                     <p className="text-xs font-semibold tracking-widest text-[#0F5C4D] uppercase mb-1">Step 2 of 2</p>
                     <h3 className="text-base font-semibold text-[#1A2421]">
                       Available slots for {dayOfWeekName}
+                      {selectedDoctorId && (
+                        <span className="text-sm font-normal text-[#5B6B65] ml-2">
+                          - {doctors.find(d => d._id === selectedDoctorId || d.id === selectedDoctorId)?.name || ""}
+                        </span>
+                      )}
                     </h3>
                   </div>
                   <div className="flex items-center gap-4 text-[11px] font-medium text-[#5B6B65]">
@@ -577,7 +678,12 @@ const Appointment = () => {
                   </div>
                 </div>
 
-                {loadingSlots ? (
+                {!selectedDoctorId ? (
+                  <div className="py-16 text-center">
+                    <Stethoscope className="w-12 h-12 text-[#B7BFBB] mx-auto mb-3" />
+                    <p className="text-sm font-medium text-[#5B6B65]">Please select a doctor first to view available slots.</p>
+                  </div>
+                ) : loadingSlots ? (
                   <div className="py-16 text-center">
                     <RefreshCw className="w-6 h-6 text-[#0F5C4D] animate-spin mx-auto mb-3" />
                     <p className="text-sm font-medium text-[#5B6B65]">Loading slots for {dayOfWeekName}…</p>
@@ -700,6 +806,15 @@ const Appointment = () => {
                       {bookingConfirmation.patientAge} yrs ({bookingConfirmation.patientGender})
                     </div>
                   </div>
+                </div>
+
+                {/* 🔥 NEW: Doctor info in confirmation */}
+                <div className="pb-2 border-b border-[#E4E7E4]">
+                  <div className="text-[10px] font-semibold uppercase text-[#8A948F]">Doctor</div>
+                  <div className="text-sm font-semibold text-[#1A2421]">{bookingConfirmation.doctorName || "N/A"}</div>
+                  {bookingConfirmation.doctorSpecialization && (
+                    <div className="text-xs text-[#5B6B65]">{bookingConfirmation.doctorSpecialization}</div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

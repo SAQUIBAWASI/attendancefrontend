@@ -1,12 +1,12 @@
 import { Route, Routes } from "react-router-dom";
-import './index.css'; // ✅ YEH BHI ADD KAR DO
+import './index.css';
+
 // Import your components
 import Login from "../src/Pages/Login.js";
 import ForgotPassword from "./Pages/ForgotPassword.js";
 import ResetPassword from "./Pages/ResetPassword.js";
 import CompanySidebar from "./Components/CompanySidebar.js";
 import DepartmentList from "./Components/department";
-// import Recruitment from "./Components/recruitment.js";
 import SubDepartmentList from "./Components/subdepartment.js";
 import AdminLayout from "./Layout/AdminLayout.jsx";
 import AboutUsFormPage from "./Pages/AboutUsFormPage.js";
@@ -63,7 +63,6 @@ import DocumentTable from "./Pages/DocumentTable.js";
 import EmployeeDashboard from "./Pages/EmployeeDashboard.jsx";
 import EmployeeLeaves from "./Pages/EmployeeLeaves.js";
 import EmployeeNotifications from "./Pages/EmployeeNotifications.js";
-
 import EmployeeList from "./Pages/EmployeeList.js";
 import GetAboutUsPage from "./Pages/GetAboutUsPage.js";
 import GetContactUsPage from "./Pages/GetContactUsPage.js";
@@ -112,7 +111,6 @@ import VendorInvoiceList from "./Pages/VendorInvoiceList.js";
 import VendorList from "./Pages/VendorList.js";
 import VendorDetail from "./Pages/VendorProfile.js";
 import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
-// import LandingPage from "./Pages/LandingPage.js";
 import EmployeeDetailsModal from "./Components/EmployeeDetailsModel.js";
 import TimelyNavbar from "./Components/TimelyNavbar.js";
 import CandidateLayout from "./Layout/CandidateLayout.jsx";
@@ -143,7 +141,6 @@ import TimelyFooter from "./Pages/TimelyFooter.js";
 import UserAccessManagement from "./Pages/UserAccessManagement.js";
 import UserActivity from "./Pages/UserActivity.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
-// import EmpManagment from "./Pages/EmpManagment.js";
 
 import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
 import JobApplicants from "./Pages/JobApplicants.jsx";
@@ -154,38 +151,26 @@ import Score from "./Pages/Score.jsx";
 import SendOffer from "./Pages/SendOffer.jsx";
 
 import AssessmentManager from "./Pages/AssessmentManager.jsx";
-// import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
 import CandidateLogin from "./Pages/CandidateLogin.jsx";
 import CandidateRegister from "./Pages/CandidateRegister.jsx";
 
-// import Documents from "./Pages/Documents.jsx";
-// import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
 import Medical from "./Pages/Medical.jsx";
-// import PersonalDocumets from "./Pages/PersonalDocumets.jsx";
-// import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
 import AllJobs from "./Pages/AllJobs.jsx";
 import AppliedJobs from "./Pages/AppliedJobs.jsx";
 import CandidateDocuments from "./Pages/CandidateDocuments.jsx";
 import CandidatePersonalDocuments from "./Pages/CandidatePersonalDocuments.jsx";
 import EmployeeJourney from "./Pages/EmployeeJourney.jsx";
-import EmployeeLetters from "./Pages/EmployeeLetters.jsx"; // ✅ New import
+import EmployeeLetters from "./Pages/EmployeeLetters.jsx";
 import EmployeePersonalDocuments from "./Pages/EmployeePersonalDocuments.jsx";
 import EmployeeResignation from "./Pages/EmployeeResignation.jsx";
 import Interview from "./Pages/Interview.jsx";
 import Letters from "./Pages/Letters.jsx";
 import MyJobs from "./Pages/MyJobs.jsx";
 import RecruitmentDashboard from "./Pages/RecruitmentDashboard.jsx";
-// import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
 import AllExpensives from "./Pages/AllExpensives.jsx";
 import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
 
 import Documents from "./Pages/Documents.jsx";
-// import JobApplicants from "./Pages/JobApplicants.jsx";
-// import JobDetails from "./Pages/JobDetails.jsx";
-// import JobPost from "./Pages/JobPost.jsx";
-// import Medical from "./Pages/Medical.jsx";
-// import Score from "./Pages/Score.jsx";
-// import SendOffer from "./Pages/SendOffer.jsx";
 import AllMedicalCertificate from "./Pages/AllMedicalCertificate.jsx";
 import ApplyingJob from "./Pages/ApplyingJob.jsx";
 import ApprovedLeaves from "./Pages/ApprovedLeaves.jsx";
@@ -196,7 +181,6 @@ import PendingLeaves from "./Pages/PendingLeaves.jsx";
 import Regularization from "./Pages/Regularization.jsx";
 import RejectedLeaves from "./Pages/RejectedLeaves.jsx";
 import TakeAssessment from "./Pages/TakeAssessment.jsx";
-// import ProductList from"./Pages/Productlist.js";
 import HolidayList from "./Pages/Holiday.js";
 import HolidaysCalendar from "./Pages/HolidaysCalendar.jsx";
 import ProductSelectionPage from "./Pages/ProductSelectionPage.jsx";
@@ -212,22 +196,18 @@ import IssueManagement from "./Pages/IssueManagement.js";
 import AdminIssueManagement from "./Pages/AdminIssueManagement.js";
 import ClaimedOTManagement from "./Pages/ClaimedOTManagement.js";
 import AdminCompOffRequests from "./Pages/AdminCompOffRequests.js";
-// import ClaimedOTManagement from "./Pages/ClaimedOTManagement.js";
-// import IssueManagement from "./Pages/IssueManagement.js";
-// import AdminIssueManagement from "./Pages/AdminIssueManagement.js";
-import MyProducts from "./Pages/MyProducts.js"
+import MyProducts from "./Pages/MyProducts.js";
 import CompanyIPManagement from "./Pages/CompanyIPManagement.js";
 import QRScanner from "./Pages/QRScanner.js";
 import EmployeeLocations from "./Pages/EmployeeLocations.js";
 
-import EmployeeVisitsData from "./Pages/EmployeeVisitsData.jsx"; // ✅ New import for Employee Visits Data
-import RejectedVisits from "./Pages/RejectedVisits.js"; // ✅ New import for Rejected Visits
-
+import EmployeeVisitsData from "./Pages/EmployeeVisitsData.jsx";
+import RejectedVisits from "./Pages/RejectedVisits.js";
 
 import VisitsData from "./Pages/VisitsData.js";
-import TotalVisits from "./Pages/TotalVisits.js"
+import TotalVisits from "./Pages/TotalVisits.js";
 import PendingVisits from "./Pages/PendingVisits.js";
-import Leads from "./Pages/Leads.js"
+import Leads from "./Pages/Leads.js";
 import RelievingLetters from "./Pages/RelievingLetters.jsx";
 import LettersSection from "./Pages/LettersSection.jsx";
 import PartnersPage from "./Pages/PartnersPage.js";
@@ -248,9 +228,6 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />}></Route>
-      {/* Login page rendered outside AdminLayout */}
-      {/* <Route path="/land" element={<LandingPage />} /> */}
-      {/* <Route path="/" element={<LoginPage />} /> */}
       <Route path="/register" element={<Register />} />
       <Route path="/productlist" element={<ProductList />} />
       <Route path="/productselection" element={<ProductSelectionPage />} />
@@ -261,59 +238,44 @@ function App() {
       <Route path="/employee-login" element={<Login />} />
       <Route path="/candidate-login" element={<CandidateLogin />} />
       <Route path="/candidate-register" element={<CandidateRegister />} />
+      
+      {/* ===== EMPLOYEE LAYOUT ROUTES (without OP) ===== */}
       <Route path="/employeedashboard" element={<EmployeeLayout><EmployeeDashboard /></EmployeeLayout>} />
       <Route path="/leave-application" element={<EmployeeLayout><LeaveApplication /></EmployeeLayout>} />
       <Route path="/myleaves" element={<EmployeeLayout><EmployeeLeaves /></EmployeeLayout>} />
       <Route path="/attendance-capture" element={<EmployeeLayout><AttendanceCapture /></EmployeeLayout>} />
       <Route path="/myattendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
-      <Route path="/myattendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
       <Route path="/issue-management" element={<EmployeeLayout><IssueManagement /></EmployeeLayout>} />
-   
       <Route path="/my-shift" element={<EmployeeLayout><MyShift /></EmployeeLayout>} />
       <Route path="/mypermissions" element={<EmployeeLayout><MyPermission /></EmployeeLayout>} />
-      {/* <Route path="/expense-management" element={<ExpenseManagement />} />   */}
       <Route path="/expense-management" element={<EmployeeLayout><ExpenseManagement /></EmployeeLayout>} />
       <Route path="/emp-profile" element={<EmployeeLayout><EmployeeProfileCombined /></EmployeeLayout>} />
       <Route path="/emp-my-jobs" element={<EmployeeLayout><MyJobs /></EmployeeLayout>} />
       <Route path="/emp-personal-documents" element={<EmployeeLayout><EmployeePersonalDocuments /></EmployeeLayout>} />
       <Route path="/emp-letters" element={<EmployeeLayout><EmployeeLetters /></EmployeeLayout>} />
-
       <Route path="/mylocation" element={<EmployeeLayout><EmployeeLocation /></EmployeeLayout>} />
-      <Route path="/jobs/:id" element={<JobDetails />} />
-      <Route path="/assessment/:jobId/:applicationId" element={<TakeAssessment />} />
-      <Route path="/assessment/:jobId/:applicationId/:quizId" element={<TakeAssessment />} />
-      <Route path="/applying-job/:jobId" element={<ApplyingJob />} />
-      {/* ✅ Candidate Portal Routes with Shared Layout */}
-      <Route element={<CandidateLayout />}>
-        <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
-          
-        <Route path="/medical-certificate" element={<MedicalCertificate />} />
-        <Route path="/all-jobs" element={<AllJobs />} />
-        <Route path="/applied-jobs" element={<AppliedJobs />} />
-        <Route path="/interview" element={<Interview />} />
-        <Route path="/letters" element={<Letters />} />
-        <Route path="/candidate-documents" element={<CandidateDocuments />} />
-        <Route path="/candidate-personal-documents" element={<CandidatePersonalDocuments />} />
-        <Route path="/my-jobs" element={<MyJobs />} />
-      </Route>
-
-      <Route path="/superadmin" element={<SuperAdminMedicalMonitor />} />
-      <Route path="/timelynavbar" element={<TimelyNavbar />}></Route>
-      <Route path="timelyfooter" element={<TimelyFooter />}></Route>
-      <Route path="/about" element={<AboutPage />}></Route>
-      <Route path="/service" element={<ServicesPage />}></Route>
-      <Route path="/whoweserve" element={<WhoWeServePage />}></Route>
-      <Route path="/contact" element={<ContactPage />}></Route>
-      <Route path="/appointment" element={<Appointment />} />
-       <Route path="/partners" element={<PartnersPage />}></Route>
-      <Route path="/membership" element={<MembershipPage />}></Route>
-      <Route path="/plans" element={<Plans />}></Route>
-      <Route path="/products" element={<Products />}></Route>
-      <Route path="/recruitment" element={<Recruitment />}></Route>
       <Route path="/mysalary" element={<EmployeeLayout><EmployeeSalary /></EmployeeLayout>} />
       <Route path="/HolidayList" element={<EmployeeLayout><HolidayList /></EmployeeLayout>} />
 
-      {/* ✅ Shared Admin Features for Employees (Wrapped in EmployeeLayout) */}
+      {/* 🔥 OP MANAGEMENT - EMPLOYEE LAYOUT (WITH /employee/ PREFIX) */}
+      <Route path="/employee/op-dashboard" element={<EmployeeLayout><OpDashboard /></EmployeeLayout>} />
+      <Route path="/employee/doctor-management" element={<EmployeeLayout><DoctorManagement /></EmployeeLayout>} />
+      <Route path="/employee/op-management" element={<EmployeeLayout><OpManagement /></EmployeeLayout>} />
+      <Route path="/employee/appointment-slots" element={<EmployeeLayout><AppointmentSlots /></EmployeeLayout>} />
+      <Route path="/employee/services" element={<EmployeeLayout><Services /></EmployeeLayout>} />
+      <Route path="/employee/bookings" element={<EmployeeLayout><Bookings /></EmployeeLayout>} />
+      <Route path="/employee/letterhead" element={<EmployeeLayout><LetterHeadDesigner /></EmployeeLayout>} />
+
+      {/* 🔥 OP MANAGEMENT - ADMIN LAYOUT (WITHOUT /employee/ PREFIX) */}
+      <Route path="/op-dashboard" element={<AdminLayout><OpDashboard /></AdminLayout>} />
+      <Route path="/doctor-management" element={<AdminLayout><DoctorManagement /></AdminLayout>} />
+      <Route path="/op-management" element={<AdminLayout><OpManagement /></AdminLayout>} />
+      <Route path="/appointment-slots" element={<AdminLayout><AppointmentSlots /></AdminLayout>} />
+      <Route path="/services" element={<AdminLayout><Services /></AdminLayout>} />
+      <Route path="/bookings" element={<AdminLayout><Bookings /></AdminLayout>} />
+      <Route path="/letterhead" element={<AdminLayout><LetterHeadDesigner /></AdminLayout>} />
+
+      {/* Employee Shared Admin Features */}
       <Route path="/emp-employees" element={<EmployeeLayout><EmployeeList /></EmployeeLayout>} />
       <Route path="/emp-attendance-summary" element={<EmployeeLayout><AttendanceSummary /></EmployeeLayout>} />
       <Route path="/emp-attendance-records" element={<EmployeeLayout><AttendanceList /></EmployeeLayout>} />
@@ -344,13 +306,40 @@ function App() {
       <Route path="/emp-all-expensives-management" element={<EmployeeLayout><AllExpensives /></EmployeeLayout>} />
       <Route path="/my-medical-certificate" element={<EmployeeLayout><MyMedicalCertificate /></EmployeeLayout>} />
       <Route path="/emp-events" element={<EmployeeLayout><Events /></EmployeeLayout>} />
-
       <Route path="/emp-claimed-ot-management" element={<EmployeeLayout><ClaimedOTManagement /></EmployeeLayout>} />
       <Route path="/emp-issues" element={<EmployeeLayout><IssueManagement /></EmployeeLayout>} />
+      <Route path="/employee-visits-data" element={<EmployeeLayout><EmployeeVisitsData /></EmployeeLayout>} />
+      <Route path="/relieving-letters" element={<EmployeeLayout><RelievingLetters /></EmployeeLayout>} />
 
-       <Route path="/employee-visits-data" element={<EmployeeLayout><EmployeeVisitsData /></EmployeeLayout>} /> {/* ✅ Employee Visits Data - Employee Side */}
-       <Route path="/relieving-letters" element={<EmployeeLayout><RelievingLetters /></EmployeeLayout>} /> {/* ✅ Relieving Letters - Employee Side */}
-      {/* All other routes inside AdminLayout */}
+      {/* Candidate Portal Routes */}
+      <Route element={<CandidateLayout />}>
+        <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
+        <Route path="/medical-certificate" element={<MedicalCertificate />} />
+        <Route path="/all-jobs" element={<AllJobs />} />
+        <Route path="/applied-jobs" element={<AppliedJobs />} />
+        <Route path="/interview" element={<Interview />} />
+        <Route path="/letters" element={<Letters />} />
+        <Route path="/candidate-documents" element={<CandidateDocuments />} />
+        <Route path="/candidate-personal-documents" element={<CandidatePersonalDocuments />} />
+        <Route path="/my-jobs" element={<MyJobs />} />
+      </Route>
+
+      {/* Public Routes */}
+      <Route path="/superadmin" element={<SuperAdminMedicalMonitor />} />
+      <Route path="/timelynavbar" element={<TimelyNavbar />}></Route>
+      <Route path="timelyfooter" element={<TimelyFooter />}></Route>
+      <Route path="/about" element={<AboutPage />}></Route>
+      <Route path="/service" element={<ServicesPage />}></Route>
+      <Route path="/whoweserve" element={<WhoWeServePage />}></Route>
+      <Route path="/contact" element={<ContactPage />}></Route>
+      <Route path="/appointment" element={<Appointment />} />
+      <Route path="/partners" element={<PartnersPage />}></Route>
+      <Route path="/membership" element={<MembershipPage />}></Route>
+      <Route path="/plans" element={<Plans />}></Route>
+      <Route path="/products" element={<Products />}></Route>
+      <Route path="/recruitment" element={<Recruitment />}></Route>
+
+      {/* Admin Layout Routes */}
       <Route
         path="/*"
         element={
@@ -408,7 +397,7 @@ function App() {
               <Route path="/completedorders" element={<CompletedBookingList />} />
               <Route path="/cancelledorders" element={<CancelledBookingList />} />
               <Route path="/companysidebar" element={<CompanySidebar />} />
-              <Route path="/staff-history/:staffId" element={<StaffHistory />} /> {/* Route for StaffHistory */}
+              <Route path="/staff-history/:staffId" element={<StaffHistory />} />
               <Route path="/book-diagnostic" element={<DiagnosticBookingForm />} />
               <Route path="/coupons" element={<CouponsPage />} />
               <Route path="/couponshistory" element={<CouponHistoryTable />} />
@@ -416,7 +405,6 @@ function App() {
               <Route path="/upload-docs" element={<UploadDocuments />} />
               <Route path="/docs" element={<DocumentTable />} />
               <Route path="/user-coupons" element={<AllUserCoupons />} />
-
               <Route path="/create-category" element={<CreateCategory />} />
               <Route path="/categorylist" element={<CategoryList />} />
               <Route path="/create-poster" element={<CreatePoster />} />
@@ -439,8 +427,8 @@ function App() {
               <Route path="/vendordocumentlist" element={<VendorDocumentList />} />
               <Route path="/redeemed-coupons" element={<RedeemedCouponsList />} />
               <Route path="/payment" element={<VendorInvoiceList />} />
-              <Route path="/rcvdpayment" element={< ReceivedPayments />} />
-              <Route path="/allpayments" element={< AllPayments />} />
+              <Route path="/rcvdpayment" element={<ReceivedPayments />} />
+              <Route path="/allpayments" element={<AllPayments />} />
               <Route path="/vendor/:id" element={<VendorDetail />} />
               <Route path="/users" element={<UserList />} />
               <Route path="/users/:userId" element={<UserDetail />} />
@@ -448,9 +436,6 @@ function App() {
               <Route path="/quizzes" element={<AllQuizzesTable />} />
               <Route path="/add-bulk-funfacts" element={<BulkFunFactUploader />} />
               <Route path="/allfanfacts" element={<AllFunFactsTable />} />
-
-
-
               <Route path="/addemployee" element={<AddEmployeePage />} />
               <Route path="/employeelist" element={<EmployeeList />} />
               <Route path="/attendancelist" element={<AttendanceList />} />
@@ -460,8 +445,6 @@ function App() {
               <Route path="/pendings-attendance" element={<PendingAttendance />} />
               <Route path="/absent-today" element={<AbsentToday />} />
               <Route path="/late-today" element={<LateToday />} />
-              <Route path="/attendance-capture" element={<AttendanceCapture />} />
-              <Route path="/myattendance" element={<MyAttendance />} />
               <Route path="/leaves-report" element={<LeavesReport />} />
               <Route path="/shift" element={<ShiftManagement />} />
               <Route path="/shiftlist" element={<ShiftList />} />
@@ -470,7 +453,6 @@ function App() {
               <Route path="/addlocation" element={<AddLocationPage />} />
               <Route path="/locationlist" element={<LocationListPage />} />
               <Route path="attedancesummary" element={<AttendanceSummary />} />
-              {/* <Route path="/empmanagement" element={<EmpManagment />} */}
               <Route path="/payroll" element={<PayRoll />} />
               <Route path="/useractivity" element={<UserActivity />} />
               <Route path="/departmentdashboard" element={<DepartmentDashboard />} />
@@ -478,13 +460,11 @@ function App() {
               <Route path="/employeedetailsmodel" element={<EmployeeDetailsModal />} />
               <Route path="/useraccess" element={<UserAccessManagement />} />
               <Route path="/client-requests" element={<ClientRequests />} />
-
               <Route path="/jobpost" element={<JobPost />} />
               <Route path="/score" element={<Score />} />
               <Route path="/sendoffer" element={<SendOffer />} />
               <Route path="/job-applicants" element={<JobApplicants />} />
               <Route path="/assessment-manager" element={<AssessmentManager />} />
-              {/* <Route path="/documents" element={<PersonalDocuments />} /> */}
               <Route path="/admin-notifications" element={<AdminNotifications />} />
               <Route path="/medical" element={<Medical />} />
               <Route path="/personaldocuments" element={<PersonalDocuments />} />
@@ -521,27 +501,12 @@ function App() {
               <Route path="/company-ip" element={<CompanyIPManagement />} />
               <Route path="/qrcode" element={<QRScanner />} />
               <Route path="/employee-locations" element={<EmployeeLocations />} />
-
-
-              <Route path="/visits-data" element={<VisitsData />} /> {/* ✅ New route for Visits Data (Admin) */}
-              <Route path="/total-visits" element={<TotalVisits />} /> {/* ✅ New route for Total Visits (Admin) */}
-              <Route path="/pending-visits" element={<PendingVisits />} /> {/* ✅ New route for Pending Visits (Admin) */}
-              <Route path="/leads" element={<Leads />} /> {/* ✅ New route for Leads (Admin) */}
-              <Route path="/rejected-visits" element={<RejectedVisits />} /> {/* ✅ New route for Rejected Visits (Admin) */}
+              <Route path="/visits-data" element={<VisitsData />} />
+              <Route path="/total-visits" element={<TotalVisits />} />
+              <Route path="/pending-visits" element={<PendingVisits />} />
+              <Route path="/leads" element={<Leads />} />
+              <Route path="/rejected-visits" element={<RejectedVisits />} />
               <Route path="/letters-section" element={<LettersSection />} />
-              <Route path="/appointment-slots" element={<AppointmentSlots />} />
-              <Route path="/bookings" element={<Bookings />} />
-               <Route path="/op-management" element={<OpManagement />} />
-              <Route path="/doctor-management" element={<DoctorManagement />} />
-              <Route path="/op-dashboard" element={<OpDashboard />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/letterhead" element={<LetterHeadDesigner />} />
-
-
-           
-           
-
-
             </Routes>
           </AdminLayout>
         }
