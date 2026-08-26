@@ -28,7 +28,12 @@ import {
   CreditCard,
   Plus,
   ReceiptText,
-  FileText
+  FileText,
+  Stethoscope,
+  Building2,
+  UserRound,
+  BadgeCheck,
+  ClipboardList,
 } from "lucide-react";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -80,6 +85,7 @@ const Bookings = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dayFilter, setDayFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [doctorFilter, setDoctorFilter] = useState("All");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -1253,6 +1259,20 @@ const Bookings = () => {
     return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
   };
 
+  // Get unique doctors from bookings for filter
+  const getUniqueDoctors = () => {
+    const doctorMap = new Map();
+    bookings.forEach(b => {
+      if (b.doctorName) {
+        doctorMap.set(b.doctorName, {
+          name: b.doctorName,
+          specialization: b.doctorSpecialization || ""
+        });
+      }
+    });
+    return Array.from(doctorMap.values());
+  };
+
   const filteredBookings = useMemo(() => {
     return bookings.filter((b) => {
       if (dayFilter !== "All" && b.dayOfWeek?.toLowerCase() !== dayFilter.toLowerCase()) {
@@ -1260,6 +1280,10 @@ const Bookings = () => {
       }
       
       if (statusFilter !== "All" && b.status?.toLowerCase() !== statusFilter.toLowerCase()) {
+        return false;
+      }
+
+      if (doctorFilter !== "All" && b.doctorName !== doctorFilter) {
         return false;
       }
       
@@ -1289,15 +1313,16 @@ const Bookings = () => {
         const matchTime = (b.startTime || "").toLowerCase().includes(query) || (b.endTime || "").toLowerCase().includes(query);
         const matchDay = (b.dayOfWeek || "").toLowerCase().includes(query);
         const matchService = (b.services || []).some(s => s.name?.toLowerCase().includes(query));
+        const matchDoctor = (b.doctorName || "").toLowerCase().includes(query) || (b.doctorSpecialization || "").toLowerCase().includes(query);
 
-        if (!matchName && !matchPhone && !matchAddress && !matchPurpose && !matchTime && !matchDay && !matchService) {
+        if (!matchName && !matchPhone && !matchAddress && !matchPurpose && !matchTime && !matchDay && !matchService && !matchDoctor) {
           return false;
         }
       }
       
       return true;
     });
-  }, [bookings, dayFilter, statusFilter, searchQuery, fromDate, toDate]);
+  }, [bookings, dayFilter, statusFilter, doctorFilter, searchQuery, fromDate, toDate]);
 
   const stats = useMemo(() => {
     const totalCount = bookings.length;
@@ -1369,6 +1394,7 @@ const Bookings = () => {
     setSearchQuery("");
     setDayFilter("All");
     setStatusFilter("All");
+    setDoctorFilter("All");
     setFromDate("");
     setToDate("");
   };
@@ -1382,7 +1408,7 @@ const Bookings = () => {
     const headers = [
       "Patient Name", "Phone", "Age", "Gender", "Address",
       "Booking Date", "Appointment Date", "Day", "Start Time", "End Time", "Shift",
-      "Purpose", "Services", "Total Fee", "Payment Status", "Appointment Status"
+      "Doctor", "Specialization", "Purpose", "Services", "Total Fee", "Payment Status", "Appointment Status"
     ];
 
     const csvRows = [
@@ -1403,6 +1429,8 @@ const Bookings = () => {
           b.startTime || "",
           b.endTime || "",
           b.shift || "",
+          `"${(b.doctorName || "").replace(/"/g, '""')}"`,
+          `"${(b.doctorSpecialization || "").replace(/"/g, '""')}"`,
           `"${(b.purpose || "").replace(/"/g, '""')}"`,
           `"${serviceNames}"`,
           totalFee || 0,
@@ -1475,200 +1503,236 @@ const Bookings = () => {
     </div>
   );
 
-  const renderFilters = () => (
-    <div className="emp-dash__card mb-6">
-      <div className="hidden lg:block">
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
-          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
-            <div className="relative min-w-[160px] flex-1 max-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
-              <input
-                type="text"
-                placeholder="Search patient..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              />
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-gray-400" />
-              <select
-                value={dayFilter}
-                onChange={(e) => setDayFilter(e.target.value)}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              >
-                {DAYS_OF_WEEK.map((day) => (
-                  <option key={day} value={day}>
-                    {day === "All" ? "All Days" : day}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-gray-400" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              >
-                <option value="All">All Statuses</option>
-                <option value="booked">Booked</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="consulting">Consulting</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] font-bold text-gray-500">From</span>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              />
-            </div>
-
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] font-bold text-gray-500">To</span>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {(searchQuery || dayFilter !== "All" || statusFilter !== "All" || fromDate || toDate) && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-              >
-                <Trash2 className="w-3 h-3 text-red-500" />
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="lg:hidden">
-        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
-          <button
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
-            className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-          >
-            <Filter className="text-blue-600 text-base" />
-            <span>Filters &amp; Actions</span>
-            {showMobileFilters ? (
-              <ChevronUp className="text-gray-400" />
-            ) : (
-              <ChevronDown className="text-gray-400" />
-            )}
-          </button>
-          <span className="text-xs text-gray-500">
-            <strong>{filteredBookings.length}</strong> records
-          </span>
-        </div>
-
-        {showMobileFilters && (
-          <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Search Patient</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+  const renderFilters = () => {
+    const doctors = getUniqueDoctors();
+    
+    return (
+      <div className="emp-dash__card mb-6">
+        <div className="hidden lg:block">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
+            <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
+              <div className="relative min-w-[160px] flex-1 max-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
                 <input
                   type="text"
-                  placeholder="Search patient name, phone..."
+                  placeholder="Search patient..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Day</label>
-              <select
-                value={dayFilter}
-                onChange={(e) => setDayFilter(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              >
-                {DAYS_OF_WEEK.map((day) => (
-                  <option key={day} value={day}>
-                    {day === "All" ? "All Days" : day}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                <select
+                  value={dayFilter}
+                  onChange={(e) => setDayFilter(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  {DAYS_OF_WEEK.map((day) => (
+                    <option key={day} value={day}>
+                      {day === "All" ? "All Days" : day}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              >
-                <option value="All">All Statuses</option>
-                <option value="booked">Booked</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="consulting">Consulting</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
+              <div className="flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-gray-400" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="booked">Booked</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="consulting">Consulting</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+              <div className="flex items-center gap-1.5">
+                <UserRound className="w-3.5 h-3.5 text-gray-400" />
+                <select
+                  value={doctorFilter}
+                  onChange={(e) => setDoctorFilter(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[160px] truncate"
+                >
+                  <option value="All">All Doctors</option>
+                  {doctors.map((doc) => (
+                    <option key={doc.name} value={doc.name}>
+                      {doc.name} {doc.specialization ? `(${doc.specialization})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-gray-500">From</span>
                 <input
                   type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  className="px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-gray-500">To</span>
                 <input
                   type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  className="px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                 />
               </div>
             </div>
 
-            <div className="pt-3 border-t border-gray-200 space-y-2">
-              <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {(searchQuery || dayFilter !== "All" || statusFilter !== "All" || doctorFilter !== "All" || fromDate || toDate) && (
                 <button
-                  onClick={downloadCSV}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                  onClick={clearFilters}
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
                 >
-                  <Download className="w-4 h-4" />
-                  Export CSV
+                  <Trash2 className="w-3 h-3 text-red-500" />
+                  Clear
                 </button>
-                {(searchQuery || dayFilter !== "All" || statusFilter !== "All" || fromDate || toDate) && (
-                  <button
-                    onClick={clearFilters}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                    Clear
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           </div>
-        )}
+        </div>
+
+        <div className="lg:hidden">
+          <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <Filter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? (
+                <ChevronUp className="text-gray-400" />
+              ) : (
+                <ChevronDown className="text-gray-400" />
+              )}
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{filteredBookings.length}</strong> records
+            </span>
+          </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search Patient</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search patient name, phone..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Day</label>
+                <select
+                  value={dayFilter}
+                  onChange={(e) => setDayFilter(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                >
+                  {DAYS_OF_WEEK.map((day) => (
+                    <option key={day} value={day}>
+                      {day === "All" ? "All Days" : day}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="booked">Booked</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="consulting">Consulting</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Doctor</label>
+                <select
+                  value={doctorFilter}
+                  onChange={(e) => setDoctorFilter(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                >
+                  <option value="All">All Doctors</option>
+                  {doctors.map((doc) => (
+                    <option key={doc.name} value={doc.name}>
+                      {doc.name} {doc.specialization ? `(${doc.specialization})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={downloadCSV}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export CSV
+                  </button>
+                  {(searchQuery || dayFilter !== "All" || statusFilter !== "All" || doctorFilter !== "All" || fromDate || toDate) && (
+                    <button
+                      onClick={clearFilters}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="emp-dash">
@@ -1729,7 +1793,7 @@ const Bookings = () => {
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <h3 className="text-base font-bold text-gray-700">No Appointment Bookings Found</h3>
             <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto mb-4">No patient appointment records match your search criteria.</p>
-            {(searchQuery || dayFilter !== "All" || statusFilter !== "All" || fromDate || toDate) && (
+            {(searchQuery || dayFilter !== "All" || statusFilter !== "All" || doctorFilter !== "All" || fromDate || toDate) && (
               <button
                 onClick={clearFilters}
                 className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
@@ -1750,6 +1814,8 @@ const Bookings = () => {
                     <th>Appt. Date</th>
                     <th>Time Slot &amp; Day</th>
                     <th>Shift</th>
+                    <th>Doctor</th>
+                    <th>Specialization</th>
                     <th>Services</th>
                     <th>Purpose</th>
                     <th>Total Fee</th>
@@ -1817,6 +1883,20 @@ const Bookings = () => {
                           >
                             {booking.shift || "Morning Shift"}
                           </span>
+                        </td>
+
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <UserRound className="w-3.5 h-3.5 text-blue-600" />
+                            <span className="text-xs font-semibold text-slate-800">{booking.doctorName || "N/A"}</span>
+                          </div>
+                        </td>
+
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <Stethoscope className="w-3.5 h-3.5 text-purple-600" />
+                            <span className="text-xs text-gray-600">{booking.doctorSpecialization || "General Physician"}</span>
+                          </div>
                         </td>
 
                         <td className="px-3 py-3">
@@ -2535,6 +2615,21 @@ const Bookings = () => {
                     <div className="text-[10px] font-bold uppercase text-gray-400">Time Slot</div>
                     <div className="text-xs font-bold text-blue-900">
                       {selectedBooking.startTime} – {selectedBooking.endTime}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase text-gray-400">Doctor</div>
+                    <div className="text-xs font-bold text-purple-900">
+                      {selectedBooking.doctorName || "N/A"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold uppercase text-gray-400">Specialization</div>
+                    <div className="text-xs font-bold text-purple-900">
+                      {selectedBooking.doctorSpecialization || "General Physician"}
                     </div>
                   </div>
                 </div>

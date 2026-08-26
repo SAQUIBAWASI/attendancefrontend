@@ -45,7 +45,10 @@ import {
   Thermometer,
   Weight,
   Ruler,
-  Clock as ClockIcon
+  Clock as ClockIcon,
+  UserRound,
+  Building2,
+  BadgeCheck,
 } from "lucide-react";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -190,6 +193,7 @@ const OpManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [feeTypeFilter, setFeeTypeFilter] = useState("All");
+  const [doctorFilter, setDoctorFilter] = useState("All");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -1264,16 +1268,42 @@ const OpManagement = () => {
     setSearchQuery("");
     setStatusFilter("All");
     setFeeTypeFilter("All");
+    setDoctorFilter("All");
     setFromDate("");
     setToDate("");
     setSelectedMonth("");
   };
 
+  // Get unique doctors from bookings for filter
+  const getUniqueDoctors = () => {
+    const doctorMap = new Map();
+    bookings.forEach(b => {
+      if (b.doctorName) {
+        doctorMap.set(b.doctorName, {
+          name: b.doctorName,
+          specialization: b.doctorSpecialization || ""
+        });
+      }
+    });
+    return Array.from(doctorMap.values());
+  };
+
   // ===== FILTERED PATIENTS =====
   const filteredPatients = useMemo(() => {
+    const doctorsList = getUniqueDoctors();
+    
     return patients.filter((p) => {
       if (statusFilter !== "All" && p.paymentStatus !== statusFilter) return false;
       if (feeTypeFilter !== "All" && p.feeType !== feeTypeFilter) return false;
+
+      // Doctor filter - check if patient has any booking with selected doctor
+      if (doctorFilter !== "All") {
+        const hasBookingWithDoctor = bookings.some(b => 
+          (b.patientPhone === p.phone || (b.patientName && p.name && b.patientName.toLowerCase() === p.name.toLowerCase())) &&
+          b.doctorName === doctorFilter
+        );
+        if (!hasBookingWithDoctor) return false;
+      }
 
       if (p.createdAt) {
         const recordDate = new Date(p.createdAt);
@@ -1305,7 +1335,7 @@ const OpManagement = () => {
       }
       return true;
     });
-  }, [patients, statusFilter, feeTypeFilter, searchQuery, fromDate, toDate, selectedMonth]);
+  }, [patients, statusFilter, feeTypeFilter, doctorFilter, searchQuery, fromDate, toDate, selectedMonth, bookings]);
 
   // ===== STATS =====
   const stats = useMemo(() => {
@@ -1355,7 +1385,7 @@ const OpManagement = () => {
     }
   };
 
-  const isFilterActive = searchQuery || statusFilter !== "All" || feeTypeFilter !== "All" || fromDate || toDate || selectedMonth;
+  const isFilterActive = searchQuery || statusFilter !== "All" || feeTypeFilter !== "All" || doctorFilter !== "All" || fromDate || toDate || selectedMonth;
 
   // ===== DOWNLOAD CSV =====
   const downloadCSV = () => {
@@ -1943,6 +1973,21 @@ const OpManagement = () => {
                   <option value="lab">Lab</option>
                 </select>
               </div>
+              <div className="flex items-center gap-1">
+                <UserRound className="w-3.5 h-3.5 text-gray-400" />
+                <select
+                  value={doctorFilter}
+                  onChange={(e) => setDoctorFilter(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[160px] truncate"
+                >
+                  <option value="All">All Doctors</option>
+                  {getUniqueDoctors().map((doc) => (
+                    <option key={doc.name} value={doc.name}>
+                      {doc.name} {doc.specialization ? `(${doc.specialization})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="relative">
                 <input
                   type="date"
@@ -2020,14 +2065,19 @@ const OpManagement = () => {
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Patient Name & Info</th>
+                    <th>Patient Name</th>
+                    <th>Phone</th>
                     <th>Age</th>
                     <th>Gender</th>
-                    <th>Fee Type & Amount</th>
+                    <th>Address</th>
+                    <th>Doctor</th>
+                    <th>Doctor Specialization</th>
+                    <th>Fee Type</th>
+                    <th>Fee Amount</th>
                     <th>Payment Type</th>
                     <th>Payment Status</th>
                     <th>Reason</th>
-                    <th>Date</th>
+                    <th>Registered Date</th>
                     <th style={{ textAlign: "right" }}>Actions</th>
                   </tr>
                 </thead>
@@ -2039,34 +2089,61 @@ const OpManagement = () => {
                       (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase())
                     ).length;
                     
+                    // Get patient's doctor names and specializations
+                    const patientDoctorDetails = bookings
+                      .filter(b => 
+                        b.patientPhone === patient.phone || 
+                        (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase())
+                      )
+                      .reduce((acc, b) => {
+                        if (b.doctorName && !acc.some(d => d.name === b.doctorName)) {
+                          acc.push({
+                            name: b.doctorName,
+                            specialization: b.doctorSpecialization || "General Physician"
+                          });
+                        }
+                        return acc;
+                      }, []);
+                    
+                    const doctorNames = patientDoctorDetails.map(d => d.name).join(", ");
+                    const doctorSpecializations = patientDoctorDetails.map(d => d.specialization).join(", ");
+                    
                     return (
                       <tr 
                         key={patient._id} 
                         className="transition-colors hover:bg-blue-50/50 cursor-pointer group"
                         onClick={() => handleRowClick(patient)}
                       >
-                        <td className="px-3 py-3 font-semibold text-gray-400 text-[11px]">{idx + 1}</td>
-                        <td className="px-3 py-3">
+                        <td className="px-2 py-2 font-semibold text-gray-400 text-[11px]">{idx + 1}</td>
+                        <td className="px-2 py-2">
                           <div className="font-semibold text-slate-800 text-xs">{patient.name || "N/A"}</div>
-                          {patient.phone && (
-                            <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
-                              <Phone className="w-3 h-3 text-gray-400" /> {patient.phone}
-                            </div>
-                          )}
-                          {patient.address && (
-                            <div className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5 truncate max-w-[200px]" title={patient.address}>
-                              <MapPin className="w-3 h-3" /> {patient.address}
-                            </div>
-                          )}
                           {patientBookingCount > 0 && (
                             <div className="text-[10px] text-blue-500 font-medium mt-0.5">
                               📋 {patientBookingCount} booking{patientBookingCount > 1 ? 's' : ''}
                             </div>
                           )}
                         </td>
-                        <td className="px-3 py-3 font-medium text-slate-800 text-xs">{patient.age ?? "N/A"} Yrs</td>
-                        <td className="px-3 py-3 font-medium text-slate-700 text-xs capitalize">{patient.gender || "N/A"}</td>
-                        <td className="px-3 py-3">
+                        <td className="px-2 py-2">
+                          <div className="text-xs font-medium text-gray-700">{patient.phone || "N/A"}</div>
+                        </td>
+                        <td className="px-2 py-2 font-medium text-slate-800 text-xs">{patient.age ?? "N/A"} Yrs</td>
+                        <td className="px-2 py-2 font-medium text-slate-700 text-xs capitalize">{patient.gender || "N/A"}</td>
+                        <td className="px-2 py-2">
+                          <div className="text-xs text-gray-600 max-w-[150px] truncate" title={patient.address}>
+                            {patient.address || "N/A"}
+                          </div>
+                        </td>
+                        <td className="px-2 py-2">
+                          <div className="text-xs font-semibold text-purple-700 max-w-[120px] truncate" title={doctorNames}>
+                            {doctorNames || "N/A"}
+                          </div>
+                        </td>
+                        <td className="px-2 py-2">
+                          <div className="text-xs text-gray-600 max-w-[120px] truncate" title={doctorSpecializations}>
+                            {doctorSpecializations || "General Physician"}
+                          </div>
+                        </td>
+                        <td className="px-2 py-2">
                           <span
                             className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                               patient.feeType === "lab"
@@ -2076,11 +2153,11 @@ const OpManagement = () => {
                           >
                             {patient.feeType === "lab" ? "Lab" : "Consult"}
                           </span>
-                          <div className="font-bold text-slate-800 text-xs mt-0.5">
-                            ₹{patient.feeAmount ?? 300}
-                          </div>
                         </td>
-                        <td className="px-3 py-3">
+                        <td className="px-2 py-2 font-bold text-slate-800 text-xs">
+                          ₹{patient.feeAmount ?? 300}
+                        </td>
+                        <td className="px-2 py-2">
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 capitalize">
                             {patient.paymentType === "online" ? (
                               <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
@@ -2090,7 +2167,7 @@ const OpManagement = () => {
                             {patient.paymentType || "cash"}
                           </span>
                         </td>
-                        <td className="px-3 py-3 payment-dropdown" onClick={handleActionClick}>
+                        <td className="px-2 py-2 payment-dropdown" onClick={handleActionClick}>
                           <div className="flex flex-col gap-1">
                             <button
                               onClick={(e) => {
@@ -2150,16 +2227,16 @@ const OpManagement = () => {
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-3 max-w-[180px]">
-                          <div className="truncate text-xs text-slate-700 font-medium" title={patient.reason}>
+                        <td className="px-2 py-2">
+                          <div className="truncate text-xs text-slate-700 font-medium max-w-[120px]" title={patient.reason}>
                             {patient.reason || "General Consultation"}
                           </div>
                         </td>
-                        <td className="px-3 py-3">
+                        <td className="px-2 py-2">
                           <div className="font-medium text-slate-800 text-[11px]">{formatDate(patient.createdAt)}</div>
                           <div className="text-[10px] text-gray-400">{formatTime(patient.createdAt)}</div>
                         </td>
-                        <td className="px-3 py-3 text-right" onClick={handleActionClick}>
+                        <td className="px-2 py-2 text-right" onClick={handleActionClick}>
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={(e) => {

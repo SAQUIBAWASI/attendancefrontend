@@ -1827,7 +1827,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
 
     
 
-    const baseUrl = 'https://ingrainhire.ingrainsystems.com/candidate-login';
+    const baseUrl = 'https://ingrainhire.ingrainsystems.com/client-login';
 
    
 
