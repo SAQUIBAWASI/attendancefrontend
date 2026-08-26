@@ -49,7 +49,7 @@ import {
 } from "lucide-react";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
-import logo from "../Images/logo2.png";
+import logo from "../Images/Timelyhealth logo.png";
 
 const GENDER_OPTIONS = [
   { value: "Male", label: "Male" },
@@ -92,10 +92,31 @@ const EMPTY_FORM = {
   appointmentDate: ""
 };
 
+// ✅ CLINIC INFO - SAME AS BOOKINGS
+const CLINIC_INFO = {
+  name: "TimelyHealth",
+  address: "Falt No: 301, 3rd Floor, Sri Sai Balaji Avenue, H. No: 1-98/9/25/p, Opp Style on Studio, VIP Hills, near Bank of Baroda, Arunodaya Colony, Sri Sai Nagar, Madhapur, Hyderabad, Telangana 500081",
+  contact: "9505397000"
+};
+
 const getDayNameFromDate = (dateStr) => {
   if (!dateStr) return "";
   const date = new Date(dateStr);
   return date.toLocaleDateString('en-US', { weekday: 'long' });
+};
+
+const formatDateToDDMMYYYY = (dateString) => {
+  if (!dateString) return "N/A";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "N/A";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return "N/A";
+  }
 };
 
 const getStatusColors = (status) => {
@@ -108,6 +129,24 @@ const getStatusColors = (status) => {
     confirmed: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200" }
   };
   return statusMap[status?.toLowerCase()] || statusMap.booked;
+};
+
+// ✅ NUMBER TO WORDS - SAME AS BOOKINGS
+const numberToWords = (num) => {
+  if (num === 0) return 'Zero';
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+  
+  const convert = (n) => {
+    if (n < 20) return ones[n];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+    if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' and ' + convert(n % 100) : '');
+    if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '');
+    if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '');
+    return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
+  };
+  
+  return convert(num) + ' Rupees Only';
 };
 
 const OpManagement = () => {
@@ -142,7 +181,6 @@ const OpManagement = () => {
   const [newPaymentStatus, setNewPaymentStatus] = useState("");
   const [paymentUpdating, setPaymentUpdating] = useState(false);
 
-  // ===== INLINE PAYMENT DROPDOWN (same as Bookings component) =====
   const [openPaymentDropdown, setOpenPaymentDropdown] = useState(null);
 
   const [existingPatient, setExistingPatient] = useState(null);
@@ -163,20 +201,28 @@ const OpManagement = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // ===== BILLING STATE (same as Bookings component) =====
+  // ===== BILLING STATE - SAME AS BOOKINGS =====
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [selectedBookingForBilling, setSelectedBookingForBilling] = useState(null);
   const [billingData, setBillingData] = useState({
-    consultationFee: 0,
-    serviceFees: [],
-    totalAmount: 0,
+    invoiceNo: "",
+    invoiceDate: "",
+    receiptNo: "",
+    receiptDate: "",
+    paymentMode: "Cash",
+    receivedBy: "Front Desk",
+    branch: "",
+    doctorName: "",
+    items: [],
+    grossAmount: 0,
+    netAmount: 0,
     paidAmount: 0,
-    dueAmount: 0,
+    balanceAmount: 0,
     paymentStatus: "Pending",
-    billDate: "",
-    billNumber: "",
-    items: []
+    amountInWords: ""
   });
+
+  const invoiceRef = useRef(null);
 
   const phoneInputRef = useRef(null);
   const nameInputRef = useRef(null);
@@ -709,17 +755,15 @@ const OpManagement = () => {
     }
   };
 
-  // ===== INLINE PAYMENT UPDATE (NEW - like Bookings component) =====
+  // ===== INLINE PAYMENT UPDATE =====
   const handleInlinePaymentUpdate = async (bookingId, newPaymentStatus, patientName) => {
     try {
-      // Update local state immediately for better UX
       setBookings((prev) =>
         prev.map((b) =>
           b._id === bookingId ? { ...b, paymentStatus: newPaymentStatus } : b
         )
       );
 
-      // Update on server
       await axios.put(`${API_BASE_URL}/appointment-slots/${bookingId}`, {
         paymentStatus: newPaymentStatus
       });
@@ -727,13 +771,12 @@ const OpManagement = () => {
       showToast(`Payment status updated to '${newPaymentStatus}' for ${patientName}!`, "success");
       setOpenPaymentDropdown(null);
       
-      // Refresh data
       fetchPatients();
       refreshPatientBookings();
     } catch (error) {
       console.error("Error updating payment status:", error);
       showToast("Failed to update payment status. Please try again.", "error");
-      fetchBookings(); // Revert on error
+      fetchBookings();
     }
   };
 
@@ -824,7 +867,7 @@ const OpManagement = () => {
     }
   };
 
-  // ===== BILLING FUNCTIONS (exact same as Bookings component) =====
+  // ===== BILLING FUNCTIONS - EXACT SAME AS BOOKINGS =====
   const getTotalServiceFee = (booking) => {
     if (!booking.services || booking.services.length === 0) return 0;
     return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
@@ -838,52 +881,54 @@ const OpManagement = () => {
     setSelectedBookingForBilling(booking);
 
     const consultationFee = booking.consultationFee || 0;
-    const serviceFees = (booking.services || []).map(s => ({
-      name: s.name,
-      price: s.price || 0,
-      paymentStatus: s.paymentStatus || "Pending"
-    }));
     const totalServiceFee = getTotalServiceFee(booking);
-    const totalAmount = consultationFee + totalServiceFee;
+    const grossAmount = consultationFee + totalServiceFee;
     const isPaid = booking.paymentStatus === "Paid";
-    const paidAmount = isPaid ? totalAmount : 0;
-    const dueAmount = isPaid ? 0 : totalAmount;
+    const paidAmount = isPaid ? grossAmount : 0;
+    const balanceAmount = isPaid ? 0 : grossAmount;
 
-    const today = new Date();
-    const billNumber = `BILL-${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-${String(booking._id).slice(-6)}`;
+    const now = new Date();
+    const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const shortId = String(booking._id || "").slice(-6).toUpperCase() || "000000";
+    const invoiceNo = `${dateStamp}-${shortId}`;
+    const dateTimeLabel = `${now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} ${now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
+    const receiptNo = `R-${shortId.slice(-4)}-${String(now.getFullYear()).slice(-2)}-${now.getMonth() + 1}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const items = [
       {
-        id: 'consultation',
+        no: 1,
         name: 'Consultation Fee',
-        description: 'OPD Consultation',
-        quantity: 1,
-        unitPrice: consultationFee,
-        total: consultationFee,
-        type: 'consultation'
+        serviceCode: 'CONS-01',
+        remarks: booking.purpose || 'OPD Consultation',
+        amount: consultationFee
       },
       ...(booking.services || []).map((s, idx) => ({
-        id: `service-${idx}`,
+        no: idx + 2,
         name: s.name,
-        description: s.description || 'Additional Service',
-        quantity: 1,
-        unitPrice: s.price || 0,
-        total: s.price || 0,
-        type: 'service',
-        serviceId: s.serviceId || s._id
+        serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, '0')}`,
+        remarks: s.description || s.paymentStatus || 'Additional Service',
+        amount: s.price || 0
       }))
     ];
 
     setBillingData({
-      consultationFee,
-      serviceFees,
-      totalAmount,
+      invoiceNo,
+      invoiceDate: dateTimeLabel,
+      receiptNo,
+      receiptDate: dateTimeLabel,
+      paymentMode: booking.paymentType
+        ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1)
+        : 'Cash',
+      receivedBy: 'Front Desk',
+      branch: booking.doctorSpecialization || 'Main Branch',
+      doctorName: booking.doctorName || 'General OP Doctor',
+      items,
+      grossAmount,
+      netAmount: grossAmount,
       paidAmount,
-      dueAmount,
+      balanceAmount,
       paymentStatus: booking.paymentStatus || "Pending",
-      billDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-      billNumber,
-      items
+      amountInWords: numberToWords(grossAmount)
     });
 
     setShowBillingModal(true);
@@ -907,8 +952,8 @@ const OpManagement = () => {
         setBillingData(prev => ({
           ...prev,
           paymentStatus: "Paid",
-          paidAmount: prev.totalAmount,
-          dueAmount: 0
+          paidAmount: prev.netAmount,
+          balanceAmount: 0
         }));
 
         fetchPatients();
@@ -924,266 +969,267 @@ const OpManagement = () => {
     }
   };
 
+  // ✅ PRINT BILL - SAME AS BOOKINGS (Watermark Logo in Center)
   const printBill = () => {
     const billContent = document.getElementById('bill-content');
     if (!billContent) return;
 
-    const win = window.open('', '_blank', 'width=800,height=900');
+    const itemsRows = billingData.items.map(item => `
+      <tr>
+        <td>${item.no}</td>
+        <td>${item.name}</td>
+        <td>${item.serviceCode}</td>
+        <td>${item.remarks}</td>
+        <td class="text-right">${Number(item.amount).toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    const win = window.open('', '_blank', 'width=850,height=1000');
     if (win) {
       win.document.write(`
         <!DOCTYPE html>
         <html>
           <head>
             <meta charset="UTF-8" />
-            <title>Bill - ${billingData.billNumber}</title>
+            <title>Bill - ${billingData.invoiceNo}</title>
             <style>
               * { margin: 0; padding: 0; box-sizing: border-box; }
-              body { 
-                font-family: 'Times New Roman', Times, serif;
-                background: #ffffff;
-                padding: 40px;
+              body {
+                font-family: Arial, Helvetica, sans-serif;
                 color: #222222;
+                padding: 24px;
+                background: #ffffff;
+                position: relative;
               }
-              .bill-container {
-                max-width: 800px;
+              .bill-wrap {
+                max-width: 820px;
                 margin: 0 auto;
-                border: 1px solid #cccccc;
-                padding: 40px;
+                border: 1px solid #999999;
+                padding: 24px 28px;
+                position: relative;
+                background: #ffffff;
+                overflow: hidden;
               }
-              .bill-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 2px solid #222222;
-                padding-bottom: 20px;
-                margin-bottom: 30px;
+              .watermark {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                opacity: 0.08;
+                z-index: 0;
+                pointer-events: none;
+                width: 300px;
+                height: 300px;
               }
-              .bill-title {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-              }
-              .bill-title .logo {
-                width: 50px;
-                height: 50px;
+              .watermark img {
+                width: 100%;
+                height: 100%;
                 object-fit: contain;
               }
-              .bill-title .title-group h1 {
-                font-size: 28px;
-                font-weight: normal;
-                letter-spacing: 2px;
-                color: #222222;
-                margin: 0;
+              .bill-content {
+                position: relative;
+                z-index: 1;
               }
-              .bill-title .title-group .sub {
-                font-size: 12px;
-                color: #666666;
-                letter-spacing: 1px;
-              }
-              .bill-number {
-                text-align: right;
-              }
-              .bill-number .label {
-                font-size: 11px;
-                color: #888888;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-              }
-              .bill-number .value {
-                font-size: 18px;
-                font-weight: bold;
-                color: #222222;
-              }
-              .bill-number .date {
-                font-size: 12px;
-                color: #666666;
-                margin-top: 4px;
-              }
-              .patient-info {
+              .top-header {
                 display: flex;
+                align-items: flex-start;
                 justify-content: space-between;
-                margin-bottom: 30px;
-                padding: 15px;
-                background: #f8fafc;
-                border-radius: 8px;
+                border-bottom: 2px solid #222222;
+                padding-bottom: 14px;
               }
-              .patient-info .info-group {
+              .top-header .brand {
                 display: flex;
-                flex-direction: column;
+                align-items: center;
+                gap: 14px;
               }
-              .patient-info .info-group .label {
-                font-size: 10px;
-                color: #888888;
-                text-transform: uppercase;
-                letter-spacing: 1px;
+              .top-header .brand img {
+                width: 60px;
+                height: 60px;
+                object-fit: contain;
               }
-              .patient-info .info-group .value {
-                font-size: 14px;
+              .top-header .brand h1 {
+                font-size: 20px;
                 font-weight: bold;
-                color: #222222;
+                color: #111111;
+                letter-spacing: 0.3px;
+              }
+              .top-header .brand p {
+                font-size: 11px;
+                color: #555555;
                 margin-top: 2px;
+                max-width: 440px;
               }
-              .table-section {
-                margin: 20px 0;
+              .top-header .contact {
+                text-align: right;
+                font-size: 11px;
+                color: #555555;
+                white-space: nowrap;
               }
-              .bill-table {
+              .bar-title {
+                text-align: center;
+                background: #f1f1f1;
+                border-top: 1px solid #999999;
+                border-bottom: 1px solid #999999;
+                padding: 6px 0;
+                font-size: 13px;
+                font-weight: bold;
+                letter-spacing: 1.5px;
+                margin: 10px 0 14px 0;
+                text-transform: uppercase;
+              }
+              .info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 4px 24px;
+                font-size: 12px;
+                margin-bottom: 14px;
+              }
+              .info-grid .label {
+                color: #666666;
+                font-weight: bold;
+                display: inline-block;
+                width: 120px;
+              }
+              table.items {
                 width: 100%;
                 border-collapse: collapse;
-              }
-              .bill-table th {
-                text-align: left;
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: #888888;
-                border-bottom: 1px solid #dddddd;
-                padding: 10px 0;
-                font-weight: normal;
-              }
-              .bill-table td {
-                padding: 12px 0;
-                border-bottom: 1px solid #eeeeee;
-                font-size: 14px;
-                color: #333333;
-              }
-              .bill-table .text-right {
-                text-align: right;
-              }
-              .totals-section {
-                margin: 20px 0 10px 0;
-                padding: 15px 0;
                 border-top: 2px solid #222222;
                 border-bottom: 2px solid #222222;
-                display: flex;
-                justify-content: flex-end;
+                margin-bottom: 12px;
               }
-              .totals-section .total-box {
+              table.items th {
+                text-align: left;
+                font-size: 11px;
+                color: #555555;
+                padding: 6px 4px;
+                border-bottom: 1px solid #bbbbbb;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+              table.items td {
+                font-size: 12px;
+                padding: 6px 4px;
+                border-bottom: 1px solid #eeeeee;
+                color: #333333;
+              }
+              table.items td.text-right,
+              table.items th.text-right {
                 text-align: right;
               }
-              .totals-section .total-box .label {
-                font-size: 14px;
-                color: #666666;
-                text-transform: uppercase;
-                letter-spacing: 1px;
+              .totals-box {
+                width: 100%;
+                max-width: 300px;
+                margin-left: auto;
+                font-size: 12px;
+                margin-bottom: 12px;
               }
-              .totals-section .total-box .amount {
-                font-size: 24px;
-                font-weight: bold;
-                color: #222222;
-                margin-top: 2px;
-              }
-              .payment-status-section {
+              .totals-box .row {
                 display: flex;
                 justify-content: space-between;
-                padding: 15px 0;
-                margin: 10px 0;
-                border-top: 1px solid #eeeeee;
+                padding: 4px 0;
                 border-bottom: 1px solid #eeeeee;
               }
-              .payment-status-section .status-label {
-                font-size: 12px;
-                color: #666666;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-              }
-              .payment-status-section .status-value {
-                font-size: 14px;
+              .totals-box .row.final {
+                border-top: 2px solid #222222;
+                border-bottom: none;
                 font-weight: bold;
-                color: ${billingData.paymentStatus === 'Paid' ? '#166534' : '#b45309'};
-              }
-              .footer-section {
-                margin-top: 40px;
-                padding-top: 20px;
-                border-top: 1px solid #dddddd;
-                display: flex;
-                justify-content: space-between;
-                font-size: 11px;
-                color: #888888;
-              }
-              .footer-section .thankyou {
-                text-align: center;
+                padding-top: 8px;
+                margin-top: 4px;
                 font-size: 13px;
-                color: #666666;
-                letter-spacing: 1px;
-                width: 100%;
+              }
+              .footer-row {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                font-size: 11px;
+                color: #555555;
+                border-top: 1px solid #dddddd;
+                padding-top: 12px;
                 margin-top: 10px;
+              }
+              .footer-note {
+                font-size: 10px;
+                color: #888888;
+                margin-top: 10px;
+                font-style: italic;
+              }
+              .signature-section {
+                display: flex;
+                justify-content: flex-end;
+                margin-top: 8px;
+              }
+              .signature-section .sig {
+                font-weight: bold;
+                color: #333;
+              }
+              @media print {
+                body { padding: 0; }
+                .bill-wrap { border: none; }
               }
             </style>
           </head>
           <body>
-            <div class="bill-container">
-              <div class="bill-header">
-                <div class="bill-title">
-                  <img src="${logo}" alt="TimelyHealth" class="logo" />
-                  <div class="title-group">
-                    <h1>BILL</h1>
-                    <div class="sub">TimelyHealth</div>
+            <div class="bill-wrap">
+              <div class="watermark">
+                <img src="${logo}" alt="${CLINIC_INFO.name}" />
+              </div>
+              
+              <div class="bill-content">
+                <div class="top-header">
+                  <div class="brand">
+                    <img src="${logo}" alt="${CLINIC_INFO.name}" />
+                    <div>
+                      <h1>${CLINIC_INFO.name}</h1>
+                      <p>${CLINIC_INFO.address}</p>
+                    </div>
+                  </div>
+                  <div class="contact">
+                    Contact No : ${CLINIC_INFO.contact}
                   </div>
                 </div>
-                <div class="bill-number">
-                  <div class="label">Bill Number</div>
-                  <div class="value">${billingData.billNumber}</div>
-                  <div class="date">${billingData.billDate}</div>
-                </div>
-              </div>
 
-              <div class="patient-info">
-                <div class="info-group">
-                  <span class="label">Patient Name</span>
-                  <span class="value">${selectedBookingForBilling?.patientName || 'N/A'}</span>
-                </div>
-                <div class="info-group">
-                  <span class="label">Phone</span>
-                  <span class="value">${selectedBookingForBilling?.patientPhone || 'N/A'}</span>
-                </div>
-                <div class="info-group">
-                  <span class="label">Age / Gender</span>
-                  <span class="value">${selectedBookingForBilling?.patientAge || 'N/A'} yrs / ${selectedBookingForBilling?.patientGender || 'N/A'}</span>
-                </div>
-                <div class="info-group">
-                  <span class="label">Appointment Date</span>
-                  <span class="value">${formatDateToDDMMYYYY(selectedBookingForBilling?.appointmentDate || selectedBookingForBilling?.date)}</span>
-                </div>
-              </div>
+                <div class="bar-title">Bill Cum Receipt</div>
 
-              <div class="table-section">
-                <table class="bill-table">
+                <div class="info-grid">
+                  <div><span class="label">Name</span>: ${selectedBookingForBilling?.patientName || 'N/A'}</div>
+                  <div><span class="label">Invoice No / Date</span>: ${billingData.invoiceNo} / ${billingData.invoiceDate}</div>
+                  <div><span class="label">Age</span>: ${selectedBookingForBilling?.patientAge || 'N/A'} Yrs</div>
+                  <div><span class="label">Gender</span>: ${selectedBookingForBilling?.patientGender || 'N/A'}</div>
+                  <div><span class="label">Branch</span>: ${billingData.branch}</div>
+                  <div><span class="label">Contact No</span>: ${selectedBookingForBilling?.patientPhone || 'N/A'}</div>
+                  <div><span class="label">Doctor</span>: ${billingData.doctorName}</div>
+                  <div><span class="label">Appt. Date</span>: ${formatDateToDDMMYYYY(selectedBookingForBilling?.date)}</div>
+                </div>
+
+                <table class="items">
                   <thead>
                     <tr>
-                      <th style="width:50%;">Description</th>
-                      <th style="width:20%;text-align:center;">Qty</th>
-                      <th style="width:30%;text-align:right;">Amount</th>
+                      <th style="width:6%;">No.</th>
+                      <th style="width:34%;">Service / Item</th>
+                      <th style="width:18%;">Service Code</th>
+                      <th style="width:24%;">Remarks</th>
+                      <th style="width:18%;" class="text-right">Amount</th>
                     </tr>
                   </thead>
                   <tbody>
-                    ${billingData.items.map(item => `
-                      <tr>
-                        <td>
-                          ${item.name}
-                          ${item.description && item.name !== 'Consultation Fee' ? `<div style="font-size:11px;color:#888888;">${item.description}</div>` : ''}
-                        </td>
-                        <td class="text-right">${item.quantity}</td>
-                        <td class="text-right">₹ ${item.total.toFixed(2)}</td>
-                      </tr>
-                    `).join('')}
+                    ${itemsRows}
                   </tbody>
                 </table>
-              </div>
 
-              <div class="totals-section">
-                <div class="total-box">
-                  <div class="label">Grand Total</div>
-                  <div class="amount">₹ ${billingData.totalAmount.toFixed(2)}</div>
+                <div class="totals-box">
+                  <div class="row"><span>Gross Bill Amount</span><span>₹ ${billingData.grossAmount.toFixed(2)}</span></div>
+                  <div class="row"><span>Net Amount</span><span>₹ ${billingData.netAmount.toFixed(2)}</span></div>
+                  <div class="row"><span>Paid Amount</span><span>₹ ${billingData.paidAmount.toFixed(2)}</span></div>
+                  <div class="row final"><span>Balance to Pay</span><span>₹ ${billingData.balanceAmount.toFixed(2)}</span></div>
                 </div>
-              </div>
 
-              <div class="payment-status-section">
-                <span class="status-label">Payment Status</span>
-                <span class="status-value">${billingData.paymentStatus}</span>
-              </div>
-
-              <div class="footer-section">
-                <div class="thankyou">Thank you for your visit</div>
+                <div class="footer-row">
+                  <span>Printed Date : ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div class="signature-section">
+                  <span class="sig">Signature</span>
+                </div>
+                <div class="footer-note">* Bills cannot be cancelled once registered.</div>
               </div>
             </div>
           </body>
@@ -1289,20 +1335,6 @@ const OpManagement = () => {
       minute: "2-digit",
       hour12: true
     });
-  };
-
-  const formatDateToDDMMYYYY = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "N/A";
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    } catch (error) {
-      return "N/A";
-    }
   };
 
   const formatDateTime = (dateStr) => {
@@ -2081,7 +2113,6 @@ const OpManagement = () => {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // Find the booking for this patient to update payment
                                     const booking = bookings.find(b => 
                                       b.patientPhone === patient.phone || 
                                       (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase())
@@ -2562,20 +2593,18 @@ const OpManagement = () => {
           </div>
         )}
 
-        {/* ===== BILLING MODAL ===== */}
+        {/* ===== BILLING MODAL - SAME AS BOOKINGS ===== */}
         {showBillingModal && selectedBookingForBilling && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
                 <div className="flex items-center gap-2">
                   <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
                     <ReceiptText className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-base">Patient Bill</h3>
-                    <p className="text-xs text-gray-500">
-                      {selectedBookingForBilling.patientName} • {billingData.billNumber}
-                    </p>
+                    <h3 className="font-bold text-gray-900 text-base">Bill Cum Receipt</h3>
+                    <p className="text-xs text-gray-500">{selectedBookingForBilling.patientName} • {billingData.invoiceNo}</p>
                   </div>
                 </div>
                 <button onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }} className="text-gray-400 hover:text-gray-600">
@@ -2583,107 +2612,113 @@ const OpManagement = () => {
                 </button>
               </div>
 
-              <div id="bill-content" className="mt-5">
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div>
-                      <div className="text-[10px] font-bold uppercase text-gray-400">Patient Name</div>
-                      <div className="text-sm font-bold text-gray-900">{selectedBookingForBilling.patientName || "N/A"}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-bold uppercase text-gray-400">Phone</div>
-                      <div className="text-sm font-bold text-gray-900">{selectedBookingForBilling.patientPhone || "N/A"}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-bold uppercase text-gray-400">Age / Gender</div>
-                      <div className="text-sm font-bold text-gray-900">
-                        {selectedBookingForBilling.patientAge || "N/A"} yrs / {selectedBookingForBilling.patientGender || "N/A"}
+              <div id="bill-content" className="p-6 md:p-8 relative overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none w-64 h-64">
+                  <img src={logo} alt={CLINIC_INFO.name} className="w-full h-full object-contain" />
+                </div>
+                
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between border-b-2 border-gray-800 pb-4 mb-3 flex-wrap gap-2">
+                    <div className="flex items-center gap-3">
+                      <img src={logo} alt={CLINIC_INFO.name} className="w-14 h-14 object-contain" />
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900 tracking-wide">{CLINIC_INFO.name}</h2>
+                        <p className="text-[11px] text-gray-500 max-w-sm">{CLINIC_INFO.address}</p>
                       </div>
                     </div>
-                    <div>
-                      <div className="text-[10px] font-bold uppercase text-gray-400">Appointment Date</div>
-                      <div className="text-sm font-bold text-gray-900">
-                        {formatDateToDDMMYYYY(selectedBookingForBilling.appointmentDate || selectedBookingForBilling.date)}
-                      </div>
+                    <div className="text-right text-[11px] text-gray-500">
+                      Contact No : {CLINIC_INFO.contact}
                     </div>
                   </div>
-                </div>
 
-                <div className="overflow-x-auto mb-4">
-                  <table className="w-full">
+                  <div className="text-center bg-gray-100 border-y border-gray-300 py-1.5 mb-4">
+                    <span className="text-sm font-bold tracking-widest text-gray-800 uppercase">Bill Cum Receipt</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs mb-5">
+                    <div><span className="font-bold text-gray-500 inline-block w-28">Name</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling.patientName || "N/A"}</span></div>
+                    <div><span className="font-bold text-gray-500 inline-block w-28">Invoice No / Date</span>: <span className="font-semibold text-gray-900">{billingData.invoiceNo} / {billingData.invoiceDate}</span></div>
+                    <div><span className="font-bold text-gray-500 inline-block w-28">Age</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling.patientAge || "N/A"} Yrs</span></div>
+                    <div><span className="font-bold text-gray-500 inline-block w-28">Gender</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling.patientGender || "N/A"}</span></div>
+                    <div><span className="font-bold text-gray-500 inline-block w-28">Branch</span>: <span className="font-semibold text-gray-900">{billingData.branch}</span></div>
+                    <div><span className="font-bold text-gray-500 inline-block w-28">Contact No</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling.patientPhone || "N/A"}</span></div>
+                    <div><span className="font-bold text-gray-500 inline-block w-28">Doctor</span>: <span className="font-semibold text-gray-900">{billingData.doctorName}</span></div>
+                    <div><span className="font-bold text-gray-500 inline-block w-28">Appt. Date</span>: <span className="font-semibold text-gray-900">{formatDateToDDMMYYYY(selectedBookingForBilling.date)}</span></div>
+                  </div>
+
+                  <table className="w-full mb-3 border-t-2 border-b-2 border-gray-800">
                     <thead>
-                      <tr className="border-b-2 border-gray-200">
-                        <th className="text-left py-2 text-[11px] font-bold uppercase text-gray-500">Description</th>
-                        <th className="text-center py-2 text-[11px] font-bold uppercase text-gray-500">Qty</th>
-                        <th className="text-right py-2 text-[11px] font-bold uppercase text-gray-500">Amount</th>
+                      <tr className="border-b border-gray-300">
+                        <th className="text-left py-1.5 text-[11px] font-bold text-gray-600 w-8">No.</th>
+                        <th className="text-left py-1.5 text-[11px] font-bold text-gray-600">Service / Item</th>
+                        <th className="text-left py-1.5 text-[11px] font-bold text-gray-600">Service Code</th>
+                        <th className="text-left py-1.5 text-[11px] font-bold text-gray-600">Remarks</th>
+                        <th className="text-right py-1.5 text-[11px] font-bold text-gray-600">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {billingData.items.map((item, idx) => (
-                        <tr key={idx} className="border-b border-gray-100">
-                          <td className="py-2.5 text-sm font-medium text-gray-800">
-                            {item.name}
-                            {item.description && item.name !== 'Consultation Fee' && (
-                              <div className="text-[11px] text-gray-400">{item.description}</div>
-                            )}
-                          </td>
-                          <td className="py-2.5 text-sm text-center text-gray-700">{item.quantity}</td>
-                          <td className="py-2.5 text-sm text-right font-medium text-gray-800">₹{item.total}</td>
+                      {billingData.items.map((item) => (
+                        <tr key={item.no} className="border-b border-gray-100">
+                          <td className="py-1.5 text-xs text-gray-700">{item.no}</td>
+                          <td className="py-1.5 text-xs font-medium text-gray-800">{item.name}</td>
+                          <td className="py-1.5 text-xs text-gray-600">{item.serviceCode}</td>
+                          <td className="py-1.5 text-xs text-gray-500">{item.remarks}</td>
+                          <td className="py-1.5 text-xs text-right font-semibold text-gray-800">{Number(item.amount).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                </div>
 
-                <div className="border-t-2 border-gray-300 pt-4">
-                  <div className="flex justify-end">
-                    <div className="w-64">
-                      <div className="flex justify-between py-1.5">
-                        <span className="text-sm text-gray-600">Sub Total</span>
-                        <span className="text-sm font-bold text-gray-800">₹{billingData.totalAmount}</span>
+                  <div className="flex flex-col items-end mb-3">
+                    <div className="w-full max-w-xs text-xs">
+                      <div className="flex justify-between py-1 border-b border-gray-200">
+                        <span className="text-gray-600">Gross Bill Amount</span>
+                        <span className="font-bold text-gray-900">₹ {billingData.grossAmount.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between py-1.5 border-t border-gray-200">
-                        <span className="text-base font-bold text-gray-800">Grand Total</span>
-                        <span className="text-base font-bold text-emerald-700">₹{billingData.totalAmount}</span>
+                      <div className="flex justify-between py-1 border-b border-gray-200">
+                        <span className="text-gray-600">Net Amount</span>
+                        <span className="font-bold text-gray-900">₹ {billingData.netAmount.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between py-1.5 border-t border-gray-200 mt-1">
-                        <span className="text-sm text-gray-600">Payment Status</span>
-                        <span className={`text-sm font-bold ${billingData.paymentStatus === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                          {billingData.paymentStatus}
-                        </span>
+                      <div className="flex justify-between py-1 border-b border-gray-200">
+                        <span className="text-gray-600">Paid Amount</span>
+                        <span className="font-bold text-emerald-700">₹ {billingData.paidAmount.toFixed(2)}</span>
                       </div>
-                      {billingData.paymentStatus === "Pending" && (
-                        <div className="flex justify-between py-1.5">
-                          <span className="text-sm text-gray-600">Due Amount</span>
-                          <span className="text-sm font-bold text-red-600">₹{billingData.dueAmount}</span>
-                        </div>
-                      )}
+                      <div className="flex justify-between py-1.5 mt-1 border-t-2 border-gray-800">
+                        <span className="font-bold text-gray-800">Balance to Pay</span>
+                        <span className={`font-bold ${billingData.balanceAmount > 0 ? "text-red-600" : "text-emerald-700"}`}>₹ {billingData.balanceAmount.toFixed(2)}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
-                  {billingData.paymentStatus === "Pending" && (
-                    <button
-                      onClick={handleMarkAsPaid}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-1.5"
-                    >
-                      <CheckCircle2 className="w-4 h-4" /> Mark as Paid
-                    </button>
-                  )}
-                  <button
-                    onClick={printBill}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5"
-                  >
-                    <Printer className="w-4 h-4" /> Print Bill
-                  </button>
-                  <button
-                    onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
-                  >
-                    Close
-                  </button>
+                  <div className="flex items-center justify-between flex-wrap gap-2 pt-4 mt-2 border-t border-gray-200 text-[11px] text-gray-500">
+                    <span>Printed Date : {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="font-bold text-gray-700">Signature</span>
+                  </div>
+                  <div className="mt-3 text-[10px] text-gray-400 italic">* Bills cannot be cancelled once registered.</div>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+                {billingData.paymentStatus === "Pending" && (
+                  <button
+                    onClick={handleMarkAsPaid}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-4 h-4" /> Mark as Paid
+                  </button>
+                )}
+                <button
+                  onClick={printBill}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <Printer className="w-4 h-4" /> Print Bill
+                </button>
+                <button
+                  onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
