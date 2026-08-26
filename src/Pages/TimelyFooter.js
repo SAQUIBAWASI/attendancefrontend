@@ -36,7 +36,7 @@ const TimelyFooter = () => {
               </div>
               {/* Company Name Below Logo */}
               <h2 className="text-2xl font-bold text-white tracking-wide">
-                Timely Health Tech Pvt Ltd.
+                Timely Healthtech Pvt Ltd.
               </h2>
             </div>
             <p className="max-w-md mb-6 text-gray-300 leading-relaxed text-base">
@@ -125,7 +125,7 @@ const TimelyFooter = () => {
         {/* Footer Bottom Section */}
         <div className="pt-8 mt-10 text-center border-t border-gray-700/50">
           <p className="text-gray-400 text-base tracking-wide">
-            © 2024 Timely Health Tech Pvt Ltd. All rights reserved. | Trusted Healthcare, Just Around the Corner.
+            © 2024 Timely Healthtech Pvt Ltd. All rights reserved. | Trusted Healthcare, Just Around the Corner.
           </p>
         </div>
       </div>
