@@ -5,10 +5,9 @@ import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
 import {
   FaPhone, FaLink, FaSearch, FaTimes, FaSync,
-  FaCalendarAlt, FaDownload, FaTimesCircle
-
+  FaCalendarAlt, FaDownload, FaTimesCircle, FaChevronUp, FaChevronDown
 } from 'react-icons/fa';
-import { FiFilter, FiActivity, FiTrendingUp } from 'react-icons/fi';
+import { FiFilter, FiActivity, FiTrendingUp, FiTrash2, FiRefreshCw } from 'react-icons/fi';
 import './EmployeeDashboard.css';
 
 /* ─── Status Badge ─── */
@@ -38,7 +37,13 @@ const PendingVisits = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState('');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  // ✅ Month filter - default to current month
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
 
   const fetchPendingVisits = useCallback(async () => {
     setLoading(true);
@@ -91,6 +96,45 @@ const PendingVisits = () => {
   const leadVisits = summaryVisitsForMonth.filter((v) => v.status === 'Lead').length;
   const rejectedVisits = summaryVisitsForMonth.filter((v) => v.status === 'Rejected').length;
 
+  // ✅ Get default month
+  const getDefaultMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+  const isDefaultMonth = selectedMonth === getDefaultMonth();
+
+  // ✅ Check if any filter is active
+  const hasActiveFilters = searchQuery || !isDefaultMonth;
+
+  // ✅ Format month for display
+  const formatMonthDisplay = (monthValue) => {
+    if (!monthValue) return '';
+    const [year, month] = monthValue.split('-');
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${monthNames[parseInt(month) - 1]} ${year}`;
+  };
+
+  // ✅ Get filter summary for display
+  const getFilterSummary = () => {
+    const parts = [];
+    if (searchQuery) {
+      parts.push(`Search: "${searchQuery}"`);
+    }
+    if (!isDefaultMonth) {
+      parts.push(`Month: ${formatMonthDisplay(selectedMonth)}`);
+    }
+    return parts;
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    const now = new Date();
+    setSelectedMonth(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
+  };
+
   const handleDownload = () => {
     const dataToDownload = filtered.map(v => ({
       'Date': new Date(v.createdAt).toLocaleDateString('en-IN', {
@@ -130,21 +174,166 @@ const PendingVisits = () => {
     <div className="emp-dash">
       <main className="p-4 sm:p-6 lg:p-8">
 
-        {/* Header */}
-        <div className="emp-dash__header">
+        {/* Header - Title on Left, Date and Filters on Right */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-6">
           <div>
-            <h1 className="emp-dash__greeting">Pending <span>Visits</span></h1>
-            <p className="emp-dash__subtitle">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
+              Pending <span>Visits</span>
+            </h1>
+            {/* <p className="emp-dash__subtitle text-sm text-gray-500">
               View all pending visit records across the organization.
-            </p>
+            </p> */}
           </div>
-          <div className="flex items-center gap-3" style={{ flexWrap: 'wrap' }}>
-            <div className="emp-dash__date-pill"><FaCalendarAlt /><span>{getPeriodLabel()}</span></div>
+
+          {/* Right side: Date + All Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative min-w-[130px]">
+              <span className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <FaSearch className="text-[10px]" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Month Filter */}
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={e => setSelectedMonth(e.target.value)}
+              className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
+
+            {/* Refresh Button */}
+            <button
+              onClick={() => { setSearchQuery(''); fetchPendingVisits(); }}
+              disabled={loading}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FiRefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+
+            {/* Export Button */}
+            <button
+              onClick={handleDownload}
+              disabled={filtered.length === 0}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FaDownload size={12} />
+              Export
+            </button>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
           </div>
         </div>
 
+        {/* Mobile Header - Only Title and Date */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <div>
+            <h1 className="text-base font-bold whitespace-nowrap">
+              Pending <span className="text-indigo-600">Visits</span>
+            </h1>
+          </div>
+          <div className="emp-dash__date-pill text-[10px] px-2 py-1">
+            <FaCalendarAlt className="text-[10px]" />
+            <span>{getPeriodLabel()}</span>
+          </div>
+        </div>
+
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{filtered.length}</strong> pending visits
+            </span>
+          </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-sm" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search by center, client, employee..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={e => setSelectedMonth(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => { setSearchQuery(''); fetchPendingVisits(); }}
+                    disabled={loading}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    disabled={filtered.length === 0}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaDownload className="w-4 h-4" />
+                    Export
+                  </button>
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    Clear All Filters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         {!loading && (
-          <div className="emp-dash__stats">
+          <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4">
             <Link to="/total-visits" className="emp-dash__stat" style={{ textDecoration: 'none', cursor: 'pointer' }}>
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Total Visits</span>
@@ -191,99 +380,30 @@ const PendingVisits = () => {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="emp-dash__card mb-6">
-          <div className="emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2"><FiFilter className="text-blue-600" /> Filters &amp; Actions</h3>
-              <p className="emp-dash__card-desc">Filter by month or search by center, client, or employee name.</p>
+        {/* ✅ Active Filter Indicator */}
+        {/* {hasActiveFilters && (
+          <div className="mb-4 flex flex-wrap items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs">
+            <span className="font-semibold text-blue-700">📅 Current Filters:</span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {getFilterSummary().map((item, index) => (
+                <span key={index} className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-medium">
+                  {item}
+                </span>
+              ))}
             </div>
+            <button 
+              onClick={clearFilters}
+              className="ml-auto text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
+            >
+              <FiTrash2 className="w-3 h-3" />
+              Clear All
+            </button>
           </div>
-          <div className="emp-dash__card-body bg-gray-50/50">
-            <div className="hidden md:flex flex-wrap items-end gap-4">
-              {/* Search */}
-              <div className="flex flex-col gap-1.5 flex-1 min-w-[180px]">
-                <label className="text-xs font-medium text-gray-600">Search</label>
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input type="text" placeholder="Center, client, employee or contact…" value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                  {searchQuery && (
-                    <button onClick={() => setSearchQuery('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
-                      <FaTimes className="text-[10px]" />
-                    </button>
-                  )}
-                </div>
-              </div>
-              {/* Month */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Month</label>
-                <input type="month" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}
-                  onClick={e => e.target.showPicker && e.target.showPicker()}
-                  className="h-9 px-3 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
-              </div>
-              {/* Refresh */}
-              <button onClick={() => { setSearchQuery(''); setSelectedMonth(''); fetchPendingVisits(); }}
-                className="h-9 px-3 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5">
-                <FaSync className={`text-[10px] ${loading ? 'animate-spin' : ''}`} />Refresh
-              </button>
-              {/* Download */}
-              <button onClick={handleDownload} disabled={filtered.length === 0}
-                className="h-9 px-3 text-xs font-semibold text-white bg-green-600 border border-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
-                <FaDownload className="text-[10px]" />Download
-              </button>
-            </div>
-
-            <div className="md:hidden flex flex-col gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search</label>
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input type="text" placeholder="Search…" value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                  {searchQuery && (
-                    <button onClick={() => setSearchQuery('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
-                      <FaTimes className="text-[10px]" />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-gray-600">Month</label>
-                  <input type="month" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}
-                    onClick={e => e.target.showPicker && e.target.showPicker()}
-                    className="w-full h-9 px-3 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
-                </div>
-
-                <button onClick={() => { setSearchQuery(''); setSelectedMonth(''); fetchPendingVisits(); }}
-                  className="self-end w-full h-9 px-3 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5">
-                  <FaSync className={`text-[10px] ${loading ? 'animate-spin' : ''}`} />Refresh
-                </button>
-              </div>
-
-              <button onClick={handleDownload} disabled={filtered.length === 0}
-                className="w-full h-9 px-3 text-xs font-semibold text-white bg-green-600 border border-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
-                <FaDownload className="text-[10px]" />Download
-              </button>
-            </div>
-
-            <div className="mt-3 pt-3 border-t border-gray-200/50 text-xs text-gray-500 font-medium">
-              Showing <strong className="text-gray-800">{filtered.length}</strong> of{' '}
-              <strong className="text-gray-800">{visitsForMonth.length}</strong> pending records for{' '}
-              <span className="text-blue-600 font-bold">{getPeriodLabel()}</span>
-            </div>
-          </div>
-        </div>
+        )}
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 text-xs font-bold">{error}</div>
-        )}
+        )} */}
 
         {/* Table */}
         <div className="emp-dash__card">

@@ -125,6 +125,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/emp-holidays-calendar": "Holidays Calendar",
       "/emp-permissions": "Permissions",
       "/emp-events": "Events",
+      "/emp-my-events": "My Events",
       "/emp-issues": "Issues",
       "/emp-tasks": "Tasks",
       "/employee-visits-data": "My Visits",
@@ -607,6 +608,12 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         path: "/emp-events",
       });
     }
+
+    menu.push({
+      icon: <i className="ri-calendar-todo-fill"></i>,
+      name: "My Events",
+      path: "/emp-my-events",
+    });
 
     if (hasPermission("locations_manage")) {
       menu.push({ icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/emp-locations" });

@@ -4387,25 +4387,438 @@ const EmployeeList = () => {
     <div className="emp-dash">
       <main className="p-1 sm:p-2 lg:p-6">
 
-        {/* Dashboard Header */}
-        <div className="emp-dash__header">
+        {/* ✅ Header with Title Only - REMOVED DATE PILL */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap leading-none">
               Employee <span>List</span>
             </h1>
           </div>
 
-          <div className="emp-dash__date-pill">
-            <FiCalendar />
-            <span>
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
+          {/* Right side: All Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative min-w-[130px]">
+              <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPagination(prev => ({ ...prev, currentPage: 1 }));
+                }}
+                className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Department */}
+            <div className="relative" ref={departmentFilterRef}>
+              <button
+                onClick={() => {
+                  setShowDepartmentFilter(!showDepartmentFilter);
+                  setShowDesignationFilter(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDepartment 
+                    ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <FaBuilding className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDepartment || 'Dept'}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDepartmentFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDepartment('');
+                      setShowDepartmentFilter(false);
+                      setPagination(prev => ({ ...prev, currentPage: 1 }));
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Departments
+                  </div>
+                  {uniqueDepartments.map(dept => (
+                    <div
+                      key={dept}
+                      onClick={() => {
+                        setFilterDepartment(dept);
+                        setShowDepartmentFilter(false);
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                      }`}
+                    >
+                      {dept}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Designation */}
+            <div className="relative" ref={designationFilterRef}>
+              <button
+                onClick={() => {
+                  setShowDesignationFilter(!showDesignationFilter);
+                  setShowDepartmentFilter(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDesignation 
+                    ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <FaUserTag className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDesignation || 'Design'}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDesignationFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDesignation('');
+                      setShowDesignationFilter(false);
+                      setPagination(prev => ({ ...prev, currentPage: 1 }));
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Designations
+                  </div>
+                  {uniqueDesignations.map(des => (
+                    <div
+                      key={des}
+                      onClick={() => {
+                        setFilterDesignation(des);
+                        setShowDesignationFilter(false);
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                      }`}
+                    >
+                      {des}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Status Tabs */}
+            {activeFilterType === 'all' && (
+              <div className="flex items-center bg-gray-100 p-0.5 rounded-lg h-8">
+                <button
+                  onClick={() => {
+                    setShowInactiveOnly(false);
+                    setPagination(prev => ({ ...prev, currentPage: 1 }));
+                  }}
+                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${
+                    !showInactiveOnly 
+                      ? 'bg-white text-blue-600 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Active ({activeEmployees.length})
+                </button>
+                <button
+                  onClick={() => {
+                    setShowInactiveOnly(true);
+                    setPagination(prev => ({ ...prev, currentPage: 1 }));
+                  }}
+                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${
+                    showInactiveOnly 
+                      ? 'bg-white text-red-600 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Inactive ({inactiveEmployees.length})
+                </button>
+              </div>
+            )}
+
+            {/* Export Button */}
+            <button
+              onClick={exportToExcel}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FiDownload className="w-3 h-3" />
+              Export
+            </button>
+
+            {/* Add Button */}
+            <button
+              onClick={() => navigate("/addemployee")}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FiPlus className="w-3 h-3" />
+              Add
+            </button>
+
+            {/* Clear Filters Button */}
+            {(filterDepartment || filterDesignation || searchTerm || activeFilterType !== 'all') && (
+              <button
+                onClick={() => {
+                  setFilterDepartment('');
+                  setFilterDesignation('');
+                  setSearchTerm('');
+                  setActiveFilterType('all');
+                  setShowInactiveOnly(false);
+                  setPagination(prev => ({ ...prev, currentPage: 1 }));
+                }}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ✅ Mobile Header - REMOVED DATE PILL */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            Employee <span className="text-indigo-600">List</span>
+          </h1>
+        </div>
+
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? (
+                <FaChevronUp className="text-gray-400" />
+              ) : (
+                <FaChevronDown className="text-gray-400" />
+              )}
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{filteredEmployees.length}</strong> employees
             </span>
           </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search ID, Name, Email..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setPagination(prev => ({ ...prev, currentPage: 1 }));
+                    }}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="relative" ref={departmentFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+                <button
+                  onClick={() => {
+                    setShowDepartmentFilter(!showDepartmentFilter);
+                    setShowDesignationFilter(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterDepartment 
+                      ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                      : 'border-gray-300 text-gray-700'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <FaBuilding className="text-gray-400" />
+                    {filterDepartment || 'All Departments'}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {showDepartmentFilter && (
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setFilterDepartment('');
+                        setShowDepartmentFilter(false);
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Departments
+                    </div>
+                    {uniqueDepartments.map(dept => (
+                      <div
+                        key={dept}
+                        onClick={() => {
+                          setFilterDepartment(dept);
+                          setShowDepartmentFilter(false);
+                          setPagination(prev => ({ ...prev, currentPage: 1 }));
+                        }}
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {dept}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="relative" ref={designationFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+                <button
+                  onClick={() => {
+                    setShowDesignationFilter(!showDesignationFilter);
+                    setShowDepartmentFilter(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterDesignation 
+                      ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                      : 'border-gray-300 text-gray-700'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <FaUserTag className="text-gray-400" />
+                    {filterDesignation || 'All Designations'}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {showDesignationFilter && (
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setFilterDesignation('');
+                        setShowDesignationFilter(false);
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Designations
+                    </div>
+                    {uniqueDesignations.map(des => (
+                      <div
+                        key={des}
+                        onClick={() => {
+                          setFilterDesignation(des);
+                          setShowDesignationFilter(false);
+                          setPagination(prev => ({ ...prev, currentPage: 1 }));
+                        }}
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {des}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Status Tabs */}
+              {activeFilterType === 'all' && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                  <div className="flex bg-gray-100 p-1 rounded-lg">
+                    <button
+                      onClick={() => {
+                        setShowInactiveOnly(false);
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
+                        !showInactiveOnly 
+                          ? 'bg-white text-blue-600 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Active ({activeEmployees.length})
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowInactiveOnly(true);
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
+                        showInactiveOnly 
+                          ? 'bg-white text-red-600 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Inactive ({inactiveEmployees.length})
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Filter Info */}
+              {activeFilterType !== 'all' && (
+                <div className="p-2 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-xs font-medium text-blue-700">
+                    Showing: <strong>{getFilterLabel()}</strong>
+                  </p>
+                </div>
+              )}
+
+              {/* Mobile Action Buttons */}
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={exportToExcel}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                  >
+                    <FiDownload className="w-4 h-4" />
+                    Export
+                  </button>
+                  <button
+                    onClick={() => navigate("/addemployee")}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    <FiPlus className="w-4 h-4" />
+                    Add
+                  </button>
+                </div>
+                {(filterDepartment || filterDesignation || searchTerm || activeFilterType !== 'all') && (
+                  <button
+                    onClick={() => {
+                      setFilterDepartment('');
+                      setFilterDesignation('');
+                      setSearchTerm('');
+                      setActiveFilterType('all');
+                      setShowInactiveOnly(false);
+                      setPagination(prev => ({ ...prev, currentPage: 1 }));
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    Clear All Filters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Top KPI Stats Grid with Clickable Cards */}
@@ -4506,430 +4919,6 @@ const EmployeeList = () => {
             </button>
           </div>
         )}
-
-        {/* Filters Card */}
-        <div className="emp-dash__card mb-4">
-          {/* Desktop View */}
-          <div className="hidden sm:block">
-            <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
-              {/* Left - Filters */}
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {/* Search */}
-                <div className="relative min-w-[140px] flex-1 max-w-[200px]">
-                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input
-                    type="text"
-                    placeholder="Search ID, Name, Email..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setPagination(prev => ({ ...prev, currentPage: 1 }));
-                    }}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                {/* Department */}
-                <div className="relative" ref={departmentFilterRef}>
-                  <button
-                    onClick={() => {
-                      setShowDepartmentFilter(!showDepartmentFilter);
-                      setShowDesignationFilter(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                      filterDepartment 
-                        ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
-                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <FaBuilding className="text-gray-400 text-[10px]" />
-                    <span className="truncate max-w-[100px]">{filterDepartment || 'Departments'}</span>
-                    <span className="text-gray-400 text-[10px]">▾</span>
-                  </button>
-                  {showDepartmentFilter && (
-                    <div 
-                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-                      style={{
-                        zIndex: 99999,
-                        top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                        left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
-                      }}
-                    >
-                      <div
-                        onClick={() => {
-                          setFilterDepartment('');
-                          setShowDepartmentFilter(false);
-                          setPagination(prev => ({ ...prev, currentPage: 1 }));
-                        }}
-                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Departments
-                      </div>
-                      {uniqueDepartments.map(dept => (
-                        <div
-                          key={dept}
-                          onClick={() => {
-                            setFilterDepartment(dept);
-                            setShowDepartmentFilter(false);
-                            setPagination(prev => ({ ...prev, currentPage: 1 }));
-                          }}
-                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                            filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                          }`}
-                        >
-                          {dept}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Designation */}
-                <div className="relative" ref={designationFilterRef}>
-                  <button
-                    onClick={() => {
-                      setShowDesignationFilter(!showDesignationFilter);
-                      setShowDepartmentFilter(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                      filterDesignation 
-                        ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
-                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <FaUserTag className="text-gray-400 text-[10px]" />
-                    <span className="truncate max-w-[100px]">{filterDesignation || 'Designations'}</span>
-                    <span className="text-gray-400 text-[10px]">▾</span>
-                  </button>
-                  {showDesignationFilter && (
-                    <div 
-                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-                      style={{
-                        zIndex: 99999,
-                        top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                        left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
-                      }}
-                    >
-                      <div
-                        onClick={() => {
-                          setFilterDesignation('');
-                          setShowDesignationFilter(false);
-                          setPagination(prev => ({ ...prev, currentPage: 1 }));
-                        }}
-                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Designations
-                      </div>
-                      {uniqueDesignations.map(des => (
-                        <div
-                          key={des}
-                          onClick={() => {
-                            setFilterDesignation(des);
-                            setShowDesignationFilter(false);
-                            setPagination(prev => ({ ...prev, currentPage: 1 }));
-                          }}
-                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                            filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                          }`}
-                        >
-                          {des}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Status Tabs */}
-                {activeFilterType === 'all' && (
-                  <div className="flex items-center bg-gray-100 p-0.5 rounded-lg h-8">
-                    <button
-                      onClick={() => {
-                        setShowInactiveOnly(false);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                      className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${
-                        !showInactiveOnly 
-                          ? 'bg-white text-blue-600 shadow-sm' 
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Active ({activeEmployees.length})
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowInactiveOnly(true);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                      className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${
-                        showInactiveOnly 
-                          ? 'bg-white text-red-600 shadow-sm' 
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Inactive ({inactiveEmployees.length})
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Right - Action Buttons */}
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button
-                  onClick={exportToExcel}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
-                >
-                  <FiDownload className="w-3 h-3" />
-                  Export
-                </button>
-                <button
-                  onClick={() => navigate("/addemployee")}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
-                >
-                  <FiPlus className="w-3 h-3" />
-                  Add
-                </button>
-                {(filterDepartment || filterDesignation || searchTerm || activeFilterType !== 'all') && (
-                  <button
-                    onClick={() => {
-                      setFilterDepartment('');
-                      setFilterDesignation('');
-                      setSearchTerm('');
-                      setActiveFilterType('all');
-                      setShowInactiveOnly(false);
-                      setPagination(prev => ({ ...prev, currentPage: 1 }));
-                    }}
-                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-                  >
-                    <FiTrash2 className="w-3 h-3" />
-                    Clear
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile View */}
-          <div className="sm:hidden">
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
-              <button
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-              >
-                <FiFilter className="text-blue-600 text-base" />
-                <span>Filters</span>
-                {showMobileFilters ? (
-                  <FaChevronUp className="text-gray-400" />
-                ) : (
-                  <FaChevronDown className="text-gray-400" />
-                )}
-              </button>
-              <span className="text-xs text-gray-500">
-                <strong>{filteredEmployees.length}</strong> employees
-              </span>
-            </div>
-
-            {showMobileFilters && (
-              <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
-                  <div className="relative">
-                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                    <input
-                      type="text"
-                      placeholder="Search ID, Name, Email..."
-                      value={searchTerm}
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="relative" ref={departmentFilterRef}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
-                  <button
-                    onClick={() => {
-                      setShowDepartmentFilter(!showDepartmentFilter);
-                      setShowDesignationFilter(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                      filterDepartment 
-                        ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
-                        : 'border-gray-300 text-gray-700'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <FaBuilding className="text-gray-400" />
-                      {filterDepartment || 'All Departments'}
-                    </span>
-                    <span className="text-gray-400">▾</span>
-                  </button>
-                  {showDepartmentFilter && (
-                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      <div
-                        onClick={() => {
-                          setFilterDepartment('');
-                          setShowDepartmentFilter(false);
-                          setPagination(prev => ({ ...prev, currentPage: 1 }));
-                        }}
-                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Departments
-                      </div>
-                      {uniqueDepartments.map(dept => (
-                        <div
-                          key={dept}
-                          onClick={() => {
-                            setFilterDepartment(dept);
-                            setShowDepartmentFilter(false);
-                            setPagination(prev => ({ ...prev, currentPage: 1 }));
-                          }}
-                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                            filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                          }`}
-                        >
-                          {dept}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative" ref={designationFilterRef}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
-                  <button
-                    onClick={() => {
-                      setShowDesignationFilter(!showDesignationFilter);
-                      setShowDepartmentFilter(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                      filterDesignation 
-                        ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
-                        : 'border-gray-300 text-gray-700'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <FaUserTag className="text-gray-400" />
-                      {filterDesignation || 'All Designations'}
-                    </span>
-                    <span className="text-gray-400">▾</span>
-                  </button>
-                  {showDesignationFilter && (
-                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      <div
-                        onClick={() => {
-                          setFilterDesignation('');
-                          setShowDesignationFilter(false);
-                          setPagination(prev => ({ ...prev, currentPage: 1 }));
-                        }}
-                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Designations
-                      </div>
-                      {uniqueDesignations.map(des => (
-                        <div
-                          key={des}
-                          onClick={() => {
-                            setFilterDesignation(des);
-                            setShowDesignationFilter(false);
-                            setPagination(prev => ({ ...prev, currentPage: 1 }));
-                          }}
-                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                            filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                          }`}
-                        >
-                          {des}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Status Tabs */}
-                {activeFilterType === 'all' && (
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-                    <div className="flex bg-gray-100 p-1 rounded-lg">
-                      <button
-                        onClick={() => {
-                          setShowInactiveOnly(false);
-                          setPagination(prev => ({ ...prev, currentPage: 1 }));
-                        }}
-                        className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-                          !showInactiveOnly 
-                            ? 'bg-white text-blue-600 shadow-sm' 
-                            : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        Active ({activeEmployees.length})
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowInactiveOnly(true);
-                          setPagination(prev => ({ ...prev, currentPage: 1 }));
-                        }}
-                        className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-                          showInactiveOnly 
-                            ? 'bg-white text-red-600 shadow-sm' 
-                            : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        Inactive ({inactiveEmployees.length})
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Filter Info */}
-                {activeFilterType !== 'all' && (
-                  <div className="p-2 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-xs font-medium text-blue-700">
-                      Showing: <strong>{getFilterLabel()}</strong>
-                    </p>
-                  </div>
-                )}
-
-                {/* Mobile Action Buttons */}
-                <div className="pt-3 border-t border-gray-200 space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={exportToExcel}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
-                    >
-                      <FiDownload className="w-4 h-4" />
-                      Export
-                    </button>
-                    <button
-                      onClick={() => navigate("/addemployee")}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-                    >
-                      <FiPlus className="w-4 h-4" />
-                      Add
-                    </button>
-                  </div>
-                  {(filterDepartment || filterDesignation || searchTerm || activeFilterType !== 'all') && (
-                    <button
-                      onClick={() => {
-                        setFilterDepartment('');
-                        setFilterDesignation('');
-                        setSearchTerm('');
-                        setActiveFilterType('all');
-                        setShowInactiveOnly(false);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                      Clear All Filters
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* ============================================= */}
         {/* ✅ BULK IMAGE ATTENDANCE ACTION BAR */}

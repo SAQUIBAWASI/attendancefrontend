@@ -223,6 +223,8 @@ import OpDashboard from './Pages/OpDashboard.js';
 import Services from "./Pages/Services.js";
 import DoctorManagement from "./Pages/DoctorManagement.js";
 import LetterHeadDesigner from "./Pages/LetterHeadDesigner.js";
+import PayrollDashboard from "./Pages/PayrollDashboard.js";
+import EmployeeEvents from "./Pages/EmployeeEvents.js";
 
 function App() {
   return (
@@ -306,6 +308,7 @@ function App() {
       <Route path="/emp-all-expensives-management" element={<EmployeeLayout><AllExpensives /></EmployeeLayout>} />
       <Route path="/my-medical-certificate" element={<EmployeeLayout><MyMedicalCertificate /></EmployeeLayout>} />
       <Route path="/emp-events" element={<EmployeeLayout><Events /></EmployeeLayout>} />
+      <Route path="/emp-my-events" element={<EmployeeLayout><EmployeeEvents /></EmployeeLayout>} />
       <Route path="/emp-claimed-ot-management" element={<EmployeeLayout><ClaimedOTManagement /></EmployeeLayout>} />
       <Route path="/emp-issues" element={<EmployeeLayout><IssueManagement /></EmployeeLayout>} />
       <Route path="/employee-visits-data" element={<EmployeeLayout><EmployeeVisitsData /></EmployeeLayout>} />
@@ -453,6 +456,7 @@ function App() {
               <Route path="/addlocation" element={<AddLocationPage />} />
               <Route path="/locationlist" element={<LocationListPage />} />
               <Route path="attedancesummary" element={<AttendanceSummary />} />
+              <Route path="/payroll-dashboard" element={<PayrollDashboard />} />
               <Route path="/payroll" element={<PayRoll />} />
               <Route path="/useractivity" element={<UserActivity />} />
               <Route path="/departmentdashboard" element={<DepartmentDashboard />} />
@@ -507,6 +511,7 @@ function App() {
               <Route path="/leads" element={<Leads />} />
               <Route path="/rejected-visits" element={<RejectedVisits />} />
               <Route path="/letters-section" element={<LettersSection />} />
+              <Route path="/employee-events" element={<EmployeeEvents />} />
             </Routes>
           </AdminLayout>
         }

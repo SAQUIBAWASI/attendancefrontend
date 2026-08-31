@@ -1365,8 +1365,10 @@ import {
   FaCheckCircle,
   FaTrash,
   FaDownload,
+  FaChevronUp,
+  FaChevronDown,
 } from 'react-icons/fa';
-import { FiFilter, FiCalendar, FiActivity, FiTrendingUp, FiTarget } from 'react-icons/fi';
+import { FiFilter, FiCalendar, FiActivity, FiTrendingUp, FiTarget, FiTrash2 } from 'react-icons/fi';
 import '../index.css';
 import './EmployeeDashboard.css';
 
@@ -1377,6 +1379,7 @@ const VisitsData = () => {
   const [callRecords, setCallRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Month filter (default = current month)
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -1604,15 +1607,20 @@ const VisitsData = () => {
 
   const getPeriodLabel = () => getMonthLabel(selectedMonth);
 
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedMonth(new Date().toISOString().slice(0, 7));
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
+  };
+
   // Download filtered data as CSV
   const handleDownload = () => {
     const dataToDownload = filteredSummary.map(emp => ({
       'Employee ID': emp.employeeId,
       'Employee Name': emp.employeeName,
       'Total Visits': emp.visits,
-
-
-
     }));
 
     const headers = Object.keys(dataToDownload[0] || {});
@@ -1673,59 +1681,202 @@ const VisitsData = () => {
     <div className="emp-dash">
       <main className="p-4 sm:p-6 lg:p-8">
 
-        {/* ── Header ── */}
-        <div className="emp-dash__header">
+        {/* ── Header - Title on Left, Date and Filters on Right ── */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <div>
-            <h1 className="emp-dash__greeting">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Visits &amp; Calls <span>Summary</span>
             </h1>
-            <p className="emp-dash__subtitle">
+            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Employee-wise visit counts and detailed records for the selected month.
-            </p>
+            </p> */}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+
+          {/* Right side: Date + All Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative min-w-[140px]">
+              <span className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <FaSearch className="text-[10px]" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[140px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div> 
+            
             {/* Set Target Button */}
             <button
               onClick={openTargetModal}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.5rem 1.1rem',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                color: '#fff',
-                background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                boxShadow: '0 2px 12px rgba(124,58,237,0.28)',
-                transition: 'transform 0.15s, box-shadow 0.15s',
-                letterSpacing: '0.01em',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.38)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = '';
-                e.currentTarget.style.boxShadow = '0 2px 12px rgba(124,58,237,0.28)';
-              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-sm whitespace-nowrap"
             >
-              <FiBullseye style={{ fontSize: '0.95rem' }} />
+              <FiBullseye className="w-3.5 h-3.5" />
               Set Target
             </button>
 
-            <div className="emp-dash__date-pill">
+            {/* <div className="emp-dash__date-pill">
               <FiCalendar />
               <span>{getPeriodLabel()}</span>
+            </div> */}
+
+           
+
+            {/* Month Picker */}
+            <div className="relative">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-[130px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"
+              />
             </div>
+
+            {/* Refresh Button */}
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedMonth(new Date().toISOString().slice(0, 7));
+                fetchAllCallData();
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaSync className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+
+            {/* Download Button */}
+            <button
+              onClick={handleDownload}
+              disabled={filteredSummary.length === 0}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FaDownload className="w-3 h-3" />
+              Export
+            </button>
+
+            {/* Clear Filters Button */}
+            {(searchQuery || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
           </div>
+        </div>
+
+        {/* Mobile Header - Only Title and Date */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <div>
+            <h1 className="text-base font-bold whitespace-nowrap">
+              Visits &amp; Calls <span className="text-indigo-600">Summary</span>
+            </h1>
+          </div>
+          {/* <div className="emp-dash__date-pill text-[10px] px-2 py-1">
+            <FiCalendar className="text-[10px]" />
+            <span>{getPeriodLabel()}</span>
+          </div> */}
+        </div>
+
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{filteredSummary.length}</strong> employees
+            </span>
+          </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-sm" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search ID or Name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={openTargetModal}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-sm"
+                  >
+                    <FiBullseye className="w-4 h-4" />
+                    Set Target
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedMonth(new Date().toISOString().slice(0, 7));
+                      fetchAllCallData();
+                    }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    <FaSync className="w-4 h-4" />
+                    Refresh
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleDownload}
+                    disabled={filteredSummary.length === 0}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaDownload className="w-4 h-4" />
+                    Export
+                  </button>
+                  {(searchQuery || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+                    <button
+                      onClick={clearFilters}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── KPI Stats ── */}
         {!loading && (
-          <div className="emp-dash__stats">
+          <div className="emp-dash__stats grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
             <Link to="/total-visits" className="emp-dash__stat" style={{ textDecoration:'none', cursor:'pointer' }}>
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Total Visits</span>
@@ -1772,157 +1923,6 @@ const VisitsData = () => {
           </div>
         )}
 
-        {/* ── Filters Card ── */}
-        <div className="emp-dash__card mb-6">
-          <div className="emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filters &amp; Actions
-              </h3>
-              <p className="emp-dash__card-desc">
-                Filter by month and search by Employee ID or Name.
-              </p>
-            </div>
-          </div>
-          <div className="emp-dash__card-body bg-gray-50/50">
-            {/* Desktop Filters - Hidden on Mobile */}
-            <div className="hidden md:flex flex-wrap items-end gap-4">
-              {/* Search */}
-              <div className="flex flex-col gap-1.5 flex-1 min-w-[180px]">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input
-                    type="text"
-                    placeholder="Search ID or Name..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      <FaTimes className="text-[10px]" />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Month Picker */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Month</label>
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="h-9 px-3 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"
-                />
-              </div>
-
-              {/* Refresh */}
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedMonth(new Date().toISOString().slice(0, 7));
-                  fetchAllCallData();
-                }}
-                className="h-9 px-3 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5"
-                title="Refresh"
-              >
-                <FaSync className={`text-[10px] ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
-
-              {/* Download */}
-              <button
-                onClick={handleDownload}
-                disabled={filteredSummary.length === 0}
-                className="h-9 px-3 text-xs font-semibold text-white bg-green-600 border border-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Download CSV"
-              >
-                <FaDownload className="text-[10px]" />
-                Download
-              </button>
-            </div>
-
-            {/* Mobile Filters - Visible only on Mobile */}
-            <div className="md:hidden flex flex-col gap-3">
-              {/* Search */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input
-                    type="text"
-                    placeholder="Search ID or Name..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      <FaTimes className="text-[10px]" />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                {/* Month Picker */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-gray-600">Month</label>
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    className="w-full h-9 px-3 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"
-                  />
-                </div>
-
-                {/* Refresh */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-gray-600">&nbsp;</label>
-                  <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setSelectedMonth(new Date().toISOString().slice(0, 7));
-                      fetchAllCallData();
-                    }}
-                    className="w-full h-9 px-3 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
-                    title="Refresh"
-                  >
-                    <FaSync className={`text-[10px] ${loading ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </button>
-                </div>
-              </div>
-
-              {/* Download */}
-              <button
-                onClick={handleDownload}
-                disabled={filteredSummary.length === 0}
-                className="w-full h-9 px-3 text-xs font-semibold text-white bg-green-600 border border-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Download CSV"
-              >
-                <FaDownload className="text-[10px]" />
-                Download CSV
-              </button>
-            </div>
-
-            <div className="mt-3 pt-3 border-t border-gray-200/50 text-xs text-gray-500 font-medium">
-              Showing <strong className="text-gray-800">{filteredSummary.length}</strong> of{' '}
-              <strong className="text-gray-800">{employeeSummary.length}</strong> employees
-            </div>
-          </div>
-        </div>
-
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 text-xs font-bold">
             {error}
@@ -1944,112 +1944,82 @@ const VisitsData = () => {
             <div className="sm:hidden px-4 pt-3 text-[11px] font-medium text-gray-500">
               Swipe left or right to see the full table.
             </div>
-              <table className="emp-dash__table visits-summary-table">
-                <thead>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            <table className="emp-dash__table visits-summary-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Emp ID</th>
+                  <th>Name</th>
+                  <th style={{ textAlign: 'center' }}>No. of Visits</th>
+                  <th style={{ textAlign: 'center' }}>View</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && callRecords.length === 0 ? (
                   <tr>
-                    <th>#</th>
-                    <th>Emp ID</th>
-                    <th>Name</th>
-                    <th style={{ textAlign: 'center' }}>No. of Visits</th>
-                    <th style={{ textAlign: 'center' }}>View</th>
-
-
-
-
+                    <td colSpan="5" className="py-10 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="emp-dash__spinner"></div>
+                        <span className="text-sm font-medium text-gray-500">Loading visit records...</span>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {loading && callRecords.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="py-10 text-center">
-                        <div className="flex flex-col items-center justify-center gap-3">
-                          <div className="emp-dash__spinner"></div>
-                          <span className="text-sm font-medium text-gray-500">Loading visit records...</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : filteredSummary.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="py-12 text-center">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <FaPhone className="text-4xl text-gray-300" />
-                          <p className="text-gray-500 font-medium">No records found</p>
-                          <p className="text-gray-400 text-xs">
-                            Try adjusting the month filter or search query
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    <AnimatePresence>
-                      {filteredSummary.map((row, idx) => (
-                        <motion.tr
-                          key={row.empId}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: Math.min(idx * 0.03, 0.5) }}
-                          className="hover:bg-gray-50/60 transition-all group"
-                        >
-                          <td className="text-xs text-gray-400 font-medium">{idx + 1}</td>
-                          <td className="font-semibold text-slate-800 text-[11px] whitespace-nowrap">
-                            {row.empId}
-                          </td>
-                          <td>
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-inner">
-                                {row.empName?.[0]?.toUpperCase() || 'E'}
-                              </div>
-                              <span className="font-semibold text-gray-900 text-xs whitespace-nowrap group-hover:text-blue-600 transition-colors">
-                                {row.empName}
-                              </span>
+                ) : filteredSummary.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="py-12 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <FaPhone className="text-4xl text-gray-300" />
+                        <p className="text-gray-500 font-medium">No records found</p>
+                        <p className="text-gray-400 text-xs">
+                          Try adjusting the month filter or search query
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  <AnimatePresence>
+                    {filteredSummary.map((row, idx) => (
+                      <motion.tr
+                        key={row.empId}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: Math.min(idx * 0.03, 0.5) }}
+                        className="hover:bg-gray-50/60 transition-all group"
+                      >
+                        <td className="text-xs text-gray-400 font-medium">{idx + 1}</td>
+                        <td className="font-semibold text-slate-800 text-[11px] whitespace-nowrap">
+                          {row.empId}
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-inner">
+                              {row.empName?.[0]?.toUpperCase() || 'E'}
                             </div>
-                          </td>
-                          <td className="text-center whitespace-nowrap">
-                            <span className="px-3 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                              {row.visits}
+                            <span className="font-semibold text-gray-900 text-xs whitespace-nowrap group-hover:text-blue-600 transition-colors">
+                              {row.empName}
                             </span>
-                          </td>
-                          <td className="text-center whitespace-nowrap">
-                            <button
-                              onClick={() => handleView(row.empId, row.empName)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm"
-                            >
-                              <FaEye className="text-[11px]" />
-                              View
-                            </button>
-                          </td>
-                        </motion.tr>
-                      ))}
-                    </AnimatePresence>
-                  )}
-                </tbody>
-              </table>
-
-
-
-
-
-
-
-
-
-
+                          </div>
+                        </td>
+                        <td className="text-center whitespace-nowrap">
+                          <span className="px-3 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                            {row.visits}
+                          </span>
+                        </td>
+                        <td className="text-center whitespace-nowrap">
+                          <button
+                            onClick={() => handleView(row.empId, row.empName)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm"
+                          >
+                            <FaEye className="text-[11px]" />
+                            View
+                          </button>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
+                )}
+              </tbody>
+            </table>
           </div>
 
           {/* Footer count */}
@@ -2814,38 +2784,6 @@ const VisitsData = () => {
                         </div>
                       </div>
                     </>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                   )}
                 </div>
 

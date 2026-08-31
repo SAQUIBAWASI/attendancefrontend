@@ -10935,22 +10935,18 @@ const AddEmployeePage = () => {
     const lastNameVal = nameParts.slice(1).join(' ') || "";
 
     // --- Auto-fill all fields ---
-    // 1. Basic Details
     setFirstName(firstNameVal);
     setLastName(lastNameVal);
     setEmail(candidate.email || "");
     setPhone(candidate.mobile || candidate.phone || "");
     
-    // 2. Address
     if (candidate.address) {
       setAddressLine1(candidate.address);
     }
     if (candidate.currentLocation) {
-      // If address line 2 is empty, use current location
       if (!candidate.address) setAddressLine1(candidate.currentLocation);
     }
     
-    // 3. Date of Birth - if available
     if (candidate.dob) {
       try {
         const dobDate = new Date(candidate.dob);
@@ -10960,11 +10956,9 @@ const AddEmployeePage = () => {
       } catch (e) { /* ignore */ }
     }
 
-    // 4. Office Details - Department & Role from job data
     if (candidate.jobId) {
       const jobRole = candidate.jobId.role || candidate.role || "";
       if (jobRole) {
-        // Try to auto-set department based on role
         const deptMap = {
           'Marketing': ['Marketing', 'Business Development', 'Sales', 'Digital Marketing'],
           'Operations': ['Operations', 'Business Operations', 'Admin'],
@@ -10983,25 +10977,13 @@ const AddEmployeePage = () => {
           setDepartment(matchedDept);
         }
         
-        // Set role
         setRole(jobRole);
       }
     }
 
-    // 5. Additional info if available
-    if (candidate.highestQualification) {
-      // Could be stored in a notes field if we had one
-    }
-
-    if (candidate.institution) {
-      // Could be stored in a notes field if we had one
-    }
-
-    // Clear suggestions
     setEmailSuggestions([]);
     setPhoneSuggestions([]);
     
-    // Show success message
     setSuccessMessage(`✅ Form auto-filled with ${fullName}'s details!`);
     setTimeout(() => setSuccessMessage(""), 4000);
   };
@@ -11136,7 +11118,6 @@ const AddEmployeePage = () => {
         setSuccessMessage(`✅ Employee found! Data loaded.`);
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        // 3. If not found, reset for new entry
         resetFormForNewEntry();
         setEmployeeFound(false);
         setSuccessMessage(`📝 New candidate - please complete the form.`);
@@ -11264,7 +11245,6 @@ const AddEmployeePage = () => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 10);
     setPhone(value);
     
-    // Update suggestions from candidates
     if (value.length > 2) {
       const candidateMatches = selectedCandidates.filter(c => 
         (c.mobile || c.phone || "").includes(value)
@@ -11279,7 +11259,6 @@ const AddEmployeePage = () => {
       setPhoneSuggestions([]);
     }
 
-    // Auto-fill if exact match found (10 digits)
     if (value.length === 10) {
       const candidate = selectedCandidates.find(c => (c.mobile || c.phone) === value);
       if (candidate) {
@@ -11295,7 +11274,6 @@ const AddEmployeePage = () => {
     const value = e.target.value;
     setEmail(value);
     
-    // Update suggestions
     if (value.length > 2) {
       const candidateMatches = selectedCandidates.filter(c => 
         c.email?.toLowerCase().includes(value.toLowerCase())
@@ -11310,7 +11288,6 @@ const AddEmployeePage = () => {
       setEmailSuggestions([]);
     }
 
-    // Auto-fill if exact match found
     if (value && value.includes('@')) {
       const candidate = selectedCandidates.find(c => c.email?.toLowerCase() === value.toLowerCase());
       if (candidate) {
@@ -11435,12 +11412,33 @@ const AddEmployeePage = () => {
     }, () => setErrorMessage("Location access denied"));
   };
 
+  // ============ FIXED: assignShiftToEmployee with proper error handling ============
   const assignShiftToEmployee = async (empId, empName, shift, startTime, endTime) => {
     try {
-      return await axios.post(`${API_BASE_URL}/shifts/assign`, {
-        employeeId: empId, employeeName: empName, shiftType: shift.toUpperCase(), startTime, endTime
+      // ✅ Validate employee ID before making API call
+      if (!empId || empId.trim() === '') {
+        console.error("❌ Cannot assign shift: Employee ID is missing or empty");
+        return { success: false, error: "Employee ID is required" };
+      }
+
+      console.log("🔄 Assigning shift with:", { empId, empName, shift, startTime, endTime });
+
+      const response = await axios.post(`${API_BASE_URL}/shifts/assign`, {
+        employeeId: empId,
+        employeeName: empName,
+        shiftType: shift.toUpperCase(),
+        startTime: startTime || "09:00",
+        endTime: endTime || "18:00"
       });
-    } catch (error) { console.error("Shift assignment error:", error); return { success: false }; }
+
+      console.log("✅ Shift assignment successful:", response.data);
+      return response;
+    } catch (error) {
+      console.error("❌ Shift assignment error:", error);
+      console.error("Response status:", error.response?.status);
+      console.error("Response data:", error.response?.data);
+      return { success: false, error: error.response?.data?.message || error.message };
+    }
   };
 
   const handleApplyIncrement = async () => {
@@ -11498,6 +11496,7 @@ const AddEmployeePage = () => {
     }
   };
 
+  // ============ FIXED: handleSubmit with proper employeeId handling ============
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -11534,34 +11533,90 @@ const AddEmployeePage = () => {
 
       if (password) payload.password = password;
 
+      let finalEmployeeId = employeeId; // Store the employee ID to use for shift assignment
+
       if (editingEmployee || employeeFound) {
         let employeeIdToUpdate = editingEmployee?._id;
         if (!employeeIdToUpdate && employeeFound) {
           const response = await axios.get(`${API_BASE_URL}/employees/get-employee-by-phone`, { params: { phone } });
           if (response.data.success) employeeIdToUpdate = response.data.data._id;
         }
+        
+        // ✅ Update employee first
         await axios.put(`${API_BASE_URL}/employees/update/${employeeIdToUpdate}`, payload);
         
+        // ✅ Use existing employeeId for shift assignment
+        const existingEmpId = editingEmployee?.employeeId || employeeFound?.employeeId || employeeId;
+        finalEmployeeId = existingEmpId;
+
+        // ✅ Assign shift with proper employeeId
         if (showShiftDetails && shiftType) {
-          await assignShiftToEmployee(employeeId, `${firstName} ${lastName}`, shiftType, shiftStartTime, shiftEndTime);
+          console.log("🔄 Assigning shift for update with ID:", finalEmployeeId);
+          const result = await assignShiftToEmployee(
+            finalEmployeeId, 
+            `${firstName} ${lastName}`, 
+            shiftType, 
+            shiftStartTime, 
+            shiftEndTime
+          );
+          
+          if (!result.success) {
+            console.warn("⚠️ Shift assignment warning:", result.error);
+            // Don't throw error, just warn user
+            setSuccessMessage(`⚠️ Employee updated but shift assignment failed: ${result.error}`);
+          }
         }
 
-        await axios.put(`${API_BASE_URL}/salary/update-salary/${employeeId}`, {
-          employeeId, salaryPerMonth: parseFloat(netSalary) || 0,
-          shiftHours: parseFloat(shiftHours) || 0, weekOffPerMonth: parseInt(weekOffsPerMonth) || 0,
+        await axios.put(`${API_BASE_URL}/salary/update-salary/${finalEmployeeId}`, {
+          employeeId: finalEmployeeId, 
+          salaryPerMonth: parseFloat(netSalary) || 0,
+          shiftHours: parseFloat(shiftHours) || 0, 
+          weekOffPerMonth: parseInt(weekOffsPerMonth) || 0,
         });
 
         setSuccessMessage("✅ Employee updated successfully!");
       } else {
-        await axios.post(`${API_BASE_URL}/employees/add-employee`, payload);
+        // ✅ Add new employee
+        const addResponse = await axios.post(`${API_BASE_URL}/employees/add-employee`, payload);
         
+        // ✅ Get the actual employee ID from response
+        if (addResponse.data.success && addResponse.data.data) {
+          finalEmployeeId = addResponse.data.data.employeeId || addResponse.data.data._id || employeeId;
+          console.log("✅ Employee created with ID:", finalEmployeeId);
+        } else {
+          // Fallback: use the generated employeeId
+          finalEmployeeId = employeeId;
+          console.log("⚠️ Using fallback employee ID:", finalEmployeeId);
+        }
+
+        // ✅ Validate that we have a valid employee ID
+        if (!finalEmployeeId || finalEmployeeId.trim() === '') {
+          throw new Error("Failed to generate employee ID. Please try again.");
+        }
+
+        // ✅ Assign shift with proper employeeId
         if (showShiftDetails && shiftType) {
-          await assignShiftToEmployee(employeeId, `${firstName} ${lastName}`, shiftType, shiftStartTime, shiftEndTime);
+          console.log("🔄 Assigning shift for new employee with ID:", finalEmployeeId);
+          const result = await assignShiftToEmployee(
+            finalEmployeeId, 
+            `${firstName} ${lastName}`, 
+            shiftType, 
+            shiftStartTime, 
+            shiftEndTime
+          );
+          
+          if (!result.success) {
+            console.warn("⚠️ Shift assignment warning:", result.error);
+            // Don't throw error, just warn user
+            setSuccessMessage(`⚠️ Employee added but shift assignment failed: ${result.error}`);
+          }
         }
 
         await axios.post(`${API_BASE_URL}/salary/set-salary`, {
-          employeeId, name: `${firstName} ${lastName}`,
-          salaryPerMonth: parseFloat(netSalary), shiftHours: parseFloat(shiftHours),
+          employeeId: finalEmployeeId, 
+          name: `${firstName} ${lastName}`,
+          salaryPerMonth: parseFloat(netSalary), 
+          shiftHours: parseFloat(shiftHours),
           weekOffPerMonth: parseInt(weekOffsPerMonth) || 0,
         });
 
@@ -11570,7 +11625,7 @@ const AddEmployeePage = () => {
 
       setTimeout(() => navigate("/employeelist"), 1500);
     } catch (err) {
-      console.error("Submit error:", err);
+      console.error("❌ Submit error:", err);
       setErrorMessage(err.response?.data?.message || err.message || "Something went wrong!");
     } finally {
       setLoading(false);
@@ -11967,7 +12022,6 @@ const AddEmployeePage = () => {
                                 <span className="ml-1 text-gray-900">{slot.description}</span>
                               </div>
                               <div>
-
                                 <span className="text-gray-500">Slot:</span>
                                 <span className="ml-1 text-gray-900">{idx + 1}</span>
                               </div>
@@ -12107,7 +12161,7 @@ const AddEmployeePage = () => {
                   type="button"
                   onClick={handleApplyIncrement}
                   disabled={!incrementType || !incrementValue || !incrementEffectiveDate || loading}
-                  className="w-full md:w-auto px-6 py-2.5 text-gray-900 bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 flex items-center justify-center gap-2"
+                  className="w-full md:w-auto px-6 py-2.5 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 flex items-center justify-center gap-2"
                 >
                   {loading ? <FaSpinner className="animate-spin" /> : <FaChartLine />}
                   Apply Increment
@@ -12128,7 +12182,7 @@ const AddEmployeePage = () => {
 
           {/* SUBMIT BUTTON */}
           <div className="flex justify-end pt-4">
-            <button type="submit" disabled={loading} className={`px-8 py-3 rounded-lg font-medium transition duration-200 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-gray-900 shadow-md'}`}>
+            <button type="submit" disabled={loading} className={`px-8 py-3 rounded-lg font-medium transition duration-200 text-white ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-md'}`}>
               {loading ? <><FaSpinner className="inline mr-2 animate-spin" /> Processing...</> : <><FaSave className="inline mr-2" /> {editingEmployee || employeeFound ? "Update Employee" : "Add Employee"}</>}
             </button>
           </div>
@@ -12137,55 +12191,55 @@ const AddEmployeePage = () => {
 
       {/* MODALS - Keep existing modals unchanged */}
       {showShiftModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-900">Create New Shift</h3><button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-500">&times;</button></div>
             <form onSubmit={handleCreateCustomShift} className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Shift Type (A-Z)" value={createShiftForm.shiftType} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))} className="p-2 border rounded text-gray-900" required /><input type="text" placeholder="Shift Name" value={createShiftForm.shiftName} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))} className="p-2 border rounded text-gray-900" required /></div>
               <input type="text" placeholder="Time Range (e.g., 09:00 - 18:00)" value={createShiftForm.timeRange} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, timeRange: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
               <input type="text" placeholder="Description" value={createShiftForm.description} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, description: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
-              <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-purple-600 rounded">Create</button></div>
+              <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Create</button></div>
             </form>
           </div>
         </div>
       )}
 
       {showDeptModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-900">Add Department</h3><button onClick={() => setShowDeptModal(false)} className="text-2xl text-gray-500">&times;</button></div>
             <form onSubmit={handleCreateDepartment} className="p-4 space-y-4">
               <input type="text" placeholder="Department Name" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
               <textarea placeholder="Description" value={deptForm.description} onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded text-gray-900"></textarea>
-              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-blue-600 rounded">Add</button></div>
+              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded">Add</button></div>
             </form>
           </div>
         </div>
       )}
 
       {showRoleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-900">Add Role</h3><button onClick={() => setShowRoleModal(false)} className="text-2xl text-gray-500">&times;</button></div>
             <form onSubmit={handleCreateRole} className="p-4 space-y-4">
               <input type="text" placeholder="Role Name" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
               <textarea placeholder="Description" value={roleForm.description} onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded text-gray-900"></textarea>
-              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-blue-600 rounded">Add</button></div>
+              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded">Add</button></div>
             </form>
           </div>
         </div>
       )}
 
       {showLocationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-900">Add Location</h3><button onClick={() => setShowLocationModal(false)} className="text-2xl text-gray-500">&times;</button></div>
             <form onSubmit={handleCreateLocation} className="p-4 space-y-4">
               <input type="text" placeholder="Location Name" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
-              <div className="flex justify-between items-center"><label className="text-sm text-gray-700">Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-3 py-1 text-sm bg-blue-600 text-gray-900 rounded">📍 Get Current Location</button></div>
+              <div className="flex justify-between items-center"><label className="text-sm text-gray-700">Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-3 py-1 text-sm bg-blue-600 text-white rounded">📍 Get Current Location</button></div>
               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Latitude" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="p-2 border rounded text-gray-900" required /><input type="text" placeholder="Longitude" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="p-2 border rounded text-gray-900" required /></div>
               <textarea placeholder="Full Address" value={locationForm.fullAddress} onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))} rows="3" className="w-full p-2 border rounded text-gray-900" required></textarea>
-              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-purple-600 rounded">Add Location</button></div>
+              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Add Location</button></div>
             </form>
           </div>
         </div>

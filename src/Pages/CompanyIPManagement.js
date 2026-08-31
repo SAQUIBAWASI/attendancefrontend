@@ -1,8 +1,8 @@
 // components/CompanyIPManagement.jsx
 import React, { useState, useEffect } from 'react';
 import CountUp from 'react-countup';
-import { FaBuilding, FaNetworkWired, FaSync, FaCheck, FaClock, FaGlobe, FaServer, FaPlus } from 'react-icons/fa';
-import { FiCalendar, FiRefreshCw, FiInfo, FiAlertCircle, FiSearch } from 'react-icons/fi';
+import { FaBuilding, FaNetworkWired, FaSync, FaCheck, FaClock, FaGlobe, FaServer, FaPlus, FaSearch, FaChevronUp, FaChevronDown } from 'react-icons/fa';
+import { FiCalendar, FiRefreshCw, FiInfo, FiAlertCircle, FiFilter, FiTrash2 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 
 const API_BASE_URL = 'https://api.timelyhealth.in';
@@ -18,6 +18,7 @@ export default function CompanyIPManagement() {
   const [newCompanyId, setNewCompanyId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [saveStatus, setSaveStatus] = useState('');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const saveStatusTimeoutRef = React.useRef(null);
 
   const showSaveStatus = (msg) => {
@@ -72,7 +73,6 @@ export default function CompanyIPManagement() {
       if (data.success) {
         showSaveStatus(`✅ IP updated for ${companyId} successfully!`);
         setShowUpdateModal(false);
-        // Refresh the list
         await fetchAllCompanyIPs();
         toast.success(`IP address updated for ${companyId}`);
       } else {
@@ -171,6 +171,13 @@ export default function CompanyIPManagement() {
     company.publicIp?.includes(searchTerm)
   );
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -194,24 +201,20 @@ export default function CompanyIPManagement() {
           </div>
         )}
 
-        {/* Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        {/* Header - Title on Left, Date and Filters on Right */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-6">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
               Company <span className="text-blue-600">IP</span> Management
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            {/* <p className="mt-1 text-sm text-gray-600">
               Manage and monitor all company network IP addresses
-            </p>
+            </p> */}
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm flex items-center gap-2"
-            >
-              <FaPlus /> Add Company
-            </button>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
+
+          {/* Right side: Date + All Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
               <FiCalendar className="text-blue-600" />
               <span className="text-sm font-medium text-gray-600">
                 {new Date().toLocaleDateString("en-US", {
@@ -221,8 +224,138 @@ export default function CompanyIPManagement() {
                   day: "numeric",
                 })}
               </span>
+            </div> */}
+
+            {/* Search */}
+            <div className="relative min-w-[160px]">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <FaSearch className="text-sm" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search Company or IP..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-[160px] pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
             </div>
+
+            {/* Add Company Button */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaPlus className="w-3 h-3" />
+              Add
+            </button>
+
+            {/* Refresh Button */}
+            <button
+              onClick={fetchAllCompanyIPs}
+              disabled={loading}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FiRefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+
+            {/* Clear Filters Button */}
+            {searchTerm && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
           </div>
+        </div>
+
+        {/* Mobile Header - Only Title and Date */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">
+              Company <span className="text-blue-600">IP</span> Management
+            </h1>
+          </div>
+          {/* <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-full shadow-sm text-[10px]">
+            <FiCalendar className="text-blue-600 text-[10px]" />
+            <span className="font-medium text-gray-600">
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
+          </div> */}
+        </div>
+
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{filteredCompanies.length}</strong> companies
+            </span>
+          </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-sm" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search by Company ID or IP..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                  >
+                    <FaPlus className="w-4 h-4" />
+                    Add Company
+                  </button>
+                  <button
+                    onClick={fetchAllCompanyIPs}
+                    disabled={loading}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
+                </div>
+                {searchTerm && (
+                  <button
+                    onClick={clearFilters}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -280,37 +413,6 @@ export default function CompanyIPManagement() {
           </div>
         </div>
 
-        {/* Search and Filter */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="p-4 border-b border-gray-100">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <FiSearch className="text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by Company ID or IP..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-64"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">
-                  Showing <strong>{filteredCompanies.length}</strong> of <strong>{companyIPs.length}</strong> companies
-                </span>
-                <button
-                  onClick={fetchAllCompanyIPs}
-                  disabled={loading}
-                  className="px-3 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
-                >
-                  <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-                  Refresh
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Main Table */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
@@ -320,6 +422,9 @@ export default function CompanyIPManagement() {
               </h3>
               <p className="text-xs text-gray-500 mt-0.5">All registered companies and their public IP addresses</p>
             </div>
+            <span className="text-sm text-gray-500">
+              Showing <strong>{filteredCompanies.length}</strong> of <strong>{companyIPs.length}</strong>
+            </span>
           </div>
 
           {filteredCompanies.length === 0 ? (

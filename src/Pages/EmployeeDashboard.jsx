@@ -5033,6 +5033,12 @@ const EmployeeDashboard = () => {
   const [colleagueBirthdayCount, setColleagueBirthdayCount] = useState(0);
   const [colleagueNames, setColleagueNames] = useState([]);
 
+  // ── state for performance and top performer ──
+  const [performanceData, setPerformanceData] = useState(null);
+  const [topPerformer, setTopPerformer] = useState(null);
+  const [showPerformancePopup, setShowPerformancePopup] = useState(false);
+  const [perfPopupVisible, setPerfPopupVisible] = useState(false);
+
   useEffect(() => {
     if (!email) return;
 
@@ -5150,6 +5156,30 @@ const EmployeeDashboard = () => {
             setLeavesToday(leaveTodayRes.data.data || []);
           } catch (e) {
             console.warn("Leaves today fetch failed", e);
+          }
+
+          // ── Fetch Employee Performance ──
+          try {
+            const currentMonth = new Date().getMonth() + 1;
+            const currentYear = new Date().getFullYear();
+            const perfRes = await axios.get(`${BASE_URL}api/dashboard/employee-performance/${targetId}?month=${currentMonth}&year=${currentYear}`);
+            if (perfRes.data && perfRes.data.success) {
+              setPerformanceData(perfRes.data);
+            }
+          } catch (e) {
+            console.warn("Employee performance fetch failed", e);
+          }
+
+          // ── Fetch Top Performer ──
+          try {
+            const currentMonth = new Date().getMonth() + 1;
+            const currentYear = new Date().getFullYear();
+            const topPerfRes = await axios.get(`${BASE_URL}api/dashboard/top-performers?month=${currentMonth}&year=${currentYear}`);
+            if (topPerfRes.data && topPerfRes.data.success && topPerfRes.data.performers) {
+              setTopPerformer(topPerfRes.data.performers[0] || null);
+            }
+          } catch (e) {
+            console.warn("Top performers fetch failed", e);
           }
 
           setLoading(false);
@@ -5326,6 +5356,39 @@ const EmployeeDashboard = () => {
   const closeColleaguePopup = () => {
     setColleaguePopupVisible(false);
     setTimeout(() => setShowColleagueBirthdayPopup(false), 300);
+  };
+
+  // ── Trigger performance modal once performance data is available ──
+  useEffect(() => {
+    if (!performanceData) return;
+
+    const alreadyNotified = sessionStorage.getItem("performance_notified");
+    if (!alreadyNotified) {
+      // Delay showing it slightly to not clash with birthday popup
+      const delay = birthdaysToday.length > 0 ? 5000 : 1500;
+      const t = setTimeout(() => {
+        setShowPerformancePopup(true);
+      }, delay);
+      return () => clearTimeout(t);
+    }
+  }, [performanceData, birthdaysToday]);
+
+  // Handle performance popup transition
+  useEffect(() => {
+    if (showPerformancePopup) {
+      const t = setTimeout(() => setPerfPopupVisible(true), 100);
+      return () => clearTimeout(t);
+    } else {
+      setPerfPopupVisible(false);
+    }
+  }, [showPerformancePopup]);
+
+  const closePerfPopup = () => {
+    setPerfPopupVisible(false);
+    setTimeout(() => {
+      setShowPerformancePopup(false);
+      sessionStorage.setItem("performance_notified", "true");
+    }, 300);
   };
 
   // ── Close popup when singing finishes ──
@@ -5777,6 +5840,44 @@ const EmployeeDashboard = () => {
           </div>
         </div>
 
+        {/* ─── PERFORMANCE ADVISORY BANNER ─── */}
+        {performanceData && (
+          <div className={`rounded-xl p-4 mb-4 border flex items-start gap-3 shadow-sm ${
+            (performanceData.performancePercentage || 0) >= 80 
+              ? "bg-emerald-50 border-emerald-100 text-emerald-800" 
+              : (performanceData.performancePercentage || 0) >= 60 
+                ? "bg-indigo-50 border-indigo-100 text-indigo-800" 
+                : "bg-red-50 border-red-100 text-red-800"
+          }`}>
+            <div className="text-xl">
+              {(performanceData.performancePercentage || 0) >= 80 ? "🏆" : (performanceData.performancePercentage || 0) >= 60 ? "✨" : "⚠️"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold uppercase tracking-wider opacity-85">Performance Advisory</h4>
+              <p className="text-sm font-semibold mt-1">
+                {(performanceData.performancePercentage || 0) >= 80 && `Your performance is excellent this month! Good job, ${profile?.name?.split(" ")[0]}! Keep up the excellent work! 👍`}
+                {(performanceData.performancePercentage || 0) >= 60 && (performanceData.performancePercentage || 0) < 80 && `Your performance is good, ${profile?.name?.split(" ")[0]}! You are doing well, but there is still room for improvement. Let's aim higher! 💪`}
+                {(performanceData.performancePercentage || 0) < 60 && `Your performance is low this month. Need to improve your performance, ${profile?.name?.split(" ")[0]}. Please focus on improvement. ⚠️`}
+              </p>
+              
+              {/* Warnings for late check-in or absents */}
+              {((performanceData.lateComingDays || 0) > 3 || (performanceData.absentDays || 0) > 2) && (
+                <div className="mt-2 text-xs border-t pt-2 border-current/10 space-y-1">
+                  <span className="font-bold block uppercase tracking-wider text-[10px] opacity-90">Attention Needed:</span>
+                  <ul className="list-disc pl-4 space-y-0.5">
+                    {(performanceData.lateComingDays || 0) > 3 && (
+                      <li>You checked in late {performanceData.lateComingDays} times this month. Please check-in on time to maintain discipline.</li>
+                    )}
+                    {(performanceData.absentDays || 0) > 2 && (
+                      <li>You have been absent {performanceData.absentDays} days this month. Please try to maintain regular attendance.</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* ─── STATS GRID ─── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
           <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-white/30 shadow-sm">
@@ -5784,7 +5885,9 @@ const EmployeeDashboard = () => {
               <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Present</span>
               <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center"><FiCheckCircle className="text-emerald-500" size={14} /></div>
             </div>
-            <div className="text-xl font-bold text-gray-800 mt-1">{employeeStats.presentThisMonth}</div>
+            <div className="text-xl font-bold text-gray-800 mt-1">
+              {performanceData ? performanceData.presentDays : employeeStats.presentThisMonth}
+            </div>
             <div className="text-[10px] text-gray-400">days this month</div>
           </div>
           <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-white/30 shadow-sm">
@@ -5792,7 +5895,9 @@ const EmployeeDashboard = () => {
               <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Absent</span>
               <div className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center"><FiUserX className="text-red-500" size={14} /></div>
             </div>
-            <div className="text-xl font-bold text-gray-800 mt-1">{employeeStats.absentThisMonth}</div>
+            <div className="text-xl font-bold text-gray-800 mt-1">
+              {performanceData ? performanceData.absentDays : employeeStats.absentThisMonth}
+            </div>
             <div className="text-[10px] text-gray-400">days this month</div>
           </div>
           <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-white/30 shadow-sm">
@@ -5800,16 +5905,22 @@ const EmployeeDashboard = () => {
               <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Late</span>
               <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center"><FiHistory className="text-amber-500" size={14} /></div>
             </div>
-            <div className="text-xl font-bold text-gray-800 mt-1">{employeeStats.lateThisMonth}</div>
+            <div className="text-xl font-bold text-gray-800 mt-1">
+              {performanceData ? performanceData.lateComingDays : employeeStats.lateThisMonth}
+            </div>
             <div className="text-[10px] text-gray-400">instances</div>
           </div>
           <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-white/30 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Attendance</span>
+              <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Performance</span>
               <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center"><FiTrendingUp className="text-indigo-500" size={14} /></div>
             </div>
-            <div className="text-xl font-bold text-gray-800 mt-1">{attendanceRate}%</div>
-            <div className="text-[10px] text-gray-400">of {employeeStats.totalWorkingDays} days</div>
+            <div className="text-xl font-bold text-gray-800 mt-1">
+              {performanceData ? `${performanceData.performancePercentage}%` : `${attendanceRate}%`}
+            </div>
+            <div className="text-[10px] text-gray-400">
+              {performanceData ? "calculated score" : `of ${employeeStats.totalWorkingDays} days`}
+            </div>
           </div>
         </div>
 
@@ -6187,6 +6298,104 @@ const EmployeeDashboard = () => {
                 className="mt-3 text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── PERFORMANCE ADVISORY POPUP ─── */}
+      {showPerformancePopup && performanceData && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+            perfPopupVisible ? "bg-black/50 backdrop-blur-sm" : "bg-black/0 pointer-events-none"
+          }`}
+          onClick={closePerfPopup}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-white/50 bg-white transition-all duration-500 ease-out ${
+              perfPopupVisible ? "opacity-100 scale-100" : "opacity-0 scale-90"
+            }`}
+          >
+            <div className={`relative h-32 flex flex-col items-center justify-center text-white p-4 text-center ${
+              (performanceData.performancePercentage || 0) >= 80 
+                ? "bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500" 
+                : (performanceData.performancePercentage || 0) >= 60 
+                  ? "bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" 
+                  : "bg-gradient-to-br from-amber-500 via-orange-500 to-red-500"
+            }`}>
+              <button
+                onClick={closePerfPopup}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors backdrop-blur-sm"
+              >
+                <FiX size={16} />
+              </button>
+              
+              <div className="text-4xl mb-1">
+                {(performanceData.performancePercentage || 0) >= 80 ? "🏆" : (performanceData.performancePercentage || 0) >= 60 ? "✨" : "⚠️"}
+              </div>
+              <h3 className="font-bold text-lg leading-tight">Monthly Performance Review</h3>
+              <p className="text-xs opacity-90">For the month of {new Date().toLocaleString('default', { month: 'long' })}</p>
+            </div>
+
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <p className="text-sm text-gray-500 font-medium">Your Performance Score</p>
+                <h4 className={`text-4xl font-extrabold mt-1 ${
+                  (performanceData.performancePercentage || 0) >= 80 ? "text-emerald-500" : (performanceData.performancePercentage || 0) >= 60 ? "text-indigo-600" : "text-red-500"
+                }`}>
+                  {performanceData.performancePercentage || 0}%
+                </h4>
+                
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mt-2 uppercase tracking-wide ${
+                  (performanceData.performancePercentage || 0) >= 80 
+                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200" 
+                    : (performanceData.performancePercentage || 0) >= 60 
+                      ? "bg-indigo-50 text-indigo-600 border border-indigo-200" 
+                      : "bg-red-50 text-red-600 border border-red-200"
+                }`}>
+                  {(performanceData.performancePercentage || 0) >= 80 ? "Excellent" : (performanceData.performancePercentage || 0) >= 60 ? "Good" : "Needs Improvement"}
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4">
+                  <p className="text-sm font-semibold text-gray-800 leading-relaxed text-center">
+                    {(performanceData.performancePercentage || 0) >= 80 && `Your performance is excellent this month! Good job, ${profile?.name?.split(" ")[0]}! Keep up the excellent work! 👍`}
+                    {(performanceData.performancePercentage || 0) >= 60 && (performanceData.performancePercentage || 0) < 80 && `Your performance is good, ${profile?.name?.split(" ")[0]}! You are doing well, but there is still room for improvement. Let's aim higher! 💪`}
+                    {(performanceData.performancePercentage || 0) < 60 && `Your performance is low this month. Need to improve your performance, ${profile?.name?.split(" ")[0]}. Please focus on improvement. ⚠️`}
+                  </p>
+                </div>
+
+                {((performanceData.lateComingDays || 0) > 3 || (performanceData.absentDays || 0) > 2) && (
+                  <div className="border border-red-100 bg-red-50/50 rounded-2xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-red-600 uppercase tracking-wider flex items-center gap-1">
+                      <FiAlertCircle size={14} /> Attention Needed
+                    </p>
+                    <ul className="list-disc pl-4 text-xs text-red-700 space-y-1 font-medium">
+                      {(performanceData.lateComingDays || 0) > 3 && (
+                        <li>You have checked in late {performanceData.lateComingDays} times this month. Please check-in on time to maintain discipline.</li>
+                      )}
+                      {(performanceData.absentDays || 0) > 2 && (
+                        <li>You have been absent {performanceData.absentDays} days this month. Please try to maintain regular attendance.</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={closePerfPopup}
+                className={`w-full py-3 rounded-xl text-sm font-semibold text-white mt-6 shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 ${
+                  (performanceData.performancePercentage || 0) >= 80 
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-500/20 hover:from-emerald-600 hover:to-teal-600" 
+                    : (performanceData.performancePercentage || 0) >= 60 
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 shadow-indigo-500/20 hover:from-indigo-600 hover:to-purple-600" 
+                      : "bg-gradient-to-r from-amber-500 to-red-500 shadow-red-500/20 hover:from-amber-600 hover:to-red-600"
+                }`}
+              >
+                Okay, Understood!
               </button>
             </div>
           </div>

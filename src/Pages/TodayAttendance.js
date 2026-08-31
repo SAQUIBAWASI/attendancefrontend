@@ -2931,8 +2931,8 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag, FaMapMarkerAlt, FaTimes, FaClock } from "react-icons/fa";
-import { FiCoffee, FiUsers, FiMapPin, FiUserCheck, FiHome, FiCalendar, FiTrash2, FiRefreshCw, FiFilter, FiChevronDown, FiChevronUp, FiImage } from "react-icons/fi";
+import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag, FaTimes, FaClock } from "react-icons/fa";
+import { FiCoffee, FiUsers, FiMapPin, FiUserCheck, FiHome, FiCalendar, FiTrash2, FiRefreshCw, FiFilter, FiChevronDown, FiChevronUp, FiImage, FiMessageSquare } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
@@ -2967,6 +2967,60 @@ const getImageUrl = (imagePath) => {
   return `${BASE_URL}${cleanPath}`;
 };
 
+// ✅ Format date to dd-mm-yyyy
+const formatDateToDDMMYYYY = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+// ✅ Format month to "Month, Year" format (e.g., "August, 2026")
+const formatMonthDisplay = (monthValue) => {
+  if (!monthValue) return "";
+  const [year, month] = monthValue.split('-');
+  const date = new Date(parseInt(year), parseInt(month) - 1);
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+};
+
+// ✅ Get Reason Badge Color
+const getReasonBadgeColor = (reason) => {
+  if (!reason) return 'bg-gray-100 text-gray-600 border-gray-200';
+  
+  const reasonLower = reason.toLowerCase();
+  if (reasonLower.includes('field') || reasonLower.includes('work')) {
+    return 'bg-blue-100 text-blue-700 border-blue-200';
+  } else if (reasonLower.includes('home') || reasonLower.includes('wfh')) {
+    return 'bg-purple-100 text-purple-700 border-purple-200';
+  } else if (reasonLower.includes('client') || reasonLower.includes('meeting')) {
+    return 'bg-amber-100 text-amber-700 border-amber-200';
+  } else if (reasonLower.includes('onsite') || reasonLower.includes('office')) {
+    return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+  } else {
+    return 'bg-gray-100 text-gray-600 border-gray-200';
+  }
+};
+
+// ✅ Get Reason Icon
+const getReasonIcon = (reason) => {
+  if (!reason) return <FiMessageSquare className="text-gray-400 text-[10px]" />;
+  
+  const reasonLower = reason.toLowerCase();
+  if (reasonLower.includes('field') || reasonLower.includes('work')) {
+    return <FiMapPin className="text-blue-500 text-[10px]" />;
+  } else if (reasonLower.includes('home') || reasonLower.includes('wfh')) {
+    return <FiHome className="text-purple-500 text-[10px]" />;
+  } else if (reasonLower.includes('client') || reasonLower.includes('meeting')) {
+    return <FiUsers className="text-amber-500 text-[10px]" />;
+  } else if (reasonLower.includes('onsite') || reasonLower.includes('office')) {
+    return <FiMapPin className="text-emerald-500 text-[10px]" />;
+  } else {
+    return <FiMessageSquare className="text-gray-400 text-[10px]" />;
+  }
+};
+
 const TodayAttendance = () => {
   const navigate = useNavigate();
   
@@ -2980,7 +3034,9 @@ const TodayAttendance = () => {
   // Date filters
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState("");
+ const [selectedMonth, setSelectedMonth] = useState(
+  new Date().toISOString().slice(0, 7)
+);
   
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -3051,6 +3107,15 @@ const TodayAttendance = () => {
     setPagination(prev => ({ ...prev, currentPage: 1 }));
   }, [searchTerm, filterDepartment, filterDesignation, activeFilter]);
 
+  // ✅ handleMonthChange function
+  const handleMonthChange = (e) => {
+    setSelectedMonth(e.target.value);
+    if (e.target.value) {
+      setFromDate("");
+      setToDate("");
+    }
+  };
+
   // Main fetch function
   const fetchAttendanceData = async () => {
     try {
@@ -3116,7 +3181,8 @@ const TodayAttendance = () => {
             rawDate: recordDate,
             profilePicture: employee?.profilePicture || null,
             checkInImage: rec.checkInImage || null,
-            checkOutImage: rec.checkOutImage || null
+            checkOutImage: rec.checkOutImage || null,
+            reason: rec.reason || employee?.reason || "Onsite" // ✅ Added reason field
           };
         })
         .filter(rec => rec !== null);
@@ -3173,10 +3239,6 @@ const TodayAttendance = () => {
     setToDate("");
     setSelectedMonth("");
     setActiveFilter(null);
-  };
-
-  const goToEmployeeLocations = () => {
-    navigate('/employee-locations');
   };
 
   const scrollToTable = () => {
@@ -3335,46 +3397,440 @@ const TodayAttendance = () => {
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
 
-        {/* Dashboard Header */}
-        <div className="emp-dash__header">
+        {/* Dashboard Header - Title on Left, Date and Filters on Right */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <div>
             <h1 className="emp-dash__greeting">
               Today's <span>Attendance</span>
             </h1>
           </div>
-          <div className="emp-dash__date-pill">
-            <FiCalendar />
+
+          {/* Right side: Filters + Date + Refresh at Last */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative min-w-[130px]">
+              <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Department */}
+            <div className="relative" ref={departmentFilterRef}>
+              <button
+                onClick={() => {
+                  setShowDepartmentFilter(!showDepartmentFilter);
+                  setShowDesignationFilter(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDepartment
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FaBuilding className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDepartment || "Dept"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDepartmentFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDepartment("");
+                      setShowDepartmentFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Departments
+                  </div>
+                  {uniqueDepartments.map((dept) => (
+                    <div
+                      key={dept}
+                      onClick={() => {
+                        setFilterDepartment(dept);
+                        setShowDepartmentFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      {dept}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Designation */}
+            <div className="relative" ref={designationFilterRef}>
+              <button
+                onClick={() => {
+                  setShowDesignationFilter(!showDesignationFilter);
+                  setShowDepartmentFilter(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDesignation
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FaUserTag className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDesignation || "Design"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDesignationFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDesignation("");
+                      setShowDesignationFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Designations
+                  </div>
+                  {uniqueDesignations.map((des) => (
+                    <div
+                      key={des}
+                      onClick={() => {
+                        setFilterDesignation(des);
+                        setShowDesignationFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      {des}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Date From - Shows dd-mm-yyyy below */}
+            <div className="relative">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => {
+                  setFromDate(e.target.value);
+                  if (e.target.value) setSelectedMonth("");
+                }}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                placeholder="From"
+                className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+              {fromDate && (
+                <div className="text-[9px] text-gray-500 mt-0.5 text-center font-mono">
+                  {formatDateToDDMMYYYY(fromDate)}
+                </div>
+              )}
+            </div>
+
+            {/* Date To - Shows dd-mm-yyyy below */}
+            <div className="relative">
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => {
+                  setToDate(e.target.value);
+                  if (e.target.value) setSelectedMonth("");
+                }}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                placeholder="To"
+                className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+              {toDate && (
+                <div className="text-[9px] text-gray-500 mt-0.5 text-center font-mono">
+                  {formatDateToDDMMYYYY(toDate)}
+                </div>
+              )}
+            </div>
+
+            {/* Month Picker - Shows "August, 2026" below */}
+            <div className="relative">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={handleMonthChange}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+              />
+              {/* {selectedMonth && (
+                <div className="text-[9px] text-gray-500 mt-0.5 text-center font-medium">
+                  {formatMonthDisplay(selectedMonth)}
+                </div>
+              )} */}
+            </div>
+
+            {/* Clear Filters Button */}
+            {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth || activeFilter) && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+
+            {/* ✅ Refresh Button - Last (Rightmost) */}
+            <button
+              onClick={fetchAttendanceData}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+              title="Refresh data"
+            >
+              <FiRefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Header - Only Title and Date */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            Today's <span className="text-indigo-600">Attendance</span>
+          </h1>
+          <div className="emp-dash__date-pill text-[10px] px-2 py-1">
+            <FiCalendar className="text-[10px]" />
             <span>
               {new Date().toLocaleDateString("en-US", {
                 weekday: "short",
-                year: "numeric",
-                month: "short",
                 day: "numeric",
+                month: "short",
+                year: "numeric",
               })}
             </span>
           </div>
         </div>
 
-        {/* Action Buttons Row */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <div className="flex items-center gap-2">
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
             <button
-              onClick={goToEmployeeLocations}
-              className="px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
             >
-              <FaMapMarkerAlt className="text-sm" />
-              Check Employee Location
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showFilters ? (
+                <FiChevronUp className="text-gray-400" />
+              ) : (
+                <FiChevronDown className="text-gray-400" />
+              )}
             </button>
+            <span className="text-xs text-gray-500">
+              <strong>{filteredRecords.length}</strong> records
+            </span>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={fetchAttendanceData}
-              className="px-3 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
-            >
-              <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-              Refresh
-            </button>
-          </div>
+
+          {showFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search ID or Name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="relative" ref={departmentFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+                <button
+                  onClick={() => {
+                    setShowDepartmentFilter(!showDepartmentFilter);
+                    setShowDesignationFilter(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterDepartment
+                      ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                      : "border-gray-300 text-gray-700"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <FaBuilding className="text-gray-400" />
+                    {filterDepartment || "All Departments"}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {showDepartmentFilter && (
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setFilterDepartment("");
+                        setShowDepartmentFilter(false);
+                      }}
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Departments
+                    </div>
+                    {uniqueDepartments.map((dept) => (
+                      <div
+                        key={dept}
+                        onClick={() => {
+                          setFilterDepartment(dept);
+                          setShowDepartmentFilter(false);
+                        }}
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                        }`}
+                      >
+                        {dept}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="relative" ref={designationFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+                <button
+                  onClick={() => {
+                    setShowDesignationFilter(!showDesignationFilter);
+                    setShowDepartmentFilter(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterDesignation
+                      ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                      : "border-gray-300 text-gray-700"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <FaUserTag className="text-gray-400" />
+                    {filterDesignation || "All Designations"}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {showDesignationFilter && (
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setFilterDesignation("");
+                        setShowDesignationFilter(false);
+                      }}
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Designations
+                    </div>
+                    {uniqueDesignations.map((des) => (
+                      <div
+                        key={des}
+                        onClick={() => {
+                          setFilterDesignation(des);
+                          setShowDesignationFilter(false);
+                        }}
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                        }`}
+                      >
+                        {des}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e.target.value);
+                      if (e.target.value) setSelectedMonth("");
+                    }}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                  {fromDate && (
+                    <div className="text-[8px] text-gray-400 mt-0.5 text-center font-mono">
+                      {formatDateToDDMMYYYY(fromDate)}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e.target.value);
+                      if (e.target.value) setSelectedMonth("");
+                    }}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                  {toDate && (
+                    <div className="text-[8px] text-gray-400 mt-0.5 text-center font-mono">
+                      {formatDateToDDMMYYYY(toDate)}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={handleMonthChange}
+                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+                />
+                {selectedMonth && (
+                  <div className="text-[8px] text-gray-400 mt-0.5 text-center font-medium">
+                    {formatMonthDisplay(selectedMonth)}
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={fetchAttendanceData}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    <FiRefreshCw className="w-4 h-4" />
+                    Refresh
+                  </button>
+                  {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth || activeFilter) && (
+                    <button
+                      onClick={clearFilters}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Top KPI Stats Grid - Clickable Cards */}
@@ -3444,374 +3900,6 @@ const TodayAttendance = () => {
           </div>
         </div>
 
-        {/* Filters Card */}
-        <div className="emp-dash__card mb-6">
-          {/* Desktop View */}
-          <div className="hidden lg:block">
-            <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <div className="relative min-w-[140px] flex-1 max-w-[200px]">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input
-                    type="text"
-                    placeholder="Search ID or Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                <div className="relative" ref={departmentFilterRef}>
-                  <button
-                    onClick={() => {
-                      setShowDepartmentFilter(!showDepartmentFilter);
-                      setShowDesignationFilter(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                      filterDepartment
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <FaBuilding className="text-gray-400 text-[10px]" />
-                    <span className="truncate max-w-[100px]">{filterDepartment || "Departments"}</span>
-                    <span className="text-gray-400 text-[10px]">▾</span>
-                  </button>
-                  {showDepartmentFilter && (
-                    <div 
-                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-                      style={{
-                        zIndex: 99999,
-                        top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                        left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
-                      }}
-                    >
-                      <div
-                        onClick={() => {
-                          setFilterDepartment("");
-                          setShowDepartmentFilter(false);
-                        }}
-                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Departments
-                      </div>
-                      {uniqueDepartments.map((dept) => (
-                        <div
-                          key={dept}
-                          onClick={() => {
-                            setFilterDepartment(dept);
-                            setShowDepartmentFilter(false);
-                          }}
-                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                            filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                          }`}
-                        >
-                          {dept}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative" ref={designationFilterRef}>
-                  <button
-                    onClick={() => {
-                      setShowDesignationFilter(!showDesignationFilter);
-                      setShowDepartmentFilter(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                      filterDesignation
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <FaUserTag className="text-gray-400 text-[10px]" />
-                    <span className="truncate max-w-[100px]">{filterDesignation || "Designations"}</span>
-                    <span className="text-gray-400 text-[10px]">▾</span>
-                  </button>
-                  {showDesignationFilter && (
-                    <div 
-                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-                      style={{
-                        zIndex: 99999,
-                        top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                        left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
-                      }}
-                    >
-                      <div
-                        onClick={() => {
-                          setFilterDesignation("");
-                          setShowDesignationFilter(false);
-                        }}
-                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Designations
-                      </div>
-                      {uniqueDesignations.map((des) => (
-                        <div
-                          key={des}
-                          onClick={() => {
-                            setFilterDesignation(des);
-                            setShowDesignationFilter(false);
-                          }}
-                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                            filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                          }`}
-                        >
-                          {des}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    placeholder="From"
-                    className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    placeholder="To"
-                    className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                <div className="relative">
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    className="w-[130px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button
-                  onClick={fetchAttendanceData}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
-                  title="Refresh data"
-                >
-                  <FiRefreshCw className="w-3 h-3" />
-                  <span className="hidden sm:inline">Refresh</span>
-                </button>
-
-                {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth || activeFilter) && (
-                  <button
-                    onClick={clearFilters}
-                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-                  >
-                    <FiTrash2 className="w-3 h-3" />
-                    Clear
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile View */}
-          <div className="lg:hidden">
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-              >
-                <FiFilter className="text-blue-600 text-base" />
-                <span>Filters</span>
-                {showFilters ? (
-                  <FiChevronUp className="text-gray-400" />
-                ) : (
-                  <FiChevronDown className="text-gray-400" />
-                )}
-              </button>
-              <span className="text-xs text-gray-500">
-                <strong>{filteredRecords.length}</strong> records
-              </span>
-            </div>
-
-            {showFilters && (
-              <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
-                  <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                    <input
-                      type="text"
-                      placeholder="Search ID or Name..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="relative" ref={departmentFilterRef}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
-                  <button
-                    onClick={() => {
-                      setShowDepartmentFilter(!showDepartmentFilter);
-                      setShowDesignationFilter(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                      filterDepartment
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <FaBuilding className="text-gray-400" />
-                      {filterDepartment || "All Departments"}
-                    </span>
-                    <span className="text-gray-400">▾</span>
-                  </button>
-                  {showDepartmentFilter && (
-                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      <div
-                        onClick={() => {
-                          setFilterDepartment("");
-                          setShowDepartmentFilter(false);
-                        }}
-                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Departments
-                      </div>
-                      {uniqueDepartments.map((dept) => (
-                        <div
-                          key={dept}
-                          onClick={() => {
-                            setFilterDepartment(dept);
-                            setShowDepartmentFilter(false);
-                          }}
-                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                            filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                          }`}
-                        >
-                          {dept}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative" ref={designationFilterRef}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
-                  <button
-                    onClick={() => {
-                      setShowDesignationFilter(!showDesignationFilter);
-                      setShowDepartmentFilter(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                      filterDesignation
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <FaUserTag className="text-gray-400" />
-                      {filterDesignation || "All Designations"}
-                    </span>
-                    <span className="text-gray-400">▾</span>
-                  </button>
-                  {showDesignationFilter && (
-                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      <div
-                        onClick={() => {
-                          setFilterDesignation("");
-                          setShowDesignationFilter(false);
-                        }}
-                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Designations
-                      </div>
-                      {uniqueDesignations.map((des) => (
-                        <div
-                          key={des}
-                          onClick={() => {
-                            setFilterDesignation(des);
-                            setShowDesignationFilter(false);
-                          }}
-                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                            filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                          }`}
-                        >
-                          {des}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
-                    <input
-                      type="date"
-                      value={fromDate}
-                      onChange={(e) => setFromDate(e.target.value)}
-                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
-                    <input
-                      type="date"
-                      value={toDate}
-                      onChange={(e) => setToDate(e.target.value)}
-                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
-                  />
-                </div>
-
-                <div className="pt-3 border-t border-gray-200 space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={fetchAttendanceData}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-                    >
-                      <FiRefreshCw className="w-4 h-4" />
-                      Refresh
-                    </button>
-                    {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth || activeFilter) && (
-                      <button
-                        onClick={clearFilters}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Table Section */}
         <div className="emp-dash__card">
           <div className="emp-dash__card-header">
@@ -3837,7 +3925,8 @@ const TodayAttendance = () => {
                       <th style={{ textAlign: "center" }}>Check In</th>
                       <th style={{ textAlign: "center" }}>Check Out</th>
                       <th style={{ textAlign: "center" }}>Total Hours</th>
-                      <th style={{ textAlign: "center" }}>Attendance Images</th>
+                      <th style={{ textAlign: "center" }}>Reason</th>
+                      <th style={{ textAlign: "center" }}>Images</th>
                       <th style={{ textAlign: "right" }}>Status</th>
                     </tr>
                   </thead>
@@ -3850,6 +3939,11 @@ const TodayAttendance = () => {
                       const hasCheckInImage = rec.checkInImage && rec.checkInImage !== null && rec.checkInImage !== "";
                       const hasCheckOutImage = rec.checkOutImage && rec.checkOutImage !== null && rec.checkOutImage !== "";
                       const hasAnyImage = hasCheckInImage || hasCheckOutImage;
+                      
+                      // ✅ Get reason display
+                      const reasonText = rec.reason || rec.reason || "Onsite";
+                      const reasonColor = getReasonBadgeColor(reasonText);
+                      const reasonIcon = getReasonIcon(reasonText);
                       
                       return (
                         <tr key={rec._id} className="hover:bg-gray-55/60 transition-all">
@@ -3901,6 +3995,13 @@ const TodayAttendance = () => {
                           <td style={{ textAlign: "center" }}>
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getHoursColor(rec.totalHours)}`}>
                               {rec.totalHours?.toFixed(2) || "0.00"}h
+                            </span>
+                          </td>
+                          {/* ✅ Reason Column */}
+                          <td style={{ textAlign: "center" }}>
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border ${reasonColor}`}>
+                              {reasonIcon}
+                              <span>{reasonText}</span>
                             </span>
                           </td>
                           {/* ✅ Attendance Images Column */}
@@ -3970,6 +4071,11 @@ const TodayAttendance = () => {
                   const hasCheckInImage = rec.checkInImage && rec.checkInImage !== null && rec.checkInImage !== "";
                   const hasCheckOutImage = rec.checkOutImage && rec.checkOutImage !== null && rec.checkOutImage !== "";
                   const hasAnyImage = hasCheckInImage || hasCheckOutImage;
+                  
+                  // ✅ Get reason
+                  const reasonText = rec.reason || "Onsite";
+                  const reasonColor = getReasonBadgeColor(reasonText);
+                  const reasonIcon = getReasonIcon(reasonText);
                   
                   const getAvatarColor = (rec) => {
                     if (rec.status?.toLowerCase() === "checked-out") {
@@ -4060,6 +4166,14 @@ const TodayAttendance = () => {
                         <span><span className="text-gray-400">Total Hours:</span> <span className="font-semibold text-gray-700">{rec.totalHours?.toFixed(2) || "0.00"}h</span></span>
                         <span className="text-gray-300">|</span>
                         <span><span className="text-gray-400">Times:</span> <span className="font-semibold text-gray-700">{rec.checkInTime ? formattedTime(rec.checkInTime) : "-"} {rec.checkOutTime ? ` - ${formattedTime(rec.checkOutTime)}` : " - -"}</span></span>
+                      </div>
+
+                      {/* ✅ Mobile Reason */}
+                      <div className="mt-2">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border ${reasonColor}`}>
+                          {reasonIcon}
+                          <span>Reason: {reasonText}</span>
+                        </span>
                       </div>
                     </div>
                   );
@@ -4187,8 +4301,6 @@ const TodayAttendance = () => {
                       }) : '-'}
                     </p>
                   </div>
-                 
-               
                 </div>
               </div>
 

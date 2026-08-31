@@ -1237,7 +1237,7 @@ const EmployeeLeaves = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   
-  // ─── 🔥 FIX: PERSISTED ITEMS PER PAGE ───
+  // ─── PERSISTED ITEMS PER PAGE ───
   const getSavedItemsPerPage = () => {
     try {
       const saved = localStorage.getItem('employeeLeaves_itemsPerPage');
@@ -1349,6 +1349,7 @@ const EmployeeLeaves = () => {
     fetchLeaveBalances(employeeId);
     fetchExtraDaysData(employeeId, getCurrentMonth());
     fetchPublicHolidays();
+    // ─── 🔥 FIX: Pass employeeId to fetchCompOffRequests ───
     fetchCompOffRequests(employeeId);
   }, []);
 
@@ -1437,11 +1438,17 @@ const EmployeeLeaves = () => {
     }
   };
 
+  // ─── 🔥 FIX: fetchCompOffRequests with proper employeeId ───
   const fetchCompOffRequests = async (employeeId) => {
     try {
+      if (!employeeId) {
+        console.warn('No employeeId provided to fetchCompOffRequests');
+        return;
+      }
       const response = await axios.get(`${API_BASE_URL}/leaves/getcompoffrequestforuser/${employeeId}`);
       if (response.data && response.data.success) {
         setCompOffRequestsFromAPI(response.data.requests || []);
+        console.log('✅ Comp-off requests loaded:', response.data.requests?.length || 0);
       }
     } catch (error) {
       console.error("Error fetching comp-off requests:", error);
@@ -1490,8 +1497,18 @@ const EmployeeLeaves = () => {
     return today <= applyDeadline;
   };
 
+  // ─── 🔥 FIX: getCompOffStatusForLeave - Better matching ───
   const getCompOffStatusForLeave = (leaveId) => {
-    const request = compOffRequestsFromAPI.find(req => req.leaveId === leaveId);
+    if (!leaveId) return { exists: false, status: null, data: null };
+    
+    // Convert to string for comparison
+    const leaveIdStr = String(leaveId);
+    
+    const request = compOffRequestsFromAPI.find(req => {
+      const reqLeaveId = req.leaveId ? String(req.leaveId) : '';
+      return reqLeaveId === leaveIdStr;
+    });
+    
     if (request) {
       return {
         exists: true,
@@ -1502,7 +1519,13 @@ const EmployeeLeaves = () => {
     return { exists: false, status: null, data: null };
   };
 
+  // ─── 🔥 FIX: openLeaveCompOffModal ───
   const openLeaveCompOffModal = (leave, extraDayDate) => {
+    if (!leave || !extraDayDate) {
+      alert("Invalid leave or extra day data");
+      return;
+    }
+
     const existingCompOff = getCompOffStatusForLeave(leave._id);
     if (existingCompOff.exists) {
       if (existingCompOff.status === 'pending') {
@@ -1514,19 +1537,26 @@ const EmployeeLeaves = () => {
       }
     }
 
-    const extraDay = extraDaysData.extraDays.list.find(d => d.date === extraDayDate);
+    // Find the extra day from the list
+    const extraDay = extraDaysData.extraDays?.list?.find(d => d.date === extraDayDate);
     if (!extraDay) {
       alert("Selected extra day not found!");
       return;
     }
     
+    // Check if apply window is open (15 days before)
     if (!isApplyWindowOpen(extraDay.date, 15)) {
       alert(`You can only apply for comp-off at least 15 days before the extra day (${formatDateDisplay(extraDay.date)}). The deadline was ${getApplyBeforeDate(extraDay.date, 15)}.`);
       return;
     }
     
+    // ─── 🔥 FIX: Set selectedExtraDay with all required fields ───
     setSelectedExtraDay({
       ...extraDay,
+      date: extraDay.date,
+      day: extraDay.day || formatDateDisplay(extraDay.date),
+      totalHours: extraDay.totalHours || 8,
+      extraHours: extraDay.extraHours || 0,
       leave: leave,
       leaveId: leave._id,
       leaveType: leave.leaveType,
@@ -1539,7 +1569,7 @@ const EmployeeLeaves = () => {
     });
     
     setExtraDayCompOffData({
-      reason: `Requesting comp-off for extra day on ${extraDay.day || formatDateDisplay(extraDay.date)} (${extraDay.totalHours} hours) against ${leave.leaveType} leave (${formatDateDisplay(leave.startDate)} - ${formatDateDisplay(leave.endDate)})`
+      reason: `Requesting comp-off for extra day on ${extraDay.day || formatDateDisplay(extraDay.date)} (${extraDay.totalHours || 8} hours) against ${leave.leaveType} leave (${formatDateDisplay(leave.startDate)} - ${formatDateDisplay(leave.endDate)})`
     });
     setIsExtraDayCompOffModalOpen(true);
     setSelectedLeaveForCompOff(null);
@@ -1551,6 +1581,7 @@ const EmployeeLeaves = () => {
     setIsViewCompOffModalOpen(true);
   };
 
+  // ─── 🔥 FIX: handleExtraDayCompOffSubmit ───
   const handleExtraDayCompOffSubmit = async (e) => {
     e.preventDefault();
     setSubmittingExtraDayCompOff(true);
@@ -1581,12 +1612,29 @@ const EmployeeLeaves = () => {
       return;
     }
 
+    if (!employeeId) {
+      alert("Employee ID not found");
+      setSubmittingExtraDayCompOff(false);
+      return;
+    }
+
+    if (!selectedExtraDay || !selectedExtraDay.date) {
+      alert("Extra day data is missing");
+      setSubmittingExtraDayCompOff(false);
+      return;
+    }
+
     try {
-      const response = await axios.post(`${API_BASE_URL}/leaves/requestforcompoffs`, {
+      const payload = {
         employeeId: employeeId,
         employeeName: employeeName,
         extraDayDate: selectedExtraDay.date,
-        extraDayDetails: selectedExtraDay,
+        extraDayDetails: {
+          date: selectedExtraDay.date,
+          day: selectedExtraDay.day || formatDateDisplay(selectedExtraDay.date),
+          totalHours: selectedExtraDay.totalHours || 8,
+          extraHours: selectedExtraDay.extraHours || 0
+        },
         reason: extraDayCompOffData.reason,
         leaveId: selectedExtraDay.leaveId,
         leaveDetails: {
@@ -1597,19 +1645,27 @@ const EmployeeLeaves = () => {
           reason: selectedExtraDay.leaveReason,
           status: selectedExtraDay.leaveStatus
         }
-      });
+      };
 
-      if (response.status === 201) {
-        alert("Comp-off request submitted successfully!");
+      console.log('📤 Submitting comp-off payload:', payload);
+
+      const response = await axios.post(`${API_BASE_URL}/leaves/requestforcompoffs`, payload);
+
+      if (response.status === 201 || response.data.success) {
+        alert("✅ Comp-off request submitted successfully!");
         setIsExtraDayCompOffModalOpen(false);
         setSelectedExtraDay(null);
-        const employeeData = JSON.parse(employeeDataRaw);
-        fetchExtraDaysData(employeeId, getCurrentMonth());
-        fetchCompOffRequests(employeeId);
+        setExtraDayCompOffData({ reason: "" });
+        // Refresh data
+        await fetchExtraDaysData(employeeId, getCurrentMonth());
+        await fetchCompOffRequests(employeeId);
+        await fetchLeaves(employeeId);
+      } else {
+        throw new Error(response.data?.message || "Failed to submit comp-off");
       }
     } catch (error) {
       console.error("Error submitting comp-off:", error);
-      alert(error.response?.data?.error || "Failed to submit comp-off request");
+      alert(error.response?.data?.error || error.response?.data?.message || error.message || "Failed to submit comp-off request");
     } finally {
       setSubmittingExtraDayCompOff(false);
     }
@@ -1796,7 +1852,6 @@ const EmployeeLeaves = () => {
     setCurrentPage(page);
   };
 
-  // ─── 🔥 HANDLE ITEMS PER PAGE CHANGE WITH LOCALSTORAGE ───
   const handleItemsPerPageChange = (e) => {
     const newValue = Number(e.target.value);
     console.log('💾 EmployeeLeaves - Saving itemsPerPage:', newValue);
@@ -2400,7 +2455,7 @@ const EmployeeLeaves = () => {
           </table>
         </div>
 
-        {/* ─── 🔥 FIXED PAGINATION SECTION ─── */}
+        {/* Pagination Section */}
         {filteredLeaves.length > 0 && (
           <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 sm:flex-row">
             <div className="flex items-center gap-2 text-sm text-gray-500">

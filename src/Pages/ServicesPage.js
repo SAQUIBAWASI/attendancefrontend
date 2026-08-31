@@ -1,5 +1,6 @@
-import { Building, Calendar, Heart, Home, Phone, Shield, Stethoscope, Users, ArrowRight, Award, Sparkles, BadgeCheck, Star, Clock, MapPin, MessageCircle, CheckCircle, Zap, Target, ThumbsUp, Gift, Microscope } from 'lucide-react'
+import { Building, Calendar, Heart, Home, Phone, Shield, Stethoscope, Users, ArrowRight, Award, Sparkles, BadgeCheck, Star, Clock, MapPin, MessageCircle, CheckCircle, Zap, Target, ThumbsUp, Gift, Microscope, Search, Filter, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import TimelyFooter from './TimelyFooter'
 import TimelyNavbar from '../Components/TimelyNavbar'
 import img1 from "../Images/WEB.jpg"
@@ -9,6 +10,10 @@ import img4 from "../Images/s1.jpg"
 
 const ServicesPage = () => {
   const navigate = useNavigate()
+  
+  // ✅ Search and Filter states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('All')
 
   const handleWhatsApp = () => {
     window.open(
@@ -48,6 +53,7 @@ const ServicesPage = () => {
       bgColor: "bg-indigo-50",
       borderColor: "border-indigo-200",
       number: "01",
+      category: "Consultation",
       details: [
         "Expert medical second opinions",
         "Review of treatment plans",
@@ -64,6 +70,7 @@ const ServicesPage = () => {
       bgColor: "bg-blue-50",
       borderColor: "border-blue-200",
       number: "02",
+      category: "Diagnostics",
       details: [
         "Home sample collection service",
         "Comprehensive health checkup packages",
@@ -80,6 +87,7 @@ const ServicesPage = () => {
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200",
       number: "03",
+      category: "Community",
       details: [
         "Complete health screening camps",
         "Multi-specialty doctor panels",
@@ -96,6 +104,7 @@ const ServicesPage = () => {
       bgColor: "bg-rose-50",
       borderColor: "border-rose-200",
       number: "04",
+      category: "Wellness",
       details: [
         "Group yoga and meditation sessions",
         "Nutrition counseling workshops",
@@ -112,6 +121,7 @@ const ServicesPage = () => {
       bgColor: "bg-cyan-50",
       borderColor: "border-cyan-200",
       number: "05",
+      category: "Consultation",
       details: [
         "24/7 availability for urgent consultations",
         "Verified and experienced doctors",
@@ -128,6 +138,7 @@ const ServicesPage = () => {
       bgColor: "bg-orange-50",
       borderColor: "border-orange-200",
       number: "06",
+      category: "Corporate",
       details: [
         "Employee health checkup programs",
         "Workplace vaccination drives",
@@ -136,6 +147,30 @@ const ServicesPage = () => {
       ]
     }
   ]
+
+  // ✅ Get unique categories
+  const categories = ['All', ...new Set(services.map(s => s.category))]
+
+  // ✅ Filter services based on search and category
+  const filteredServices = services.filter(service => {
+    const matchesSearch = searchQuery === '' || 
+      service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.details.some(d => d.toLowerCase().includes(searchQuery.toLowerCase()))
+    
+    const matchesCategory = selectedCategory === 'All' || service.category === selectedCategory
+    
+    return matchesSearch && matchesCategory
+  })
+
+  // ✅ Clear filters
+  const clearFilters = () => {
+    setSearchQuery('')
+    setSelectedCategory('All')
+  }
+
+  // ✅ Check if any filter is active
+  const hasActiveFilters = searchQuery !== '' || selectedCategory !== 'All'
 
   const stats = [
     { number: "500+", label: "Families Served", icon: <Users className="w-3.5 h-3.5" />, color: "from-emerald-50 to-emerald-100" },
@@ -257,7 +292,7 @@ const ServicesPage = () => {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-100/10 rounded-full blur-3xl"></div>
         
         <div className="relative px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-          <div className="mb-10 text-center">
+          <div className="mb-8 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-3 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-full shadow-md">
               <Award className="w-3.5 h-3.5 text-purple-600" />
               <span className="text-xs font-medium text-purple-800">✦ What We Offer</span>
@@ -271,67 +306,160 @@ const ServicesPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {services.map((service, index) => (
-              <div
-                key={index}
-                onClick={() => navigate(service.link)}
-                className="group relative p-5 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100 hover:border-transparent cursor-pointer overflow-hidden"
+          {/* ✅ Search & Filter Bar */}
+          <div className="mb-6 bg-white rounded-2xl shadow-lg border border-gray-100 p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+              {/* Search Input */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search services by name, description or details..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Category Filter */}
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-400" />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white min-w-[140px]"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat === 'All' ? '📋 All Categories' : cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Clear Filters */}
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+                >
+                  <X className="w-3.5 h-3.5 text-red-500" />
+                  Clear Filters
+                </button>
+              )}
+            </div>
+
+            {/* ✅ Filter Summary */}
+            {hasActiveFilters && (
+              <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                <span className="font-medium text-gray-700">Active Filters:</span>
+                {searchQuery && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-medium">
+                    Search: "{searchQuery}"
+                  </span>
+                )}
+                {selectedCategory !== 'All' && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-medium">
+                    Category: {selectedCategory}
+                  </span>
+                )}
+                <span className="ml-auto text-gray-400">
+                  Showing <strong className="text-gray-700">{filteredServices.length}</strong> of <strong className="text-gray-700">{services.length}</strong> services
+                </span>
+              </div>
+            )}
+          </div>
+
+          {filteredServices.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="inline-flex p-4 bg-gray-100 rounded-full mb-4">
+                <Search className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-700">No Services Found</h3>
+              <p className="text-sm text-gray-500 mt-1">Try adjusting your search or filters</p>
+              <button
+                onClick={clearFilters}
+                className="mt-3 px-4 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-0 group-hover:opacity-5 transition-all duration-500`}></div>
-                <div className={`absolute -inset-1 bg-gradient-to-r ${service.color} rounded-xl opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500`}></div>
-                
-                <div className="relative">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                      <div className={`p-2.5 rounded-xl ${service.bgColor} group-hover:scale-110 group-hover:shadow-md transition-all duration-300`}>
-                        {service.icon}
+                Clear All Filters
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {filteredServices.map((service, index) => (
+                <div
+                  key={index}
+                  onClick={() => navigate(service.link)}
+                  className="group relative p-5 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100 hover:border-transparent cursor-pointer overflow-hidden"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-0 group-hover:opacity-5 transition-all duration-500`}></div>
+                  <div className={`absolute -inset-1 bg-gradient-to-r ${service.color} rounded-xl opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500`}></div>
+                  
+                  <div className="relative">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        <div className={`p-2.5 rounded-xl ${service.bgColor} group-hover:scale-110 group-hover:shadow-md transition-all duration-300`}>
+                          {service.icon}
+                        </div>
+                        <div className="mt-1 text-center">
+                          <span className={`text-[9px] font-bold bg-gradient-to-r ${service.color} bg-clip-text text-transparent`}>
+                            {service.number}
+                          </span>
+                        </div>
                       </div>
-                      <div className="mt-1 text-center">
-                        <span className={`text-[9px] font-bold bg-gradient-to-r ${service.color} bg-clip-text text-transparent`}>
-                          {service.number}
-                        </span>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 mb-1">
+                          <h3 className={`text-base font-bold font-calibri text-gray-900 group-hover:bg-gradient-to-r ${service.color} group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300 leading-tight`}>
+                            {service.title}
+                          </h3>
+                        </div>
+                        
+                        <p className="text-xs font-sans text-gray-600 leading-relaxed mb-2.5">
+                          {service.description}
+                        </p>
                       </div>
                     </div>
                     
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1 mb-1">
-                        <h3 className={`text-base font-bold font-calibri text-gray-900 group-hover:bg-gradient-to-r ${service.color} group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300 leading-tight`}>
-                          {service.title}
-                        </h3>
-                      </div>
-                      
-                      <p className="text-xs font-sans text-gray-600 leading-relaxed mb-2.5">
-                        {service.description}
-                      </p>
+                    <ul className="space-y-1 mb-3 pl-1">
+                      {service.details.map((detail, idx) => (
+                        <li key={idx} className="flex items-start gap-1.5 text-[11px] text-gray-600 font-sans">
+                          <CheckCircle className="w-3 h-3 mt-0.5 text-emerald-500 flex-shrink-0" />
+                          <span>{detail}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className={`inline-flex items-center gap-1 text-[11px] font-semibold bg-gradient-to-r ${service.color} bg-clip-text text-transparent group-hover:gap-1.5 transition-all`}>
+                        <span>Explore Service</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </span>
+                      <span className="text-[9px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {service.category}
+                      </span>
                     </div>
                   </div>
                   
-                  <ul className="space-y-1 mb-3 pl-1">
-                    {service.details.map((detail, idx) => (
-                      <li key={idx} className="flex items-start gap-1.5 text-[11px] text-gray-600 font-sans">
-                        <CheckCircle className="w-3 h-3 mt-0.5 text-emerald-500 flex-shrink-0" />
-                        <span>{detail}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <div className={`inline-flex items-center gap-1 text-[11px] font-semibold bg-gradient-to-r ${service.color} bg-clip-text text-transparent group-hover:gap-1.5 transition-all`}>
-                    <span>Explore Service</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </div>
+                  <div className={`absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r ${service.color} group-hover:w-full transition-all duration-700 rounded-full`}></div>
                 </div>
-                
-                <div className={`absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r ${service.color} group-hover:w-full transition-all duration-700 rounded-full`}></div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           
           <div className="mt-10 text-center">
             <div className="inline-flex items-center gap-2 px-5 py-2 bg-white rounded-full shadow-md border border-gray-100">
               <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
               <span className="text-xs text-gray-600 font-sans">
-                <span className="font-semibold text-gray-800">6 Services</span> — All designed for your well-being
+                <span className="font-semibold text-gray-800">{filteredServices.length} Services</span> — All designed for your well-being
               </span>
             </div>
           </div>

@@ -1147,10 +1147,10 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
           </div>
 
           <div className="emp-page__toolbar">
-            <div className="emp-dash__date-pill">
+            {/* <div className="emp-dash__date-pill">
               <FaCalendarAlt />
               <span>{activeLabelYear}</span>
-            </div>
+            </div> */}
             <button
               type="button"
               onClick={() => { fetchHolidays(); }}

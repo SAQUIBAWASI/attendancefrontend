@@ -2906,7 +2906,7 @@ const LeavesList = () => {
               Leave <span className="text-blue-600">Requests</span>
             </h1>
           </div>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
+          {/* <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
             <FiCalendar className="text-blue-600" />
             <span className="text-sm font-medium text-gray-600">
               {new Date().toLocaleDateString("en-US", {
@@ -2916,7 +2916,7 @@ const LeavesList = () => {
                 day: "numeric",
               })}
             </span>
-          </div>
+          </div> */}
         </div>
 
        {/* Top KPI Stats Grid */}

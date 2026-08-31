@@ -72,7 +72,16 @@ const getCurrentEmployeeLocation = () =>
   });
 
 /* ─── Add / Edit Form Modal ─── */
-const EMPTY_FORM = { centerName:'', clientName:'', contact:'', address:'', addressLink:'', status:'Pending', remarks:'' };
+const EMPTY_FORM = { 
+  centerName: '', 
+  clientName: '', 
+  contact: '', 
+  address: '', 
+  addressLink: '', 
+  status: 'Pending', 
+  remarks: '',
+  visited: '1'  // ✅ Added visited field
+};
 
 const VisitFormModal = ({ show, onClose, onSave, editRecord, employeeId }) => {
   const [form, setForm] = useState(EMPTY_FORM);
@@ -90,6 +99,7 @@ const VisitFormModal = ({ show, onClose, onSave, editRecord, employeeId }) => {
         addressLink:editRecord.addressLink|| '',
         status:     editRecord.status     || 'Pending',
         remarks:    editRecord.remarks    || '',
+        visited:    editRecord.visited    || '1',  // ✅ Added visited
       });
     } else {
       setForm(EMPTY_FORM);
@@ -143,7 +153,7 @@ const VisitFormModal = ({ show, onClose, onSave, editRecord, employeeId }) => {
         exit={{ opacity:0, scale:0.95 }} transition={{ duration:0.2 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
         onClick={e => e.stopPropagation()}>
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold text-gray-800">{editRecord ? 'Edit Visit Record' : 'Add New Visit Record'}</h3>
             <button onClick={onClose} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
@@ -187,6 +197,19 @@ const VisitFormModal = ({ show, onClose, onSave, editRecord, employeeId }) => {
               <input type="url" name="addressLink" value={form.addressLink} onChange={handleChange}
                 placeholder="https://maps.google.com/..." className={inp} />
             </div>
+
+            {/* ✅ NEW FIELD: Visited Count */}
+            <div>
+              <label className={lbl}>Visited <span className="text-red-500">*</span></label>
+              <select name="visited" value={form.visited} onChange={handleChange} className={inp}>
+                <option value="1">1 - First Visit</option>
+                <option value="2">2 - Second Visit</option>
+                <option value="3">3 - Third Visit</option>
+                <option value="4">4 - Fourth Visit</option>
+                <option value="5">5+ - Multiple Visits</option>
+              </select>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={lbl}>Status</label>
@@ -267,7 +290,7 @@ const EmployeeVisitsData = () => {
 
   // ── View Targets modal ────────────────────────────────────────────────────────
   const [showTargetModal, setShowTargetModal] = useState(false);
-  const [targetData, setTargetData]           = useState(null);   // { target, month }
+  const [targetData, setTargetData]           = useState(null);
   const [targetLoading, setTargetLoading]     = useState(false);
   const [viewTargetMonth, setViewTargetMonth] = useState('');
 
@@ -323,7 +346,6 @@ const EmployeeVisitsData = () => {
     } catch { return selectedMonth; }
   };
 
-  // Fetch the target for the active month
   const fetchMyTarget = useCallback(async (month) => {
     if (!employeeId) return;
     setTargetLoading(true);
@@ -340,7 +362,6 @@ const EmployeeVisitsData = () => {
     }
   }, [employeeId]);
 
-  // Calculate visit counts for the selected target month
   const getVisitsForMonth = (month) => {
     if (!month) return [];
     return visits.filter(v => new Date(v.createdAt).toISOString().slice(0, 7) === month);
@@ -496,7 +517,7 @@ const EmployeeVisitsData = () => {
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 text-xs font-bold">{error}</div>
         )}
 
-        {/* Table */}
+        {/* ── Visit Records Card ── */}
         <div className="emp-dash__card">
           <div className="emp-dash__card-header">
             <div>
@@ -504,18 +525,18 @@ const EmployeeVisitsData = () => {
               <p className="emp-dash__card-desc">All your visit and call records for <strong>{getPeriodLabel()}</strong>.</p>
             </div>
           </div>
-          <div className="emp-dash__table-wrap employee-visits-table-wrap overflow-x-auto">
-            <div className="sm:hidden px-4 pt-3 text-[11px] font-medium text-gray-500">
-              Swipe left or right to see the full table.
-            </div>
+
+          {/* ── Desktop Table (hidden on mobile) ── */}
+          <div className="hidden sm:block emp-dash__table-wrap overflow-x-auto">
             <table className="emp-dash__table employee-visits-table">
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th>S.No</th>
                   <th><div className="flex items-center gap-1"><FaCalendarAlt size={10} />Date</div></th>
                   <th>Center Name</th>
                   <th>Client &amp; Contact</th>
                   <th>Address</th>
+                  <th style={{ textAlign:'center' }}>Visited</th>  {/* ✅ NEW COLUMN */}
                   <th style={{ textAlign:'center' }}>Status</th>
                   <th>Remarks</th>
                   <th style={{ textAlign:'center' }}>Actions</th>
@@ -523,14 +544,14 @@ const EmployeeVisitsData = () => {
               </thead>
               <tbody>
                 {loading && visits.length === 0 ? (
-                  <tr><td colSpan="8" className="py-10 text-center">
+                  <tr><td colSpan="9" className="py-10 text-center">
                     <div className="flex flex-col items-center justify-center gap-3">
                       <div className="emp-dash__spinner"></div>
                       <span className="text-sm font-medium text-gray-500">Loading visit records…</span>
                     </div>
                   </td></tr>
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan="8" className="py-14 text-center">
+                  <tr><td colSpan="9" className="py-14 text-center">
                     <div className="flex flex-col items-center justify-center gap-3">
                       <FaPhone className="text-5xl text-gray-200" />
                       <p className="text-gray-500 font-semibold text-sm">No records found</p>
@@ -590,6 +611,11 @@ const EmployeeVisitsData = () => {
                             )}
                           </div>
                         </td>
+                        <td className="text-center">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
+                            {rec.visited || '1'}×
+                          </span>
+                        </td>
                         <td className="text-center whitespace-nowrap"><StatusBadge status={rec.status} /></td>
                         <td><span className="text-xs text-gray-500 line-clamp-2 max-w-[160px]" title={rec.remarks}>{rec.remarks || '—'}</span></td>
                         <td className="text-center whitespace-nowrap">
@@ -611,13 +637,151 @@ const EmployeeVisitsData = () => {
               </tbody>
             </table>
           </div>
+
+          {/* ── Mobile Card List (visible only on small screens) ── */}
+          <div className="block sm:hidden">
+            {loading && visits.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-10">
+                <div className="emp-dash__spinner"></div>
+                <span className="text-sm font-medium text-gray-500">Loading visit records…</span>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-12 px-4 text-center">
+                <FaPhone className="text-5xl text-gray-200" />
+                <p className="text-gray-500 font-semibold text-sm">No records found</p>
+                <p className="text-gray-400 text-xs">Try adjusting filters or add a new visit record.</p>
+                <button onClick={() => { setEditRecord(null); setShowForm(true); }}
+                  className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm">
+                  <FaPlus size={10} />Add Visit
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {filtered.map((rec, idx) => (
+                  <div key={rec._id} style={{
+                    padding: '1rem',
+                    borderBottom: idx < filtered.length - 1 ? '1px solid #f0f1f3' : 'none',
+                    background: '#fff',
+                  }}>
+                    {/* Row 1: Serial + Date + Status + Actions */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{
+                          minWidth: '1.5rem', height: '1.5rem', borderRadius: '6px',
+                          background: '#f3f4f6', color: '#6b7280',
+                          fontSize: '0.65rem', fontWeight: 700,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>{idx + 1}</span>
+                        <div>
+                          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>
+                            {rec.centerName}
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.1rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <FaCalendarAlt style={{ fontSize: '0.6rem' }} />
+                            {new Date(rec.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
+                          {rec.visited || '1'}×
+                        </span>
+                        <StatusBadge status={rec.status} />
+                        <button onClick={() => { setEditRecord(rec); setShowForm(true); }}
+                          style={{
+                            width: '1.75rem', height: '1.75rem', borderRadius: '6px',
+                            background: '#eff6ff', color: '#2563eb', border: 'none',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                          }} title="Edit">
+                          <FaEdit size={11} />
+                        </button>
+                        <button onClick={() => { setDeleteId(rec._id); setShowDelete(true); }}
+                          style={{
+                            width: '1.75rem', height: '1.75rem', borderRadius: '6px',
+                            background: '#fff1f2', color: '#ef4444', border: 'none',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                          }} title="Delete">
+                          <FaTrash size={11} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Row 2: Client & Contact */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      background: '#f9fafb', borderRadius: '8px', padding: '0.45rem 0.65rem',
+                      marginBottom: '0.5rem',
+                    }}>
+                      <div style={{
+                        width: '1.6rem', height: '1.6rem', borderRadius: '6px',
+                        background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      }}>
+                        <FaPhone style={{ color: '#2563eb', fontSize: '0.65rem' }} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#111827' }}>{rec.clientName}</div>
+                        <div style={{ fontSize: '0.68rem', color: '#6b7280' }}>{rec.contact}</div>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Address + Map links */}
+                    {(rec.address || rec.addressLink || rec.employeeLocation?.mapsLink) && (
+                      <div style={{
+                        background: '#f0fdf4', borderRadius: '8px', padding: '0.4rem 0.65rem',
+                        marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem',
+                      }}>
+                        <FaMapMarkerAlt style={{ color: '#16a34a', fontSize: '0.7rem', marginTop: '0.1rem', flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {rec.address && (
+                            <div style={{ fontSize: '0.72rem', color: '#374151', wordBreak: 'break-word' }}>{rec.address}</div>
+                          )}
+                          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
+                            {rec.addressLink && (
+                              <a href={rec.addressLink} target="_blank" rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                                style={{ fontSize: '0.68rem', color: '#2563eb', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <FaLink size={9} /> Client Map
+                              </a>
+                            )}
+                            {rec.employeeLocation?.mapsLink && (
+                              <a href={rec.employeeLocation.mapsLink} target="_blank" rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                                style={{ fontSize: '0.68rem', color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <FaMapMarkerAlt size={9} /> My Location
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Row 4: Remarks */}
+                    {rec.remarks && (
+                      <div style={{
+                        fontSize: '0.7rem', color: '#6b7280',
+                        padding: '0.35rem 0.65rem',
+                        background: '#fafafa', borderRadius: '6px',
+                        border: '1px solid #f0f1f3',
+                        wordBreak: 'break-word',
+                      }}>
+                        <span style={{ fontWeight: 600, color: '#9ca3af', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Remarks: </span>
+                        {rec.remarks}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer summary */}
           {!loading && filtered.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 bg-gray-50/50">
+            <div className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 border-t border-gray-100 bg-gray-50/50 gap-2">
               <p className="text-xs font-semibold text-gray-500">
                 Showing <span className="text-gray-900 font-bold">{filtered.length}</span> records for{' '}
                 <span className="text-blue-600 font-bold">{getPeriodLabel()}</span>
               </p>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
                 <span>Leads: <strong className="text-green-600">{filtered.filter(v => v.status==='Lead').length}</strong></span>
                 <span>Pending: <strong className="text-amber-600">{filtered.filter(v => v.status==='Pending').length}</strong></span>
                 <span>Rejected: <strong className="text-red-500">{filtered.filter(v => v.status==='Rejected').length}</strong></span>
@@ -746,7 +910,7 @@ const EmployeeVisitsData = () => {
                         </div>
                       </div>
 
-                      {/* Progress Bar (visits vs target) */}
+                      {/* Progress Bar */}
                       {targetData && (
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
@@ -776,7 +940,6 @@ const EmployeeVisitsData = () => {
 
                       {/* Stats Grid */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.7rem' }}>
-                        {/* Total Visits */}
                         <div style={{
                           background: '#eff6ff', borderRadius: '12px', padding: '0.85rem 1rem',
                           display: 'flex', alignItems: 'center', gap: '0.65rem',
@@ -793,7 +956,6 @@ const EmployeeVisitsData = () => {
                           </div>
                         </div>
 
-                        {/* Leads */}
                         <div style={{
                           background: '#f0fdf4', borderRadius: '12px', padding: '0.85rem 1rem',
                           display: 'flex', alignItems: 'center', gap: '0.65rem',
@@ -810,7 +972,6 @@ const EmployeeVisitsData = () => {
                           </div>
                         </div>
 
-                        {/* Rejected */}
                         <div style={{
                           background: '#fff1f2', borderRadius: '12px', padding: '0.85rem 1rem',
                           display: 'flex', alignItems: 'center', gap: '0.65rem',
@@ -827,7 +988,6 @@ const EmployeeVisitsData = () => {
                           </div>
                         </div>
 
-                        {/* Pending */}
                         <div style={{
                           background: '#fffbeb', borderRadius: '12px', padding: '0.85rem 1rem',
                           display: 'flex', alignItems: 'center', gap: '0.65rem',
@@ -845,7 +1005,6 @@ const EmployeeVisitsData = () => {
                         </div>
                       </div>
 
-                      {/* Month Note */}
                       <div style={{
                         background: '#f8fafc', borderRadius: '10px', padding: '0.6rem 0.9rem',
                         fontSize: '0.72rem', color: '#64748b', textAlign: 'center',

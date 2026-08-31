@@ -712,7 +712,11 @@ const AdminCompOffRequests = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [monthFilter, setMonthFilter] = useState("");
+  // ✅ Month filter - default to current month
+  const [monthFilter, setMonthFilter] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
     const saved = localStorage.getItem('compOffRequests_itemsPerPage');
@@ -737,12 +741,15 @@ const AdminCompOffRequests = () => {
       if (statusFilter) {
         url += `&status=${statusFilter}`;
       }
+      // ✅ Always send month filter with selected month
       if (monthFilter) {
         url += `&month=${monthFilter}`;
       }
       if (searchTerm) {
         url += `&search=${searchTerm}`;
       }
+
+      console.log("Fetching URL:", url);
 
       const response = await axios.get(url);
       
@@ -795,7 +802,9 @@ const AdminCompOffRequests = () => {
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("");
-    setMonthFilter("");
+    // ✅ Reset to current month
+    const now = new Date();
+    setMonthFilter(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
     setCurrentPage(1);
     if (window.innerWidth < 640) {
       setShowMobileFilters(false);
@@ -963,6 +972,48 @@ const AdminCompOffRequests = () => {
     localStorage.setItem('compOffRequests_itemsPerPage', String(limit));
   };
 
+  // ✅ Check if any filter is active (excluding default month)
+  const getDefaultMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+  const isDefaultMonth = monthFilter === getDefaultMonth();
+  const hasActiveFilters = searchTerm || statusFilter || !isDefaultMonth;
+
+  // ✅ Get status label for display
+  const getStatusLabel = (status) => {
+    const labels = {
+      pending: '⏳ Pending',
+      approved: '✅ Approved',
+      rejected: '❌ Rejected'
+    };
+    return labels[status] || status;
+  };
+
+  // ✅ Format month for display
+  const formatMonthDisplay = (monthValue) => {
+    if (!monthValue) return '';
+    const [year, month] = monthValue.split('-');
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${monthNames[parseInt(month) - 1]} ${year}`;
+  };
+
+  // ✅ Get filter summary for display
+  const getFilterSummary = () => {
+    const parts = [];
+    if (searchTerm) {
+      parts.push(`Search: "${searchTerm}"`);
+    }
+    if (statusFilter) {
+      parts.push(`Status: ${getStatusLabel(statusFilter)}`);
+    }
+    // ✅ Always show month (it's always selected)
+    if (monthFilter) {
+      parts.push(`Month: ${formatMonthDisplay(monthFilter)}`);
+    }
+    return parts;
+  };
+
   if (loading && requests.length === 0) {
     return (
       <div className="emp-dash">
@@ -1004,23 +1055,161 @@ const AdminCompOffRequests = () => {
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
-        <div className="emp-dash__header">
+        {/* Header - Title on Left, Date and Filters on Right */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
               Comp-off <span>Requests</span>
             </h1>
           </div>
-          <div className="emp-dash__date-pill">
-            <FiCalendar />
-            <span>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })}
+
+          {/* Right side: Date + All Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative min-w-[130px]">
+              <span className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <FaSearch className="text-[10px]" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={handleStatusChange}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+
+            {/* Month Filter - default current month */}
+            <input
+              type="month"
+              value={monthFilter}
+              onChange={handleMonthChange}
+              className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
+
+            {/* Refresh Button */}
+            <button
+              onClick={fetchRequests}
+              disabled={loading}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FiRefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Header - Only Title and Date */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            Comp-off <span className="text-indigo-600">Requests</span>
+          </h1>
+        </div>
+
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? <FiChevronUp className="text-gray-400" /> : <FiChevronDown className="text-gray-400" />}
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{requests.length}</strong> requests
             </span>
           </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-sm" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search employee name, ID, or reason..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={handleStatusChange}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  <option value="">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={monthFilter}
+                  onChange={handleMonthChange}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={fetchRequests}
+                    disabled={loading}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {!loading && (
@@ -1083,101 +1272,26 @@ const AdminCompOffRequests = () => {
           </div>
         )}
 
-        <div className="emp-dash__card">
-          <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+        {/* ✅ Active Filter Indicator - Shows current filters */}
+        <div className="mb-4 flex flex-wrap items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs">
+          <span className="font-semibold text-blue-700">📅 Current Filters:</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {getFilterSummary().map((item, index) => (
+              <span key={index} className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-medium">
+                {item}
+              </span>
+            ))}
+          </div>
+          {hasActiveFilters && (
+            <button 
+              onClick={clearFilters}
+              className="ml-auto text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
             >
-              <FiFilter className="text-blue-600" />
-              Filters
-              {showMobileFilters ? <FiChevronUp className="ml-1" /> : <FiChevronDown className="ml-1" />}
+              <FiTrash2 className="w-3 h-3" />
+              Clear All
             </button>
-            <span className="text-xs text-gray-400">{requests.length} requests</span>
-          </div>
-
-          <div className={`${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
-            <div className="emp-dash__card-body bg-gray-50/50">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative flex-1 min-w-[180px]">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <FaSearch className="text-xs" />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search employee name, ID, or reason..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
-
-                <select
-                  value={statusFilter}
-                  onChange={handleStatusChange}
-                  className="h-8 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                >
-                  <option value="">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-
-                <input
-                  type="month"
-                  value={monthFilter}
-                  onChange={handleMonthChange}
-                  className="h-8 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-
-                <button
-                  onClick={fetchRequests}
-                  disabled={loading}
-                  className="h-8 px-3 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-1.5"
-                >
-                  <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-                  Refresh
-                </button>
-
-                {(searchTerm || statusFilter || monthFilter) && (
-                  <button
-                    onClick={clearFilters}
-                    className="h-8 px-3 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-1.5"
-                  >
-                    <FiTrash2 className="w-3.5 h-3.5" /> Clear
-                  </button>
-                )}
-              </div>
-
-              {(searchTerm || statusFilter || monthFilter) && (
-                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-                  <span className="text-[10px] text-gray-500 font-medium">Active Filters:</span>
-                  {searchTerm && (
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
-                      &quot;{searchTerm}&quot;
-                    </span>
-                  )}
-                  {statusFilter && (
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
-                      statusFilter === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                      statusFilter === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
-                      'bg-red-50 text-red-700 border-red-200'
-                    }`}>
-                      {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-                    </span>
-                  )}
-                  {monthFilter && (
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[9px] font-semibold border border-blue-200">
-                      {new Date(`${monthFilter}-01`).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+          )}
         </div>
-
-        <div className="mt-6" />
 
         {loading && (
           <div className="flex items-center justify-center py-6">
@@ -1195,9 +1309,9 @@ const AdminCompOffRequests = () => {
           <div className="p-8 text-center bg-white rounded-lg shadow-md emp-dash__card">
             <p className="text-lg text-gray-500">No comp-off requests found</p>
             <p className="mt-2 text-sm text-gray-500">
-              {(searchTerm || statusFilter || monthFilter) ? 'Try clearing filters' : 'No requests submitted yet'}
+              {hasActiveFilters ? 'Try clearing filters' : 'No requests submitted yet'}
             </p>
-            {(searchTerm || statusFilter || monthFilter) && (
+            {hasActiveFilters && (
               <button
                 onClick={clearFilters}
                 className="mt-3 px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition"

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { FaEye, FaEyeSlash, FaUser, FaSmile, FaTimes, FaArrowRight, FaCamera, FaSpinner, FaCheck, FaRedo, FaExclamationTriangle, FaVolumeUp, FaMapMarkerAlt, FaApple } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaUser, FaSmile, FaTimes, FaArrowRight, FaCamera, FaSpinner, FaCheck, FaRedo, FaExclamationTriangle, FaVolumeUp } from "react-icons/fa";
 import { BsCamera } from "react-icons/bs";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
@@ -170,10 +170,7 @@ const LoginPage = () => {
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [isSpeechSupported, setIsSpeechSupported] = useState(true);
-  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [showIOSGuide, setShowIOSGuide] = useState(false);
-
+  
   // Employee data
   const [isImageCaptureAllowed, setIsImageCaptureAllowed] = useState(false);
   const [employeeId, setEmployeeId] = useState('');
@@ -217,15 +214,86 @@ const LoginPage = () => {
   const redirectTimerRef = useRef(null);
   const welcomeTimerRef = useRef(null);
 
-  // ─── Detect iOS ───
-  useEffect(() => {
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    setIsIOS(isIOSDevice);
-    console.log('Is iOS:', isIOSDevice);
-  }, []);
+  // ─── CLEAR ALL USER DATA ───
+  const clearAllUserData = () => {
+    // 1. Cancel all speech
+    if ('speechSynthesis' in window) {
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+    }
+    
+    // 2. Clear all timeouts
+    if (speechTimeoutRef.current) {
+      clearTimeout(speechTimeoutRef.current);
+      speechTimeoutRef.current = null;
+    }
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
+    }
+    if (welcomeTimerRef.current) {
+      clearTimeout(welcomeTimerRef.current);
+      welcomeTimerRef.current = null;
+    }
+    
+    // 3. Clear ALL localStorage items
+    const allKeys = Object.keys(localStorage);
+    const keysToKeep = ['_persist']; // Keep only redux persist if needed
+    allKeys.forEach(key => {
+      if (!keysToKeep.includes(key)) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // 4. Clear sessionStorage
+    try {
+      sessionStorage.clear();
+    } catch (e) {}
+    
+    // 5. Clear cookies
+    document.cookie.split(";").forEach(function(c) { 
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+    
+    // 6. Reset ALL state variables
+    setEmployeeId('');
+    setEmployeeEmail('');
+    setEmployeeName('');
+    setEmployeeDepartment('');
+    setIsImageCaptureAllowed(false);
+    setCheckedIn(false);
+    setAssignedLocation(null);
+    setDistance(null);
+    setPosition(null);
+    setUserName('');
+    setUserRole('');
+    setShowWelcome(false);
+    setShowSuccessPopup(false);
+    setShowReasonPopup(false);
+    setShowCameraModal(false);
+    setCapturedImage(null);
+    setError('');
+    setToastMessage(null);
+    setIsLoading(false);
+    setIsSpeaking(false);
+    setIsCapturing(false);
+    setIsCameraReady(false);
+    setSubmitting(false);
+    setReason('');
+    setTempReason('');
+    setPendingAction(null);
+    setIsReasonProcessing(false);
+    setCameraError(null);
+    
+    // 7. Reset speech synthesis
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.getVoices();
+      } catch (e) {}
+    }
+  };
 
-  // ─── Fetch Location for iOS ───
+  // ─── Fetch Location ───
   const fetchLocation = () => {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
@@ -233,90 +301,24 @@ const LoginPage = () => {
         resolve({ lat: null, lng: null });
         return;
       }
-
-      // iOS specific options
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 0
-      };
-
-      console.log('Fetching location...');
-
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          console.log('Location fetched:', position.coords);
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           setLatitude(lat);
           setLongitude(lng);
           setLocationFetched(true);
           setLocationError('');
-          setShowIOSGuide(false);
           resolve({ lat, lng });
         },
         (error) => {
-          console.log('Location Error:', error.code, error.message);
-          let errorMsg = '';
-          
-          if (error.code === 1) {
-            errorMsg = isIOS 
-              ? '📱 Please enable Location in iPhone Settings:\nSettings > Privacy > Location Services > [App Name] > While Using'
-              : 'Location permission denied. Please allow access.';
-            setShowIOSGuide(true);
-          } else if (error.code === 2) {
-            errorMsg = '📍 Location unavailable. Please check GPS.';
-          } else if (error.code === 3) {
-            errorMsg = '⏳ Location timeout. Please try again.';
-          } else {
-            errorMsg = error.message;
-          }
-          
-          setLocationError(errorMsg);
+          setLocationError(`Location denied: ${error.message}`);
           setLocationFetched(false);
           resolve({ lat: null, lng: null });
         },
-        options
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     });
-  };
-
-  // ─── Manual Location Fetch Button Handler ───
-  const handleFetchLocation = async () => {
-    setIsFetchingLocation(true);
-    setLocationError('');
-    setShowIOSGuide(false);
-    
-    try {
-      const result = await fetchLocation();
-      if (result.lat !== null && result.lng !== null) {
-        setToastMessage({ 
-          type: 'success', 
-          text: `📍 ${result.lat.toFixed(4)}, ${result.lng.toFixed(4)}` 
-        });
-        setTimeout(() => setToastMessage(null), 3000);
-      } else if (isIOS && !result.lat) {
-        setToastMessage({ 
-          type: 'error', 
-          text: '📱 Please enable Location in Settings > Privacy > Location Services' 
-        });
-        setTimeout(() => setToastMessage(null), 5000);
-      }
-    } catch (err) {
-      setLocationError('Failed to fetch location');
-    } finally {
-      setIsFetchingLocation(false);
-    }
-  };
-
-  // ─── Open iOS Settings Guide ───
-  const openIOSSettingsGuide = () => {
-    setShowIOSGuide(true);
-    // For iOS, open settings
-    if (isIOS) {
-      // This works on iOS Safari
-      window.location.href = 'app-settings:';
-    }
   };
 
   // ─── Get Current Location ───
@@ -326,17 +328,6 @@ const LoginPage = () => {
         reject(new Error("Geolocation not supported"));
         return;
       }
-
-      const options = isIOS ? {
-        enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 0
-      } : {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      };
-
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -355,7 +346,7 @@ const LoginPage = () => {
         (err) => {
           reject(new Error("Error getting location: " + err.message));
         },
-        options
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     });
   };
@@ -555,20 +546,20 @@ const LoginPage = () => {
       setSuccessMessage("✅ Check-in Successful with Photo! 📸");
       setShowSuccessPopup(true);
       setCheckedIn(true);
-
+      
       playSuccessSound();
       setTimeout(async () => {
         setIsSpeaking(true);
         await speakCheckInSuccess(employeeName);
         setIsSpeaking(false);
       }, 500);
-
+      
       setShowWelcome(false);
-
+      
       redirectTimerRef.current = setTimeout(() => {
         navigate('/employeedashboard', { replace: true });
       }, 2000);
-
+      
     } catch (err) {
       alert(err.response?.data?.message || "Check-in failed.");
       setIsCapturing(false);
@@ -606,7 +597,7 @@ const LoginPage = () => {
   // ─── Open Camera for Attendance ───
   const handleOpenCameraForAttendance = async () => {
     setShowWelcome(false);
-
+    
     try {
       await getCurrentLocation();
     } catch (err) {
@@ -676,6 +667,7 @@ const LoginPage = () => {
     setShowWelcome(false);
     if (speechTimeoutRef.current) {
       clearTimeout(speechTimeoutRef.current);
+      speechTimeoutRef.current = null;
     }
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -693,10 +685,14 @@ const LoginPage = () => {
   // ─── Check if attendance prompt should be shown ───
   const shouldShowAttendancePrompt = () => {
     const hour = new Date().getHours();
-    if (hour >= 5 && !checkedIn) {
+    if (hour >= 5 && hour <= 21 && !checkedIn) {
       const role = localStorage.getItem('userRole');
       if (role === 'employee') {
-        return true;
+        const storedEmpId = localStorage.getItem('employeeId');
+        // ✅ IMPORTANT: Check if stored employeeId matches current employeeId
+        if (storedEmpId && storedEmpId === employeeId && employeeId) {
+          return true;
+        }
       }
     }
     return false;
@@ -709,10 +705,7 @@ const LoginPage = () => {
     const emailParam = urlParams.get('email');
     const passwordParam = urlParams.get('password');
 
-    // Auto fetch location on page load with delay for iOS
-    setTimeout(() => {
-      fetchLocation();
-    }, isIOS ? 1500 : 100);
+    fetchLocation();
 
     if (autoLogin === 'true' && emailParam && passwordParam) {
       setEmail(emailParam);
@@ -723,11 +716,34 @@ const LoginPage = () => {
         }
       }, 1000);
     }
-  }, [location, isIOS]);
+    
+    // ✅ Cleanup on unmount
+    return () => {
+      if (speechTimeoutRef.current) {
+        clearTimeout(speechTimeoutRef.current);
+        speechTimeoutRef.current = null;
+      }
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = null;
+      }
+      if (welcomeTimerRef.current) {
+        clearTimeout(welcomeTimerRef.current);
+        welcomeTimerRef.current = null;
+      }
+      if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch (e) {}
+      }
+    };
+  }, [location]);
 
   // ─── Auto close welcome popup after 5 seconds ───
   useEffect(() => {
     if (showWelcome) {
+      if (welcomeTimerRef.current) {
+        clearTimeout(welcomeTimerRef.current);
+        welcomeTimerRef.current = null;
+      }
       welcomeTimerRef.current = setTimeout(() => {
         goToDashboard();
       }, 5000);
@@ -735,6 +751,7 @@ const LoginPage = () => {
     return () => {
       if (welcomeTimerRef.current) {
         clearTimeout(welcomeTimerRef.current);
+        welcomeTimerRef.current = null;
       }
     };
   }, [showWelcome]);
@@ -757,51 +774,31 @@ const LoginPage = () => {
     return () => {
       document.removeEventListener('click', resumeSpeech);
       document.removeEventListener('touchstart', resumeSpeech);
-      if (speechTimeoutRef.current) {
-        clearTimeout(speechTimeoutRef.current);
-      }
-      if (redirectTimerRef.current) {
-        clearTimeout(redirectTimerRef.current);
-      }
-      if (welcomeTimerRef.current) {
-        clearTimeout(welcomeTimerRef.current);
-      }
-      if ('speechSynthesis' in window) {
-        try { window.speechSynthesis.cancel(); } catch (e) {}
-      }
     };
   }, []);
 
   // ─── Login Submit ───
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    
+    // ✅ CRITICAL: Clear all old user data BEFORE login
+    clearAllUserData();
+    
+    // ✅ Reset error and loading
     setError('');
     setIsLoading(true);
 
+    // Get location
     let lat = latitude;
     let lng = longitude;
-    
-    // If location not fetched yet or null, try to fetch again
     if (!locationFetched || lat === null || lng === null) {
       const locationResult = await fetchLocation();
       lat = locationResult.lat;
       lng = locationResult.lng;
     }
 
-    // If still no location, set error and stop
-    if (lat === null || lng === null) {
-      if (isIOS) {
-        setError('📱 Location not available. Please enable in Settings > Privacy > Location Services');
-        setShowIOSGuide(true);
-      } else {
-        setError('❌ Location not available. Please click "📍 Get Location" button.');
-      }
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // ✅ Admin Login
+      // ─── TRY ADMIN LOGIN ───
       const adminResponse = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -812,6 +809,8 @@ const LoginPage = () => {
       if (adminResponse.ok) {
         const admin = adminData.admin || {};
         const name = admin.name || 'Admin';
+        
+        // ✅ Set admin data in localStorage
         localStorage.setItem('adminToken', adminData.token);
         localStorage.setItem('userRole', 'admin');
         localStorage.setItem('adminEmail', email);
@@ -819,19 +818,22 @@ const LoginPage = () => {
         localStorage.setItem('adminPassword', password);
         if (admin.id || admin._id) {
           localStorage.setItem('adminId', admin.id || admin._id);
+          localStorage.setItem('userId', admin.id || admin._id);
         }
-        localStorage.setItem('userData', JSON.stringify({ name, email, role: 'admin' }));
         localStorage.setItem('userData', JSON.stringify({ name, email, role: 'admin', password }));
+        
+        // ✅ Update state for admin
         setUserName(name);
         setUserRole('Admin');
         setIsImageCaptureAllowed(false);
-
+        setEmployeeId(''); // Clear employee ID for admin
+        
         setIsLoading(false);
         navigate('/dashboard', { replace: true });
         return;
       }
 
-      // ✅ Employee Login
+      // ─── TRY EMPLOYEE LOGIN ───
       const empResponse = await fetch(`${API_BASE_URL}/employees/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -848,63 +850,59 @@ const LoginPage = () => {
         const dept = employee.department || '';
         const isAllowed = employee.isAllowedImageCapturedAttendance === true || employee.isAllowedImageCapturedAttendance === "true";
 
+        // ✅ Set employee data in localStorage
+        localStorage.setItem('employeeId', empId);
+        localStorage.setItem('employeeEmail', empEmail);
+        localStorage.setItem('employeeName', name);
+        localStorage.setItem('employeeDepartment', dept);
+        localStorage.setItem('userRole', 'employee');
+        localStorage.setItem('isAllowedImageCapturedAttendance', String(isAllowed));
+        localStorage.setItem('employeePassword', password);
+        if (empData.token) localStorage.setItem('token', empData.token);
+        
+        const userData = {
+          _id: employee.id || employee._id,
+          name, email: empEmail, employeeId: empId, role, department: dept,
+          permissions: employee.permissions || [],
+          isAllowedImageCapturedAttendance: isAllowed,
+          lastCheckInLocation: employee.lastCheckInLocation || null
+        };
+        const userDataWithPass = { ...userData, password };
+        localStorage.setItem('userData', JSON.stringify(userDataWithPass));
+        localStorage.setItem('employeeData', JSON.stringify(userDataWithPass));
+        localStorage.setItem('userId', employee.id || employee._id);
+
+        // ✅ Update state for employee
         setEmployeeId(empId);
         setEmployeeEmail(empEmail);
         setEmployeeName(name);
         setEmployeeDepartment(dept);
         setIsImageCaptureAllowed(isAllowed);
 
-        // ✅ Check if already checked in today
+        // ✅ Check if already checked in
         let isAlreadyCheckedIn = false;
         if (employee.lastCheckInLocation && employee.lastCheckInLocation.timestamp) {
           isAlreadyCheckedIn = isToday(employee.lastCheckInLocation.timestamp);
         }
-
-        // ✅ Also check from attendance API
         await fetchTodayAttendance(empId);
-
-        // ✅ If either says checked in, set checkedIn true
         if (isAlreadyCheckedIn) {
           setCheckedIn(true);
         }
-
         await fetchAssignedLocation(empId);
-
-        const userData = {
-          name, email: empEmail, employeeId: empId, role, department: dept,
-          permissions: employee.permissions || [],
-          isAllowedImageCapturedAttendance: isAllowed,
-          lastCheckInLocation: employee.lastCheckInLocation || null
-        };
-        localStorage.setItem("userData", JSON.stringify(userData));
-        localStorage.setItem("employeeData", JSON.stringify(userData));
-        const userDataWithPass = { ...userData, password };
-        localStorage.setItem("userData", JSON.stringify(userDataWithPass));
-        localStorage.setItem("employeeData", JSON.stringify(userDataWithPass));
-        localStorage.setItem("employeeId", empId);
-        localStorage.setItem("employeeEmail", empEmail);
-        localStorage.setItem("employeeName", name);
-        localStorage.setItem("employeeDepartment", dept);
-        localStorage.setItem('userRole', 'employee');
-        localStorage.setItem("isAllowedImageCapturedAttendance", String(isAllowed));
-        localStorage.setItem("employeePassword", password);
-        if (empData.token) localStorage.setItem("token", empData.token);
 
         setUserName(name);
         setUserRole(role);
 
         setIsLoading(false);
 
-        // ✅ WELCOME POPUP HAMESHA DIKHEGA!
+        // ✅ Show welcome popup
         setShowWelcome(true);
-
-        // ✅ Voice welcome
         await speakWelcome(name, role);
-
+        
         return;
       }
 
-      // ❌ CLIENT LOGIN REMOVED - No longer supported
+      // ─── LOGIN FAILED ───
       if (empData && empData.message) {
         throw new Error(empData.message);
       } else {
@@ -922,61 +920,10 @@ const LoginPage = () => {
 
       {/* ─── TOAST ─── */}
       {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up max-w-[90vw]">
-          <div className={`px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-sm text-white font-medium text-sm flex items-center gap-2.5 border border-white/20 ${
-            toastMessage.type === "success" ? "bg-gradient-to-r from-green-500 to-emerald-500" : 
-            toastMessage.type === "info" ? "bg-gradient-to-r from-blue-500 to-indigo-500" :
-            "bg-gradient-to-r from-red-500 to-rose-500"
-          }`}>
-            <span className="text-lg">{toastMessage.type === "success" ? "✅" : toastMessage.type === "info" ? "ℹ️" : "❌"}</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
+          <div className={`px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-sm text-white font-medium text-sm flex items-center gap-2.5 border border-white/20 ${toastMessage.type === "success" ? "bg-gradient-to-r from-green-500 to-emerald-500" : "bg-gradient-to-r from-red-500 to-rose-500"}`}>
+            <span className="text-lg">{toastMessage.type === "success" ? "✅" : "❌"}</span>
             <span>{toastMessage.text}</span>
-          </div>
-        </div>
-      )}
-
-      {/* ─── IOS GUIDE POPUP ─── */}
-      {showIOSGuide && isIOS && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 transform animate-scale-up border border-blue-200/50">
-            <div className="text-center">
-              <div className="flex justify-center mb-3">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
-                  <div className="relative w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30">
-                    <FaApple className="text-3xl text-white" />
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900">📱 Enable Location for iPhone</h3>
-              <p className="text-sm text-gray-600 mt-2">
-                To use this app, please enable location services:
-              </p>
-              <div className="mt-4 text-left bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <p className="text-sm font-medium text-gray-800">Steps:</p>
-                <ol className="text-xs text-gray-600 mt-2 space-y-2 list-decimal list-inside">
-                  <li>Open <strong>Settings</strong> app</li>
-                  <li>Go to <strong>Privacy & Security</strong></li>
-                  <li>Tap <strong>Location Services</strong></li>
-                  <li>Make sure <strong>Location Services</strong> is <span className="text-green-600 font-bold">ON</span></li>
-                  <li>Find this app and select <strong>"While Using the App"</strong></li>
-                  <li>Refresh this page and try again</li>
-                </ol>
-              </div>
-              <div className="mt-4 flex gap-3">
-                <button
-                  onClick={() => setShowIOSGuide(false)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleFetchLocation}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-lg shadow-blue-500/30 transition-all duration-200"
-                >
-                  🔄 Try Again
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -1193,72 +1140,31 @@ const LoginPage = () => {
       {/* ─── HIDDEN CANVAS ─── */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* ─── LOCATION BUTTON - Top Right, HAMESHA SHOW HOGA ─── */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2 flex-wrap justify-end max-w-[80vw]">
-        {/* ─── GET LOCATION BUTTON ─── */}
-        <button
-          onClick={handleFetchLocation}
-          disabled={isFetchingLocation}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 shadow-sm hover:shadow-md border ${
-            locationFetched && latitude !== null && longitude !== null
-              ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200'
-              : locationError
-              ? 'bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-200'
-              : 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200'
-          } ${isFetchingLocation ? 'opacity-70 cursor-not-allowed' : ''}`}
-        >
-          {isFetchingLocation ? (
-            <>
-              <FaSpinner className="animate-spin text-xs" />
-              <span>Fetching...</span>
-            </>
-          ) : (
-            <>
-              <FaMapMarkerAlt className="text-xs" />
-              <span>📍 Get Location</span>
-            </>
-          )}
-        </button>
-
-        {/* ─── COORDINATES DISPLAY ─── */}
-        <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-mono font-medium border ${
+      {/* ─── LOCATION STATUS ─── */}
+      <div className="fixed top-4 right-4 z-50">
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
           locationFetched && latitude !== null && longitude !== null
-            ? 'bg-green-50 border-green-200 text-green-700'
+            ? 'bg-green-100 text-green-700 border border-green-200'
             : locationError
-            ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
-            : 'bg-gray-50 border-gray-200 text-gray-500'
+            ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+            : 'bg-gray-100 text-gray-600 border border-gray-200'
         }`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${
+          <span className={`w-2 h-2 rounded-full ${
             locationFetched && latitude !== null && longitude !== null
               ? 'bg-green-500 animate-pulse'
               : locationError
               ? 'bg-yellow-500'
               : 'bg-gray-400'
           }`}></span>
-          {locationFetched && latitude !== null && longitude !== null ? (
-            <span>{latitude.toFixed(4)}, {longitude.toFixed(4)}</span>
-          ) : locationError ? (
-            <span className="max-w-[150px] truncate" title={locationError}>
-              {isIOS ? '📱 Enable in Settings' : locationError}
-            </span>
-          ) : (
-            <span>⏳ Fetching...</span>
-          )}
+          {locationFetched && latitude !== null && longitude !== null
+            ? `📍 ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+            : locationError
+            ? '⚠️ Location off'
+            : '⏳ Fetching location...'}
         </div>
-
-        {/* ─── iOS Guide Button ─── */}
-        {isIOS && locationError && (
-          <button
-            onClick={() => setShowIOSGuide(true)}
-            className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200 transition-all"
-          >
-            <FaApple className="text-xs" />
-            Help
-          </button>
-        )}
       </div>
 
-      {/* ─── WELCOME POPUP ─── ✅ HAMESHA DIKHEGA! */}
+      {/* ─── WELCOME POPUP ─── */}
       {showWelcome && (
         <div 
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-md animate-fadeIn" 
@@ -1312,7 +1218,7 @@ const LoginPage = () => {
                 </div>
               )}
 
-              {/* ─── ATTENDANCE PROMPT ─── ✅ Show when NOT checked in */}
+              {/* ─── ATTENDANCE PROMPT ─── ✅ ONLY FOR CURRENT EMPLOYEE */}
               {!checkedIn && isImageCaptureAllowed && shouldShowAttendancePrompt() && (
                 <div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100">
                   <div className="flex items-center gap-3 mb-3">
@@ -1372,7 +1278,7 @@ const LoginPage = () => {
             <p className="mt-1 text-sm text-gray-500">Admin / Employee Login</p>
           </div>
 
-          {/* ✅ ERROR MESSAGE UI PE SHOW HOGA! */}
+          {/* ERROR MESSAGE */}
           {error && (
             <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
               ❌ {error}
@@ -1380,19 +1286,8 @@ const LoginPage = () => {
           )}
 
           {locationError && !error && (
-            <div className="p-3 mb-4 text-sm text-yellow-700 bg-yellow-50 rounded-lg border border-yellow-200 flex items-start gap-2">
-              <span className="mt-0.5">⚠️</span>
-              <div>
-                <span>{locationError}</span>
-                {isIOS && (
-                  <button
-                    onClick={() => setShowIOSGuide(true)}
-                    className="block text-xs font-medium text-blue-600 hover:text-blue-800 mt-1 underline"
-                  >
-                    📱 How to enable location
-                  </button>
-                )}
-              </div>
+            <div className="p-2 mb-3 text-xs text-yellow-700 bg-yellow-50 rounded-lg border border-yellow-200 flex items-center gap-2">
+              <span>⚠️</span> {locationError}
             </div>
           )}
 
@@ -1475,7 +1370,6 @@ const LoginPage = () => {
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-spin { animation: spin 0.8s linear infinite; }
         .z-60 { z-index: 60; }
-        .z-100 { z-index: 100; }
       `}</style>
     </div>
   );

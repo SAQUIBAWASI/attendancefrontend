@@ -1613,4 +1613,4 @@ const LetterHeadDesigner = () => {
   );
 };
 
-export default LetterHeadDesigner;
+export default LetterHeadDesigner

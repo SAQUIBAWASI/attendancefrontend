@@ -17,7 +17,9 @@ import {
   FiCoffee, 
   FiTrendingUp,
   FiChevronUp,
-  FiChevronDown
+  FiChevronDown,
+  FiUserMinus,
+  FiX
 } from "react-icons/fi";
 import companyStamp from "../Images/company-stamp-1780465131172.png";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +40,22 @@ const formatDateLocal = (date) => {
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
+};
+
+// ============================================
+// 📅 HELPER: Carry-Forward localStorage key
+// ============================================
+const getCarryForwardKey = (employeeId, month) =>
+  `payroll_carryForward_${employeeId}_${month}`;
+
+// ============================================
+// 📅 HELPER: Get previous month string (YYYY-MM)
+// ============================================
+const getPreviousMonth = (monthStr) => {
+  if (!monthStr) return '';
+  const [year, month] = monthStr.split('-').map(Number);
+  const d = new Date(year, month - 2, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };
 
 const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, employeeLeavesData, weekOffDay, shiftHours = 8, holidayDaysInMonth = 0) => {
@@ -222,6 +240,9 @@ const PayRoll = () => {
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
 
+  // ✅ Active/Inactive filter state (Default to 'active' as requested)
+  const [filterStatus, setFilterStatus] = useState("active");
+
   const [uniqueDepartments, setUniqueDepartments] = useState([]);
   const [uniqueDesignations, setUniqueDesignations] = useState([]);
 
@@ -245,7 +266,6 @@ const PayRoll = () => {
   const getSavedItemsPerPage = () => {
     try {
       const saved = localStorage.getItem('payroll_itemsPerPage');
-      console.log('🔍 PayRoll - Loading from localStorage:', saved);
       if (saved) {
         const parsed = parseInt(saved, 10);
         if (!isNaN(parsed) && [5, 10, 20, 50].includes(parsed)) {
@@ -261,10 +281,8 @@ const PayRoll = () => {
 
   const [itemsPerPage, setItemsPerPage] = useState(getSavedItemsPerPage);
 
-  // ─── FORCE RELOAD ON MOUNT ───
   useEffect(() => {
     const saved = getSavedItemsPerPage();
-    console.log('🔄 PayRoll - Mount - Setting itemsPerPage to:', saved);
     setItemsPerPage(saved);
   }, []);
 
@@ -618,7 +636,7 @@ const PayRoll = () => {
   };
 
   // ============================================
-  // 📅 fetchEmployeeAttendance Function - FIXED to fetch fresh data
+  // 📅 fetchEmployeeAttendance Function
   // ============================================
   const fetchEmployeeAttendance = async (employeeId, month) => {
     setAttendanceLoading(true);
@@ -663,7 +681,7 @@ const PayRoll = () => {
   };
 
   // ============================================
-  // 📅 handleRowClick Function - REFRESHES data on each open
+  // 📅 handleRowClick Function
   // ============================================
   const handleRowClick = async (employee) => {
     setSelectedEmployee(employee);
@@ -741,10 +759,10 @@ const PayRoll = () => {
       }
 
       const employeesForMonth = filterEmployeesByJoiningDate(employeesData, targetMonth);
-      const activeEmployees = employeesForMonth.filter(emp => !isEmployeeHidden(emp));
       
+      // ✅ Store ALL employees (active + inactive) in employeesMap
       const employeesMap = {};
-      activeEmployees.forEach(emp => {
+      employeesForMonth.forEach(emp => {
         employeesMap[emp.employeeId] = {
           salaryPerMonth: emp.salaryPerMonth || 0,
           shiftHours: emp.shiftHours || 8,
@@ -773,7 +791,9 @@ const PayRoll = () => {
           specialAllowance: emp.specialAllowance || 0,
           gmc: emp.gmc || emp.gmcAmount || 0,
           profTax: emp.ptax || emp.profTax || 0,
-          otherDeductions: emp.otherDeductions || 0
+          otherDeductions: emp.otherDeductions || 0,
+          status: emp.status || 'active',
+          isActive: emp.isActive !== false
         };
       });
       
@@ -782,7 +802,7 @@ const PayRoll = () => {
         setAllEmployees(employeesData);
       }
 
-      extractUniqueValues(activeEmployees);
+      extractUniqueValues(employeesForMonth);
 
       let holidayCount = 0;
       if (Array.isArray(holidaysData)) {
@@ -817,9 +837,14 @@ const PayRoll = () => {
       const daysInMonthValue = getDaysInMonth(targetMonth);
       const processedSalaries = [];
       
-      for (const emp of activeEmployees) {
+      // ✅ Process ALL employees (including inactive)
+      for (const emp of employeesForMonth) {
         const summary = summaryData.find(x => x.employeeId === emp.employeeId) || {};
         
+        const deptLower = (emp.department || '').toLowerCase().trim();
+        const isDevOrMarketing = deptLower.includes("developer") || deptLower.includes("digital marketing") || deptLower.includes("development");
+        const isSpecialDept = ["laboratory medicine", "nursing", "medical"].includes(deptLower) || deptLower.includes("laboratory") || deptLower.includes("nursing") || deptLower.includes("medical");
+
         let targetWeekOffCount = emp.weekOffPerMonth || 4;
         
         const employeeRole = summary.role || emp.role || emp.designation || '';
@@ -839,8 +864,14 @@ const PayRoll = () => {
           holidayCount
         );
 
-        const earnedWeekOffs = weekOffData.earnedWeekOffs;
-        const defaultWeekOffs = emp.weekOffPerMonth || 4;
+        let earnedWeekOffs = weekOffData.earnedWeekOffs;
+        let defaultWeekOffs = emp.weekOffPerMonth || 4;
+        if (isDevOrMarketing) {
+          defaultWeekOffs = weekOffData.totalWeekOffDays || 5;
+          earnedWeekOffs = defaultWeekOffs;
+        } else if (isSpecialDept) {
+          defaultWeekOffs = 4;
+        }
         const finalWeekOffs = Math.min(earnedWeekOffs, defaultWeekOffs);
 
         let salaryForMonth = emp.salaryPerMonth || 0;
@@ -875,11 +906,44 @@ const PayRoll = () => {
         const overTimeHours = summary.overTimeHours ?? 0;
         
         const compOffData = currentCompOffsMap[emp.employeeId] || { balance: 0 };
-        
+
+        // ============================================
+        // 📅 CARRY-FORWARD LOGIC
+        // ============================================
+        const expectedWorkingDays = daysInMonthValue - finalWeekOffs;
+        const actualDaysWorked = presentDaysCount + (halfDaysCount * 0.5);
+
+        const prevMonth = getPreviousMonth(targetMonth);
+        const prevCarryForward = prevMonth
+          ? parseFloat(localStorage.getItem(getCarryForwardKey(emp.employeeId, prevMonth)) || '0')
+          : 0;
+
+        const adjustedActualDays = actualDaysWorked + prevCarryForward;
+
+        let payablePresentDays, carryForwardDays;
+        if (adjustedActualDays > expectedWorkingDays) {
+          payablePresentDays = expectedWorkingDays;
+          carryForwardDays = Math.round((adjustedActualDays - expectedWorkingDays) * 100) / 100;
+        } else {
+          payablePresentDays = adjustedActualDays;
+          carryForwardDays = 0;
+        }
+
+        if (isSpecialDept) {
+          carryForwardDays = Math.round((carryForwardDays + holidayCount) * 100) / 100;
+        }
+
+        localStorage.setItem(getCarryForwardKey(emp.employeeId, targetMonth), String(carryForwardDays));
+
         let calculatedSalary = 0;
         if (salaryForMonth > 0 && daysInMonthValue > 0) {
-          const effectivePaidDays = presentDaysCount + (halfDaysCount * 0.5) + (includeWeekOffInSalary ? finalWeekOffs : 0) + holidayCount + compOffData.balance;
-          calculatedSalary = effectivePaidDays * dailyRate;
+          if (presentDaysCount === 0 && halfDaysCount === 0) {
+            calculatedSalary = 0;
+          } else {
+            const holidayAddition = isSpecialDept ? 0 : holidayCount;
+            const effectivePaidDays = payablePresentDays + (includeWeekOffInSalary ? finalWeekOffs : 0) + holidayAddition + compOffData.balance;
+            calculatedSalary = effectivePaidDays * dailyRate;
+          }
         }
 
         let totalOTHours = overTimeHours || 0;
@@ -940,6 +1004,9 @@ const PayRoll = () => {
           }
         }
 
+        // ✅ Check if employee is inactive
+        const isInactive = isEmployeeHidden(emp);
+
         const salaryObj = {
           employeeId: emp.employeeId,
           name: emp.name,
@@ -991,17 +1058,25 @@ const PayRoll = () => {
           specialAllowance: emp.specialAllowance,
           gmcAmount: emp.gmc,
           ptax: emp.profTax,
-          otherDeductions: emp.otherDeductions
+          otherDeductions: emp.otherDeductions,
+
+          // 📅 CARRY-FORWARD FIELDS
+          expectedWorkingDays: expectedWorkingDays,
+          payablePresentDays: payablePresentDays,
+          carryForwardDays: carryForwardDays,
+          carryForwardFromPrev: prevCarryForward,
+          
+          // ✅ STATUS FIELD
+          isInactive: isInactive
         };
 
         processedSalaries.push(salaryObj);
       }
 
-      const activeProcessedSalaries = filterInactiveEmployees(processedSalaries, employeesMap);
-      
+      // ✅ Store ALL employees in records (not filtered)
       if (isMounted) {
-        setRecords(activeProcessedSalaries);
-        setFilteredRecords(activeProcessedSalaries);
+        setRecords(processedSalaries);
+        setFilteredRecords(processedSalaries);
       }
 
     } catch (err) {
@@ -1013,7 +1088,7 @@ const PayRoll = () => {
         setIsLoadingMonth(false);
       }
     }
-  }, [EMPLOYEES_API_URL, LEAVES_API_URL, API_BASE_URL, ATTENDANCE_SUMMARY_API_URL, ATTENDANCE_DETAILS_API_URL, processLeavesData, filterInactiveEmployees, filterEmployeesByJoiningDate, processCompOffData, selectedMonth, approvedOTMap]);
+  }, [EMPLOYEES_API_URL, LEAVES_API_URL, API_BASE_URL, ATTENDANCE_SUMMARY_API_URL, ATTENDANCE_DETAILS_API_URL, processLeavesData, filterEmployeesByJoiningDate, processCompOffData, selectedMonth, approvedOTMap]);
 
   useEffect(() => {
     if (records.length === 0) return;
@@ -1054,11 +1129,19 @@ const PayRoll = () => {
     fetchData(selectedMonth);
   }, [fetchData, selectedMonth]);
 
+  // ✅ Updated filtering logic with status filter
   useEffect(() => {
     let filtered = records.filter(record =>
       record.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.employeeId?.toString().includes(searchTerm)
     );
+
+    // ✅ Status filter using isInactive flag
+    if (filterStatus === 'active') {
+      filtered = filtered.filter(record => !record.isInactive);
+    } else if (filterStatus === 'inactive') {
+      filtered = filtered.filter(record => record.isInactive);
+    }
 
     if (filterDepartment) {
       filtered = filtered.filter(record => record.department === filterDepartment);
@@ -1070,7 +1153,7 @@ const PayRoll = () => {
 
     setFilteredRecords(filtered);
     setCurrentPage(1);
-  }, [searchTerm, filterDepartment, filterDesignation, records]);
+  }, [searchTerm, filterDepartment, filterDesignation, records, filterStatus]);
 
   const handleMonthChange = (e) => {
     const month = e.target.value;
@@ -1101,6 +1184,7 @@ const PayRoll = () => {
     setSearchTerm("");
     setFilterDepartment("");
     setFilterDesignation("");
+    setFilterStatus("all");
     setFromDate("");
     setToDate("");
     const currentMonth = new Date().toISOString().slice(0, 7);
@@ -1111,17 +1195,25 @@ const PayRoll = () => {
   // ─── 🔥 HANDLE ITEMS PER PAGE CHANGE WITH LOCALSTORAGE ───
   const handleItemsPerPageChange = (e) => {
     const newValue = Number(e.target.value);
-    console.log('💾 PayRoll - Saving itemsPerPage:', newValue);
     
     try {
       localStorage.setItem('payroll_itemsPerPage', String(newValue));
-      console.log('✅ PayRoll - Verified saved:', localStorage.getItem('payroll_itemsPerPage'));
     } catch (error) {
       console.error('❌ Save error:', error);
     }
     
     setItemsPerPage(newValue);
     setCurrentPage(1);
+  };
+
+  // ✅ Count active employees from records
+  const getActiveCount = () => {
+    return records.filter(record => !record.isInactive).length;
+  };
+
+  // ✅ Count inactive employees from records
+  const getInactiveCount = () => {
+    return records.filter(record => record.isInactive).length;
   };
 
   const indexOfLastRecord = currentPage * itemsPerPage;
@@ -1255,7 +1347,10 @@ const PayRoll = () => {
     const compOffData = employeeCompOffs[selectedEmployee.employeeId];
     const compOffBalance = compOffData?.balance || 0;
     
-    const paidDays = Math.max(0, effectiveWorkingDays + weekOffDays + holidays + compOffBalance);
+    let paidDays = 0;
+    if (workingDays > 0 || halfDays > 0) {
+      paidDays = Math.max(0, effectiveWorkingDays + weekOffDays + holidays + compOffBalance);
+    }
     let baseSalary = paidDays * dailyRate;
 
     const extraDaysAmount = (extraWorkData.extraDays || 0) * dailyRate;
@@ -1359,7 +1454,10 @@ const PayRoll = () => {
     const compOffData = employeeCompOffs[selectedEmployee.employeeId];
     const compOffBalance = compOffData?.balance || 0;
     
-    let paidDays = Math.max(0, workingDays + (selectedEmployee.halfDayWorking || 0) * 0.5 + weekOffDays + holidays + compOffBalance);
+    let paidDays = 0;
+    if (workingDays > 0 || (selectedEmployee.halfDayWorking || 0) > 0) {
+      paidDays = Math.max(0, workingDays + (selectedEmployee.halfDayWorking || 0) * 0.5 + weekOffDays + holidays + compOffBalance);
+    }
 
     const systemCalculatedSalary = Math.round(paidDays * dailyRate);
 
@@ -1429,7 +1527,7 @@ const PayRoll = () => {
   };
 
   // ============================================================
-  // 🔥 FIXED: generateInvoiceHTML - Now shows FINAL PAY from dashboard
+  // 🔥 generateInvoiceHTML
   // ============================================================
   const generateInvoiceHTML = (employee) => {
     const employeeData = getEmployeeData(employee);
@@ -1472,10 +1570,8 @@ const PayRoll = () => {
     const halfDays = employee.halfDayWorking || 0;
     const holidays = employee.holidayCount || 0;
 
-    // ─── 🔥 FIX: Use FINAL PAY from dashboard ───
     const finalNetPay = employee.finalPay || employee.calculatedSalary || 0;
 
-    // ─── EARNINGS ───
     const earningsItems = [];
     
     const basicAmt = employeeData.basicPay || employeeData.salaryPerMonth || 0;
@@ -1490,19 +1586,16 @@ const PayRoll = () => {
     const specialAmt = employeeData.specialAllowance || 0;
     if (specialAmt > 0) earningsItems.push({ label: 'Special Allowance', amount: specialAmt });
     
-    // Add OT amount if present
     const otAmount = employee.otAmount || employee.finalOTAmount || 0;
     if (otAmount > 0) {
       earningsItems.push({ label: 'Overtime', amount: otAmount });
     }
     
-    // Add comp-off pay if present
     const compOffPay = compOffData.balance * dailyRate;
     if (compOffPay > 0) {
       earningsItems.push({ label: 'Comp-off / Holiday Pay', amount: compOffPay });
     }
     
-    // Info rows (no amount)
     earningsItems.push({ label: `Working Days (Full: ${presentDays})`, amount: 0, isInfo: true });
     earningsItems.push({ label: `Week Off Days (${weekOffDisplayValue})`, amount: 0, isInfo: true });
     
@@ -1510,10 +1603,8 @@ const PayRoll = () => {
       earningsItems.push({ label: `Public Holidays (${holidays})`, amount: 0, isInfo: true });
     }
 
-    // ─── DEDUCTIONS ───
     const deductionsItems = [];
     
-    // Calculate LOP days
     let totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + holidays + compOffData.balance;
     let lopDays = Math.max(0, daysInMonth - totalPaidDays);
     let lopAmount = lopDays * dailyRate;
@@ -1540,11 +1631,9 @@ const PayRoll = () => {
     
     deductionsItems.push({ label: `Other Deductions`, amount: totalOtherDeductions });
 
-    // ─── CALCULATE TOTALS ───
     const totalEarningsAmt = earningsItems.filter(item => !item.isInfo).reduce((sum, item) => sum + item.amount, 0);
     const totalDeductionsAmt = deductionsItems.reduce((sum, item) => sum + item.amount, 0);
 
-    // ─── TABLE ROWS ───
     let tableRowsHTML = '';
     const maxRows = Math.max(earningsItems.length, deductionsItems.length);
     for (let i = 0; i < maxRows; i++) {
@@ -1579,7 +1668,6 @@ const PayRoll = () => {
       `;
     }
 
-    // ─── NUMBER TO WORDS ───
     const numberToWords = (num) => {
       const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
       const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
@@ -1810,7 +1898,6 @@ const PayRoll = () => {
                 </div>
               </div>
             </div>
-            
           </div>
         </body>
       </html>
@@ -1847,7 +1934,7 @@ const PayRoll = () => {
   };
 
   // ============================================
-  // 📅 AttendancePopupModal - FIXED to show updated data
+  // 📅 AttendancePopupModal
   // ============================================
   const AttendancePopupModal = () => {
     if (!showAttendancePopup) return null;
@@ -2113,37 +2200,326 @@ const PayRoll = () => {
     );
   }
 
+  const activeCount = getActiveCount();
+  const inactiveCount = getInactiveCount();
+
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
-        {/* Header */}
-        <div className="emp-dash__header">
+        {/* Header - Desktop View */}
+        <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap mb-4">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Employee <span>Payroll</span>
             </h1>
           </div>
+
+          {/* Right side: Filters (Desktop only) */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Status Tabs (All, Active, Inactive) */}
+            <div className="flex items-center gap-1.5 mr-2">
+              <button
+                onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  filterStatus === 'all'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                All ({records.length})
+              </button>
+              <button
+                onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  filterStatus === 'active'
+                    ? 'bg-green-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Active ({activeCount})
+              </button>
+              <button
+                onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  filterStatus === 'inactive'
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Inactive ({inactiveCount})
+              </button>
+            </div>
+
+            {/* Quick Search - Compact */}
+            <div className="relative min-w-[120px] flex-1 max-w-[160px]">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+              <input
+                type="text"
+                placeholder="Search ID or Name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Department Dropdown */}
+            <div className="relative" ref={departmentFilterRef}>
+              <button
+                onClick={() => {
+                  setShowDepartmentFilter(!showDepartmentFilter);
+                  setShowDesignationFilter(false);
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDepartment
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FaBuilding className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDepartment || "Dept"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDepartmentFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDepartment("");
+                      setShowDepartmentFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Departments
+                  </div>
+                  {uniqueDepartments.map((dept) => (
+                    <div
+                      key={dept}
+                      onClick={() => {
+                        setFilterDepartment(dept);
+                        setShowDepartmentFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      {dept}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Designation Dropdown */}
+            <div className="relative" ref={designationFilterRef}>
+              <button
+                onClick={() => {
+                  setShowDesignationFilter(!showDesignationFilter);
+                  setShowDepartmentFilter(false);
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDesignation
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FaUserTag className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDesignation || "Desig"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDesignationFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDesignation("");
+                      setShowDesignationFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Designations
+                  </div>
+                  {uniqueDesignations.map((des) => (
+                    <div
+                      key={des}
+                      onClick={() => {
+                        setFilterDesignation(des);
+                        setShowDesignationFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      {des}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Date Pickers */}
+            <div className="relative">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                placeholder="From"
+                className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            <div className="relative">
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                placeholder="To"
+                className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            <div className="relative">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={handleMonthChange}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <button
+              onClick={handleDateRangeFilter}
+              disabled={!fromDate || !toDate}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap disabled:opacity-50"
+            >
+              <FaSearch className="w-3 h-3" />
+              Apply
+            </button>
+
+            <button
+              onClick={() => setShowTemplateModal(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
+            >
+              ⚙️
+            </button>
+
+            <button
+              onClick={() => {
+                const currentMonth = new Date().toISOString().slice(0, 7);
+                setSelectedMonth(currentMonth);
+                fetchData(currentMonth);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
+            >
+              Current
+            </button>
+
+            <button
+              onClick={() => fetchData(selectedMonth)}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
+            >
+              ⟳
+            </button>
+
+            <button
+              onClick={() => navigate("/bank-reports")}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              Bank Reports
+            </button>
+
+            <button
+              onClick={() => setShowOTModal(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              OT ({selectedOTEmployees.size})
+            </button>
+
+            {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7) || filterStatus !== 'all') && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                ✕ Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Header - Mobile View */}
+        <div className="sm:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            Employee <span className="text-indigo-600">Payroll</span>
+          </h1>
           <div className="emp-dash__date-pill">
             <FaCalendarAlt />
             <span>{formatMonthDisplay(selectedMonth)}</span>
           </div>
         </div>
 
-        {/* Stats Grid - 5 Cards */}
+        {/* Stats Grid - Updated with Active/Inactive Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
-          {/* Card 1: Active Employees */}
-          <div className="emp-dash__stat">
+          {/* Card 1: All Employees */}
+          <div 
+            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'all' ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+            onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
+          >
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Active Employees</span>
+              <span className="emp-dash__stat-label">All Employees</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
                 <FiUsers />
               </div>
             </div>
-            <div className="emp-dash__stat-value">{filteredRecords.length}</div>
-            <div className="emp-dash__stat-meta">registered & active</div>
+            <div className="emp-dash__stat-value">{records.length}</div>
+            <div className="emp-dash__stat-meta">total in payroll</div>
           </div>
 
-          {/* Card 2: Total Assigned Salary */}
+          {/* Card 2: Active Employees */}
+          <div 
+            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'active' ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
+            onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}
+          >
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Active Employees</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FiUserCheck />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value text-green-600">{activeCount}</div>
+            <div className="emp-dash__stat-meta">active in payroll</div>
+          </div>
+
+          {/* Card 3: Inactive Employees */}
+          <div 
+            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'inactive' ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
+            onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }}
+          >
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Inactive Employees</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
+                <FiUserMinus />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value text-red-600">{inactiveCount}</div>
+            <div className="emp-dash__stat-meta">hidden from reports</div>
+          </div>
+
+          {/* Card 4: Total Assigned Salary */}
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Assigned Salary</span>
@@ -2153,63 +2529,65 @@ const PayRoll = () => {
             </div>
             <div className="emp-dash__stat-value">
               ₹
-              {filteredRecords
-                .reduce((sum, emp) => sum + (emp.salaryPerMonth || 0), 0)
-                .toLocaleString()}
+              {Math.round(
+                filteredRecords
+                  .reduce((sum, emp) => sum + (emp.salaryPerMonth || 0), 0)
+              ).toLocaleString()}
             </div>
             <div className="emp-dash__stat-meta">total assigned per month</div>
           </div>
 
-          {/* Card 3: Total Net Pay */}
+          {/* Card 5: Total Net Pay */}
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Net Pay</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--salary">
                 <FiTrendingUp />
               </div>
             </div>
             <div className="emp-dash__stat-value">
               ₹
-              {filteredRecords
-                .reduce(
-                  (sum, emp) =>
-                    sum + (emp.finalPay || emp.calculatedSalary || 0),
-                  0
-                )
-                .toLocaleString()}
+              {Math.round(
+                filteredRecords
+                  .reduce((sum, emp) => sum + (emp.finalPay || 0), 0)
+              ).toLocaleString()}
             </div>
-            <div className="emp-dash__stat-meta">calculated payout</div>
+            <div className="emp-dash__stat-meta">total net pay this month</div>
           </div>
+        </div>
 
-          {/* Card 4: Active This Month */}
-          <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Active This Month</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FiUserCheck />
-              </div>
-            </div>
-            <div className="emp-dash__stat-value">
-              {filteredRecords.filter(emp => !emp.isHistoricalMonth).length}
-            </div>
-            <div className="emp-dash__stat-meta">current cycle active</div>
-          </div>
-
-          {/* Card 5: Earned Weekoffs */}
-          <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Earned Weekoffs</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
-                <FaCalendarAlt />
-              </div>
-            </div>
-            <div className="emp-dash__stat-value">
-              {filteredRecords
-                .reduce((sum, emp) => sum + (emp.earnedWeekOffs || 0), 0)
-                .toFixed(1)}
-            </div>
-            <div className="emp-dash__stat-meta">total earned this month</div>
-          </div>
+        {/* ✅ Active/Inactive Filter Tabs - Mobile only since they are in the header on desktop */}
+        <div className="flex items-center gap-3 mb-4 flex-wrap sm:hidden">
+          <button
+            onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
+            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+              filterStatus === 'all'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            All ({records.length})
+          </button>
+          <button
+            onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}
+            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+              filterStatus === 'active'
+                ? 'bg-green-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Active ({activeCount})
+          </button>
+          <button
+            onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }}
+            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+              filterStatus === 'inactive'
+                ? 'bg-red-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Inactive ({inactiveCount})
+          </button>
         </div>
 
         {selectedMonth === "2026-05" && (
@@ -2220,220 +2598,23 @@ const PayRoll = () => {
           </div>
         )}
 
-        {/* Filters Card - Desktop View */}
-        <div className="emp-dash__card mb-6">
-          <div className="hidden sm:block">
-            <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <div className="relative min-w-[120px] flex-1 max-w-[160px]">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input
-                    type="text"
-                    placeholder="Search ID or Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                <div className="relative" ref={departmentFilterRef}>
-                  <button
-                    onClick={() => {
-                      setShowDepartmentFilter(!showDepartmentFilter);
-                      setShowDesignationFilter(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                      filterDepartment
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <FaBuilding className="text-gray-400 text-[10px]" />
-                    <span className="truncate max-w-[80px]">{filterDepartment || "Dept"}</span>
-                    <span className="text-gray-400 text-[10px]">▾</span>
-                  </button>
-                  {showDepartmentFilter && (
-                    <div 
-                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-                      style={{
-                        zIndex: 99999,
-                        top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                        left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
-                      }}
-                    >
-                      <div
-                        onClick={() => {
-                          setFilterDepartment("");
-                          setShowDepartmentFilter(false);
-                        }}
-                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Departments
-                      </div>
-                      {uniqueDepartments.map((dept) => (
-                        <div
-                          key={dept}
-                          onClick={() => {
-                            setFilterDepartment(dept);
-                            setShowDepartmentFilter(false);
-                          }}
-                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                            filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                          }`}
-                        >
-                          {dept}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative" ref={designationFilterRef}>
-                  <button
-                    onClick={() => {
-                      setShowDesignationFilter(!showDesignationFilter);
-                      setShowDepartmentFilter(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                      filterDesignation
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <FaUserTag className="text-gray-400 text-[10px]" />
-                    <span className="truncate max-w-[80px]">{filterDesignation || "Desig"}</span>
-                    <span className="text-gray-400 text-[10px]">▾</span>
-                  </button>
-                  {showDesignationFilter && (
-                    <div 
-                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-                      style={{
-                        zIndex: 99999,
-                        top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                        left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
-                      }}
-                    >
-                      <div
-                        onClick={() => {
-                          setFilterDesignation("");
-                          setShowDesignationFilter(false);
-                        }}
-                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Designations
-                      </div>
-                      {uniqueDesignations.map((des) => (
-                        <div
-                          key={des}
-                          onClick={() => {
-                            setFilterDesignation(des);
-                            setShowDesignationFilter(false);
-                          }}
-                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                            filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                          }`}
-                        >
-                          {des}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    placeholder="From"
-                    className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    placeholder="To"
-                    className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                <div className="relative">
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={handleMonthChange}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button
-                  onClick={handleDateRangeFilter}
-                  disabled={!fromDate || !toDate}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap disabled:opacity-50"
-                >
-                  <FaSearch className="w-3 h-3" />
-                  Apply
-                </button>
-
-                <button
-                  onClick={() => setShowTemplateModal(true)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
-                >
-                  ⚙️
-                </button>
-
-                <button
-                  onClick={() => {
-                    const currentMonth = new Date().toISOString().slice(0, 7);
-                    setSelectedMonth(currentMonth);
-                    fetchData(currentMonth);
-                  }}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
-                >
-                  Current
-                </button>
-
-                <button
-                  onClick={() => fetchData(selectedMonth)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
-                >
-                  ⟳
-                </button>
-
-                <button
-                  onClick={() => navigate("/bank-reports")}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
-                >
-                  Bank Reports
-                </button>
-
-                <button
-                  onClick={() => setShowOTModal(true)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all shadow-sm whitespace-nowrap"
-                >
-                  OT ({selectedOTEmployees.size})
-                </button>
-
-                {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
-                  <button
-                    onClick={clearFilters}
-                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-                  >
-                    ✕ Clear
-                  </button>
-                )}
-              </div>
-            </div>
+        {/* Status Filter Info Badge */}
+        {filterStatus !== 'all' && (
+          <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+            <span className="text-xs font-medium text-blue-700">
+              🔍 Showing: <strong>{filterStatus === 'active' ? 'Active' : 'Inactive'} Employees</strong> ({filteredRecords.length} employees)
+            </span>
+            <button
+              onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
+              className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
+            >
+              <FiX className="w-3 h-3" /> Clear Filter
+            </button>
           </div>
+        )}
 
+        {/* Filters Card - Mobile View Only */}
+        <div className="emp-dash__card mb-6 sm:hidden">
           {/* Mobile View */}
           <div className="sm:hidden">
             <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
@@ -2530,6 +2711,31 @@ const PayRoll = () => {
                   <input type="month" value={selectedMonth} onChange={handleMonthChange} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold" />
                 </div>
 
+                {/* ✅ Mobile Status Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                  <div className="flex bg-gray-100 p-1 rounded-lg">
+                    <button
+                      onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
+                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${filterStatus === 'all' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
+                    >
+                      All ({records.length})
+                    </button>
+                    <button
+                      onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}
+                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${filterStatus === 'active' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-600'}`}
+                    >
+                      Active ({activeCount})
+                    </button>
+                    <button
+                      onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }}
+                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${filterStatus === 'inactive' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-600'}`}
+                    >
+                      Inactive ({inactiveCount})
+                    </button>
+                  </div>
+                </div>
+
                 <div className="pt-3 border-t border-gray-200 space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <button onClick={handleDateRangeFilter} disabled={!fromDate || !toDate} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50">
@@ -2554,7 +2760,7 @@ const PayRoll = () => {
                     <button onClick={() => navigate("/bank-reports")} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm">
                       Bank Reports
                     </button>
-                    {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+                    {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7) || filterStatus !== 'all') && (
                       <button onClick={clearFilters} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
                         ✕ Clear
                       </button>
@@ -2611,6 +2817,14 @@ const PayRoll = () => {
                   <th style={{ textAlign: "center" }}>Half</th>
                   <th style={{ textAlign: "center" }}>
                     <span className="flex items-center justify-center gap-1">
+                      Carry Fwd
+                      <span className="text-[8px] text-gray-400 cursor-help" title="Extra days worked beyond expected working days — carried to next month">
+                        ⓘ
+                      </span>
+                    </span>
+                  </th>
+                  <th style={{ textAlign: "center" }}>
+                    <span className="flex items-center justify-center gap-1">
                       Earned WO
                       <span className="text-[8px] text-gray-400 cursor-help" title="Weekoffs earned based on weekly attendance (5+ days/week)">
                         ⓘ
@@ -2629,6 +2843,7 @@ const PayRoll = () => {
                   <th style={{ textAlign: "center" }}>OT Amount</th>
                   <th style={{ textAlign: "center" }}>Calculated</th>
                   <th style={{ textAlign: "center" }}>Final Pay</th>
+                  <th style={{ textAlign: "center" }}>Status</th>
                   <th style={{ textAlign: "right" }}>Actions</th>
                 </tr>
               </thead>
@@ -2637,7 +2852,7 @@ const PayRoll = () => {
                   <tr
                     key={item.employeeId}
                     onClick={() => handleRowClick(item)}
-                    className="transition-colors hover:bg-slate-50/50 cursor-pointer"
+                    className={`transition-colors hover:bg-slate-50/50 cursor-pointer ${item.isInactive ? 'bg-red-50/30' : ''}`}
                   >
                     <td className="font-semibold text-slate-800 text-[11px]">
                       {item.employeeId}
@@ -2647,7 +2862,7 @@ const PayRoll = () => {
                         <div className="flex items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full shadow-inner">
                           {item.name ? item.name.charAt(0).toUpperCase() : "?"}
                         </div>
-                        <span className="font-semibold text-slate-800 text-xs whitespace-nowrap">
+                        <span className={`font-semibold text-xs whitespace-nowrap ${item.isInactive ? 'text-gray-500' : 'text-slate-800'}`}>
                           {item.name}
                         </span>
                       </div>
@@ -2659,32 +2874,57 @@ const PayRoll = () => {
                       {item.department}
                     </td>
                     <td className="text-center whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-blue-50 text-blue-700 border border-blue-100'}`}>
                         {item.totalWorkingDays || 0}
                       </span>
                     </td>
                     <td className="text-center whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
                         {item.presentDays || 0}
                       </span>
                     </td>
                     <td className="text-center whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
                         {item.halfDayWorking || 0}
                       </span>
                     </td>
+                    {/* Carry-Forward Cell */}
                     <td className="text-center whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
+                      {(item.carryForwardDays > 0 || item.carryForwardFromPrev > 0) ? (
+                        <div className="flex flex-col items-center gap-0.5">
+                          {item.carryForwardDays > 0 && (
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-orange-100 text-orange-700 border border-orange-300'}`}
+                              title={`${item.carryForwardDays} extra day(s) carried forward to next month`}
+                            >
+                              +{item.carryForwardDays}→
+                            </span>
+                          )}
+                          {item.carryForwardFromPrev > 0 && (
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-blue-50 text-blue-600 border border-blue-200'}`}
+                              title={`${item.carryForwardFromPrev} day(s) carried in from previous month`}
+                            >
+                              ←{item.carryForwardFromPrev}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-300 text-[10px]">—</span>
+                      )}
+                    </td>
+                    <td className="text-center whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
                         {item.earnedWeekOffs || 0}
                       </span>
                     </td>
                     <td className="text-center whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-50 text-gray-600 border border-gray-200">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}>
                         {item.defaultWeekOffs || 0}
                       </span>
                     </td>
                     <td className="text-center whitespace-nowrap">
-                      <div className="font-semibold text-slate-700">₹{(item.salaryPerMonth || 0).toLocaleString()}</div>
+                      <div className={`font-semibold ${item.isInactive ? 'text-gray-400' : 'text-slate-700'}`}>₹{(item.salaryPerMonth || 0).toLocaleString()}</div>
                       {item.currentSalary && item.currentSalary !== item.salaryPerMonth && (
                         <div className="text-[9px] text-gray-400 line-through">₹{item.currentSalary.toLocaleString()}</div>
                       )}
@@ -2694,16 +2934,26 @@ const PayRoll = () => {
                     </td>
                     <td className="text-center whitespace-nowrap">
                       {item.finalOTAmount > 0 ? (
-                        <span className="font-bold text-green-600">₹{item.finalOTAmount.toFixed(0)}</span>
+                        <span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-green-600'}`}>₹{item.finalOTAmount.toFixed(0)}</span>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
                     <td className="text-center whitespace-nowrap">
-                      <span className="font-bold text-blue-700">₹{calculateSalary(item).toLocaleString()}</span>
+                      <span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-blue-700'}`}>₹{calculateSalary(item).toLocaleString()}</span>
                     </td>
                     <td className="text-center whitespace-nowrap">
-                      <span className="font-extrabold text-green-700">₹{(item.finalPay || item.calculatedSalary || 0).toLocaleString()}</span>
+                      <span className={`font-extrabold ${item.isInactive ? 'text-gray-400' : 'text-green-700'}`}>₹{(item.finalPay || item.calculatedSalary || 0).toLocaleString()}</span>
+                    </td>
+                    {/* ✅ Status Column */}
+                    <td className="text-center whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold ${
+                        item.isInactive 
+                          ? 'bg-red-50 text-red-700 border border-red-200' 
+                          : 'bg-green-50 text-green-700 border border-green-200'
+                      }`}>
+                        {item.isInactive ? 'INACTIVE' : 'ACTIVE'}
+                      </span>
                     </td>
                     <td className="text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-1.5">
@@ -2728,13 +2978,13 @@ const PayRoll = () => {
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); downloadInvoice(item); }}
-                          disabled={!isPayslipDownloadAllowed(item.month || selectedMonth)}
+                          disabled={!isPayslipDownloadAllowed(item.month || selectedMonth) || item.isInactive}
                           className={`p-1.5 border rounded-lg transition-all shadow-sm ${
-                            isPayslipDownloadAllowed(item.month || selectedMonth)
+                            isPayslipDownloadAllowed(item.month || selectedMonth) && !item.isInactive
                               ? 'text-purple-600 bg-purple-50 hover:bg-purple-100 border-purple-100'
                               : 'text-gray-300 bg-gray-50 border-gray-100 cursor-not-allowed'
                           }`}
-                          title="Download Payslip"
+                          title={item.isInactive ? "Payslip not available for inactive employees" : "Download Payslip"}
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -2853,6 +3103,20 @@ const PayRoll = () => {
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Default Weekoffs</span><span className="font-bold text-gray-600">{selectedEmployee.defaultWeekOffs || 0}</span></div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">WeekOff Days</span><span className="font-bold text-purple-700">{getWeekOffDaysForDisplay(selectedEmployee)}</span></div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Month Days</span><span className="font-bold text-slate-700">{selectedEmployee.monthDays || monthDays}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Expected Working Days</span><span className="font-bold text-slate-600">{selectedEmployee.expectedWorkingDays ?? ((selectedEmployee.monthDays || monthDays) - (selectedEmployee.weekOffs || 0))}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Payable Present Days</span><span className="font-bold text-blue-700">{typeof selectedEmployee.payablePresentDays === 'number' ? selectedEmployee.payablePresentDays : (selectedEmployee.presentDays || 0)}</span></div>
+              {(selectedEmployee.carryForwardFromPrev > 0) && (
+                <div className="flex justify-between py-1.5 border-b border-blue-100 bg-blue-50 rounded px-1">
+                  <span className="text-blue-600 font-semibold">← Carry-in from Prev Month</span>
+                  <span className="font-bold text-blue-700">+{selectedEmployee.carryForwardFromPrev} day(s)</span>
+                </div>
+              )}
+              {(selectedEmployee.carryForwardDays > 0) && (
+                <div className="flex justify-between py-1.5 border-b border-orange-100 bg-orange-50 rounded px-1 sm:col-span-2">
+                  <span className="text-orange-600 font-semibold">→ Carry-forward to Next Month</span>
+                  <span className="font-bold text-orange-700">{selectedEmployee.carryForwardDays} day(s)</span>
+                </div>
+              )}
               <div className="flex justify-between py-1.5 border-b border-gray-100">
                 <span className="text-gray-500 font-medium">Monthly Salary</span>
                 <div className="text-right">
@@ -3034,13 +3298,14 @@ const PayRoll = () => {
                     <tr><td colSpan="4" className="p-4 text-center text-gray-400 font-semibold">No employees found.</td></tr>
                   ) : (
                     records.map(r => (
-                      <tr key={r.employeeId} className="hover:bg-slate-50/50">
+                      <tr key={r.employeeId} className={`hover:bg-slate-50/50 ${r.isInactive ? 'opacity-50 bg-red-50/30' : ''}`}>
                         <td className="p-3">
                           <input 
                             type="checkbox" 
                             checked={selectedOTEmployees.has(r.employeeId)}
                             onChange={() => handleOTEmployeeSelection(r.employeeId)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            disabled={r.isInactive}
+                            className={`w-4 h-4 border-gray-300 rounded focus:ring-blue-500 ${r.isInactive ? 'cursor-not-allowed' : 'text-blue-600'}`}
                           />
                         </td>
                         <td className="p-3 text-gray-500 font-semibold">{r.employeeId}</td>

@@ -30,10 +30,13 @@ const Dashboard = () => {
   const [allHolidays, setAllHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [topPerformersData, setTopPerformersData] = useState([]);
+  const [departmentPerformanceData, setDepartmentPerformanceData] = useState([]);
   
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [searchTerm, setSearchTerm] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [filterMonth, setFilterMonth] = useState(new Date().toISOString().slice(0, 7));
 
   // ─── BIRTHDAY POPUP STATES ───
   const [birthdaysToday, setBirthdaysToday] = useState([]);
@@ -90,6 +93,87 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error("Error fetching birthdays:", error);
+    }
+  };
+
+  // ─── FETCH TOP PERFORMERS ───
+  const fetchTopPerformers = async (month = null) => {
+    try {
+      let url = `${API_BASE_URL}/dashboard/top-performers`;
+      if (month) {
+        const [year, monthNum] = month.split('-').map(Number);
+        url = `${API_BASE_URL}/dashboard/top-performers?month=${monthNum}&year=${year}`;
+      }
+      const response = await axios.get(url);
+      console.log("Top Performers API Response:", response.data);
+      
+      if (response.data && response.data.success) {
+        const performers = response.data.performers || [];
+        console.log("Performers data:", performers);
+        
+        const mappedPerformers = performers.map(perf => ({
+          id: perf.employeeCode || perf.employeeId,
+          employeeId: perf.employeeCode || perf.employeeId,
+          name: perf.name || perf.employeeName,
+          rate: Math.round(perf.performancePercentage || 0),
+          performancePercentage: perf.performancePercentage || 0,
+          presentDays: perf.presentDays || 0,
+          expectedWorkingDays: perf.expectedWorkingDays || 0,
+          lateComingDays: perf.lateComingDays || 0,
+          actualWorkingHours: perf.actualWorkingHours || 0,
+          expectedWorkingHours: perf.expectedWorkingHours || 0
+        }));
+        
+        console.log("Mapped performers:", mappedPerformers);
+        setTopPerformersData(mappedPerformers);
+      } else {
+        console.log("No performers data in response");
+        setTopPerformersData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching top performers:", error);
+      setTopPerformersData([]);
+    }
+  };
+
+  // ─── FETCH DEPARTMENT PERFORMANCE ───
+  const fetchDepartmentPerformance = async (month = null) => {
+    try {
+      let url = `${API_BASE_URL}/dashboard/department-performance`;
+      if (month) {
+        const [year, monthNum] = month.split('-').map(Number);
+        url = `${API_BASE_URL}/dashboard/department-performance?month=${monthNum}&year=${year}`;
+      }
+      const response = await axios.get(url);
+      console.log("Department Performance API Response:", response.data);
+      
+      if (response.data && response.data.success) {
+        // Fix: Use departmentPerformance from response
+        const departments = response.data.departmentPerformance || response.data.departments || response.data.data || [];
+        console.log("Departments data:", departments);
+        
+        const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#ef4444', '#175cd3', '#8b5cf6', '#06b6d4'];
+        const mappedDepartments = departments.map((dept, index) => ({
+          name: dept.name || dept.department || 'Unknown',
+          rate: Math.round(dept.rate || dept.performancePercentage || 0),
+          color: dept.color || colors[index % colors.length],
+          employeeCount: dept.employeeCount || 0,
+          presentDays: dept.presentDays || 0,
+          expectedWorkingDays: dept.expectedWorkingDays || 0,
+          actualWorkingHours: dept.actualWorkingHours || 0,
+          expectedWorkingHours: dept.expectedWorkingHours || 0,
+          lateComingDays: dept.lateComingDays || 0
+        }));
+        
+        console.log("Mapped departments:", mappedDepartments);
+        setDepartmentPerformanceData(mappedDepartments);
+      } else {
+        console.log("No department data in response");
+        setDepartmentPerformanceData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching department performance:", error);
+      setDepartmentPerformanceData([]);
     }
   };
 
@@ -163,6 +247,8 @@ const Dashboard = () => {
       }
 
       await fetchBirthdays();
+      await fetchTopPerformers(selectedMonth);
+      await fetchDepartmentPerformance(selectedMonth);
 
       setLoading(false);
     } catch (err) {
@@ -176,10 +262,19 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  // Fetch data when month changes
+  useEffect(() => {
+    if (selectedMonth) {
+      fetchTopPerformers(selectedMonth);
+      fetchDepartmentPerformance(selectedMonth);
+    }
+  }, [selectedMonth]);
+
   useEffect(() => {
     if (allAttendance.length > 0) {
       const latest = getLatestWorkingDate();
       setSelectedMonth(latest.slice(0, 7));
+      setFilterMonth(latest.slice(0, 7));
     }
   }, [allAttendance]);
 
@@ -497,7 +592,16 @@ const Dashboard = () => {
     }).length;
   };
 
-  // Values for stats cards
+  // Values for stats cards - using selected month
+  const getDateForMonth = (monthStr) => {
+    const [year, month] = monthStr.split('-').map(Number);
+    const lastDay = new Date(year, month, 0).getDate();
+    return `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  };
+
+  const currentMonthDateStr = getDateForMonth(selectedMonth);
+  
+  // Use selected month for calculations
   const presentToday = calculatePresentCountForDate(todayStr);
   const onTimeToday = calculateOnTimeCountForDate(todayStr);
   const lateToday = calculateLateCountForDate(todayStr);
@@ -569,183 +673,120 @@ const Dashboard = () => {
 
   const heatmapGrid = getHeatmapGrid();
 
-  // Top Performers
-  const getTopPerformers = () => {
-    const performers = [];
+  // Attendance Streaks - Based on continuous attendance
+  const getAttendanceStreaks = () => {
+    const streaks = [];
     const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
     const [year, month] = selectedMonth.split('-').map(Number);
     
     const daysInMonth = new Date(year, month, 0).getDate();
-    let workingDays = 0;
-    for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(year, month - 1, d);
-      if (date.getDay() !== 0) workingDays++;
-    }
-    if (workingDays === 0) workingDays = 1;
 
     activeEmps.forEach(emp => {
-      const empAttendance = allAttendance.filter(record => {
-        if (!record.checkInTime) return false;
-        const recordDate = new Date(record.checkInTime);
-        const empId = typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId;
-        return empId === emp.employeeId && 
-               recordDate.getFullYear() === year && 
-               recordDate.getMonth() + 1 === month;
-      });
+      const empId = emp.employeeId || emp._id;
+      if (!empId) return;
 
-      const presentCount = empAttendance.length;
-      const rate = Math.min(100, Math.round((presentCount / workingDays) * 100));
-
-      performers.push({
-        id: emp.employeeId,
-        name: emp.name,
-        rate
-      });
-    });
-
-    const results = performers.sort((a, b) => b.rate - a.rate).slice(0, 5);
-    if (results.length === 0 || results.every(r => r.rate === 0)) {
-      return [
-        { id: "e1", name: "Dara Gowthami", rate: 42 },
-        { id: "e2", name: "K Akhil Kumar", rate: 42 },
-        { id: "e3", name: "Saquiba Wasi", rate: 42 },
-        { id: "e4", name: "kejiya pari", rate: 42 },
-        { id: "e5", name: "Dr Abhigna jupakka", rate: 42 }
-      ];
-    }
-    return results;
-  };
-
-  const topPerformers = getTopPerformers();
-
-  // Attendance Streaks
-  const getAttendanceStreaks = () => {
-    const streaks = [];
-    const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
-    
-    activeEmps.forEach(emp => {
-      const empRecords = allAttendance
+      // Get all unique dates this employee was present
+      const presentDates = allAttendance
         .filter(r => {
           if (!r.checkInTime) return false;
           
           const recDate = getRecordDateStr(r.checkInTime);
-          if (selectedMonth && !recDate.startsWith(selectedMonth)) return false;
-          
           const rEmpId = typeof r.employeeId === 'object' && r.employeeId !== null 
             ? r.employeeId.employeeId || r.employeeId._id 
             : r.employeeId;
-          const targetEmpId = emp.employeeId || emp._id;
-          return rEmpId && targetEmpId && rEmpId.toString() === targetEmpId.toString();
+          return rEmpId && rEmpId.toString() === empId.toString() &&
+                 recDate.startsWith(selectedMonth);
         })
         .map(r => getRecordDateStr(r.checkInTime))
         .filter(Boolean);
 
-      const uniqueDates = Array.from(new Set(empRecords)).sort();
-      
+      const uniqueDates = Array.from(new Set(presentDates)).sort();
+
+      // Calculate continuous streak
       let maxStreak = 0;
       let currentStreak = 0;
-      let prevDate = null;
 
-      uniqueDates.forEach(dateStr => {
-        const currentDate = new Date(dateStr);
-        if (!prevDate) {
-          currentStreak = 1;
-        } else {
-          const diffTime = Math.abs(currentDate - prevDate);
-          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-          if (diffDays === 1) {
-            currentStreak++;
-          } else if (diffDays > 1) {
-            if (currentStreak > maxStreak) maxStreak = currentStreak;
-            currentStreak = 1;
-          }
+      // Check each day of the month for continuous attendance
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dateObj = new Date(year, month - 1, d);
+        
+        // Skip Sundays (non-working days don't break streak)
+        if (dateObj.getDay() === 0) {
+          continue;
         }
-        prevDate = currentDate;
-      });
 
-      if (currentStreak > maxStreak) maxStreak = currentStreak;
+        const isPresent = uniqueDates.includes(dateStr);
+
+        if (isPresent) {
+          currentStreak++;
+          if (currentStreak > maxStreak) {
+            maxStreak = currentStreak;
+          }
+        } else {
+          // If absent on a working day, break the streak
+          currentStreak = 0;
+        }
+      }
+
+      // Calculate current ongoing streak (from last present day until today)
+      let ongoingStreak = 0;
+      const today = new Date();
+      
+      // Find the last present date
+      let lastPresentDate = null;
+      for (let i = 0; i < uniqueDates.length; i++) {
+        lastPresentDate = uniqueDates[i];
+      }
+
+      if (lastPresentDate) {
+        const lastDate = new Date(lastPresentDate);
+        let currentDate = new Date(lastPresentDate);
+        let streakCount = 0;
+        
+        // Count forward from last present date
+        while (currentDate <= today) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          // Skip Sundays
+          if (currentDate.getDay() !== 0) {
+            if (uniqueDates.includes(dateStr)) {
+              streakCount++;
+            } else {
+              // If there's a gap, break the streak
+              break;
+            }
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        ongoingStreak = streakCount;
+      }
 
       streaks.push({
-        id: emp.employeeId || emp._id,
-        name: emp.name,
-        streak: maxStreak || 0
+        id: empId,
+        name: emp.name || emp.employeeName || 'Unknown',
+        streak: Math.max(maxStreak, ongoingStreak)
       });
     });
 
-    const sortedStreaks = streaks.sort((a, b) => b.streak - a.streak).slice(0, 5);
-    if (sortedStreaks.length === 0 || sortedStreaks.every(s => s.streak === 0)) {
-      return [
-        { id: "e2", name: "K Akhil Kumar", streak: 50 },
-        { id: "e1", name: "Dara Gowthami", streak: 34 },
-        { id: "e6", name: "G NARESH KUMAR", streak: 28 },
-        { id: "e7", name: "Koncha Saidulu Reddy", streak: 27 },
-        { id: "e8", name: "aarif", streak: 17 }
-      ];
+    // Sort by streak descending and take top 5
+    const results = streaks
+      .sort((a, b) => b.streak - a.streak)
+      .slice(0, 5);
+
+    // Filter out employees with 0 streak
+    const filteredResults = results.filter(r => r.streak > 0);
+
+    if (filteredResults.length === 0) {
+      return [];
     }
-    return sortedStreaks;
+
+    return filteredResults;
   };
 
   const attendanceStreaks = getAttendanceStreaks();
 
-  // Department Performance
-  const getDepartmentPerformance = () => {
-    const deptTotals = {};
-    const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
-    const [year, month] = selectedMonth.split('-').map(Number);
-    
-    const daysInMonth = new Date(year, month, 0).getDate();
-    let workingDays = 0;
-    for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(year, month - 1, d);
-      if (date.getDay() !== 0) workingDays++;
-    }
-    if (workingDays === 0) workingDays = 1;
-
-    activeEmps.forEach(emp => {
-      const dept = emp.department || 'Operations';
-      
-      const empAttendance = allAttendance.filter(record => {
-        if (!record.checkInTime) return false;
-        const recordDate = new Date(record.checkInTime);
-        const empId = typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId;
-        return empId === emp.employeeId && 
-               recordDate.getFullYear() === year && 
-               recordDate.getMonth() + 1 === month;
-      });
-
-      const rate = Math.min(100, (empAttendance.length / workingDays) * 100);
-
-      if (!deptTotals[dept]) {
-        deptTotals[dept] = { totalRate: 0, count: 0 };
-      }
-      deptTotals[dept].totalRate += rate;
-      deptTotals[dept].count += 1;
-    });
-
-    const result = Object.entries(deptTotals).map(([name, data]) => ({
-      name,
-      rate: Math.round(data.totalRate / data.count)
-    }));
-
-    const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#ef4444', '#175cd3'];
-    const sortedResult = result.sort((a, b) => b.rate - a.rate).map((item, idx) => ({
-      ...item,
-      color: colors[idx % colors.length]
-    })).slice(0, 5);
-
-    if (sortedResult.length === 0 || sortedResult.every(r => r.rate === 0)) {
-      return [
-        { name: "Nursing", rate: 42, color: "#10b981" },
-        { name: "Medical", rate: 42, color: "#3b82f6" },
-        { name: "Digital Marketing", rate: 38, color: "#f59e0b" },
-        { name: "Marketing", rate: 38, color: "#ec4899" },
-        { name: "Laboratory Medicine", rate: 37, color: "#ef4444" }
-      ];
-    }
-    return sortedResult;
-  };
-
-  const departmentPerformance = getDepartmentPerformance();
+  // Department Performance - using API data
+  const displayDepartmentPerformance = departmentPerformanceData.length > 0 ? departmentPerformanceData : [];
 
   // Exceptions count today
   const forgotCheckoutToday = (() => {
@@ -776,20 +817,14 @@ const Dashboard = () => {
       return holidayDate.getFullYear() === year && holidayDate.getMonth() + 1 === month;
     });
 
-    if (dbHolidays.length > 0) return dbHolidays;
-
-    return [
-      { _id: "h1", name: "Independence Day", type: "National Holiday", fromDate: `${year}-08-15`, toDate: `${year}-08-15` },
-      { _id: "h2", name: "Raksha Bandhan", type: "Festival", fromDate: `${year}-08-19`, toDate: `${year}-08-19` },
-      { _id: "h3", name: "Company Foundation Day", type: "Company Holiday", fromDate: `${year}-08-28`, toDate: `${year}-08-28` }
-    ];
+    return dbHolidays;
   };
 
   const holidayList = getHolidaysForSelectedMonth();
 
-  // Monthly Attendance & Leave Composed Trend
+  // Monthly Attendance & Leave Composed Trend - for selected year
   const getMonthlyTrend = () => {
-    const currentYear = new Date(todayStr).getFullYear();
+    const currentYear = new Date(selectedMonth).getFullYear();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const data = [];
     const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
@@ -837,37 +872,19 @@ const Dashboard = () => {
 
       const hasDbRecords = presentRecords.length > 0 || monthLeaves.length > 0;
 
-      const fallbackRate = [45, 50, 55, 60, 58, 64, 70, 87, 85, 78, 82, 70][idx];
-      const fallbackLeavesCount = [2, 1, 3, 0, 4, 2, 1, 5, 2, 3, 1, 2][idx];
-      const fallbackLeavesDays = [2, 1, 5, 0, 8, 3, 1, 8, 3, 4, 1, 3][idx];
-      const fallbackLeaveDetails = [
-        [{ name: "Ramesh Reddy", days: 2 }],
-        [{ name: "aarif", days: 1 }],
-        [{ name: "K Akhil Kumar", days: 3 }, { name: "kejiya pari", days: 2 }],
-        [],
-        [{ name: "Dara Gowthami", days: 5 }, { name: "Dr Abhigna jupakka", days: 3 }],
-        [{ name: "Koncha Saidulu Reddy", days: 3 }],
-        [{ name: "Saquiba Wasi", days: 1 }],
-        [{ name: "Ramesh Reddy", days: 3 }, { name: "aarif", days: 2 }, { name: "K Akhil Kumar", days: 3 }],
-        [{ name: "Dr Abhigna jupakka", days: 3 }],
-        [{ name: "kejiya pari", days: 4 }],
-        [{ name: "Dara Gowthami", days: 1 }],
-        [{ name: "Saquiba Wasi", days: 3 }]
-      ][idx];
-
       data.push({ 
         month, 
-        rate: rate || fallbackRate,
-        leavesCount: monthLeaves.length || fallbackLeavesCount,
-        leavesDays: totalLeavesDays || fallbackLeavesDays,
-        leaveDetails: leaveDetails.length > 0 ? leaveDetails : fallbackLeaveDetails,
+        rate: rate,
+        leavesCount: monthLeaves.length,
+        leavesDays: totalLeavesDays,
+        leaveDetails: leaveDetails,
         hasDbRecords
       });
     });
 
     const filteredData = data.filter(d => d.hasDbRecords);
     if (filteredData.length === 0) {
-      return data.slice(7, 10);
+      return data.slice(0, 12);
     }
     return filteredData;
   };
@@ -876,30 +893,7 @@ const Dashboard = () => {
 
   // Pending Leave Requests
   const pendingLeaves = allLeaves.filter(l => l.status === "pending");
-  const displayPendingLeaves = pendingLeaves.length > 0 ? pendingLeaves : [
-    {
-      _id: "mock-l1",
-      employeeName: "Janapala Bharath Sai Reddy",
-      employeeId: "EMP001",
-      leaveType: "Casual Leave",
-      startDate: `${selectedMonth}-14`,
-      endDate: `${selectedMonth}-14`,
-      days: 1,
-      reason: "Family engagement",
-      isMock: true
-    },
-    {
-      _id: "mock-l2",
-      employeeName: "Bhargavi Chinthakunta",
-      employeeId: "EMP002",
-      leaveType: "Casual Leave",
-      startDate: `${selectedMonth}-02`,
-      endDate: `${selectedMonth}-05`,
-      days: 4,
-      reason: "Personal travel",
-      isMock: true
-    }
-  ];
+  const displayPendingLeaves = pendingLeaves.length > 0 ? pendingLeaves : [];
 
   const getAvatarInitials = (name) => {
     if (!name) return "?";
@@ -1108,7 +1102,7 @@ const Dashboard = () => {
       return (
         <div className="bg-white p-2.5 border border-slate-200 rounded-lg shadow-lg max-w-[220px] text-[10px]">
           <p className="font-extrabold text-[#101828] border-b border-slate-100 pb-1 mb-1 text-center">
-            {data.month} {new Date(todayStr).getFullYear()}
+            {data.month} {new Date(selectedMonth).getFullYear()}
           </p>
           <div className="space-y-0.5">
             <p className="flex items-center justify-between font-semibold">
@@ -1149,11 +1143,16 @@ const Dashboard = () => {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
-  const formattedToday = new Date(todayStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  // Handle month filter change
+  const handleMonthChange = (e) => {
+    const newMonth = e.target.value;
+    setSelectedMonth(newMonth);
+    // Fetch top performers for the selected month
+    fetchTopPerformers(newMonth);
+    fetchDepartmentPerformance(newMonth);
+  };
+
+  const displayTopPerformers = topPerformersData.length > 0 ? topPerformersData : [];
 
   return (
     <div className="emp-dash">
@@ -1263,11 +1262,11 @@ const Dashboard = () => {
                 <FiCalendar className="text-[#175cd3] mr-1.5" size={14} />
                 <select
                   value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  onChange={handleMonthChange}
                   className="appearance-none bg-transparent pr-5 text-xs font-medium text-gray-900 focus:outline-none cursor-pointer"
                 >
                   {Array.from({ length: 12 }, (_, i) => {
-                    const year = new Date(todayStr).getFullYear();
+                    const year = new Date().getFullYear();
                     const mStr = String(i + 1).padStart(2, '0');
                     const ym = `${year}-${mStr}`;
                     return (
@@ -1295,10 +1294,7 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
-          <div className="emp-dash__date-pill">
-            <FiCalendar />
-            <span>{formattedToday}</span>
-          </div>
+        
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
@@ -1451,66 +1447,144 @@ const Dashboard = () => {
         </div>
 
         {/* ATTENDANCE HEATMAP */}
-        <div className="emp-dash__card flex flex-col min-h-[270px]">
-          <div className="emp-dash__card-header">
-            <h3 className="emp-dash__card-title">Attendance Heatmap</h3>
-            <button onClick={() => navigate("/attedancesummary")} className="text-slate-400 hover:text-slate-600 transition-all"><FiMoreVertical size={14} /></button>
-          </div>
+      <div className="emp-dash__card flex flex-col min-h-[270px]">
+  <div className="emp-dash__card-header">
+    <h3 className="emp-dash__card-title">Attendance Heatmap</h3>
 
-          <div className="flex-1 flex flex-col justify-center py-2 overflow-x-auto">
-            <div className="space-y-1.5 min-w-[200px]">
-              {heatmapGrid.map((week, wIdx) => (
-                <div key={wIdx} className="flex items-center gap-1.5">
-                  <span className="text-[8px] font-bold text-[#667085] w-6">W{wIdx + 1}</span>
-                  <div className="flex-1 grid grid-cols-7 gap-1">
-                    {week.map((cell, cIdx) => {
-                      let bgClass = "bg-[#f8fafc] border border-slate-100";
-                      if (cell.day) {
-                        if (cell.rate >= 90) bgClass = "bg-[#10b981]";
-                        else if (cell.rate >= 75) bgClass = "bg-[#34d399]";
-                        else if (cell.rate >= 60) bgClass = "bg-[#a7f3d0]";
-                        else if (cell.rate >= 40) bgClass = "bg-[#fde68a]";
-                        else if (cell.rate >= 20) bgClass = "bg-[#fcd34d]";
-                        else if (cell.rate > 0) bgClass = "bg-[#f97316]";
-                        else bgClass = "bg-rose-100 text-rose-500";
-                      }
-                      return (
-                        <div 
-                          key={cIdx} 
-                          className={`h-7 rounded-lg ${bgClass} flex items-center justify-center text-[8px] font-bold text-[#101828]/80 shadow-sm`}
-                          title={cell.day ? `Day ${cell.day}: ${cell.rate.toFixed(0)}%` : "No data"}
-                        >
-                          {cell.day || ""}
-                        </div>
-                      );
-                    })}
-                  </div>
+    <button
+      onClick={() => navigate("/attedancesummary")}
+      className="text-slate-400 hover:text-slate-600 transition-all"
+    >
+      <FiMoreVertical size={14} />
+    </button>
+  </div>
+
+  <div className="flex-1 flex flex-col justify-center py-2 overflow-x-auto">
+    <div className="space-y-1.5 min-w-[200px]">
+      {heatmapGrid.map((week, wIdx) => (
+        <div key={wIdx} className="flex items-center gap-1.5">
+          <span className="text-[8px] font-bold text-[#667085] w-6">
+            W{wIdx + 1}
+          </span>
+
+          <div className="flex-1 grid grid-cols-7 gap-1">
+            {week.map((cell, cIdx) => {
+              // Default = Date not available / 0% = Light Blue
+              let bgClass =
+                "bg-blue-100 border border-blue-200 text-blue-600";
+
+              if (cell.day) {
+                // 100% = Dark Green
+                if (cell.rate === 100) {
+                  bgClass = "bg-[#059669] text-white";
+                }
+
+                // 65% - 99% = Light Green
+                else if (cell.rate >= 65) {
+                  bgClass = "bg-[#6ee7b7] text-[#065f46]";
+                }
+
+                // 51% - 64% = Dark Yellow
+                else if (cell.rate >= 51) {
+                  bgClass = "bg-[#facc15] text-[#713f12]";
+                }
+
+                // 11% - 50% = Light Yellow
+                else if (cell.rate >= 11) {
+                  bgClass = "bg-[#fef08a] text-[#713f12]";
+                }
+
+                // 1% - 10% = Light Red
+                else if (cell.rate >= 1) {
+                  bgClass = "bg-[#fca5a5] text-[#991b1b]";
+                }
+
+                // 0% = Light Blue
+                else {
+                  bgClass =
+                    "bg-blue-100 border border-blue-200 text-blue-600";
+                }
+              }
+
+              return (
+                <div
+                  key={cIdx}
+                  className={`h-7 rounded-lg ${bgClass} flex items-center justify-center text-[8px] font-bold shadow-sm`}
+                  title={
+                    cell.day
+                      ? `Day ${cell.day}: ${cell.rate.toFixed(0)}%`
+                      : "Date not available"
+                  }
+                >
+                  {cell.day || ""}
                 </div>
-              ))}
-            </div>
-            
-            <div className="flex items-center gap-1.5 mt-1 pl-7.5 min-w-[200px]">
-              <div className="flex-1 grid grid-cols-7 gap-1 text-center">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                  <span key={day} className="text-[8px] font-semibold text-[#667085]">{day}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-1.5 border-t border-[#f1f5f9] text-[9px]">
-            <span className="font-semibold text-[#667085]">High</span>
-            <div className="flex gap-0.5">
-              <span className="w-3 h-3 rounded bg-[#10b981]" />
-              <span className="w-3 h-3 rounded bg-[#34d399]" />
-              <span className="w-3 h-3 rounded bg-[#a7f3d0]" />
-              <span className="w-3 h-3 rounded bg-[#fde68a]" />
-              <span className="w-3 h-3 rounded bg-[#fcd34d]" />
-              <span className="w-3 h-3 rounded bg-[#f97316]" />
-            </div>
-            <span className="font-semibold text-[#667085]">Low</span>
+              );
+            })}
           </div>
         </div>
+      ))}
+    </div>
+
+    {/* Days */}
+    <div className="flex items-center gap-1.5 mt-1 pl-7.5 min-w-[200px]">
+      <div className="flex-1 grid grid-cols-7 gap-1 text-center">
+        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+          <span
+            key={day}
+            className="text-[8px] font-semibold text-[#667085]"
+          >
+            {day}
+          </span>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {/* Heatmap Legend */}
+  <div className="flex items-center justify-between pt-1.5 border-t border-[#f1f5f9] text-[9px]">
+    <span className="font-semibold text-[#667085]">High</span>
+
+    <div className="flex gap-0.5">
+      {/* 100% - Dark Green */}
+      <span
+        className="w-3 h-3 rounded bg-[#059669]"
+        title="100%"
+      />
+
+      {/* 75% - 99% - Light Green */}
+      <span
+        className="w-3 h-3 rounded bg-[#6ee7b7]"
+        title="65% - 99%"
+      />
+
+      {/* 51% - 64% - Dark Yellow */}
+      <span
+        className="w-3 h-3 rounded bg-[#facc15]"
+        title="51% - 74%"
+      />
+
+      {/* 11% - 50% - Light Yellow */}
+      <span
+        className="w-3 h-3 rounded bg-[#fef08a]"
+        title="11% - 50%"
+      />
+
+      {/* 1% - 10% - Light Red */}
+      <span
+        className="w-3 h-3 rounded bg-[#fca5a5]"
+        title="1% - 10%"
+      />
+
+      {/* 0% / Date Not Available - Light Blue */}
+      <span
+        className="w-3 h-3 rounded bg-blue-100 border border-blue-200"
+        title="0% / Date not available"
+      />
+    </div>
+
+    <span className="font-semibold text-[#667085]">Low</span>
+  </div>
+</div>
 
         {/* LIVE WORKFORCE */}
         <div className="emp-dash__card flex flex-col min-h-[270px]">
@@ -1642,7 +1716,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* TOP ATTENDANCE PERFORMERS */}
+        {/* TOP ATTENDANCE PERFORMERS - Using API Data */}
         <div className="emp-dash__card flex flex-col min-h-[230px]">
           <div className="emp-dash__card-header">
             <h3 className="emp-dash__card-title">Top Performers</h3>
@@ -1650,30 +1724,45 @@ const Dashboard = () => {
           </div>
           
           <div className="flex-1 space-y-2.5">
-            {topPerformers.map((perf, index) => {
-              let badgeBg = "bg-slate-100 text-slate-500 border border-slate-200";
-              if (index === 0) badgeBg = "bg-amber-100 text-amber-700 border border-amber-300 font-extrabold";
-              if (index === 1) badgeBg = "bg-slate-100 text-slate-700 border border-slate-300 font-extrabold";
-              if (index === 2) badgeBg = "bg-orange-100 text-orange-700 border border-orange-300 font-extrabold";
-              
-              return (
-                <div key={perf.id} className="flex items-center justify-between text-[10px]">
-                  <div className="flex items-center gap-2 w-3/5">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] flex-shrink-0 ${badgeBg}`}>
-                      {index + 1}
-                    </span>
-                    <span className="font-semibold text-[#101828] truncate" title={perf.name}>{perf.name}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1.5 w-2/5 justify-end">
-                    <div className="w-14 bg-slate-100 h-1.5 rounded-full overflow-hidden flex-shrink-0">
-                      <div className="bg-[#10b981] h-full rounded-full" style={{ width: `${perf.rate}%` }} />
+            {displayTopPerformers.length > 0 ? (
+              displayTopPerformers.map((perf, index) => {
+                let badgeBg = "bg-slate-100 text-slate-500 border border-slate-200";
+                if (index === 0) badgeBg = "bg-amber-100 text-amber-700 border border-amber-300 font-extrabold";
+                if (index === 1) badgeBg = "bg-slate-100 text-slate-700 border border-slate-300 font-extrabold";
+                if (index === 2) badgeBg = "bg-orange-100 text-orange-700 border border-orange-300 font-extrabold";
+                
+                const rate = perf.rate || perf.performancePercentage || 0;
+                
+                return (
+                  <div key={perf.id || perf.employeeId || index} className="flex items-center justify-between text-[10px]">
+                    <div className="flex items-center gap-2 w-3/5">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] flex-shrink-0 ${badgeBg}`}>
+                        {index + 1}
+                      </span>
+                      <div className="flex flex-col truncate">
+                        <span className="font-semibold text-[#101828] truncate" title={perf.name || perf.employeeName}>
+                          {perf.name || perf.employeeName || 'Unknown'}
+                        </span>
+                        <span className="text-[8px] text-slate-500 font-medium">
+                          Late: {perf.lateComingDays || 0} {perf.lateComingDays === 1 ? 'day' : 'days'}
+                        </span>
+                      </div>
                     </div>
-                    <span className="font-extrabold text-[#101828] min-w-[28px] text-right">{perf.rate}%</span>
+                    
+                    <div className="flex items-center gap-1.5 w-2/5 justify-end">
+                      <div className="w-14 bg-slate-100 h-1.5 rounded-full overflow-hidden flex-shrink-0">
+                        <div className="bg-[#10b981] h-full rounded-full" style={{ width: `${rate}%` }} />
+                      </div>
+                      <span className="font-extrabold text-[#101828] min-w-[28px] text-right">{rate}%</span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="flex items-center justify-center h-full text-[#667085] text-xs">
+                <span>No data available for {formatMonthLabel(selectedMonth)}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1685,27 +1774,33 @@ const Dashboard = () => {
           </div>
           
           <div className="flex-1 space-y-2.5">
-            {attendanceStreaks.map((streakObj, idx) => (
-              <div key={streakObj.id} className="flex items-center justify-between text-[10px]">
-                <div className="flex items-center gap-2 w-2/3">
-                  <div className={`w-7 h-7 rounded-full border flex items-center justify-center font-bold text-[8px] flex-shrink-0 ${getAvatarBg(streakObj.name)}`}>
-                    {getAvatarInitials(streakObj.name)}
+            {attendanceStreaks.length > 0 ? (
+              attendanceStreaks.map((streakObj, idx) => (
+                <div key={streakObj.id} className="flex items-center justify-between text-[10px]">
+                  <div className="flex items-center gap-2 w-2/3">
+                    <div className={`w-7 h-7 rounded-full border flex items-center justify-center font-bold text-[8px] flex-shrink-0 ${getAvatarBg(streakObj.name)}`}>
+                      {getAvatarInitials(streakObj.name)}
+                    </div>
+                    <span className="font-semibold text-[#101828] truncate" title={streakObj.name}>{streakObj.name}</span>
                   </div>
-                  <span className="font-semibold text-[#101828] truncate" title={streakObj.name}>{streakObj.name}</span>
+                  
+                  <div className="flex items-center gap-1 w-1/3 justify-end text-slate-500 font-bold">
+                    <FaFire className="text-orange-500" size={12} />
+                    <span className="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100 whitespace-nowrap">
+                      {streakObj.streak}d
+                    </span>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-1 w-1/3 justify-end text-slate-500 font-bold">
-                  <FaFire className="text-orange-500" size={12} />
-                  <span className="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100 whitespace-nowrap">
-                    {streakObj.streak}d
-                  </span>
-                </div>
+              ))
+            ) : (
+              <div className="flex items-center justify-center h-full text-[#667085] text-xs">
+                <span>No data available for {formatMonthLabel(selectedMonth)}</span>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
-        {/* DEPARTMENT PERFORMANCE */}
+        {/* DEPARTMENT PERFORMANCE - Using API Data */}
         <div className="emp-dash__card flex flex-col min-h-[230px]">
           <div className="emp-dash__card-header">
             <h3 className="emp-dash__card-title">Dept Performance</h3>
@@ -1713,17 +1808,23 @@ const Dashboard = () => {
           </div>
           
           <div className="flex-1 space-y-2.5">
-            {departmentPerformance.map(dept => (
-              <div key={dept.name} className="flex flex-col gap-0.5 text-[10px]">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-[#667085]">{dept.name}</span>
-                  <span className="font-extrabold text-[#101828]">{dept.rate}%</span>
+            {displayDepartmentPerformance.length > 0 ? (
+              displayDepartmentPerformance.map(dept => (
+                <div key={dept.name} className="flex flex-col gap-0.5 text-[10px]">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-[#667085]">{dept.name}</span>
+                    <span className="font-extrabold text-[#101828]">{dept.rate}%</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${dept.rate}%`, backgroundColor: dept.color }} />
+                  </div>
                 </div>
-                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${dept.rate}%`, backgroundColor: dept.color }} />
-                </div>
+              ))
+            ) : (
+              <div className="flex items-center justify-center h-full text-[#667085] text-xs">
+                <span>No data available for {formatMonthLabel(selectedMonth)}</span>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -1873,64 +1974,70 @@ const Dashboard = () => {
           </div>
 
           <div className="flex-1 w-full h-[190px] py-2 relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={monthlyTrendData} margin={{ top: 5, right: -5, left: -15, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#175cd3" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#175cd3" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis 
-                  dataKey="month" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: '700' }} 
-                />
-                <YAxis 
-                  yAxisId="left"
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: '700' }}
-                  domain={[0, 100]}
-                  ticks={[0, 20, 40, 60, 80, 100]}
-                  unit="%"
-                />
-                <YAxis 
-                  yAxisId="right"
-                  orientation="right"
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#ec4899', fontSize: 9, fontWeight: '700' }}
-                  domain={[0, 'auto']}
-                  allowDecimals={false}
-                />
-                
-                <Tooltip content={<TrendTooltip />} />
-                
-                <Area 
-                  yAxisId="left"
-                  type="monotone" 
-                  dataKey="rate" 
-                  stroke="#175cd3" 
-                  strokeWidth={2} 
-                  fill="url(#trendGradient)" 
-                  dot={{ fill: '#175cd3', stroke: '#fff', strokeWidth: 1.5, r: 3.5 }}
-                  activeDot={{ r: 5, fill: '#175cd3', stroke: '#fff', strokeWidth: 1.5 }}
-                />
-                
-                <Line 
-                  yAxisId="right"
-                  type="monotone" 
-                  dataKey="leavesDays" 
-                  stroke="#ec4899" 
-                  strokeWidth={2} 
-                  dot={{ fill: '#ec4899', stroke: '#fff', strokeWidth: 1.5, r: 3.5 }}
-                  activeDot={{ r: 5, fill: '#ec4899', stroke: '#fff', strokeWidth: 1.5 }}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+            {monthlyTrendData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={monthlyTrendData} margin={{ top: 5, right: -5, left: -15, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#175cd3" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#175cd3" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: '700' }} 
+                  />
+                  <YAxis 
+                    yAxisId="left"
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: '700' }}
+                    domain={[0, 100]}
+                    ticks={[0, 20, 40, 60, 80, 100]}
+                    unit="%"
+                  />
+                  <YAxis 
+                    yAxisId="right"
+                    orientation="right"
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#ec4899', fontSize: 9, fontWeight: '700' }}
+                    domain={[0, 'auto']}
+                    allowDecimals={false}
+                  />
+                  
+                  <Tooltip content={<TrendTooltip />} />
+                  
+                  <Area 
+                    yAxisId="left"
+                    type="monotone" 
+                    dataKey="rate" 
+                    stroke="#175cd3" 
+                    strokeWidth={2} 
+                    fill="url(#trendGradient)" 
+                    dot={{ fill: '#175cd3', stroke: '#fff', strokeWidth: 1.5, r: 3.5 }}
+                    activeDot={{ r: 5, fill: '#175cd3', stroke: '#fff', strokeWidth: 1.5 }}
+                  />
+                  
+                  <Line 
+                    yAxisId="right"
+                    type="monotone" 
+                    dataKey="leavesDays" 
+                    stroke="#ec4899" 
+                    strokeWidth={2} 
+                    dot={{ fill: '#ec4899', stroke: '#fff', strokeWidth: 1.5, r: 3.5 }}
+                    activeDot={{ r: 5, fill: '#ec4899', stroke: '#fff', strokeWidth: 1.5 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-[#667085] text-sm">
+                <span>No data available for this period</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-center gap-3 text-[8px] font-bold text-[#667085] uppercase tracking-wide pt-1 border-t border-slate-100">
@@ -1953,78 +2060,70 @@ const Dashboard = () => {
         </div>
 
         <div className="flex items-stretch gap-2 overflow-x-auto pb-1.5 pt-2 custom-scrollbar">
-          {displayPendingLeaves.map(leave => {
-            const isMock = leave.isMock;
-            
-            const formatLeaveRange = (start, end) => {
-              if (!start) return "";
-              const sDate = new Date(start);
-              const eDate = end ? new Date(end) : sDate;
-              const formatOptions = { month: 'short', day: 'numeric' };
-              
-              if (sDate.getTime() === eDate.getTime()) {
-                return sDate.toLocaleDateString('en-US', formatOptions);
-              }
-              
-              return `${sDate.toLocaleDateString('en-US', formatOptions)} - ${eDate.toLocaleDateString('en-US', formatOptions)}`;
-            };
+          {displayPendingLeaves.length > 0 ? (
+            displayPendingLeaves.map(leave => {
+              const formatLeaveRange = (start, end) => {
+                if (!start) return "";
+                const sDate = new Date(start);
+                const eDate = end ? new Date(end) : sDate;
+                const formatOptions = { month: 'short', day: 'numeric' };
+                
+                if (sDate.getTime() === eDate.getTime()) {
+                  return sDate.toLocaleDateString('en-US', formatOptions);
+                }
+                
+                return `${sDate.toLocaleDateString('en-US', formatOptions)} - ${eDate.toLocaleDateString('en-US', formatOptions)}`;
+              };
 
-            return (
-              <div 
-                key={leave._id} 
-                className="bg-white rounded-lg p-2.5 flex flex-col justify-between min-w-[210px] max-w-[210px] border border-slate-200 shadow-sm hover:shadow-md transition-all"
-              >
-                <div className="flex items-start gap-2">
-                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-[9px] flex-shrink-0 ${getAvatarBg(leave.employeeName || leave.employeeId)}`}>
-                    {getAvatarInitials(leave.employeeName || leave.employeeId)}
+              return (
+                <div 
+                  key={leave._id} 
+                  className="bg-white rounded-lg p-2.5 flex flex-col justify-between min-w-[210px] max-w-[210px] border border-slate-200 shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start gap-2">
+                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-[9px] flex-shrink-0 ${getAvatarBg(leave.employeeName || leave.employeeId)}`}>
+                      {getAvatarInitials(leave.employeeName || leave.employeeId)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] font-extrabold text-[#101828] block truncate" title={leave.employeeName || leave.employeeId}>
+                        {leave.employeeName || leave.employeeId}
+                      </span>
+                      <span className="text-[8px] text-[#667085] font-bold uppercase mt-0.5 block">{leave.leaveType}</span>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-[10px] font-extrabold text-[#101828] block truncate" title={leave.employeeName || leave.employeeId}>
-                      {leave.employeeName || leave.employeeId}
+
+                  <div className="my-2 text-[9px] font-semibold text-[#667085] flex items-center gap-1">
+                    <FiCalendar size={11} className="text-slate-400" />
+                    <span>{formatLeaveRange(leave.startDate, leave.endDate)}</span>
+                    <span className="text-[8px] text-[#667085] font-bold bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-full whitespace-nowrap ml-auto">
+                      {leave.days}d
                     </span>
-                    <span className="text-[8px] text-[#667085] font-bold uppercase mt-0.5 block">{leave.leaveType}</span>
+                  </div>
+
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={() => updateLeaveStatus(leave._id, "approved")}
+                      className="flex-1 flex items-center justify-center gap-0.5 border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50 text-emerald-600 py-0.5 rounded-lg text-[9px] font-bold transition-all"
+                    >
+                      <FiCheck size={11} />
+                      <span>Approve</span>
+                    </button>
+                    <button 
+                      onClick={() => updateLeaveStatus(leave._id, "rejected")}
+                      className="flex-1 flex items-center justify-center gap-0.5 border border-rose-200 hover:border-rose-300 hover:bg-rose-50 text-rose-600 py-0.5 rounded-lg text-[9px] font-bold transition-all"
+                    >
+                      <FiX size={11} />
+                      <span>Reject</span>
+                    </button>
                   </div>
                 </div>
-
-                <div className="my-2 text-[9px] font-semibold text-[#667085] flex items-center gap-1">
-                  <FiCalendar size={11} className="text-slate-400" />
-                  <span>{formatLeaveRange(leave.startDate, leave.endDate)}</span>
-                  <span className="text-[8px] text-[#667085] font-bold bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-full whitespace-nowrap ml-auto">
-                    {leave.days}d
-                  </span>
-                </div>
-
-                <div className="flex gap-1">
-                  <button 
-                    onClick={() => {
-                      if (isMock) {
-                        alert("Approved (Mock Leave)");
-                      } else {
-                        updateLeaveStatus(leave._id, "approved");
-                      }
-                    }}
-                    className="flex-1 flex items-center justify-center gap-0.5 border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50 text-emerald-600 py-0.5 rounded-lg text-[9px] font-bold transition-all"
-                  >
-                    <FiCheck size={11} />
-                    <span>Approve</span>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (isMock) {
-                        alert("Rejected (Mock Leave)");
-                      } else {
-                        updateLeaveStatus(leave._id, "rejected");
-                      }
-                    }}
-                    className="flex-1 flex items-center justify-center gap-0.5 border border-rose-200 hover:border-rose-300 hover:bg-rose-50 text-rose-600 py-0.5 rounded-lg text-[9px] font-bold transition-all"
-                  >
-                    <FiX size={11} />
-                    <span>Reject</span>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <div className="flex items-center justify-center w-full text-[#667085] text-xs py-4">
+              <span>No pending leave requests</span>
+            </div>
+          )}
         </div>
       </div>
 

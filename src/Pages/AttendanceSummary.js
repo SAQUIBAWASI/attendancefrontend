@@ -1,13 +1,7 @@
-
-
-// AttendanceSummary.jsx - Complete fixed OT calculation
-
-// AttendanceSummary.jsx - Complete Fixed Code
-
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import { useEffect, useRef, useState } from "react";
-import { FaBuilding, FaUserTag, FaTimes, FaCalendarAlt, FaSearch, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaBuilding, FaUserTag, FaTimes, FaCalendarAlt, FaSearch, FaChevronDown, FaChevronUp, FaStar, FaTrophy, FaMedal, FaAward } from "react-icons/fa";
 import { FiFilter, FiMapPin, FiUserCheck, FiUsers, FiCoffee, FiTrendingUp, 
   FiDownload, 
   FiTrash2, 
@@ -81,6 +75,268 @@ export default function AttendanceSummary() {
   const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false);
   const [bulkUpdateEmployees, setBulkUpdateEmployees] = useState([]);
 
+  // Zero Attendance Popup States
+  const [showZeroAttendanceModal, setShowZeroAttendanceModal] = useState(false);
+  const [zeroAttendanceEmployeesList, setZeroAttendanceEmployeesList] = useState([]);
+  const [selectedZeroAttendanceEmployees, setSelectedZeroAttendanceEmployees] = useState([]);
+
+  // Top Performers States
+  const [topPerformers, setTopPerformers] = useState([]);
+  const [allPerformers, setAllPerformers] = useState([]);
+  const [showTopPerformersModal, setShowTopPerformersModal] = useState(false);
+  const [showAllPerformersModal, setShowAllPerformersModal] = useState(false);
+  const [selectedPerformer, setSelectedPerformer] = useState(null);
+  const [performerDetails, setPerformerDetails] = useState(null);
+  const [showPerformerDetailModal, setShowPerformerDetailModal] = useState(false);
+
+  // ============================================
+  // ATTENDANCE STATUS HELPER FUNCTIONS
+  // ============================================
+
+  // Helper function to get employee shift timing
+  const getEmployeeShiftTimings = (employeeId) => {
+    const shift = getEmployeeShift(employeeId);
+    if (!shift) return { start: "09:00", end: "18:00", shiftHours: 9, startHour: 9, startMinute: 0, endHour: 18, endMinute: 0 };
+    
+    const [startHour, startMinute] = shift.start.split(':').map(Number);
+    const [endHour, endMinute] = shift.end.split(':').map(Number);
+    let startMinutes = startHour * 60 + startMinute;
+    let endMinutes = endHour * 60 + endMinute;
+    if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+    const shiftHours = (endMinutes - startMinutes) / 60;
+    
+    return {
+      start: shift.start,
+      end: shift.end,
+      shiftHours: shiftHours,
+      startHour: startHour,
+      startMinute: startMinute,
+      endHour: endHour,
+      endMinute: endMinute
+    };
+  };
+
+  // Helper function to calculate attendance status based on check-in time and shift
+  const calculateAttendanceStatus = (employeeId, checkInTime, checkOutTime, totalHours) => {
+    if (!checkInTime) { 
+      return { 
+        status: 'absent', 
+        message: '❌ Absent', 
+        color: 'text-red-600 bg-red-50 border-red-100',
+        icon: '❌',
+        shortMessage: 'Absent'
+      };
+    }
+    
+    const shiftTimings = getEmployeeShiftTimings(employeeId);
+    const checkInDate = new Date(checkInTime);
+    const shiftStart = new Date(checkInTime);
+    shiftStart.setHours(shiftTimings.startHour, shiftTimings.startMinute, 0, 0);
+    
+    // Calculate minutes difference from shift start
+    const diffMinutes = (checkInDate - shiftStart) / (1000 * 60);
+    
+    // Get shift hours
+    const shiftHours = shiftTimings.shiftHours || 9;
+    const actualHours = totalHours || 0;
+    const checkOutExists = !!checkOutTime;
+    
+    // Calculate threshold for full day (85% of shift hours)
+    const fullDayThreshold = shiftHours * 0.85;
+    
+    // Determine status based on rules:
+    // 1. If check-in is 1+ hour late → Half Day
+    // 2. If check-in is 30+ minutes late → Late Coming
+    // 3. If no check-out → Single Punch (Partial)
+    // 4. If check-out exists but hours < 85% of shift → Early Logout (Partial)
+    // 5. If completed full shift hours (85%+) → Full Day
+    
+    // Check for Single Punch (check-in exists but no check-out)
+    if (checkInTime && !checkOutTime) {
+      return { 
+        status: 'single_punch', 
+        message: '📤 Single Punch', 
+        shortMessage: 'Single Punch',
+        color: 'text-purple-700 bg-purple-50 border-purple-200',
+        icon: '📤'
+      };
+    }
+    
+    // Check for Early Logout (check-out exists but didn't complete enough hours)
+    if (checkOutTime && actualHours < fullDayThreshold && actualHours > 0) {
+      const remainingHours = (shiftHours - actualHours).toFixed(1);
+      return { 
+        status: 'early_logout', 
+        message: `⏳ Early Logout (${remainingHours}h remaining)`, 
+        shortMessage: 'Early Logout',
+        color: 'text-orange-700 bg-orange-50 border-orange-200',
+        icon: '⏳'
+      };
+    }
+    
+    // Check for Late Coming (30+ mins late)
+    if (diffMinutes >= 60) {
+      // 1+ hour late → Half Day
+      return { 
+        status: 'half_day', 
+        message: `🌓 Half Day (${Math.round(diffMinutes)} mins late)`, 
+        shortMessage: 'Half Day',
+        color: 'text-amber-700 bg-amber-50 border-amber-200',
+        icon: '🌓'
+      };
+    } else if (diffMinutes >= 30) {
+      // 30+ minutes late → Late Coming
+      return { 
+        status: 'late', 
+        message: `⏰ Late (${Math.round(diffMinutes)} mins)`, 
+        shortMessage: 'Late',
+        color: 'text-orange-600 bg-orange-50 border-orange-200',
+        icon: '⏰'
+      };
+    } else if (actualHours >= fullDayThreshold) {
+      // Completed full shift (85% or more of shift hours)
+      return { 
+        status: 'full_day', 
+        message: '✅ Full Day', 
+        shortMessage: 'Full Day',
+        color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+        icon: '✅'
+      };
+    } else {
+      // Default: Present (on time but didn't complete full shift)
+      return { 
+        status: 'present', 
+        message: '📌 Present', 
+        shortMessage: 'Present',
+        color: 'text-blue-700 bg-blue-50 border-blue-200',
+        icon: '📌'
+      };
+    }
+  };
+
+  // Get employee attendance status for summary view
+  const getEmployeeAttendanceStatus = (employeeId, month) => {
+    if (!employeeId || !month) { 
+      return { 
+        status: 'unknown', 
+        message: 'No Data', 
+        shortMessage: 'No Data',
+        color: 'text-gray-500 bg-gray-50 border-gray-200',
+        icon: '⚪'
+      };
+    }
+    
+    // Get employee records for the month
+    const empRecords = records.filter(r => {
+      if (r.employeeId !== employeeId) return false;
+      if (!r.checkInTime) return false;
+      const recMonth = new Date(r.checkInTime).toISOString().slice(0, 7);
+      return recMonth === month;
+    });
+    
+    if (empRecords.length === 0) {
+      return { 
+        status: 'absent', 
+        message: '❌ No Attendance', 
+        shortMessage: 'No Attendance',
+        color: 'text-red-600 bg-red-50 border-red-100',
+        icon: '❌'
+      };
+    }
+    
+    // Check the most recent record's status
+    const latestRecord = empRecords.reduce((a, b) => 
+      new Date(a.checkInTime) > new Date(b.checkInTime) ? a : b
+    );
+    
+    const status = calculateAttendanceStatus(
+      employeeId, 
+      latestRecord.checkInTime, 
+      latestRecord.checkOutTime, 
+      latestRecord.totalHours || latestRecord.hours || 0
+    );
+    
+    return status;
+  };
+
+  // ============================================
+  // OT CALCULATION HELPER FUNCTIONS - ✅ FIXED
+  // ============================================
+
+  // Get shift hours for an employee
+  const getEmployeeShiftHoursForOT = (employeeId) => {
+    const shiftTimings = getEmployeeShiftTimings(employeeId);
+    return shiftTimings.shiftHours || 9;
+  };
+
+  // Calculate OT for a single record
+  const calculateOTForRecord = (employeeId, totalHours) => {
+    const shiftHours = getEmployeeShiftHoursForOT(employeeId);
+    if (!totalHours || totalHours === 0) return 0;
+    const ot = totalHours - shiftHours;
+    return ot > 0 ? parseFloat(ot.toFixed(2)) : 0;
+  };
+
+  // ✅ FIXED: Calculate total OT for an employee for the month
+  const calculateEmployeeOT = (employeeId) => {
+    if (!employeeId) return 0;
+    
+    let totalOT = 0;
+    
+    // ✅ Agar records empty hain toh 0 return karo
+    if (!records || records.length === 0) return 0;
+    
+    records.forEach((rec) => {
+      // ✅ Skip if employeeId doesn't match
+      if (rec.employeeId !== employeeId) return;
+      
+      // ✅ Skip if no check-in time
+      if (!rec.checkInTime) return;
+      
+      // ✅ Month filter
+      if (selectedMonth && rec.checkInTime) {
+        const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+        if (recMonth !== selectedMonth) return;
+      }
+      
+      // ✅ Date range filter
+      if (fromDate && toDate && rec.checkInTime) {
+        const recordDate = new Date(rec.checkInTime).toISOString().split('T')[0];
+        if (recordDate < fromDate || recordDate > toDate) return;
+      }
+      
+      const hours = rec.totalHours || rec.hours || 0;
+      const ot = calculateOTForRecord(employeeId, hours);
+      totalOT += ot;
+    });
+    
+    return parseFloat(totalOT.toFixed(2));
+  };
+
+  // Format decimal hours to HH:MM format for display
+  const formatDecimalHours = (decimalHours) => {
+    if (!decimalHours && decimalHours !== 0) return "0h 0m";
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    if (minutes === 60) {
+      return `${hours + 1}h 0m`;
+    }
+    return `${hours}h ${minutes}m`;
+  };
+
+  // ✅ FIXED: Format OT hours to 1 decimal place with proper null handling
+  const formatOTHours = (decimalHours) => {
+    if (decimalHours === null || decimalHours === undefined || isNaN(decimalHours)) {
+      return "0.0";
+    }
+    if (decimalHours === 0) return "0.0";
+    return decimalHours.toFixed(1);
+  };
+
+  // ============================================
+  // END OF HELPER FUNCTIONS
+  // ============================================
+
   // Helper function to get all dates of a month
   const getAllDatesOfMonth = (month) => {
     if (!month) return [];
@@ -98,10 +354,9 @@ export default function AttendanceSummary() {
   const getWeekoffDatesForEmployee = (month) => {
     if (!month) return [];
     const monthDates = getAllDatesOfMonth(month);
-    // Get Sundays (max 4)
     return monthDates
-      .filter(date => date.getDay() === 0) // Sundays only
-      .slice(0, 4) // Max 4 Sundays
+      .filter(date => date.getDay() === 0)
+      .slice(0, 4)
       .map(date => date.toLocaleDateString('en-CA'));
   };
 
@@ -117,17 +372,14 @@ export default function AttendanceSummary() {
     return monthDates.filter(date => {
       const dateKey = date.toLocaleDateString('en-CA');
       const dayOfWeek = date.getDay();
-      // Skip only Sundays (day 0)
       if (dayOfWeek === 0) return false;
-      // Skip weekoffs (Sundays)
       if (weekoffDates.includes(dateKey)) return false;
-      // If current month, only till today
       if (month === currentMonth && dateKey > todayStr) return false;
       return true;
     });
   };
 
-  // Helper function to get missing attendance dates for a specific employee (excluding Sundays)
+  // Helper function to get missing attendance dates for a specific employee
   const getMissingAttendanceDates = (employeeId, month) => {
     if (!month) return [];
     
@@ -135,25 +387,18 @@ export default function AttendanceSummary() {
     const employeeRecords = employeeDetails.filter(r => r.employeeId === employeeId);
     const weekoffDates = getWeekoffDatesForEmployee(month);
     
-    // Get dates where employee has attendance
     const attendedDates = new Set(
       employeeRecords
         .filter(r => r.checkInTime)
         .map(r => new Date(r.checkInTime).toLocaleDateString('en-CA'))
     );
     
-    // Filter out Sundays, weekoffs, and dates with attendance
     const workingDays = monthDates.filter(date => {
       const dateKey = date.toLocaleDateString('en-CA');
       const dayOfWeek = date.getDay();
       
-      // Skip Sundays only
       if (dayOfWeek === 0) return false;
-      
-      // Skip weekoffs (Sundays)
       if (weekoffDates.includes(dateKey)) return false;
-      
-      // Skip if attendance already exists
       if (attendedDates.has(dateKey)) return false;
       
       return true;
@@ -162,7 +407,7 @@ export default function AttendanceSummary() {
     return workingDays;
   };
 
-  // Get all active employees with their attendance status for ANY month
+  // Get all active employees with their attendance status
   const getAllActiveEmployeesAttendanceStatus = (month) => {
     if (!month) return [];
     
@@ -171,12 +416,10 @@ export default function AttendanceSummary() {
     const todayStr = today.toISOString().split('T')[0];
     const currentMonth = new Date().toISOString().slice(0, 7);
     
-    // Get all active employees
     const activeEmployees = employees.filter(emp => 
       emp.status === 'active' || emp.status === undefined
     );
     
-    // For each employee, check their attendance for the month
     return activeEmployees.map(emp => {
       const empRecords = records.filter(r => 
         r.employeeId === emp.employeeId &&
@@ -184,41 +427,32 @@ export default function AttendanceSummary() {
         new Date(r.checkInTime).toISOString().slice(0, 7) === month
       );
       
-      // Get dates where employee has attendance
       const attendedDates = new Set(
         empRecords.map(r => new Date(r.checkInTime).toLocaleDateString('en-CA'))
       );
       
-      // Get weekoff dates (Sundays)
       const weekoffDates = getWeekoffDatesForEmployee(month);
       
-      // Get working days (Monday to Saturday, excluding Sundays)
       let workingDays = monthDates.filter(date => {
         const dateKey = date.toLocaleDateString('en-CA');
         const dayOfWeek = date.getDay();
-        // Skip Sundays only
         if (dayOfWeek === 0) return false;
-        // Skip weekoffs (Sundays)
         if (weekoffDates.includes(dateKey)) return false;
         return true;
       });
       
-      // If current month, only till today
       if (month === currentMonth) {
         workingDays = workingDays.filter(date => 
           date.toLocaleDateString('en-CA') <= todayStr
         );
       }
       
-      // Count how many working days employee has attendance
       const attendedCount = workingDays.filter(date => 
         attendedDates.has(date.toLocaleDateString('en-CA'))
       ).length;
       
-      // Get missing days (working days where attendance is missing)
       const missingDaysList = workingDays.filter(date => {
         const dateKey = date.toLocaleDateString('en-CA');
-        // Skip if attendance exists
         if (attendedDates.has(dateKey)) return false;
         return true;
       });
@@ -240,17 +474,6 @@ export default function AttendanceSummary() {
           : 0
       };
     });
-  };
-
-  // Helper function to format decimal hours to HH:MM
-  const formatDecimalHours = (decimalHours) => {
-    if (!decimalHours && decimalHours !== 0) return "0h 0m";
-    const hours = Math.floor(decimalHours);
-    const minutes = Math.round((decimalHours - hours) * 60);
-    if (minutes === 60) {
-      return `${hours + 1}h 0m`;
-    }
-    return `${hours}h ${minutes}m`;
   };
 
   // Calculate OT Hours
@@ -375,8 +598,9 @@ export default function AttendanceSummary() {
     return { start: null, end: null };
   };
 
-  const getEmployeeShift = (employeeId) => {
-    const shiftAssignment = shiftsData.find(s =>
+  const getEmployeeShift = (employeeId, customShiftsData = null) => {
+    const dataToUse = customShiftsData || shiftsData;
+    const shiftAssignment = dataToUse.find(s =>
       s.employeeAssignment?.employeeId === employeeId ||
       s.employeeId === employeeId
     );
@@ -482,33 +706,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  const calculateOTForRecord = (employeeId, totalHours) => {
-    const shiftHours = getEmployeeShiftHours(employeeId);
-    const ot = calculateOTHours(totalHours, shiftHours);
-    return ot;
-  };
-
-  const calculateEmployeeOT = (employeeId) => {
-    let totalOT = 0;
-    const shiftHours = getEmployeeShiftHours(employeeId);
-    records.forEach((rec) => {
-      if (rec.employeeId !== employeeId) return;
-      if (selectedMonth && rec.checkInTime) {
-        const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
-        if (recMonth !== selectedMonth) return;
-      }
-      if (fromDate && toDate && rec.checkInTime) {
-        const recordDate = new Date(rec.checkInTime).toISOString().split('T')[0];
-        if (recordDate < fromDate || recordDate > toDate) return;
-      }
-      const hours = rec.totalHours || rec.hours || 0;
-      const assignedShift = rec.assignedShiftHours || shiftHours || 9;
-      const ot = calculateOTHours(hours, assignedShift);
-      totalOT += ot;
-    });
-    return Number(totalOT.toFixed(2));
-  };
-
   const calculateEmployeeWorkingDays = (employeeId) => {
     let presentDays = 0;
     let halfDays = 0;
@@ -530,11 +727,12 @@ export default function AttendanceSummary() {
     return presentDays + (halfDays * 0.5);
   };
 
-  const calculateEmployeeLateDays = (employeeId) => {
+  const calculateEmployeeLateDays = (employeeId, customRecords = null, customShiftsData = null) => {
     let lateDays = 0;
-    const shift = getEmployeeShift(employeeId);
+    const shift = getEmployeeShift(employeeId, customShiftsData);
     if (!shift) return 0;
-    records.forEach((rec) => {
+    const recordsToUse = customRecords || records;
+    recordsToUse.forEach((rec) => {
       if (rec.employeeId !== employeeId) return;
       if (selectedMonth && rec.checkInTime) {
         const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
@@ -549,9 +747,7 @@ export default function AttendanceSummary() {
         const [hours, minutes] = shift.start.split(':').map(Number);
         const shiftStartTime = new Date(checkInDateTime);
         shiftStartTime.setHours(hours, minutes, 0, 0);
-        const graceTime = new Date(shiftStartTime);
-        graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
-        if (checkInDateTime > graceTime) lateDays++;
+        if (checkInDateTime > shiftStartTime) lateDays++;
       }
     });
     return lateDays;
@@ -600,6 +796,119 @@ export default function AttendanceSummary() {
     const employee = employees.find(emp => emp.employeeId === employeeId);
     return employee?.role || employee?.designation || '-';
   };
+
+  // ============================================
+  // TOP PERFORMERS API FUNCTIONS - FIXED
+  // ============================================
+
+  // Fetch Top Performers with month filter - ENRICHED WITH LATE DAYS
+  const fetchTopPerformers = async (month = null, customRecords = null, customShiftsData = null) => {
+    try {
+      let url = `${BASE_URL}/dashboard/top-performers`;
+      if (month) {
+        const [year, monthNum] = month.split('-').map(Number);
+        url = `${BASE_URL}/dashboard/top-performers?month=${monthNum}&year=${year}`;
+      }
+      const response = await fetch(url);
+      const result = await response.json();
+      if (result.success) {
+        // ENRICH performer data with calculated late days from records
+        const enrichedPerformers = (result.performers || []).map(perf => {
+          // Calculate late days using the same function as the main table
+          const empCode = perf.employeeCode || perf.employeeId;
+          const lateDays = calculateEmployeeLateDays(empCode, customRecords, customShiftsData);
+          
+          // Also get other metrics for completeness
+          const presentDays = perf.presentDays || perf.attendedDays || 0;
+          const workingDays = perf.expectedWorkingDays || perf.totalWorkingDays || 0;
+          const otHours = perf.actualWorkingHours || perf.overtimeHours || 0;
+          const performance = perf.performancePercentage || perf.rate || 0;
+          
+          return {
+            ...perf,
+            employeeId: empCode,
+            // Override with calculated values from our records
+            lateDays: lateDays,
+            lateComingDays: lateDays, // This is what the popup uses
+            presentDays: presentDays,
+            attendedDays: presentDays,
+            expectedWorkingDays: workingDays,
+            totalWorkingDays: workingDays,
+            actualWorkingHours: otHours,
+            overtimeHours: otHours,
+            performancePercentage: performance,
+            rate: performance,
+            // Also fetch from employee summary if available
+            name: perf.name || perf.employeeName || employees.find(e => e.employeeId === empCode)?.name || 'Unknown',
+            department: perf.department || getEmployeeDepartment(empCode),
+          };
+        });
+        setTopPerformers(enrichedPerformers);
+      } else {
+        console.error("Failed to fetch top performers:", result.message);
+        setTopPerformers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching top performers:", error);
+      setTopPerformers([]);
+    }
+  };
+
+  const fetchAllPerformers = async (month = null, customRecords = null, customShiftsData = null) => {
+    try {
+      let url = `${BASE_URL}/dashboard/all-performers`;
+      if (month) {
+        const [year, monthNum] = month.split('-').map(Number);
+        url = `${BASE_URL}/dashboard/all-performers?month=${monthNum}&year=${year}`;
+      }
+      const response = await fetch(url);
+      const result = await response.json();
+      if (result.success) {
+        // ENRICH performer data with calculated late days from records
+        const enrichedPerformers = (result.performers || []).map(perf => {
+          // Calculate late days using the same function as the main table
+          const empCode = perf.employeeCode || perf.employeeId;
+          const lateDays = calculateEmployeeLateDays(empCode, customRecords, customShiftsData);
+          
+          // Also get other metrics for completeness
+          const presentDays = perf.presentDays || perf.attendedDays || 0;
+          const workingDays = perf.expectedWorkingDays || perf.totalWorkingDays || 0;
+          const otHours = perf.actualWorkingHours || perf.overtimeHours || 0;
+          const performance = perf.performancePercentage || perf.rate || 0;
+          
+          return {
+            ...perf,
+            employeeId: empCode,
+            // Override with calculated values from our records
+            lateDays: lateDays,
+            lateComingDays: lateDays, // This is what the popup uses
+            presentDays: presentDays,
+            attendedDays: presentDays,
+            expectedWorkingDays: workingDays,
+            totalWorkingDays: workingDays,
+            actualWorkingHours: otHours,
+            overtimeHours: otHours,
+            performancePercentage: performance,
+            rate: performance,
+            // Also fetch from employee summary if available
+            name: perf.name || perf.employeeName || employees.find(e => e.employeeId === empCode)?.name || 'Unknown',
+            department: perf.department || getEmployeeDepartment(empCode),
+          };
+        });
+        setAllPerformers(enrichedPerformers);
+      } else {
+        console.error("Failed to fetch all performers:", result.message);
+        setAllPerformers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching all performers:", error);
+      setAllPerformers([]);
+    }
+  };
+
+  // ============================================
+  // END OF TOP PERFORMERS API FUNCTIONS
+  // ============================================
 
   const downloadSingleEmployeeExcel = async (employeeId) => {
     try {
@@ -658,7 +967,7 @@ export default function AttendanceSummary() {
         "Onsite Days": calculateEmployeeOnsiteDays(employeeId),
         "Half Day": empSummary.halfDayWorking || 0,
         "Full Day Leave": empSummary.fullDayNotWorking || 0,
-        "Over Time": formatDecimalHours(totalOT),
+        "Over Time": formatOTHours(totalOT),
         "Working Days": calculateEmployeeWorkingDays(employeeId).toFixed(1),
         "Total Hours": formatDecimalHours(sortedAttendance.reduce((sum, rec) =>
           sum + (Number(rec.totalHours) || 0), 0
@@ -688,6 +997,7 @@ export default function AttendanceSummary() {
           (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
         const adminComment = rec.comment !== undefined && rec.comment !== null ? rec.comment : "";
         const otHours = calculateOTForRecord(employeeId, hours);
+        const status = calculateAttendanceStatus(employeeId, rec.checkInTime, rec.checkOutTime, hours);
         return {
           "Date": checkIn.toLocaleDateString("en-IN"),
           "Day": checkIn.toLocaleDateString("en-IN", { weekday: 'short' }),
@@ -696,8 +1006,9 @@ export default function AttendanceSummary() {
           "Check-In": formatDate(rec.checkInTime),
           "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
           "Hours": formatDecimalHours(parseFloat(hours)),
-          "Over Time": formatDecimalHours(otHours),
+          "Over Time": formatOTHours(otHours),
           "Day Type": calculateDayType(employeeId, hours),
+          "Attendance Status": status.shortMessage,
           "Reason": rec.reason || "",
           "Admin Comment": adminComment
         };
@@ -747,6 +1058,7 @@ export default function AttendanceSummary() {
         const shiftInfo = shift ? `${shift.start} - ${shift.end}` : "Not Assigned";
         const shiftHours = getEmployeeShiftHours(emp.employeeId);
         const totalOT = calculateEmployeeOT(emp.employeeId);
+        const status = getEmployeeAttendanceStatus(emp.employeeId, emp.month || selectedMonth);
         return {
           "Employee ID": emp.employeeId,
           "Name": emp.name,
@@ -760,8 +1072,9 @@ export default function AttendanceSummary() {
           "Onsite Days": calculateEmployeeOnsiteDays(emp.employeeId),
           "Half Day": emp.halfDayWorking || 0,
           "Full Day": emp.fullDayNotWorking || 0,
-          "Over Time": formatDecimalHours(totalOT),
-          "Working Days": calculateEmployeeWorkingDays(emp.employeeId).toFixed(1)
+          "Over Time": formatOTHours(totalOT),
+          "Working Days": calculateEmployeeWorkingDays(emp.employeeId).toFixed(1),
+          "Attendance Status": status.shortMessage
         };
       });
       const summarySheet = XLSX.utils.json_to_sheet(summaryData);
@@ -821,6 +1134,7 @@ export default function AttendanceSummary() {
               (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
             const adminComment = rec.comment !== undefined && rec.comment !== null ? rec.comment : "";
             const otHours = calculateOTForRecord(empId, hours);
+            const status = calculateAttendanceStatus(empId, rec.checkInTime, rec.checkOutTime, hours);
             return {
               "Date": checkIn.toLocaleDateString("en-IN"),
               "Day": checkIn.toLocaleDateString("en-IN", { weekday: 'short' }),
@@ -829,8 +1143,9 @@ export default function AttendanceSummary() {
               "Check-In": formatDate(rec.checkInTime),
               "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
               "Hours": formatDecimalHours(parseFloat(hours)),
-              "Over Time": formatDecimalHours(otHours),
+              "Over Time": formatOTHours(otHours),
               "Day Type": calculateDayType(empId, hours),
+              "Attendance Status": status.shortMessage,
               "Reason": rec.reason || "",
               "Admin Comment": adminComment
             };
@@ -948,6 +1263,7 @@ export default function AttendanceSummary() {
       setEmployees(activeEmployees);
       extractUniqueValues(activeEmployees);
       
+      let assignmentsList = [];
       try {
         const shiftsRes = await fetch(`${BASE_URL}/shifts/master`);
         if (shiftsRes.ok) {
@@ -960,7 +1276,8 @@ export default function AttendanceSummary() {
         if (assignmentsRes.ok) {
           const assignmentsResult = await assignmentsRes.json();
           if (assignmentsResult.success) {
-            setShiftsData(assignmentsResult.data || []);
+            assignmentsList = assignmentsResult.data || [];
+            setShiftsData(assignmentsList);
           }
         }
       } catch (shiftError) {
@@ -986,6 +1303,11 @@ export default function AttendanceSummary() {
       );
       setRecords(sortedRecords);
       setFilteredRecords(sortedRecords);
+      
+      // Fetch top performers and all performers with month filter
+      await fetchTopPerformers(selectedMonth, sortedRecords, assignmentsList);
+      await fetchAllPerformers(selectedMonth, sortedRecords, assignmentsList);
+      
       await calculateSummaryFromBackend();
     } catch (err) {
       setError(err.message);
@@ -1124,7 +1446,7 @@ export default function AttendanceSummary() {
     }
   };
 
-  // Handle adding missing punches with weekoff logic (Monday to Saturday working)
+  // Handle adding missing punches with weekoff logic
   const handleAddMissingPunchesWithWeekoff = async () => {
     try {
       const missingDates = getMissingAttendanceDates(selectedEmployee, selectedMonth);
@@ -1135,7 +1457,6 @@ export default function AttendanceSummary() {
         return;
       }
       
-      // Show which dates will be added and which are weekoffs
       let confirmMessage = `📋 Attendance Summary for ${selectedEmployee}:\n\n`;
       confirmMessage += `📅 Month: ${selectedMonth}\n`;
       confirmMessage += `📌 Weekoffs (Sundays - will be skipped): ${weekoffDates.length > 0 ? weekoffDates.join(', ') : 'None'}\n`;
@@ -1154,7 +1475,6 @@ export default function AttendanceSummary() {
       let successCount = 0;
       const errors = [];
       
-      // Get shift timings for the employee
       const shift = getEmployeeShift(selectedEmployee);
       if (!shift) {
         showSaveStatus("❌ Employee shift not found!", "error");
@@ -1162,15 +1482,11 @@ export default function AttendanceSummary() {
         return;
       }
       
-      // Process each missing date
       for (const date of missingDates) {
         const dateKey = date.toLocaleDateString('en-CA');
-        
-        // Create check-in and check-out times based on shift
         const checkInTime = `${dateKey}T${shift.start}:00`;
         const checkOutTime = `${dateKey}T${shift.end}:00`;
         
-        // Calculate hours based on shift
         const [startHour, startMinute] = shift.start.split(':').map(Number);
         const [endHour, endMinute] = shift.end.split(':').map(Number);
         let startMinutes = startHour * 60 + startMinute;
@@ -1178,20 +1494,17 @@ export default function AttendanceSummary() {
         if (endMinutes <= startMinutes) endMinutes += 24 * 60;
         const hours = (endMinutes - startMinutes) / 60;
         
-        // Check if any attendance already exists for this date
         const existingRecord = employeeDetails.find(r => 
           r.checkInTime && 
           new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey
         );
         
         if (existingRecord) {
-          // Skip if already has attendance
           continue;
         }
         
-        // Create attendance record
         const payload = {
-          attendanceId: null, // New record
+          attendanceId: null,
           employeeId: selectedEmployee,
           date: dateKey,
           hours: hours,
@@ -1214,7 +1527,6 @@ export default function AttendanceSummary() {
           const result = await response.json();
           if (result.success) {
             successCount++;
-            // Update local state to show the new record
             const newRecord = {
               _id: result.data?._id || `temp_${Date.now()}_${dateKey}`,
               employeeId: selectedEmployee,
@@ -1236,11 +1548,8 @@ export default function AttendanceSummary() {
         }
       }
       
-      // Refresh data after all operations
       if (successCount > 0) {
         showSaveStatus(`✅ ${successCount}/${missingDates.length} missing attendance records added successfully!${errors.length > 0 ? ` (${errors.length} failed)` : ''}`);
-        
-        // Refresh employee details
         await handleViewDetails(selectedEmployee);
         await calculateSummaryFromBackend();
         await fetchAllData();
@@ -1267,28 +1576,12 @@ export default function AttendanceSummary() {
       return;
     }
     
-    // Create a table of employees with no attendance
-    let message = "🚨 EMPLOYEES WITH ZERO ATTENDANCE:\n\n";
-    message += `📌 Working Days: Monday to Saturday\n`;
-    message += `📌 Weekoffs (Sundays - will be skipped): ${weekoffDates.length > 0 ? weekoffDates.join(', ') : 'None'}\n\n`;
-    message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-    message += "ID\tName\t\tDepartment\tMissing Days\n";
-    message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-    
-    zeroAttendanceEmployees.forEach((emp, index) => {
-      message += `${emp.employeeId}\t${emp.name}\t\t${emp.department || '-'}\t${emp.missingDays}\n`;
-    });
-    
-    message += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-    message += `Total: ${zeroAttendanceEmployees.length} employees with zero attendance`;
-    message += "\n\nDo you want to add attendance for all these employees?";
-    
-    if (window.confirm(message)) {
-      handleBulkAddAttendanceForZeroAttendanceEmployees(zeroAttendanceEmployees);
-    }
+    setZeroAttendanceEmployeesList(zeroAttendanceEmployees);
+    setSelectedZeroAttendanceEmployees(zeroAttendanceEmployees.map(emp => emp.employeeId));
+    setShowZeroAttendanceModal(true);
   };
 
-  // Bulk add attendance for all employees with zero attendance (with weekoff logic)
+  // Bulk add attendance for all employees with zero attendance
   const handleBulkAddAttendanceForZeroAttendanceEmployees = async (employeesList) => {
     try {
       if (!employeesList || employeesList.length === 0) {
@@ -1323,14 +1616,12 @@ export default function AttendanceSummary() {
       
       for (const emp of employeesList) {
         try {
-          // Get shift for this employee
           const shift = getEmployeeShift(emp.employeeId);
           if (!shift) {
             errors.push(`❌ ${emp.employeeId} - No shift assigned`);
             continue;
           }
           
-          // Get all missing dates for this employee
           const params = new URLSearchParams({
             employeeId: emp.employeeId,
             month: selectedMonth
@@ -1346,7 +1637,6 @@ export default function AttendanceSummary() {
           
           const empDetails = result.details || [];
           
-          // Get missing dates (excluding Sundays)
           const monthDates = getAllDatesOfMonth(selectedMonth);
           const attendedDates = new Set(
             empDetails
@@ -1357,16 +1647,12 @@ export default function AttendanceSummary() {
           let workingDaysForEmp = monthDates.filter(date => {
             const dateKey = date.toLocaleDateString('en-CA');
             const dayOfWeek = date.getDay();
-            // Skip Sundays only
             if (dayOfWeek === 0) return false;
-            // Skip weekoffs (Sundays)
             if (weekoffDates.includes(dateKey)) return false;
-            // Skip if attendance exists
             if (attendedDates.has(dateKey)) return false;
             return true;
           });
           
-          // If current month, only till today
           if (selectedMonth === currentMonth) {
             workingDaysForEmp = workingDaysForEmp.filter(date => 
               date.toLocaleDateString('en-CA') <= todayStr
@@ -1377,7 +1663,6 @@ export default function AttendanceSummary() {
             continue;
           }
           
-          // Add attendance for each missing date
           for (const date of workingDaysForEmp) {
             const dateKey = date.toLocaleDateString('en-CA');
             const checkInTime = `${dateKey}T${shift.start}:00`;
@@ -1428,11 +1713,8 @@ export default function AttendanceSummary() {
         }
       }
       
-      // Show final status
       if (totalAdded > 0) {
         showSaveStatus(`✅ Added ${totalAdded} attendance records for ${employeesList.length} employees!${errors.length > 0 ? ` (${errors.length} errors)` : ''}`);
-        
-        // Refresh all data
         await fetchAllData();
         if (selectedEmployee) {
           await handleViewDetails(selectedEmployee);
@@ -1454,6 +1736,7 @@ export default function AttendanceSummary() {
       showSaveStatus("🚨 Error in bulk operation: " + error.message, "error");
     } finally {
       setLoading(false);
+      setShowZeroAttendanceModal(false);
     }
   };
 
@@ -1527,14 +1810,11 @@ export default function AttendanceSummary() {
         return;
       }
       
-      // Update state
       setEditedRows(newEdited);
       showSaveStatus(`✅ Found ${count} records! Saving...`);
       
-      // CRITICAL: Wait for state to update
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Call bulk save with pre-collected records
       await handleBulkSaveAttendanceWithRecords(recordsToUpdate);
       
     } catch (error) {
@@ -1543,7 +1823,7 @@ export default function AttendanceSummary() {
     }
   };
 
-  // Bulk save with pre-collected records - NO STATE READ
+  // Bulk save with pre-collected records
   const handleBulkSaveAttendanceWithRecords = async (recordsToUpdate) => {
     try {
       if (recordsToUpdate.length === 0) {
@@ -1555,11 +1835,9 @@ export default function AttendanceSummary() {
       let successCount = 0;
       const errors = [];
       
-      // Process each record
       for (const item of recordsToUpdate) {
         const { dateKey, rec, updateData } = item;
         
-        // Use the data from updateData directly (no state read)
         const currentReason = updateData.reason !== undefined ? updateData.reason : (rec?.reason || "");
         const currentComment = updateData.comment !== undefined ? updateData.comment : (rec?.comment || "");
         const currentHours = updateData.hours !== undefined ? updateData.hours : (rec ? (rec.totalHours || rec.hours) : 0);
@@ -1613,7 +1891,6 @@ export default function AttendanceSummary() {
           const result = await res.json();
           if (result.success) {
             successCount++;
-            // Clear the edited flag
             setEditedRows(prev => {
               const newRows = { ...prev };
               if (newRows[dateKey]) {
@@ -1632,8 +1909,6 @@ export default function AttendanceSummary() {
       
       if (successCount > 0) {
         showSaveStatus(`✅ ${successCount}/${recordsToUpdate.length} records updated successfully!${errors.length > 0 ? ` (${errors.length} failed)` : ''}`);
-        
-        // Refresh data
         if (selectedEmployee) {
           await handleViewDetails(selectedEmployee);
         }
@@ -1782,6 +2057,9 @@ export default function AttendanceSummary() {
     try {
       setLoading(true);
       await calculateSummaryFromBackend();
+      // Re-fetch performers with current month filter
+      await fetchTopPerformers(selectedMonth);
+      await fetchAllPerformers(selectedMonth);
       setCurrentPage(1);
     } catch (error) {
       console.error("Error applying date filter:", error);
@@ -1798,6 +2076,9 @@ export default function AttendanceSummary() {
     try {
       setLoading(true);
       await calculateSummaryFromBackend();
+      // Re-fetch performers with new month filter
+      await fetchTopPerformers(month);
+      await fetchAllPerformers(month);
       setCurrentPage(1);
     } catch (error) {
       console.error("Error applying month filter:", error);
@@ -1816,6 +2097,9 @@ export default function AttendanceSummary() {
     try {
       setLoading(true);
       await calculateSummaryFromBackend();
+      // Re-fetch performers with current month
+      await fetchTopPerformers(new Date().toISOString().slice(0, 7));
+      await fetchAllPerformers(new Date().toISOString().slice(0, 7));
       setCurrentPage(1);
     } catch (error) {
       console.error("Error clearing filters:", error);
@@ -1889,6 +2173,31 @@ export default function AttendanceSummary() {
       default:
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Unknown</span>;
     }
+  };
+
+  // Show Top Performers Modal
+  const handleShowTopPerformers = () => {
+    setShowTopPerformersModal(true);
+  };
+
+  // Show All Performers Modal
+  const handleShowAllPerformers = () => {
+    setShowAllPerformersModal(true);
+  };
+
+  // Show Performer Details
+  const handleShowPerformerDetails = (performer) => {
+    setSelectedPerformer(performer);
+    setPerformerDetails(performer);
+    setShowPerformerDetailModal(true);
+  };
+
+  // Format Month Label
+  const formatMonthLabel = (ymStr) => {
+    if (!ymStr) return "Current Month";
+    const [y, m] = ymStr.split('-');
+    const date = new Date(parseInt(y), parseInt(m) - 1, 1);
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
   useEffect(() => {
@@ -2032,77 +2341,484 @@ export default function AttendanceSummary() {
           </div>
         )}
 
-        {/* Header */}
-        <div className="emp-dash__header">
+        {/* Header with Top Performers, All Performers, Zero Attendance and Filters - Desktop Only */}
+        <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap mb-4">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Attendance <span>Summary</span>
             </h1>
           </div>
-          <div className="emp-dash__date-pill">
-            <FaCalendarAlt />
-            <span>{getPeriodLabel()}</span>
+          
+          {/* Right side: Performer Tags + Zero Attendance + Filters (Desktop only) */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Top Performers Tag */}
+            {topPerformers.length > 0 && (
+              <button
+                onClick={handleShowTopPerformers}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-amber-700 bg-amber-100 border border-amber-200 rounded-full hover:bg-amber-200 transition shadow-sm cursor-pointer"
+              >
+                <FaStar className="text-amber-500 text-sm" />
+                {topPerformers.length} Top Performers
+                <span className="text-[10px] text-amber-500">★</span>
+              </button>
+            )}
+
+            {/* All Performers Tag */}
+            {allPerformers.length > 0 && (
+              <button
+                onClick={handleShowAllPerformers}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-blue-700 bg-blue-100 border border-blue-200 rounded-full hover:bg-blue-200 transition shadow-sm cursor-pointer"
+              >
+                <FaTrophy className="text-blue-500 text-sm" />
+                {allPerformers.length} All Performers
+                <span className="text-[10px] text-blue-500">▼</span>
+              </button>
+            )}
+
+            {/* Zero Attendance Tag */}
+            {(() => {
+              const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
+              const zeroAttendanceEmployees = status.filter(emp => emp.hasNoAttendance);
+              if (zeroAttendanceEmployees.length === 0) return null;
+              return (
+                <button
+                  onClick={handleShowZeroAttendanceEmployees}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-red-700 bg-red-100 border border-red-200 rounded-full hover:bg-red-200 transition shadow-sm cursor-pointer"
+                >
+                  <span className="text-red-500 text-sm">🚨</span>
+                  {zeroAttendanceEmployees.length} Zero Attendance
+                  <span className="text-[10px] text-red-500">▼</span>
+                </button>
+              );
+            })()}
+
+            {/* Quick Search - Compact */}
+            <div className="relative">
+              <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-[140px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Department Dropdown - Compact */}
+            <div className="relative" ref={departmentFilterRef}>
+              <button
+                onClick={() => {
+                  setShowDepartmentFilter(!showDepartmentFilter);
+                  setShowDesignationFilter(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDepartment
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FaBuilding className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDepartment || "Dept"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDepartmentFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDepartment("");
+                      setShowDepartmentFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Departments
+                  </div>
+                  {uniqueDepartments.map((dept) => (
+                    <div
+                      key={dept}
+                      onClick={() => {
+                        setFilterDepartment(dept);
+                        setShowDepartmentFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      {dept}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Designation Dropdown - Compact */}
+            <div className="relative" ref={designationFilterRef}>
+              <button
+                onClick={() => {
+                  setShowDesignationFilter(!showDesignationFilter);
+                  setShowDepartmentFilter(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDesignation
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FaUserTag className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDesignation || "Design"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDesignationFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDesignation("");
+                      setShowDesignationFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Designations
+                  </div>
+                  {uniqueDesignations.map((des) => (
+                    <div
+                      key={des}
+                      onClick={() => {
+                        setFilterDesignation(des);
+                        setShowDesignationFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      {des}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Month Picker - Compact */}
+            <div className="relative">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={handleMonthChange}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+              />
+            </div>
+
+            {/* Apply Filter Button */}
+            <button
+              onClick={handleDateRangeFilter}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaSearch className="w-3 h-3" />
+              Apply
+            </button>
+
+            {/* Bulk Update Button */}
+            <button
+              onClick={() => {
+                const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
+                const employeesWithMissing = status.filter(emp => emp.hasMissingDays);
+                if (employeesWithMissing.length === 0) {
+                  showSaveStatus("✅ All employees have complete attendance for this month!", "success");
+                  return;
+                }
+                setBulkUpdateEmployees(employeesWithMissing);
+                setSelectedEmployeesForBulkUpdate([]);
+                setShowBulkUpdateModal(true);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all shadow-sm whitespace-nowrap"
+            >
+              <FiPlus className="w-3 h-3" />
+              Bulk Update
+            </button>
+
+            {/* Clear Filters Button */}
+            {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+
+            {/* Export Button */}
+            <button
+              onClick={downloadCombinedExcel}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-md whitespace-nowrap"
+            >
+              <FiDownload className="w-3 h-3" />
+              Export
+            </button>
           </div>
         </div>
 
-        {/* Zero Attendance Alert Card */}
-        {(() => {
-          const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
-          const zeroAttendanceEmployees = status.filter(emp => emp.hasNoAttendance);
-          const weekoffDates = getWeekoffDatesForEmployee(selectedMonth);
+        {/* Mobile Header - Performer Tags + Zero Attendance + Title */}
+        <div className="sm:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            Attendance <span className="text-indigo-600">Summary</span>
+          </h1>
           
-          if (zeroAttendanceEmployees.length === 0) return null;
-          
-          return (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 bg-red-100 rounded-full">
-                    <span className="text-xl">🚨</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-red-700">
-                      {zeroAttendanceEmployees.length} Employee(s) with Zero Attendance
-                    </h4>
-                    <p className="text-xs text-red-600">
-                      These employees have not marked any attendance for {selectedMonth}
-                      {weekoffDates.length > 0 && ` (${weekoffDates.length} Sundays will be skipped)`}
-                    </p>
-                    {/* <p className="text-[10px] text-gray-500 mt-0.5">
-                      Working Days: Monday to Saturday | Weekoff: Sunday
-                    </p> */}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleShowZeroAttendanceEmployees}
-                    className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition shadow-sm"
-                  >
-                    View & Fix All
-                  </button>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Top Performers - Mobile */}
+            {topPerformers.length > 0 && (
+              <button
+                onClick={handleShowTopPerformers}
+                className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-200 rounded-full hover:bg-amber-200 transition shadow-sm cursor-pointer"
+              >
+                <FaStar className="text-amber-500 text-xs" />
+                {topPerformers.length}
+              </button>
+            )}
+
+            {/* All Performers - Mobile */}
+            {allPerformers.length > 0 && (
+              <button
+                onClick={handleShowAllPerformers}
+                className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-blue-700 bg-blue-100 border border-blue-200 rounded-full hover:bg-blue-200 transition shadow-sm cursor-pointer"
+              >
+                <FaTrophy className="text-blue-500 text-xs" />
+                {allPerformers.length}
+              </button>
+            )}
+
+            {/* Zero Attendance Tag - Mobile */}
+            {(() => {
+              const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
+              const zeroAttendanceEmployees = status.filter(emp => emp.hasNoAttendance);
+              if (zeroAttendanceEmployees.length === 0) return null;
+              return (
+                <button
+                  onClick={handleShowZeroAttendanceEmployees}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-red-700 bg-red-100 border border-red-200 rounded-full hover:bg-red-200 transition shadow-sm cursor-pointer"
+                >
+                  <span className="text-red-500 text-xs">🚨</span>
+                  {zeroAttendanceEmployees.length}
+                </button>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* Mobile Filters Toggle - Only visible on mobile */}
+        <div className="sm:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? (
+                <FaChevronUp className="text-gray-400" />
+              ) : (
+                <FaChevronDown className="text-gray-400" />
+              )}
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{filteredSummary.length}</strong> employees
+            </span>
+          </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              {/* Search */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search ID or Name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
                 </div>
               </div>
-              
-              {/* Show list of employees with zero attendance */}
-              <div className="mt-3 flex flex-wrap gap-2">
-                {zeroAttendanceEmployees.slice(0, 10).map(emp => (
-                  <div 
-                    key={emp.employeeId}
-                    onClick={() => handleViewDetails(emp.employeeId)}
-                    className="px-3 py-1.5 bg-white border border-red-200 rounded-lg text-xs font-medium text-red-700 cursor-pointer hover:bg-red-50 transition shadow-sm"
-                  >
-                    {emp.employeeId} - {emp.name}
-                  </div>
-                ))}
-                {zeroAttendanceEmployees.length > 10 && (
-                  <div className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs font-medium text-gray-600">
-                    +{zeroAttendanceEmployees.length - 10} more
+
+              {/* Department */}
+              <div className="relative" ref={departmentFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+                <button                  onClick={() => {
+                    setShowDepartmentFilter(!showDepartmentFilter);
+                    setShowDesignationFilter(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterDepartment
+                      ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                      : "border-gray-300 text-gray-700"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <FaBuilding className="text-gray-400" />
+                    {filterDepartment || "All Departments"}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {showDepartmentFilter && (
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setFilterDepartment("");
+                        setShowDepartmentFilter(false);
+                      }}
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Departments
+                    </div>
+                    {uniqueDepartments.map((dept) => (
+                      <div
+                        key={dept}
+                        onClick={() => {
+                          setFilterDepartment(dept);
+                          setShowDepartmentFilter(false);
+                        }}
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                        }`}
+                      >
+                        {dept}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
+
+              {/* Designation */}
+              <div className="relative" ref={designationFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+                <button
+                  onClick={() => {
+                    setShowDesignationFilter(!showDesignationFilter);
+                    setShowDepartmentFilter(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterDesignation
+                      ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                      : "border-gray-300 text-gray-700"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <FaUserTag className="text-gray-400" />
+                    {filterDesignation || "All Designations"}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {showDesignationFilter && (
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div                      onClick={() => {
+                        setFilterDesignation("");
+                        setShowDesignationFilter(false);
+                      }}
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Designations
+                    </div>
+                    {uniqueDesignations.map((des) => (
+                      <div
+                        key={des}
+                        onClick={() => {
+                          setFilterDesignation(des);
+                          setShowDesignationFilter(false);
+                        }}
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                        }`}
+                      >
+                        {des}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Month Picker */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={handleMonthChange}
+                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+                />
+              </div>
+
+              {/* Mobile Action Buttons */}
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleDateRangeFilter}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    <FaSearch className="w-4 h-4" />
+                    Apply
+                  </button>
+                  <button
+                    onClick={handleFixWrongData}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm"
+                  >
+                    🔧 Fix
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
+                      const employeesWithMissing = status.filter(emp => emp.hasMissingDays);
+                      if (employeesWithMissing.length === 0) {
+                        showSaveStatus("✅ All employees have complete attendance for this month!", "success");
+                        return;
+                      }
+                      setBulkUpdateEmployees(employeesWithMissing);
+                      setSelectedEmployeesForBulkUpdate([]);
+                      setShowBulkUpdateModal(true);
+                    }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
+                  >
+                    <FiPlus className="w-4 h-4" />
+                    Bulk Update
+                  </button>
+                  <button
+                    onClick={downloadCombinedExcel}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                  >
+                    <FiDownload className="w-4 h-4" />
+                    Export
+                  </button>
+                </div>
+                {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+                  <button
+                    onClick={clearFilters}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
-          );
-        })()}
+          )}
+        </div>
 
         {/* Stats Grid - Mobile Responsive */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
@@ -2164,455 +2880,6 @@ export default function AttendanceSummary() {
           </div>
         </div>
 
-        {/* Filters Card - Mobile Toggle */}
-        <div className="emp-dash__card mb-6">
-          {/* Desktop View */}
-          <div className="hidden sm:block">
-            <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
-              {/* Left - Filters */}
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {/* Search */}
-                <div className="relative min-w-[140px] flex-1 max-w-[200px]">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input
-                    type="text"
-                    placeholder="Search ID or Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                {/* Department */}
-                <div className="relative" ref={departmentFilterRef}>
-                  <button
-                    onClick={() => {
-                      setShowDepartmentFilter(!showDepartmentFilter);
-                      setShowDesignationFilter(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                      filterDepartment
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <FaBuilding className="text-gray-400 text-[10px]" />
-                    <span className="truncate max-w-[100px]">{filterDepartment || "Departments"}</span>
-                    <span className="text-gray-400 text-[10px]">▾</span>
-                  </button>
-                  {showDepartmentFilter && (
-                    <div 
-                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-                      style={{
-                        zIndex: 99999,
-                        top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                        left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
-                      }}
-                    >
-                      <div
-                        onClick={() => {
-                          setFilterDepartment("");
-                          setShowDepartmentFilter(false);
-                        }}
-                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Departments
-                      </div>
-                      {uniqueDepartments.map((dept) => (
-                        <div
-                          key={dept}
-                          onClick={() => {
-                            setFilterDepartment(dept);
-                            setShowDepartmentFilter(false);
-                          }}
-                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                            filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                          }`}
-                        >
-                          {dept}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Designation */}
-                <div className="relative" ref={designationFilterRef}>
-                  <button
-                    onClick={() => {
-                      setShowDesignationFilter(!showDesignationFilter);
-                      setShowDepartmentFilter(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                      filterDesignation
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <FaUserTag className="text-gray-400 text-[10px]" />
-                    <span className="truncate max-w-[100px]">{filterDesignation || "Designations"}</span>
-                    <span className="text-gray-400 text-[10px]">▾</span>
-                  </button>
-                  {showDesignationFilter && (
-                    <div 
-                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-                      style={{
-                        zIndex: 99999,
-                        top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                        left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
-                      }}
-                    >
-                      <div
-                        onClick={() => {
-                          setFilterDesignation("");
-                          setShowDesignationFilter(false);
-                        }}
-                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Designations
-                      </div>
-                      {uniqueDesignations.map((des) => (
-                        <div
-                          key={des}
-                          onClick={() => {
-                            setFilterDesignation(des);
-                            setShowDesignationFilter(false);
-                          }}
-                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                            filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                          }`}
-                        >
-                          {des}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Date From - Compact */}
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    placeholder="From"
-                    className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                {/* Date To - Compact */}
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    placeholder="To"
-                    className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                {/* Month Picker - Compact */}
-                <div className="relative">
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={handleMonthChange}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    className="w-[130px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
-                  />
-                </div>
-              </div>
-
-              {/* Right - Action Buttons */}
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button
-                  onClick={handleDateRangeFilter}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
-                >
-                  <FaSearch className="w-3 h-3" />
-                  Apply
-                </button>
-
-                {/* <button
-                  onClick={handleFixWrongData}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
-                  title="Fix data corrections for the selected month"
-                >
-                  🔧 Fix
-                </button> */}
-
-                <button
-                  onClick={() => {
-                    const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
-                    const employeesWithMissing = status.filter(emp => emp.hasMissingDays);
-                    if (employeesWithMissing.length === 0) {
-                      showSaveStatus("✅ All employees have complete attendance for this month!", "success");
-                      return;
-                    }
-                    setBulkUpdateEmployees(employeesWithMissing);
-                    setSelectedEmployeesForBulkUpdate([]);
-                    setShowBulkUpdateModal(true);
-                  }}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all shadow-sm whitespace-nowrap"
-                >
-                  <FiPlus className="w-3 h-3" />
-                  Bulk Update
-                </button>
-
-                {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
-                  <button
-                    onClick={clearFilters}
-                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-                  >
-                    <FiTrash2 className="w-3 h-3" />
-                    Clear
-                  </button>
-                )}
-
-                <button
-                  onClick={downloadCombinedExcel}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-md whitespace-nowrap"
-                >
-                  <FiDownload className="w-3 h-3" />
-                  Export
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile View */}
-          <div className="sm:hidden">
-            {/* Mobile Header with Toggle */}
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
-              <button
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-              >
-                <FiFilter className="text-blue-600 text-base" />
-                <span>Filters &amp; Actions</span>
-                {showMobileFilters ? (
-                  <FaChevronUp className="text-gray-400" />
-                ) : (
-                  <FaChevronDown className="text-gray-400" />
-                )}
-              </button>
-              <span className="text-xs text-gray-500">
-                <strong>{filteredSummary.length}</strong> employees
-              </span>
-            </div>
-
-            {/* Mobile Filters */}
-            {showMobileFilters && (
-              <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-                {/* Search */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
-                  <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                    <input
-                      type="text"
-                      placeholder="Search ID or Name..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                    />
-                  </div>
-                </div>
-
-                {/* Department */}
-                <div className="relative" ref={departmentFilterRef}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
-                  <button
-                    onClick={() => {
-                      setShowDepartmentFilter(!showDepartmentFilter);
-                      setShowDesignationFilter(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                      filterDepartment
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <FaBuilding className="text-gray-400" />
-                      {filterDepartment || "All Departments"}
-                    </span>
-                    <span className="text-gray-400">▾</span>
-                  </button>
-                  {showDepartmentFilter && (
-                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      <div
-                        onClick={() => {
-                          setFilterDepartment("");
-                          setShowDepartmentFilter(false);
-                        }}
-                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Departments
-                      </div>
-                      {uniqueDepartments.map((dept) => (
-                        <div
-                          key={dept}
-                          onClick={() => {
-                            setFilterDepartment(dept);
-                            setShowDepartmentFilter(false);
-                          }}
-                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                            filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                          }`}
-                        >
-                          {dept}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Designation */}
-                <div className="relative" ref={designationFilterRef}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
-                  <button
-                    onClick={() => {
-                      setShowDesignationFilter(!showDesignationFilter);
-                      setShowDepartmentFilter(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                      filterDesignation
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <FaUserTag className="text-gray-400" />
-                      {filterDesignation || "All Designations"}
-                    </span>
-                    <span className="text-gray-400">▾</span>
-                  </button>
-                  {showDesignationFilter && (
-                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      <div
-                        onClick={() => {
-                          setFilterDesignation("");
-                          setShowDesignationFilter(false);
-                        }}
-                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Designations
-                      </div>
-                      {uniqueDesignations.map((des) => (
-                        <div
-                          key={des}
-                          onClick={() => {
-                            setFilterDesignation(des);
-                            setShowDesignationFilter(false);
-                          }}
-                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                            filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                          }`}
-                        >
-                          {des}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Date From & To */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
-                    <input
-                      type="date"
-                      value={fromDate}
-                      onChange={(e) => setFromDate(e.target.value)}
-                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
-                    <input
-                      type="date"
-                      value={toDate}
-                      onChange={(e) => setToDate(e.target.value)}
-                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                    />
-                  </div>
-                </div>
-
-                {/* Month Picker */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={handleMonthChange}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
-                  />
-                </div>
-
-                {/* Mobile Action Buttons */}
-                <div className="pt-3 border-t border-gray-200 space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={handleDateRangeFilter}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-                    >
-                      <FaSearch className="w-4 h-4" />
-                      Apply
-                    </button>
-                    <button
-                      onClick={handleFixWrongData}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm"
-                    >
-                      🔧 Fix
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => {
-                        const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
-                        const employeesWithMissing = status.filter(emp => emp.hasMissingDays);
-                        if (employeesWithMissing.length === 0) {
-                          showSaveStatus("✅ All employees have complete attendance for this month!", "success");
-                          return;
-                        }
-                        setBulkUpdateEmployees(employeesWithMissing);
-                        setSelectedEmployeesForBulkUpdate([]);
-                        setShowBulkUpdateModal(true);
-                      }}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
-                    >
-                      <FiPlus className="w-4 h-4" />
-                      Bulk Update
-                    </button>
-                    <button
-                      onClick={downloadCombinedExcel}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
-                    >
-                      <FiDownload className="w-4 h-4" />
-                      Export
-                    </button>
-                  </div>
-                  {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
-                    <button
-                      onClick={clearFilters}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                      Clear
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Table Card */}
         <div className="emp-dash__card">
           {employeeSummary.length === 0 ? (
@@ -2640,6 +2907,7 @@ export default function AttendanceSummary() {
                       <th style={{ textAlign: "center" }} className="hidden lg:table-cell">Full Day</th>
                       <th style={{ textAlign: "center" }}>OT</th>
                       <th style={{ textAlign: "center" }}>Work Days</th>
+                      <th style={{ textAlign: "center" }}>Status</th>
                       <th style={{ textAlign: "right" }}>Download</th>
                     </tr>
                   </thead>
@@ -2650,7 +2918,8 @@ export default function AttendanceSummary() {
                       const onsiteDays = calculateEmployeeOnsiteDays(emp.employeeId);
                       const department = getEmployeeDepartment(emp.employeeId);
                       const designation = getEmployeeDesignation(emp.employeeId);
-                      const totalOT = calculateEmployeeOT(emp.employeeId);
+                      const totalOT = calculateEmployeeOT(emp.employeeId) || 0; // ✅ Ensure always a number
+                      const status = getEmployeeAttendanceStatus(emp.employeeId, emp.month || selectedMonth);
 
                       return (
                         <tr
@@ -2711,13 +2980,19 @@ export default function AttendanceSummary() {
                             </span>
                           </td>
                           <td className="text-center whitespace-nowrap">
+                            {/* ✅ FIXED: OT show as decimal with proper fallback */}
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                              {formatDecimalHours(totalOT)}
+                              {formatOTHours(totalOT)}
                             </span>
                           </td>
                           <td className="text-center whitespace-nowrap">
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100">
                               {workingDays.toFixed(1)}
+                            </span>
+                          </td>
+                          <td className="text-center whitespace-nowrap">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${status.color}`}>
+                              {status.icon} {status.shortMessage}
                             </span>
                           </td>
                           <td className="text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
@@ -2807,6 +3082,163 @@ export default function AttendanceSummary() {
         </div>
       </main>
 
+      {/* Zero Attendance Modal Popup */}
+      {showZeroAttendanceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white shadow-2xl rounded-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="flex flex-wrap items-center justify-between p-4 border-b gap-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <span className="text-red-500 text-xl">🚨</span>
+                  Zero Attendance Employees - {selectedMonth}
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  {zeroAttendanceEmployeesList.length} employee(s) with no attendance this month
+                  {getWeekoffDatesForEmployee(selectedMonth).length > 0 && 
+                    ` (${getWeekoffDatesForEmployee(selectedMonth).length} Sundays will be skipped)`}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowZeroAttendanceModal(false);
+                  setSelectedZeroAttendanceEmployees([]);
+                }}
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+                <div className="overflow-x-auto">
+                  <table className="emp-dash__table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '40px' }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedZeroAttendanceEmployees.length === zeroAttendanceEmployeesList.length && zeroAttendanceEmployeesList.length > 0}
+                            onChange={() => {
+                              const allIds = zeroAttendanceEmployeesList.map(emp => emp.employeeId);
+                              setSelectedZeroAttendanceEmployees(prev => {
+                                if (prev.length === allIds.length) {
+                                  return [];
+                                } else {
+                                  return allIds;
+                                }
+                              });
+                            }}
+                            className="w-4 h-4 cursor-pointer"
+                          />
+                        </th>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th style={{ textAlign: "center" }}>Department</th>
+                        <th style={{ textAlign: "center" }}>Designation</th>
+                        <th style={{ textAlign: "center" }}>Working Days</th>
+                        <th style={{ textAlign: "center" }}>Attended</th>
+                        <th style={{ textAlign: "center" }}>Missing</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {zeroAttendanceEmployeesList.map((emp) => (
+                        <tr key={emp.employeeId} className="transition-colors hover:bg-slate-50/50">
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={selectedZeroAttendanceEmployees.includes(emp.employeeId)}
+                              onChange={() => {
+                                setSelectedZeroAttendanceEmployees(prev => {
+                                  if (prev.includes(emp.employeeId)) {
+                                    return prev.filter(id => id !== emp.employeeId);
+                                  } else {
+                                    return [...prev, emp.employeeId];
+                                  }
+                                });
+                              }}
+                              className="w-4 h-4 cursor-pointer"
+                            />
+                          </td>
+                          <td className="font-semibold text-slate-800 text-[11px]">
+                            {emp.employeeId}
+                          </td>
+                          <td>
+                            <div className="flex items-center justify-start gap-2">
+                              <div className="flex items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full shadow-inner">
+                                {emp.name ? emp.name.charAt(0).toUpperCase() : "?"}
+                              </div>
+                              <span className="font-semibold text-slate-800 text-xs whitespace-nowrap">
+                                {emp.name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
+                            {emp.department}
+                          </td>
+                          <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
+                            {emp.designation}
+                          </td>
+                          <td className="text-center font-semibold text-slate-700 text-xs">
+                            {emp.totalWorkingDays}
+                          </td>
+                          <td className="text-center">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
+                              {emp.attendedDays}
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                              {emp.missingDays}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex flex-wrap items-center justify-between p-4 border-t gap-3 bg-slate-50/50">
+              <div className="text-xs text-slate-600">
+                <strong>{selectedZeroAttendanceEmployees.length}</strong> employee(s) selected
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowZeroAttendanceModal(false);
+                    setSelectedZeroAttendanceEmployees([]);
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const selectedEmployees = zeroAttendanceEmployeesList.filter(emp => 
+                      selectedZeroAttendanceEmployees.includes(emp.employeeId)
+                    );
+                    handleBulkAddAttendanceForZeroAttendanceEmployees(selectedEmployees);
+                  }}
+                  disabled={selectedZeroAttendanceEmployees.length === 0}
+                  className={`px-4 py-2 text-xs font-semibold text-white rounded-lg transition ${
+                    selectedZeroAttendanceEmployees.length === 0
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-red-600 hover:bg-red-700 shadow-sm'
+                  }`}
+                >
+                  Add Attendance ({selectedZeroAttendanceEmployees.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bulk Update Modal */}
       {showBulkUpdateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
@@ -2822,9 +3254,6 @@ export default function AttendanceSummary() {
                   {getWeekoffDatesForEmployee(selectedMonth).length > 0 && 
                     ` (${getWeekoffDatesForEmployee(selectedMonth).length} Sundays will be skipped)`}
                 </p>
-                {/* <p className="text-[10px] text-gray-400 mt-0.5">
-                  Working Days: Monday to Saturday | Weekoff: Sunday
-                </p> */}
               </div>
               <button
                 onClick={() => {
@@ -2979,6 +3408,370 @@ export default function AttendanceSummary() {
         </div>
       )}
 
+      {/* Top Performers Modal - FIXED with correct late days */}
+      {showTopPerformersModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white shadow-2xl rounded-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
+            <div className="flex flex-wrap items-center justify-between p-4 border-b gap-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <FaStar className="text-yellow-500 text-xl" />
+                  Top Performers - {formatMonthLabel(selectedMonth)}
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  {topPerformers.length} employees with highest performance
+                </p>
+              </div>
+              <button
+                onClick={() => setShowTopPerformersModal(false)}
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
+              {topPerformers.length > 0 ? (
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+                  <div className="overflow-x-auto">
+                    <table className="emp-dash__table">
+                      <thead>
+                        <tr>
+                          <th style={{ textAlign: "center" }}>Rank</th>
+                          <th>Employee</th>
+                          <th style={{ textAlign: "center" }}>Department</th>
+                          <th style={{ textAlign: "center" }}>Present Days</th>
+                          <th style={{ textAlign: "center" }}>Working Days</th>
+                          <th style={{ textAlign: "center" }}>Late Coming</th>
+                          <th style={{ textAlign: "center" }}>OT Hours</th>
+                          <th style={{ textAlign: "center" }}>Performance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {topPerformers.map((perf, index) => {
+                          // Use the enriched values that now include late days
+                          const presentDays = perf.presentDays || perf.attendedDays || 0;
+                          const workingDays = perf.expectedWorkingDays || perf.totalWorkingDays || 0;
+                          // This will now show the correct late days from our calculation
+                          const lateComing = perf.lateComingDays || perf.lateDays || 0;
+                          const otHours = perf.actualWorkingHours || perf.overtimeHours || 0;
+                          const performance = perf.performancePercentage || perf.rate || 0;
+                          const name = perf.name || perf.employeeName || employees.find(e => e.employeeId === perf.employeeId)?.name || 'Unknown';
+                          const dept = perf.department || getEmployeeDepartment(perf.employeeId) || '-';
+                          
+                          return (
+                            <tr 
+                              key={perf.employeeId || index}
+                              className="transition-colors hover:bg-slate-50/50 cursor-pointer"
+                              onClick={() => handleShowPerformerDetails(perf)}
+                            >
+                              <td className="text-center">
+                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                  index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                                  index === 1 ? 'bg-gray-100 text-gray-700' :
+                                  index === 2 ? 'bg-orange-100 text-orange-700' :
+                                  'bg-blue-50 text-blue-700'
+                                }`}>
+                                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="flex items-center justify-start gap-2">
+                                  <div className="flex items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-yellow-400 to-amber-500 text-white rounded-full shadow-inner">
+                                    {name ? name.charAt(0).toUpperCase() : "?"}
+                                  </div>
+                                  <span className="font-semibold text-slate-800 text-xs whitespace-nowrap">
+                                    {name}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
+                                {dept}
+                              </td>
+                              <td className="text-center font-semibold text-emerald-600 text-xs">
+                                {presentDays}
+                              </td>
+                              <td className="text-center font-semibold text-slate-700 text-xs">
+                                {workingDays}
+                              </td>
+                              <td className="text-center">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  lateComing === 0 
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                    : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                }`}>
+                                  {lateComing} days
+                                </span>
+                              </td>
+                              <td className="text-center font-semibold text-indigo-600 text-xs">
+                                {formatOTHours(otHours)}
+                              </td>
+                              <td className="text-center">
+                                <div className="flex items-center gap-2 justify-center">
+                                  <div className="w-16 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-amber-500"
+                                      style={{ width: `${Math.min(performance, 100)}%` }}
+                                    />
+                                  </div>
+                                  <span className="font-bold text-slate-800 text-xs">
+                                    {performance}%
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <p className="text-sm font-medium">No performer data available for {formatMonthLabel(selectedMonth)}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* All Performers Modal - FIXED with correct late days */}
+      {showAllPerformersModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white shadow-2xl rounded-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
+            <div className="flex flex-wrap items-center justify-between p-4 border-b gap-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <FaTrophy className="text-blue-500 text-xl" />
+                  All Performers - {formatMonthLabel(selectedMonth)}
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  {allPerformers.length} employees with their performance metrics
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAllPerformersModal(false)}
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
+              {allPerformers.length > 0 ? (
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+                  <div className="overflow-x-auto">
+                    <table className="emp-dash__table">
+                      <thead>
+                        <tr>
+                          <th style={{ textAlign: "center" }}>Rank</th>
+                          <th>Employee</th>
+                          <th style={{ textAlign: "center" }}>Department</th>
+                          <th style={{ textAlign: "center" }}>Present Days</th>
+                          <th style={{ textAlign: "center" }}>Working Days</th>
+                          <th style={{ textAlign: "center" }}>Late Coming</th>
+                          <th style={{ textAlign: "center" }}>OT Hours</th>
+                          <th style={{ textAlign: "center" }}>Performance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {allPerformers.map((perf, index) => {
+                          // Use the enriched values that now include late days
+                          const presentDays = perf.presentDays || perf.attendedDays || 0;
+                          const workingDays = perf.expectedWorkingDays || perf.totalWorkingDays || 0;
+                          // This will now show the correct late days from our calculation
+                          const lateComing = perf.lateComingDays || perf.lateDays || 0;
+                          const otHours = perf.actualWorkingHours || perf.overtimeHours || 0;
+                          const performance = perf.performancePercentage || perf.rate || 0;
+                          const name = perf.name || perf.employeeName || employees.find(e => e.employeeId === perf.employeeId)?.name || 'Unknown';
+                          const dept = perf.department || getEmployeeDepartment(perf.employeeId) || '-';
+                          
+                          return (
+                            <tr 
+                              key={perf.employeeId || index}
+                              className="transition-colors hover:bg-slate-50/50 cursor-pointer"
+                              onClick={() => handleShowPerformerDetails(perf)}
+                            >
+                              <td className="text-center">
+                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                  index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                                  index === 1 ? 'bg-gray-100 text-gray-700' :
+                                  index === 2 ? 'bg-orange-100 text-orange-700' :
+                                  'bg-blue-50 text-blue-700'
+                                }`}>
+                                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="flex items-center justify-start gap-2">
+                                  <div className="flex items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-blue-400 to-indigo-500 text-white rounded-full shadow-inner">
+                                    {name ? name.charAt(0).toUpperCase() : "?"}
+                                  </div>
+                                  <span className="font-semibold text-slate-800 text-xs whitespace-nowrap">
+                                    {name}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
+                                {dept}
+                              </td>
+                              <td className="text-center font-semibold text-emerald-600 text-xs">
+                                {presentDays}
+                              </td>
+                              <td className="text-center font-semibold text-slate-700 text-xs">
+                                {workingDays}
+                              </td>
+                              <td className="text-center">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  lateComing === 0 
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                    : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                }`}>
+                                  {lateComing} days
+                                </span>
+                              </td>
+                              <td className="text-center font-semibold text-indigo-600 text-xs">
+                                {formatOTHours(otHours)}
+                              </td>
+                              <td className="text-center">
+                                <div className="flex items-center gap-2 justify-center">
+                                  <div className="w-16 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-500"
+                                      style={{ width: `${Math.min(performance, 100)}%` }}
+                                    />
+                                  </div>
+                                  <span className="font-bold text-slate-800 text-xs">
+                                    {performance}%
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <p className="text-sm font-medium">No performer data available for {formatMonthLabel(selectedMonth)}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Performer Detail Modal - Fixed version with employee ID */}
+      {showPerformerDetailModal && performerDetails && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white shadow-2xl rounded-2xl w-full max-w-2xl flex flex-col max-h-[80vh]">
+            <div className="flex flex-wrap items-center justify-between p-4 border-b gap-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <FaStar className="text-yellow-500 text-xl" />
+                  Performer Details
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  {performerDetails.name || performerDetails.employeeName || 'Employee'} - Performance Metrics
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowPerformerDetailModal(false);
+                  setSelectedPerformer(null);
+                  setPerformerDetails(null);
+                }}
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <p className="text-xs text-slate-500">Employee ID</p>
+                  <p className="text-sm font-bold text-slate-800">
+                    {performerDetails.employeeCode || performerDetails.employeeId || performerDetails._id || performerDetails.id || 'N/A'}
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <p className="text-xs text-slate-500">Name</p>
+                  <p className="text-sm font-bold text-slate-800">
+                    {performerDetails.name || performerDetails.employeeName || 'Unknown'}
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <p className="text-xs text-slate-500">Department</p>
+                  <p className="text-sm font-bold text-slate-800">
+                    {performerDetails.department || getEmployeeDepartment(performerDetails.employeeCode || performerDetails.employeeId) || 'N/A'}
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <p className="text-xs text-slate-500">Email</p>
+                  <p className="text-sm font-bold text-slate-800 truncate">
+                    {performerDetails.email || performerDetails.employeeEmail || 'N/A'}
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <p className="text-xs text-slate-500">Present Days</p>
+                  <p className="text-lg font-bold text-emerald-600">
+                    {performerDetails.presentDays || performerDetails.attendedDays || 0}
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <p className="text-xs text-slate-500">Expected Working Days</p>
+                  <p className="text-lg font-bold text-slate-800">
+                    {performerDetails.expectedWorkingDays || performerDetails.totalWorkingDays || 0}
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <p className="text-xs text-slate-500">Late Coming Days</p>
+                  <p className={`text-lg font-bold ${(performerDetails.lateComingDays || performerDetails.lateDays || 0) === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {performerDetails.lateComingDays || performerDetails.lateDays || 0}
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <p className="text-xs text-slate-500">Shift Hours</p>
+                  <p className="text-lg font-bold text-slate-800">
+                    {performerDetails.shiftHours || 0}h
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <p className="text-xs text-slate-500">Actual Working Hours</p>
+                  <p className="text-lg font-bold text-indigo-600">
+                    {formatDecimalHours(performerDetails.actualWorkingHours || 0)}
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <p className="text-xs text-slate-500">Expected Working Hours</p>
+                  <p className="text-lg font-bold text-slate-800">
+                    {formatDecimalHours(performerDetails.expectedWorkingHours || 0)}
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 col-span-2">
+                  <p className="text-xs text-slate-500">Performance Score</p>
+                  <div className="flex items-center gap-4 mt-1">
+                    <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-amber-500"
+                        style={{ width: `${Math.min(performerDetails.performancePercentage || performerDetails.rate || 0, 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-xl font-bold text-slate-800">
+                      {performerDetails.performancePercentage || performerDetails.rate || 0}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Details Modal */}
       {selectedEmployee && (() => {
         const monthDates = getAllDatesOfMonth(selectedMonth);
@@ -3096,6 +3889,7 @@ export default function AttendanceSummary() {
                           <th style={{ textAlign: "center" }}>Hours</th>
                           <th>Admin Comment</th>
                           <th style={{ textAlign: "center" }}>Over Time</th>
+                          <th style={{ textAlign: "center" }}>Attendance Status</th>
                           <th style={{ textAlign: "center" }}>Day Type</th>
                           <th style={{ textAlign: "right" }}>Action</th>
                         </tr>
@@ -3137,6 +3931,14 @@ export default function AttendanceSummary() {
                           };
 
                           const otHours = calculateOTForRecord(selectedEmployee, currentHours);
+                          
+                          // Calculate attendance status for this specific record
+                          const attendanceStatus = rec ? calculateAttendanceStatus(
+                            selectedEmployee,
+                            rec.checkInTime,
+                            rec.checkOutTime,
+                            rec.totalHours || rec.hours || 0
+                          ) : null;
 
                           return (
                             <tr key={dateKey} className="transition-colors hover:bg-slate-50/50">
@@ -3245,12 +4047,22 @@ export default function AttendanceSummary() {
                               </td>
 
                               <td className="font-semibold text-center text-indigo-700 text-xs">
-                                {rec ? formatDecimalHours(otHours) : "-"}
+                                {rec ? formatOTHours(otHours) : "-"}
                               </td>
 
+                                 {/* Attendance Status Column */}
+                              <td className="text-center">
+                                {attendanceStatus ? (
+                                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${attendanceStatus.color}`}>
+                                    {attendanceStatus.icon} {attendanceStatus.shortMessage}
+                                  </span>
+                                ) : '-'}
+                              </td>
+                              
                               <td className="text-center">
                                 {rec ? getDayTypeBadge(currentHours) : "-"}
                               </td>
+
 
                               <td className="text-right">
                                 <button

@@ -1702,6 +1702,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/absent-today": "Absent Today",
       "/leavelist": "Leaves",
       "/payroll": "Payroll",
+      "/payroll-dashboard": "Payroll Dashboard",
       "/useractivity": "User Activity",
       "/useraccess": "User Access",
       "/jobpost": "Job Posts",
@@ -1721,6 +1722,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/documents": "Documents",
       "/all-expensives": "Expenses",
       "/events": "Events",
+      "/employee-events": "My Events",
       "/over-time": "Over Time",
       "/comp-off-settings": "Comp Off Settings",
       "/employee-resignation": "Resignation",
@@ -1884,6 +1886,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       icon: <i className="ri-user-fill"></i>,
       name: "Admin",
       dropdown: [
+        { name: "Payroll Dashboard", path: "/payroll-dashboard" },
         { name: "Payroll", path: "/payroll" },
         { name: "Expenses", path: "/all-expensives" },
         { name: "User Activity", path: "/useractivity" },
@@ -1942,6 +1945,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       icon: <i className="ri-calendar-event-fill"></i>,
       name: "Events",
       path: "/events",
+    },
+    {
+      icon: <i className="ri-calendar-todo-fill"></i>,
+      name: "My Events",
+      path: "/employee-events",
     },
     {
       icon: <i className="ri-time-fill"></i>,

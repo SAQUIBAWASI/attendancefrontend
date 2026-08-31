@@ -2307,7 +2307,7 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { FaBuilding, FaSearch, FaUserTag, FaChevronDown, FaChevronUp } from "react-icons/fa";
-import { FiCalendar, FiClock, FiCheckCircle, FiUserCheck, FiFilter, FiActivity } from "react-icons/fi";
+import { FiCalendar, FiClock, FiCheckCircle, FiUserCheck, FiFilter, FiActivity, FiTrash2 } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
 import "../index.css";
@@ -2348,7 +2348,10 @@ export const Permissions = () => {
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    limit: 10,
+    limit: (() => {
+      const saved = localStorage.getItem('permissions_itemsPerPage');
+      return saved ? parseInt(saved, 10) : 10;
+    })(),
   });
 
   // Click outside handlers for filter dropdowns
@@ -2538,6 +2541,7 @@ export const Permissions = () => {
       totalCount: filteredPermissions.length,
       totalPages: Math.ceil(filteredPermissions.length / limit)
     });
+    localStorage.setItem('permissions_itemsPerPage', String(limit));
   };
 
   const handlePrevPage = () => {
@@ -2638,164 +2642,292 @@ export const Permissions = () => {
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
 
-        {/* Dashboard Header */}
-        <div className="emp-dash__header">
-           <div className="flex items-baseline gap-3 flex-wrap">
-    <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
+        {/* Dashboard Header - Title on Left, Date and Filters on Right */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Employee Permission <span>Requests</span>
             </h1>
-            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Manage and review outbound or personal duty permission requests from employees.
-            </p> */}
           </div>
-          <div className="emp-dash__date-pill">
-            <FiCalendar />
+
+          {/* Right side: Date + All Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* <div className="emp-dash__date-pill">
+              <FiCalendar />
+              <span>
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "short",
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </div> */}
+
+            {/* Search */}
+            <div className="relative min-w-[130px]">
+              <span className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <FaSearch className="text-[10px]" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Department */}
+            <div className="relative" ref={departmentFilterRef}>
+              <button
+                onClick={() => {
+                  setShowDepartmentFilter(!showDepartmentFilter);
+                  setShowDesignationFilter(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDepartment
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FaBuilding className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDepartment || "Dept"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDepartmentFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDepartment("");
+                      setShowDepartmentFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Departments
+                  </div>
+                  {uniqueDepartments.map((dept) => (
+                    <div
+                      key={dept}
+                      onClick={() => {
+                        setFilterDepartment(dept);
+                        setShowDepartmentFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      {dept}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Designation */}
+            <div className="relative" ref={designationFilterRef}>
+              <button
+                onClick={() => {
+                  setShowDesignationFilter(!showDesignationFilter);
+                  setShowDepartmentFilter(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDesignation
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FaUserTag className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDesignation || "Design"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDesignationFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDesignation("");
+                      setShowDesignationFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Designations
+                  </div>
+                  {uniqueDesignations.map((des) => (
+                    <div
+                      key={des}
+                      onClick={() => {
+                        setFilterDesignation(des);
+                        setShowDesignationFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      {des}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Date From */}
+            <div className="relative">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => {
+                  setFromDate(e.target.value);
+                  if (e.target.value && toDate) {
+                    handleDateRangeFilter();
+                  }
+                }}
+                className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Date To */}
+            <div className="relative">
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => {
+                  setToDate(e.target.value);
+                  if (fromDate && e.target.value) {
+                    handleDateRangeFilter();
+                  }
+                }}
+                className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Month Picker */}
+            <div className="relative">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={handleMonthChange}
+                className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+              />
+            </div>
+
+            {/* Clear Filters Button */}
+            {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Header - Only Title and Date */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            Employee Permission <span className="text-indigo-600">Requests</span>
+          </h1>
+          {/* <div className="emp-dash__date-pill text-[10px] px-2 py-1">
+            <FiCalendar className="text-[10px]" />
             <span>
               {new Date().toLocaleDateString("en-US", {
                 weekday: "short",
-                year: "numeric",
-                month: "short",
                 day: "numeric",
+                month: "short",
+                year: "numeric",
               })}
             </span>
-          </div>
+          </div> */}
         </div>
 
-   {/* Top KPI Stats Grid */}
-{!loading && (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
-    <div className="emp-dash__stat">
-      <div className="emp-dash__stat-top">
-        <span className="emp-dash__stat-label">Pending</span>
-        <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
-          <FiClock className="text-orange-500" />
-        </div>
-      </div>
-      <div className="emp-dash__stat-value">{pendingCount}</div>
-      <div className="emp-dash__stat-meta">awaiting review</div>
-    </div>
-    
-    <div className="emp-dash__stat">
-      <div className="emp-dash__stat-top">
-        <span className="emp-dash__stat-label">Approved</span>
-        <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-          <FiCheckCircle className="text-blue-500" />
-        </div>
-      </div>
-      <div className="emp-dash__stat-value">{approvedCount}</div>
-      <div className="emp-dash__stat-meta">currently active</div>
-    </div>
-
-    <div className="emp-dash__stat">
-      <div className="emp-dash__stat-top">
-        <span className="emp-dash__stat-label">Completed</span>
-        <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-          <FiUserCheck className="text-green-500" />
-        </div>
-      </div>
-      <div className="emp-dash__stat-value">{completedCount}</div>
-      <div className="emp-dash__stat-meta">successfully logged</div>
-    </div>
-
-    <div className="emp-dash__stat">
-      <div className="emp-dash__stat-top">
-        <span className="emp-dash__stat-label">Total</span>
-        <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-          <FiActivity className="text-indigo-500" />
-        </div>
-      </div>
-      <div className="emp-dash__stat-value">{totalCount}</div>
-      <div className="emp-dash__stat-meta">in selected filter</div>
-    </div>
-  </div>
-)}
-
-        {/* Filters Card - Mobile Toggle */}
-        <div className="emp-dash__card mb-6">
-          {/* Mobile Filter Toggle Button */}
-          <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
             <button
               onClick={() => setShowMobileFilters(!showMobileFilters)}
               className="flex items-center gap-2 text-sm font-semibold text-gray-700"
             >
-              <FiFilter className="text-blue-600" />
-              Filter Requests
-              {showMobileFilters ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
             </button>
-            <span className="text-xs text-gray-400">
-              {filteredPermissions.length} requests
+            <span className="text-xs text-gray-500">
+              <strong>{filteredPermissions.length}</strong> requests
             </span>
           </div>
 
-          {/* Desktop Header */}
-          {/* <div className="hidden sm:flex emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filter Requests
-              </h3>
-              <p className="emp-dash__card-desc">Search by employee name/ID, filter by department, designation, date range, or month</p>
-            </div>
-          </div> */}
-
-          {/* Filter Content - Toggle on Mobile */}
-          <div className={`emp-dash__card-body bg-gray-50/50 ${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
-              
-              {/* Search */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <FaSearch className="text-xs" />
+                    <FaSearch className="text-sm" />
                   </span>
                   <input
                     type="text"
                     placeholder="Search name or ID..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
                 </div>
               </div>
 
-              {/* Department Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Department</label>
+              <div className="relative" ref={departmentFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
                 <button
-                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDepartment 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-55'
+                  onClick={() => {
+                    setShowDepartmentFilter(!showDepartmentFilter);
+                    setShowDesignationFilter(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterDepartment
+                      ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                      : "border-gray-300 text-gray-700"
                   }`}
                 >
-                  <span className="flex items-center gap-1.5 truncate">
+                  <span className="flex items-center gap-2">
                     <FaBuilding className="text-gray-400" />
-                    {filterDepartment || 'All Departments'}
+                    {filterDepartment || "All Departments"}
                   </span>
                   <span className="text-gray-400">▾</span>
                 </button>
-                
                 {showDepartmentFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
                       onClick={() => {
-                        setFilterDepartment('');
+                        setFilterDepartment("");
                         setShowDepartmentFilter(false);
                       }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                     >
                       All Departments
                     </div>
-                    {uniqueDepartments.map(dept => (
-                      <div 
+                    {uniqueDepartments.map((dept) => (
+                      <div
                         key={dept}
                         onClick={() => {
                           setFilterDepartment(dept);
                           setShowDepartmentFilter(false);
                         }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
-                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
                         }`}
                       >
                         {dept}
@@ -2805,44 +2937,45 @@ export const Permissions = () => {
                 )}
               </div>
 
-              {/* Designation Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Designation</label>
+              <div className="relative" ref={designationFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
                 <button
-                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDesignation 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-55'
+                  onClick={() => {
+                    setShowDesignationFilter(!showDesignationFilter);
+                    setShowDepartmentFilter(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterDesignation
+                      ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                      : "border-gray-300 text-gray-700"
                   }`}
                 >
-                  <span className="flex items-center gap-1.5 truncate">
+                  <span className="flex items-center gap-2">
                     <FaUserTag className="text-gray-400" />
-                    {filterDesignation || 'All Designations'}
+                    {filterDesignation || "All Designations"}
                   </span>
                   <span className="text-gray-400">▾</span>
                 </button>
-                
                 {showDesignationFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
                       onClick={() => {
-                        setFilterDesignation('');
+                        setFilterDesignation("");
                         setShowDesignationFilter(false);
                       }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                     >
                       All Designations
                     </div>
-                    {uniqueDesignations.map(des => (
-                      <div 
+                    {uniqueDesignations.map((des) => (
+                      <div
                         key={des}
                         onClick={() => {
                           setFilterDesignation(des);
                           setShowDesignationFilter(false);
                         }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
-                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
                         }`}
                       >
                         {des}
@@ -2852,97 +2985,110 @@ export const Permissions = () => {
                 )}
               </div>
 
-              {/* From Date */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">From Date</label>
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => {
-                    setFromDate(e.target.value);
-                    if (e.target.value && toDate) {
-                      handleDateRangeFilter();
-                    }
-                  }}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e.target.value);
+                      if (e.target.value && toDate) {
+                        handleDateRangeFilter();
+                      }
+                    }}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e.target.value);
+                      if (fromDate && e.target.value) {
+                        handleDateRangeFilter();
+                      }
+                    }}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
               </div>
 
-              {/* To Date */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">To Date</label>
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => {
-                    setToDate(e.target.value);
-                    if (fromDate && e.target.value) {
-                      handleDateRangeFilter();
-                    }
-                  }}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Month Filter */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Month</label>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
                 <input
                   type="month"
                   value={selectedMonth}
                   onChange={handleMonthChange}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"
                 />
               </div>
 
-            </div>
-            
-            <div className="flex flex-wrap justify-between items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-              {/* Active filters indicator */}
-              {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] text-gray-500 font-medium">Active Filters:</span>
-                  {searchTerm && (
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
-                      "{searchTerm}"
-                    </span>
-                  )}
-                  {filterDepartment && (
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[9px] font-semibold border border-blue-200">
-                      {filterDepartment}
-                    </span>
-                  )}
-                  {filterDesignation && (
-                    <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[9px] font-semibold border border-purple-200">
-                      {filterDesignation}
-                    </span>
-                  )}
-                  {(fromDate || toDate) && (
-                    <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-[9px] font-semibold border border-green-200">
-                      {fromDate || '...'} - {toDate || '...'}
-                    </span>
-                  )}
-                  {selectedMonth !== new Date().toISOString().slice(0, 7) && (
-                    <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[9px] font-semibold border border-amber-200">
-                      {new Date(selectedMonth + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
-                    </span>
-                  )}
-                </div>
-              )}
-              
-              <div className="flex gap-2 ml-auto">
+              <div className="pt-3 border-t border-gray-200">
                 {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
                   <button
                     onClick={clearFilters}
-                    className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-55 transition-colors shadow-sm"
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
                   >
-                    Clear All ✕
+                    <FiTrash2 className="w-4 h-4" />
+                    Clear All Filters
                   </button>
                 )}
               </div>
             </div>
-          </div>
+          )}
         </div>
+
+        {/* Top KPI Stats Grid */}
+        {!loading && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Pending</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                  <FiClock className="text-orange-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{pendingCount}</div>
+              <div className="emp-dash__stat-meta">awaiting review</div>
+            </div>
+            
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Approved</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                  <FiCheckCircle className="text-blue-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{approvedCount}</div>
+              <div className="emp-dash__stat-meta">currently active</div>
+            </div>
+
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Completed</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                  <FiUserCheck className="text-green-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{completedCount}</div>
+              <div className="emp-dash__stat-meta">successfully logged</div>
+            </div>
+
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Total</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                  <FiActivity className="text-indigo-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{totalCount}</div>
+              <div className="emp-dash__stat-meta">in selected filter</div>
+            </div>
+          </div>
+        )}
 
         {/* Requests Table / Card Container */}
         {filteredPermissions.length === 0 ? (

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiCalendar, FiGift, FiClock, FiActivity, FiUsers, FiFilter } from 'react-icons/fi';
+import { FiCalendar, FiGift, FiClock, FiActivity, FiUsers, FiFilter, FiTrash2 } from 'react-icons/fi';
 import { FaSearch, FaCalendarAlt, FaBuilding, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isEmployeeHidden } from '../utils/employeeStatus';
 import "../index.css";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -25,19 +26,24 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('All');
-  const [selectedMonth, setSelectedMonth] = useState('');
+  // ✅ FIX: Use current month as default instead of empty string
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   useEffect(() => {
     fetchEmployees();
   }, []);
+  
 
   const fetchEmployees = async () => {
     try {
       setLoading(true);
       const response = await axios.get('https://api.timelyhealth.in/api/employees/get-employees');
       const data = response.data || [];
-      processEvents(data);
+      
+      // ✅ Filter out inactive employees
+      const activeEmployees = data.filter(emp => !isEmployeeHidden(emp));
+      processEvents(activeEmployees);
     } catch (error) {
       console.error('Error fetching employees:', error);
     } finally {
@@ -148,31 +154,177 @@ const Events = () => {
   const birthdayCount = events.filter(e => e.type === 'Birthday').length;
   const anniversaryCount = events.filter(e => e.type === 'Work Anniversary').length;
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setActiveTab('All');
+    setSelectedMonth(new Date().toISOString().slice(0, 7)); // Reset to current month
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
+  };
+
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
 
-        {/* Dashboard Header */}
-        <div className="emp-dash__header">
+        {/* Dashboard Header - Title on Left, Date and Filters on Right */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <div className="flex items-baseline gap-3 flex-wrap">
-    <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Upcoming <span>Events</span>
             </h1>
-            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Monitor upcoming birthdays, work anniversaries, and milestones.
-            </p> */}
           </div>
-          <div className="emp-dash__date-pill">
-            <FiCalendar />
+
+          {/* Right side: Date + All Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative min-w-[130px]">
+              <span className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <FaSearch className="text-[10px]" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Tab Filter - Compact */}
+            <div className="flex bg-gray-100 p-0.5 rounded-lg h-8">
+              {['All', 'Birthdays', 'Anniversaries'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${
+                    activeTab === tab
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  {tab === 'All' ? 'All' : tab === 'Birthdays' ? '🎂 Bday' : '🏆 Anniv'}
+                </button>
+              ))}
+            </div>
+
+            {/* Month Filter */}
+            <div className="relative">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            {/* Clear Filters Button */}
+            {(searchTerm || activeTab !== 'All' || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Header - Only Title and Date */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            Upcoming <span className="text-indigo-600">Events</span>
+          </h1>
+          <div className="emp-dash__date-pill text-[10px] px-2 py-1">
+            <FiCalendar className="text-[10px]" />
             <span>
               {new Date().toLocaleDateString("en-US", {
                 weekday: "short",
-                year: "numeric",
-                month: "short",
                 day: "numeric",
+                month: "short",
+                year: "numeric",
               })}
             </span>
           </div>
+        </div>
+
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{filteredEvents.length}</strong> events
+            </span>
+          </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-sm" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search by name or ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Event Type</label>
+                <div className="flex bg-gray-100 p-1 rounded-lg">
+                  {['All', 'Birthdays', 'Anniversaries'].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all ${
+                        activeTab === tab
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      {tab === 'All' ? 'All' : tab === 'Birthdays' ? '🎂 Bday' : '🏆 Anniv'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-gray-200">
+                {(searchTerm || activeTab !== 'All' || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+                  <button
+                    onClick={clearFilters}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    Clear All Filters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Top KPI Stats Grid - 2 columns on mobile, 3 on desktop */}
@@ -250,126 +402,6 @@ const Events = () => {
             </button>
           </div>
         )}
-
-        {/* Filters Card - Mobile Toggle */}
-        <div className="emp-dash__card mb-6">
-          {/* Mobile Filter Toggle Button */}
-          <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-            >
-              <FiFilter className="text-blue-600" />
-              Filter Events
-              {showMobileFilters ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
-            </button>
-            <span className="text-xs text-gray-400">
-              {filteredEvents.length} events
-            </span>
-          </div>
-
-          {/* Desktop Header */}
-          {/* <div className="hidden sm:flex emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filter Events
-              </h3>
-            </div>
-          </div> */}
-
-          {/* Filter Content - Toggle on Mobile */}
-          <div className={`emp-dash__card-body bg-gray-50/50 ${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Search */}
-              <div className="flex-1 min-w-[200px]">
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <FaSearch className="text-xs" />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search by name or ID..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
-                {['All', 'Birthdays', 'Anniversaries'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-3 sm:px-4 py-1.5 text-[10px] sm:text-xs font-semibold rounded-md transition-all ${
-                      activeTab === tab
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    {tab === 'All' ? 'All' : tab === 'Birthdays' ? '🎂 Bday' : '🏆 Anniv'}
-                  </button>
-                ))}
-              </div>
-
-              {/* Month Filter */}
-              <div className="relative w-[140px] sm:w-[150px]">
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-
-              {selectedMonth && (
-                <button
-                  onClick={() => setSelectedMonth('')}
-                  className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-
-            {/* Active filter indicator */}
-            {(activeTab !== 'All' || selectedMonth || searchTerm) && (
-              <div className="mt-3 pt-3 border-t border-gray-200/50 flex flex-wrap items-center gap-2">
-                <span className="text-[10px] text-gray-500 font-medium">Active Filters:</span>
-                {activeTab !== 'All' && (
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
-                    activeTab === 'Birthdays'
-                      ? 'bg-rose-50 text-rose-700 border-rose-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200'
-                  }`}>
-                    {activeTab === 'Birthdays' ? '🎂 Birthdays' : '🏆 Anniversaries'}
-                  </span>
-                )}
-                {selectedMonth && (
-                  <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[9px] font-semibold border border-purple-200">
-                    {new Date(selectedMonth + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
-                  </span>
-                )}
-                {searchTerm && (
-                  <span className="px-2 py-0.5 bg-gray-50 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
-                    "{searchTerm}"
-                  </span>
-                )}
-                <button
-                  onClick={() => {
-                    setActiveTab('All');
-                    setSelectedMonth('');
-                    setSearchTerm('');
-                  }}
-                  className="text-[9px] text-red-500 hover:text-red-700 font-semibold ml-1"
-                >
-                  Clear All ✕
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Events Table / Card Container */}
         <div className="emp-dash__card mb-6">
@@ -631,11 +663,7 @@ const Events = () => {
                 </span>
                 <span 
                   className="text-blue-500 cursor-pointer hover:underline text-[9px]"
-                  onClick={() => {
-                    setActiveTab('All');
-                    setSelectedMonth('');
-                    setSearchTerm('');
-                  }}
+                  onClick={clearFilters}
                 >
                   Reset All
                 </span>

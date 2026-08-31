@@ -224,7 +224,7 @@ const MyProducts = () => {
               Manage and monitor all your products in one place.
             </p> */}
           </div>
-          <div className="emp-dash__date-pill bg-white/70 backdrop-blur-lg border border-white/50 shadow-lg">
+          {/* <div className="emp-dash__date-pill bg-white/70 backdrop-blur-lg border border-white/50 shadow-lg">
             <FiCalendar className="text-blue-500" />
             <span>
               {new Date().toLocaleDateString("en-US", {
@@ -234,7 +234,7 @@ const MyProducts = () => {
                 day: "numeric",
               })}
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* Top KPI Stats Grid */}

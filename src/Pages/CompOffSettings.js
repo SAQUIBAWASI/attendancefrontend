@@ -1,590 +1,34 @@
-// import React, { useEffect, useState, useRef } from 'react';
-// import { API_BASE_URL } from '../config';
-
-// function CompOffSettings() {
-//   const [settings, setSettings] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState('');
-//   const [saveStatus, setSaveStatus] = useState('');
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [isModalOpen, setIsModalOpen] = useState(false);
-//   const [editingSetting, setEditingSetting] = useState(null);
-  
-//   // Form state
-//   const [formData, setFormData] = useState({
-//     totalCompOff: '',
-//     validityFrom: '',
-//     validityTo: ''
-//   });
-  
-//   // Pagination
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [itemsPerPage, setItemsPerPage] = useState(10);
-  
-//   const saveStatusTimeoutRef = useRef(null);
-  
-//   const showSaveStatus = (msg, isError = false) => {
-//     setSaveStatus(msg);
-//     clearTimeout(saveStatusTimeoutRef.current);
-//     saveStatusTimeoutRef.current = setTimeout(() => setSaveStatus(''), 3500);
-//   };
-  
-//   // ── Fetch all comp-off settings ──────────────────────────────────────────────
-//   const fetchSettings = async () => {
-//     try {
-//       setLoading(true);
-//       const response = await fetch(`${API_BASE_URL}/leaves/get-all-comp-off-settings`);
-      
-//       if (!response.ok) {
-//         throw new Error('Failed to fetch comp-off settings');
-//       }
-      
-//       const result = await response.json();
-      
-//       if (result.success) {
-//         setSettings(result.data || []);
-//       } else {
-//         throw new Error(result.message || 'Failed to fetch settings');
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       setError(err.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-  
-//   useEffect(() => {
-//     fetchSettings();
-//   }, []);
-  
-//   // ── Add new comp-off setting ──────────────────────────────────────────────
-//   const handleAddSetting = async () => {
-//     // Validation
-//     if (!formData.totalCompOff || formData.totalCompOff <= 0) {
-//       showSaveStatus('❌ Please enter a valid number of Comp-Off days', true);
-//       return;
-//     }
-    
-//     if (!formData.validityFrom) {
-//       showSaveStatus('❌ Please select Validity From date', true);
-//       return;
-//     }
-    
-//     if (!formData.validityTo) {
-//       showSaveStatus('❌ Please select Validity To date', true);
-//       return;
-//     }
-    
-//     const fromDate = new Date(formData.validityFrom);
-//     const toDate = new Date(formData.validityTo);
-    
-//     if (toDate < fromDate) {
-//       showSaveStatus('❌ Validity To date cannot be before Validity From date', true);
-//       return;
-//     }
-    
-//     try {
-//       const response = await fetch(`${API_BASE_URL}/leaves/add-comp-off-settings`, {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify({
-//           totalCompOff: Number(formData.totalCompOff),
-//           validityFrom: formData.validityFrom,
-//           validityTo: formData.validityTo
-//         })
-//       });
-      
-//       const result = await response.json();
-      
-//       if (result.success) {
-//         showSaveStatus('✅ Comp-Off setting added successfully');
-//         setIsModalOpen(false);
-//         resetForm();
-//         fetchSettings();
-//       } else {
-//         throw new Error(result.message || 'Failed to add setting');
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       showSaveStatus(`❌ ${err.message}`, true);
-//     }
-//   };
-  
-//   // ── Update comp-off setting ───────────────────────────────────────────────
-//   const handleUpdateSetting = async () => {
-//     if (!formData.totalCompOff || formData.totalCompOff <= 0) {
-//       showSaveStatus('❌ Please enter a valid number of Comp-Off days', true);
-//       return;
-//     }
-    
-//     if (!formData.validityFrom) {
-//       showSaveStatus('❌ Please select Validity From date', true);
-//       return;
-//     }
-    
-//     if (!formData.validityTo) {
-//       showSaveStatus('❌ Please select Validity To date', true);
-//       return;
-//     }
-    
-//     const fromDate = new Date(formData.validityFrom);
-//     const toDate = new Date(formData.validityTo);
-    
-//     if (toDate < fromDate) {
-//       showSaveStatus('❌ Validity To date cannot be before Validity From date', true);
-//       return;
-//     }
-    
-//     try {
-//       const response = await fetch(`${API_BASE_URL}/leaves/update-comp-off-settings/${editingSetting._id}`, {
-//         method: 'PUT',
-//         headers: {
-//           'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify({
-//           totalCompOff: Number(formData.totalCompOff),
-//           validityFrom: formData.validityFrom,
-//           validityTo: formData.validityTo
-//         })
-//       });
-      
-//       const result = await response.json();
-      
-//       if (result.success) {
-//         showSaveStatus('✅ Comp-Off setting updated successfully');
-//         setIsModalOpen(false);
-//         resetForm();
-//         fetchSettings();
-//       } else {
-//         throw new Error(result.message || 'Failed to update setting');
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       showSaveStatus(`❌ ${err.message}`, true);
-//     }
-//   };
-  
-//   // ── Delete comp-off setting ───────────────────────────────────────────────
-//   const handleDeleteSetting = async (setting) => {
-//     if (!window.confirm(`Are you sure you want to delete this Comp-Off setting?`)) {
-//       return;
-//     }
-    
-//     try {
-//       const response = await fetch(`${API_BASE_URL}/leaves/delete-comp-off-settings/${setting._id}`, {
-//         method: 'DELETE'
-//       });
-      
-//       const result = await response.json();
-      
-//       if (result.success) {
-//         showSaveStatus('✅ Comp-Off setting deleted successfully');
-//         fetchSettings();
-//       } else {
-//         throw new Error(result.message || 'Failed to delete setting');
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       showSaveStatus(`❌ ${err.message}`, true);
-//     }
-//   };
-  
-//   // ── Open modal for add/edit ───────────────────────────────────────────────
-//   const openAddModal = () => {
-//     setEditingSetting(null);
-//     resetForm();
-//     setIsModalOpen(true);
-//   };
-  
-//   const openEditModal = (setting) => {
-//     setEditingSetting(setting);
-//     setFormData({
-//       totalCompOff: setting.totalCompOff,
-//       validityFrom: setting.validityFrom.split('T')[0],
-//       validityTo: setting.validityTo.split('T')[0]
-//     });
-//     setIsModalOpen(true);
-//   };
-  
-//   const resetForm = () => {
-//     setFormData({
-//       totalCompOff: '',
-//       validityFrom: '',
-//       validityTo: ''
-//     });
-//   };
-  
-//   // ── Filtered + paginated list ─────────────────────────────────────────────
-//   const filteredSettings = settings.filter(setting => {
-//     if (!searchTerm) return true;
-//     const q = searchTerm.toLowerCase();
-//     return (
-//       setting._id?.toLowerCase().includes(q) ||
-//       setting.totalCompOff?.toString().includes(q) ||
-//       setting.status?.toLowerCase().includes(q)
-//     );
-//   });
-  
-//   const totalPages = Math.ceil(filteredSettings.length / itemsPerPage);
-//   const startIdx = (currentPage - 1) * itemsPerPage;
-//   const currentItems = filteredSettings.slice(startIdx, startIdx + itemsPerPage);
-  
-//   const getPageNumbers = () => {
-//     const pages = [];
-//     const delta = 2;
-//     for (let i = Math.max(1, currentPage - delta); i <= Math.min(totalPages, currentPage + delta); i++) {
-//       pages.push(i);
-//     }
-//     return pages;
-//   };
-  
-//   // ── Format date ───────────────────────────────────────────────────────────
-//   const formatDate = (dateString) => {
-//     if (!dateString) return '-';
-//     const date = new Date(dateString);
-//     return date.toLocaleDateString('en-IN', {
-//       year: 'numeric',
-//       month: 'short',
-//       day: 'numeric'
-//     });
-//   };
-  
-//   // ── Loading / Error states ────────────────────────────────────────────────
-//   if (loading) return (
-//     <div className="flex items-center justify-center min-h-screen">
-//       <div className="text-lg font-semibold text-blue-600">Loading Comp-Off Settings...</div>
-//     </div>
-//   );
-  
-//   if (error) return (
-//     <div className="flex items-center justify-center min-h-screen">
-//       <div className="p-4 text-red-600 bg-red-100 rounded-lg">Error: {error}</div>
-//     </div>
-//   );
-  
-//   // ── Render ────────────────────────────────────────────────────────────────
-//   return (
-//     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
-//       <div className="mx-auto max-w-9xl">
-        
-//         {/* Toast notification */}
-//         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${
-//             saveStatus.includes('✅') ? 'bg-green-600 border-l-4 border-green-700' : 'bg-red-500 border-l-4 border-red-600'
-//           }`}>
-//             {saveStatus}
-//           </div>
-//         )}
-        
-//         {/* ── Header with Add Button ── */}
-//         <div className="flex flex-wrap items-center justify-between mb-4">
-//           <h1 className="text-2xl font-bold text-gray-800">Comp-Off Settings</h1>
-//           <button
-//             onClick={openAddModal}
-//             className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200"
-//           >
-//             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-//             </svg>
-//             Add New Setting
-//           </button>
-//         </div>
-        
-//         {/* ── Filter bar ── */}
-//         <div className="p-2 mb-2 bg-white border border-gray-200 rounded-lg shadow-md">
-//           <div className="flex flex-wrap items-center gap-2">
-//             {/* Search */}
-//             <div className="relative flex-1 min-w-[200px]">
-//               <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-//               </svg>
-//               <input
-//                 type="text"
-//                 placeholder="Search by ID, days or status..."
-//                 value={searchTerm}
-//                 onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-//                 className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-//               />
-//             </div>
-            
-//             {/* Clear */}
-//             <button
-//               onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
-//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 whitespace-nowrap"
-//             >
-//               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-//               </svg>
-//               Clear
-//             </button>
-//           </div>
-//         </div>
-        
-//         {/* ── Table card ── */}
-//         <div className="p-0 mb-0 bg-white border border-gray-200 shadow-lg rounded-2xl">
-//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-//             <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
-//                 <tr>
-//                   <th className="py-2 px-3 text-center">S.No</th>
-//                   <th className="py-2 px-3 text-center">Total Comp-Off Days</th>
-//                   <th className="py-2 px-3 text-center">Validity Period</th>
-//                   <th className="py-2 px-3 text-center">Status</th>
-//                   <th className="py-2 px-3 text-center">Created At</th>
-//                   <th className="py-2 px-3 text-center">Actions</th>
-//                 </tr>
-//               </thead>
-              
-//               <tbody>
-//                 {currentItems.map((setting, index) => (
-//                   <tr
-//                     key={setting._id}
-//                     className="border-t border-gray-200 hover:bg-blue-50"
-//                   >
-//                     <td className="px-2 py-2 text-center text-gray-600">
-//                       {startIdx + index + 1}
-//                     </td>
-//                     <td className="px-2 py-2 font-semibold text-center text-indigo-600">
-//                       {setting.totalCompOff} day{setting.totalCompOff !== 1 ? 's' : ''}
-//                     </td>
-//                     <td className="px-2 py-2 text-center text-gray-600">
-//                       {formatDate(setting.validityFrom)} - {formatDate(setting.validityTo)}
-//                     </td>
-//                     <td className="px-2 py-2 text-center">
-//                       <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-//                         setting.status === 'active'
-//                           ? 'bg-green-100 text-green-800'
-//                           : 'bg-gray-100 text-gray-500'
-//                       }`}>
-//                         {setting.status === 'active' ? 'Active' : 'Inactive'}
-//                       </span>
-//                     </td>
-//                     <td className="px-2 py-2 text-center text-gray-600">
-//                       {formatDate(setting.createdAt)}
-//                     </td>
-//                     <td className="px-2 py-2 text-center">
-//                       <div className="flex items-center justify-center gap-2">
-//                         <button
-//                           title="Edit Setting"
-//                           onClick={() => openEditModal(setting)}
-//                           className="p-1.5 text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 transition-all duration-150"
-//                         >
-//                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-//                           </svg>
-//                         </button>
-//                         <button
-//                           title="Delete Setting"
-//                           onClick={() => handleDeleteSetting(setting)}
-//                           className="p-1.5 text-red-600 bg-red-100 rounded-lg hover:bg-red-200 transition-all duration-150"
-//                         >
-//                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-//                           </svg>
-//                         </button>
-//                       </div>
-//                     </td>
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-            
-//             {/* ── Pagination ── */}
-//             {filteredSettings.length > 0 && (
-//               <div className="flex flex-col items-center justify-between gap-4 mt-6 pb-4 sm:flex-row px-4">
-//                 <div className="flex flex-wrap items-center gap-4">
-//                   <div className="flex items-center gap-2">
-//                     <label className="text-sm font-medium text-gray-700">Show:</label>
-//                     <select
-//                       value={itemsPerPage}
-//                       onChange={e => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-//                       className="p-2 text-sm border rounded-lg"
-//                     >
-//                       <option value={5}>5</option>
-//                       <option value={10}>10</option>
-//                       <option value={20}>20</option>
-//                       <option value={50}>50</option>
-//                     </select>
-//                     <span className="text-sm text-gray-500">entries</span>
-//                   </div>
-//                   <div className="text-sm text-gray-600">
-//                     Showing {startIdx + 1} to {Math.min(startIdx + itemsPerPage, filteredSettings.length)} of {filteredSettings.length} entries
-//                   </div>
-//                 </div>
-                
-//                 <div className="flex items-center gap-2">
-//                   <button
-//                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-//                     disabled={currentPage === 1}
-//                     className={`px-4 py-1 text-sm border rounded-lg ${
-//                       currentPage === 1
-//                         ? 'text-gray-500 bg-gray-100 border-gray-200 cursor-not-allowed'
-//                         : 'text-blue-500 bg-white hover:bg-gray-100 border-gray-300'
-//                     }`}
-//                   >
-//                     Previous
-//                   </button>
-                  
-//                   {getPageNumbers().map(page => (
-//                     <button
-//                       key={page}
-//                       onClick={() => setCurrentPage(page)}
-//                       className={`px-4 py-1 text-sm border rounded-lg ${
-//                         currentPage === page
-//                           ? 'text-white bg-blue-600 border-blue-600'
-//                           : 'text-blue-500 bg-white hover:bg-gray-100 border-gray-300'
-//                       }`}
-//                     >
-//                       {page}
-//                     </button>
-//                   ))}
-                  
-//                   <button
-//                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-//                     disabled={currentPage === totalPages || totalPages === 0}
-//                     className={`px-4 py-1 text-sm border rounded-lg ${
-//                       currentPage === totalPages || totalPages === 0
-//                         ? 'text-gray-500 bg-gray-100 border-gray-200 cursor-not-allowed'
-//                         : 'text-blue-500 bg-white hover:bg-gray-100 border-gray-300'
-//                     }`}
-//                   >
-//                     Next
-//                   </button>
-//                 </div>
-//               </div>
-//             )}
-            
-//             {filteredSettings.length === 0 && (
-//               <div className="py-8 text-center text-gray-500">
-//                 No comp-off settings found
-//                 {searchTerm && ' matching your search'}
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-      
-//       {/* ── Modal for Add/Edit ── */}
-//       {isModalOpen && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//           <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
-//             <div className="flex items-center justify-between mb-4">
-//               <h2 className="text-xl font-bold text-gray-800">
-//                 {editingSetting ? 'Edit Comp-Off Setting' : 'Add New Comp-Off Setting'}
-//               </h2>
-//               <button
-//                 onClick={() => {
-//                   setIsModalOpen(false);
-//                   resetForm();
-//                 }}
-//                 className="text-gray-500 hover:text-gray-700"
-//               >
-//                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-//                 </svg>
-//               </button>
-//             </div>
-            
-//             <div className="space-y-4">
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">
-//                   Total Comp-Off Days <span className="text-red-500">*</span>
-//                 </label>
-//                 <input
-//                   type="number"
-//                   min="0.5"
-//                   step="0.5"
-//                   value={formData.totalCompOff}
-//                   onChange={e => setFormData({ ...formData, totalCompOff: e.target.value })}
-//                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-//                   placeholder="Enter total comp-off days"
-//                 />
-//               </div>
-              
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">
-//                   Validity From <span className="text-red-500">*</span>
-//                 </label>
-//                 <input
-//                   type="date"
-//                   value={formData.validityFrom}
-//                   onChange={e => setFormData({ ...formData, validityFrom: e.target.value })}
-//                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-//                 />
-//               </div>
-              
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">
-//                   Validity To <span className="text-red-500">*</span>
-//                 </label>
-//                 <input
-//                   type="date"
-//                   value={formData.validityTo}
-//                   onChange={e => setFormData({ ...formData, validityTo: e.target.value })}
-//                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-//                 />
-//               </div>
-//             </div>
-            
-//             <div className="flex justify-end gap-3 mt-6">
-//               <button
-//                 onClick={() => {
-//                   setIsModalOpen(false);
-//                   resetForm();
-//                 }}
-//                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all"
-//               >
-//                 Cancel
-//               </button>
-//               <button
-//                 onClick={editingSetting ? handleUpdateSetting : handleAddSetting}
-//                 className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
-//               >
-//                 {editingSetting ? 'Update' : 'Save'}
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-      
-//       <style>{`
-//         @keyframes fade-in {
-//           from { opacity: 0; transform: translateY(-10px); }
-//           to   { opacity: 1; transform: translateY(0); }
-//         }
-//         .animate-fade-in { animation: fade-in 0.3s ease-out; }
-//       `}</style>
-//     </div>
-//   );
-// }
-
-// export default CompOffSettings;
-
-
-
 import axios from "axios";
 import { useEffect, useState } from "react";
-import CountUp from 'react-countup';
-import { FaCheck, FaTimes, FaEye, FaSearch, FaExchangeAlt } from "react-icons/fa";
-import { FiFileText, FiClock, FiCheckCircle, FiXCircle, FiCalendar, FiFilter, FiList, FiTrash2 } from "react-icons/fi";
+import { FaCheck, FaTimes, FaEye, FaSearch, FaExchangeAlt, FaChevronUp, FaChevronDown } from "react-icons/fa";
+import { 
+  FiFileText, FiClock, FiCheckCircle, FiXCircle, 
+  FiCalendar, FiFilter, FiList, FiTrash2, FiRefreshCw,
+  FiInfo, FiEdit, FiSave, FiX, FiPlus
+} from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 
-const AdminCompOffRequests = () => {
+const CompOffSettings = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [counts, setCounts] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [monthFilter, setMonthFilter] = useState("");
+  // ✅ Month filter - default to current month
+  const [monthFilter, setMonthFilter] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = localStorage.getItem('compOffSettings_itemsPerPage');
+    return saved ? parseInt(saved, 10) : 10;
+  });
 
   // Modal states
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -596,19 +40,17 @@ const AdminCompOffRequests = () => {
   const [actionMessage, setActionMessage] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const getCurrentMonth = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  };
-
+  // Fetch requests with comp-off filter
   const fetchRequests = async () => {
     setLoading(true);
+    setError("");
     try {
       let url = `${API_BASE_URL}/leaves/all?page=${currentPage}&limit=${itemsPerPage}`;
       
       if (statusFilter) {
         url += `&status=${statusFilter}`;
       }
+      // ✅ Always send month filter
       if (monthFilter) {
         url += `&month=${monthFilter}`;
       }
@@ -619,15 +61,43 @@ const AdminCompOffRequests = () => {
       const response = await axios.get(url);
       
       if (response.data && response.data.success) {
-        setRequests(response.data.requests || []);
-        setCounts(response.data.counts || { total: 0, pending: 0, approved: 0, rejected: 0 });
-        setPagination(response.data.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 });
+        const allRequests = response.data.requests || [];
+        
+        // Filter comp-off requests
+        const compOffRequests = allRequests.filter(req => {
+          return req.isCompOff === true || 
+                 req.compOffRequest === true || 
+                 req.leaveType === 'comp-off' ||
+                 req.leaveType === 'Comp-off' ||
+                 req.leaveType === 'comp_off' ||
+                 req.leaveType === 'Comp-Off' ||
+                 req.leaveDetails?.leaveType === 'comp-off' ||
+                 req.leaveDetails?.leaveType === 'Comp-off' ||
+                 req.leaveDetails?.leaveType === 'comp_off' ||
+                 req.leaveDetails?.isCompOff === true ||
+                 (req.reason && req.reason.toLowerCase().includes('comp-off')) ||
+                 (req.reason && req.reason.toLowerCase().includes('comp off'));
+        });
+        
+        setRequests(compOffRequests);
+        setCounts({
+          total: compOffRequests.length,
+          pending: compOffRequests.filter(r => r.status === 'pending').length,
+          approved: compOffRequests.filter(r => r.status === 'approved').length,
+          rejected: compOffRequests.filter(r => r.status === 'rejected').length
+        });
+        setPagination({
+          page: currentPage,
+          limit: itemsPerPage,
+          total: compOffRequests.length,
+          totalPages: Math.ceil(compOffRequests.length / itemsPerPage)
+        });
       } else {
-        setError("Failed to fetch comp-off requests");
+        setError("Failed to fetch comp-off settings");
       }
     } catch (err) {
-      console.error("Error fetching comp-off requests:", err);
-      setError(err.response?.data?.error || "Failed to fetch comp-off requests");
+      console.error("Error fetching comp-off settings:", err);
+      setError(err.response?.data?.error || "Failed to fetch comp-off settings. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -667,20 +137,35 @@ const AdminCompOffRequests = () => {
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("");
-    setMonthFilter("");
+    // ✅ Reset to current month
+    const now = new Date();
+    setMonthFilter(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
     setCurrentPage(1);
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
+  };
+
+  const handleCardClick = (filterType) => {
+    if (filterType === 'total') {
+      setStatusFilter('');
+      setCurrentPage(1);
+    } else if (filterType === 'pending') {
+      setStatusFilter('pending');
+      setCurrentPage(1);
+    } else if (filterType === 'approved') {
+      setStatusFilter('approved');
+      setCurrentPage(1);
+    } else if (filterType === 'rejected') {
+      setStatusFilter('rejected');
+      setCurrentPage(1);
+    }
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const formatDateDisplay = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString('en-IN', {
       day: '2-digit',
@@ -702,11 +187,11 @@ const AdminCompOffRequests = () => {
 
   const getStatusBadge = (status) => {
     const styles = {
-      pending: "bg-yellow-100 text-yellow-800",
-      approved: "bg-green-100 text-green-800",
-      rejected: "bg-red-100 text-red-800"
+      pending: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+      approved: "bg-green-100 text-green-800 border border-green-200",
+      rejected: "bg-red-100 text-red-800 border border-red-200"
     };
-    return styles[status] || "bg-gray-100 text-gray-800";
+    return styles[status] || "bg-gray-100 text-gray-800 border border-gray-200";
   };
 
   const handleView = (request) => {
@@ -730,7 +215,7 @@ const AdminCompOffRequests = () => {
     setActionLoading(true);
     try {
       const response = await axios.put(
-        `${API_BASE_URL}/leaves/compoff-status/${selectedRequest._id}`,
+        `${API_BASE_URL}/leaves/updateleaves/${selectedRequest._id}`,
         {
           status: "approved"
         }
@@ -763,7 +248,7 @@ const AdminCompOffRequests = () => {
     setActionLoading(true);
     try {
       const response = await axios.put(
-        `${API_BASE_URL}/leaves/compoff-status/${selectedRequest._id}`,
+        `${API_BASE_URL}/leaves/updateleaves/${selectedRequest._id}`,
         {
           status: "rejected",
           rejectedReason: rejectReason
@@ -801,24 +286,79 @@ const AdminCompOffRequests = () => {
     return pageNumbers;
   };
 
+  const handleItemsPerPageChange = (limit) => {
+    setItemsPerPage(limit);
+    setCurrentPage(1);
+    localStorage.setItem('compOffSettings_itemsPerPage', String(limit));
+  };
+
+  // ✅ Get default month
+  const getDefaultMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+  const isDefaultMonth = monthFilter === getDefaultMonth();
+  
+  // ✅ Check if any filter is active (excluding default month)
+  const hasActiveFilters = searchTerm || statusFilter || !isDefaultMonth;
+
+  // ✅ Get status label for display
+  const getStatusLabel = (status) => {
+    const labels = {
+      pending: '⏳ Pending',
+      approved: '✅ Approved',
+      rejected: '❌ Rejected'
+    };
+    return labels[status] || status;
+  };
+
+  // ✅ Format month for display
+  const formatMonthDisplay = (monthValue) => {
+    if (!monthValue) return '';
+    const [year, month] = monthValue.split('-');
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${monthNames[parseInt(month) - 1]} ${year}`;
+  };
+
+  // ✅ Get filter summary for display
+  const getFilterSummary = () => {
+    const parts = [];
+    if (searchTerm) {
+      parts.push(`Search: "${searchTerm}"`);
+    }
+    if (statusFilter) {
+      parts.push(`Status: ${getStatusLabel(statusFilter)}`);
+    }
+    // ✅ Always show month
+    if (monthFilter) {
+      parts.push(`Month: ${formatMonthDisplay(monthFilter)}`);
+    }
+    return parts;
+  };
+
   if (loading && requests.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-700">Loading comp-off requests...</p>
+          <p className="text-lg font-semibold text-gray-700">Loading comp-off settings...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && requests.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="max-w-md p-8 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
           <div className="mb-4 text-4xl text-red-500">X</div>
           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
-          <button onClick={() => window.location.reload()} className="px-6 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700">Retry</button>
+          <button 
+            onClick={fetchRequests} 
+            className="px-6 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -827,123 +367,124 @@ const AdminCompOffRequests = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="p-4 sm:p-6 lg:p-8">
-        {/* Dashboard Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        
+        {/* Dashboard Header - Title on Left, Date and Filters on Right */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-6">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
-              Comp-off <span className="text-purple-600">Requests</span>
+              Comp-off <span className="text-purple-600">Settings</span>
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Manage and approve employee comp-off requests
-            </p>
           </div>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
-            <FiCalendar className="text-purple-600" />
-            <span className="text-sm font-medium text-gray-600">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
+
+          {/* Right side: Date + All Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative min-w-[150px]">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <FaSearch className="text-sm" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="w-[150px] pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={handleStatusChange}
+              className="h-8 px-3 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+
+            {/* Month Filter - default current month */}
+            <input
+              type="month"
+              value={monthFilter}
+              onChange={handleMonthChange}
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              className="w-[130px] h-8 px-3 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+            />
+
+            {/* Refresh Button */}
+            <button
+              onClick={fetchRequests}
+              disabled={loading}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FiRefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Header - Only Title and Date */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">
+              Comp-off <span className="text-purple-600">Settings</span>
+            </h1>
+          </div>
+        </div>
+
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-purple-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{requests.length}</strong> records
             </span>
           </div>
-        </div>
 
-        {/* Top KPI Stats Grid */}
-        <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Requests</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                <FiList className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={counts.total || 0} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">total requests</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Pending</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                <FiClock className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={counts.pending || 0} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">awaiting approval</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
-                <FiCheckCircle className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={counts.approved || 0} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">approved requests</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Rejected</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-red-50 text-red-600">
-                <FiXCircle className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={counts.rejected || 0} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">rejected requests</div>
-          </div>
-        </div>
-
-        {/* Filters Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-gray-100">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <FiFilter className="text-purple-600" /> Filters &amp; Search
-              </h3>
-            </div>
-          </div>
-          
-          <div className="p-4 bg-gray-50/50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">
-              
-              {/* Search */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <FaSearch className="text-sm" />
                   </span>
                   <input
                     type="text"
-                    placeholder="Search name, ID, or reason..."
+                    placeholder="Search..."
                     value={searchTerm}
                     onChange={handleSearch}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                   />
                 </div>
               </div>
 
-              {/* Status Filter */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Status</label>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
                 <select
                   value={statusFilter}
                   onChange={handleStatusChange}
-                  className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 >
                   <option value="">All Status</option>
                   <option value="pending">Pending</option>
@@ -952,52 +493,148 @@ const AdminCompOffRequests = () => {
                 </select>
               </div>
 
-              {/* Month Filter */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Month</label>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
                 <input
                   type="month"
                   value={monthFilter}
                   onChange={handleMonthChange}
                   onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
-            </div>
 
-            {/* Filter Actions */}
-            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-              <div className="text-xs text-gray-500 font-medium">
-                Showing <strong>{requests.length}</strong> of <strong>{pagination.total || 0}</strong> records
-              </div>
-              <div className="flex gap-2">
-                {(searchTerm || statusFilter || monthFilter) && (
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={clearFilters}
-                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
+                    onClick={fetchRequests}
+                    disabled={loading}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all shadow-sm"
                   >
-                    <FiTrash2 /> Clear Filters
+                    <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    Refresh
                   </button>
-                )}
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Top KPI Stats Grid */}
+        <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div 
+            className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${statusFilter === '' ? 'ring-2 ring-purple-500 ring-offset-2' : ''}`}
+            onClick={() => handleCardClick('total')}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Records</span>
+              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                <FiList className="text-base" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">{counts.total || 0}</div>
+            <div className="mt-1 text-xs text-gray-500">total records</div>
+          </div>
+
+          <div 
+            className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${statusFilter === 'pending' ? 'ring-2 ring-amber-500 ring-offset-2' : ''}`}
+            onClick={() => handleCardClick('pending')}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Pending</span>
+              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                <FiClock className="text-base" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">{counts.pending || 0}</div>
+            <div className="mt-1 text-xs text-gray-500">awaiting review</div>
+          </div>
+
+          <div 
+            className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${statusFilter === 'approved' ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
+            onClick={() => handleCardClick('approved')}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved</span>
+              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
+                <FiCheckCircle className="text-base" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">{counts.approved || 0}</div>
+            <div className="mt-1 text-xs text-gray-500">approved records</div>
+          </div>
+
+          <div 
+            className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${statusFilter === 'rejected' ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
+            onClick={() => handleCardClick('rejected')}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Rejected</span>
+              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-red-50 text-red-600">
+                <FiXCircle className="text-base" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">{counts.rejected || 0}</div>
+            <div className="mt-1 text-xs text-gray-500">rejected records</div>
           </div>
         </div>
 
-        {/* Main Requests Container */}
+        {/* ✅ Active Filter Indicator - Shows which filter is active */}
+        <div className="mb-4 flex flex-wrap items-center gap-2 px-4 py-2 bg-purple-50 border border-purple-200 rounded-lg text-xs">
+          <span className="font-semibold text-purple-700">📅 Current Filters:</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {getFilterSummary().map((item, index) => (
+              <span key={index} className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-medium">
+                {item}
+              </span>
+            ))}
+          </div>
+          {hasActiveFilters && (
+            <button 
+              onClick={clearFilters}
+              className="ml-auto text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-1"
+            >
+              <FiTrash2 className="w-3 h-3" />
+              Clear All
+            </button>
+          )}
+        </div>
+
+        {/* Main Records Container */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <div>
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <FiList className="text-purple-600" /> Comp-off Requests List
+                <FiList className="text-purple-600" /> Comp-off Settings List
               </h3>
-              <p className="text-xs text-gray-500 mt-0.5">Manage and approve employee comp-off requests</p>
+              <p className="text-xs text-gray-500 mt-0.5">Manage and configure comp-off settings</p>
             </div>
           </div>
 
           {requests.length === 0 ? (
-            <div className="py-12 text-center text-sm text-gray-500 font-medium">
-              No comp-off requests found matching current filter values.
+            <div className="py-12 text-center">
+              <div className="text-5xl mb-4">📋</div>
+              <p className="text-base font-semibold text-gray-700">No comp-off records found</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {hasActiveFilters ? 'Try clearing filters' : 'No comp-off requests available'}
+              </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 px-4 py-2 text-sm font-semibold text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-all"
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
           ) : (
             <>
@@ -1008,65 +645,52 @@ const AdminCompOffRequests = () => {
                     <tr>
                       <th style={{ color: 'black' }} className="px-4 py-3 text-left">Employee</th>
                       <th style={{ color: 'black' }} className="px-4 py-3 text-center">Leave Details</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Extra Day Details</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Extra Day</th>
                       <th style={{ color: 'black' }} className="px-4 py-3 text-center">Status</th>
                       <th style={{ color: 'black' }} className="px-4 py-3 text-center">Requested On</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Action</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 text-xs">
                     {requests.map((request) => (
                       <tr key={request._id} className="hover:bg-gray-50 transition-all">
-                        {/* Employee */}
                         <td className="px-4 py-3">
-                          <div>
-                            <div className="font-semibold text-gray-900">{request.employeeName || "N/A"}</div>
-                            <div className="text-xs text-gray-500">{request.employeeId || "N/A"}</div>
-                          </div>
+                          <div className="font-semibold text-gray-900">{request.employeeName || "N/A"}</div>
+                          <div className="text-xs text-gray-500">{request.employeeId || "N/A"}</div>
                         </td>
-                        
-                        {/* Leave Details */}
                         <td className="px-4 py-3 text-center">
                           <div className="flex flex-col items-center">
                             <span className="px-2 py-0.5 text-xs font-medium capitalize bg-blue-50 text-blue-700 rounded-full border border-blue-200">
-                              {request.leaveDetails?.leaveType || "N/A"}
+                              {request.leaveType || request.leaveDetails?.leaveType || "Comp-off"}
                             </span>
                             <div className="text-xs text-gray-500 mt-0.5">
-                              {request.leaveDetails?.startDate ? formatDate(request.leaveDetails.startDate) : "N/A"} 
-                              {request.leaveDetails?.endDate && request.leaveDetails?.startDate !== request.leaveDetails?.endDate 
-                                ? ` - ${formatDate(request.leaveDetails.endDate)}` 
+                              {request.startDate ? formatDate(request.startDate) : request.leaveDetails?.startDate ? formatDate(request.leaveDetails.startDate) : "N/A"} 
+                              {request.endDate && request.startDate !== request.endDate 
+                                ? ` - ${formatDate(request.endDate)}` 
+                                : request.leaveDetails?.endDate && request.leaveDetails?.startDate !== request.leaveDetails?.endDate
+                                ? ` - ${formatDate(request.leaveDetails.endDate)}`
                                 : ''}
-                              <span className="ml-1 text-gray-400">({request.leaveDetails?.days || 0} days)</span>
+                              <span className="ml-1 text-gray-400">({request.days || request.leaveDetails?.days || 0} days)</span>
                             </div>
                           </div>
                         </td>
-                        
-                        {/* Extra Day Details */}
                         <td className="px-4 py-3 text-center">
-                          <div className="flex flex-col items-center">
-                            <div className="font-medium text-gray-900">
-                              {request.extraDayDetails?.day || formatDateDisplay(request.extraDayDate)}
-                            </div>
-                            <div className="text-xs text-green-600 font-semibold">
-                              +{request.extraDayDetails?.extraHours || 0} hrs 
-                              <span className="text-gray-400 ml-1">({request.extraDayDetails?.totalHours || 8} total hrs)</span>
-                            </div>
+                          <div className="font-medium text-gray-900">
+                            {request.extraDayDetails?.day || formatDate(request.extraDayDate)}
+                          </div>
+                          <div className="text-xs text-green-600 font-semibold">
+                            +{request.extraDayDetails?.extraHours || 0} hrs 
+                            <span className="text-gray-400 ml-1">({request.extraDayDetails?.totalHours || 8} total hrs)</span>
                           </div>
                         </td>
-                        
-                        {/* Status */}
                         <td className="px-4 py-3 text-center">
                           <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusBadge(request.status)}`}>
                             {request.status ? request.status.charAt(0).toUpperCase() + request.status.slice(1) : "N/A"}
                           </span>
                         </td>
-                        
-                        {/* Requested On */}
                         <td className="px-4 py-3 text-center text-gray-600">
                           {request.createdAt ? formatDateTime(request.createdAt) : "N/A"}
                         </td>
-                        
-                        {/* Action */}
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <button
@@ -1117,10 +741,10 @@ const AdminCompOffRequests = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mb-3 text-gray-600">
-                      <div><span className="text-gray-400">Leave Type:</span> <span className="font-medium capitalize">{request.leaveDetails?.leaveType || "N/A"}</span></div>
-                      <div><span className="text-gray-400">Days:</span> <span className="font-medium">{request.leaveDetails?.days || 0}</span></div>
-                      <div><span className="text-gray-400">Date:</span> <span className="font-medium">{request.leaveDetails?.startDate ? formatDate(request.leaveDetails.startDate) : "N/A"}</span></div>
-                      <div><span className="text-gray-400">Extra Day:</span> <span className="font-medium">{request.extraDayDetails?.day || formatDateDisplay(request.extraDayDate)}</span></div>
+                      <div><span className="text-gray-400">Leave Type:</span> <span className="font-medium capitalize">{request.leaveType || request.leaveDetails?.leaveType || "Comp-off"}</span></div>
+                      <div><span className="text-gray-400">Days:</span> <span className="font-medium">{request.days || request.leaveDetails?.days || 0}</span></div>
+                      <div><span className="text-gray-400">Date:</span> <span className="font-medium">{request.startDate ? formatDate(request.startDate) : request.leaveDetails?.startDate ? formatDate(request.leaveDetails.startDate) : "N/A"}</span></div>
+                      <div><span className="text-gray-400">Extra Day:</span> <span className="font-medium">{request.extraDayDetails?.day || formatDate(request.extraDayDate)}</span></div>
                       <div><span className="text-gray-400">Extra Hours:</span> <span className="font-semibold text-green-600">+{request.extraDayDetails?.extraHours || 0} hrs</span></div>
                       <div><span className="text-gray-400">Requested:</span> <span className="font-medium">{request.createdAt ? formatDateTime(request.createdAt) : "N/A"}</span></div>
                     </div>
@@ -1213,20 +837,18 @@ const AdminCompOffRequests = () => {
 
       {/* View Modal */}
       {isViewModalOpen && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
-          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-150 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 z-10 p-4 bg-white border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                  <FiList className="text-purple-600" /> Request Details
+                  <FiList className="text-purple-600" /> Record Details
                 </h2>
                 <button
                   onClick={() => setIsViewModalOpen(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <FiX className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -1244,30 +866,28 @@ const AdminCompOffRequests = () => {
               </div>
 
               {/* Leave Details */}
-              {selectedRequest.leaveDetails && (
-                <div className="p-4 bg-green-50/50 rounded-xl border border-green-100">
-                  <h3 className="mb-3 font-semibold text-gray-700 flex items-center gap-2">
-                    <FiFileText className="text-green-600" /> Leave Details (Comp-off Against)
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-500">Type:</span> <span className="font-medium text-gray-900 capitalize">{selectedRequest.leaveDetails.leaveType}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Status:</span> <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusBadge(selectedRequest.leaveDetails.status)}`}>{selectedRequest.leaveDetails.status}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Start:</span> <span className="font-medium text-gray-900">{formatDate(selectedRequest.leaveDetails.startDate)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">End:</span> <span className="font-medium text-gray-900">{formatDate(selectedRequest.leaveDetails.endDate)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Days:</span> <span className="font-medium text-gray-900">{selectedRequest.leaveDetails.days}</span></div>
-                    <div className="flex justify-between col-span-2"><span className="text-gray-500">Reason:</span> <span className="font-medium text-gray-900">{selectedRequest.leaveDetails.reason}</span></div>
-                  </div>
+              <div className="p-4 bg-green-50/50 rounded-xl border border-green-100">
+                <h3 className="mb-3 font-semibold text-gray-700 flex items-center gap-2">
+                  <FiFileText className="text-green-600" /> Leave Details
+                </h3>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-500">Type:</span> <span className="font-medium text-gray-900 capitalize">{selectedRequest.leaveType || selectedRequest.leaveDetails?.leaveType || "Comp-off"}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Status:</span> <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusBadge(selectedRequest.status)}`}>{selectedRequest.status}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Start:</span> <span className="font-medium text-gray-900">{selectedRequest.startDate ? formatDate(selectedRequest.startDate) : selectedRequest.leaveDetails?.startDate ? formatDate(selectedRequest.leaveDetails.startDate) : "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">End:</span> <span className="font-medium text-gray-900">{selectedRequest.endDate ? formatDate(selectedRequest.endDate) : selectedRequest.leaveDetails?.endDate ? formatDate(selectedRequest.leaveDetails.endDate) : "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Days:</span> <span className="font-medium text-gray-900">{selectedRequest.days || selectedRequest.leaveDetails?.days || 0}</span></div>
+                  <div className="flex justify-between col-span-2"><span className="text-gray-500">Reason:</span> <span className="font-medium text-gray-900">{selectedRequest.reason || selectedRequest.leaveDetails?.reason || "N/A"}</span></div>
                 </div>
-              )}
+              </div>
 
               {/* Extra Day Details */}
               {selectedRequest.extraDayDetails && (
                 <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                   <h3 className="mb-3 font-semibold text-gray-700 flex items-center gap-2">
-                    <FiClock className="text-blue-600" /> Extra Day Details (Comp-off For)
+                    <FiClock className="text-blue-600" /> Extra Day Details
                   </h3>
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-500">Date:</span> <span className="font-medium text-gray-900">{selectedRequest.extraDayDetails.day || formatDateDisplay(selectedRequest.extraDayDetails.date)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Date:</span> <span className="font-medium text-gray-900">{selectedRequest.extraDayDetails.day || formatDate(selectedRequest.extraDayDate)}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">Total Hours:</span> <span className="font-medium text-gray-900">{selectedRequest.extraDayDetails.totalHours || 8} hrs</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">Extra Hours:</span> <span className="font-medium text-green-600">+{selectedRequest.extraDayDetails.extraHours || 0} hrs</span></div>
                   </div>
@@ -1293,14 +913,6 @@ const AdminCompOffRequests = () => {
                   )}
                 </div>
               </div>
-
-              {/* Reason */}
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                <h3 className="mb-3 font-semibold text-gray-700 flex items-center gap-2">
-                  <FiFileText className="text-gray-600" /> Reason for Comp-off
-                </h3>
-                <p className="text-sm text-gray-600">{selectedRequest.reason}</p>
-              </div>
             </div>
           </div>
         </div>
@@ -1308,11 +920,11 @@ const AdminCompOffRequests = () => {
 
       {/* Approve Modal */}
       {isApproveModalOpen && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200">
             <div className="p-4 border-b border-gray-100">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <FiCheckCircle className="text-green-600" /> Approve Comp-off Request
+                <FiCheckCircle className="text-green-600" /> Approve Request
               </h2>
             </div>
             <div className="p-6">
@@ -1320,8 +932,8 @@ const AdminCompOffRequests = () => {
               <div className="p-4 bg-green-50 rounded-xl border border-green-100">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex justify-between"><span className="text-gray-500">Employee:</span> <span className="font-medium text-gray-900">{selectedRequest.employeeName}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Leave:</span> <span className="font-medium text-gray-900 capitalize">{selectedRequest.leaveDetails?.leaveType}</span></div>
-                  <div className="flex justify-between col-span-2"><span className="text-gray-500">Extra Day:</span> <span className="font-medium text-gray-900">{selectedRequest.extraDayDetails?.day || formatDateDisplay(selectedRequest.extraDayDate)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Leave:</span> <span className="font-medium text-gray-900 capitalize">{selectedRequest.leaveType || selectedRequest.leaveDetails?.leaveType || "Comp-off"}</span></div>
+                  <div className="flex justify-between col-span-2"><span className="text-gray-500">Extra Day:</span> <span className="font-medium text-gray-900">{selectedRequest.extraDayDetails?.day || formatDate(selectedRequest.extraDayDate)}</span></div>
                 </div>
               </div>
               <div className="flex gap-3 mt-6">
@@ -1355,11 +967,11 @@ const AdminCompOffRequests = () => {
 
       {/* Reject Modal */}
       {isRejectModalOpen && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200">
             <div className="p-4 border-b border-gray-100">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <FiXCircle className="text-red-600" /> Reject Comp-off Request
+                <FiXCircle className="text-red-600" /> Reject Request
               </h2>
             </div>
             <div className="p-6">
@@ -1367,8 +979,8 @@ const AdminCompOffRequests = () => {
               <div className="p-4 bg-red-50 rounded-xl border border-red-100">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex justify-between"><span className="text-gray-500">Employee:</span> <span className="font-medium text-gray-900">{selectedRequest.employeeName}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Leave:</span> <span className="font-medium text-gray-900 capitalize">{selectedRequest.leaveDetails?.leaveType}</span></div>
-                  <div className="flex justify-between col-span-2"><span className="text-gray-500">Extra Day:</span> <span className="font-medium text-gray-900">{selectedRequest.extraDayDetails?.day || formatDateDisplay(selectedRequest.extraDayDate)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Leave:</span> <span className="font-medium text-gray-900 capitalize">{selectedRequest.leaveType || selectedRequest.leaveDetails?.leaveType || "Comp-off"}</span></div>
+                  <div className="flex justify-between col-span-2"><span className="text-gray-500">Extra Day:</span> <span className="font-medium text-gray-900">{selectedRequest.extraDayDetails?.day || formatDate(selectedRequest.extraDayDate)}</span></div>
                 </div>
               </div>
               <div className="mt-4">
@@ -1414,8 +1026,8 @@ const AdminCompOffRequests = () => {
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200">
             <div className="p-6 text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
                 <FiCheckCircle className="text-green-600 text-2xl" />
@@ -1439,4 +1051,4 @@ const AdminCompOffRequests = () => {
   );
 };
 
-export default AdminCompOffRequests;
+export default CompOffSettings;

@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -9,7 +8,7 @@ import {
   FaChevronUp,
   FaChevronDown
 } from 'react-icons/fa';
-import { FiActivity, FiAlertCircle, FiCheckCircle, FiClock as FiClockIcon, FiFilter, FiList, FiUsers } from 'react-icons/fi';
+import { FiActivity, FiAlertCircle, FiCheckCircle, FiClock as FiClockIcon, FiFilter, FiList, FiUsers, FiTrash2 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import StatCard from '../Components/StatCard';
 import { API_BASE_URL } from '../config';
@@ -90,6 +89,46 @@ const ShiftManagement = () => {
   // Generate A-Z array for shift names
   const shiftLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+  // ✅ Convert 24-hour to 12-hour format (AM/PM)
+  const convertTo12Hour = (time24) => {
+    if (!time24) return '';
+    let [hours, minutes] = time24.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return time24;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+  };
+
+  // ✅ Convert 12-hour to 24-hour format
+  const convertTo24Hour = (time12) => {
+    if (!time12) return '';
+    const match = time12.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/i);
+    if (!match) return time12;
+    let hours = parseInt(match[1]);
+    const minutes = parseInt(match[2]);
+    const ampm = match[3].toUpperCase();
+    if (ampm === 'PM' && hours !== 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  };
+
+  // ✅ Format time for display in 12-hour format
+  const formatTimeDisplay = (time) => {
+    if (!time) return 'Not set';
+    // If already in 12-hour format with AM/PM, return as is
+    if (/[AP]M/i.test(time)) return time;
+    // Otherwise convert from 24-hour
+    return convertTo12Hour(time);
+  };
+
+  // ✅ Format time range for display
+  const formatTimeRange = (startTime, endTime) => {
+    if (!startTime || !endTime) return 'Not set';
+    const start12 = formatTimeDisplay(startTime);
+    const end12 = formatTimeDisplay(endTime);
+    return `${start12} - ${end12}`;
+  };
+
   const filterInactiveAssignments = (assignments) => {
     if (!Array.isArray(assignments) || !allEmployees.length) return assignments;
 
@@ -153,6 +192,9 @@ const ShiftManagement = () => {
     setFilterShiftType('');
     setFilteredAssignments(employeeAssignments);
     setCurrentPageAssignments(1);
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
   };
 
   useEffect(() => {
@@ -247,7 +289,11 @@ const ShiftManagement = () => {
       shiftCategory: shift.shiftCategory || 'Regular',
       timeSlots: shift.timeSlots.map((slot, idx) => ({
         ...slot,
-        slotId: `${Date.now()}_${idx}`
+        slotId: `${Date.now()}_${idx}`,
+        // Convert to 24-hour for form inputs
+        startTime: slot.startTime ? convertTo24Hour(slot.startTime) : '',
+        endTime: slot.endTime ? convertTo24Hour(slot.endTime) : '',
+        timeRange: slot.timeRange || ''
       })),
       isBrakeShift: shift.isBrakeShift || false
     });
@@ -265,18 +311,11 @@ const ShiftManagement = () => {
         return;
       }
 
-      const formatAmPm = (time24) => {
-        if (!time24) return '';
-        let [hours, minutes] = time24.split(':').map(Number);
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-      };
-
+      // Format time slots with 12-hour display
       const formattedTimeSlots = createForm.timeSlots.map(slot => {
         const formattedSlot = { ...slot };
         if (slot.startTime && slot.endTime) {
-          formattedSlot.timeRange = `${formatAmPm(slot.startTime)} - ${formatAmPm(slot.endTime)}`;
+          formattedSlot.timeRange = formatTimeRange(slot.startTime, slot.endTime);
         }
         return formattedSlot;
       });
@@ -321,20 +360,13 @@ const ShiftManagement = () => {
         return;
       }
 
-      const formatAmPm = (time24) => {
-        if (!time24) return '';
-        let [hours, minutes] = time24.split(':').map(Number);
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-      };
-
       const slot = { ...createForm.timeSlots[0] };
       if (!slot.startTime || !slot.endTime || !slot.description.trim()) {
         setError('Please fill time slot details');
         return;
       }
-      slot.timeRange = `${formatAmPm(slot.startTime)} - ${formatAmPm(slot.endTime)}`;
+      // Format with 12-hour display
+      slot.timeRange = formatTimeRange(slot.startTime, slot.endTime);
 
       const response = await axios.post(`${API_BASE_URL}/shifts/create`, {
         shiftType: createForm.shiftType,
@@ -375,14 +407,6 @@ const ShiftManagement = () => {
         return;
       }
       
-      const formatAmPm = (time24) => {
-        if (!time24) return '';
-        let [hours, minutes] = time24.split(':').map(Number);
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-      };
-
       const slot1 = { ...createForm.timeSlots[0] };
       const slot2 = { ...createForm.timeSlots[1] };
       
@@ -391,9 +415,10 @@ const ShiftManagement = () => {
         return;
       }
 
-      slot1.timeRange = `${formatAmPm(slot1.startTime)} - ${formatAmPm(slot1.endTime)}`;
+      // Format with 12-hour display
+      slot1.timeRange = formatTimeRange(slot1.startTime, slot1.endTime);
       slot1.description = "Morning Slot";
-      slot2.timeRange = `${formatAmPm(slot2.startTime)} - ${formatAmPm(slot2.endTime)}`;
+      slot2.timeRange = formatTimeRange(slot2.startTime, slot2.endTime);
       slot2.description = "Evening Slot";
 
       const response = await axios.post(`${API_BASE_URL}/shifts/create`, {
@@ -449,7 +474,7 @@ const ShiftManagement = () => {
 
   const getBrakeShiftTimeDisplay = (shift) => {
     if (shift?.isBrakeShift && shift?.timeSlots?.length > 1) {
-      return `${shift.timeSlots[0].timeRange} - ${shift.timeSlots[1].timeRange}`;
+      return `${shift.timeSlots[0].timeRange || 'Not set'} | ${shift.timeSlots[1].timeRange || 'Not set'}`;
     }
     return shift?.timeSlots?.[0]?.timeRange || "Not set";
   };
@@ -521,7 +546,8 @@ const ShiftManagement = () => {
     if (assignment.employeeAssignment?.selectedTimeRange) {
       return assignment.employeeAssignment.selectedTimeRange;
     } else if (assignment.startTime && assignment.endTime) {
-      return `${assignment.startTime} - ${assignment.endTime}`;
+      // Format in 12-hour
+      return formatTimeRange(assignment.startTime, assignment.endTime);
     }
     return "Not specified";
   };
@@ -759,7 +785,7 @@ const ShiftManagement = () => {
     return assignment.employeeAssignment?.employeeId || assignment.employeeId || "Unknown";
   };
 
-  // Function to format shift display text with time
+  // Function to format shift display text with time in 12-hour format
   const getShiftDisplayText = (shift) => {
     const timeSlot = shift.timeSlots?.[0];
     const timeStr = timeSlot?.timeRange || 'No time set';
@@ -830,27 +856,452 @@ const ShiftManagement = () => {
   return (
     <div className="emp-dash">
       <div className="p-2 sm:p-4 lg:p-6">
-        {/* Dashboard Header */}
-        <div className="emp-dash__header">
+        {/* Dashboard Header - Title on Left, Date and Filters on Right */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Shift <span>Management</span>
             </h1>
-            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Create shifts and assign them to employees
-            </p> */}
           </div>
-          <div className="emp-dash__date-pill">
-            <FaCalendar />
-            <span>
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
+
+          {/* Right side: Date + All Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative min-w-[150px]">
+              <span className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <FaSearch className="text-[10px]" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-[150px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Department */}
+            <div className="relative" ref={departmentFilterRef}>
+              <button
+                onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDepartment 
+                    ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <FaBuilding className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDepartment || "Dept"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDepartmentFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDepartment('');
+                      setShowDepartmentFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Departments
+                  </div>
+                  {uniqueDepartments.map(dept => (
+                    <div
+                      key={dept}
+                      onClick={() => {
+                        setFilterDepartment(dept);
+                        setShowDepartmentFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                      }`}
+                    >
+                      {dept}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Designation */}
+            <div className="relative" ref={designationFilterRef}>
+              <button
+                onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterDesignation 
+                    ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <FaUserTag className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDesignation || "Design"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDesignationFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterDesignation('');
+                      setShowDesignationFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Designations
+                  </div>
+                  {uniqueDesignations.map(des => (
+                    <div
+                      key={des}
+                      onClick={() => {
+                        setFilterDesignation(des);
+                        setShowDesignationFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                      }`}
+                    >
+                      {des}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Shift Type */}
+            <div className="relative" ref={shiftTypeFilterRef}>
+              <button
+                onClick={() => setShowShiftTypeFilter(!showShiftTypeFilter)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  filterShiftType 
+                    ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <FaClock className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterShiftType ? `Shift ${filterShiftType}` : "Shift"}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showShiftTypeFilter && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: shiftTypeFilterRef.current ? shiftTypeFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    left: shiftTypeFilterRef.current ? shiftTypeFilterRef.current.getBoundingClientRect().left : 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setFilterShiftType('');
+                      setShowShiftTypeFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Shifts
+                  </div>
+                  {masterShifts.map(shift => (
+                    <div
+                      key={shift._id}
+                      onClick={() => {
+                        setFilterShiftType(shift.shiftType);
+                        setShowShiftTypeFilter(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                        filterShiftType === shift.shiftType ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                      }`}
+                    >
+                      {getShiftDisplayText(shift)}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Create Defaults Button */}
+            {masterShifts.length === 0 && (
+              <button
+                onClick={handleCreateDefaultShifts}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FaPlus className="w-3 h-3" />
+                Defaults
+              </button>
+            )}
+
+            {/* Regular Button */}
+            <button
+              onClick={() => setShowCustomCreateModal(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaPlus className="w-3 h-3" />
+              Regular
+            </button>
+
+            {/* Brake Button */}
+            <button
+              onClick={() => setShowBrakeShiftModal(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaPlus className="w-3 h-3" />
+              Brake
+            </button>
+
+            {/* Assign Button */}
+            <button
+              onClick={() => setShowAssignModal(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaClock className="w-3 h-3" />
+              Assign
+            </button>
+
+            {/* Clear Filters Button */}
+            {(searchTerm || filterDepartment || filterDesignation || filterShiftType) && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Header - Only Title and Date */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            Shift <span className="text-indigo-600">Management</span>
+          </h1>
+        </div>
+
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{filteredAssignments.length}</strong> assignments
             </span>
           </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-sm" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search by ID or Name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="relative" ref={departmentFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+                <button
+                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterDepartment 
+                      ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                      : 'border-gray-300 text-gray-700'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <FaBuilding className="text-gray-400" />
+                    {filterDepartment || "All Departments"}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {showDepartmentFilter && (
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setFilterDepartment('');
+                        setShowDepartmentFilter(false);
+                      }}
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Departments
+                    </div>
+                    {uniqueDepartments.map(dept => (
+                      <div
+                        key={dept}
+                        onClick={() => {
+                          setFilterDepartment(dept);
+                          setShowDepartmentFilter(false);
+                        }}
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {dept}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="relative" ref={designationFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+                <button
+                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterDesignation 
+                      ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                      : 'border-gray-300 text-gray-700'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <FaUserTag className="text-gray-400" />
+                    {filterDesignation || "All Designations"}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {showDesignationFilter && (
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setFilterDesignation('');
+                        setShowDesignationFilter(false);
+                      }}
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Designations
+                    </div>
+                    {uniqueDesignations.map(des => (
+                      <div
+                        key={des}
+                        onClick={() => {
+                          setFilterDesignation(des);
+                          setShowDesignationFilter(false);
+                        }}
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {des}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="relative" ref={shiftTypeFilterRef}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Shift Type</label>
+                <button
+                  onClick={() => setShowShiftTypeFilter(!showShiftTypeFilter)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                    filterShiftType 
+                      ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                      : 'border-gray-300 text-gray-700'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <FaClock className="text-gray-400" />
+                    {filterShiftType ? `Shift ${filterShiftType}` : "All Shifts"}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {showShiftTypeFilter && (
+                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setFilterShiftType('');
+                        setShowShiftTypeFilter(false);
+                      }}
+                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Shifts
+                    </div>
+                    {masterShifts.map(shift => (
+                      <div
+                        key={shift._id}
+                        onClick={() => {
+                          setFilterShiftType(shift.shiftType);
+                          setShowShiftTypeFilter(false);
+                        }}
+                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                          filterShiftType === shift.shiftType ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {getShiftDisplayText(shift)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                {masterShifts.length === 0 && (
+                  <button
+                    onClick={handleCreateDefaultShifts}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    <FaPlus className="w-4 h-4" />
+                    Create Defaults
+                  </button>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setShowCustomCreateModal(true)}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    <FaPlus className="w-4 h-4" />
+                    Regular
+                  </button>
+                  <button
+                    onClick={() => setShowBrakeShiftModal(true)}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all shadow-sm"
+                  >
+                    <FaPlus className="w-4 h-4" />
+                    Brake
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowAssignModal(true)}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                >
+                  <FaClock className="w-4 h-4" />
+                  Assign
+                </button>
+                {(filterDepartment || filterDesignation || filterShiftType || searchTerm) && (
+                  <button
+                    onClick={clearFilters}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    Clear All Filters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Top KPI Stats Grid - 2 per row on mobile, 3 per row on desktop */}
@@ -890,382 +1341,6 @@ const ShiftManagement = () => {
             </div>
           </div>
         )}
-
-        {/* Filters Card */}
-    <div className="emp-dash__card mb-6">
-  {/* Desktop View */}
-  <div className="hidden sm:block">
-    <div className="flex items-center justify-between gap-4 p-4 bg-white rounded-xl border border-gray-200">
-      {/* Left - Filters */}
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[180px] max-w-[240px]">
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-          <input
-            type="text"
-            placeholder="Search by ID or Name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-          />
-        </div>
-
-        {/* Department */}
-        <div className="relative" ref={departmentFilterRef}>
-          <button
-            onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-all bg-white ${
-              filterDepartment 
-                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <FaBuilding className="text-gray-400 text-xs" />
-            <span className="whitespace-nowrap">{filterDepartment || 'All Departments'}</span>
-            <span className="text-gray-400 text-xs">▾</span>
-          </button>
-          {showDepartmentFilter && (
-            <div className="absolute left-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px] max-h-60 overflow-y-auto">
-              <div
-                onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }}
-                className="px-3 py-2 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-              >
-                All Departments
-              </div>
-              {uniqueDepartments.map(dept => (
-                <div
-                  key={dept}
-                  onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }}
-                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 ${
-                    filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                  }`}
-                >
-                  {dept}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Designation */}
-        <div className="relative" ref={designationFilterRef}>
-          <button
-            onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-all bg-white ${
-              filterDesignation 
-                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <FaUserTag className="text-gray-400 text-xs" />
-            <span className="whitespace-nowrap">{filterDesignation || 'All Designations'}</span>
-            <span className="text-gray-400 text-xs">▾</span>
-          </button>
-          {showDesignationFilter && (
-            <div className="absolute left-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px] max-h-60 overflow-y-auto">
-              <div
-                onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }}
-                className="px-3 py-2 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-              >
-                All Designations
-              </div>
-              {uniqueDesignations.map(des => (
-                <div
-                  key={des}
-                  onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }}
-                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 ${
-                    filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                  }`}
-                >
-                  {des}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Shift Type */}
-        <div className="relative" ref={shiftTypeFilterRef}>
-          <button
-            onClick={() => setShowShiftTypeFilter(!showShiftTypeFilter)}
-            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-all bg-white ${
-              filterShiftType 
-                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <FaClock className="text-gray-400 text-xs" />
-            <span className="whitespace-nowrap">{filterShiftType ? `Shift ${filterShiftType}` : 'All Shifts'}</span>
-            <span className="text-gray-400 text-xs">▾</span>
-          </button>
-          {showShiftTypeFilter && (
-            <div className="absolute left-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px] max-h-60 overflow-y-auto">
-              <div
-                onClick={() => { setFilterShiftType(''); setShowShiftTypeFilter(false); }}
-                className="px-3 py-2 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-              >
-                All Shifts
-              </div>
-              {masterShifts.map(shift => (
-                <div
-                  key={shift._id}
-                  onClick={() => { setFilterShiftType(shift.shiftType); setShowShiftTypeFilter(false); }}
-                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 ${
-                    filterShiftType === shift.shiftType ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                  }`}
-                >
-                  {getShiftDisplayText(shift)}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Right - Action Buttons */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {masterShifts.length === 0 && (
-          <button
-            onClick={handleCreateDefaultShifts}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-          >
-            <FaPlus className="w-3.5 h-3.5" />
-            Create Defaults
-          </button>
-        )}
-        <button
-          onClick={() => setShowCustomCreateModal(true)}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-        >
-          <FaPlus className="w-3.5 h-3.5" />
-          Regular
-        </button>
-        <button
-          onClick={() => setShowBrakeShiftModal(true)}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all shadow-sm"
-        >
-          <FaPlus className="w-3.5 h-3.5" />
-          Break
-        </button>
-        <button
-          onClick={() => setShowAssignModal(true)}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-        >
-          <FaClock className="w-3.5 h-3.5" />
-          Assign
-        </button>
-      </div>
-    </div>
-  </div>
-
-  {/* Mobile View */}
-  <div className="sm:hidden">
-    {/* Mobile Header with Toggle */}
-    <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200">
-      <button
-        onClick={() => setShowMobileFilters(!showMobileFilters)}
-        className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-      >
-        <FiFilter className="text-blue-600 text-base" />
-        <span>Filters</span>
-        {showMobileFilters ? (
-          <FaChevronUp className="text-gray-400" />
-        ) : (
-          <FaChevronDown className="text-gray-400" />
-        )}
-      </button>
-      <span className="text-sm text-gray-500">
-        <strong>{filteredAssignments.length}</strong> assignments
-      </span>
-    </div>
-
-    {/* Mobile Filters */}
-    {showMobileFilters && (
-      <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-4">
-        {/* Search */}
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">Search Employee</label>
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-            <input
-              type="text"
-              placeholder="Search by ID or Name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-            />
-          </div>
-        </div>
-
-        {/* Department */}
-        <div className="relative" ref={departmentFilterRef}>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">Department</label>
-          <button
-            onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-              filterDepartment 
-                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
-                : 'border-gray-300 text-gray-700'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <FaBuilding className="text-gray-400" />
-              {filterDepartment || 'All Departments'}
-            </span>
-            <span className="text-gray-400">▾</span>
-          </button>
-          {showDepartmentFilter && (
-            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div
-                onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }}
-                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-              >
-                All Departments
-              </div>
-              {uniqueDepartments.map(dept => (
-                <div
-                  key={dept}
-                  onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }}
-                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                    filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                  }`}
-                >
-                  {dept}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Designation */}
-        <div className="relative" ref={designationFilterRef}>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">Designation</label>
-          <button
-            onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-              filterDesignation 
-                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
-                : 'border-gray-300 text-gray-700'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <FaUserTag className="text-gray-400" />
-              {filterDesignation || 'All Designations'}
-            </span>
-            <span className="text-gray-400">▾</span>
-          </button>
-          {showDesignationFilter && (
-            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div
-                onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }}
-                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-              >
-                All Designations
-              </div>
-              {uniqueDesignations.map(des => (
-                <div
-                  key={des}
-                  onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }}
-                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                    filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                  }`}
-                >
-                  {des}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Shift Type */}
-        <div className="relative" ref={shiftTypeFilterRef}>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">Shift Type</label>
-          <button
-            onClick={() => setShowShiftTypeFilter(!showShiftTypeFilter)}
-            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-              filterShiftType 
-                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
-                : 'border-gray-300 text-gray-700'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <FaClock className="text-gray-400" />
-              {filterShiftType ? `Shift ${filterShiftType}` : 'All Shifts'}
-            </span>
-            <span className="text-gray-400">▾</span>
-          </button>
-          {showShiftTypeFilter && (
-            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div
-                onClick={() => { setFilterShiftType(''); setShowShiftTypeFilter(false); }}
-                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-              >
-                All Shifts
-              </div>
-              {masterShifts.map(shift => (
-                <div
-                  key={shift._id}
-                  onClick={() => { setFilterShiftType(shift.shiftType); setShowShiftTypeFilter(false); }}
-                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                    filterShiftType === shift.shiftType ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                  }`}
-                >
-                  {getShiftDisplayText(shift)}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Action Buttons */}
-        <div className="pt-3 border-t border-gray-200 space-y-2">
-          {masterShifts.length === 0 && (
-            <button
-              onClick={handleCreateDefaultShifts}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-            >
-              <FaPlus className="w-3.5 h-3.5" />
-              Create Defaults
-            </button>
-          )}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setShowCustomCreateModal(true)}
-              className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-            >
-              <FaPlus className="w-3.5 h-3.5" />
-              Regular
-            </button>
-            <button
-              onClick={() => setShowBrakeShiftModal(true)}
-              className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all shadow-sm"
-            >
-              <FaPlus className="w-3.5 h-3.5" />
-              Break
-            </button>
-          </div>
-          <button
-            onClick={() => setShowAssignModal(true)}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-          >
-            <FaClock className="w-3.5 h-3.5" />
-            Assign
-          </button>
-        </div>
-
-        {/* Clear Filters */}
-        {(filterDepartment || filterDesignation || filterShiftType || searchTerm) && (
-          <button
-            onClick={clearFilters}
-            className="w-full px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-          >
-            Clear All Filters
-          </button>
-        )}
-      </div>
-    )}
-  </div>
-</div>
 
         {/* Messages */}
         {error && (
@@ -1327,6 +1402,16 @@ const ShiftManagement = () => {
                       const borderColor = getShiftBorderColor(shift.shiftType);
                       const isBrakeShift = shift.isBrakeShift;
 
+                      // Get display times in 12-hour format
+                      let timeDisplay = 'Not set';
+                      if (isBrakeShift) {
+                        timeDisplay = getBrakeShiftTimeDisplay(shift);
+                      } else if (timeSlot?.timeRange) {
+                        timeDisplay = timeSlot.timeRange;
+                      } else if (timeSlot?.startTime && timeSlot?.endTime) {
+                        timeDisplay = formatTimeRange(timeSlot.startTime, timeSlot.endTime);
+                      }
+
                       return (
                         <div
                           key={shift._id}
@@ -1363,7 +1448,7 @@ const ShiftManagement = () => {
 
                           <div className="my-2 px-2 py-1.5 border-l-3 border-gray-900/25 bg-white/20 rounded-r-lg">
                             <div className="text-xs font-semibold text-gray-900">
-                              {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : (timeSlot?.timeRange || "Not set")}
+                              {timeDisplay}
                             </div>
                             <p className="text-[10px] truncate text-gray-800 mt-0.5">
                               {isBrakeShift ?
@@ -1435,14 +1520,6 @@ const ShiftManagement = () => {
                     {(filterDepartment || filterDesignation || filterShiftType || searchTerm) && ' · Filters active'}
                   </p>
                 </div>
-                {(filterDepartment || filterDesignation || filterShiftType || searchTerm) && (
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {searchTerm && <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-medium">🔍 Search</span>}
-                    {filterDepartment && <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-[10px] font-medium">🏢 Dept</span>}
-                    {filterDesignation && <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium">📋 Desig</span>}
-                    {filterShiftType && <span className="px-2 py-1 bg-teal-100 text-teal-700 rounded-full text-[10px] font-medium">⏰ Shift</span>}
-                  </div>
-                )}
               </div>
 
               {employeeAssignments.length === 0 ? (
@@ -1479,6 +1556,18 @@ const ShiftManagement = () => {
                             const isBrakeShift = shift?.isBrakeShift || false;
                             const scheduled = assignment.employeeAssignment?.scheduledChange;
 
+                            // Get time display in 12-hour format
+                            let timeDisplay = 'Not set';
+                            if (isBrakeShift && shift) {
+                              timeDisplay = getBrakeShiftTimeDisplay(shift);
+                            } else if (timeSlot?.timeRange) {
+                              timeDisplay = timeSlot.timeRange;
+                            } else if (assignment.startTime && assignment.endTime) {
+                              timeDisplay = formatTimeRange(assignment.startTime, assignment.endTime);
+                            } else if (timeSlot?.startTime && timeSlot?.endTime) {
+                              timeDisplay = formatTimeRange(timeSlot.startTime, timeSlot.endTime);
+                            }
+
                             return (
                               <tr key={assignment._id} className="hover:bg-gray-50/60 transition-all">
                                 <td className="font-semibold text-gray-900 whitespace-nowrap text-xs">{employeeId}</td>
@@ -1491,7 +1580,7 @@ const ShiftManagement = () => {
                                   </span>
                                 </td>
                                 <td className="text-center text-gray-600 font-medium whitespace-nowrap hidden lg:table-cell text-xs">
-                                  {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : getEmployeeTimeRange(assignment)}
+                                  {timeDisplay}
                                 </td>
                                 <td className="text-center">
                                   {scheduled?.shiftType ? (
@@ -1606,777 +1695,559 @@ const ShiftManagement = () => {
           </div>
         </div>
 
-        {/* REGULAR SHIFT CREATE MODAL */}
+        {/* ==================== MODALS ==================== */}
+
+        {/* ✅ Custom Create Modal */}
         {showCustomCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-md bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                  <FaPlus className="text-blue-600" /> Create Regular Shift
-                </h3>
-                <button onClick={() => setShowCustomCreateModal(false)} className="text-lg text-gray-500 hover:text-gray-500">
-                  &times;
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Create Custom Shift</h3>
+                <button onClick={() => setShowCustomCreateModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
+                  <FaTimes className="text-gray-500" />
                 </button>
               </div>
-
-              <form onSubmit={handleCreateCustomShift} className="p-3">
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block mb-1 text-xs text-gray-700">
-                        Shift Type *
-                      </label>
-                      <select
-                        value={createForm.shiftType}
-                        onChange={(e) => setCreateForm(prev => ({
-                          ...prev,
-                          shiftType: e.target.value
-                        }))}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
-                        required
-                      >
-                        <option value="">Select Shift Letter</option>
-                        {shiftLetters
-                          .filter(letter => !masterShifts.some(shift => shift.shiftType === letter))
-                          .map(letter => (
-                            <option key={letter} value={letter}>
-                              Shift {letter}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 text-xs text-gray-700">
-                        Shift Category *
-                      </label>
-                      <select
-                        value={createForm.shiftCategory}
-                        onChange={(e) => setCreateForm(prev => ({ ...prev, shiftCategory: e.target.value }))}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
-                        required
-                      >
-                        {shiftCategories.map(cat => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
+              
+              <form onSubmit={handleCreateCustomShift}>
+                <div className="space-y-4">
                   <div>
-                    <label className="block mb-1 text-xs text-gray-700">
-                      Shift Name *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Shift Type (A-Z)</label>
                     <input
                       type="text"
-                      value={createForm.shiftName}
-                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Extended Shift"
+                      maxLength="1"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.shiftType}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))}
+                      placeholder="e.g. A"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block mb-1 text-xs text-gray-700">
-                      Time Slot *
-                    </label>
-                    <div className="p-2 space-y-2 bg-white border border-gray-200 rounded-md">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block mb-0.5 text-[10px] text-gray-500">Start Time</label>
-                          <input
-                            type="time"
-                            value={createForm.timeSlots[0].startTime || ''}
-                            onChange={(e) => updateTimeSlot('startTime', e.target.value)}
-                            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block mb-0.5 text-[10px] text-gray-500">End Time</label>
-                          <input
-                            type="time"
-                            value={createForm.timeSlots[0].endTime || ''}
-                            onChange={(e) => updateTimeSlot('endTime', e.target.value)}
-                            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
-                            required
-                          />
-                        </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Shift Name</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.shiftName}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
+                      placeholder="e.g. Morning Shift"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.shiftCategory}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftCategory: e.target.value }))}
+                    >
+                      {shiftCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <input
+                      type="time"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.timeSlots[0].startTime}
+                      onChange={(e) => updateTimeSlot('startTime', e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <input
+                      type="time"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.timeSlots[0].endTime}
+                      onChange={(e) => updateTimeSlot('endTime', e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.timeSlots[0].description}
+                      onChange={(e) => updateTimeSlot('description', e.target.value)}
+                      placeholder="e.g. Full day shift"
+                    />
+                  </div>
+
+                  {error && <p className="text-sm text-red-600">{error}</p>}
+                  {success && <p className="text-sm text-green-600">{success}</p>}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomCreateModal(false)}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                    >
+                      Create Shift
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ Brake Shift Modal */}
+        {showBrakeShiftModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Create Brake Shift</h3>
+                <button onClick={() => setShowBrakeShiftModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
+                  <FaTimes className="text-gray-500" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleCreateBrakeShift}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Shift Type (A-Z)</label>
+                    <input
+                      type="text"
+                      maxLength="1"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.shiftType}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))}
+                      placeholder="e.g. A"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Shift Name</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.shiftName}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
+                      placeholder="e.g. Brake Shift A"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.shiftCategory}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftCategory: e.target.value }))}
+                    >
+                      {shiftCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="border-l-4 border-blue-500 pl-3">
+                    <p className="text-sm font-semibold text-blue-700 mb-2">Morning Slot</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Start Time</label>
+                        <input
+                          type="time"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          value={createForm.timeSlots[0]?.startTime || ''}
+                          onChange={(e) => updateBrakeTimeSlot(0, 'startTime', e.target.value)}
+                          required
+                        />
                       </div>
                       <div>
-                        <label className="block mb-0.5 text-[10px] text-gray-500">Description</label>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">End Time</label>
                         <input
-                          type="text"
-                          value={createForm.timeSlots[0].description}
-                          onChange={(e) => updateTimeSlot('description', e.target.value)}
-                          className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
-                          placeholder="Morning 10 to 7"
+                          type="time"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          value={createForm.timeSlots[0]?.endTime || ''}
+                          onChange={(e) => updateBrakeTimeSlot(0, 'endTime', e.target.value)}
                           required
                         />
                       </div>
                     </div>
                   </div>
 
-                  {createForm.shiftType && createForm.timeSlots[0].startTime && createForm.timeSlots[0].endTime && (
-                    <div className="p-2 bg-white border border-gray-200 rounded-md">
-                      <h4 className="mb-0.5 text-xs text-gray-700">Preview:</h4>
-                      <p className="text-[10px] text-gray-700">
-                        Shift {createForm.shiftType}: {createForm.shiftName}
-                      </p>
-                      <p className="text-[10px] text-gray-500">
-                        Time: {createForm.timeSlots[0].startTime && createForm.timeSlots[0].endTime ? 
-                          (() => {
-                            const formatAmPm = (time24) => {
-                              if (!time24) return '';
-                              let [hours, minutes] = time24.split(':').map(Number);
-                              const ampm = hours >= 12 ? 'PM' : 'AM';
-                              hours = hours % 12 || 12;
-                              return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-                            };
-                            return `${formatAmPm(createForm.timeSlots[0].startTime)} - ${formatAmPm(createForm.timeSlots[0].endTime)}`;
-                          })() : ''}
-                      </p>
+                  <div className="border-l-4 border-pink-500 pl-3">
+                    <p className="text-sm font-semibold text-pink-700 mb-2">Evening Slot</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Start Time</label>
+                        <input
+                          type="time"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          value={createForm.timeSlots[1]?.startTime || ''}
+                          onChange={(e) => updateBrakeTimeSlot(1, 'startTime', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">End Time</label>
+                        <input
+                          type="time"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          value={createForm.timeSlots[1]?.endTime || ''}
+                          onChange={(e) => updateBrakeTimeSlot(1, 'endTime', e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                <div className="flex justify-end gap-2 pt-3 mt-3 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomCreateModal(false)}
-                    className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-3 py-1.5 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Create Shift
-                  </button>
+                  {error && <p className="text-sm text-red-600">{error}</p>}
+                  {success && <p className="text-sm text-green-600">{success}</p>}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowBrakeShiftModal(false)}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-colors shadow-sm"
+                    >
+                      Create Brake Shift
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* BRAKE SHIFT CREATE MODAL */}
-        {showBrakeShiftModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-md bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                  <FaPlus className="text-blue-600" /> Create Brake Shift
-                </h3>
-                <button onClick={() => setShowBrakeShiftModal(false)} className="text-lg text-gray-500 hover:text-gray-500">
-                  &times;
+        {/* ✅ Edit Shift Modal */}
+        {showEditShiftModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Edit Shift</h3>
+                <button onClick={() => setShowEditShiftModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
+                  <FaTimes className="text-gray-500" />
                 </button>
               </div>
-
-              <form onSubmit={handleCreateBrakeShift} className="p-3">
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block mb-1 text-xs text-gray-700">
-                        Shift Type *
-                      </label>
-                      <select
-                        value={createForm.shiftType}
-                        onChange={(e) => setCreateForm(prev => ({
-                          ...prev,
-                          shiftType: e.target.value
-                        }))}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500"
-                        required
-                      >
-                        <option value="">Select Shift Letter</option>
-                        {shiftLetters
-                          .filter(letter => !masterShifts.some(shift => shift.shiftType === letter))
-                          .map(letter => (
-                            <option key={letter} value={letter}>
-                              Shift {letter}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 text-xs text-gray-700">
-                        Shift Category *
-                      </label>
-                      <select
-                        value={createForm.shiftCategory}
-                        onChange={(e) => setCreateForm(prev => ({ ...prev, shiftCategory: e.target.value }))}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500"
-                        required
-                      >
-                        {shiftCategories.map(cat => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
+              
+              <form onSubmit={handleUpdateShift}>
+                <div className="space-y-4">
                   <div>
-                    <label className="block mb-1 text-xs text-gray-700">
-                      Shift Name *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Shift Type (A-Z)</label>
                     <input
                       type="text"
-                      value={createForm.shiftName}
-                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500"
-                      placeholder="Brake Shift"
+                      maxLength="1"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.shiftType}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))}
+                      placeholder="e.g. A"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block mb-1 text-xs text-gray-700">
-                      Brake Shift Slots *
-                    </label>
-                    <div className="p-2 space-y-3 bg-white border border-gray-200 rounded-md">
-                      <div>
-                        <h4 className="mb-1 text-[10px] font-semibold text-green-700 border-b pb-1 border-green-200">Morning Slot</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block mb-0.5 text-[10px] text-gray-500">Start Time</label>
-                            <input
-                              type="time"
-                              value={createForm.timeSlots[0]?.startTime || ''}
-                              onChange={(e) => updateBrakeTimeSlot(0, 'startTime', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label className="block mb-0.5 text-[10px] text-gray-500">End Time</label>
-                            <input
-                              type="time"
-                              value={createForm.timeSlots[0]?.endTime || ''}
-                              onChange={(e) => updateBrakeTimeSlot(0, 'endTime', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h4 className="mb-1 text-[10px] font-semibold text-pink-700 border-b pb-1 border-pink-200">Evening Slot</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block mb-0.5 text-[10px] text-gray-500">Start Time</label>
-                            <input
-                              type="time"
-                              value={createForm.timeSlots[1]?.startTime || ''}
-                              onChange={(e) => updateBrakeTimeSlot(1, 'startTime', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-pink-500"
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label className="block mb-0.5 text-[10px] text-gray-500">End Time</label>
-                            <input
-                              type="time"
-                              value={createForm.timeSlots[1]?.endTime || ''}
-                              onChange={(e) => updateBrakeTimeSlot(1, 'endTime', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-pink-500"
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {createForm.shiftType && createForm.timeSlots[0]?.startTime && createForm.timeSlots[0]?.endTime && createForm.timeSlots[1]?.startTime && createForm.timeSlots[1]?.endTime && (
-                    <div className="p-2 border border-green-200 rounded-md bg-green-50">
-                      <p className="text-xs text-green-700">
-                        Shift {createForm.shiftType} (Brake): {createForm.shiftName}
-                      </p>
-                      <p className="text-[10px] text-blue-700 mt-1">
-                        {(() => {
-                           const formatAmPm = (time24) => {
-                             if (!time24) return ''; let [h, m] = time24.split(':').map(Number);
-                             const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
-                             return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
-                           };
-                           return `${formatAmPm(createForm.timeSlots[0].startTime)} - ${formatAmPm(createForm.timeSlots[0].endTime)} & ${formatAmPm(createForm.timeSlots[1].startTime)} - ${formatAmPm(createForm.timeSlots[1].endTime)}`;
-                        })()}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-2 pt-3 mt-3 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowBrakeShiftModal(false)}
-                    className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-3 py-1.5 text-xs text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700 transition-all"
-                  >
-                    Create Brake Shift
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* EDIT SHIFT MODAL */}
-        {showEditShiftModal && editingShift && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-md bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                  <FaEdit className="text-blue-600" /> Edit Shift
-                </h3>
-                <button onClick={() => {
-                  setShowEditShiftModal(false);
-                  setEditingShift(null);
-                  setCreateForm({
-                    shiftType: '',
-                    shiftName: '',
-                    shiftCategory: 'Regular',
-                    timeSlots: [{ slotId: `${Date.now()}_1`, startTime: '', endTime: '', timeRange: '', description: '' }],
-                    isBrakeShift: false
-                  });
-                }} className="text-lg text-gray-500 hover:text-gray-500">
-                  &times;
-                </button>
-              </div>
-
-              <form onSubmit={handleUpdateShift} className="p-3">
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block mb-1 text-xs text-gray-700">
-                        Shift Type *
-                      </label>
-                      <select
-                        value={createForm.shiftType}
-                        onChange={(e) => setCreateForm(prev => ({
-                          ...prev,
-                          shiftType: e.target.value
-                        }))}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
-                        required
-                      >
-                        <option value="">Select Shift Letter</option>
-                        {shiftLetters
-                          .filter(letter => !masterShifts.some(shift => shift.shiftType === letter && shift._id !== editingShift?._id))
-                          .map(letter => (
-                            <option key={letter} value={letter}>
-                              Shift {letter}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 text-xs text-gray-700">
-                        Shift Category *
-                      </label>
-                      <select
-                        value={createForm.shiftCategory}
-                        onChange={(e) => setCreateForm(prev => ({ ...prev, shiftCategory: e.target.value }))}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
-                        required
-                      >
-                        {shiftCategories.map(cat => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-xs text-gray-700">
-                      Shift Name *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Shift Name</label>
                     <input
                       type="text"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       value={createForm.shiftName}
                       onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Extended Shift"
+                      placeholder="e.g. Morning Shift"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block mb-1 text-xs text-gray-700">
-                      Time Slot *
-                    </label>
-                    {createForm.timeSlots.map((slot, idx) => (
-                      <div key={slot.slotId} className="p-2 mb-2 space-y-2 bg-white border border-gray-200 rounded-md">
-                        {createForm.timeSlots.length > 1 && (
-                          <h4 className="text-[10px] font-semibold text-gray-600">
-                            Slot {idx + 1}: {idx === 0 ? 'Morning' : 'Evening'}
-                          </h4>
-                        )}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block mb-0.5 text-[10px] text-gray-500">Start Time</label>
-                            <input
-                              type="time"
-                              value={slot.startTime || ''}
-                              onChange={(e) => {
-                                if (createForm.timeSlots.length === 1) {
-                                  updateTimeSlot('startTime', e.target.value);
-                                } else {
-                                  updateBrakeTimeSlot(idx, 'startTime', e.target.value);
-                                }
-                              }}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label className="block mb-0.5 text-[10px] text-gray-500">End Time</label>
-                            <input
-                              type="time"
-                              value={slot.endTime || ''}
-                              onChange={(e) => {
-                                if (createForm.timeSlots.length === 1) {
-                                  updateTimeSlot('endTime', e.target.value);
-                                } else {
-                                  updateBrakeTimeSlot(idx, 'endTime', e.target.value);
-                                }
-                              }}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
-                              required
-                            />
-                          </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      value={createForm.shiftCategory}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftCategory: e.target.value }))}
+                    >
+                      {shiftCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {createForm.timeSlots.map((slot, index) => (
+                    <div key={slot.slotId || index} className="border-t border-gray-200 pt-3">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Time Slot {index + 1}</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Start Time</label>
+                          <input
+                            type="time"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            value={slot.startTime || ''}
+                            onChange={(e) => {
+                              const newSlots = [...createForm.timeSlots];
+                              newSlots[index].startTime = e.target.value;
+                              setCreateForm(prev => ({ ...prev, timeSlots: newSlots }));
+                            }}
+                          />
                         </div>
                         <div>
-                          <label className="block mb-0.5 text-[10px] text-gray-500">Description</label>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">End Time</label>
                           <input
-                            type="text"
-                            value={slot.description || ''}
+                            type="time"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            value={slot.endTime || ''}
                             onChange={(e) => {
-                              if (createForm.timeSlots.length === 1) {
-                                updateTimeSlot('description', e.target.value);
-                              } else {
-                                updateBrakeTimeSlot(idx, 'description', e.target.value);
-                              }
+                              const newSlots = [...createForm.timeSlots];
+                              newSlots[index].endTime = e.target.value;
+                              setCreateForm(prev => ({ ...prev, timeSlots: newSlots }));
                             }}
-                            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
-                            placeholder={idx === 0 ? "Morning description" : "Evening description"}
-                            required
                           />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      <div className="mt-2">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          value={slot.description || ''}
+                          onChange={(e) => {
+                            const newSlots = [...createForm.timeSlots];
+                            newSlots[index].description = e.target.value;
+                            setCreateForm(prev => ({ ...prev, timeSlots: newSlots }));
+                          }}
+                          placeholder="Slot description"
+                        />
+                      </div>
+                    </div>
+                  ))}
 
-                <div className="flex justify-end gap-2 pt-3 mt-3 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEditShiftModal(false);
-                      setEditingShift(null);
-                      setCreateForm({
-                        shiftType: '',
-                        shiftName: '',
-                        shiftCategory: 'Regular',
-                        timeSlots: [{ slotId: `${Date.now()}_1`, startTime: '', endTime: '', timeRange: '', description: '' }],
-                        isBrakeShift: false
-                      });
-                    }}
-                    className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-3 py-1.5 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700 flex items-center gap-1 transition-colors"
-                  >
-                    <FaSave className="text-[10px]" /> Update Shift
-                  </button>
+                  {error && <p className="text-sm text-red-600">{error}</p>}
+                  {success && <p className="text-sm text-green-600">{success}</p>}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditShiftModal(false)}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                    >
+                      Update Shift
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* ASSIGN SHIFT MODAL */}
+        {/* ✅ Assign Modal */}
         {showAssignModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-md bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                  <FaClock className="text-blue-600" /> {editingAssignment ? 'Edit Assignment' : 'Assign Shift'}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">
+                  {editingAssignment ? 'Edit Assignment' : 'Assign Shift to Employee'}
                 </h3>
-                <button onClick={() => {
-                  setShowAssignModal(false);
-                  setEditingAssignment(null);
-                  setAssignForm({
-                    employeeId: '',
-                    employeeName: '',
-                    shiftType: '',
-                    effectiveFromMonth: '',
-                    effectiveFromDate: ''
-                  });
-                }} className="text-lg text-gray-500 hover:text-gray-500">
-                  &times;
+                <button 
+                  onClick={() => {
+                    setShowAssignModal(false);
+                    setEditingAssignment(null);
+                  }} 
+                  className="p-1.5 hover:bg-gray-100 rounded-lg"
+                >
+                  <FaTimes className="text-gray-500" />
                 </button>
               </div>
-
-              <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift} className="p-3">
-                <div className="space-y-2">
-                  {editingAssignment && (
-                    <div className="p-2 mb-1 text-[10px] text-blue-800 bg-blue-50 border border-blue-100 rounded-md">
-                      Current shift stays active until the selected date. Use month for quick selection, or pick an exact date below.
-                    </div>
+              
+              <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift}>
+                <div className="space-y-4">
+                  {!editingAssignment && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          value={assignForm.employeeId}
+                          onChange={(e) => setAssignForm(prev => ({ ...prev, employeeId: e.target.value }))}
+                          placeholder="Enter Employee ID"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          value={assignForm.employeeName}
+                          onChange={(e) => setAssignForm(prev => ({ ...prev, employeeName: e.target.value }))}
+                          placeholder="Enter Employee Name"
+                          required
+                        />
+                      </div>
+                    </>
                   )}
-                  <div>
-                    <label className="block mb-1 text-xs text-gray-700">
-                      Employee ID {editingAssignment && '(Cannot change)'}
-                    </label>
-                    <input
-                      type="text"
-                      value={assignForm.employeeId}
-                      onChange={(e) => setAssignForm(prev => ({ ...prev, employeeId: e.target.value }))}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
-                      placeholder="EMP001"
-                      required
-                      readOnly={!!editingAssignment}
-                    />
-                  </div>
 
                   <div>
-                    <label className="block mb-1 text-xs text-gray-700">
-                      Employee Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={assignForm.employeeName}
-                      onChange={(e) => setAssignForm(prev => ({ ...prev, employeeName: e.target.value }))}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
-                      placeholder="John Doe"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-xs text-gray-700">
-                      Select Shift Type *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Shift Type</label>
                     <select
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       value={assignForm.shiftType}
                       onChange={(e) => setAssignForm(prev => ({ ...prev, shiftType: e.target.value }))}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
                       required
                     >
-                      <option value="">Select Shift Type</option>
-                      {masterShifts.map(shift => {
-                        const timeSlot = shift.timeSlots?.[0];
-                        const timeStr = timeSlot?.timeRange || 'No time set';
-                        const descStr = timeSlot?.description ? ` - ${timeSlot.description}` : '';
-                        
-                        if (shift.isBrakeShift) {
-                          const morningSlot = shift.timeSlots?.[0];
-                          const eveningSlot = shift.timeSlots?.[1];
-                          const brakeTimeStr = morningSlot?.timeRange && eveningSlot?.timeRange 
-                            ? `${morningSlot.timeRange} & ${eveningSlot.timeRange}` 
-                            : 'No time set';
-                          return (
-                            <option key={shift._id} value={shift.shiftType}>
-                              Shift {shift.shiftType}: {shift.shiftName} ({shift.shiftCategory || 'Regular'}) - {brakeTimeStr} [Brake]
-                            </option>
-                          );
-                        }
-                        
-                        return (
-                          <option key={shift._id} value={shift.shiftType}>
-                            Shift {shift.shiftType}: {shift.shiftName} ({shift.shiftCategory || 'Regular'}) - {timeStr}{descStr}
-                          </option>
-                        );
-                      })}
+                      <option value="">Select Shift</option>
+                      {masterShifts.map(shift => (
+                        <option key={shift._id} value={shift.shiftType}>
+                          Shift {shift.shiftType} - {shift.shiftName}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
                   {editingAssignment && (
                     <>
                       <div>
-                        <label className="block mb-1 text-xs text-gray-700">
-                          Effective From (Month)
-                        </label>
-                        <input
-                          type="month"
-                          value={assignForm.effectiveFromMonth}
-                          onChange={(e) => {
-                            const month = e.target.value;
-                            setAssignForm((prev) => ({
-                              ...prev,
-                              effectiveFromMonth: month,
-                              effectiveFromDate: month ? `${month}-01` : prev.effectiveFromDate,
-                            }));
-                          }}
-                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
-                        />
-                        <p className="mt-1 text-[10px] text-gray-500">
-                          Quick select: sets the date to the 1st of the chosen month.
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="block mb-1 text-xs text-gray-700">
-                          Effective From (Date) *
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Effective From Date</label>
                         <input
                           type="date"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                           value={assignForm.effectiveFromDate}
                           onChange={(e) => {
-                            const date = e.target.value;
-                            setAssignForm((prev) => ({
+                            const newDate = e.target.value;
+                            setAssignForm(prev => ({
                               ...prev,
-                              effectiveFromDate: date,
-                              effectiveFromMonth: date ? date.slice(0, 7) : prev.effectiveFromMonth,
+                              effectiveFromDate: newDate,
+                              effectiveFromMonth: newDate ? newDate.slice(0, 7) : ''
                             }));
                           }}
-                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
                           required
                         />
-                        <p className="mt-1 text-[10px] text-gray-500">
-                          Pick the exact date the new shift should start. Today applies immediately; a future date schedules the change.
-                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Effective From Month</label>
+                        <input
+                          type="month"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          value={assignForm.effectiveFromMonth}
+                          onChange={(e) => {
+                            const newMonth = e.target.value;
+                            setAssignForm(prev => ({
+                              ...prev,
+                              effectiveFromMonth: newMonth,
+                              effectiveFromDate: newMonth ? `${newMonth}-01` : ''
+                            }));
+                          }}
+                        />
                       </div>
                     </>
                   )}
-                </div>
 
-                <div className="flex justify-end gap-2 pt-3 mt-3 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAssignModal(false);
-                      setEditingAssignment(null);
-                      setAssignForm({
-                        employeeId: '',
-                        employeeName: '',
-                        shiftType: '',
-                        effectiveFromMonth: '',
-                        effectiveFromDate: ''
-                      });
-                    }}
-                    className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-3 py-1.5 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    {editingAssignment ? 'Update' : 'Assign'}
-                  </button>
+                  {error && <p className="text-sm text-red-600">{error}</p>}
+                  {success && <p className="text-sm text-green-600">{success}</p>}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAssignModal(false);
+                        setEditingAssignment(null);
+                      }}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                    >
+                      {editingAssignment ? 'Update Assignment' : 'Assign Shift'}
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* VIEW EMPLOYEES MODAL */}
-        {showViewModal && viewEmployees.length > 0 && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-4xl bg-white shadow-2xl rounded-2xl flex flex-col max-h-[80vh] overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
+        {/* ✅ View Modal */}
+        {showViewModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                    <FiUsers className="text-blue-600" /> {viewShiftInfo.shiftName} Employees
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Employees in Shift {viewShiftInfo.shiftType}
                   </h3>
-                  <p className="text-[10px] text-gray-500">
-                    Shift {viewShiftInfo.shiftType} • {viewEmployees.length} active employees
+                  <p className="text-sm text-gray-500">
+                    {viewShiftInfo.shiftName} {viewShiftInfo.isBrakeShift ? '· Brake Shift' : ''}
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="text-lg text-gray-500 hover:text-gray-500"
-                >
-                  &times;
+                <button onClick={() => setShowViewModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
+                  <FaTimes className="text-gray-500" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
+              {viewEmployees.length === 0 ? (
+                <div className="py-8 text-center text-gray-500">
+                  <div className="text-4xl mb-2">👤</div>
+                  <p>No employees assigned to this shift</p>
+                </div>
+              ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[800px]">
-                    <thead className="sticky top-0 bg-white border-b border-gray-200">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase whitespace-nowrap">Employee ID</th>
-                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase whitespace-nowrap">Employee Name</th>
-                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase hidden sm:table-cell">Department</th>
-                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase hidden md:table-cell">Designation</th>
-                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase hidden lg:table-cell">Time Slot</th>
-                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Actions</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Emp ID</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Name</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 hidden sm:table-cell">Department</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 hidden md:table-cell">Designation</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {viewEmployees.map((emp) => {
-                        const rowColor = getShiftRowColor(emp.shiftType);
-                        const shift = masterShifts.find(s => s.shiftType === emp.shiftType);
-                        const isBrakeShift = shift?.isBrakeShift || false;
-                        const employeeId = emp.employeeAssignment?.employeeId || emp.employeeId;
-                        const department = getEmployeeDepartment(employeeId);
-                        const designation = getEmployeeDesignation(employeeId);
-
-                        return (
-                          <tr key={emp._id} className={`${rowColor} transition-colors`}>
-                            <td className="px-2 py-2 text-[10px] text-gray-900 whitespace-nowrap">{employeeId}</td>
-                            <td className="px-2 py-2 text-[10px] text-gray-900 whitespace-nowrap">{emp.employeeAssignment?.employeeName || emp.employeeName}</td>
-                            <td className="px-2 py-2 text-[10px] text-gray-900 hidden sm:table-cell">{department}</td>
-                            <td className="px-2 py-2 text-[10px] text-gray-900 hidden md:table-cell">{designation}</td>
-                            <td className="px-2 py-2 text-[10px] text-gray-900 hidden lg:table-cell">
-                              {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : getEmployeeTimeRange(emp)}
-                            </td>
-                            <td className="px-2 py-2">
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => {
-                                    setShowViewModal(false);
-                                    openEditAssignment(emp);
-                                  }}
-                                  className="px-2 py-1 text-[8px] bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200"
-                                >
-                                  <FaEdit className="text-[6px]" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleDeleteAssignment(emp._id);
-                                    setShowViewModal(false);
-                                  }}
-                                  className="px-2 py-1 text-[8px] bg-red-50 text-red-700 rounded hover:bg-red-100 border border-red-200"
-                                >
-                                  <FaTrash className="text-[6px]" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                    <tbody>
+                      {viewEmployees.map((emp, idx) => (
+                        <tr key={idx} className="border-t border-gray-100 hover:bg-gray-50">
+                          <td className="px-4 py-2 text-xs font-medium text-gray-900">
+                            {emp.employeeId || emp._id}
+                          </td>
+                          <td className="px-4 py-2 text-xs text-gray-700">
+                            {emp.employeeName || emp.name || 'Unknown'}
+                          </td>
+                          <td className="px-4 py-2 text-xs text-gray-600 hidden sm:table-cell">
+                            {emp.department || '-'}
+                          </td>
+                          <td className="px-4 py-2 text-xs text-gray-600 hidden md:table-cell">
+                            {emp.role || emp.designation || '-'}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+              )}
 
-              <div className="p-3 bg-white border-t border-gray-200">
+              <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
+                <span className="text-xs text-gray-500">
+                  Total: {viewEmployees.length} employee{viewEmployees.length !== 1 ? 's' : ''}
+                </span>
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="w-full py-2 text-[10px] bg-gray-200 text-gray-900 rounded hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Close
                 </button>
