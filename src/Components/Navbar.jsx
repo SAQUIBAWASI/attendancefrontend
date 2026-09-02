@@ -132,6 +132,14 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       "/comp-off-requests": "",
       "/comp-off-settings": "",
       "/events": "",
+      // ===== OP Management Routes =====
+      "/op-dashboard": "",
+      "/doctor-management": "",
+      "/op-management": "",
+      "/appointment-slots": "",
+      "/services": "",
+      "/bookings": "",
+      "/letterhead": "",
     };
 
     return routes[location.pathname] || "";
@@ -185,6 +193,21 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   ];
 
   const isJobModule = jobTabs.some(
+    (tab) => tab.path === location.pathname
+  );
+
+  // ===== OP MANAGEMENT TABS =====
+  const opTabs = [
+    { path: "/op-dashboard", label: "OP Dashboard" },
+    { path: "/doctor-management", label: "Doctors" },
+    { path: "/op-management", label: "OP Records" },
+    { path: "/appointment-slots", label: "Appointment Slots" },
+    { path: "/services", label: "Services" },
+    { path: "/bookings", label: "Bookings" },
+    { path: "/letterhead", label: "Letter Head" },
+  ];
+
+  const isOPModule = opTabs.some(
     (tab) => tab.path === location.pathname
   );
 
@@ -247,6 +270,10 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   };
 
   const handleOvertimeTabClick = (path) => {
+    navigate(path);
+  };
+
+  const handleOPTabClick = (path) => {
     navigate(path);
   };
 
@@ -432,6 +459,28 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
                 {tab.label}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* ===== OP MANAGEMENT MODULE TABS ===== */}
+        {isOPModule && (
+          <div className="flex items-center gap-1 ml-4">
+            {opTabs.map((tab) => {
+              const isActive = location.pathname === tab.path;
+              return (
+                <button
+                  key={tab.path}
+                  onClick={() => handleOPTabClick(tab.path)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
+                      : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

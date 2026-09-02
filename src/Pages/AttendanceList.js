@@ -88,7 +88,7 @@ export default function AttendanceList() {
     return saved ? parseInt(saved, 10) : 10;
   });
 
-  // ✅ Image Popup states
+  // ✅ Image Popup states - ADDED viewingImageType
   const [imagePopup, setImagePopup] = useState({
     isOpen: false,
     imageUrl: null,
@@ -98,7 +98,8 @@ export default function AttendanceList() {
     date: null,
     rawImagePath: null,
     checkInTime: null,
-    checkOutTime: null
+    checkOutTime: null,
+    viewingImageType: null // 'checkin' or 'checkout'
   });
 
   // Helper function to format decimal hours to HH:MM
@@ -445,8 +446,8 @@ export default function AttendanceList() {
     }
   };
 
-  // ✅ Image Popup Handlers - WITH DATE & TIME
-  const openImagePopup = (imagePath, imageType, employeeName, employeeId, date, checkInTime, checkOutTime) => {
+  // ✅ Updated Image Popup Handler - with viewingImageType
+  const openImagePopup = (imagePath, imageType, employeeName, employeeId, date, checkInTime, checkOutTime, viewingImageType) => {
     console.log("🔍 Opening image popup with path:", imagePath);
     console.log("🔍 BASE_URL (without /api):", BASE_URL);
     
@@ -467,7 +468,8 @@ export default function AttendanceList() {
       date: date,
       rawImagePath: imagePath,
       checkInTime: checkInTime,
-      checkOutTime: checkOutTime
+      checkOutTime: checkOutTime,
+      viewingImageType: viewingImageType // 'checkin' or 'checkout'
     });
   };
 
@@ -481,7 +483,8 @@ export default function AttendanceList() {
       date: null,
       rawImagePath: null,
       checkInTime: null,
-      checkOutTime: null
+      checkOutTime: null,
+      viewingImageType: null
     });
   };
 
@@ -552,10 +555,6 @@ export default function AttendanceList() {
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Attendance <span>List</span>
             </h1>
-            {/* <div className="emp-dash__date-pill">
-              <FaCalendarAlt />
-              <span>{getPeriodLabel()}</span>
-            </div> */}
           </div>
 
           {/* Right side: All Filters */}
@@ -1147,7 +1146,7 @@ export default function AttendanceList() {
                               {rec.onsite ? "🏢 WFO" : "🏠 WFH"}
                             </span>
                           </td>
-                          {/* ✅ Attendance Images Column */}
+                          {/* ✅ Attendance Images Column - Updated with viewingImageType */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {hasAnyImage ? (
                               <div className="flex items-center justify-center gap-1.5">
@@ -1160,7 +1159,8 @@ export default function AttendanceList() {
                                       rec.employeeId,
                                       recordDate,
                                       rec.checkInTime,
-                                      rec.checkOutTime
+                                      rec.checkOutTime,
+                                      'checkin' // ✅ Pass which image is being viewed
                                     )}
                                     className="relative group flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-all shadow-sm hover:shadow-md"
                                     title="View Check-In Image"
@@ -1178,7 +1178,8 @@ export default function AttendanceList() {
                                       rec.employeeId,
                                       recordDate,
                                       rec.checkInTime,
-                                      rec.checkOutTime
+                                      rec.checkOutTime,
+                                      'checkout' // ✅ Pass which image is being viewed
                                     )}
                                     className="relative group flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition-all shadow-sm hover:shadow-md"
                                     title="View Check-Out Image"
@@ -1281,7 +1282,7 @@ export default function AttendanceList() {
         </div>
       </main>
 
-      {/* ✅ IMAGE POPUP MODAL - WITH X ICON TOP RIGHT */}
+      {/* ✅ IMAGE POPUP MODAL - WITH FIXED CHECK-OUT TIME DISPLAY */}
       {imagePopup.isOpen && (
         <div 
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in p-4"
@@ -1312,20 +1313,53 @@ export default function AttendanceList() {
                   <p className="text-xs text-gray-500 mt-0.5">
                     {imagePopup.employeeName} ({imagePopup.employeeId})
                   </p>
-                  {/* ✅ Show Date and Time */}
-                  <div className="flex items-center gap-3 mt-1">
+                  {/* ✅ Show Date and CORRECT Time based on image type */}
+                  <div className="flex items-center gap-3 mt-1 flex-wrap">
                     <p className="text-[11px] text-gray-600 flex items-center gap-1">
                       <FaCalendarAlt className="text-indigo-400 text-[10px]" />
                       {imagePopup.date ? formatDate(imagePopup.date) : '-'}
                     </p>
-                    <p className="text-[11px] text-gray-600 flex items-center gap-1">
-                      <FaClock className="text-indigo-400 text-[10px]" />
-                      {imagePopup.checkInTime ? new Date(imagePopup.checkInTime).toLocaleTimeString('en-IN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                      }) : '-'}
-                    </p>
+                    
+                    {/* ✅ FIX: Show Check-In Time or Check-Out Time based on which image is being viewed */}
+                    {imagePopup.viewingImageType === 'checkin' ? (
+                      <p className="text-[11px] text-emerald-600 flex items-center gap-1 font-semibold">
+                        <FaClock className="text-emerald-500 text-[10px]" />
+                        Check-In: {imagePopup.checkInTime ? new Date(imagePopup.checkInTime).toLocaleTimeString('en-IN', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true
+                        }) : '-'}
+                      </p>
+                    ) : imagePopup.viewingImageType === 'checkout' ? (
+                      <p className="text-[11px] text-indigo-600 flex items-center gap-1 font-semibold">
+                        <FaClock className="text-indigo-500 text-[10px]" />
+                        Check-Out: {imagePopup.checkOutTime ? new Date(imagePopup.checkOutTime).toLocaleTimeString('en-IN', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true
+                        }) : '-'}
+                      </p>
+                    ) : (
+                      // Fallback: show both times if type is unknown
+                      <>
+                        <p className="text-[11px] text-emerald-600 flex items-center gap-1">
+                          <FaClock className="text-emerald-500 text-[10px]" />
+                          In: {imagePopup.checkInTime ? new Date(imagePopup.checkInTime).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          }) : '-'}
+                        </p>
+                        <p className="text-[11px] text-indigo-600 flex items-center gap-1">
+                          <FaClock className="text-indigo-500 text-[10px]" />
+                          Out: {imagePopup.checkOutTime ? new Date(imagePopup.checkOutTime).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          }) : '-'}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

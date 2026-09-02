@@ -1,3 +1,5 @@
+// DoctorManagement.js - Complete fixed component
+
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -21,7 +23,8 @@ import {
   FaPrint,
   FaCheckCircle,
   FaTimesCircle,
-  FaTrashAlt
+  FaTrashAlt,
+  FaAward
 } from "react-icons/fa";
 import {
   FiUsers,
@@ -38,7 +41,10 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiClock,
-  FiCalendar
+  FiCalendar,
+  FiChevronDown,
+  FiChevronUp,
+  FiCheck
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -58,10 +64,10 @@ const DEFAULT_SPECIALIZATIONS = [
   "Pulmonologist",
   "Radiologist",
   "Surgeon",
-  "Urologist"
+  "Urologist",
+  "General Medicine"
 ];
 
-// Time options from 5:00 AM to 12:00 AM (midnight)
 const TIME_OPTIONS = [
   "05:00 AM", "05:30 AM", "06:00 AM", "06:30 AM",
   "07:00 AM", "07:30 AM", "08:00 AM", "08:30 AM",
@@ -102,25 +108,19 @@ export default function DoctorManagement() {
   const [showForm, setShowForm] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [specializationFilter, setSpecializationFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  // Dropdown visibility states
   const [showSpecDropdown, setShowSpecDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const specDropdownRef = useRef(null);
   const statusDropdownRef = useRef(null);
 
-  // Card click filter state
   const [activeCardFilter, setActiveCardFilter] = useState("all");
 
-  // Month filter - default to current month
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  });
+  // FIX: Month filter - default to ALL (empty string) instead of current month
+  const [selectedMonth, setSelectedMonth] = useState("");
 
   const [toast, setToast] = useState(null);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -129,14 +129,12 @@ export default function DoctorManagement() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordInModal, setShowPasswordInModal] = useState(false);
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
     const saved = localStorage.getItem("doctorMgmt_itemsPerPage");
     return saved ? parseInt(saved, 10) : 10;
   });
 
-  // Close dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (specDropdownRef.current && !specDropdownRef.current.contains(e.target)) {
@@ -159,19 +157,41 @@ export default function DoctorManagement() {
     fetchDoctors();
   }, []);
 
-  // Fetch all doctors
+  // FIXED: Fetch doctors with proper data extraction
   const fetchDoctors = async () => {
     setLoading(true);
     setError("");
     try {
       const res = await axios.get(`${API_BASE_URL}/doctors/getalldoctors`);
+      console.log("=== FULL API RESPONSE ===", res);
+      console.log("=== RESPONSE DATA ===", res.data);
+      
+      let doctorsData = [];
+      
       if (res.data && res.data.success) {
-        setDoctors(res.data.data || []);
-      } else {
-        setDoctors([]);
+        if (res.data.data && Array.isArray(res.data.data)) {
+          doctorsData = res.data.data;
+        } else if (Array.isArray(res.data)) {
+          doctorsData = res.data;
+        } else {
+          doctorsData = res.data.data || [];
+        }
+      } else if (Array.isArray(res.data)) {
+        doctorsData = res.data;
       }
+      
+      console.log("=== EXTRACTED DOCTORS ===", doctorsData);
+      console.log("=== DOCTORS COUNT ===", doctorsData.length);
+      
+      setDoctors(doctorsData);
+      
+      // If doctors exist, show success toast
+      if (doctorsData.length > 0) {
+        showToast(`Loaded ${doctorsData.length} doctors successfully!`);
+      }
+      
     } catch (err) {
-      console.error("Error fetching doctors:", err);
+      console.error("=== ERROR FETCHING DOCTORS ===", err);
       setDoctors([]);
       setError(err.response?.data?.message || "Failed to fetch doctor records");
       showToast(err.response?.data?.message || "Failed to fetch doctor records", "error");
@@ -335,58 +355,42 @@ export default function DoctorManagement() {
     setShowPassword(false);
   };
 
-  // Get default month
   const getDefaultMonth = () => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   };
   const isDefaultMonth = selectedMonth === getDefaultMonth();
 
-  // Check if any filter is active
-  const hasActiveFilters = searchQuery || specializationFilter !== "All" || statusFilter !== "All" || !isDefaultMonth;
-
-  // Format month for display
-  const formatMonthDisplay = (monthValue) => {
-    if (!monthValue) return '';
-    const [year, month] = monthValue.split('-');
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${monthNames[parseInt(month) - 1]} ${year}`;
-  };
-
-  // Get filter summary for display
-  const getFilterSummary = () => {
-    const parts = [];
-    if (searchQuery) {
-      parts.push(`Search: "${searchQuery}"`);
-    }
-    if (specializationFilter !== "All") {
-      parts.push(`Specialization: ${specializationFilter}`);
-    }
-    if (statusFilter !== "All") {
-      parts.push(`Status: ${statusFilter === "active" ? "✅ Active" : "❌ Inactive"}`);
-    }
-    if (!isDefaultMonth) {
-      parts.push(`Month: ${formatMonthDisplay(selectedMonth)}`);
-    }
-    return parts;
-  };
+  const hasActiveFilters = searchQuery || specializationFilter !== "All" || statusFilter !== "All" || selectedMonth !== "";
 
   const clearFilters = () => {
     setSearchQuery("");
     setSpecializationFilter("All");
     setStatusFilter("All");
+    setSelectedMonth(""); // FIX: Clear month filter
     setActiveCardFilter("all");
     setCurrentPage(1);
+    if (window.innerWidth < 1024) {
+      setShowMobileFilters(false);
+    }
   };
 
-  // Unique specializations dynamically gathered from data + defaults
+  const getSpecLabel = () => {
+    if (specializationFilter === "All") return "Specialization";
+    return specializationFilter;
+  };
+
+  const getStatusLabel = () => {
+    if (statusFilter === "All") return "Status";
+    return statusFilter === "active" ? "Active" : "Inactive";
+  };
+
   const uniqueSpecializations = useMemo(() => {
     const fromData = doctors.map((d) => d.specialization).filter(Boolean);
     const combined = Array.from(new Set([...DEFAULT_SPECIALIZATIONS, ...fromData]));
     return combined.sort();
   }, [doctors]);
 
-  // Handle Card Click for quick filtering
   const handleCardClick = (type) => {
     setActiveCardFilter(type);
     setCurrentPage(1);
@@ -399,12 +403,21 @@ export default function DoctorManagement() {
     }
   };
 
+  // FIXED: Filter logic - only apply month filter if selectedMonth is not empty
   const filteredDoctors = useMemo(() => {
-    return doctors.filter((d) => {
-      // Apply month filter
-      if (selectedMonth) {
+    console.log("=== FILTERING DOCTORS ===");
+    console.log("All Doctors:", doctors);
+    console.log("Selected Month:", selectedMonth);
+    console.log("Specialization Filter:", specializationFilter);
+    console.log("Status Filter:", statusFilter);
+    console.log("Search Query:", searchQuery);
+    
+    const filtered = doctors.filter((d) => {
+      // Apply month filter ONLY if selectedMonth is not empty
+      if (selectedMonth && selectedMonth !== "") {
         const createdAt = new Date(d.createdAt);
         const doctorMonth = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
+        console.log(`Doctor ${d.name} month: ${doctorMonth}, Selected: ${selectedMonth}`);
         if (doctorMonth !== selectedMonth) return false;
       }
 
@@ -424,12 +437,15 @@ export default function DoctorManagement() {
       }
       return true;
     });
+    
+    console.log("=== FILTERED DOCTORS COUNT ===", filtered.length);
+    console.log("=== FILTERED DOCTORS ===", filtered);
+    return filtered;
   }, [doctors, specializationFilter, statusFilter, searchQuery, selectedMonth]);
 
-  // Reset to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, specializationFilter, statusFilter]);
+  }, [searchQuery, specializationFilter, statusFilter, selectedMonth]);
 
   const stats = useMemo(() => {
     const total = doctors.length;
@@ -501,9 +517,6 @@ export default function DoctorManagement() {
     showToast(`Exported ${filteredDoctors.length} doctor records to CSV!`);
   };
 
-  const isFilterActive = searchQuery !== "" || specializationFilter !== "All" || statusFilter !== "All";
-
-  // Pagination calculations
   const totalPages = Math.ceil(filteredDoctors.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -544,12 +557,12 @@ export default function DoctorManagement() {
     return pageNumbers;
   };
 
-  // Helper function for specialization badge colors
   const getSpecializationBadgeStyle = (spec) => {
     const colorMap = {
       "Cardiologist": "bg-rose-50 text-rose-700 border-rose-200",
       "Dermatologist": "bg-amber-50 text-amber-700 border-amber-200",
       "General Physician": "bg-blue-50 text-blue-700 border-blue-200",
+      "General Medicine": "bg-cyan-50 text-cyan-700 border-cyan-200",
       "Gynecologist": "bg-pink-50 text-pink-700 border-pink-200",
       "Neurologist": "bg-purple-50 text-purple-700 border-purple-200",
       "Orthopedic": "bg-teal-50 text-teal-700 border-teal-200",
@@ -560,7 +573,6 @@ export default function DoctorManagement() {
     return colorMap[spec] || "bg-violet-50 text-violet-700 border-violet-200";
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="emp-dash">
@@ -572,7 +584,6 @@ export default function DoctorManagement() {
     );
   }
 
-  // Error state
   if (error && doctors.length === 0) {
     return (
       <div className="emp-dash">
@@ -597,7 +608,6 @@ export default function DoctorManagement() {
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
 
-        {/* Toast Notification */}
         {toast && (
           <div
             className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
@@ -617,18 +627,171 @@ export default function DoctorManagement() {
           </div>
         )}
 
-        {/* ===================== HEADER ===================== */}
-        <div className="emp-dash__header">
-          <div className="flex items-baseline gap-3 flex-wrap">
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Doctor <span>Management</span>
             </h1>
           </div>
+          
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="emp-dash__date-pill">
+            <div className="emp-dash__date-pill flex-shrink-0">
               <FaUserMd />
               <span>{doctors.length} Registered Doctors</span>
             </div>
+            
+            <div className="relative min-w-[150px]">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+              <input
+                type="text"
+                placeholder="Search Name, Phone, Email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[180px] pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Month Filter - ADDED */}
+            <div className="relative">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                title="Filter by month"
+              />
+            </div>
+
+            <div className="relative" ref={specDropdownRef}>
+              <button
+                onClick={() => {
+                  setShowSpecDropdown(!showSpecDropdown);
+                  setShowStatusDropdown(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  specializationFilter !== "All"
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FaAward className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{getSpecLabel()}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showSpecDropdown && (
+                <div
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: specDropdownRef.current ? specDropdownRef.current.getBoundingClientRect().bottom + 4 : "auto",
+                    left: specDropdownRef.current ? specDropdownRef.current.getBoundingClientRect().left : "auto"
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setSpecializationFilter("All");
+                      setShowSpecDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs font-medium border-b border-gray-100 cursor-pointer hover:bg-blue-50 ${
+                      specializationFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-500"
+                    }`}
+                  >
+                    All Specializations
+                  </div>
+                  {uniqueSpecializations.map((spec) => (
+                    <div
+                      key={spec}
+                      onClick={() => {
+                        setSpecializationFilter(spec);
+                        setShowSpecDropdown(false);
+                      }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                        specializationFilter === spec ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      <span>{spec}</span>
+                      {specializationFilter === spec && <FiCheck className="w-3 h-3 text-blue-600" />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="relative" ref={statusDropdownRef}>
+              <button
+                onClick={() => {
+                  setShowStatusDropdown(!showStatusDropdown);
+                  setShowSpecDropdown(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  statusFilter !== "All"
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FiUserCheck className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[60px]">{getStatusLabel()}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showStatusDropdown && (
+                <div
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[150px]"
+                  style={{
+                    zIndex: 99999,
+                    top: statusDropdownRef.current ? statusDropdownRef.current.getBoundingClientRect().bottom + 4 : "auto",
+                    left: statusDropdownRef.current ? statusDropdownRef.current.getBoundingClientRect().left : "auto"
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setStatusFilter("All");
+                      setShowStatusDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      statusFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>All Status</span>
+                    {statusFilter === "All" && <FiCheck className="w-3 h-3 text-blue-600" />}
+                  </div>
+                  <div
+                    onClick={() => {
+                      setStatusFilter("active");
+                      setShowStatusDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      statusFilter === "active" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>Active</span>
+                    {statusFilter === "active" && <FiCheck className="w-3 h-3 text-blue-600" />}
+                  </div>
+                  <div
+                    onClick={() => {
+                      setStatusFilter("inactive");
+                      setShowStatusDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      statusFilter === "inactive" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>Inactive</span>
+                    {statusFilter === "inactive" && <FiCheck className="w-3 h-3 text-blue-600" />}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3 text-red-500" />
+                Clear
+              </button>
+            )}
+
             <button
               onClick={fetchDoctors}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
@@ -639,7 +802,7 @@ export default function DoctorManagement() {
             </button>
             <button
               onClick={downloadCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
               title="Export CSV"
             >
               <FiDownload className="w-3.5 h-3.5" />
@@ -656,23 +819,129 @@ export default function DoctorManagement() {
               <FiPlus className="w-3.5 h-3.5" />
               <span>Add Doctor</span>
             </button>
+          </div>
+        </div>
 
-            {/* Clear Filters Button */}
+        <div className="lg:hidden flex flex-col gap-2 mb-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h1 className="text-base font-bold whitespace-nowrap">
+              Doctor <span className="text-indigo-600">Management</span>
+            </h1>
+            <div className="emp-dash__date-pill text-[10px] px-2 py-1">
+              <FaUserMd className="text-[10px]" />
+              <span>{doctors.length} Doctors</span>
+            </div>
+          </div>
+          
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+            <input
+              type="text"
+              placeholder="Search doctor..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
+          </div>
+          
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+            >
+              <FiFilter className="text-blue-600 text-sm" />
+              <span>Filter</span>
+              {showMobileFilters ? (
+                <FiChevronUp className="text-gray-400 text-xs" />
+              ) : (
+                <FiChevronDown className="text-gray-400 text-xs" />
+              )}
+            </button>
+            
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
               >
                 <FiTrash2 className="w-3 h-3 text-red-500" />
                 Clear
               </button>
             )}
+            
+            <button
+              onClick={() => {
+                setFormData({ ...EMPTY_FORM });
+                setEditingId(null);
+                setShowForm(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm ml-auto"
+            >
+              <FiPlus className="w-3.5 h-3.5" />
+              <span>Add</span>
+            </button>
           </div>
+
+          {showMobileFilters && (
+            <div className="p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Specialization</label>
+                <select
+                  value={specializationFilter}
+                  onChange={(e) => setSpecializationFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                >
+                  <option value="All">All Specializations</option>
+                  {uniqueSpecializations.map((spec) => (
+                    <option key={spec} value={spec}>{spec}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                >
+                  <option value="All">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={downloadCSV}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                  >
+                    <FiDownload className="w-4 h-4" />
+                    Export CSV
+                  </button>
+                  <button
+                    onClick={fetchDoctors}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    <FiRefreshCw className="w-4 h-4" />
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* ===================== TOP KPI STATS GRID ===================== */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
-          {/* Total Doctors */}
           <div
             className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
               activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""
@@ -689,7 +958,6 @@ export default function DoctorManagement() {
             <div className="emp-dash__stat-meta">all registered</div>
           </div>
 
-          {/* Active Doctors */}
           <div
             className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
               activeCardFilter === "active" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""
@@ -706,7 +974,6 @@ export default function DoctorManagement() {
             <div className="emp-dash__stat-meta">available for booking</div>
           </div>
 
-          {/* Inactive Doctors */}
           <div
             className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
               activeCardFilter === "inactive" ? "ring-2 ring-red-500/20 border-red-400" : ""
@@ -723,7 +990,6 @@ export default function DoctorManagement() {
             <div className="emp-dash__stat-meta">temporarily paused</div>
           </div>
 
-          {/* Specializations Count */}
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Specializations</span>
@@ -735,7 +1001,6 @@ export default function DoctorManagement() {
             <div className="emp-dash__stat-meta">medical specialties</div>
           </div>
 
-          {/* Filtered Records */}
           <div className="emp-dash__stat col-span-2 lg:col-span-1">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Filtered Records</span>
@@ -750,257 +1015,6 @@ export default function DoctorManagement() {
           </div>
         </div>
 
-        {/* ===================== FILTERS CARD ===================== */}
-        <div className="emp-dash__card mb-6">
-          {/* Desktop Filter Bar */}
-          <div className="hidden lg:block">
-            <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {/* Search */}
-                <div className="relative min-w-[160px] flex-1 max-w-[240px]">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input
-                    type="text"
-                    placeholder="Search Name, Phone, Email..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                {/* Specialization Filter Dropdown */}
-                <div className="relative" ref={specDropdownRef}>
-                  <button
-                    onClick={() => {
-                      setShowSpecDropdown(!showSpecDropdown);
-                      setShowStatusDropdown(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                      specializationFilter !== "All"
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <FiAward className="text-gray-400 text-xs" />
-                    <span className="truncate max-w-[130px]">
-                      {specializationFilter !== "All" ? specializationFilter : "Specializations"}
-                    </span>
-                    <span className="text-gray-400 text-[10px]">▾</span>
-                  </button>
-                  {showSpecDropdown && (
-                    <div
-                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[220px] max-h-64 overflow-y-auto"
-                      style={{
-                        zIndex: 99999,
-                        top: specDropdownRef.current ? specDropdownRef.current.getBoundingClientRect().bottom + 4 : "auto",
-                        left: specDropdownRef.current ? specDropdownRef.current.getBoundingClientRect().left : "auto"
-                      }}
-                    >
-                      <div
-                        onClick={() => {
-                          setSpecializationFilter("All");
-                          setShowSpecDropdown(false);
-                        }}
-                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                      >
-                        All Specializations
-                      </div>
-                      {uniqueSpecializations.map((spec) => (
-                        <div
-                          key={spec}
-                          onClick={() => {
-                            setSpecializationFilter(spec);
-                            setShowSpecDropdown(false);
-                          }}
-                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                            specializationFilter === spec
-                              ? "bg-blue-50 text-blue-700 font-semibold"
-                              : "text-gray-700"
-                          }`}
-                        >
-                          {spec}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Status Filter Dropdown */}
-                <div className="relative" ref={statusDropdownRef}>
-                  <button
-                    onClick={() => {
-                      setShowStatusDropdown(!showStatusDropdown);
-                      setShowSpecDropdown(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                      statusFilter !== "All"
-                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <FiUserCheck className="text-gray-400 text-xs" />
-                    <span className="truncate max-w-[100px]">
-                      {statusFilter === "All" ? "All Status" : statusFilter === "active" ? "Active" : "Inactive"}
-                    </span>
-                    <span className="text-gray-400 text-[10px]">▾</span>
-                  </button>
-                  {showStatusDropdown && (
-                    <div
-                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[160px]"
-                      style={{
-                        zIndex: 99999,
-                        top: statusDropdownRef.current ? statusDropdownRef.current.getBoundingClientRect().bottom + 4 : "auto",
-                        left: statusDropdownRef.current ? statusDropdownRef.current.getBoundingClientRect().left : "auto"
-                      }}
-                    >
-                      <div
-                        onClick={() => {
-                          setStatusFilter("All");
-                          setShowStatusDropdown(false);
-                        }}
-                        className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                          statusFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                        }`}
-                      >
-                        All Status
-                      </div>
-                      <div
-                        onClick={() => {
-                          setStatusFilter("active");
-                          setShowStatusDropdown(false);
-                        }}
-                        className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                          statusFilter === "active" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                        }`}
-                      >
-                        Active
-                      </div>
-                      <div
-                        onClick={() => {
-                          setStatusFilter("inactive");
-                          setShowStatusDropdown(false);
-                        }}
-                        className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                          statusFilter === "inactive" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                        }`}
-                      >
-                        Inactive
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right - Action Buttons */}
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                {isFilterActive && (
-                  <button
-                    onClick={clearFilters}
-                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-                  >
-                    <FiTrash2 className="w-3 h-3 text-red-500" />
-                    Clear
-                  </button>
-                )}
-
-                <button
-                  onClick={downloadCSV}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
-                >
-                  <FiDownload className="w-3 h-3" />
-                  Export
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Filter Bar */}
-          <div className="lg:hidden">
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
-              <button
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-              >
-                <FiFilter className="text-blue-600 text-base" />
-                <span>Filters &amp; Actions</span>
-                <span className="text-gray-400 text-xs">
-                  {showMobileFilters ? "▲" : "▼"}
-                </span>
-              </button>
-              <span className="text-xs text-gray-500">
-                <strong>{filteredDoctors.length}</strong> doctors
-              </span>
-            </div>
-
-            {showMobileFilters && (
-              <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Search Doctor</label>
-                  <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                    <input
-                      type="text"
-                      placeholder="Search doctor..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Specialization</label>
-                  <select
-                    value={specializationFilter}
-                    onChange={(e) => setSpecializationFilter(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  >
-                    <option value="All">All Specializations</option>
-                    {uniqueSpecializations.map((spec) => (
-                      <option key={spec} value={spec}>{spec}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  >
-                    <option value="All">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-
-                <div className="pt-3 border-t border-gray-200 space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={downloadCSV}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
-                    >
-                      <FiDownload className="w-3.5 h-3.5" />
-                      Export CSV
-                    </button>
-                    {isFilterActive && (
-                      <button
-                        onClick={clearFilters}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                      >
-                        <FiTrash2 className="w-3.5 h-3.5 text-red-500" />
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ===================== DOCTOR TABLE SECTION ===================== */}
         <div className="emp-dash__card">
           {filteredDoctors.length === 0 ? (
             <div className="emp-dash__card-body py-12 text-center text-gray-500">
@@ -1013,7 +1027,7 @@ export default function DoctorManagement() {
                   ? "Click 'Add Doctor' to register a new doctor."
                   : "There are no doctor records matching your current filter criteria."}
               </p>
-              {isFilterActive ? (
+              {hasActiveFilters ? (
                 <button
                   onClick={clearFilters}
                   className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
@@ -1058,12 +1072,10 @@ export default function DoctorManagement() {
 
                       return (
                         <tr key={doctor._id} className="transition-colors hover:bg-slate-50/50">
-                          {/* Row Number */}
                           <td className="px-3 py-3 font-semibold text-center text-slate-500 text-[11px]">
                             {indexOfFirstItem + idx + 1}
                           </td>
 
-                          {/* Doctor Info */}
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-xs shadow-sm">
@@ -1077,7 +1089,6 @@ export default function DoctorManagement() {
                             </div>
                           </td>
 
-                          {/* Specialization */}
                           <td className="px-3 py-3 whitespace-nowrap">
                             <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${specBadgeClass}`}>
                               <FiAward className="text-[10px]" />
@@ -1085,7 +1096,6 @@ export default function DoctorManagement() {
                             </span>
                           </td>
 
-                          {/* Qualification */}
                           <td className="px-3 py-3 whitespace-nowrap text-slate-700 text-xs font-medium">
                             {doctor.qualification ? (
                               <div className="flex items-center gap-1">
@@ -1097,7 +1107,6 @@ export default function DoctorManagement() {
                             )}
                           </td>
 
-                          {/* Experience */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {doctor.experience ? (
                               <span className="px-2 py-0.5 text-[10px] font-bold text-slate-700 bg-slate-100 rounded border border-slate-200">
@@ -1108,14 +1117,12 @@ export default function DoctorManagement() {
                             )}
                           </td>
 
-                          {/* Fee */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className="text-xs font-bold text-slate-800">
                               ₹{doctor.consultationFee || 0}
                             </span>
                           </td>
 
-                          {/* Available Schedule */}
                           <td className="px-3 py-3">
                             <div className="flex flex-col gap-1 max-w-[190px]">
                               {doctor.availableDays && doctor.availableDays.length > 0 ? (
@@ -1141,7 +1148,6 @@ export default function DoctorManagement() {
                             </div>
                           </td>
 
-                          {/* Status */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <div className="flex flex-col items-center gap-1">
                               <span
@@ -1172,7 +1178,6 @@ export default function DoctorManagement() {
                             </div>
                           </td>
 
-                          {/* Joined Date */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <div className="font-semibold text-slate-700 text-[11px]">
                               {formatDate(doctor.createdAt)}
@@ -1180,7 +1185,6 @@ export default function DoctorManagement() {
                             <div className="text-[10px] text-gray-400">{formatTime(doctor.createdAt)}</div>
                           </td>
 
-                          {/* Actions */}
                           <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1">
                               <button
@@ -1217,7 +1221,6 @@ export default function DoctorManagement() {
                 </table>
               </div>
 
-              {/* ===================== PAGINATION ===================== */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -1291,7 +1294,6 @@ export default function DoctorManagement() {
           )}
         </div>
 
-        {/* ===================== ADD / EDIT DOCTOR MODAL ===================== */}
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
@@ -1316,7 +1318,6 @@ export default function DoctorManagement() {
               </div>
 
               <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-                {/* Row 1: Doctor Name, Email */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -1353,7 +1354,6 @@ export default function DoctorManagement() {
                   </div>
                 </div>
 
-                {/* Row 2: Phone, Specialization */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -1397,7 +1397,6 @@ export default function DoctorManagement() {
                   </div>
                 </div>
 
-                {/* Row 3: Password */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Password {!editingId && <span className="text-blue-600">*</span>}
@@ -1434,7 +1433,6 @@ export default function DoctorManagement() {
                   )}
                 </div>
 
-                {/* Row 4: Qualification, Experience */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -1471,7 +1469,6 @@ export default function DoctorManagement() {
                   </div>
                 </div>
 
-                {/* Row 5: Consultation Fee, Status */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -1520,7 +1517,6 @@ export default function DoctorManagement() {
                   </div>
                 </div>
 
-                {/* Row 6: Address */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Clinic / Hospital Address
@@ -1538,7 +1534,6 @@ export default function DoctorManagement() {
                   </div>
                 </div>
 
-                {/* Row 7: Available Days */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Available Days
@@ -1564,7 +1559,6 @@ export default function DoctorManagement() {
                   </div>
                 </div>
 
-                {/* Row 8: Available Time */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Available Time Schedule
@@ -1618,7 +1612,6 @@ export default function DoctorManagement() {
                   )}
                 </div>
 
-                {/* Form Actions */}
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
                   <button
                     type="button"
@@ -1647,7 +1640,6 @@ export default function DoctorManagement() {
           </div>
         )}
 
-        {/* ===================== DOCTOR DETAIL MODAL ===================== */}
         {showDetailModal && selectedDoctor && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
@@ -1674,7 +1666,6 @@ export default function DoctorManagement() {
               </div>
 
               <div className="my-5 bg-gray-50 p-5 rounded-xl border border-gray-200 space-y-4">
-                {/* Profile Header */}
                 <div className="flex items-center gap-3.5 pb-3 border-b border-gray-200">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-lg flex items-center justify-center flex-shrink-0 shadow-inner">
                     {selectedDoctor.name
@@ -1701,7 +1692,6 @@ export default function DoctorManagement() {
                   </span>
                 </div>
 
-                {/* Details Grid */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <div className="text-[10px] font-bold uppercase text-gray-400">Phone</div>
@@ -1783,7 +1773,6 @@ export default function DoctorManagement() {
                   </div>
                 </div>
 
-                {/* Password Box */}
                 <div className="pt-3 border-t border-blue-200 bg-blue-50/50 -mx-5 px-5 py-3 rounded-b-xl">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
@@ -1806,7 +1795,6 @@ export default function DoctorManagement() {
                 </div>
               </div>
 
-              {/* Modal Footer */}
               <div className="flex items-center justify-end gap-2.5 mt-4">
                 <button
                   onClick={() => window.print()}

@@ -137,7 +137,9 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/employee/appointment-slots": "Appointments Slots",
       "/employee/services": "Services",
       "/employee/bookings": "Bookings",
-      "/employee/letterhead": "Letter Head"
+      "/employee/letterhead": "Letter Head",
+      // ✅ My Referrals
+      "/myreferral": "My Referrals"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -445,6 +447,13 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         path: "/employee-visits-data",
         badge: "NEW"
       },
+      // ✅ MY REFERRALS - Added here
+      { 
+        icon: <i className="ri-share-forward-fill"></i>, 
+        name: "My Referrals", 
+        path: "/myreferral",
+        badge: "NEW"
+      },
       { 
         icon: <i className="ri-error-warning-fill"></i>, 
         name: "Issues", 
@@ -647,6 +656,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       icon: <i className="ri-map-pin-user-fill"></i>, 
       name: "My Visits", 
       path: "/employee-visits-data",
+      badge: "NEW"
+    });
+
+    // ✅ MY REFERRALS - Added in Admin Menu too
+    menu.push({ 
+      icon: <i className="ri-share-forward-fill"></i>, 
+      name: "My Referrals", 
+      path: "/myreferral",
       badge: "NEW"
     });
 

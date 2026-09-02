@@ -23,7 +23,9 @@ import {
   UserPlus,
   CalendarDays,
   Stethoscope,
-  BookOpen
+  BookOpen,
+  CalendarRange,
+  X
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -57,50 +59,220 @@ const COLORS = {
 
 const OpDashboard = () => {
   const navigate = useNavigate();
+  
+  // ===== ALL DATA STATES =====
   const [patients, setPatients] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [slots, setSlots] = useState([]);
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeFilter, setTimeFilter] = useState("all"); // 'all', 'month', 'today', '7days'
+  const [timeFilter, setTimeFilter] = useState("all");
+  
+  // ===== DATE RANGE FILTERS =====
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
-  // Selected month for Day-by-Day trend chart (default: current YYYY-MM)
   const [selectedTrendMonth, setSelectedTrendMonth] = useState(
     new Date().toISOString().slice(0, 7)
   );
 
-  // Graph Type Selector State ('composed' | 'area' | 'bar' | 'line')
   const [trendChartType, setTrendChartType] = useState("composed");
 
+  // ===== FETCH ALL DATA =====
   useEffect(() => {
-    fetchPatients();
+    fetchAllData();
   }, []);
 
-  const fetchPatients = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${API_BASE_URL}/patients`);
-      if (res.data && res.data.success) {
-        setPatients(res.data.data || []);
-      }
+      await Promise.all([
+        fetchPatientsData(),
+        fetchBookingsData(),
+        fetchDoctorsData(),
+        fetchSlotsData(),
+        fetchServicesData()
+      ]);
     } catch (err) {
-      console.error("Error fetching patient data for OP Dashboard:", err);
-      setError("Failed to load patient records");
+      console.error("Error fetching dashboard data:", err);
+      setError("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
   };
 
-  // Quick Action Handlers
+  // ===== INDIVIDUAL API CALLS =====
+  const fetchPatientsData = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/patients`);
+      if (res.data && res.data.success) {
+        setPatients(res.data.data || []);
+      } else if (Array.isArray(res.data)) {
+        setPatients(res.data);
+      } else {
+        setPatients([]);
+      }
+    } catch (err) {
+      console.error("Error fetching patients:", err);
+      setPatients([]);
+    }
+  };
+
+  const fetchBookingsData = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings`);
+      if (res.data && res.data.success) {
+        const bookingsData = res.data.bookings || res.data.data || [];
+        const transformed = bookingsData.map((b) => {
+          const slotDetails = b.slotDetails || {};
+          return {
+            _id: b._id || b.id,
+            patientName: b.patientName || "",
+            patientAge: b.patientAge || "",
+            patientGender: b.patientGender || "Male",
+            patientPhone: b.patientPhone || "",
+            patientAddress: b.patientAddress || "",
+            date: slotDetails.date || b.appointmentDate || b.date || "",
+            startTime: slotDetails.startTime || b.startTime || "",
+            endTime: slotDetails.endTime || b.endTime || "",
+            doctorName: slotDetails.doctorName || b.doctorName || "",
+            doctorSpecialization: slotDetails.doctorSpecialization || b.doctorSpecialization || "",
+            consultationFee: b.consultationFee || 300,
+            paymentStatus: b.paymentStatus || "Pending",
+            paymentType: b.paymentType || "cash",
+            status: b.status || "confirmed",
+            services: b.services || [],
+            purpose: b.purpose || "",
+            createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
+            bookedAt: b.bookedAt || b.createdAt || new Date().toISOString()
+          };
+        });
+        setBookings(transformed);
+      } else {
+        setBookings([]);
+      }
+    } catch (err) {
+      console.error("Error fetching bookings:", err);
+      setBookings([]);
+    }
+  };
+
+  const fetchDoctorsData = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/doctors/getalldoctors`);
+      if (res.data && res.data.success) {
+        setDoctors(res.data.data || []);
+      } else {
+        setDoctors([]);
+      }
+    } catch (err) {
+      console.error("Error fetching doctors:", err);
+      setDoctors([]);
+    }
+  };
+
+  const fetchSlotsData = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/appointment-slots`);
+      if (res.data && res.data.success) {
+        setSlots(res.data.slots || []);
+      } else {
+        setSlots([]);
+      }
+    } catch (err) {
+      console.error("Error fetching slots:", err);
+      setSlots([]);
+    }
+  };
+
+  const fetchServicesData = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/services/allservices`);
+      if (res.data && res.data.success) {
+        setServices(res.data.services || []);
+      } else {
+        setServices([]);
+      }
+    } catch (err) {
+      console.error("Error fetching services:", err);
+      setServices([]);
+    }
+  };
+
   const handleQuickAction = (path) => {
     navigate(path);
   };
 
-  // Filtered patients based on selected timeframe
+  // ===== HELPER FUNCTIONS =====
+  const getTotalServiceFee = (booking) => {
+    if (!booking.services || booking.services.length === 0) return 0;
+    return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
+  };
+
+  const getTotalBookingFee = (booking) => {
+    return (booking.consultationFee || 0) + getTotalServiceFee(booking);
+  };
+
+  // ===== CHECK IF DATE IS IN RANGE =====
+  const isDateInRange = (dateStr) => {
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return false;
+    
+    if (fromDate && toDate) {
+      const from = new Date(fromDate);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      return date >= from && date <= to;
+    }
+    if (fromDate && !toDate) {
+      const from = new Date(fromDate);
+      from.setHours(0, 0, 0, 0);
+      return date >= from;
+    }
+    if (!fromDate && toDate) {
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      return date <= to;
+    }
+    return true;
+  };
+
+  // ===== FILTERED PATIENTS (with date range) =====
   const filteredPatients = useMemo(() => {
-    if (timeFilter === "all") return patients;
+    const patientsWithBookings = patients.map((p) => {
+      const patientBookings = bookings.filter(
+        (b) =>
+          (b.patientPhone === p.phone ||
+          (b.patientName && p.name && b.patientName.toLowerCase() === p.name.toLowerCase())) &&
+          isDateInRange(b.createdAt)
+      );
+      const totalFee = patientBookings.reduce((sum, b) => sum + getTotalBookingFee(b), 0);
+      const isPaid = patientBookings.some((b) => b.paymentStatus === "Paid" || b.paymentStatus === "paid");
+      const bookingStatus = patientBookings.length > 0 ? patientBookings[0].status : "No Booking";
+      const doctorName = patientBookings.length > 0 ? patientBookings[0].doctorName : "N/A";
+      const appointmentDate = patientBookings.length > 0 ? patientBookings[0].date : null;
+      
+      return {
+        ...p,
+        totalFee: totalFee || p.feeAmount || 300,
+        isPaid: isPaid || p.paymentStatus === "Paid" || p.paymentStatus === "paid",
+        bookingStatus,
+        doctorName,
+        appointmentDate,
+        bookingCount: patientBookings.length,
+        patientBookings
+      };
+    });
+
+    if (timeFilter === "all") return patientsWithBookings;
     const now = new Date();
     
-    return patients.filter((p) => {
+    return patientsWithBookings.filter((p) => {
       if (!p.createdAt) return false;
       const created = new Date(p.createdAt);
 
@@ -123,34 +295,39 @@ const OpDashboard = () => {
       }
       return true;
     });
-  }, [patients, timeFilter]);
+  }, [patients, bookings, timeFilter, fromDate, toDate]);
 
-  // Overall KPI Metrics
+  // ===== FILTERED BOOKINGS (with date range) =====
+  const filteredBookings = useMemo(() => {
+    return bookings.filter((b) => isDateInRange(b.createdAt));
+  }, [bookings, fromDate, toDate]);
+
+  // ===== METRICS WITH DATE RANGE =====
   const metrics = useMemo(() => {
     const total = filteredPatients.length;
-    const paidPatients = filteredPatients.filter((p) => p.paymentStatus === "paid");
-    const pendingPatients = filteredPatients.filter((p) => p.paymentStatus === "pending");
+    const paidPatients = filteredPatients.filter((p) => p.isPaid);
+    const pendingPatients = filteredPatients.filter((p) => !p.isPaid);
 
-    const totalRevenue = paidPatients.reduce((sum, p) => sum + (p.feeAmount || 0), 0);
-    const pendingRevenue = pendingPatients.reduce((sum, p) => sum + (p.feeAmount || 0), 0);
-    const totalExpectedRevenue = filteredPatients.reduce((sum, p) => sum + (p.feeAmount || 0), 0);
+    const totalRevenue = paidPatients.reduce((sum, p) => sum + (p.totalFee || 0), 0);
+    const pendingRevenue = pendingPatients.reduce((sum, p) => sum + (p.totalFee || 0), 0);
+    const totalExpectedRevenue = filteredPatients.reduce((sum, p) => sum + (p.totalFee || 0), 0);
 
     const avgFee = total > 0 ? Math.round(totalExpectedRevenue / total) : 0;
     const collectionRate = totalExpectedRevenue > 0 ? Math.round((totalRevenue / totalExpectedRevenue) * 100) : 0;
 
-    // Fee breakdown
-    const consultCount = filteredPatients.filter((p) => p.feeType === "consultation" || !p.feeType).length;
-    const labCount = filteredPatients.filter((p) => p.feeType === "lab").length;
-    const consultRevenue = filteredPatients
-      .filter((p) => (p.feeType === "consultation" || !p.feeType) && p.paymentStatus === "paid")
-      .reduce((sum, p) => sum + (p.feeAmount || 0), 0);
-    const labRevenue = filteredPatients
-      .filter((p) => p.feeType === "lab" && p.paymentStatus === "paid")
-      .reduce((sum, p) => sum + (p.feeAmount || 0), 0);
+    const confirmedCount = filteredBookings.filter(b => b.status === "confirmed" || b.status === "booked").length;
+    const completedCount = filteredBookings.filter(b => b.status === "completed").length;
+    const consultingCount = filteredBookings.filter(b => b.status === "consulting").length;
+    const cancelledCount = filteredBookings.filter(b => b.status === "cancelled").length;
+    const pendingBookingCount = filteredBookings.filter(b => b.status === "pending").length;
 
-    // Payment Type breakdown
-    const cashCount = filteredPatients.filter((p) => p.paymentType === "cash" || !p.paymentType).length;
-    const onlineCount = filteredPatients.filter((p) => p.paymentType === "online").length;
+    const bookingPaidCount = filteredBookings.filter(b => b.paymentStatus === "Paid" || b.paymentStatus === "paid").length;
+    const bookingPendingCount = filteredBookings.filter(b => b.paymentStatus === "Pending" || b.paymentStatus === "pending").length;
+
+    const totalBookings = filteredBookings.length;
+
+    const cashCount = filteredBookings.filter(b => b.paymentType === "cash" || !b.paymentType).length;
+    const onlineCount = filteredBookings.filter(b => b.paymentType === "online").length;
 
     return {
       total,
@@ -161,41 +338,49 @@ const OpDashboard = () => {
       totalExpectedRevenue,
       avgFee,
       collectionRate,
-      consultCount,
-      labCount,
-      consultRevenue,
-      labRevenue,
+      totalBookings,
+      confirmedCount,
+      completedCount,
+      consultingCount,
+      cancelledCount,
+      pendingBookingCount,
+      bookingPaidCount,
+      bookingPendingCount,
       cashCount,
-      onlineCount
+      onlineCount,
+      doctorsCount: doctors.length,
+      slotsCount: slots.length,
+      servicesCount: services.length
     };
-  }, [filteredPatients]);
+  }, [filteredPatients, filteredBookings, doctors, services]);
 
-  // Daily Trend Data for Top Composed Chart
+  // ===== TREND DATA FROM FILTERED BOOKINGS =====
   const trendData = useMemo(() => {
-    if (!filteredPatients.length) return [];
+    if (!filteredBookings.length) return [];
     
     const map = {};
-    filteredPatients.forEach((p) => {
-      const dateKey = p.createdAt
-        ? new Date(p.createdAt).toLocaleDateString("en-IN", {
+    filteredBookings.forEach((b) => {
+      const dateKey = b.createdAt
+        ? new Date(b.createdAt).toLocaleDateString("en-IN", {
             day: "2-digit",
             month: "short"
           })
         : "Unknown";
 
       if (!map[dateKey]) {
-        map[dateKey] = { date: dateKey, patients: 0, revenue: 0, rawDate: new Date(p.createdAt) };
+        map[dateKey] = { date: dateKey, patients: 0, revenue: 0, bookings: 0, rawDate: new Date(b.createdAt) };
       }
       map[dateKey].patients += 1;
-      if (p.paymentStatus === "paid") {
-        map[dateKey].revenue += p.feeAmount || 0;
+      map[dateKey].bookings += 1;
+      if (b.paymentStatus === "Paid" || b.paymentStatus === "paid") {
+        map[dateKey].revenue += getTotalBookingFee(b);
       }
     });
 
     return Object.values(map).sort((a, b) => a.rawDate - b.rawDate);
-  }, [filteredPatients]);
+  }, [filteredBookings]);
 
-  // Day-by-Day Monthly Trend Calculation for Selected Month
+  // ===== MONTHLY DAILY TREND =====
   const monthlyDailyTrend = useMemo(() => {
     if (!selectedTrendMonth) return { daysData: [], monthLabel: "", totalMonthPatients: 0, totalMonthRevenue: 0, peakDay: "-" };
 
@@ -217,26 +402,24 @@ const OpDashboard = () => {
         paidPatients: 0,
         pendingPatients: 0,
         revenue: 0,
-        consultCount: 0,
-        labCount: 0
+        bookings: 0
       };
     }
 
-    patients.forEach((p) => {
-      if (!p.createdAt) return;
-      const pDate = new Date(p.createdAt);
+    filteredBookings.forEach((b) => {
+      if (!b.createdAt) return;
+      const pDate = new Date(b.createdAt);
       if (pDate.getFullYear() === year && pDate.getMonth() === monthIdx) {
         const day = pDate.getDate();
         if (dayMap[day]) {
           dayMap[day].patients += 1;
-          if (p.paymentStatus === "paid") {
+          dayMap[day].bookings += 1;
+          if (b.paymentStatus === "Paid" || b.paymentStatus === "paid") {
             dayMap[day].paidPatients += 1;
-            dayMap[day].revenue += p.feeAmount || 0;
+            dayMap[day].revenue += getTotalBookingFee(b);
           } else {
             dayMap[day].pendingPatients += 1;
           }
-          if (p.feeType === "lab") dayMap[day].labCount += 1;
-          else dayMap[day].consultCount += 1;
         }
       }
     });
@@ -250,7 +433,7 @@ const OpDashboard = () => {
     daysData.forEach((d) => {
       if (d.patients > maxVal && d.patients > 0) {
         maxVal = d.patients;
-        peakDay = `${d.dateLabel} (${d.patients} patients)`;
+        peakDay = `${d.dateLabel} (${d.patients} bookings)`;
       }
     });
 
@@ -261,47 +444,50 @@ const OpDashboard = () => {
       totalMonthRevenue,
       peakDay
     };
-  }, [patients, selectedTrendMonth]);
+  }, [filteredBookings, selectedTrendMonth]);
 
-  // Fee Type Distribution Data
-  const feeTypePieData = useMemo(() => {
-    return [
-      { name: "Consultation Fee", value: metrics.consultCount, revenue: metrics.consultRevenue, color: COLORS.primary },
-      { name: "Lab Fee", value: metrics.labCount, revenue: metrics.labRevenue, color: COLORS.purple }
-    ];
-  }, [metrics]);
-
-  // Payment Status Distribution Data
+  // ===== CHART DATA =====
   const paymentStatusData = useMemo(() => {
+    const paid = filteredBookings.filter(b => b.paymentStatus === "Paid" || b.paymentStatus === "paid").length;
+    const pending = filteredBookings.filter(b => b.paymentStatus === "Pending" || b.paymentStatus === "pending").length;
     return [
-      { name: "Paid", value: metrics.paidCount, color: COLORS.success },
-      { name: "Pending", value: metrics.pendingCount, color: COLORS.warning }
+      { name: "Paid", value: paid || 1, color: COLORS.success },
+      { name: "Pending", value: pending || 1, color: COLORS.warning }
     ];
-  }, [metrics]);
+  }, [filteredBookings]);
 
-  // Payment Method Breakdown Data
   const paymentMethodData = useMemo(() => {
+    const cash = filteredBookings.filter(b => b.paymentType === "cash" || !b.paymentType).length;
+    const online = filteredBookings.filter(b => b.paymentType === "online").length;
     return [
-      { name: "Cash", value: metrics.cashCount, color: COLORS.success },
-      { name: "Online", value: metrics.onlineCount, color: COLORS.indigo }
+      { name: "Cash", value: cash || 1, color: COLORS.success },
+      { name: "Online", value: online || 1, color: COLORS.indigo }
     ];
-  }, [metrics]);
+  }, [filteredBookings]);
 
-  // Gender Ratio Data
   const genderData = useMemo(() => {
     const counts = { Male: 0, Female: 0, Other: 0 };
-    filteredPatients.forEach((p) => {
+    patients.forEach((p) => {
       const g = p.gender || "Other";
       if (counts[g] !== undefined) counts[g]++;
       else counts.Other++;
     });
+
+    const total = counts.Male + counts.Female + counts.Other;
+    if (total === 0) {
+      return [
+        { name: "Male", value: 1, color: "#3b82f6" },
+        { name: "Female", value: 1, color: "#ec4899" },
+        { name: "Other", value: 1, color: "#a855f7" }
+      ];
+    }
 
     return [
       { name: "Male", value: counts.Male, color: "#3b82f6" },
       { name: "Female", value: counts.Female, color: "#ec4899" },
       { name: "Other", value: counts.Other, color: "#a855f7" }
     ];
-  }, [filteredPatients]);
+  }, [patients]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "N/A";
@@ -312,7 +498,13 @@ const OpDashboard = () => {
     });
   };
 
-  // Custom Tooltip for Monthly Daily Trend Chart
+  // ===== CLEAR DATE RANGE =====
+  const clearDateRange = () => {
+    setFromDate("");
+    setToDate("");
+  };
+
+  // ===== TOOLTIP =====
   const DailyTrendTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -322,19 +514,19 @@ const OpDashboard = () => {
             📅 {data.dateLabel}
           </div>
           <div className="flex justify-between gap-4 text-blue-700 font-semibold">
-            <span>Total Patients:</span>
+            <span>Total Bookings:</span>
             <span>{data.patients}</span>
           </div>
           <div className="flex justify-between gap-4 text-emerald-600 font-medium">
-            <span>Paid Patients:</span>
+            <span>Paid:</span>
             <span>{data.paidPatients}</span>
           </div>
           <div className="flex justify-between gap-4 text-amber-600 font-medium">
-            <span>Pending Patients:</span>
+            <span>Pending:</span>
             <span>{data.pendingPatients}</span>
           </div>
           <div className="flex justify-between gap-4 text-purple-700 font-bold pt-1 border-t border-gray-100">
-            <span>Revenue Collected:</span>
+            <span>Revenue:</span>
             <span>₹{data.revenue.toLocaleString()}</span>
           </div>
         </div>
@@ -343,7 +535,7 @@ const OpDashboard = () => {
     return null;
   };
 
-  // Render Daily Trend Chart depending on Graph Type selected
+  // ===== RENDER TREND GRAPH =====
   const renderTrendGraph = () => {
     const data = monthlyDailyTrend.daysData;
 
@@ -387,7 +579,7 @@ const OpDashboard = () => {
               yAxisId="left" 
               type="monotone" 
               dataKey="patients" 
-              name="Patients Registered" 
+              name="Bookings" 
               stroke="#2563eb" 
               strokeWidth={2.5} 
               fill="url(#opTrendGradient)" 
@@ -409,21 +601,21 @@ const OpDashboard = () => {
 
         {trendChartType === "bar" && (
           <>
-            <Bar yAxisId="left" dataKey="patients" name="Patients Registered" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={16} />
+            <Bar yAxisId="left" dataKey="patients" name="Bookings" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={16} />
             <Bar yAxisId="right" dataKey="revenue" name="Revenue (₹)" fill="#10b981" radius={[4, 4, 0, 0]} barSize={16} />
           </>
         )}
 
         {trendChartType === "line" && (
           <>
-            <Line yAxisId="left" type="monotone" dataKey="patients" name="Patients Registered" stroke="#2563eb" strokeWidth={3} dot={{ fill: '#2563eb', stroke: '#fff', strokeWidth: 1.5, r: 4 }} activeDot={{ r: 6, fill: '#2563eb', stroke: '#fff', strokeWidth: 2 }} />
+            <Line yAxisId="left" type="monotone" dataKey="patients" name="Bookings" stroke="#2563eb" strokeWidth={3} dot={{ fill: '#2563eb', stroke: '#fff', strokeWidth: 1.5, r: 4 }} activeDot={{ r: 6, fill: '#2563eb', stroke: '#fff', strokeWidth: 2 }} />
             <Line yAxisId="right" type="monotone" dataKey="revenue" name="Revenue (₹)" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', stroke: '#fff', strokeWidth: 1.5, r: 4 }} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }} />
           </>
         )}
 
         {trendChartType === "composed" && (
           <>
-            <Bar yAxisId="left" dataKey="patients" name="Patients Registered" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
+            <Bar yAxisId="left" dataKey="patients" name="Bookings" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
             <Line yAxisId="right" type="monotone" dataKey="revenue" name="Revenue (₹)" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', stroke: '#fff', strokeWidth: 1.5, r: 4 }} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }} />
           </>
         )}
@@ -431,6 +623,7 @@ const OpDashboard = () => {
     );
   };
 
+  // ===== LOADING =====
   if (loading) {
     return (
       <div className="emp-dash">
@@ -442,6 +635,7 @@ const OpDashboard = () => {
     );
   }
 
+  // ===== RENDER =====
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
@@ -453,18 +647,15 @@ const OpDashboard = () => {
                 OP <span>Dashboard</span>
               </h1>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Real-time Outpatient analytics, registration trends, fee collection &amp; revenue insights
-            </p>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Time filter selector */}
+            {/* Time Filter Buttons */}
             <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg p-1 shadow-sm">
               <button
-                onClick={() => setTimeFilter("all")}
+                onClick={() => { setTimeFilter("all"); clearDateRange(); }}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
-                  timeFilter === "all"
+                  timeFilter === "all" && !fromDate && !toDate
                     ? "bg-blue-600 text-white shadow-xs"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
@@ -472,7 +663,7 @@ const OpDashboard = () => {
                 All Time
               </button>
               <button
-                onClick={() => setTimeFilter("month")}
+                onClick={() => { setTimeFilter("month"); clearDateRange(); }}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
                   timeFilter === "month"
                     ? "bg-blue-600 text-white shadow-xs"
@@ -482,7 +673,7 @@ const OpDashboard = () => {
                 This Month
               </button>
               <button
-                onClick={() => setTimeFilter("7days")}
+                onClick={() => { setTimeFilter("7days"); clearDateRange(); }}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
                   timeFilter === "7days"
                     ? "bg-blue-600 text-white shadow-xs"
@@ -492,7 +683,7 @@ const OpDashboard = () => {
                 Last 7 Days
               </button>
               <button
-                onClick={() => setTimeFilter("today")}
+                onClick={() => { setTimeFilter("today"); clearDateRange(); }}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
                   timeFilter === "today"
                     ? "bg-blue-600 text-white shadow-xs"
@@ -503,8 +694,37 @@ const OpDashboard = () => {
               </button>
             </div>
 
+            {/* Date Range Picker */}
+            <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2 py-1 shadow-sm">
+              <CalendarRange className="w-3.5 h-3.5 text-gray-400" />
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => { setFromDate(e.target.value); setTimeFilter("all"); }}
+                className="w-[110px] text-xs border-none focus:outline-none focus:ring-0 bg-transparent text-gray-700 font-medium"
+                placeholder="From"
+              />
+              <span className="text-gray-300 text-xs">-</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => { setToDate(e.target.value); setTimeFilter("all"); }}
+                className="w-[110px] text-xs border-none focus:outline-none focus:ring-0 bg-transparent text-gray-700 font-medium"
+                placeholder="To"
+              />
+              {(fromDate || toDate) && (
+                <button
+                  onClick={clearDateRange}
+                  className="text-gray-400 hover:text-red-500 transition-colors p-0.5"
+                  title="Clear Date Range"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
             <button
-              onClick={fetchPatients}
+              onClick={fetchAllData}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
               title="Refresh Data"
             >
@@ -513,9 +733,8 @@ const OpDashboard = () => {
           </div>
         </div>
 
-        {/* ✅ QUICK ACTION BUTTONS - 4 Buttons */}
+        {/* QUICK ACTION BUTTONS */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          {/* Doctors */}
           <button
             onClick={() => handleQuickAction("/doctors")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all group"
@@ -530,7 +749,6 @@ const OpDashboard = () => {
             <ArrowRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
           </button>
 
-          {/* Slots */}
           <button
             onClick={() => handleQuickAction("/slots")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-purple-300 transition-all group"
@@ -545,7 +763,6 @@ const OpDashboard = () => {
             <ArrowRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
           </button>
 
-          {/* OP */}
           <button
             onClick={() => handleQuickAction("/op-management")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-300 transition-all group"
@@ -560,7 +777,6 @@ const OpDashboard = () => {
             <ArrowRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
           </button>
 
-          {/* Bookings */}
           <button
             onClick={() => handleQuickAction("/bookings")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-amber-300 transition-all group"
@@ -576,22 +792,22 @@ const OpDashboard = () => {
           </button>
         </div>
 
-        {/* KPI Stats Cards Grid */}
+        {/* KPI STATS CARDS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total OP Patients</span>
+              <span className="emp-dash__stat-label">Total Bookings</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <Users className="w-4 h-4 text-blue-600" />
+                <Calendar className="w-4 h-4 text-blue-600" />
               </div>
             </div>
-            <div className="emp-dash__stat-value">{metrics.total}</div>
-            <div className="emp-dash__stat-meta">registered OPD records</div>
+            <div className="emp-dash__stat-value">{metrics.totalBookings}</div>
+            <div className="emp-dash__stat-meta">{metrics.doctorsCount} doctors</div>
           </div>
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Revenue Collected</span>
+              <span className="emp-dash__stat-label">Total Revenue</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
                 <IndianRupee className="w-4 h-4 text-emerald-600" />
               </div>
@@ -615,13 +831,13 @@ const OpDashboard = () => {
               ₹{metrics.pendingRevenue.toLocaleString()}
             </div>
             <div className="emp-dash__stat-meta">
-              {metrics.pendingCount} patients pending
+              {metrics.bookingPendingCount} bookings pending
             </div>
           </div>
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Avg Fee per Patient</span>
+              <span className="emp-dash__stat-label">Avg Fee / Booking</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
                 <TrendingUp className="w-4 h-4 text-indigo-600" />
               </div>
@@ -629,19 +845,36 @@ const OpDashboard = () => {
             <div className="emp-dash__stat-value text-indigo-600">
               ₹{metrics.avgFee.toLocaleString()}
             </div>
-            <div className="emp-dash__stat-meta">average OPD charge</div>
+            <div className="emp-dash__stat-meta">average consultation fee</div>
           </div>
         </div>
 
-        {/* Charts Row 1: Patient & Revenue Trend (ComposedChart) */}
+        {/* DATE RANGE INFO BADGE */}
+        {(fromDate || toDate) && (
+          <div className="flex items-center gap-2 mb-4 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
+            <CalendarRange className="w-4 h-4 text-blue-500" />
+            <span className="font-semibold">Date Range:</span>
+            <span>{fromDate ? formatDate(fromDate) : "Start"}</span>
+            <span className="text-blue-300">→</span>
+            <span>{toDate ? formatDate(toDate) : "End"}</span>
+            <button
+              onClick={clearDateRange}
+              className="ml-2 text-blue-500 hover:text-red-500 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Charts Row 1: Booking & Revenue Trend */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2 emp-dash__card p-4 md:p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-blue-600" /> Patient Registrations &amp; Revenue Trend
+                  <Activity className="w-4 h-4 text-blue-600" /> Bookings &amp; Revenue Trend
                 </h3>
-                <p className="text-xs text-gray-500">Daily patient volume and revenue generated</p>
+                <p className="text-xs text-gray-500">Daily booking volume and revenue generated</p>
               </div>
             </div>
 
@@ -667,7 +900,7 @@ const OpDashboard = () => {
                       }}
                     />
                     <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
-                    <Bar yAxisId="left" dataKey="patients" name="Patients Registered" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={24} />
+                    <Bar yAxisId="left" dataKey="bookings" name="Bookings" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={24} />
                     <Line yAxisId="right" type="monotone" dataKey="revenue" name="Revenue (₹)" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -675,51 +908,45 @@ const OpDashboard = () => {
             )}
           </div>
 
-          {/* Fee Type Distribution Donut Chart */}
+          {/* Booking Status Distribution */}
           <div className="emp-dash__card p-4 md:p-5 flex flex-col justify-between">
             <div>
               <h3 className="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2 mb-1">
-                <PieIcon className="w-4 h-4 text-purple-600" /> Fee Type Breakdown
+                <PieIcon className="w-4 h-4 text-purple-600" /> Booking Status
               </h3>
-              <p className="text-xs text-gray-500 mb-4">Consultation vs Lab fee distribution</p>
+              <p className="text-xs text-gray-500 mb-4">Appointment status distribution</p>
 
-              <div style={{ width: "100%", height: 220, minHeight: 220, position: "relative" }}>
-                <ResponsiveContainer width="100%" height={220}>
+              <div style={{ width: "100%", height: 200, minHeight: 200, position: "relative" }}>
+                <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie
-                      data={feeTypePieData}
+                      data={[
+                        { name: "Confirmed", value: metrics.confirmedCount || 1, color: "#3b82f6" },
+                        { name: "Completed", value: metrics.completedCount || 1, color: "#10b981" },
+                        { name: "Consulting", value: metrics.consultingCount || 1, color: "#8b5cf6" },
+                        { name: "Cancelled", value: metrics.cancelledCount || 1, color: "#ef4444" },
+                        { name: "Pending", value: metrics.pendingBookingCount || 1, color: "#f59e0b" }
+                      ]}
                       cx="50%"
                       cy="50%"
-                      innerRadius={55}
-                      outerRadius={80}
-                      paddingAngle={5}
+                      innerRadius={40}
+                      outerRadius={70}
+                      paddingAngle={3}
                       dataKey="value"
                     >
-                      {feeTypePieData.map((entry, index) => (
+                      {[
+                        { name: "Confirmed", color: "#3b82f6" },
+                        { name: "Completed", color: "#10b981" },
+                        { name: "Consulting", color: "#8b5cf6" },
+                        { name: "Cancelled", color: "#ef4444" },
+                        { name: "Pending", color: "#f59e0b" }
+                      ].map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      formatter={(value, name, props) => [
-                        `${value} Patients (₹${props.payload.revenue.toLocaleString()})`,
-                        name
-                      ]}
-                    />
+                    <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-gray-100 text-center">
-              <div className="bg-blue-50 p-2 rounded-lg">
-                <span className="text-[10px] uppercase font-bold text-blue-700 block">Consultation</span>
-                <span className="text-sm font-bold text-blue-900">{metrics.consultCount}</span>
-                <span className="text-[10px] text-gray-500 block">₹{metrics.consultRevenue.toLocaleString()}</span>
-              </div>
-              <div className="bg-purple-50 p-2 rounded-lg">
-                <span className="text-[10px] uppercase font-bold text-purple-700 block">Lab Fee</span>
-                <span className="text-sm font-bold text-purple-900">{metrics.labCount}</span>
-                <span className="text-[10px] text-gray-500 block">₹{metrics.labRevenue.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -740,7 +967,7 @@ const OpDashboard = () => {
                   <XAxis type="number" tick={{ fontSize: 11 }} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={60} />
                   <Tooltip />
-                  <Bar dataKey="value" name="Patients" radius={[0, 6, 6, 0]}>
+                  <Bar dataKey="value" name="Bookings" radius={[0, 6, 6, 0]}>
                     {paymentStatusData.map((entry, index) => (
                       <Cell key={`status-cell-${index}`} fill={entry.color} />
                     ))}
@@ -751,12 +978,12 @@ const OpDashboard = () => {
 
             <div className="flex justify-around items-center pt-2 text-xs border-t border-gray-100 mt-2">
               <div className="text-center">
-                <span className="text-emerald-600 font-bold block text-sm">{metrics.paidCount}</span>
-                <span className="text-gray-500 text-[11px]">Paid Records</span>
+                <span className="text-emerald-600 font-bold block text-sm">{metrics.bookingPaidCount}</span>
+                <span className="text-gray-500 text-[11px]">Paid Bookings</span>
               </div>
               <div className="text-center">
-                <span className="text-amber-600 font-bold block text-sm">{metrics.pendingCount}</span>
-                <span className="text-gray-500 text-[11px]">Pending Records</span>
+                <span className="text-amber-600 font-bold block text-sm">{metrics.bookingPendingCount}</span>
+                <span className="text-gray-500 text-[11px]">Pending Bookings</span>
               </div>
             </div>
           </div>
@@ -774,7 +1001,7 @@ const OpDashboard = () => {
                   <XAxis type="number" tick={{ fontSize: 11 }} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={60} />
                   <Tooltip />
-                  <Bar dataKey="value" name="Patients" radius={[0, 6, 6, 0]}>
+                  <Bar dataKey="value" name="Bookings" radius={[0, 6, 6, 0]}>
                     {paymentMethodData.map((entry, index) => (
                       <Cell key={`method-cell-${index}`} fill={entry.color} />
                     ))}
@@ -840,18 +1067,17 @@ const OpDashboard = () => {
           </div>
         </div>
 
-        {/* DAY-BY-DAY MONTHLY OPD TREND CHART WITH GRAPH TYPE SELECTOR */}
+        {/* DAY-BY-DAY MONTHLY TREND CHART */}
         <div className="emp-dash__card p-4 md:p-5 mb-6 flex flex-col">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
             <div>
               <h3 className="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2">
-                <BarChart2 className="w-4.5 h-4.5 text-blue-600" /> Daily OPD Trend ({monthlyDailyTrend.monthLabel})
+                <BarChart2 className="w-4.5 h-4.5 text-blue-600" /> Daily Booking Trend ({monthlyDailyTrend.monthLabel})
               </h3>
-              <p className="text-xs text-gray-500">Day-by-day patient volume and revenue breakdown for the selected month</p>
+              <p className="text-xs text-gray-500">Day-by-day booking volume and revenue breakdown</p>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
-              {/* GRAPH TYPE SELECTOR */}
               <div className="flex items-center gap-1.5">
                 <label className="text-xs font-semibold text-gray-500 flex items-center gap-1">
                   <Sliders className="w-3.5 h-3.5 text-blue-600" /> Graph Type:
@@ -900,14 +1126,12 @@ const OpDashboard = () => {
                 </div>
               </div>
 
-              {/* MONTH SELECTOR */}
               <div className="flex items-center gap-1.5">
                 <label className="text-xs font-semibold text-gray-500">Month:</label>
                 <input
                   type="month"
                   value={selectedTrendMonth}
                   onChange={(e) => setSelectedTrendMonth(e.target.value)}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
                   className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg font-bold text-gray-700 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                 />
               </div>
@@ -926,7 +1150,7 @@ const OpDashboard = () => {
               <span className="font-bold text-gray-800">{monthlyDailyTrend.monthLabel}</span>
             </div>
             <div className="bg-blue-50 p-2 rounded-lg">
-              <span className="text-[10px] text-blue-700 font-bold uppercase block">Monthly Patients</span>
+              <span className="text-[10px] text-blue-700 font-bold uppercase block">Monthly Bookings</span>
               <span className="font-extrabold text-blue-900 text-sm">{monthlyDailyTrend.totalMonthPatients}</span>
             </div>
             <div className="bg-emerald-50 p-2 rounded-lg">
@@ -934,7 +1158,7 @@ const OpDashboard = () => {
               <span className="font-extrabold text-emerald-900 text-sm">₹{monthlyDailyTrend.totalMonthRevenue.toLocaleString()}</span>
             </div>
             <div className="bg-purple-50 p-2 rounded-lg">
-              <span className="text-[10px] text-purple-700 font-bold uppercase block">Peak Patient Day</span>
+              <span className="text-[10px] text-purple-700 font-bold uppercase block">Peak Day</span>
               <span className="font-bold text-purple-900 truncate block" title={monthlyDailyTrend.peakDay}>
                 {monthlyDailyTrend.peakDay}
               </span>
@@ -942,78 +1166,84 @@ const OpDashboard = () => {
           </div>
         </div>
 
-        {/* Recent OPD Registrations Table */}
+        {/* Recent Bookings Table */}
         <div className="emp-dash__card p-4 md:p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-bold text-gray-800 text-sm md:text-base">Recent OPD Registrations</h3>
-              <p className="text-xs text-gray-500">Latest patient registrations and payment status</p>
+              <h3 className="font-bold text-gray-800 text-sm md:text-base">Recent Bookings</h3>
+              <p className="text-xs text-gray-500">Latest appointments and payment status</p>
             </div>
             <button
-              onClick={() => navigate("/op-management")}
+              onClick={() => navigate("/bookings")}
               className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
             >
-              View All Patients <ArrowRight className="w-3.5 h-3.5" />
+              View All Bookings <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          {filteredPatients.length === 0 ? (
+          {filteredBookings.length === 0 ? (
             <div className="text-center py-8 text-gray-400 text-xs">
-              No recent OPD patient records found
+              No bookings found for selected period
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="emp-dash__table">
                 <thead>
                   <tr>
-                    <th>S.No</th>
+                    <th style={{ width: "45px", textAlign: "center" }}>S.No</th>
                     <th>Patient Name</th>
-                    <th>Age</th>
-                    <th>Gender</th>
-                    <th>Phone</th>
-                    <th>Fee Type &amp; Amount</th>
-                    <th>Payment Mode</th>
-                    <th>Status</th>
-                    <th>Date</th>
+                    <th>Doctor</th>
+                    <th style={{ textAlign: "center" }}>Date &amp; Slot</th>
+                    <th style={{ textAlign: "center" }}>Fee</th>
+                    <th style={{ textAlign: "center" }}>Status</th>
+                    <th style={{ textAlign: "center" }}>Payment</th>
+                    <th style={{ textAlign: "center" }}>Services</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPatients.slice(0, 7).map((p, idx) => (
-                    <tr key={p._id || idx} className="hover:bg-slate-50/50">
-                      <td className="px-3 py-2.5 font-semibold text-gray-400 text-xs">{idx + 1}</td>
-                      <td className="px-3 py-2.5 font-semibold text-gray-800 text-xs">{p.name}</td>
-                      <td className="px-3 py-2.5 text-xs text-gray-700">{p.age} Yrs</td>
-                      <td className="px-3 py-2.5 text-xs text-gray-700 capitalize">{p.gender || "N/A"}</td>
-                      <td className="px-3 py-2.5 text-xs text-gray-600">{p.phone}</td>
-                      <td className="px-3 py-2.5 text-xs">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase mr-1.5 ${
-                            p.feeType === "lab"
-                              ? "bg-purple-100 text-purple-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
-                          {p.feeType === "lab" ? "Lab" : "Consult"}
-                        </span>
-                        <span className="font-bold text-gray-800">₹{p.feeAmount ?? 300}</span>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs capitalize text-gray-700">
-                        {p.paymentType || "cash"}
-                      </td>
-                      <td className="px-3 py-2.5 text-xs">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                            p.paymentStatus === "paid"
-                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                              : "bg-amber-100 text-amber-800 border border-amber-200"
-                          }`}
-                        >
-                          {p.paymentStatus || "pending"}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs text-gray-500">{formatDate(p.createdAt)}</td>
-                    </tr>
-                  ))}
+                  {filteredBookings.slice(0, 10).map((b, idx) => {
+                    const totalFee = getTotalBookingFee(b);
+                    const isPaid = b.paymentStatus === "Paid" || b.paymentStatus === "paid";
+                    const statusColors = {
+                      confirmed: "bg-blue-100 text-blue-800 border-blue-200",
+                      completed: "bg-emerald-100 text-emerald-800 border-emerald-200",
+                      consulting: "bg-purple-100 text-purple-800 border-purple-200",
+                      cancelled: "bg-red-100 text-red-800 border-red-200",
+                      pending: "bg-gray-100 text-gray-800 border-gray-200",
+                      booked: "bg-blue-100 text-blue-800 border-blue-200"
+                    };
+                    const statusClass = statusColors[b.status] || statusColors.pending;
+                    
+                    return (
+                      <tr key={b._id || idx} className="hover:bg-slate-50/50 cursor-pointer" onClick={() => navigate("/bookings")}>
+                        <td className="px-3 py-2.5 font-semibold text-gray-400 text-xs text-center">{idx + 1}</td>
+                        <td className="px-3 py-2.5 font-semibold text-gray-800 text-xs">{b.patientName || "N/A"}</td>
+                        <td className="px-3 py-2.5 text-xs text-gray-700">{b.doctorName || "N/A"}</td>
+                        <td className="px-3 py-2.5 text-xs text-gray-600 text-center">
+                          <div>{formatDate(b.date)}</div>
+                          <div className="text-[10px] text-gray-400">{b.startTime} - {b.endTime}</div>
+                        </td>
+                        <td className="px-3 py-2.5 text-xs text-center font-bold text-gray-800">₹{totalFee}</td>
+                        <td className="px-3 py-2.5 text-xs text-center">
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusClass}`}>
+                            {b.status || "pending"}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-xs text-center">
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${isPaid ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-amber-100 text-amber-800 border-amber-200"}`}>
+                            {b.paymentStatus || "Pending"}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-xs text-center">
+                          {(b.services && b.services.length > 0) ? (
+                            <span className="text-blue-600 font-semibold">{b.services.length}</span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

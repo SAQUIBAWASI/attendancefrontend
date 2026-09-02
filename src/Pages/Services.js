@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import {
@@ -12,7 +12,11 @@ import {
   FaTimes,
   FaCheck,
   FaCheckCircle,
-  FaFileInvoiceDollar
+  FaFileInvoiceDollar,
+  FaSort,
+  FaSortAmountDown,
+  FaSortAmountUp,
+  FaTag
 } from "react-icons/fa";
 import {
   FiUsers,
@@ -28,7 +32,9 @@ import {
   FiLayers,
   FiDollarSign,
   FiTrendingUp,
-  FiActivity
+  FiActivity,
+  FiChevronDown,
+  FiChevronUp
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -52,6 +58,12 @@ const Services = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [priceSort, setPriceSort] = useState("default");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  
+  // Dropdown states
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  
+  // Refs for dropdown
+  const sortFilterRef = useRef(null);
 
   // Modal States
   const [selectedService, setSelectedService] = useState(null);
@@ -71,6 +83,17 @@ const Services = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
+
+  // Click outside handler for dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sortFilterRef.current && !sortFilterRef.current.contains(event.target)) {
+        setShowSortDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchServices();
@@ -221,6 +244,34 @@ const Services = () => {
     }
   };
 
+  // Get sort label
+  const getSortLabel = () => {
+    switch (priceSort) {
+      case "nameAZ":
+        return "Name (A-Z)";
+      case "lowToHigh":
+        return "Price: Low to High";
+      case "highToLow":
+        return "Price: High to Low";
+      default:
+        return "Default";
+    }
+  };
+
+  // Get sort icon
+  const getSortIcon = () => {
+    switch (priceSort) {
+      case "nameAZ":
+        return <FaSortAmountDown className="text-blue-500 text-[10px]" />;
+      case "lowToHigh":
+        return <FaSortAmountUp className="text-emerald-500 text-[10px]" />;
+      case "highToLow":
+        return <FaSortAmountDown className="text-purple-500 text-[10px]" />;
+      default:
+        return <FaSort className="text-gray-400 text-[10px]" />;
+    }
+  };
+
   // Filtered & Sorted Services
   const filteredServices = useMemo(() => {
     let result = services.filter((s) => {
@@ -336,6 +387,9 @@ const Services = () => {
     setSearchQuery("");
     setPriceSort("default");
     setCurrentPage(1);
+    if (window.innerWidth < 1024) {
+      setShowMobileFilters(false);
+    }
   };
 
   const isFilterActive = searchQuery !== "" || priceSort !== "default";
@@ -363,18 +417,121 @@ const Services = () => {
           </div>
         )}
 
-        {/* ===================== HEADER ===================== */}
-        <div className="emp-dash__header">
-          <div className="flex items-baseline gap-3 flex-wrap">
+        {/* ===================== HEADER WITH SEARCH AND SORT ===================== */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Service <span>Management</span>
             </h1>
+            
           </div>
+          
+          {/* Right side: Search + Sort + Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="emp-dash__date-pill">
+            <div className="emp-dash__date-pill flex-shrink-0">
               <FaFileMedical />
               <span>{services.length} Clinical Services</span>
             </div>
+            {/* Search */}
+            <div className="relative min-w-[180px]">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+              <input
+                type="text"
+                placeholder="Search service name, price, description..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[220px] pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Sort Filter - Dropdown */}
+            <div className="relative" ref={sortFilterRef}>
+              <button
+                onClick={() => setShowSortDropdown(!showSortDropdown)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  priceSort !== "default"
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {getSortIcon()}
+                <span className="truncate max-w-[100px]">{getSortLabel()}</span>
+                <span className="text-gray-400 text-[10px] ml-0.5">▾</span>
+              </button>
+              
+              {showSortDropdown && (
+                <div 
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
+                  style={{
+                    zIndex: 99999,
+                    top: sortFilterRef.current ? sortFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                    right: sortFilterRef.current ? window.innerWidth - sortFilterRef.current.getBoundingClientRect().right : 'auto',
+                    left: 'auto',
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setPriceSort("default");
+                      setShowSortDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs font-medium border-b border-gray-100 cursor-pointer hover:bg-blue-50 ${
+                      priceSort === "default" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-500"
+                    }`}
+                  >
+                    Default
+                  </div>
+                  <div
+                    onClick={() => {
+                      setPriceSort("nameAZ");
+                      setShowSortDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center gap-2 ${
+                      priceSort === "nameAZ" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <FaSortAmountDown className="text-blue-500 text-[10px]" />
+                    Name (A-Z)
+                  </div>
+                  <div
+                    onClick={() => {
+                      setPriceSort("lowToHigh");
+                      setShowSortDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center gap-2 ${
+                      priceSort === "lowToHigh" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <FaSortAmountUp className="text-emerald-500 text-[10px]" />
+                    Price: Low to High
+                  </div>
+                  <div
+                    onClick={() => {
+                      setPriceSort("highToLow");
+                      setShowSortDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center gap-2 ${
+                      priceSort === "highToLow" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <FaSortAmountDown className="text-purple-500 text-[10px]" />
+                    Price: High to Low
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Clear Filters */}
+            {isFilterActive && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3 text-red-500" />
+                Clear
+              </button>
+            )}
+
+            {/* Action Buttons */}
             <button
               onClick={fetchServices}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
@@ -399,6 +556,102 @@ const Services = () => {
               <span>Add Service</span>
             </button>
           </div>
+        </div>
+
+        {/* Mobile Header */}
+        <div className="lg:hidden flex flex-col gap-2 mb-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h1 className="text-base font-bold whitespace-nowrap">
+              Service <span className="text-indigo-600">Management</span>
+            </h1>
+            <div className="emp-dash__date-pill text-[10px] px-2 py-1">
+              <FaFileMedical className="text-[10px]" />
+              <span>{services.length} Services</span>
+            </div>
+          </div>
+          
+          {/* Mobile Search */}
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+            <input
+              type="text"
+              placeholder="Search service name, price..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
+          </div>
+          
+          {/* Mobile Actions Row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+            >
+              <FiFilter className="text-blue-600 text-sm" />
+              <span>Filter</span>
+              {showMobileFilters ? (
+                <FiChevronUp className="text-gray-400 text-xs" />
+              ) : (
+                <FiChevronDown className="text-gray-400 text-xs" />
+              )}
+            </button>
+            
+            {isFilterActive && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+              >
+                <FiTrash2 className="w-3 h-3 text-red-500" />
+                Clear
+              </button>
+            )}
+            
+            <button
+              onClick={openAddForm}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm ml-auto"
+            >
+              <FiPlus className="w-3.5 h-3.5" />
+              <span>Add</span>
+            </button>
+          </div>
+
+          {showMobileFilters && (
+            <div className="p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Sort By</label>
+                <select
+                  value={priceSort}
+                  onChange={(e) => setPriceSort(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                >
+                  <option value="default">Default</option>
+                  <option value="nameAZ">Name (A-Z)</option>
+                  <option value="lowToHigh">Price: Low to High</option>
+                  <option value="highToLow">Price: High to Low</option>
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={downloadCSV}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                  >
+                    <FiDownload className="w-4 h-4" />
+                    Export CSV
+                  </button>
+                  <button
+                    onClick={fetchServices}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    <FiRefreshCw className="w-4 h-4" />
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ===================== TOP KPI STATS GRID ===================== */}
@@ -463,137 +716,6 @@ const Services = () => {
               {filteredServices.length}
             </div>
             <div className="emp-dash__stat-meta">matching results</div>
-          </div>
-        </div>
-
-        {/* ===================== FILTERS CARD ===================== */}
-        <div className="emp-dash__card mb-6">
-          {/* Desktop Filter Bar */}
-          <div className="hidden lg:block">
-            <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {/* Search */}
-                <div className="relative min-w-[180px] flex-1 max-w-[280px]">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input
-                    type="text"
-                    placeholder="Search service name, price, description..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
-
-                {/* Sort Filter */}
-                <select
-                  value={priceSort}
-                  onChange={(e) => setPriceSort(e.target.value)}
-                  className={`px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                    priceSort !== "default"
-                      ? "border-blue-500 text-blue-700 bg-blue-50"
-                      : "border-gray-300 text-gray-700"
-                  }`}
-                >
-                  <option value="default">Sort by: Default</option>
-                  <option value="nameAZ">Name (A-Z)</option>
-                  <option value="lowToHigh">Price: Low to High</option>
-                  <option value="highToLow">Price: High to Low</option>
-                </select>
-              </div>
-
-              {/* Right Actions */}
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                {isFilterActive && (
-                  <button
-                    onClick={clearFilters}
-                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-                  >
-                    <FiTrash2 className="w-3 h-3 text-red-500" />
-                    Clear
-                  </button>
-                )}
-
-                <button
-                  onClick={downloadCSV}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
-                >
-                  <FiDownload className="w-3 h-3" />
-                  Export
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Filters */}
-          <div className="lg:hidden">
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
-              <button
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-              >
-                <FiFilter className="text-blue-600 text-base" />
-                <span>Filters &amp; Actions</span>
-                <span className="text-gray-400 text-xs">
-                  {showMobileFilters ? "▲" : "▼"}
-                </span>
-              </button>
-              <span className="text-xs text-gray-500">
-                <strong>{filteredServices.length}</strong> services
-              </span>
-            </div>
-
-            {showMobileFilters && (
-              <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Search Service</label>
-                  <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                    <input
-                      type="text"
-                      placeholder="Search service name, price..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Sort Options</label>
-                  <select
-                    value={priceSort}
-                    onChange={(e) => setPriceSort(e.target.value)}
-                    className="w-full px-2.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  >
-                    <option value="default">Default</option>
-                    <option value="nameAZ">Name (A-Z)</option>
-                    <option value="lowToHigh">Price: Low to High</option>
-                    <option value="highToLow">Price: High to Low</option>
-                  </select>
-                </div>
-
-                <div className="pt-3 border-t border-gray-200 space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={downloadCSV}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
-                    >
-                      <FiDownload className="w-3.5 h-3.5" />
-                      Export CSV
-                    </button>
-                    {isFilterActive && (
-                      <button
-                        onClick={clearFilters}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                      >
-                        <FiTrash2 className="w-3.5 h-3.5 text-red-500" />
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 

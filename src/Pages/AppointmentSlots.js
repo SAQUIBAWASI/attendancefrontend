@@ -40,7 +40,10 @@ import {
   FaPlus,
   FaTrashAlt,
   FaEye,
-  FaUserInjured
+  FaUserInjured,
+  FaSort,
+  FaSortAmountDown,
+  FaSortAmountUp
 } from "react-icons/fa";
 import {
   FiUsers,
@@ -56,7 +59,11 @@ import {
   FiSun,
   FiMoon,
   FiCoffee,
-  FiAlertCircle
+  FiAlertCircle,
+  FiChevronDown,
+  FiChevronUp,
+  FiDownload,
+  FiEdit2
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -122,6 +129,12 @@ const AppointmentSlots = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDay, setSelectedDay] = useState("Monday");
 
+  // Dropdown states
+  const [showShiftDropdown, setShowShiftDropdown] = useState(false);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const shiftFilterRef = useRef(null);
+  const statusFilterRef = useRef(null);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBookModal, setShowBookModal] = useState(false);
   const [selectedSlotForBook, setSelectedSlotForBook] = useState(null);
@@ -151,6 +164,20 @@ const AppointmentSlots = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
+
+  // Close dropdowns on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (shiftFilterRef.current && !shiftFilterRef.current.contains(e.target)) {
+        setShowShiftDropdown(false);
+      }
+      if (statusFilterRef.current && !statusFilterRef.current.contains(e.target)) {
+        setShowStatusDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchDoctors();
@@ -606,6 +633,17 @@ const AppointmentSlots = () => {
     return doctors.find((d) => d._id === selectedDoctorId);
   };
 
+  // Filter label helpers
+  const getShiftLabel = () => {
+    if (shiftFilter === "All") return "Shift";
+    return shiftFilter;
+  };
+
+  const getStatusLabel = () => {
+    if (statusFilter === "All") return "Status";
+    return statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
+  };
+
   const handleCardClick = (filterType) => {
     if (filterType === "all") {
       setStatusFilter("All");
@@ -654,19 +692,202 @@ const AppointmentSlots = () => {
         )}
 
         {/* ===================== HEADER ===================== */}
-        <div className="emp-dash__header">
-          <div className="flex items-baseline gap-3 flex-wrap">
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Appointment <span>Slots</span>
             </h1>
+           
           </div>
+          
+          {/* Right side: Filters + Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="emp-dash__date-pill">
+             <div className="emp-dash__date-pill flex-shrink-0">
               <FaRegCalendarAlt />
               <span>
                 {stats.totalSlotsCount} Total Slots • {selectedDay === "All" ? "All Days" : selectedDay}
               </span>
             </div>
+            {/* Search */}
+            <div className="relative min-w-[140px]">
+              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search time, patient, doctor..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[180px] pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Shift Filter Dropdown */}
+            <div className="relative" ref={shiftFilterRef}>
+              <button
+                onClick={() => {
+                  setShowShiftDropdown(!showShiftDropdown);
+                  setShowStatusDropdown(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  shiftFilter !== "All"
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FiSun className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[60px]">{getShiftLabel()}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showShiftDropdown && (
+                <div
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[150px]"
+                  style={{
+                    zIndex: 99999,
+                    top: shiftFilterRef.current ? shiftFilterRef.current.getBoundingClientRect().bottom + 4 : "auto",
+                    left: shiftFilterRef.current ? shiftFilterRef.current.getBoundingClientRect().left : "auto"
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setShiftFilter("All");
+                      setShowShiftDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      shiftFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>All Shifts</span>
+                    {shiftFilter === "All" && <Check className="w-3 h-3 text-blue-600" />}
+                  </div>
+                  <div
+                    onClick={() => {
+                      setShiftFilter("Morning");
+                      setShowShiftDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      shiftFilter === "Morning" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>Morning Shift</span>
+                    {shiftFilter === "Morning" && <Check className="w-3 h-3 text-blue-600" />}
+                  </div>
+                  <div
+                    onClick={() => {
+                      setShiftFilter("Evening");
+                      setShowShiftDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      shiftFilter === "Evening" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>Evening Shift</span>
+                    {shiftFilter === "Evening" && <Check className="w-3 h-3 text-blue-600" />}
+                  </div>
+                  <div
+                    onClick={() => {
+                      setShiftFilter("Break");
+                      setShowShiftDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      shiftFilter === "Break" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>Break Period</span>
+                    {shiftFilter === "Break" && <Check className="w-3 h-3 text-blue-600" />}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Status Filter Dropdown */}
+            <div className="relative" ref={statusFilterRef}>
+              <button
+                onClick={() => {
+                  setShowStatusDropdown(!showStatusDropdown);
+                  setShowShiftDropdown(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                  statusFilter !== "All"
+                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FiFilter className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[60px]">{getStatusLabel()}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showStatusDropdown && (
+                <div
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[140px]"
+                  style={{
+                    zIndex: 99999,
+                    top: statusFilterRef.current ? statusFilterRef.current.getBoundingClientRect().bottom + 4 : "auto",
+                    left: statusFilterRef.current ? statusFilterRef.current.getBoundingClientRect().left : "auto"
+                  }}
+                >
+                  <div
+                    onClick={() => {
+                      setStatusFilter("All");
+                      setShowStatusDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      statusFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>All Statuses</span>
+                    {statusFilter === "All" && <Check className="w-3 h-3 text-blue-600" />}
+                  </div>
+                  <div
+                    onClick={() => {
+                      setStatusFilter("available");
+                      setShowStatusDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      statusFilter === "available" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>Available</span>
+                    {statusFilter === "available" && <Check className="w-3 h-3 text-blue-600" />}
+                  </div>
+                  <div
+                    onClick={() => {
+                      setStatusFilter("booked");
+                      setShowStatusDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      statusFilter === "booked" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>Booked</span>
+                    {statusFilter === "booked" && <Check className="w-3 h-3 text-blue-600" />}
+                  </div>
+                  <div
+                    onClick={() => {
+                      setStatusFilter("blocked");
+                      setShowStatusDropdown(false);
+                    }}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
+                      statusFilter === "blocked" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    <span>Blocked</span>
+                    {statusFilter === "blocked" && <Check className="w-3 h-3 text-blue-600" />}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Clear Filters */}
+            {isFilterActive && (
+              <button
+                onClick={handleClearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3 text-red-500" />
+                Clear
+              </button>
+            )}
+
+            {/* Action Buttons */}
             <button
               onClick={() => {
                 handleClearFilters();
@@ -695,6 +916,98 @@ const AppointmentSlots = () => {
               <FiPlus className="w-3.5 h-3.5" />
               <span>Add Slots</span>
             </button>
+          </div>
+        </div>
+
+        {/* Mobile Header */}
+        <div className="lg:hidden flex flex-col gap-2 mb-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h1 className="text-base font-bold whitespace-nowrap">
+              Appointment <span className="text-indigo-600">Slots</span>
+            </h1>
+            <div className="emp-dash__date-pill text-[10px] px-2 py-1">
+              <FaRegCalendarAlt className="text-[10px]" />
+              <span>{stats.totalSlotsCount} Slots</span>
+            </div>
+          </div>
+          
+          {/* Mobile Search */}
+          <div className="relative flex-1">
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search time, patient, doctor..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
+          </div>
+          
+          {/* Mobile Actions Row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => {
+                // Simple mobile filter - show dropdowns inline
+                setShowShiftDropdown(false);
+                setShowStatusDropdown(false);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+            >
+              <FiFilter className="text-blue-600 text-sm" />
+              <span>Filters</span>
+            </button>
+            
+            {isFilterActive && (
+              <button
+                onClick={handleClearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+              >
+                <FiTrash2 className="w-3 h-3 text-red-500" />
+                Clear
+              </button>
+            )}
+            
+            <button
+              onClick={() => {
+                setNewSlotDoctor("");
+                setNewSlotDays([]);
+                setNewSlotStartTime("09:00");
+                setNewSlotEndTime("09:20");
+                setNewSlotGap(5);
+                setNewSlotShift("Morning Shift");
+                setNewSlotConsultationFee(300);
+                setNewSlotDuration(20);
+                setShowAddModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm ml-auto"
+            >
+              <FiPlus className="w-3.5 h-3.5" />
+              <span>Add</span>
+            </button>
+          </div>
+
+          {/* Mobile Filters - Inline Selects */}
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            <select
+              value={shiftFilter}
+              onChange={(e) => setShiftFilter(e.target.value)}
+              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            >
+              <option value="All">All Shifts</option>
+              <option value="Morning">Morning Shift</option>
+              <option value="Break">Break Period</option>
+              <option value="Evening">Evening Shift</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            >
+              <option value="All">All Statuses</option>
+              <option value="available">Available</option>
+              <option value="booked">Booked</option>
+              <option value="blocked">Blocked</option>
+            </select>
           </div>
         </div>
 
@@ -955,11 +1268,7 @@ const AppointmentSlots = () => {
                   <div
                     className="bg-emerald-500 h-1.5 rounded-full"
                     style={{
-                      width: `${
-                        doctorStatusStats.total > 0
-                          ? (doctorStatusStats.available / doctorStatusStats.total) * 100
-                          : 0
-                      }%`
+                      width: `${doctorStatusStats.total > 0 ? (doctorStatusStats.available / doctorStatusStats.total) * 100 : 0}%`
                     }}
                   ></div>
                 </div>
@@ -988,11 +1297,7 @@ const AppointmentSlots = () => {
                   <div
                     className="bg-amber-500 h-1.5 rounded-full"
                     style={{
-                      width: `${
-                        doctorStatusStats.total > 0
-                          ? (doctorStatusStats.booked / doctorStatusStats.total) * 100
-                          : 0
-                      }%`
+                      width: `${doctorStatusStats.total > 0 ? (doctorStatusStats.booked / doctorStatusStats.total) * 100 : 0}%`
                     }}
                   ></div>
                 </div>
@@ -1021,11 +1326,7 @@ const AppointmentSlots = () => {
                   <div
                     className="bg-gray-400 h-1.5 rounded-full"
                     style={{
-                      width: `${
-                        doctorStatusStats.total > 0
-                          ? (doctorStatusStats.blocked / doctorStatusStats.total) * 100
-                          : 0
-                      }%`
+                      width: `${doctorStatusStats.total > 0 ? (doctorStatusStats.blocked / doctorStatusStats.total) * 100 : 0}%`
                     }}
                   ></div>
                 </div>
@@ -1033,68 +1334,6 @@ const AppointmentSlots = () => {
             </div>
           </div>
         )}
-
-        {/* ===================== FILTERS BAR ===================== */}
-        <div className="emp-dash__card p-3 mb-6 flex flex-col sm:flex-row gap-3 items-center justify-between">
-          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-            {/* Shift Filter */}
-            <div className="flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-gray-400" />
-              <select
-                value={shiftFilter}
-                onChange={(e) => setShiftFilter(e.target.value)}
-                className={`px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                  shiftFilter !== "All"
-                    ? "border-blue-500 text-blue-700 bg-blue-50"
-                    : "border-gray-300 text-gray-700"
-                }`}
-              >
-                <option value="All">All Shifts</option>
-                <option value="Morning">Morning Shift</option>
-                <option value="Break">Break Period</option>
-                <option value="Evening">Evening Shift</option>
-              </select>
-            </div>
-
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className={`px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                statusFilter !== "All"
-                  ? "border-blue-500 text-blue-700 bg-blue-50"
-                  : "border-gray-300 text-gray-700"
-              }`}
-            >
-              <option value="All">All Statuses</option>
-              <option value="available">Available</option>
-              <option value="booked">Booked</option>
-              <option value="blocked">Blocked</option>
-              <option value="break">Break</option>
-            </select>
-
-            {isFilterActive && (
-              <button
-                onClick={handleClearFilters}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-xs"
-              >
-                <FiTrash2 className="w-3 h-3 text-red-500" />
-                Clear
-              </button>
-            )}
-          </div>
-
-          <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search time, patient, doctor..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-            />
-          </div>
-        </div>
 
         {/* ===================== SLOTS DISPLAY SECTION ===================== */}
         {loading ? (

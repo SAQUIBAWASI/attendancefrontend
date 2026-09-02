@@ -225,6 +225,7 @@ import DoctorManagement from "./Pages/DoctorManagement.js";
 import LetterHeadDesigner from "./Pages/LetterHeadDesigner.js";
 import PayrollDashboard from "./Pages/PayrollDashboard.js";
 import EmployeeEvents from "./Pages/EmployeeEvents.js";
+import EmployeeReferral from "./Pages/EmployeeReferral.js";
 
 function App() {
   return (
@@ -256,6 +257,7 @@ function App() {
       <Route path="/emp-personal-documents" element={<EmployeeLayout><EmployeePersonalDocuments /></EmployeeLayout>} />
       <Route path="/emp-letters" element={<EmployeeLayout><EmployeeLetters /></EmployeeLayout>} />
       <Route path="/mylocation" element={<EmployeeLayout><EmployeeLocation /></EmployeeLayout>} />
+      <Route path="/myreferral" element={<EmployeeLayout><EmployeeReferral /></EmployeeLayout>} />
       <Route path="/mysalary" element={<EmployeeLayout><EmployeeSalary /></EmployeeLayout>} />
       <Route path="/HolidayList" element={<EmployeeLayout><HolidayList /></EmployeeLayout>} />
 

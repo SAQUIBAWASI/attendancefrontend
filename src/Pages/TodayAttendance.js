@@ -3067,7 +3067,9 @@ const TodayAttendance = () => {
     date: null,
     rawImagePath: null,
     checkInTime: null,
-    checkOutTime: null
+    checkOutTime: null,
+    // ✅ New field to track which image is being viewed
+    viewingImageType: null // 'checkin' or 'checkout'
   });
 
   // ─── Persist pagination limit in localStorage ───
@@ -3262,8 +3264,8 @@ const TodayAttendance = () => {
     }, 100);
   };
 
-  // ✅ Image Popup Handlers
-  const openImagePopup = (imagePath, imageType, employeeName, employeeId, date, checkInTime, checkOutTime) => {
+  // ✅ Updated Image Popup Handler - now accepts which image type is being viewed
+  const openImagePopup = (imagePath, imageType, employeeName, employeeId, date, checkInTime, checkOutTime, viewingImageType) => {
     if (!imagePath) {
       console.log("❌ No image path provided");
       return;
@@ -3281,7 +3283,8 @@ const TodayAttendance = () => {
       date: date,
       rawImagePath: imagePath,
       checkInTime: checkInTime,
-      checkOutTime: checkOutTime
+      checkOutTime: checkOutTime,
+      viewingImageType: viewingImageType // 'checkin' or 'checkout'
     });
   };
 
@@ -3295,7 +3298,8 @@ const TodayAttendance = () => {
       date: null,
       rawImagePath: null,
       checkInTime: null,
-      checkOutTime: null
+      checkOutTime: null,
+      viewingImageType: null
     });
   };
 
@@ -4004,7 +4008,7 @@ const TodayAttendance = () => {
                               <span>{reasonText}</span>
                             </span>
                           </td>
-                          {/* ✅ Attendance Images Column */}
+                          {/* ✅ Attendance Images Column - Updated with viewingImageType */}
                           <td style={{ textAlign: "center" }}>
                             {hasAnyImage ? (
                               <div className="flex items-center justify-center gap-1.5">
@@ -4017,7 +4021,8 @@ const TodayAttendance = () => {
                                       rec.employeeId,
                                       rec.rawDate,
                                       rec.checkInTime,
-                                      rec.checkOutTime
+                                      rec.checkOutTime,
+                                      'checkin' // ✅ Pass which image is being viewed
                                     )}
                                     className="relative group flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-all shadow-sm hover:shadow-md"
                                     title="View Check-In Image"
@@ -4035,7 +4040,8 @@ const TodayAttendance = () => {
                                       rec.employeeId,
                                       rec.rawDate,
                                       rec.checkInTime,
-                                      rec.checkOutTime
+                                      rec.checkOutTime,
+                                      'checkout' // ✅ Pass which image is being viewed
                                     )}
                                     className="relative group flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition-all shadow-sm hover:shadow-md"
                                     title="View Check-Out Image"
@@ -4061,7 +4067,7 @@ const TodayAttendance = () => {
                 </table>
               </div>
 
-              {/* Mobile View Card List */}
+              {/* Mobile View Card List - Updated with viewingImageType */}
               <div className="block lg:hidden divide-y divide-gray-100">
                 {currentRows.map((rec) => {
                   const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
@@ -4115,7 +4121,7 @@ const TodayAttendance = () => {
                             <h4 className="font-semibold text-gray-900">{rec.name}</h4>
                           </div>
                         </div>
-                        {/* ✅ Mobile Images */}
+                        {/* ✅ Mobile Images - Updated with viewingImageType */}
                         {hasAnyImage && (
                           <div className="flex items-center gap-1">
                             {hasCheckInImage && (
@@ -4127,7 +4133,8 @@ const TodayAttendance = () => {
                                   rec.employeeId,
                                   rec.rawDate,
                                   rec.checkInTime,
-                                  rec.checkOutTime
+                                  rec.checkOutTime,
+                                  'checkin'
                                 )}
                                 className="flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-all"
                                 title="View Check-In Image"
@@ -4144,7 +4151,8 @@ const TodayAttendance = () => {
                                   rec.employeeId,
                                   rec.rawDate,
                                   rec.checkInTime,
-                                  rec.checkOutTime
+                                  rec.checkOutTime,
+                                  'checkout'
                                 )}
                                 className="flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 transition-all"
                                 title="View Check-Out Image"
@@ -4251,7 +4259,7 @@ const TodayAttendance = () => {
         </div>
       </main>
 
-      {/* ✅ IMAGE POPUP MODAL WITH X ICON IN TOP RIGHT CORNER */}
+      {/* ✅ IMAGE POPUP MODAL WITH FIXED CHECK-OUT TIME DISPLAY */}
       {imagePopup.isOpen && (
         <div 
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in p-4"
@@ -4282,8 +4290,8 @@ const TodayAttendance = () => {
                   <p className="text-xs text-gray-500 mt-0.5">
                     {imagePopup.employeeName} ({imagePopup.employeeId})
                   </p>
-                  {/* ✅ Show Date and Time */}
-                  <div className="flex items-center gap-3 mt-1">
+                  {/* ✅ Show Date and CORRECT Time based on image type */}
+                  <div className="flex items-center gap-3 mt-1 flex-wrap">
                     <p className="text-[11px] text-gray-600 flex items-center gap-1">
                       <FaCalendarAlt className="text-indigo-400 text-[10px]" />
                       {imagePopup.date ? new Date(imagePopup.date).toLocaleDateString('en-IN', {
@@ -4292,14 +4300,47 @@ const TodayAttendance = () => {
                         year: 'numeric'
                       }) : '-'}
                     </p>
-                    <p className="text-[11px] text-gray-600 flex items-center gap-1">
-                      <FaClock className="text-indigo-400 text-[10px]" />
-                      {imagePopup.checkInTime ? new Date(imagePopup.checkInTime).toLocaleTimeString('en-IN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                      }) : '-'}
-                    </p>
+                    
+                    {/* ✅ FIX: Show Check-In Time or Check-Out Time based on which image is being viewed */}
+                    {imagePopup.viewingImageType === 'checkin' ? (
+                      <p className="text-[11px] text-emerald-600 flex items-center gap-1 font-semibold">
+                        <FaClock className="text-emerald-500 text-[10px]" />
+                        Check-In: {imagePopup.checkInTime ? new Date(imagePopup.checkInTime).toLocaleTimeString('en-IN', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true
+                        }) : '-'}
+                      </p>
+                    ) : imagePopup.viewingImageType === 'checkout' ? (
+                      <p className="text-[11px] text-indigo-600 flex items-center gap-1 font-semibold">
+                        <FaClock className="text-indigo-500 text-[10px]" />
+                        Check-Out: {imagePopup.checkOutTime ? new Date(imagePopup.checkOutTime).toLocaleTimeString('en-IN', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true
+                        }) : '-'}
+                      </p>
+                    ) : (
+                      // Fallback: show both times if type is unknown
+                      <>
+                        <p className="text-[11px] text-emerald-600 flex items-center gap-1">
+                          <FaClock className="text-emerald-500 text-[10px]" />
+                          In: {imagePopup.checkInTime ? new Date(imagePopup.checkInTime).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          }) : '-'}
+                        </p>
+                        <p className="text-[11px] text-indigo-600 flex items-center gap-1">
+                          <FaClock className="text-indigo-500 text-[10px]" />
+                          Out: {imagePopup.checkOutTime ? new Date(imagePopup.checkOutTime).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          }) : '-'}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
