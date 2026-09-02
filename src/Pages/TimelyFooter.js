@@ -72,9 +72,8 @@ const TimelyFooter = () => {
             <h3 className="mb-5 text-xl font-semibold tracking-wide">Quick Links</h3>
             <ul className="space-y-3">
               <li><Link to="/" className="text-gray-300 hover:text-white transition-colors duration-200 no-underline text-base">Home</Link></li>
-              <li><Link to="/services" className="text-gray-300 hover:text-white transition-colors duration-200 no-underline text-base">Services</Link></li>
+              <li><Link to="/service" className="text-gray-300 hover:text-white transition-colors duration-200 no-underline text-base">Services</Link></li>
               <li><Link to="/about" className="text-gray-300 hover:text-white transition-colors duration-200 no-underline text-base">About Us</Link></li>
-              <li><Link to="/who-we-serve" className="text-gray-300 hover:text-white transition-colors duration-200 no-underline text-base">Who We Serve</Link></li>
               <li><Link to="/contact" className="text-gray-300 hover:text-white transition-colors duration-200 no-underline text-base">Contact</Link></li>
             </ul>
           </div>
