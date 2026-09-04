@@ -1414,7 +1414,12 @@ export default function EmployeeSalary() {
     );
   }
 
-  const totalSalary = filteredRecords.reduce((sum, emp) => sum + (emp.finalPay || emp.calculatedSalary || 0), 0);
+  // FIXED: Calculate total salary using calculatedSalary instead of finalPay
+  const totalSalary = filteredRecords.reduce((sum, emp) => {
+    const pay = emp.calculatedSalary || emp.baseCalculatedSalary || 0;
+    return sum + (typeof pay === 'number' ? pay : 0);
+  }, 0);
+
   const avgSalary = filteredRecords.length > 0 ? Math.round(totalSalary / filteredRecords.length) : 0;
   const availableDocs = filteredRecords.filter((emp) => emp.canDownload).length;
 
@@ -1448,6 +1453,8 @@ export default function EmployeeSalary() {
             <div className="emp-dash__stat-value">{filteredRecords.length}</div>
             <div className="emp-dash__stat-meta">months</div>
           </div>
+          
+          {/* FIXED: Total Net Pay showing calculatedSalary sum */}
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Net Pay</span>
@@ -1455,9 +1462,21 @@ export default function EmployeeSalary() {
                 <FiDollarSign />
               </div>
             </div>
-            <div className="emp-dash__stat-value">₹<CountUp end={Math.round(totalSalary)} duration={1.2} separator="," /></div>
+            <div className="emp-dash__stat-value">
+              {totalSalary > 0 ? (
+                <CountUp 
+                  end={Math.round(totalSalary)} 
+                  duration={1.2} 
+                  separator="," 
+                  prefix="₹"
+                />
+              ) : (
+                '₹0'
+              )}
+            </div>
             <div className="emp-dash__stat-meta">sum</div>
           </div>
+
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Payslips</span>
@@ -1471,7 +1490,18 @@ export default function EmployeeSalary() {
               <span className="emp-dash__stat-label">Avg Salary</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiPieChart /></div>
             </div>
-            <div className="emp-dash__stat-value">₹<CountUp end={avgSalary} duration={1.2} separator="," /></div>
+            <div className="emp-dash__stat-value">
+              {avgSalary > 0 ? (
+                <CountUp 
+                  end={avgSalary} 
+                  duration={1.2} 
+                  separator="," 
+                  prefix="₹"
+                />
+              ) : (
+                '₹0'
+              )}
+            </div>
             <div className="emp-dash__stat-meta">per month</div>
           </div>
         </div>
@@ -1791,19 +1821,6 @@ export default function EmployeeSalary() {
                 <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Expected Working Days</span><span className="font-bold text-slate-600">{selectedEmployee.expectedWorkingDays}</span></div>
                 <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Payable Present Days</span><span className="font-bold text-blue-700">{selectedEmployee.payablePresentDays}</span></div>
                 
-                {/* {selectedEmployee.carryForwardFromPrev > 0 && (
-                  <div className="flex justify-between py-1 border-b border-blue-100 bg-blue-50 rounded px-1">
-                    <span className="text-blue-600 font-semibold">← Carry-in from Prev Month</span>
-                    <span className="font-bold text-blue-700">+{selectedEmployee.carryForwardFromPrev} day(s)</span>
-                  </div>
-                )}
-                {selectedEmployee.carryForwardDays > 0 && (
-                  <div className="flex justify-between py-1 border-b border-orange-100 bg-orange-50 rounded px-1 sm:col-span-2">
-                    <span className="text-orange-600 font-semibold">→ Carry-forward to Next Month</span>
-                    <span className="font-bold text-orange-700">{selectedEmployee.carryForwardDays} day(s)</span>
-                  </div>
-                )} */}
-
                 <div className="flex justify-between py-1 border-b border-gray-100">
                   <span className="text-gray-500">Monthly Assigned Salary</span>
                   <span className="font-bold text-slate-800">₹{(selectedEmployee.salaryPerMonth || 0).toLocaleString()}</span>

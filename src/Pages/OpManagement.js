@@ -491,7 +491,8 @@ export default function OpManagement() {
           imagingOrdered: b.imagingOrdered || [],
           referralToSpecialist: b.referralToSpecialist || "",
           patientRating: b.patientRating || null,
-          patientFeedback: b.patientFeedback || ""
+          patientFeedback: b.patientFeedback || "",
+          isOP: b.isOP || false  // <-- ADD THIS LINE
         };
       });
       
@@ -719,7 +720,8 @@ export default function OpManagement() {
         paymentType: formData.paymentType,
         paymentStatus: formData.paymentStatus,
         doctorId: formData.doctorId,
-        appointmentDate: formData.appointmentDate
+        appointmentDate: formData.appointmentDate,
+        isOP: true  // <-- ADD THIS LINE - SEND isOP: true
       };
       const slotRes = await axios.post(`${API_BASE_URL}/appointment-slots/book`, bookingPayload);
       if (slotRes.data.success) {

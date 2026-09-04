@@ -424,7 +424,11 @@ export default function Bookings() {
       
       console.log("=== EXTRACTED BOOKINGS ===", bookingsData);
       
-      const transformedBookings = bookingsData.map((b) => {
+      // Filter out OP bookings (isOP === true) - ONLY SHOW isOP === false
+      const nonOPBookings = bookingsData.filter((b) => b.isOP === false || b.isOP === undefined);
+      console.log("=== NON-OP BOOKINGS (isOP === false) ===", nonOPBookings);
+      
+      const transformedBookings = nonOPBookings.map((b) => {
         const slotDetails = b.slotDetails || {};
         return {
           _id: b._id || b.id,
@@ -477,11 +481,12 @@ export default function Bookings() {
           imagingOrdered: b.imagingOrdered || [],
           referralToSpecialist: b.referralToSpecialist || "",
           patientRating: b.patientRating || null,
-          patientFeedback: b.patientFeedback || ""
+          patientFeedback: b.patientFeedback || "",
+          isOP: b.isOP || false
         };
       });
       
-      console.log("=== TRANSFORMED BOOKINGS ===", transformedBookings);
+      console.log("=== TRANSFORMED NON-OP BOOKINGS ===", transformedBookings);
       setBookings(transformedBookings);
     } catch (error) {
       console.error("Error fetching bookings:", error);
@@ -705,7 +710,8 @@ export default function Bookings() {
         paymentType: formData.paymentType,
         paymentStatus: formData.paymentStatus,
         doctorId: formData.doctorId,
-        appointmentDate: formData.appointmentDate
+        appointmentDate: formData.appointmentDate,
+        isOP: false  // <-- Always false for this component
       };
       const slotRes = await axios.post(`${API_BASE_URL}/appointment-slots/book`, bookingPayload);
       if (slotRes.data.success) {
@@ -1627,13 +1633,28 @@ export default function Bookings() {
     return Array.from(doctorMap.values());
   };
 
-  // Filtered Patients
+  // Filtered Patients - Only patients with non-OP bookings (isOP === false)
   const filteredPatients = useMemo(() => {
-    console.log("=== FILTERING PATIENTS ===");
+    console.log("=== FILTERING PATIENTS (NON-OP ONLY) ===");
     console.log("All Patients:", patients);
     console.log("Selected Month:", selectedMonth);
     
-    const filtered = patients.filter((p) => {
+    // Get patients that have at least one booking with isOP === false
+    const patientsWithNonOPBookings = patients.filter((p) => {
+      const hasNonOPBooking = bookings.some(
+        (b) =>
+          (b.patientPhone === p.phone ||
+            (b.patientName &&
+              p.name &&
+              b.patientName.toLowerCase() === p.name.toLowerCase())) &&
+          b.isOP === false
+      );
+      return hasNonOPBooking;
+    });
+    
+    console.log("Patients with non-OP bookings:", patientsWithNonOPBookings.length);
+    
+    const filtered = patientsWithNonOPBookings.filter((p) => {
       const paymentStatus = getPatientPaymentStatus(p);
       
       if (statusFilter !== "All" && paymentStatus !== statusFilter) return false;
@@ -1646,7 +1667,8 @@ export default function Bookings() {
               (b.patientName &&
                 p.name &&
                 b.patientName.toLowerCase() === p.name.toLowerCase())) &&
-            b.doctorName === doctorFilter
+            b.doctorName === doctorFilter &&
+            b.isOP === false
         );
         if (!hasBookingWithDoctor) return false;
       }
@@ -1685,7 +1707,7 @@ export default function Bookings() {
       return true;
     });
     
-    console.log("=== FILTERED PATIENTS COUNT ===", filtered.length);
+    console.log("=== FILTERED PATIENTS COUNT (NON-OP) ===", filtered.length);
     return filtered;
   }, [
     patients,
@@ -1704,15 +1726,16 @@ export default function Bookings() {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, fromDate, toDate, selectedMonth]);
 
-  // Stats with services included
+  // Stats - Only for non-OP bookings
   const stats = useMemo(() => {
-    const total = bookings.length;
+    const nonOPBookings = bookings.filter((b) => b.isOP === false);
+    const total = nonOPBookings.length;
     
     let paidTotal = 0;
     let paidCount = 0;
     let pendingCount = 0;
     
-    bookings.forEach((b) => {
+    nonOPBookings.forEach((b) => {
       const totalFee = getTotalBookingFee(b);
       const isPaid = b.paymentStatus === "Paid";
       
@@ -1907,7 +1930,7 @@ export default function Bookings() {
           <div className="flex items-center gap-2 flex-wrap">
             <div className="emp-dash__date-pill">
               <FaCalendarCheck />
-              <span>{bookings.length} Total Bookings</span>
+              <span>{stats.total} Total Bookings</span>
             </div>
             <div className="relative min-w-[130px]">
               <FaSearch className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
@@ -2027,7 +2050,7 @@ export default function Bookings() {
             </h1>
             <div className="emp-dash__date-pill text-[10px] px-2 py-1">
               <FaCalendarCheck className="w-3 h-3 text-blue-600" />
-              <span>{bookings.length} Bookings</span>
+              <span>{stats.total} Bookings</span>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -2275,7 +2298,7 @@ export default function Bookings() {
               <FaUserInjured className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <h3 className="text-base font-bold text-gray-700">No Booking Records Found</h3>
               <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto mb-4">
-                {bookings.length === 0
+                {stats.total === 0
                   ? "Click 'Add Booking' to create a new appointment."
                   : "No records match your current search/date filters."}
               </p>
@@ -2777,7 +2800,7 @@ export default function Bookings() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base">
-                      {editingId ? "Edit Patient Details" : "Register OPD Patient & Book Slot"}
+                      {editingId ? "Edit Patient Details" : "Register Patient & Book Slot"}
                     </h3>
                     <p className="text-xs text-gray-500">Fill in patient and consultation details below</p>
                   </div>

@@ -300,6 +300,14 @@ function EmployeeReferral() {
     });
   };
 
+  // ✅ Function to handle link click - opens in new tab
+  const handleLinkClick = (url, e) => {
+    e.stopPropagation(); // Prevent card click
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -499,10 +507,15 @@ function EmployeeReferral() {
                 {referral.jobTitle}
               </h3>
 
-              {/* Job Link */}
-              <div className="flex items-center gap-1 text-[10px] text-blue-600 truncate mb-2">
-                <FiLink className="text-[10px] flex-shrink-0" />
-                <span className="truncate">{referral.jobLink}</span>
+              {/* ✅ Job Link - Clickable */}
+              <div 
+                className="flex items-center gap-1 text-[10px] text-blue-600 truncate mb-2 cursor-pointer hover:underline group"
+                onClick={(e) => handleLinkClick(referral.jobLink, e)}
+              >
+                <FiLink className="text-[10px] flex-shrink-0 group-hover:text-blue-800" />
+                <span className="truncate group-hover:text-blue-800">
+                  {referral.jobLink || 'No link'}
+                </span>
               </div>
 
               {/* Details Grid */}
@@ -588,9 +601,13 @@ function EmployeeReferral() {
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Job</p>
                 <p className="font-semibold text-gray-800 text-lg mt-1">{viewingReferral.jobTitle}</p>
-                <div className="mt-1 flex items-center gap-1 text-xs text-blue-600 truncate">
-                  <FiLink className="text-xs" />
-                  <span className="truncate">{viewingReferral.jobLink}</span>
+                {/* ✅ Clickable link in view modal */}
+                <div 
+                  className="mt-1 flex items-center gap-1 text-xs text-blue-600 truncate cursor-pointer hover:underline group"
+                  onClick={(e) => handleLinkClick(viewingReferral.jobLink, e)}
+                >
+                  <FiLink className="text-xs flex-shrink-0 group-hover:text-blue-800" />
+                  <span className="truncate group-hover:text-blue-800">{viewingReferral.jobLink}</span>
                 </div>
               </div>
 
@@ -728,9 +745,13 @@ function EmployeeReferral() {
                   <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Job You're Referring</p>
                     <p className="font-semibold text-gray-800">{referringJob.jobTitle}</p>
-                    <div className="mt-1 flex items-center gap-1 text-xs text-blue-600 truncate">
-                      <FiLink className="text-xs" />
-                      <span className="truncate">{referringJob.jobLink}</span>
+                    {/* ✅ Clickable link in referral modal */}
+                    <div 
+                      className="mt-1 flex items-center gap-1 text-xs text-blue-600 truncate cursor-pointer hover:underline group"
+                      onClick={(e) => handleLinkClick(referringJob.jobLink, e)}
+                    >
+                      <FiLink className="text-xs flex-shrink-0 group-hover:text-blue-800" />
+                      <span className="truncate group-hover:text-blue-800">{referringJob.jobLink}</span>
                     </div>
                   </div>
 

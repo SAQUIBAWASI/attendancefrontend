@@ -10,25 +10,21 @@ import {
   FaMoneyBillWave,
   FaPlus,
   FaRoute,
-  FaRupeeSign,
   FaSearch,
   FaSync,
   FaTimes,
   FaTrashAlt,
   FaEdit,
+  FaCheckCircle,
+  FaCar,
+  FaWallet,
+  FaFileInvoice,
+  FaUserClock,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import { API_BASE_URL } from "../config";
 import "./EmployeeDashboard.css";
 import "./EmployeePageShell.css";
-
-const QUICK_PURPOSES = [
-  "Client Visit",
-  "Sample Collection",
-  "Site Inspection",
-  "Sales Meeting",
-  "Delivery & Pickup",
-  "Branch Travel",
-];
 
 const INITIAL_STOP = {
   locationName: "",
@@ -45,8 +41,34 @@ const INITIAL_FORM = {
   remark: "",
 };
 
-const formatCurrency = (value) => `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
-const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "—");
+const formatCurrency = (value) => 
+  `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+  
+const formatDate = (value) => 
+  value ? new Date(value).toLocaleDateString("en-IN", { 
+    day: "numeric", 
+    month: "short", 
+    year: "numeric" 
+  }) : "—";
+
+const StatusBadge = ({ status }) => {
+  const config = {
+    Pending: { bg: '#fef0c7', text: '#b54708' },
+    Approved: { bg: '#d1fae5', text: '#065f46' },
+    Rejected: { bg: '#fee4e2', text: '#b42318' },
+  };
+  const style = config[status] || { bg: '#f3f4f6', text: '#374151' };
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      padding: '0.2rem 0.55rem', borderRadius: 6,
+      fontSize: '0.7rem', fontWeight: 700,
+      backgroundColor: style.bg, color: style.text,
+    }}>
+      {status || 'Pending'}
+    </span>
+  );
+};
 
 const ExpenseManagement = () => {
   const [expenses, setExpenses] = useState([]);
@@ -58,14 +80,15 @@ const ExpenseManagement = () => {
   const [tableSearch, setTableSearch] = useState("");
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [stops, setStops] = useState([{ ...INITIAL_STOP }]);
-  
-  // ✅ Edit states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [editFormData, setEditFormData] = useState(INITIAL_FORM);
   const [editStops, setEditStops] = useState([{ ...INITIAL_STOP }]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [error, setError] = useState("");
 
   const employeeId = useMemo(() => {
     const directId = localStorage.getItem("employeeId");
@@ -107,9 +130,31 @@ const ExpenseManagement = () => {
     }
   };
 
-  // ============= EDIT FUNCTIONS =============
-  
-  // Open Edit Modal
+  const showToast = (message) => {
+    setToastMessage(message);
+    setShowSuccessToast(true);
+    setTimeout(() => setShowSuccessToast(false), 3000);
+  };
+
+  const handleOpenAddExpense = () => {
+    setFormData(INITIAL_FORM);
+    setStops([{ ...INITIAL_STOP }]);
+    setError("");
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setIsEditModalOpen(false);
+    setSelectedExpense(null);
+    setEditingExpense(null);
+    setError("");
+  };
+
+  const handleViewExpense = (expense) => {
+    setSelectedExpense(expense);
+  };
+
   const handleEditExpense = (expense) => {
     setEditingExpense(expense);
     setEditFormData({
@@ -118,17 +163,20 @@ const ExpenseManagement = () => {
       km: expense.km || "",
       remark: expense.remark || "",
     });
-    setEditStops(expense.stops && expense.stops.length > 0 ? expense.stops.map(s => ({ ...s })) : [{ ...INITIAL_STOP }]);
+    setEditStops(expense.stops && expense.stops.length > 0 
+      ? expense.stops.map(s => ({ ...s })) 
+      : [{ ...INITIAL_STOP }]
+    );
+    setError("");
     setIsEditModalOpen(true);
   };
 
-  // Handle Edit Input Change
+  // ============= EDIT FUNCTIONS =============
   const handleEditInputChange = (e) => {
     const { name, value } = e.target;
     setEditFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle Edit Stop Change
   const handleEditStopChange = (index, field, value) => {
     setEditStops((prev) =>
       prev.map((stop, stopIndex) =>
@@ -137,26 +185,29 @@ const ExpenseManagement = () => {
     );
   };
 
-  // Add Edit Stop
   const addEditStop = () => {
     setEditStops((prev) => [...prev, { ...INITIAL_STOP }]);
   };
 
-  // Remove Edit Stop
   const removeEditStop = (index) => {
     if (editStops.length === 1) return;
     setEditStops((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Calculate Edit Values
   const editParsedKm = editFormData.km ? parseFloat(editFormData.km) : 0;
   const editStopsKm = editStops.reduce((sum, stop) => sum + (parseFloat(stop.km) || 0), 0);
   const editTotalKm = editStopsKm > 0 ? editStopsKm : editParsedKm;
   const editCalculatedCost = (editTotalKm * kmRate).toFixed(2);
 
-  // Submit Edit
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    
+    if (!editFormData.purpose || editTotalKm <= 0 || !editFormData.date) {
+      setError("Please fill in purpose, distance (KM), and date.");
+      return;
+    }
+
     setIsUpdating(true);
 
     try {
@@ -174,52 +225,36 @@ const ExpenseManagement = () => {
         stops: editStops
       };
 
-      console.log("📤 Updating expense:", updateData);
-
       const res = await axios.put(
         `${API_BASE_URL}/expense/edit/${editingExpense._id}`,
         updateData
       );
 
-      console.log("📥 Update response:", res.data);
-
       if (res.data.success) {
-        alert("✅ Expense updated successfully!");
-        setIsEditModalOpen(false);
-        setEditingExpense(null);
-        
-        // Refresh data
+        showToast("✅ Expense updated successfully!");
+        handleCloseModal();
         await fetchInitialData();
-        
-        // Close detail modal if open
-        if (selectedExpense) {
-          setSelectedExpense(null);
-        }
       } else {
-        alert("❌ Failed to update expense!");
+        setError("❌ Failed to update expense!");
       }
     } catch (error) {
       console.error("Error updating expense:", error);
-      alert("❌ Error: " + (error.response?.data?.message || error.message));
+      setError(error?.response?.data?.message || error?.message || "Failed to update. Please try again.");
     } finally {
       setIsUpdating(false);
     }
   };
 
   // ============= DELETE FUNCTIONS =============
-
-  // Delete Expense
   const handleDeleteExpense = async (expenseId, purpose) => {
     if (window.confirm(`Are you sure you want to delete this expense record for "${purpose || 'Unknown'}"?`)) {
       setIsDeleting(true);
       try {
         const res = await axios.delete(`${API_BASE_URL}/expense/delete/${expenseId}`);
         if (res.data.success) {
-          alert("✅ Expense deleted successfully!");
+          showToast("✅ Expense deleted successfully!");
           await fetchInitialData();
-          if (selectedExpense) {
-            setSelectedExpense(null);
-          }
+          setSelectedExpense(null);
         }
       } catch (error) {
         console.error("Error deleting expense:", error);
@@ -231,7 +266,6 @@ const ExpenseManagement = () => {
   };
 
   // ============= ORIGINAL FUNCTIONS =============
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -294,20 +328,21 @@ const ExpenseManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (!employeeId) {
-      alert("Employee details are missing. Please login again.");
+      setError("Employee details are missing. Please login again.");
       return;
     }
 
     if (!formData.purpose || totalKm <= 0 || !formData.date) {
-      alert("Please fill in purpose, distance (KM), and date.");
+      setError("Please fill in purpose, distance (KM), and date.");
       return;
     }
 
     for (let i = 0; i < stops.length; i += 1) {
       if (!stops[i].locationName.trim()) {
-        alert(`Please provide a Location/Sample Name for Stop ${i + 1}.`);
+        setError(`Please provide a Location/Sample Name for Stop ${i + 1}.`);
         return;
       }
     }
@@ -323,14 +358,12 @@ const ExpenseManagement = () => {
 
       if (response.data.success) {
         setExpenses((prev) => [response.data.expense, ...prev]);
-        setFormData(INITIAL_FORM);
-        setStops([{ ...INITIAL_STOP }]);
-        setIsModalOpen(false);
-        alert("Expense recorded successfully!");
+        handleCloseModal();
+        showToast("✅ Expense recorded successfully!");
       }
     } catch (error) {
       console.error("Error submitting expense:", error);
-      alert("Failed to record expense. Please try again.");
+      setError(error?.response?.data?.message || error?.message || "Failed to record expense. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -349,6 +382,15 @@ const ExpenseManagement = () => {
 
   return (
     <div className="emp-dash emp-page-shell">
+      {showSuccessToast && (
+        <div className="emp-toast">
+          <div className="emp-toast-content">
+            <FaCheckCircle className="emp-toast-icon" />
+            <span>{toastMessage}</span>
+          </div>
+        </div>
+      )}
+
       <main>
         <div className="emp-dash__header">
           <div>
@@ -375,20 +417,20 @@ const ExpenseManagement = () => {
         <div className="emp-dash__stats">
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Claims</span>
+              <span className="emp-dash__stat-label">Total Claims</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FaClipboardList />
+                <FaFileInvoice />
               </div>
             </div>
             <div className="emp-dash__stat-value">{stats.totalClaims}</div>
-            <div className="emp-dash__stat-meta">total records submitted</div>
+            <div className="emp-dash__stat-meta">records submitted</div>
           </div>
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Distance</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FaRoute />
+                <FaCar />
               </div>
             </div>
             <div className="emp-dash__stat-value">{Math.round(stats.totalDistance)}</div>
@@ -397,20 +439,20 @@ const ExpenseManagement = () => {
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Reimbursable</span>
+              <span className="emp-dash__stat-label">Total Amount</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
-                <FaMoneyBillWave />
+                <FaWallet />
               </div>
             </div>
-            <div className="emp-dash__stat-value">{Math.round(stats.totalAmount)}</div>
-            <div className="emp-dash__stat-meta">rupees across all claims</div>
+            <div className="emp-dash__stat-value">{formatCurrency(stats.totalAmount)}</div>
+            <div className="emp-dash__stat-meta">reimbursable amount</div>
           </div>
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">This Month</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
-                <FaCalendarAlt />
+                <FaUserClock />
               </div>
             </div>
             <div className="emp-dash__stat-value">{stats.monthlyClaims}</div>
@@ -420,14 +462,18 @@ const ExpenseManagement = () => {
 
         <div className="emp-page__hero">
           <div>
-            <div className="emp-page__hero-eyebrow">Travel reimbursement</div>
-            <div className="emp-page__hero-title">Current travel rate: {formatCurrency(kmRate)} per KM</div>
+            <div className="emp-page__hero-eyebrow">
+              <FaRoute /> Travel reimbursement
+            </div>
+            <div className="emp-page__hero-title">
+              Rate: {formatCurrency(kmRate)} <span style={{ fontSize: "0.8rem", fontWeight: "normal" }}>per KM</span>
+            </div>
             <p className="emp-page__hero-copy">
-              Stops-based distance is used automatically when you enter visit-wise KM. Keep each stop clear so approvals and reporting stay clean.
+              Enter your trip details and stops. Distance is automatically calculated from your stops or you can enter it manually.
             </p>
           </div>
           <div className="emp-page__hero-actions">
-            <button type="button" className="emp-page__hero-btn" onClick={() => setIsModalOpen(true)}>
+            <button type="button" className="emp-page__hero-btn" onClick={handleOpenAddExpense}>
               <FaPlus />
               Record Expense
             </button>
@@ -441,8 +487,8 @@ const ExpenseManagement = () => {
         <div className="emp-dash__card">
           <div className="emp-dash__card-header">
             <div>
-              <h3 className="emp-dash__card-title">Expense Records</h3>
-              <p className="emp-dash__card-desc">Review submitted travel claims and open any record for full details.</p>
+              <h3 className="emp-dash__card-title">Expense History</h3>
+              <p className="emp-dash__card-desc">Review and manage all your submitted travel claims.</p>
             </div>
             <div className="emp-page__pill">
               <FaMoneyBillWave />
@@ -468,7 +514,7 @@ const ExpenseManagement = () => {
 
               <div className="emp-page__pill emp-page__pill--muted">
                 <FaClipboardList />
-                Found {filteredExpenses.length}
+                {filteredExpenses.length} records
               </div>
             </div>
           </div>
@@ -476,10 +522,21 @@ const ExpenseManagement = () => {
           {filteredExpenses.length === 0 ? (
             <div className="emp-page__empty">
               <div className="emp-page__empty-icon">
-                <FaClipboardList />
+                <FaFileInvoice />
               </div>
               <h3>No expense records found</h3>
-              <p>{tableSearch ? "Try a different search term." : "Create your first expense record to see it here."}</p>
+              <p>
+                {tableSearch 
+                  ? "Try adjusting your search terms." 
+                  : "Start tracking your travel expenses by clicking 'Record Expense'."}
+              </p>
+              <button 
+                className="emp-page__hero-btn" 
+                onClick={handleOpenAddExpense}
+                style={{ marginTop: "1rem" }}
+              >
+                <FaPlus /> Create Your First Expense
+              </button>
             </div>
           ) : (
             <>
@@ -490,9 +547,9 @@ const ExpenseManagement = () => {
                       <th>Purpose & Date</th>
                       <th>Distance</th>
                       <th>Stops</th>
-                      <th>Outcome</th>
+                      <th>Status</th>
                       <th>Amount</th>
-                      <th>Action</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -502,48 +559,53 @@ const ExpenseManagement = () => {
                       return (
                         <tr key={`${expense._id || expense.date}-${index}`}>
                           <td>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-                              <span style={{ fontWeight: 600 }}>{expense.purpose}</span>
-                              <span style={{ color: "#98a2b3", fontSize: "0.75rem" }}>{formatDate(expense.date)}</span>
+                            <div className="emp-table__purpose">
+                              <span className="emp-table__purpose-name">{expense.purpose}</span>
+                              <span className="emp-table__purpose-date">{formatDate(expense.date)}</span>
                             </div>
                           </td>
-                          <td>{Number(expense.km || 0).toFixed(1)} km</td>
+                          <td>
+                            <span className="emp-table__distance">
+                              <FaCar className="emp-table__distance-icon" />
+                              {Number(expense.km || 0).toFixed(1)} km
+                            </span>
+                          </td>
                           <td>
                             <span className="emp-page__badge emp-page__badge--primary">
-                              <FaRoute />
+                              <FaMapMarkerAlt />
                               {stopCount > 0 ? `${stopCount} stop${stopCount > 1 ? "s" : ""}` : "Single visit"}
                             </span>
                           </td>
-                          <td style={{ maxWidth: 220 }}>
-                            <span title={primaryOutcome}>{primaryOutcome}</span>
+                          <td>
+                            <StatusBadge status={expense.status || "Pending"} />
                           </td>
-                          <td style={{ fontWeight: 700 }}>{formatCurrency(expense.totalAmount)}</td>
-                          <td style={{ textAlign: "right" }}>
-                            <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                          <td>
+                            <span className="emp-table__amount">{formatCurrency(expense.totalAmount)}</span>
+                          </td>
+                          <td>
+                            <div className="emp-table__actions">
                               <button
                                 type="button"
-                                className="emp-page__icon-btn"
-                                onClick={() => setSelectedExpense(expense)}
+                                className="emp-table__action-btn emp-table__action-btn--view"
+                                onClick={() => handleViewExpense(expense)}
                                 title="View details"
                               >
                                 <FaEye />
                               </button>
                               <button
                                 type="button"
-                                className="emp-page__icon-btn"
+                                className="emp-table__action-btn emp-table__action-btn--edit"
                                 onClick={() => handleEditExpense(expense)}
                                 title="Edit"
-                                style={{ color: "#10b981" }}
                               >
                                 <FaEdit />
                               </button>
                               <button
                                 type="button"
-                                className="emp-page__icon-btn"
+                                className="emp-table__action-btn emp-table__action-btn--delete"
                                 onClick={() => handleDeleteExpense(expense._id, expense.purpose)}
                                 disabled={isDeleting}
                                 title="Delete"
-                                style={{ color: "#ef4444" }}
                               >
                                 <FaTrashAlt />
                               </button>
@@ -565,29 +627,29 @@ const ExpenseManagement = () => {
                       <div className="emp-page__mobile-top">
                         <div>
                           <div className="emp-page__mobile-title">{expense.purpose}</div>
-                          <div className="emp-page__mobile-subtitle">{formatDate(expense.date)}</div>
+                          <div className="emp-page__mobile-subtitle">
+                            <FaCalendarAlt /> {formatDate(expense.date)}
+                          </div>
                         </div>
-                        <div style={{ display: "flex", gap: "4px" }}>
+                        <div className="emp-mobile__actions">
                           <button
                             type="button"
-                            className="emp-page__icon-btn"
-                            onClick={() => setSelectedExpense(expense)}
+                            className="emp-table__action-btn emp-table__action-btn--view"
+                            onClick={() => handleViewExpense(expense)}
                           >
                             <FaEye />
                           </button>
                           <button
                             type="button"
-                            className="emp-page__icon-btn"
+                            className="emp-table__action-btn emp-table__action-btn--edit"
                             onClick={() => handleEditExpense(expense)}
-                            style={{ color: "#10b981" }}
                           >
                             <FaEdit />
                           </button>
                           <button
                             type="button"
-                            className="emp-page__icon-btn"
+                            className="emp-table__action-btn emp-table__action-btn--delete"
                             onClick={() => handleDeleteExpense(expense._id, expense.purpose)}
-                            style={{ color: "#ef4444" }}
                           >
                             <FaTrashAlt />
                           </button>
@@ -601,15 +663,15 @@ const ExpenseManagement = () => {
                         </div>
                         <div className="emp-page__mobile-field">
                           <span>Amount</span>
-                          <span>{formatCurrency(expense.totalAmount)}</span>
+                          <span className="emp-table__amount">{formatCurrency(expense.totalAmount)}</span>
                         </div>
                         <div className="emp-page__mobile-field">
                           <span>Stops</span>
                           <span>{stopCount > 0 ? stopCount : 1}</span>
                         </div>
                         <div className="emp-page__mobile-field">
-                          <span>Outcome</span>
-                          <span>{primaryOutcome}</span>
+                          <span>Status</span>
+                          <StatusBadge status={expense.status || "Pending"} />
                         </div>
                       </div>
                     </div>
@@ -621,459 +683,350 @@ const ExpenseManagement = () => {
         </div>
       </main>
 
-      {/* ===== RECORD EXPENSE MODAL (Same as before) ===== */}
+      {/* ===== RECORD EXPENSE MODAL - Expense Fields ===== */}
       {isModalOpen && (
-        <div
-          className="emp-expense-modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setIsModalOpen(false);
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
           }}
+          onClick={handleCloseModal}
         >
-          <div className="emp-expense-modal-card">
-            {/* Header */}
-            <div className="emp-expense-modal-header">
-              <div className="emp-expense-modal-header-left">
-                <div className="emp-expense-modal-icon">
-                  <FaMoneyBillWave />
-                </div>
-                <div>
-                  <h3 className="emp-expense-modal-title">Record Expense</h3>
-                  <p className="emp-expense-modal-subtitle">Track visit stops, distance, and reimbursement claim</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="emp-page__icon-btn"
-                onClick={() => setIsModalOpen(false)}
-                title="Close"
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              maxWidth: '540px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+              padding: '24px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Record Expense</h2>
+              <button 
+                onClick={handleCloseModal}
+                style={{ background: 'none', border: 'none', fontSize: '20px', color: '#94a3b8', cursor: 'pointer' }}
               >
                 <FaTimes />
               </button>
             </div>
+            
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
+              Track visit stops, distance, and reimbursement claim
+            </p>
 
-            {/* Scrollable Form Body */}
-            <form id="expense-record-form" onSubmit={handleSubmit} className="emp-expense-modal-body">
-              {/* Trip Overview Section */}
-              <div className="emp-expense-section">
-                <div className="emp-expense-section-title">
-                  <FaRoute /> 1. Trip & Purpose
+            <form onSubmit={handleSubmit}>
+              {error && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, marginBottom: '12px' }}>
+                  <FaExclamationCircle size={14} />
+                  <span>{error}</span>
                 </div>
+              )}
 
-                <div className="emp-page__form-grid">
-                  <div className="emp-page__form-full">
-                    <label className="emp-page__label">
-                      Purpose of Travel <span style={{ color: "#ef4444" }}>*</span>
-                    </label>
-                    <input
-                      name="purpose"
-                      value={formData.purpose}
-                      onChange={handleInputChange}
-                      className="emp-page__input"
-                      placeholder="e.g. Client meeting or sample collection"
-                      required
-                    />
-                    {/* Quick suggestion chips for fast mobile entry */}
-                    <div className="emp-expense-chips">
-                      {QUICK_PURPOSES.map((item) => (
-                        <button
-                          key={item}
-                          type="button"
-                          className={`emp-expense-chip ${formData.purpose === item ? "emp-expense-chip--active" : ""}`}
-                          onClick={() => setFormData((prev) => ({ ...prev, purpose: item }))}
-                        >
-                          {item}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="emp-page__label">
-                      Travel Date <span style={{ color: "#ef4444" }}>*</span>
-                    </label>
-                    <input
-                      type="date"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleInputChange}
-                      className="emp-page__input"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="emp-page__label">Total Distance</label>
-                    <div className="emp-page__readonly" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span>{Number(totalKm || 0).toFixed(1)} KM</span>
-                      <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 500 }}>
-                        {stopsKm > 0 ? "Sum of stops" : "Manual entry"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {/* Purpose */}
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>Purpose of Travel <span style={{ color: '#ef4444' }}>*</span></label>
+                <input
+                  type="text"
+                  name="purpose"
+                  value={formData.purpose}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Client meeting or sample collection"
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none' }}
+                  required
+                />
               </div>
 
-              {/* Live Calculation Banner */}
-              <div className="emp-expense-summary-banner">
-                <div className="emp-expense-summary-item">
-                  <span className="emp-expense-summary-label">Total Distance</span>
-                  <span className="emp-expense-summary-val">{Number(totalKm || 0).toFixed(1)} km</span>
-                </div>
-                <div className="emp-expense-summary-item">
-                  <span className="emp-expense-summary-label">Travel Rate</span>
-                  <span className="emp-expense-summary-val">{formatCurrency(kmRate)} / km</span>
-                </div>
-                <div className="emp-expense-summary-item">
-                  <span className="emp-expense-summary-label">Est. Reimbursement</span>
-                  <span className="emp-expense-summary-val emp-expense-summary-val--highlight">
-                    {formatCurrency(calculatedCost)}
+              {/* Date */}
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>Travel Date <span style={{ color: '#ef4444' }}>*</span></label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleInputChange}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none' }}
+                  required
+                />
+              </div>
+
+              {/* Total Distance */}
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>Total Distance</label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', fontWeight: 600 }}>
+                  <span>{Number(totalKm || 0).toFixed(1)} KM</span>
+                  <span style={{ fontSize: '11px', fontWeight: 500, color: '#94a3b8' }}>
+                    {stopsKm > 0 ? "Auto-calculated from stops" : "Manual entry"}
                   </span>
                 </div>
               </div>
 
-              {/* Stops & Samples Section */}
-              <div className="emp-expense-section">
-                <div className="emp-expense-section-header">
-                  <div className="emp-expense-section-title">
-                    <FaMapMarkerAlt /> 2. Route Stops & Samples ({stops.length})
-                  </div>
+              {/* Estimated Amount */}
+              <div style={{ background: '#eff6ff', borderRadius: '10px', padding: '8px 12px', border: '1px solid #bfdbfe', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Estimated Reimbursement</span>
+                  <span style={{ fontSize: '18px', fontWeight: 800, color: '#3b82f6' }}>{formatCurrency(calculatedCost)}</span>
+                </div>
+              </div>
+
+              {/* Stops Section */}
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Route Stops & Samples ({stops.length})</label>
                   <button
                     type="button"
-                    className="emp-page__primary-btn"
                     onClick={addStop}
-                    style={{ padding: "0.45rem 0.85rem", fontSize: "0.75rem", width: "auto" }}
+                    style={{ padding: '4px 12px', border: 'none', borderRadius: '6px', background: '#3b82f6', color: 'white', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
                   >
-                    <FaPlus /> Add Stop
+                    <FaPlus size={10} /> Add Stop
                   </button>
                 </div>
 
-                <div className="emp-page__stop-list">
-                  {stops.map((stop, index) => (
-                    <div key={`stop-${index}`} className="emp-expense-stop-card">
-                      <div className="emp-expense-stop-header">
-                        <span className="emp-expense-stop-badge">
-                          <FaMapMarkerAlt style={{ fontSize: "0.75rem" }} /> Stop #{index + 1}
-                        </span>
+                {stops.map((stop, index) => (
+                  <div key={`stop-${index}`} style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px', border: '1px solid #e2e8f0', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>Stop #{index + 1}</span>
+                      {stops.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeStop(index)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px' }}
+                        >
+                          <FaTrashAlt /> Remove
+                        </button>
+                      )}
+                    </div>
 
-                        {stops.length > 1 && (
-                          <button
-                            type="button"
-                            className="emp-expense-stop-remove-btn"
-                            onClick={() => removeStop(index)}
-                            title="Remove this stop"
-                          >
-                            <FaTrashAlt /> Remove
-                          </button>
-                        )}
+                    <div style={{ marginBottom: '6px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#0f172a', marginBottom: '2px' }}>Location / Sample Name <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input
+                        type="text"
+                        value={stop.locationName}
+                        onChange={(e) => handleStopChange(index, "locationName", e.target.value)}
+                        placeholder="e.g. KPHB Branch / City Hospital"
+                        style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                        required
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '6px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#0f172a', marginBottom: '2px' }}>Meeting Outcome (Optional)</label>
+                      <input
+                        type="text"
+                        value={stop.outcome}
+                        onChange={(e) => handleStopChange(index, "outcome", e.target.value)}
+                        placeholder="e.g. Collected sample / Discussed terms"
+                        style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#0f172a', marginBottom: '2px' }}>Distance (KM)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          value={stop.km}
+                          onChange={(e) => handleStopChange(index, "km", e.target.value)}
+                          placeholder="0.0"
+                          style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                        />
                       </div>
-
-                      <div className="emp-page__form-grid">
-                        <div>
-                          <label className="emp-page__label">
-                            Location / Sample Name <span style={{ color: "#ef4444" }}>*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={stop.locationName}
-                            onChange={(e) => handleStopChange(index, "locationName", e.target.value)}
-                            className="emp-page__input"
-                            placeholder="e.g. KPHB Branch / City Hospital"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label className="emp-page__label">Meeting Outcome (Optional)</label>
-                          <input
-                            type="text"
-                            value={stop.outcome}
-                            onChange={(e) => handleStopChange(index, "outcome", e.target.value)}
-                            className="emp-page__input"
-                            placeholder="e.g. Collected sample / Discussed terms"
-                          />
-                        </div>
-
-                        <div className="emp-page__subgrid emp-page__form-full">
-                          <div>
-                            <label className="emp-page__label">Distance (KM)</label>
-                            <div className="emp-expense-input-with-affix">
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.1"
-                                inputMode="decimal"
-                                value={stop.km}
-                                onChange={(e) => handleStopChange(index, "km", e.target.value)}
-                                className="emp-page__input emp-expense-input--has-suffix"
-                                placeholder="0.0"
-                              />
-                              <span className="emp-expense-input-suffix">km</span>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="emp-page__label">Order Value (₹)</label>
-                            <div className="emp-expense-input-with-affix">
-                              <span className="emp-expense-input-prefix">₹</span>
-                              <input
-                                type="number"
-                                min="0"
-                                inputMode="numeric"
-                                value={stop.orderValue}
-                                onChange={(e) => handleStopChange(index, "orderValue", e.target.value)}
-                                className="emp-page__input emp-expense-input--has-prefix"
-                                placeholder="0"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="emp-page__label">Upsell Value (₹)</label>
-                            <div className="emp-expense-input-with-affix">
-                              <span className="emp-expense-input-prefix">₹</span>
-                              <input
-                                type="number"
-                                min="0"
-                                inputMode="numeric"
-                                value={stop.upsellValue}
-                                onChange={(e) => handleStopChange(index, "upsellValue", e.target.value)}
-                                className="emp-page__input emp-expense-input--has-prefix"
-                                placeholder="0"
-                              />
-                            </div>
-                          </div>
-                        </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#0f172a', marginBottom: '2px' }}>Order Value (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={stop.orderValue}
+                          onChange={(e) => handleStopChange(index, "orderValue", e.target.value)}
+                          placeholder="0"
+                          style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#0f172a', marginBottom: '2px' }}>Upsell Value (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={stop.upsellValue}
+                          onChange={(e) => handleStopChange(index, "upsellValue", e.target.value)}
+                          placeholder="0"
+                          style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
 
                 <button
                   type="button"
-                  className="emp-expense-add-stop-btn"
                   onClick={addStop}
+                  style={{ width: '100%', padding: '8px', border: '2px dashed #d1d5db', borderRadius: '8px', background: 'transparent', color: '#64748b', fontSize: '13px', fontWeight: 500, cursor: 'pointer', marginTop: '4px' }}
                 >
                   <FaPlus /> Add Another Stop
                 </button>
               </div>
 
-              {/* Remarks Section */}
-              <div className="emp-expense-section">
-                <div className="emp-expense-section-title">
-                  <FaCommentDots /> 3. Additional Remark (Optional)
-                </div>
+              {/* Remarks */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>Additional Remark (Optional)</label>
                 <textarea
                   name="remark"
                   value={formData.remark}
                   onChange={handleInputChange}
-                  className="emp-page__textarea"
                   placeholder="Enter any additional notes, parking fees, toll info, or justifications..."
                   rows={2}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
                 />
               </div>
-            </form>
 
-            {/* Sticky Modal Footer */}
-            <div className="emp-expense-modal-footer">
-              <div className="emp-expense-footer-summary">
-                <span className="emp-expense-footer-summary-label">Claim Summary</span>
-                <span className="emp-expense-footer-summary-val">
-                  {Number(totalKm || 0).toFixed(1)} km <span style={{ color: "#94a3b8" }}>•</span> {formatCurrency(calculatedCost)}
-                </span>
-              </div>
-
-              <div className="emp-expense-footer-actions">
-                <button
-                  type="button"
-                  className="emp-page__secondary-btn"
-                  onClick={() => setIsModalOpen(false)}
-                >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
+                <button type="button" onClick={handleCloseModal} style={{ padding: '8px 24px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, background: '#f1f5f9', color: '#64748b', cursor: 'pointer' }}>
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  form="expense-record-form"
-                  className="emp-page__primary-btn"
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <>
-                      <FaSync className="animate-spin" /> Submitting...
-                    </>
-                  ) : (
-                    "Submit Record"
-                  )}
+                <button type="submit" disabled={submitting} style={{ padding: '8px 24px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, background: '#3b82f6', color: 'white', cursor: 'pointer' }}>
+                  {submitting ? "Submitting..." : "Submit Record"}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
 
       {/* ===== EXPENSE DETAILS MODAL ===== */}
       {selectedExpense && (
-        <div
-          className="emp-expense-modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setSelectedExpense(null);
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
           }}
+          onClick={() => setSelectedExpense(null)}
         >
-          <div className="emp-expense-modal-card">
-            {/* Header */}
-            <div className="emp-expense-modal-header">
-              <div className="emp-expense-modal-header-left">
-                <div className="emp-expense-modal-icon">
-                  <FaClipboardList />
-                </div>
-                <div>
-                  <h3 className="emp-expense-modal-title">Expense Details</h3>
-                  <p className="emp-expense-modal-subtitle">Submitted on {formatDate(selectedExpense.date)}</p>
-                </div>
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              maxWidth: '540px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+              padding: '24px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Expense Details</h2>
+              <button 
+                onClick={() => setSelectedExpense(null)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', color: '#94a3b8', cursor: 'pointer' }}
+              >
+                <FaTimes />
+              </button>
+            </div>
+            
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
+              Submitted on {formatDate(selectedExpense.date)}
+            </p>
+
+            {/* Summary Banner */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
+              <div>
+                <div style={{ fontSize: '10px', fontWeight: 500, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Distance</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{Number(selectedExpense.km || 0).toFixed(1)} km</div>
               </div>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  type="button"
-                  className="emp-page__icon-btn"
-                  onClick={() => {
-                    setSelectedExpense(null);
-                    handleEditExpense(selectedExpense);
-                  }}
-                  style={{ color: "#10b981" }}
-                  title="Edit"
-                >
-                  <FaEdit />
-                </button>
-                <button
-                  type="button"
-                  className="emp-page__icon-btn"
-                  onClick={() => {
-                    const expense = selectedExpense;
-                    setSelectedExpense(null);
-                    handleDeleteExpense(expense._id, expense.purpose);
-                  }}
-                  style={{ color: "#ef4444" }}
-                  title="Delete"
-                >
-                  <FaTrashAlt />
-                </button>
-                <button
-                  type="button"
-                  className="emp-page__icon-btn"
-                  onClick={() => setSelectedExpense(null)}
-                  title="Close"
-                >
-                  <FaTimes />
-                </button>
+              <div>
+                <div style={{ fontSize: '10px', fontWeight: 500, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Rate Applied</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{formatCurrency(selectedExpense.rateApplied)}/km</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '10px', fontWeight: 500, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Amount</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#3b82f6' }}>{formatCurrency(selectedExpense.totalAmount)}</div>
               </div>
             </div>
 
-            {/* Body */}
-            <div className="emp-expense-modal-body">
-              {/* Summary Banner */}
-              <div className="emp-expense-summary-banner">
-                <div className="emp-expense-summary-item">
-                  <span className="emp-expense-summary-label">Distance</span>
-                  <span className="emp-expense-summary-val">{Number(selectedExpense.km || 0).toFixed(1)} km</span>
+            {/* Purpose & Date */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}><FaInfoCircle style={{ color: '#3b82f6' }} /> Purpose & Date</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: 500, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Purpose</div>
+                  <div style={{ fontSize: '14px', fontWeight: 500, color: '#0f172a', padding: '4px 8px', background: '#f8fafc', borderRadius: '4px' }}>{selectedExpense.purpose}</div>
                 </div>
-                <div className="emp-expense-summary-item">
-                  <span className="emp-expense-summary-label">Rate Applied</span>
-                  <span className="emp-expense-summary-val">{formatCurrency(selectedExpense.rateApplied)} / km</span>
-                </div>
-                <div className="emp-expense-summary-item">
-                  <span className="emp-expense-summary-label">Total Reimbursable</span>
-                  <span className="emp-expense-summary-val emp-expense-summary-val--highlight">
-                    {formatCurrency(selectedExpense.totalAmount)}
-                  </span>
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: 500, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Date</div>
+                  <div style={{ fontSize: '14px', fontWeight: 500, color: '#0f172a', padding: '4px 8px', background: '#f8fafc', borderRadius: '4px' }}>{formatDate(selectedExpense.date)}</div>
                 </div>
               </div>
+            </div>
 
-              <div className="emp-expense-section">
-                <div className="emp-expense-section-title">
-                  <FaInfoCircle /> Purpose & Date
-                </div>
-                <div className="emp-page__form-grid">
-                  <div>
-                    <label className="emp-page__label">Purpose of Travel</label>
-                    <div className="emp-page__readonly">{selectedExpense.purpose}</div>
-                  </div>
-                  <div>
-                    <label className="emp-page__label">Travel Date</label>
-                    <div className="emp-page__readonly">{formatDate(selectedExpense.date)}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stops Visited */}
-              <div className="emp-expense-section">
-                <div className="emp-expense-section-title">
-                  <FaMapMarkerAlt /> Stops & Samples Visited ({selectedExpense.stops?.length || 0})
-                </div>
-
-                {selectedExpense.stops?.length ? (
-                  <div className="emp-page__stop-list">
-                    {selectedExpense.stops.map((stop, index) => (
-                      <div key={`detail-stop-${index}`} className="emp-expense-stop-card">
-                        <div className="emp-expense-stop-header">
-                          <span className="emp-expense-stop-badge">
-                            <FaMapMarkerAlt style={{ fontSize: "0.75rem" }} /> Stop #{index + 1}: {stop.locationName || "Location"}
-                          </span>
-                          {stop.outcome && (
-                            <span className="emp-page__badge emp-page__badge--primary">
-                              {stop.outcome}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="emp-page__subgrid">
-                          <div className="emp-page__metric">
-                            <div className="emp-page__metric-label">Distance</div>
-                            <div className="emp-page__metric-value">{Number(stop.km || 0).toFixed(1)} km</div>
-                          </div>
-                          <div className="emp-page__metric">
-                            <div className="emp-page__metric-label">Order Value</div>
-                            <div className="emp-page__metric-value">{formatCurrency(stop.orderValue)}</div>
-                          </div>
-                          <div className="emp-page__metric">
-                            <div className="emp-page__metric-label">Upsell Value</div>
-                            <div className="emp-page__metric-value">{formatCurrency(stop.upsellValue)}</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="emp-page__empty" style={{ padding: "1.5rem 1rem" }}>
-                    <div className="emp-page__empty-icon">
-                      <FaRoute />
+            {/* Stops */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}><FaMapMarkerAlt style={{ color: '#3b82f6' }} /> Stops ({selectedExpense.stops?.length || 0})</div>
+              {selectedExpense.stops?.length ? (
+                selectedExpense.stops.map((stop, index) => (
+                  <div key={`detail-stop-${index}`} style={{ background: '#f8fafc', borderRadius: '8px', padding: '8px 12px', border: '1px solid #e2e8f0', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '50%', background: '#3b82f6', color: 'white', fontSize: '10px', fontWeight: 700 }}>{index + 1}</span>
+                      <span style={{ fontSize: '13px', fontWeight: 500, color: '#0f172a' }}>{stop.locationName}</span>
+                      {stop.outcome && (
+                        <span style={{ fontSize: '10px', color: '#10b981', background: '#ecfdf5', padding: '2px 8px', borderRadius: '12px' }}>{stop.outcome}</span>
+                      )}
                     </div>
-                    <h3>Single visit record</h3>
-                    <p>No itemized stop list was recorded for this trip.</p>
+                    <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#64748b' }}>
+                      <span>📏 {Number(stop.km || 0).toFixed(1)} km</span>
+                      <span>💰 {formatCurrency(stop.orderValue)}</span>
+                      <span>📈 {formatCurrency(stop.upsellValue)}</span>
+                    </div>
                   </div>
-                )}
-              </div>
-
-              {/* Remark */}
-              {selectedExpense.remark && (
-                <div className="emp-expense-section">
-                  <div className="emp-expense-section-title">
-                    <FaCommentDots /> Remark / Notes
-                  </div>
-                  <div className="emp-page__readonly" style={{ minHeight: "3.5rem", whiteSpace: "pre-wrap" }}>
-                    {selectedExpense.remark}
-                  </div>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+                  <FaRoute style={{ fontSize: '28px', marginBottom: '6px', opacity: 0.5 }} />
+                  <p style={{ margin: 0, fontSize: '13px' }}>No stops recorded for this trip</p>
                 </div>
               )}
             </div>
 
-            {/* Footer */}
-            <div className="emp-expense-modal-footer" style={{ justifyContent: "flex-end" }}>
-              <button
-                type="button"
-                className="emp-page__secondary-btn"
-                onClick={() => setSelectedExpense(null)}
-                style={{ width: "100%", maxWidth: "200px" }}
+            {/* Remarks */}
+            {selectedExpense.remark && (
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}><FaCommentDots style={{ color: '#3b82f6' }} /> Remarks</div>
+                <div style={{ fontSize: '13px', color: '#0f172a', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', whiteSpace: 'pre-wrap' }}>
+                  {selectedExpense.remark}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', marginTop: '16px' }}>
+              <button 
+                onClick={() => setSelectedExpense(null)} 
+                style={{ padding: '8px 24px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, background: '#f1f5f9', color: '#64748b', cursor: 'pointer' }}
               >
-                Close Details
+                Close
               </button>
             </div>
           </div>
@@ -1082,297 +1035,218 @@ const ExpenseManagement = () => {
 
       {/* ===== EDIT EXPENSE MODAL ===== */}
       {isEditModalOpen && editingExpense && (
-        <div
-          className="emp-expense-modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setIsEditModalOpen(false);
-              setEditingExpense(null);
-            }
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
           }}
+          onClick={handleCloseModal}
         >
-          <div className="emp-expense-modal-card">
-            {/* Header */}
-            <div className="emp-expense-modal-header">
-              <div className="emp-expense-modal-header-left">
-                <div className="emp-expense-modal-icon">
-                  <FaEdit />
-                </div>
-                <div>
-                  <h3 className="emp-expense-modal-title">Edit Expense</h3>
-                  <p className="emp-expense-modal-subtitle">Update your travel expense details</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="emp-page__icon-btn"
-                onClick={() => {
-                  setIsEditModalOpen(false);
-                  setEditingExpense(null);
-                }}
-                title="Close"
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              maxWidth: '540px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+              padding: '24px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Edit Expense</h2>
+              <button 
+                onClick={handleCloseModal}
+                style={{ background: 'none', border: 'none', fontSize: '20px', color: '#94a3b8', cursor: 'pointer' }}
               >
                 <FaTimes />
               </button>
             </div>
+            
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
+              Update your travel expense details
+            </p>
 
-            {/* Form Body */}
-            <form id="expense-edit-form" onSubmit={handleEditSubmit} className="emp-expense-modal-body">
-              {/* Trip Overview Section */}
-              <div className="emp-expense-section">
-                <div className="emp-expense-section-title">
-                  <FaRoute /> 1. Trip & Purpose
+            <form onSubmit={handleEditSubmit}>
+              {error && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, marginBottom: '12px' }}>
+                  <FaExclamationCircle size={14} />
+                  <span>{error}</span>
                 </div>
+              )}
 
-                <div className="emp-page__form-grid">
-                  <div className="emp-page__form-full">
-                    <label className="emp-page__label">
-                      Purpose of Travel <span style={{ color: "#ef4444" }}>*</span>
-                    </label>
-                    <input
-                      name="purpose"
-                      value={editFormData.purpose}
-                      onChange={handleEditInputChange}
-                      className="emp-page__input"
-                      placeholder="e.g. Client meeting or sample collection"
-                      required
-                    />
-                    <div className="emp-expense-chips">
-                      {QUICK_PURPOSES.map((item) => (
-                        <button
-                          key={item}
-                          type="button"
-                          className={`emp-expense-chip ${editFormData.purpose === item ? "emp-expense-chip--active" : ""}`}
-                          onClick={() => setEditFormData((prev) => ({ ...prev, purpose: item }))}
-                        >
-                          {item}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="emp-page__label">
-                      Travel Date <span style={{ color: "#ef4444" }}>*</span>
-                    </label>
-                    <input
-                      type="date"
-                      name="date"
-                      value={editFormData.date}
-                      onChange={handleEditInputChange}
-                      className="emp-page__input"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="emp-page__label">Total Distance</label>
-                    <div className="emp-page__readonly" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span>{Number(editTotalKm || 0).toFixed(1)} KM</span>
-                      <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 500 }}>
-                        {editStopsKm > 0 ? "Sum of stops" : "Manual entry"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>Purpose of Travel <span style={{ color: '#ef4444' }}>*</span></label>
+                <input
+                  type="text"
+                  name="purpose"
+                  value={editFormData.purpose}
+                  onChange={handleEditInputChange}
+                  placeholder="e.g. Client meeting or sample collection"
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none' }}
+                  required
+                />
               </div>
 
-              {/* Live Calculation Banner */}
-              <div className="emp-expense-summary-banner">
-                <div className="emp-expense-summary-item">
-                  <span className="emp-expense-summary-label">Total Distance</span>
-                  <span className="emp-expense-summary-val">{Number(editTotalKm || 0).toFixed(1)} km</span>
-                </div>
-                <div className="emp-expense-summary-item">
-                  <span className="emp-expense-summary-label">Travel Rate</span>
-                  <span className="emp-expense-summary-val">{formatCurrency(kmRate)} / km</span>
-                </div>
-                <div className="emp-expense-summary-item">
-                  <span className="emp-expense-summary-label">Est. Reimbursement</span>
-                  <span className="emp-expense-summary-val emp-expense-summary-val--highlight">
-                    {formatCurrency(editCalculatedCost)}
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>Travel Date <span style={{ color: '#ef4444' }}>*</span></label>
+                <input
+                  type="date"
+                  name="date"
+                  value={editFormData.date}
+                  onChange={handleEditInputChange}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none' }}
+                  required
+                />
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>Total Distance</label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', fontWeight: 600 }}>
+                  <span>{Number(editTotalKm || 0).toFixed(1)} KM</span>
+                  <span style={{ fontSize: '11px', fontWeight: 500, color: '#94a3b8' }}>
+                    {editStopsKm > 0 ? "Sum of stops" : "Manual entry"}
                   </span>
                 </div>
               </div>
 
-              {/* Stops & Samples Section */}
-              <div className="emp-expense-section">
-                <div className="emp-expense-section-header">
-                  <div className="emp-expense-section-title">
-                    <FaMapMarkerAlt /> 2. Route Stops & Samples ({editStops.length})
-                  </div>
+              <div style={{ background: '#eff6ff', borderRadius: '10px', padding: '8px 12px', border: '1px solid #bfdbfe', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Estimated Reimbursement</span>
+                  <span style={{ fontSize: '18px', fontWeight: 800, color: '#3b82f6' }}>{formatCurrency(editCalculatedCost)}</span>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Route Stops & Samples ({editStops.length})</label>
                   <button
                     type="button"
-                    className="emp-page__primary-btn"
                     onClick={addEditStop}
-                    style={{ padding: "0.45rem 0.85rem", fontSize: "0.75rem", width: "auto" }}
+                    style={{ padding: '4px 12px', border: 'none', borderRadius: '6px', background: '#3b82f6', color: 'white', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
                   >
-                    <FaPlus /> Add Stop
+                    <FaPlus size={10} /> Add Stop
                   </button>
                 </div>
 
-                <div className="emp-page__stop-list">
-                  {editStops.map((stop, index) => (
-                    <div key={`edit-stop-${index}`} className="emp-expense-stop-card">
-                      <div className="emp-expense-stop-header">
-                        <span className="emp-expense-stop-badge">
-                          <FaMapMarkerAlt style={{ fontSize: "0.75rem" }} /> Stop #{index + 1}
-                        </span>
+                {editStops.map((stop, index) => (
+                  <div key={`edit-stop-${index}`} style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px', border: '1px solid #e2e8f0', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>Stop #{index + 1}</span>
+                      {editStops.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeEditStop(index)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px' }}
+                        >
+                          <FaTrashAlt /> Remove
+                        </button>
+                      )}
+                    </div>
 
-                        {editStops.length > 1 && (
-                          <button
-                            type="button"
-                            className="emp-expense-stop-remove-btn"
-                            onClick={() => removeEditStop(index)}
-                            title="Remove this stop"
-                          >
-                            <FaTrashAlt /> Remove
-                          </button>
-                        )}
+                    <div style={{ marginBottom: '6px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#0f172a', marginBottom: '2px' }}>Location / Sample Name <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input
+                        type="text"
+                        value={stop.locationName}
+                        onChange={(e) => handleEditStopChange(index, "locationName", e.target.value)}
+                        placeholder="e.g. KPHB Branch / City Hospital"
+                        style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                        required
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '6px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#0f172a', marginBottom: '2px' }}>Meeting Outcome (Optional)</label>
+                      <input
+                        type="text"
+                        value={stop.outcome}
+                        onChange={(e) => handleEditStopChange(index, "outcome", e.target.value)}
+                        placeholder="e.g. Collected sample / Discussed terms"
+                        style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#0f172a', marginBottom: '2px' }}>Distance (KM)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          value={stop.km}
+                          onChange={(e) => handleEditStopChange(index, "km", e.target.value)}
+                          placeholder="0.0"
+                          style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                        />
                       </div>
-
-                      <div className="emp-page__form-grid">
-                        <div>
-                          <label className="emp-page__label">
-                            Location / Sample Name <span style={{ color: "#ef4444" }}>*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={stop.locationName}
-                            onChange={(e) => handleEditStopChange(index, "locationName", e.target.value)}
-                            className="emp-page__input"
-                            placeholder="e.g. KPHB Branch / City Hospital"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label className="emp-page__label">Meeting Outcome (Optional)</label>
-                          <input
-                            type="text"
-                            value={stop.outcome}
-                            onChange={(e) => handleEditStopChange(index, "outcome", e.target.value)}
-                            className="emp-page__input"
-                            placeholder="e.g. Collected sample / Discussed terms"
-                          />
-                        </div>
-
-                        <div className="emp-page__subgrid emp-page__form-full">
-                          <div>
-                            <label className="emp-page__label">Distance (KM)</label>
-                            <div className="emp-expense-input-with-affix">
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.1"
-                                inputMode="decimal"
-                                value={stop.km}
-                                onChange={(e) => handleEditStopChange(index, "km", e.target.value)}
-                                className="emp-page__input emp-expense-input--has-suffix"
-                                placeholder="0.0"
-                              />
-                              <span className="emp-expense-input-suffix">km</span>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="emp-page__label">Order Value (₹)</label>
-                            <div className="emp-expense-input-with-affix">
-                              <span className="emp-expense-input-prefix">₹</span>
-                              <input
-                                type="number"
-                                min="0"
-                                inputMode="numeric"
-                                value={stop.orderValue}
-                                onChange={(e) => handleEditStopChange(index, "orderValue", e.target.value)}
-                                className="emp-page__input emp-expense-input--has-prefix"
-                                placeholder="0"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="emp-page__label">Upsell Value (₹)</label>
-                            <div className="emp-expense-input-with-affix">
-                              <span className="emp-expense-input-prefix">₹</span>
-                              <input
-                                type="number"
-                                min="0"
-                                inputMode="numeric"
-                                value={stop.upsellValue}
-                                onChange={(e) => handleEditStopChange(index, "upsellValue", e.target.value)}
-                                className="emp-page__input emp-expense-input--has-prefix"
-                                placeholder="0"
-                              />
-                            </div>
-                          </div>
-                        </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#0f172a', marginBottom: '2px' }}>Order Value (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={stop.orderValue}
+                          onChange={(e) => handleEditStopChange(index, "orderValue", e.target.value)}
+                          placeholder="0"
+                          style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#0f172a', marginBottom: '2px' }}>Upsell Value (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={stop.upsellValue}
+                          onChange={(e) => handleEditStopChange(index, "upsellValue", e.target.value)}
+                          placeholder="0"
+                          style={{ width: '100%', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
 
                 <button
                   type="button"
-                  className="emp-expense-add-stop-btn"
                   onClick={addEditStop}
+                  style={{ width: '100%', padding: '8px', border: '2px dashed #d1d5db', borderRadius: '8px', background: 'transparent', color: '#64748b', fontSize: '13px', fontWeight: 500, cursor: 'pointer', marginTop: '4px' }}
                 >
                   <FaPlus /> Add Another Stop
                 </button>
               </div>
 
-              {/* Remarks Section */}
-              <div className="emp-expense-section">
-                <div className="emp-expense-section-title">
-                  <FaCommentDots /> 3. Additional Remark (Optional)
-                </div>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>Additional Remark (Optional)</label>
                 <textarea
                   name="remark"
                   value={editFormData.remark}
                   onChange={handleEditInputChange}
-                  className="emp-page__textarea"
                   placeholder="Enter any additional notes, parking fees, toll info, or justifications..."
                   rows={2}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
                 />
               </div>
-            </form>
 
-            {/* Footer */}
-            <div className="emp-expense-modal-footer">
-              <div className="emp-expense-footer-summary">
-                <span className="emp-expense-footer-summary-label">Updated Summary</span>
-                <span className="emp-expense-footer-summary-val">
-                  {Number(editTotalKm || 0).toFixed(1)} km <span style={{ color: "#94a3b8" }}>•</span> {formatCurrency(editCalculatedCost)}
-                </span>
-              </div>
-
-              <div className="emp-expense-footer-actions">
-                <button
-                  type="button"
-                  className="emp-page__secondary-btn"
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    setEditingExpense(null);
-                  }}
-                >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
+                <button type="button" onClick={handleCloseModal} style={{ padding: '8px 24px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, background: '#f1f5f9', color: '#64748b', cursor: 'pointer' }}>
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  form="expense-edit-form"
-                  className="emp-page__primary-btn"
-                  disabled={isUpdating}
-                >
-                  {isUpdating ? (
-                    <>
-                      <FaSync className="animate-spin" /> Updating...
-                    </>
-                  ) : (
-                    "Update Expense"
-                  )}
+                <button type="submit" disabled={isUpdating} style={{ padding: '8px 24px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, background: '#3b82f6', color: 'white', cursor: 'pointer' }}>
+                  {isUpdating ? "Updating..." : "Update Expense"}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
