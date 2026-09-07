@@ -25,7 +25,9 @@ import {
   FaCheck,
   FaClipboardList,
   FaCalendarCheck,
-  FaHistory
+  FaHistory,
+  FaPrescription,
+  FaFilePdf
 } from "react-icons/fa";
 import {
   FiUsers,
@@ -51,6 +53,7 @@ import {
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 import logo from "../Images/Timelyhealth logo.png";
+import prescriptionTemplate from "../Images/prescription.jpg";
 
 const GENDER_OPTIONS = [
   { value: "Male", label: "Male" },
@@ -292,6 +295,13 @@ export default function OpManagement() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // ===== PRESCRIPTION MODAL STATE =====
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [selectedBookingForPrescription, setSelectedBookingForPrescription] = useState(null);
+
+  // ===== PRESCRIPTION PRINT REF =====
+  const prescriptionRef = useRef(null);
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
@@ -323,6 +333,7 @@ export default function OpManagement() {
   const phoneInputRef = useRef(null);
   const nameInputRef = useRef(null);
   const searchTimeoutRef = useRef(null);
+  const printRef = useRef(null);
 
   const getDefaultMonth = () => {
     const now = new Date();
@@ -492,7 +503,7 @@ export default function OpManagement() {
           referralToSpecialist: b.referralToSpecialist || "",
           patientRating: b.patientRating || null,
           patientFeedback: b.patientFeedback || "",
-          isOP: b.isOP || false  // <-- ADD THIS LINE
+          isOP: b.isOP || false
         };
       });
       
@@ -622,7 +633,7 @@ export default function OpManagement() {
       phone: existingPatient.phone || "",
       address: existingPatient.address || "",
       feeType: existingPatient.feeType || "consultation",
-      feeAmount: existingPatient.feeAmount ?? 300,
+      feeAmount: existingPatient.feeType === "lab" ? 0 : (existingPatient.feeAmount ?? 300),
       paymentType: existingPatient.paymentType || "cash",
       reason: existingPatient.reason || "",
       paymentStatus: existingPatient.paymentStatus || "Pending"
@@ -634,7 +645,19 @@ export default function OpManagement() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Fee type change - automatically set fee amount
+    if (name === "feeType") {
+      const feeAmount = value === "lab" ? 0 : 300;
+      setFormData((prev) => ({ 
+        ...prev, 
+        [name]: value,
+        feeAmount: feeAmount 
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+    
     if (name === "phone") checkExistingPatient(value, "phone");
     else if (name === "name") checkExistingPatient(value, "name");
     if (name === "doctorId" || name === "appointmentDate") {
@@ -721,7 +744,7 @@ export default function OpManagement() {
         paymentStatus: formData.paymentStatus,
         doctorId: formData.doctorId,
         appointmentDate: formData.appointmentDate,
-        isOP: true  // <-- ADD THIS LINE - SEND isOP: true
+        isOP: true
       };
       const slotRes = await axios.post(`${API_BASE_URL}/appointment-slots/book`, bookingPayload);
       if (slotRes.data.success) {
@@ -987,6 +1010,7 @@ export default function OpManagement() {
 
   const handleEdit = (patient) => {
     const today = new Date().toISOString().split("T")[0];
+    const feeAmount = patient.feeType === "lab" ? 0 : (patient.feeAmount ?? 300);
     setFormData({
       name: patient.name || "",
       age: patient.age ?? "",
@@ -994,7 +1018,7 @@ export default function OpManagement() {
       phone: patient.phone || "",
       address: patient.address || "",
       feeType: patient.feeType || "consultation",
-      feeAmount: patient.feeAmount ?? 300,
+      feeAmount: feeAmount,
       paymentType: patient.paymentType || "cash",
       reason: patient.reason || "",
       paymentStatus: patient.paymentStatus || "Pending",
@@ -1057,6 +1081,98 @@ export default function OpManagement() {
       showToast("Failed to fetch patient data", "error");
     } finally {
       setHistoryLoading(false);
+    }
+  };
+
+  // ==================== PRESCRIPTION HANDLERS ====================
+  const openPrescriptionModal = (booking) => {
+    setSelectedBookingForPrescription(booking);
+    setShowPrescriptionModal(true);
+  };
+
+  // ==================== PRESCRIPTION PRINT HANDLER ====================
+  const handlePrintPrescription = () => {
+    if (prescriptionRef.current) {
+      const printContent = prescriptionRef.current;
+      const win = window.open("", "_blank", "width=800,height=900");
+      if (win) {
+        win.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Prescription - ${selectedBookingForPrescription?.patientName || "Patient"}</title>
+              <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { 
+                  font-family: Arial, sans-serif; 
+                  background: #fff; 
+                  display: flex; 
+                  justify-content: center; 
+                  align-items: center; 
+                  min-height: 100vh;
+                  padding: 20px;
+                }
+                .prescription-wrap { 
+                  max-width: 650px; 
+                  width: 100%; 
+                  position: relative; 
+                  background: #fff;
+                  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                  border-radius: 12px;
+                  overflow: hidden;
+                }
+                .prescription-wrap img { 
+                  width: 100%; 
+                  height: auto; 
+                  display: block; 
+                }
+                .overlay-print { 
+                  position: absolute; 
+                  top: 0; 
+                  left: 0; 
+                  right: 0; 
+                  bottom: 0; 
+                  padding: 0; 
+                }
+                .overlay-print .fld { 
+                  position: absolute; 
+                  font-size: 15px; 
+                  font-weight: 600; 
+                  color: #1a1a1a; 
+                  letter-spacing: 0.2px; 
+                  line-height: 1.3; 
+                }
+                @media print {
+                  body { padding: 0; }
+                  .prescription-wrap { box-shadow: none; border-radius: 0; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="prescription-wrap">
+                <img src="${prescriptionTemplate}" alt="Prescription" />
+                <div class="overlay-print">
+                  <div class="fld" style="top:78px;left:90px;">${selectedBookingForPrescription?.patientName || "N/A"}</div>
+                  <div class="fld" style="top:78px;right:70px;">${formatDateToDDMMYYYY(selectedBookingForPrescription?.appointmentDate || selectedBookingForPrescription?.date)}</div>
+                  <div class="fld" style="top:104px;left:90px;">${selectedBookingForPrescription?.patientAge || "N/A"}</div>
+                  <div class="fld" style="top:104px;left:230px;">${selectedBookingForPrescription?.patientGender || "N/A"}</div>
+                  <div class="fld" style="top:104px;right:100px;">${selectedBookingForPrescription?.patientPhone || "N/A"}</div>
+                  <div class="fld" style="top:130px;left:90px;">${selectedBookingForPrescription?.purpose || selectedBookingForPrescription?.reason || "N/A"}</div>
+                </div>
+              </div>
+              <script>
+                window.onload = function() {
+                  window.print();
+                }
+              </script>
+            </body>
+          </html>
+        `);
+        win.document.close();
+        win.focus();
+      }
+    } else {
+      showToast("No prescription content to print", "error");
     }
   };
 
@@ -2403,7 +2519,7 @@ export default function OpManagement() {
                             )}
                           </td>
 
-                          {/* ===== BOOKING STATUS DROPDOWN - FIXED OVERFLOW ISSUE ===== */}
+                          {/* ===== BOOKING STATUS DROPDOWN ===== */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {bookingStatus !== "No Booking" && matchingBooking ? (
                               <div className="relative inline-block status-dropdown">
@@ -2460,7 +2576,7 @@ export default function OpManagement() {
                             </span>
                           </td>
 
-                          {/* ===== CONSULTATION PAYMENT DROPDOWN - FIXED OVERFLOW ISSUE ===== */}
+                          {/* ===== CONSULTATION PAYMENT DROPDOWN ===== */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {matchingBooking ? (
                               <div className="relative inline-block payment-dropdown">
@@ -2543,7 +2659,7 @@ export default function OpManagement() {
                             )}
                           </td>
 
-                          {/* ===== SERVICE PAYMENT DROPDOWN - FIXED OVERFLOW ISSUE ===== */}
+                          {/* ===== SERVICE PAYMENT DROPDOWN ===== */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {services.length > 0 ? (
                               <div className="flex flex-col gap-0.5 items-center">
@@ -2664,6 +2780,15 @@ export default function OpManagement() {
 
                               {matchingBooking && (
                                 <>
+                                  {/* Prescription Button */}
+                                  <button
+                                    onClick={() => openPrescriptionModal(matchingBooking)}
+                                    className="p-1.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg transition-all duration-200 shadow-sm border border-teal-100 hover:shadow-md hover:scale-105"
+                                    title="Prescription"
+                                  >
+                                    <FaPrescription className="w-3.5 h-3.5" />
+                                  </button>
+
                                   {/* Bill Button */}
                                   <button
                                     onClick={() => openBillingModal(matchingBooking)}
@@ -3341,6 +3466,13 @@ export default function OpManagement() {
                                     >
                                       <FaFileInvoiceDollar className="w-3.5 h-3.5" />
                                     </button>
+                                    <button
+                                      onClick={() => openPrescriptionModal(booking)}
+                                      className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                      title="Prescription"
+                                    >
+                                      <FaPrescription className="w-3.5 h-3.5" />
+                                    </button>
                                   </div>
                                 </div>
 
@@ -3475,6 +3607,149 @@ export default function OpManagement() {
                 >
                   Close
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================== PRESCRIPTION MODAL - FIXED PRINT ===================== */}
+        {showPrescriptionModal && selectedBookingForPrescription && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="relative max-w-[650px] w-full rounded-2xl overflow-hidden shadow-2xl bg-white">
+              {/* Close Button */}
+              <button
+                onClick={() => {
+                  setShowPrescriptionModal(false);
+                  setSelectedBookingForPrescription(null);
+                }}
+                className="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all z-30"
+              >
+                <FaTimes className="w-5 h-5 text-gray-700" />
+              </button>
+
+              {/* Print & Download Buttons */}
+              <div className="absolute top-3 left-3 flex gap-2 z-30">
+                <button
+                  onClick={handlePrintPrescription}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-lg transition-all"
+                >
+                  <FaPrint className="w-4 h-4" /> Print / PDF
+                </button>
+                <button
+                  onClick={handlePrintPrescription}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold shadow-lg transition-all"
+                >
+                  <FaFilePdf className="w-4 h-4" /> Download PDF
+                </button>
+              </div>
+
+              {/* Prescription Content - Print Reference */}
+              <div ref={prescriptionRef} className="relative">
+                <img
+                  src={prescriptionTemplate}
+                  alt="Prescription Template"
+                  className="w-full h-auto object-contain rounded-2xl"
+                />
+                
+                {/* ===== OVERLAY - FINAL POSITIONS ===== */}
+                <div className="absolute inset-0 text-black" style={{ padding: 0 }}>
+                  
+                  {/* NAME - Top Left */}
+                  <div 
+                    style={{ 
+                      position: 'absolute',
+                      top: '78px',
+                      left: '90px',
+                      fontSize: '15px', 
+                      fontWeight: '600',
+                      color: '#1a1a1a',
+                      letterSpacing: '0.2px',
+                      lineHeight: '1.3'
+                    }}
+                  >
+                    {selectedBookingForPrescription.patientName || "N/A"}
+                  </div>
+                  
+                  {/* DATE - Top Right */}
+                  <div 
+                    style={{ 
+                      position: 'absolute',
+                      top: '78px',
+                      right: '20px',
+                      fontSize: '15px', 
+                      fontWeight: '600',
+                      color: '#1a1a1a',
+                      letterSpacing: '0.2px',
+                      lineHeight: '1.3'
+                    }}
+                  >
+                    {formatDateToDDMMYYYY(selectedBookingForPrescription.appointmentDate || selectedBookingForPrescription.date)}
+                  </div>
+                  
+                  {/* AGE - Second row */}
+                  <div 
+                    style={{ 
+                      position: 'absolute',
+                      top: '104px',
+                      left: '90px',
+                      fontSize: '15px', 
+                      fontWeight: '600',
+                      color: '#1a1a1a',
+                      letterSpacing: '0.2px',
+                      lineHeight: '1.3'
+                    }}
+                  >
+                    {selectedBookingForPrescription.patientAge || "N/A"}
+                  </div>
+                  
+                  {/* GENDER - Second row */}
+                  <div 
+                    style={{ 
+                      position: 'absolute',
+                      top: '104px',
+                      left: '230px',
+                      fontSize: '15px', 
+                      fontWeight: '600',
+                      color: '#1a1a1a',
+                      letterSpacing: '0.2px',
+                      lineHeight: '1.3'
+                    }}
+                  >
+                    {selectedBookingForPrescription.patientGender || "N/A"}
+                  </div>
+                  
+                  {/* MOBILE - Second row */}
+                  <div 
+                    style={{ 
+                      position: 'absolute',
+                      top: '104px',
+                      right: '100px',
+                      fontSize: '15px', 
+                      fontWeight: '600',
+                      color: '#1a1a1a',
+                      letterSpacing: '0.2px',
+                      lineHeight: '1.3'
+                    }}
+                  >
+                    {selectedBookingForPrescription.patientPhone || "N/A"}
+                  </div>
+                  
+                  {/* DIAGNOSIS - REASON SE AAYEGA */}
+                  <div 
+                    style={{ 
+                      position: 'absolute',
+                      top: '130px',
+                      left: '90px',
+                      fontSize: '15px', 
+                      fontWeight: '600',
+                      color: '#1a1a1a',
+                      letterSpacing: '0.2px',
+                      lineHeight: '1.3'
+                    }}
+                  >
+                    {selectedBookingForPrescription.purpose || selectedBookingForPrescription.reason || "N/A"}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

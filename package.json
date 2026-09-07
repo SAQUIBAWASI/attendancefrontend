@@ -48,6 +48,7 @@
     "react-scripts": "5.0.1",
     "react-select": "^5.10.2",
     "react-time-picker": "^8.1.0",
+    "react-to-print": "^3.3.0",
     "react-toastify": "^11.0.5",
     "reactstrap": "^9.2.3",
     "recharts": "^2.15.1",
