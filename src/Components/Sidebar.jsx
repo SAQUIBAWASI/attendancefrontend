@@ -1744,7 +1744,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/appointment-slots": "Appointments Slots",
       "/bookings": "Bookings",
       "/op-management": "OP Management",
-      "/op-dashboard": "OP Dashboard"
+      "/op-dashboard": "OP Dashboard",
+      "/doctor-management": "Doctors",
+      "/referral-management": "Referral Contacts",
+      "/referredop": "Referred OP",
+      "/services": "Services",
+      "/letterhead": "Letter Head"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1827,13 +1832,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       password = password || employeeData.password || employeeData.employeePassword || localStorage.getItem("employeePassword") || '456789';
     }
 
-    
-
     const baseUrl = 'https://ingrainhire.ingrainsystems.com/client-login';
-
-   
-
-
 
     const params = new URLSearchParams();
     params.append('email', email);
@@ -1892,10 +1891,6 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "User Activity", path: "/useractivity" },
         { name: "User Access", path: "/useraccess" },
         { name: "Shifts", path: "/shift" },
-        // { name: "Appointments Slots", path: "/appointment-slots" },
-        // { name: "Bookings", path: "/bookings" },
-        // { name: "OP Management", path: "/op-management" },
-        // { name: "OP Dashboard", path: "/op-dashboard" },
       ],
     },
     {
@@ -1904,13 +1899,13 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       dropdown: [
         { name: "OP Dashboard", path: "/op-dashboard" },
         { name: "Doctors", path: "/doctor-management" },
+        { name: "Referral Contacts", path: "/referral-management" },
+        { name: "Referred OP", path: "/referredop" },
         { name: "OP Records", path: "/op-management" },
-          { name: "Appointments Slots", path: "/appointment-slots" },
-          { name: "Services", path: "/services" },
+        { name: "Appointment Slots", path: "/appointment-slots" },
+        { name: "Services", path: "/services" },
         { name: "Bookings", path: "/bookings" },
         { name: "Letter Head", path: "/letterhead" },
-       
-        
       ],
     },
 

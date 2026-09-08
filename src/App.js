@@ -226,6 +226,8 @@ import LetterHeadDesigner from "./Pages/LetterHeadDesigner.js";
 import PayrollDashboard from "./Pages/PayrollDashboard.js";
 import EmployeeEvents from "./Pages/EmployeeEvents.js";
 import EmployeeReferral from "./Pages/EmployeeReferral.js";
+import ReferralManagement from "./Pages/ReferralManagement.js";
+import ReferredOP from "./Pages/ReferredOP.js";
 
 function App() {
   return (
@@ -273,6 +275,8 @@ function App() {
       {/* 🔥 OP MANAGEMENT - ADMIN LAYOUT (WITHOUT /employee/ PREFIX) */}
       <Route path="/op-dashboard" element={<AdminLayout><OpDashboard /></AdminLayout>} />
       <Route path="/doctor-management" element={<AdminLayout><DoctorManagement /></AdminLayout>} />
+      <Route path="/referral-management" element={<AdminLayout><ReferralManagement /></AdminLayout>} />
+      <Route path="/referredop" element={<AdminLayout><ReferredOP /></AdminLayout>} />
       <Route path="/op-management" element={<AdminLayout><OpManagement /></AdminLayout>} />
       <Route path="/appointment-slots" element={<AdminLayout><AppointmentSlots /></AdminLayout>} />
       <Route path="/services" element={<AdminLayout><Services /></AdminLayout>} />

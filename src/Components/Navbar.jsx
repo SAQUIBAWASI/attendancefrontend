@@ -135,6 +135,8 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       // ===== OP Management Routes =====
       "/op-dashboard": "",
       "/doctor-management": "",
+      "/referral-management": "",
+      "/referredop": "",
       "/op-management": "",
       "/appointment-slots": "",
       "/services": "",
@@ -196,10 +198,12 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     (tab) => tab.path === location.pathname
   );
 
-  // ===== OP MANAGEMENT TABS =====
+  // ===== OP MANAGEMENT TABS - UPDATED WITH ALL SECTIONS =====
   const opTabs = [
     { path: "/op-dashboard", label: "OP Dashboard" },
     { path: "/doctor-management", label: "Doctors" },
+    { path: "/referral-management", label: "Referral Contacts" },
+    { path: "/referredop", label: "Referred OP" },
     { path: "/op-management", label: "OP Records" },
     { path: "/appointment-slots", label: "Appointment Slots" },
     { path: "/services", label: "Services" },
@@ -462,7 +466,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
           </div>
         )}
 
-        {/* ===== OP MANAGEMENT MODULE TABS ===== */}
+        {/* ===== OP MANAGEMENT MODULE TABS - UPDATED ===== */}
         {isOPModule && (
           <div className="flex items-center gap-1 ml-4">
             {opTabs.map((tab) => {

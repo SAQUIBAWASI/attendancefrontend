@@ -736,7 +736,7 @@ const OpDashboard = () => {
         {/* QUICK ACTION BUTTONS */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <button
-            onClick={() => handleQuickAction("/doctors")}
+            onClick={() => handleQuickAction("/employee/doctor-management")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all group"
           >
             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
@@ -750,7 +750,7 @@ const OpDashboard = () => {
           </button>
 
           <button
-            onClick={() => handleQuickAction("/slots")}
+            onClick={() => handleQuickAction("/employee/appointment-slots")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-purple-300 transition-all group"
           >
             <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
@@ -764,7 +764,7 @@ const OpDashboard = () => {
           </button>
 
           <button
-            onClick={() => handleQuickAction("/op-management")}
+            onClick={() => handleQuickAction("/employee/op-management")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-300 transition-all group"
           >
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
@@ -778,7 +778,7 @@ const OpDashboard = () => {
           </button>
 
           <button
-            onClick={() => handleQuickAction("/bookings")}
+            onClick={() => handleQuickAction("/employee/bookings")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-amber-300 transition-all group"
           >
             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
