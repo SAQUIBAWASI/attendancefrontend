@@ -1,4 +1,4 @@
-// OpManagement.js - Complete OP Management (Final - Fixed Edit)
+// OpManagement.js - Complete OP Management (With Add Buttons for Referrals)
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
@@ -40,7 +40,11 @@ import {
   FaPills,
   FaFlask,
   FaMinusCircle,
-  FaPlusCircle
+  FaPlusCircle,
+  FaUserTag,
+  FaUserFriends,
+  FaUserMd as FaUserMdIcon,
+  FaExternalLinkAlt
 } from "react-icons/fa";
 import {
   FiUsers,
@@ -67,16 +71,23 @@ import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 import logo from "../Images/Timelyhealth logo.png";
 import prescriptionTemplate from "../Images/prescription.jpg";
+import prescriptionBackTemplate from "../Images/prescriptionbackside.jpg";
+
+// ===== NEW: Import useNavigate for navigation =====
+import { useNavigate } from "react-router-dom";
+
+const TITLE_OPTIONS = [
+  { value: "Mr.", label: "Mr." },
+  { value: "Ms.", label: "Ms." },
+  { value: "Mrs.", label: "Mrs." },
+  { value: "Baby", label: "Baby" },
+  { value: "Dr.", label: "Dr." }
+];
 
 const GENDER_OPTIONS = [
   { value: "Male", label: "Male" },
   { value: "Female", label: "Female" },
   { value: "Other", label: "Other" }
-];
-
-const FEE_TYPE_OPTIONS = [
-  { value: "consultation", label: "Consultation Fee" },
-  { value: "lab", label: "Lab Fee" }
 ];
 
 const PAYMENT_TYPE_OPTIONS = [
@@ -100,13 +111,14 @@ const BOOKING_STATUS_OPTIONS = [
 ];
 
 const EMPTY_FORM = {
+  title: "Mr.",
   name: "",
+  dob: "",
   age: "",
   gender: "",
   phone: "",
   address: "",
-  feeType: "consultation",
-  feeAmount: 300,
+  serviceItems: [],
   paymentType: "cash",
   reason: "",
   paymentStatus: "Pending",
@@ -114,13 +126,15 @@ const EMPTY_FORM = {
   slotId: "",
   appointmentDate: "",
   selectedServices: [],
-  referredBy: "",
-  referralContactId: "",
+  referredByCustomer: "",
+  referredByDoctor: "",
+  referralCustomerId: "",
+  referralDoctorId: "",
   referralCommission: "",
   referralCommissionType: "",
   partialAmount: "",
-  serviceName: "",
-  servicePrice: ""
+  bookingId: "",
+  status: "confirmed"
 };
 
 const CLINIC_INFO = {
@@ -128,6 +142,23 @@ const CLINIC_INFO = {
   address:
     "Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, H. No: 1-98/9/25/p, Opp Style on Studio, VIP Hills, near Bank of Baroda, Arunodaya Colony, Sri Sai Nagar, Madhapur, Hyderabad, Telangana 500081",
   contact: "9505397000"
+};
+
+const calculateAgeFromDOB = (dob) => {
+  if (!dob) return "";
+  try {
+    const birthDate = new Date(dob);
+    if (isNaN(birthDate.getTime())) return "";
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age > 0 ? age.toString() : "";
+  } catch {
+    return "";
+  }
 };
 
 const getDayNameFromDate = (dateStr) => {
@@ -205,6 +236,9 @@ const numberToWords = (num) => {
 };
 
 export default function OpManagement() {
+  // ===== NEW: useNavigate hook =====
+  const navigate = useNavigate();
+
   // ===== MAIN DATA STATES =====
   const [patients, setPatients] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -220,23 +254,17 @@ export default function OpManagement() {
 
   const [services, setServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(false);
-
-  // ===== SERVICE SUGGESTIONS STATE =====
   const [filteredServices, setFilteredServices] = useState([]);
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
 
-  // Service dropdown for modal
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [serviceDropdownOpenForModal, setServiceDropdownOpenForModal] = useState(false);
   const [selectedServiceForBooking, setSelectedServiceForBooking] = useState(null);
   const [selectedBookingForService, setSelectedBookingForService] = useState(null);
 
-  // Status Dropdown state
   const [openStatusDropdown, setOpenStatusDropdown] = useState(null);
   const [statusUpdating, setStatusUpdating] = useState(false);
-
-  // Payment Dropdown state
   const [openPaymentDropdown, setOpenPaymentDropdown] = useState(null);
   const [paymentUpdating, setPaymentUpdating] = useState(false);
 
@@ -252,7 +280,6 @@ export default function OpManagement() {
   const [showExistingPatientPopup, setShowExistingPatientPopup] = useState(false);
   const [searchingPatient, setSearchingPatient] = useState(false);
 
-  // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [feeTypeFilter, setFeeTypeFilter] = useState("All");
@@ -261,8 +288,6 @@ export default function OpManagement() {
   const [toDate, setToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-
-  // Card filter state
   const [activeCardFilter, setActiveCardFilter] = useState("all");
 
   const [toast, setToast] = useState(null);
@@ -272,19 +297,16 @@ export default function OpManagement() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // ===== PRESCRIPTION MODAL STATE =====
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
   const [selectedBookingForPrescription, setSelectedBookingForPrescription] = useState(null);
   const prescriptionRef = useRef(null);
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
     const saved = localStorage.getItem("opMgmt_itemsPerPage");
     return saved ? parseInt(saved, 10) : 10;
   });
 
-  // ===== BILLING STATE =====
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [selectedBookingForBilling, setSelectedBookingForBilling] = useState(null);
   const [billingData, setBillingData] = useState({
@@ -324,55 +346,23 @@ export default function OpManagement() {
     toDate !== "" ||
     (selectedMonth && selectedMonth !== "");
 
-  // Toast helper
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Calculate totals
-  const calculateTotals = () => {
-    const consultationFee = formData.feeAmount || 0;
-    const servicesTotal = formData.selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
-    const subtotal = consultationFee + servicesTotal;
-    const commissionPercent = parseFloat(formData.referralCommission) || 0;
-    const commissionAmount = (subtotal * commissionPercent) / 100;
-    const finalPayable = subtotal - commissionAmount;
-
-    return {
-      consultationFee,
-      servicesTotal,
-      subtotal,
-      commissionPercent,
-      commissionAmount,
-      finalPayable
-    };
-  };
-
-  // Fetch initial data
   useEffect(() => {
     fetchAllData();
     const today = new Date().toISOString().split("T")[0];
     setFormData((prev) => ({ ...prev, appointmentDate: today }));
   }, []);
 
-  // Fetch slots when doctor or date changes
   useEffect(() => {
     if (formData.doctorId && formData.appointmentDate) {
       filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
     }
   }, [formData.doctorId, formData.appointmentDate]);
 
-  const fetchAllData = () => {
-    fetchPatients();
-    fetchBookings();
-    fetchDoctors();
-    fetchAllSlots();
-    fetchServices();
-    fetchReferralContacts();
-  };
-
-  // Click outside handlers for dropdowns
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest(".status-dropdown")) {
@@ -389,7 +379,15 @@ export default function OpManagement() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // ===== fetchPatients =====
+  const fetchAllData = () => {
+    fetchPatients();
+    fetchBookings();
+    fetchDoctors();
+    fetchAllSlots();
+    fetchServices();
+    fetchReferralContacts();
+  };
+
   const fetchPatients = async () => {
     setLoading(true);
     try {
@@ -416,7 +414,6 @@ export default function OpManagement() {
     }
   };
 
-  // ===== fetchBookings =====
   const fetchBookings = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings`);
@@ -445,6 +442,8 @@ export default function OpManagement() {
           patientGender: b.patientGender || "Male",
           patientPhone: b.patientPhone || "",
           patientAddress: b.patientAddress || "",
+          patientTitle: b.patientTitle || "Mr.",
+          patientDob: b.patientDob || "",
           dayOfWeek: slotDetails.dayOfWeek || b.dayOfWeek || "",
           date: slotDetails.date || b.appointmentDate || b.date || "",
           startTime: slotDetails.startTime || b.startTime || "",
@@ -463,12 +462,15 @@ export default function OpManagement() {
           balanceAmount: b.balanceAmount || 0,
           status: b.status || "confirmed",
           services: b.services || [],
+          serviceItems: b.serviceItems || [],
           createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
           bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
           appointmentDate: b.appointmentDate || slotDetails.date || "",
           isOP: b.isOP || false,
-          referredBy: b.referredBy || "",
-          referralContactId: b.referralContactId || "",
+          referredByCustomer: b.referredByCustomer || "",
+          referredByDoctor: b.referredByDoctor || "",
+          referralCustomerId: b.referralCustomerId || "",
+          referralDoctorId: b.referralDoctorId || "",
           referralCommission: b.referralCommission || "",
           referralCommissionType: b.referralCommissionType || "",
           subtotal: b.subtotal || 0,
@@ -482,7 +484,6 @@ export default function OpManagement() {
     }
   };
 
-  // ===== fetchDoctors =====
   const fetchDoctors = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/doctors/getalldoctors`);
@@ -495,7 +496,6 @@ export default function OpManagement() {
     }
   };
 
-  // ===== fetchAllSlots =====
   const fetchAllSlots = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/appointment-slots`);
@@ -507,7 +507,6 @@ export default function OpManagement() {
     }
   };
 
-  // ===== fetchServices =====
   const fetchServices = async () => {
     setServicesLoading(true);
     try {
@@ -525,7 +524,6 @@ export default function OpManagement() {
     }
   };
 
-  // ===== fetchReferralContacts =====
   const fetchReferralContacts = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/referralcontacts/getallreferralcontacts`);
@@ -546,7 +544,6 @@ export default function OpManagement() {
     }
   };
 
-  // Filter slots for appointment booking
   const filterSlotsByDoctorAndDate = (doctorId, date) => {
     if (!doctorId || !date) {
       setAvailableSlots([]);
@@ -581,8 +578,7 @@ export default function OpManagement() {
     }
   };
 
-  // Existing patient lookup
-  const checkExistingPatient = (value, field) => {
+  const checkExistingPatient = (value) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     if (editingId) {
       setExistingPatient(null);
@@ -597,12 +593,7 @@ export default function OpManagement() {
     setSearchingPatient(true);
     searchTimeoutRef.current = setTimeout(() => {
       let found = null;
-      if (field === "phone") {
-        found = patients.find((p) => p.phone === value);
-      } else if (field === "name") {
-        const searchTerm = value.toLowerCase().trim();
-        found = patients.find((p) => p.name && p.name.toLowerCase().includes(searchTerm));
-      }
+      found = patients.find((p) => p.phone === value);
       if (found) {
         setExistingPatient(found);
         setShowExistingPatientPopup(true);
@@ -618,19 +609,22 @@ export default function OpManagement() {
     if (!existingPatient) return;
     setFormData((prev) => ({
       ...prev,
+      title: existingPatient.title || "Mr.",
       name: existingPatient.name || "",
+      dob: existingPatient.dob || "",
       age: existingPatient.age ?? "",
       gender: existingPatient.gender || "",
       phone: existingPatient.phone || "",
       address: existingPatient.address || "",
-      feeType: existingPatient.feeType || "consultation",
-      feeAmount: existingPatient.feeType === "lab" ? 0 : (existingPatient.feeAmount ?? 300),
+      serviceItems: existingPatient.serviceItems || [],
       paymentType: existingPatient.paymentType || "cash",
       reason: existingPatient.reason || "",
       paymentStatus: existingPatient.paymentStatus || "Pending",
       selectedServices: existingPatient.services || [],
-      referredBy: existingPatient.referredBy || "",
-      referralContactId: existingPatient.referralContactId || "",
+      referredByCustomer: existingPatient.referredByCustomer || "",
+      referredByDoctor: existingPatient.referredByDoctor || "",
+      referralCustomerId: existingPatient.referralCustomerId || "",
+      referralDoctorId: existingPatient.referralDoctorId || "",
       referralCommission: existingPatient.referralCommission || "",
       referralCommissionType: existingPatient.referralCommissionType || ""
     }));
@@ -639,86 +633,62 @@ export default function OpManagement() {
     showToast(`Patient ${existingPatient.name} details auto-filled!`, "info");
   };
 
-  // ===== REFERRAL CONTACT HANDLER =====
-  const handleReferralContactSelect = (contact, commissionType) => {
-    if (!contact) return;
-    let commissionValue = 0;
-    let commissionLabel = "";
-
-    if (commissionType === "clinic") {
-      commissionValue = parseFloat(contact.clinicCommission) || 0;
-      commissionLabel = "Clinic";
-    } else if (commissionType === "pharmacy") {
-      commissionValue = parseFloat(contact.pharmacyCommission) || 0;
-      commissionLabel = "Pharmacy";
-    } else if (commissionType === "lab") {
-      commissionValue = parseFloat(contact.labCommission) || 0;
-      commissionLabel = "Lab";
-    }
-
-    let displayName = "";
-    if (contact.referralType === "customer") {
-      displayName = contact.customerName || "";
-    } else {
-      displayName = contact.doctorName || "";
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      referredBy: displayName,
-      referralContactId: contact._id,
-      referralCommission: commissionValue.toString(),
-      referralCommissionType: commissionLabel
+  const handleDobChange = (dob) => {
+    setFormData((prev) => ({ 
+      ...prev, 
+      dob: dob,
+      age: calculateAgeFromDOB(dob)
     }));
-
-    showToast(`Referred by: ${displayName} | ${commissionLabel}: ${commissionValue}%`, "info");
   };
 
-  // ===== SERVICE HANDLERS =====
-  const handleAddServiceToPatient = async (service) => {
+  const handleReferralCustomerSelect = (contact) => {
+    if (!contact) return;
+    setFormData((prev) => ({
+      ...prev,
+      referredByCustomer: contact.customerName || "",
+      referralCustomerId: contact._id,
+    }));
+    showToast(`Customer referral: ${contact.customerName}`, "info");
+  };
+
+  const handleReferralDoctorSelect = (contact) => {
+    if (!contact) return;
+    setFormData((prev) => ({
+      ...prev,
+      referredByDoctor: contact.doctorName || "",
+      referralDoctorId: contact._id,
+    }));
+    showToast(`Doctor referral: ${contact.doctorName}`, "info");
+  };
+
+  // ===== NEW: Navigation handlers for Add buttons =====
+  const handleAddCustomerReferral = () => {
+    navigate("/customer-referrals");
+  };
+
+  const handleAddDoctorReferral = () => {
+    navigate("/doctor-referrals");
+  };
+
+  const handleAddServiceItem = (service) => {
     if (!service) return;
-    if (formData.selectedServices.some(s => s._id === service._id)) {
+    if (formData.serviceItems.some(s => s._id === service._id)) {
       showToast("Service already added!", "info");
       return;
     }
-    try {
-      const existingService = services.find(s => s._id === service._id);
-      let serviceToAdd = service;
-      if (!existingService) {
-        const newServiceData = {
-          name: service.name,
-          price: service.price,
-          description: service.description || ""
-        };
-        const res = await axios.post(`${API_BASE_URL}/services/addservice`, newServiceData);
-        if (res && res.data && res.data.success) {
-          serviceToAdd = res.data.data;
-          fetchServices();
-          showToast(`Service "${serviceToAdd.name}" created and added!`, "success");
-        } else {
-          showToast("Failed to create service", "error");
-          return;
-        }
-      } else {
-        serviceToAdd = existingService;
-      }
-      setFormData((prev) => ({
-        ...prev,
-        selectedServices: [...prev.selectedServices, { ...serviceToAdd, custom: false }],
-        serviceName: "",
-        servicePrice: ""
-      }));
-      setFilteredServices([]);
-      setShowServiceSuggestions(false);
-      showToast(`Added ${serviceToAdd.name}`, "success");
-    } catch (error) {
-      console.error("Error adding service:", error);
-      showToast(error.response?.data?.message || "Failed to add service", "error");
-    }
+    setFormData((prev) => ({
+      ...prev,
+      serviceItems: [...prev.serviceItems, { 
+        ...service, 
+        custom: false 
+      }]
+    }));
+    setFilteredServices([]);
+    setShowServiceSuggestions(false);
+    showToast(`Added ${service.name}`, "success");
   };
 
-  // ===== HANDLE ADD CUSTOM SERVICE =====
-  const handleAddCustomService = async () => {
+  const handleAddCustomServiceItem = async () => {
     const serviceName = formData.serviceName?.trim();
     const servicePrice = formData.servicePrice?.trim();
 
@@ -736,14 +706,14 @@ export default function OpManagement() {
     );
 
     if (existingService) {
-      if (formData.selectedServices.some(s => s._id === existingService._id)) {
+      if (formData.serviceItems.some(s => s._id === existingService._id)) {
         showToast("Service already added!", "info");
         setFormData((prev) => ({ ...prev, serviceName: "", servicePrice: "" }));
         setFilteredServices([]);
         setShowServiceSuggestions(false);
         return;
       }
-      await handleAddServiceToPatient(existingService);
+      handleAddServiceItem(existingService);
       setFormData((prev) => ({ ...prev, serviceName: "", servicePrice: "" }));
       setFilteredServices([]);
       setShowServiceSuggestions(false);
@@ -762,7 +732,10 @@ export default function OpManagement() {
         await fetchServices();
         setFormData((prev) => ({
           ...prev,
-          selectedServices: [...prev.selectedServices, { ...newService, custom: false }],
+          serviceItems: [...prev.serviceItems, { 
+            ...newService, 
+            custom: false 
+          }],
           serviceName: "",
           servicePrice: ""
         }));
@@ -778,23 +751,25 @@ export default function OpManagement() {
     }
   };
 
-  const handleRemoveServiceFromPatient = (serviceId) => {
+  const handleRemoveServiceItem = (serviceId) => {
     setFormData((prev) => ({
       ...prev,
-      selectedServices: prev.selectedServices.filter(s => s._id !== serviceId)
+      serviceItems: prev.serviceItems.filter(s => s._id !== serviceId)
     }));
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === "feeType") {
-      const feeAmount = value === "lab" ? 0 : 300;
-      setFormData((prev) => ({ ...prev, [name]: value, feeAmount: feeAmount }));
+    
+    if (name === "phone") {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      checkExistingPatient(value);
+    } else if (name === "dob") {
+      handleDobChange(value);
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
-    if (name === "phone") checkExistingPatient(value, "phone");
-    else if (name === "name") checkExistingPatient(value, "name");
+    
     if (name === "doctorId" || name === "appointmentDate") {
       const doctorId = name === "doctorId" ? value : formData.doctorId;
       const date = name === "appointmentDate" ? value : formData.appointmentDate;
@@ -807,53 +782,52 @@ export default function OpManagement() {
     setFormData((prev) => ({ ...prev, slotId }));
   };
 
-  // ===== FIXED EDIT HANDLER =====
-  const handleEdit = (patient) => {
-    const today = new Date().toISOString().split("T")[0];
+  const handleEdit = (patient, existingBooking) => {
+    console.log("🔄 EDIT CLICKED for patient:", patient);
+    console.log("📋 Existing booking passed:", existingBooking);
     
-    // Find existing booking for this patient
-    const existingBooking = bookings.find(
-      (b) =>
-        b.patientPhone === patient.phone ||
-        (b.patientName &&
-          patient.name &&
-          b.patientName.toLowerCase() === patient.name.toLowerCase())
-    );
+    const today = new Date().toISOString().split("T")[0];
 
-    // Get doctorId, appointmentDate, slotId from booking or patient
     const doctorId = existingBooking?.doctorId || patient.doctorId || "";
     const appointmentDate = existingBooking?.appointmentDate || 
                             existingBooking?.date || 
                             patient.appointmentDate || 
                             today;
     const slotId = existingBooking?.slotId || existingBooking?._id || "";
+    const bookingId = existingBooking?._id || "";
 
-    const feeAmount = patient.feeType === "lab" ? 0 : (patient.feeAmount ?? 300);
+    console.log("📌 Booking ID for update:", bookingId);
 
-    // Set all form data
     setFormData({
+      title: patient.title || "Mr.",
       name: patient.name || "",
+      dob: patient.dob || "",
       age: patient.age ?? "",
       gender: patient.gender || "",
       phone: patient.phone || "",
       address: patient.address || "",
-      feeType: patient.feeType || "consultation",
-      feeAmount: feeAmount,
+      serviceItems: patient.serviceItems || existingBooking?.serviceItems || [],
       paymentType: patient.paymentType || "cash",
       reason: patient.reason || "",
       paymentStatus: patient.paymentStatus || "Pending",
       doctorId: doctorId,
       slotId: slotId,
+      bookingId: bookingId,
       appointmentDate: appointmentDate,
       selectedServices: patient.services || existingBooking?.services || [],
-      referredBy: patient.referredBy || existingBooking?.referredBy || "",
-      referralContactId: patient.referralContactId || existingBooking?.referralContactId || "",
+      referredByCustomer: patient.referredByCustomer || existingBooking?.referredByCustomer || "",
+      referredByDoctor: patient.referredByDoctor || existingBooking?.referredByDoctor || "",
+      referralCustomerId: patient.referralCustomerId || existingBooking?.referralCustomerId || "",
+      referralDoctorId: patient.referralDoctorId || existingBooking?.referralDoctorId || "",
       referralCommission: patient.referralCommission || existingBooking?.referralCommission || "",
       referralCommissionType: patient.referralCommissionType || existingBooking?.referralCommissionType || "",
       partialAmount: patient.partialAmount || existingBooking?.partialAmount || "",
       serviceName: "",
-      servicePrice: ""
+      servicePrice: "",
+      status: existingBooking?.status || "confirmed"
     });
+
+    console.log("📝 Form data set with bookingId:", bookingId);
 
     setEditingId(patient._id);
     setShowForm(true);
@@ -863,12 +837,23 @@ export default function OpManagement() {
     setShowServiceSuggestions(false);
     setAvailableSlots([]);
 
-    // ✅ Load slots for the doctor and date
     if (doctorId && appointmentDate) {
       setTimeout(() => {
         filterSlotsByDoctorAndDate(doctorId, appointmentDate);
       }, 200);
     }
+  };
+
+  const handleAddNewPatient = () => {
+    const today = new Date().toISOString().split("T")[0];
+    setFormData({ ...EMPTY_FORM, appointmentDate: today });
+    setEditingId(null);
+    setShowForm(true);
+    setAvailableSlots([]);
+    setExistingPatient(null);
+    setShowExistingPatientPopup(false);
+    setFilteredServices([]);
+    setShowServiceSuggestions(false);
   };
 
   const handleDelete = async (id) => {
@@ -922,7 +907,6 @@ export default function OpManagement() {
     }
   };
 
-  // ==================== STATUS DROPDOWN HANDLERS ====================
   const handleStatusDropdownToggle = (bookingId, e) => {
     e.stopPropagation();
     setOpenStatusDropdown(openStatusDropdown === bookingId ? null : bookingId);
@@ -952,7 +936,6 @@ export default function OpManagement() {
     }
   };
 
-  // ==================== PAYMENT DROPDOWN HANDLERS ====================
   const handlePaymentDropdownToggle = (bookingId, e) => {
     e.stopPropagation();
     setOpenPaymentDropdown(openPaymentDropdown === bookingId ? null : bookingId);
@@ -996,9 +979,12 @@ export default function OpManagement() {
     }
   };
 
-  // Submit patient & book slot
   const handleBookNow = async (e) => {
     e.preventDefault();
+    
+    console.log("📝 NEW BOOKING SUBMITTED");
+    console.log("📊 Form Data:", formData);
+
     if (!formData.name || !formData.phone || formData.age === "" || !formData.gender) {
       showToast("Please fill all required fields", "error");
       return;
@@ -1011,14 +997,17 @@ export default function OpManagement() {
       showToast("Please select an available slot", "error");
       return;
     }
+    if (formData.serviceItems.length === 0) {
+      showToast("Please add at least one service", "error");
+      return;
+    }
+
     setSubmitting(true);
     try {
       let patientData;
 
-      // Calculate totals
-      const consultationFee = formData.feeAmount || 0;
-      const servicesTotal = formData.selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
-      const subtotal = consultationFee + servicesTotal;
+      const servicesTotal = formData.serviceItems.reduce((sum, s) => sum + (s.price || 0), 0);
+      const subtotal = servicesTotal;
       const commissionPercent = parseFloat(formData.referralCommission) || 0;
       const commissionAmount = (subtotal * commissionPercent) / 100;
       const finalPayable = subtotal - commissionAmount;
@@ -1046,69 +1035,48 @@ export default function OpManagement() {
         balanceAmount = finalPayable;
       }
 
-      if (editingId) {
-        const res = await axios.put(`${API_BASE_URL}/patients/${editingId}`, {
-          name: formData.name,
-          age: formData.age,
-          gender: formData.gender,
-          phone: formData.phone,
-          address: formData.address,
-          feeType: formData.feeType,
-          feeAmount: formData.feeAmount,
-          paymentType: formData.paymentType,
-          reason: formData.reason,
-          paymentStatus: paymentStatus,
-          services: formData.selectedServices,
-          referredBy: formData.referredBy,
-          referralContactId: formData.referralContactId,
-          referralCommission: formData.referralCommission,
-          referralCommissionType: formData.referralCommissionType,
-          partialAmount: formData.partialAmount
-        });
-        if (res.data.success) {
-          patientData = res.data.data;
-          setPatients((prev) => prev.map((p) => (p._id === editingId ? patientData : p)));
-        }
+      console.log("📝 Creating new patient");
+      const res = await axios.post(`${API_BASE_URL}/patients`, {
+        title: formData.title,
+        name: formData.name,
+        dob: formData.dob,
+        age: formData.age,
+        gender: formData.gender,
+        phone: formData.phone,
+        address: formData.address,
+        serviceItems: formData.serviceItems,
+        paymentType: formData.paymentType,
+        reason: formData.reason,
+        paymentStatus: paymentStatus,
+        services: formData.selectedServices,
+        referredByCustomer: formData.referredByCustomer,
+        referredByDoctor: formData.referredByDoctor,
+        referralCustomerId: formData.referralCustomerId,
+        referralDoctorId: formData.referralDoctorId,
+        referralCommission: formData.referralCommission,
+        referralCommissionType: formData.referralCommissionType,
+        partialAmount: formData.partialAmount
+      });
+      
+      if (res.data.success) {
+        patientData = res.data.data;
+        setPatients((prev) => [patientData, ...prev]);
       } else {
-        const res = await axios.post(`${API_BASE_URL}/patients`, {
-          name: formData.name,
-          age: formData.age,
-          gender: formData.gender,
-          phone: formData.phone,
-          address: formData.address,
-          feeType: formData.feeType,
-          feeAmount: formData.feeAmount,
-          paymentType: formData.paymentType,
-          reason: formData.reason,
-          paymentStatus: paymentStatus,
-          services: formData.selectedServices,
-          referredBy: formData.referredBy,
-          referralContactId: formData.referralContactId,
-          referralCommission: formData.referralCommission,
-          referralCommissionType: formData.referralCommissionType,
-          partialAmount: formData.partialAmount
-        });
-        if (res.data.success) {
-          patientData = res.data.data;
-          setPatients((prev) => [patientData, ...prev]);
-        }
-      }
-      if (!patientData) {
         showToast("Failed to save patient data", "error");
         setSubmitting(false);
         return;
       }
 
       const bookingPayload = {
-        slotId: formData.slotId,
         patientId: patientData._id,
+        patientTitle: formData.title,
         patientName: formData.name,
         patientPhone: formData.phone,
         patientAge: formData.age,
+        patientDob: formData.dob,
         patientGender: formData.gender,
         patientAddress: formData.address,
         purpose: formData.reason,
-        consultationFee: formData.feeAmount,
         paymentType: formData.paymentType,
         paymentStatus: paymentStatus,
         partialAmount: formData.partialAmount || 0,
@@ -1117,21 +1085,39 @@ export default function OpManagement() {
         doctorId: formData.doctorId,
         appointmentDate: formData.appointmentDate,
         isOP: true,
-        services: formData.selectedServices.map(s => ({
+        status: formData.status || "confirmed",
+        serviceItems: formData.serviceItems.map(s => ({
           serviceId: s._id,
           name: s.name,
           price: s.price,
           description: s.description || ""
         })),
-        referredBy: formData.referredBy,
-        referralContactId: formData.referralContactId,
+        services: formData.serviceItems.map(s => ({
+          serviceId: s._id,
+          name: s.name,
+          price: s.price,
+          description: s.description || ""
+        })),
+        referredByCustomer: formData.referredByCustomer,
+        referredByDoctor: formData.referredByDoctor,
+        referralCustomerId: formData.referralCustomerId,
+        referralDoctorId: formData.referralDoctorId,
         referralCommission: formData.referralCommission,
         referralCommissionType: formData.referralCommissionType
       };
 
-      const slotRes = await axios.post(`${API_BASE_URL}/appointment-slots/book`, bookingPayload);
+      console.log("📝 CREATING NEW BOOKING");
+      console.log("📦 Booking Payload:", bookingPayload);
+      
+      const slotRes = await axios.post(`${API_BASE_URL}/appointment-slots/book`, {
+        ...bookingPayload,
+        slotId: formData.slotId
+      });
+      
+      console.log("✅ CREATE RESPONSE:", slotRes.data);
+      
       if (slotRes.data.success) {
-        showToast(`Appointment booked successfully for ${formData.name}!`, "success");
+        showToast(`✅ Appointment booked successfully for ${formData.title} ${formData.name}!`, "success");
         fetchBookings();
         fetchAllSlots();
         filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
@@ -1142,18 +1128,191 @@ export default function OpManagement() {
         setAvailableSlots([]);
         setExistingPatient(null);
         setShowExistingPatientPopup(false);
+        setFilteredServices([]);
+        setShowServiceSuggestions(false);
       } else {
+        console.error("❌ Create failed:", slotRes.data);
         showToast(slotRes.data.message || "Failed to book appointment", "error");
       }
     } catch (err) {
-      console.error("Error booking appointment:", err);
+      console.error("❌ Error in handleBookNow:", err);
+      console.error("❌ Error response:", err.response?.data);
       showToast(err.response?.data?.message || "Failed to book appointment", "error");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ==================== PRESCRIPTION HANDLERS ====================
+  const handleUpdateNow = async (e) => {
+    e.preventDefault();
+    
+    console.log("🔄 UPDATE BOOKING SUBMITTED");
+    console.log("📊 Form Data:", formData);
+    console.log("🆔 Booking ID:", formData.bookingId);
+    console.log("✏️ Editing ID:", editingId);
+
+    if (!formData.name || !formData.phone || formData.age === "" || !formData.gender) {
+      showToast("Please fill all required fields", "error");
+      return;
+    }
+    if (!formData.doctorId) {
+      showToast("Please select a doctor", "error");
+      return;
+    }
+    if (!formData.slotId) {
+      showToast("Please select an available slot", "error");
+      return;
+    }
+    if (formData.serviceItems.length === 0) {
+      showToast("Please add at least one service", "error");
+      return;
+    }
+    
+    if (!formData.bookingId) {
+      showToast("❌ No booking found to update. Please refresh and try again.", "error");
+      console.error("❌ Update mode but bookingId is empty!");
+      setSubmitting(false);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      let patientData;
+
+      const servicesTotal = formData.serviceItems.reduce((sum, s) => sum + (s.price || 0), 0);
+      const subtotal = servicesTotal;
+      const commissionPercent = parseFloat(formData.referralCommission) || 0;
+      const commissionAmount = (subtotal * commissionPercent) / 100;
+      const finalPayable = subtotal - commissionAmount;
+
+      let paymentStatus = formData.paymentStatus;
+      let amountPaid = 0;
+      let balanceAmount = finalPayable;
+
+      if (formData.paymentStatus === "Paid") {
+        amountPaid = finalPayable;
+        balanceAmount = 0;
+      } else if (formData.paymentStatus === "Partial" && formData.partialAmount) {
+        amountPaid = parseFloat(formData.partialAmount) || 0;
+        balanceAmount = finalPayable - amountPaid;
+        if (balanceAmount <= 0) {
+          paymentStatus = "Paid";
+          amountPaid = finalPayable;
+          balanceAmount = 0;
+        }
+      } else if (formData.paymentStatus === "Due") {
+        amountPaid = 0;
+        balanceAmount = finalPayable;
+      } else {
+        amountPaid = 0;
+        balanceAmount = finalPayable;
+      }
+
+      console.log("🔄 Updating patient:", editingId);
+      const res = await axios.put(`${API_BASE_URL}/patients/${editingId}`, {
+        title: formData.title,
+        name: formData.name,
+        dob: formData.dob,
+        age: formData.age,
+        gender: formData.gender,
+        phone: formData.phone,
+        address: formData.address,
+        serviceItems: formData.serviceItems,
+        paymentType: formData.paymentType,
+        reason: formData.reason,
+        paymentStatus: paymentStatus,
+        services: formData.selectedServices,
+        referredByCustomer: formData.referredByCustomer,
+        referredByDoctor: formData.referredByDoctor,
+        referralCustomerId: formData.referralCustomerId,
+        referralDoctorId: formData.referralDoctorId,
+        referralCommission: formData.referralCommission,
+        referralCommissionType: formData.referralCommissionType,
+        partialAmount: formData.partialAmount
+      });
+      
+      if (res.data.success) {
+        patientData = res.data.data;
+        setPatients((prev) => prev.map((p) => (p._id === editingId ? patientData : p)));
+      } else {
+        showToast("Failed to update patient data", "error");
+        setSubmitting(false);
+        return;
+      }
+
+      const bookingPayload = {
+        patientId: patientData._id,
+        patientTitle: formData.title,
+        patientName: formData.name,
+        patientPhone: formData.phone,
+        patientAge: formData.age,
+        patientDob: formData.dob,
+        patientGender: formData.gender,
+        patientAddress: formData.address,
+        purpose: formData.reason,
+        paymentType: formData.paymentType,
+        paymentStatus: paymentStatus,
+        partialAmount: formData.partialAmount || 0,
+        amountPaid: amountPaid,
+        balanceAmount: balanceAmount,
+        doctorId: formData.doctorId,
+        appointmentDate: formData.appointmentDate,
+        isOP: true,
+        status: formData.status || "confirmed",
+        serviceItems: formData.serviceItems.map(s => ({
+          serviceId: s._id,
+          name: s.name,
+          price: s.price,
+          description: s.description || ""
+        })),
+        services: formData.serviceItems.map(s => ({
+          serviceId: s._id,
+          name: s.name,
+          price: s.price,
+          description: s.description || ""
+        })),
+        referredByCustomer: formData.referredByCustomer,
+        referredByDoctor: formData.referredByDoctor,
+        referralCustomerId: formData.referralCustomerId,
+        referralDoctorId: formData.referralDoctorId,
+        referralCommission: formData.referralCommission,
+        referralCommissionType: formData.referralCommissionType
+      };
+
+      console.log("🔄 UPDATING BOOKING with ID:", formData.bookingId);
+      console.log("📦 Booking Payload:", bookingPayload);
+      
+      const slotRes = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${formData.bookingId}`, bookingPayload);
+      
+      console.log("✅ UPDATE RESPONSE:", slotRes.data);
+      
+      if (slotRes.data.success) {
+        showToast(`✅ Appointment updated successfully for ${formData.title} ${formData.name}!`, "success");
+        fetchBookings();
+        fetchAllSlots();
+        filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
+        const today = new Date().toISOString().split("T")[0];
+        setFormData({ ...EMPTY_FORM, appointmentDate: today });
+        setEditingId(null);
+        setShowForm(false);
+        setAvailableSlots([]);
+        setExistingPatient(null);
+        setShowExistingPatientPopup(false);
+        setFilteredServices([]);
+        setShowServiceSuggestions(false);
+      } else {
+        console.error("❌ Update failed:", slotRes.data);
+        showToast(slotRes.data.message || "Failed to update appointment", "error");
+      }
+    } catch (err) {
+      console.error("❌ Error in handleUpdateNow:", err);
+      console.error("❌ Error response:", err.response?.data);
+      showToast(err.response?.data?.message || "Failed to update appointment", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const openPrescriptionModal = (booking) => {
     setSelectedBookingForPrescription(booking);
     setShowPrescriptionModal(true);
@@ -1161,7 +1320,7 @@ export default function OpManagement() {
 
   const handlePrintPrescription = () => {
     if (prescriptionRef.current) {
-      const win = window.open("", "_blank", "width=800,height=900");
+      const win = window.open("", "_blank", "width=800,height=1100");
       if (win) {
         win.document.write(`
           <!DOCTYPE html>
@@ -1170,26 +1329,97 @@ export default function OpManagement() {
               <title>Prescription - ${selectedBookingForPrescription?.patientName || "Patient"}</title>
               <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: Arial, sans-serif; background: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-                .prescription-wrap { max-width: 650px; width: 100%; position: relative; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden; }
-                .prescription-wrap img { width: 100%; height: auto; display: block; }
-                .overlay-print { position: absolute; top: 0; left: 0; right: 0; bottom: 0; padding: 0; }
-                .overlay-print .fld { position: absolute; font-size: 15px; font-weight: 600; color: #1a1a1a; letter-spacing: 0.2px; line-height: 1.3; }
-                @media print { body { padding: 0; } .prescription-wrap { box-shadow: none; border-radius: 0; } }
+                body { 
+                  font-family: Arial, sans-serif; 
+                  background: #fff; 
+                  display: flex; 
+                  flex-direction: column;
+                  align-items: center; 
+                  min-height: 100vh; 
+                  padding: 20px; 
+                }
+                .prescription-page { 
+                  max-width: 650px; 
+                  width: 100%; 
+                  position: relative; 
+                  background: #fff; 
+                  box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+                  border-radius: 12px; 
+                  overflow: hidden; 
+                  margin-bottom: 30px;
+                  page-break-after: always;
+                }
+                .prescription-page img { 
+                  width: 100%; 
+                  height: auto; 
+                  display: block; 
+                }
+                .page-label {
+                  text-align: center;
+                  font-size: 11px;
+                  color: #888;
+                  padding: 6px 0;
+                  background: #f5f5f5;
+                  border-bottom: 1px solid #ddd;
+                  font-weight: bold;
+                  letter-spacing: 1px;
+                }
+                .overlay-print { 
+                  position: absolute; 
+                  top: 0; 
+                  left: 0; 
+                  right: 0; 
+                  bottom: 0; 
+                  padding: 0; 
+                }
+                .overlay-print .fld { 
+                  position: absolute; 
+                  font-size: 15px; 
+                  font-weight: 600; 
+                  color: #1a1a1a; 
+                  letter-spacing: 0.2px; 
+                  line-height: 1.3; 
+                }
+                @media print { 
+                  body { padding: 0; } 
+                  .prescription-page { box-shadow: none; border-radius: 0; margin-bottom: 0; }
+                  .prescription-page:last-child { margin-bottom: 0; }
+                  .page-label { display: none; }
+                }
               </style>
             </head>
             <body>
-              <div class="prescription-wrap">
-                <img src="${prescriptionTemplate}" alt="Prescription" />
+              
+              <div class="prescription-page">
+                <div class="page-label">📄 Front Side - Prescription</div>
+                <img src="${prescriptionTemplate}" alt="Prescription - Front" />
                 <div class="overlay-print">
-                  <div class="fld" style="top:78px;left:90px;">${selectedBookingForPrescription?.patientName || "N/A"}</div>
-                  <div class="fld" style="top:78px;right:20px;">${formatDateToDDMMYYYY(selectedBookingForPrescription?.appointmentDate || selectedBookingForPrescription?.date)}</div>
-                  <div class="fld" style="top:104px;left:90px;">${selectedBookingForPrescription?.patientAge || "N/A"}</div>
-                  <div class="fld" style="top:104px;left:230px;">${selectedBookingForPrescription?.patientGender || "N/A"}</div>
-                  <div class="fld" style="top:104px;right:100px;">${selectedBookingForPrescription?.patientPhone || "N/A"}</div>
-                  <div class="fld" style="top:130px;left:90px;">${selectedBookingForPrescription?.purpose || selectedBookingForPrescription?.reason || "N/A"}</div>
+                  <div class="fld" style="top:78px;left:90px;max-width:280px;">
+                    ${selectedBookingForPrescription?.patientTitle || ""} ${selectedBookingForPrescription?.patientName || "N/A"}
+                  </div>
+                  <div class="fld" style="top:78px;right:20px;">
+                    ${formatDateToDDMMYYYY(selectedBookingForPrescription?.appointmentDate || selectedBookingForPrescription?.date)}
+                  </div>
+                  <div class="fld" style="top:104px;left:90px;">
+                    ${selectedBookingForPrescription?.patientAge || "N/A"}
+                  </div>
+                  <div class="fld" style="top:104px;left:230px;">
+                    ${selectedBookingForPrescription?.patientGender || "N/A"}
+                  </div>
+                  <div class="fld" style="top:104px;right:100px;">
+                    ${selectedBookingForPrescription?.patientPhone || "N/A"}
+                  </div>
+                  <div class="fld" style="top:130px;left:90px;max-width:320px;">
+                    ${selectedBookingForPrescription?.purpose || selectedBookingForPrescription?.reason || "N/A"}
+                  </div>
                 </div>
               </div>
+
+              <div class="prescription-page">
+                <div class="page-label">📄 Back Side</div>
+                <img src="${prescriptionBackTemplate}" alt="Prescription - Back" />
+              </div>
+
               <script>window.onload = function() { window.print(); }</script>
             </body>
           </html>
@@ -1202,14 +1432,14 @@ export default function OpManagement() {
     }
   };
 
-  // Billing helpers
   const getTotalServiceFee = (booking) => {
-    if (!booking.services || booking.services.length === 0) return 0;
-    return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
+    if (!booking.serviceItems && !booking.services) return 0;
+    const items = booking.serviceItems || booking.services || [];
+    return items.reduce((sum, s) => sum + (s.price || 0), 0);
   };
 
   const getTotalBookingFee = (booking) => {
-    return (booking.consultationFee || 0) + getTotalServiceFee(booking);
+    return getTotalServiceFee(booking);
   };
 
   const getPatientTotalFee = (patient) => {
@@ -1220,7 +1450,7 @@ export default function OpManagement() {
           patient.name &&
           b.patientName.toLowerCase() === patient.name.toLowerCase())
     );
-    if (patientBookings.length === 0) return patient.feeAmount || 300;
+    if (patientBookings.length === 0) return 0;
     return patientBookings.reduce((total, b) => total + getTotalBookingFee(b), 0);
   };
 
@@ -1234,17 +1464,16 @@ export default function OpManagement() {
     );
     const allServices = [];
     patientBookings.forEach((b) => {
-      if (b.services && b.services.length > 0) {
-        b.services.forEach((s) => {
-          allServices.push({
-            name: s.name,
-            price: s.price || 0,
-            bookingDate: b.date || b.appointmentDate,
-            serviceId: s.serviceId || s._id,
-            bookingId: b._id
-          });
+      const items = b.serviceItems || b.services || [];
+      items.forEach((s) => {
+        allServices.push({
+          name: s.name,
+          price: s.price || 0,
+          bookingDate: b.date || b.appointmentDate,
+          serviceId: s.serviceId || s._id,
+          bookingId: b._id
         });
-      }
+      });
     });
     return allServices;
   };
@@ -1307,9 +1536,8 @@ export default function OpManagement() {
 
   const openBillingModal = (booking) => {
     setSelectedBookingForBilling(booking);
-    const consultationFee = booking.consultationFee || 0;
     const totalServiceFee = getTotalServiceFee(booking);
-    const grossAmount = consultationFee + totalServiceFee;
+    const grossAmount = totalServiceFee;
     const commissionPercent = parseFloat(booking.referralCommission) || 0;
     const commissionAmount = (grossAmount * commissionPercent) / 100;
     const netAmount = grossAmount - commissionAmount;
@@ -1324,32 +1552,25 @@ export default function OpManagement() {
     const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
     const receiptNo = `R-${shortId.slice(-4)}-${String(now.getFullYear()).slice(-2)}-${now.getMonth() + 1}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    const items = [
-      {
-        no: 1,
-        name: "Consultation Fee",
-        serviceCode: "CONS-01",
-        remarks: booking.purpose || "OPD Consultation",
-        amount: consultationFee,
-        paymentStatus: booking.paymentStatus || "Pending"
-      },
-      ...(booking.services || []).map((s, idx) => ({
-        no: idx + 2,
-        name: s.name,
-        serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
-        remarks: s.description || "Additional Service",
-        amount: s.price || 0,
-        paymentStatus: booking.paymentStatus || "Pending"
-      })),
-      ...(commissionPercent > 0 ? [{
-        no: (booking.services || []).length + 2,
+    const items = (booking.serviceItems || booking.services || []).map((s, idx) => ({
+      no: idx + 1,
+      name: s.name,
+      serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
+      remarks: "Service",
+      amount: s.price || 0,
+      paymentStatus: booking.paymentStatus || "Pending"
+    }));
+
+    if (commissionPercent > 0) {
+      items.push({
+        no: items.length + 1,
         name: `Referral Discount (${booking.referralCommissionType || 'Clinic'}: ${commissionPercent}%)`,
         serviceCode: "REF-DISC",
-        remarks: `Referred by ${booking.referredBy || 'N/A'}`,
+        remarks: `Referred by ${booking.referredByCustomer || booking.referredByDoctor || 'N/A'}`,
         amount: -commissionAmount,
         paymentStatus: "Paid"
-      }] : [])
-    ];
+      });
+    }
 
     setBillingData({
       invoiceNo,
@@ -1448,7 +1669,7 @@ export default function OpManagement() {
                 </div>
                 <div class="bar-title">Bill Cum Receipt</div>
                 <div class="info-grid">
-                  <div><span class="label">Name</span>: ${selectedBookingForBilling?.patientName || "N/A"}</div>
+                  <div><span class="label">Name</span>: ${selectedBookingForBilling?.patientTitle || ""} ${selectedBookingForBilling?.patientName || "N/A"}</div>
                   <div><span class="label">Invoice No / Date</span>: ${billingData.invoiceNo} / ${billingData.invoiceDate}</div>
                   <div><span class="label">Age</span>: ${selectedBookingForBilling?.patientAge || "N/A"} Yrs</div>
                   <div><span class="label">Gender</span>: ${selectedBookingForBilling?.patientGender || "N/A"}</div>
@@ -1529,12 +1750,16 @@ export default function OpManagement() {
     return Array.from(doctorMap.values());
   };
 
-  // Filtered Patients
   const filteredPatients = useMemo(() => {
     const filtered = patients.filter((p) => {
       const paymentStatus = getPatientPaymentStatus(p);
       if (statusFilter !== "All" && paymentStatus !== statusFilter) return false;
-      if (feeTypeFilter !== "All" && p.feeType !== feeTypeFilter) return false;
+      if (feeTypeFilter !== "All") {
+        const hasMatchingService = (p.serviceItems || []).some(s => 
+          s.name && s.name.toLowerCase().includes(feeTypeFilter.toLowerCase())
+        );
+        if (!hasMatchingService) return false;
+      }
       if (doctorFilter !== "All") {
         const hasBookingWithDoctor = bookings.some(
           (b) =>
@@ -1584,10 +1809,10 @@ export default function OpManagement() {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, fromDate, toDate, selectedMonth]);
 
-  // Stats
   const stats = useMemo(() => {
     const total = patients.length;
     let paidTotal = 0, paidCount = 0, pendingCount = 0, partialCount = 0, dueCount = 0;
+
     patients.forEach((p) => {
       const patientBookings = bookings.filter(
         (b) =>
@@ -1596,24 +1821,37 @@ export default function OpManagement() {
             p.name &&
             b.patientName.toLowerCase() === p.name.toLowerCase())
       );
+
       let totalFee = 0;
-      patientBookings.forEach((b) => totalFee += getTotalBookingFee(b));
-      if (patientBookings.length === 0) totalFee = p.feeAmount || 300;
+      if (patientBookings.length > 0) {
+        patientBookings.forEach((b) => {
+          totalFee += (b.finalPayable || b.totalAmount || 0);
+        });
+      }
+
       const status = getPatientPaymentStatus(p);
-      if (status === "Paid") { paidCount++; paidTotal += totalFee; }
-      else if (status === "Partial") partialCount++;
-      else if (status === "Due") dueCount++;
-      else pendingCount++;
+      if (status === "Paid") {
+        paidCount++;
+        paidTotal += totalFee;
+      } else if (status === "Partial") {
+        partialCount++;
+        const paidAmount = patientBookings.reduce((sum, b) => sum + (b.amountPaid || 0), 0);
+        paidTotal += paidAmount;
+      } else if (status === "Due") {
+        dueCount++;
+      } else {
+        pendingCount++;
+      }
     });
-    if (patients.length > 0 && bookings.length === 0) {
-      patients.forEach((p) => {
-        if (p.paymentStatus === "Paid") { paidCount++; paidTotal += (p.feeAmount || 300); }
-        else if (p.paymentStatus === "Partial") partialCount++;
-        else if (p.paymentStatus === "Due") dueCount++;
-        else pendingCount++;
-      });
-    }
-    return { total, paid: paidCount, pending: pendingCount, partial: partialCount, due: dueCount, totalRevenue: paidTotal };
+
+    return {
+      total,
+      paid: paidCount,
+      pending: pendingCount,
+      partial: partialCount,
+      due: dueCount,
+      totalRevenue: paidTotal
+    };
   }, [patients, bookings]);
 
   const formatDate = (dateStr) => {
@@ -1626,7 +1864,6 @@ export default function OpManagement() {
     return new Date(dateStr).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
   };
 
-  // Pagination
   const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -1654,7 +1891,7 @@ export default function OpManagement() {
   const downloadCSV = () => {
     if (filteredPatients.length === 0) { alert("No patient records available to export!"); return; }
     const headers = ["#", "Patient Name", "Phone", "Doctor", "Appointment Date", "Slot Timing", "Booking Status",
-      "Consultation Fee", "Payment Status", "Services", "Total Fee", "Payment Mode", "Reason", "Referred By", "Referral Commission", "Created At", "Registered"];
+      "Services", "Total Fee", "Payment Status", "Payment Mode", "Reason", "Referred By Customer", "Referred By Doctor", "Created At", "Registered"];
     const csvRows = [
       headers.join(","),
       ...filteredPatients.map((p, idx) => {
@@ -1667,25 +1904,23 @@ export default function OpManagement() {
         const appointmentDate = getAppointmentDate(p);
         const slotTiming = getSlotTiming(p);
         const bookingCreated = getBookingCreatedDate(p);
-        const serviceNames = services.map(s => s.name).join("; ");
+        const serviceNames = services.map(s => `${s.name}`).join("; ");
         const booking = getMatchingBooking(p);
-        const consultationFee = booking?.consultationFee || p.feeAmount || 300;
         return [
           idx + 1,
-          `"${(p.name || "").replace(/"/g, '""')}"`,
+          `"${(p.title || "")} ${(p.name || "").replace(/"/g, '""')}"`,
           `"${p.phone || ""}"`,
           `"${booking?.doctorName || "N/A"}"`,
           `"${formatDateToDDMMYYYY(appointmentDate)}"`,
           `"${slotTiming}"`,
           `"${bookingStatus}"`,
-          consultationFee,
-          `"${consPaymentStatus}"`,
           `"${serviceNames}"`,
           totalFee,
+          `"${consPaymentStatus}"`,
           `"${p.paymentType || "cash"}"`,
           `"${(p.reason || "").replace(/"/g, '""')}"`,
-          `"${(p.referredBy || "").replace(/"/g, '""')}"`,
-          p.referralCommission || 0,
+          `"${(p.referredByCustomer || "").replace(/"/g, '""')}"`,
+          `"${(p.referredByDoctor || "").replace(/"/g, '""')}"`,
           `"${formatDateTimeToDDMMYYYY(bookingCreated)}"`,
           `${regDate} ${regTime}`
         ].join(",");
@@ -1709,7 +1944,6 @@ export default function OpManagement() {
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
 
-        {/* Toast Notification */}
         {toast && (
           <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${toast.type === "error" ? "bg-red-600" : toast.type === "info" ? "bg-cyan-600" : "bg-emerald-600"
             }`}>
@@ -1736,7 +1970,7 @@ export default function OpManagement() {
             </select>
             <select value={feeTypeFilter} onChange={(e) => setFeeTypeFilter(e.target.value)}
               className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-              <option value="All">All Fee Types</option><option value="consultation">Consultation</option><option value="lab">Lab</option>
+              <option value="All">All Services</option>
             </select>
             <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)}
               className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[130px] truncate">
@@ -1757,17 +1991,8 @@ export default function OpManagement() {
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap">
               <FiDownload className="w-3 h-3" /> Export CSV
             </button>
-            <button onClick={() => {
-              const today = new Date().toISOString().split("T")[0];
-              setFormData({ ...EMPTY_FORM, appointmentDate: today });
-              setEditingId(null);
-              setShowForm(true);
-              setAvailableSlots([]);
-              setExistingPatient(null);
-              setShowExistingPatientPopup(false);
-              setFilteredServices([]);
-              setShowServiceSuggestions(false);
-            }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap">
+            <button onClick={handleAddNewPatient} 
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap">
               <FiPlus className="w-3 h-3" /> Add Patient
             </button>
             {hasActiveFilters && (
@@ -1786,17 +2011,7 @@ export default function OpManagement() {
             <div className="emp-dash__date-pill text-[10px] px-2 py-1"><FaUserInjured className="w-3 h-3 text-blue-600" /><span>{patients.length} Patients</span></div>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => {
-              const today = new Date().toISOString().split("T")[0];
-              setFormData({ ...EMPTY_FORM, appointmentDate: today });
-              setEditingId(null);
-              setShowForm(true);
-              setAvailableSlots([]);
-              setExistingPatient(null);
-              setShowExistingPatientPopup(false);
-              setFilteredServices([]);
-              setShowServiceSuggestions(false);
-            }} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">
+            <button onClick={handleAddNewPatient} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">
               <FiPlus className="w-3 h-3" /> Add
             </button>
             <button onClick={() => setShowMobileFilters(!showMobileFilters)}
@@ -1824,10 +2039,10 @@ export default function OpManagement() {
                     <option value="All">All Status</option><option value="Pending">Pending</option><option value="Partial">Partial</option><option value="Paid">Paid</option><option value="Due">Due</option>
                   </select>
                 </div>
-                <div><label className="block text-xs font-medium text-gray-600 mb-1">Fee Type</label>
+                <div><label className="block text-xs font-medium text-gray-600 mb-1">Service</label>
                   <select value={feeTypeFilter} onChange={(e) => setFeeTypeFilter(e.target.value)}
                     className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                    <option value="All">All Fee Types</option><option value="consultation">Consultation</option><option value="lab">Lab</option>
+                    <option value="All">All Services</option>
                   </select>
                 </div>
               </div>
@@ -1853,17 +2068,7 @@ export default function OpManagement() {
                   className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
               <div className="pt-3 border-t border-gray-200 flex gap-2">
-                <button onClick={() => {
-                  const today = new Date().toISOString().split("T")[0];
-                  setFormData({ ...EMPTY_FORM, appointmentDate: today });
-                  setEditingId(null);
-                  setShowForm(true);
-                  setAvailableSlots([]);
-                  setExistingPatient(null);
-                  setShowExistingPatientPopup(false);
-                  setFilteredServices([]);
-                  setShowServiceSuggestions(false);
-                }} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm">
+                <button onClick={handleAddNewPatient} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm">
                   <FiPlus className="w-4 h-4" /> Add Patient
                 </button>
                 <button onClick={downloadCSV} disabled={filteredPatients.length === 0}
@@ -1929,7 +2134,7 @@ export default function OpManagement() {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-blue-900">Existing Patient Record Found!</p>
                       <div className="mt-1 text-xs text-blue-800 space-y-0.5">
-                        <p><span className="font-semibold">Name:</span> {existingPatient.name} | <span className="font-semibold">Phone:</span> {existingPatient.phone}</p>
+                        <p><span className="font-semibold">Name:</span> {existingPatient.title || ""} {existingPatient.name} | <span className="font-semibold">Phone:</span> {existingPatient.phone}</p>
                         <p><span className="font-semibold">Age:</span> {existingPatient.age} yrs | <span className="font-semibold">Gender:</span> {existingPatient.gender}</p>
                       </div>
                       <button type="button" onClick={autoFillPatientDetails} className="mt-2 px-3.5 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-xs inline-flex items-center gap-1.5"><FaCheck className="text-[10px]" /> Auto-Fill Details</button>
@@ -1939,34 +2144,105 @@ export default function OpManagement() {
                 </div>
               )}
 
-              <form onSubmit={handleBookNow} className="mt-5 space-y-4">
-                {/* Patient Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form onSubmit={editingId ? handleUpdateNow : handleBookNow} className="mt-5 space-y-4">
+                {/* ===== PATIENT DETAILS - PHONE FIRST ===== */}
+                <div className="grid grid-cols-1">
                   <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+                      <FaPhoneAlt className="text-blue-600" /> Phone Number <span className="text-blue-600">*</span>
+                    </label>
+                    <div className="relative">
+                      <FaPhoneAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
+                      <input 
+                        ref={phoneInputRef} 
+                        type="tel" 
+                        name="phone" 
+                        value={formData.phone} 
+                        onChange={handleInputChange} 
+                        placeholder="+91 9876543210" 
+                        className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" 
+                        required 
+                      />
+                    </div>
+                    <p className="text-[9px] text-gray-400 mt-1 flex items-center gap-1">
+                      <FiAlertCircle className="w-3 h-3" /> Phone number is used to check for existing patients
+                    </p>
+                  </div>
+                </div>
+
+                {/* ===== TITLE + NAME ===== */}
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="col-span-1">
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <FaUserTag className="text-blue-600" /> Title <span className="text-blue-600">*</span>
+                    </label>
+                    <div className="relative">
+                      <select 
+                        name="title" 
+                        value={formData.title} 
+                        onChange={handleInputChange}
+                        className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none"
+                        required
+                      >
+                        {TITLE_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                      </select>
+                      <span className="text-gray-400 text-xs absolute right-2 top-2.5 pointer-events-none">▾</span>
+                    </div>
+                  </div>
+                  <div className="col-span-3">
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Patient Name <span className="text-blue-600">*</span></label>
                     <div className="relative">
                       <FaUserInjured className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                      <input ref={nameInputRef} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter patient full name" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" required />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Phone Number <span className="text-blue-600">*</span></label>
-                    <div className="relative">
-                      <FaPhoneAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                      <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" required />
+                      <input 
+                        ref={nameInputRef} 
+                        type="text" 
+                        name="name" 
+                        value={formData.name} 
+                        onChange={handleInputChange} 
+                        placeholder="Enter patient full name" 
+                        className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" 
+                        required 
+                      />
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* ===== DOB + AGE + GENDER ===== */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <FaCalendarAlt className="text-blue-600" /> DOB <span className="text-blue-600">*</span>
+                    </label>
+                    <input 
+                      type="date" 
+                      name="dob" 
+                      value={formData.dob} 
+                      onChange={handleInputChange}
+                      max={new Date().toISOString().split("T")[0]}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" 
+                      required 
+                    />
+                  </div>
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Age (Years) <span className="text-blue-600">*</span></label>
-                    <input type="number" name="age" value={formData.age} onChange={handleInputChange} placeholder="28" min="0" max="120" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" required />
+                    <input 
+                      type="number" 
+                      name="age" 
+                      value={formData.age} 
+                      onChange={handleInputChange} 
+                      placeholder="Auto-calculated" 
+                      min="0" 
+                      max="120" 
+                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium cursor-default" 
+                      required 
+                      readOnly
+                    />
+                    <p className="text-[8px] text-gray-400 mt-0.5">Auto-calculated from DOB</p>
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Gender <span className="text-blue-600">*</span></label>
                     <div className="relative">
-                      <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none" required>
+                      <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none" required>
                         <option value="">Select Gender</option>
                         {GENDER_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                       </select>
@@ -1979,7 +2255,7 @@ export default function OpManagement() {
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Address</label>
                   <div className="relative">
                     <FaMapMarkerAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                    <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Patient street address" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" />
+                    <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Patient street address" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" />
                   </div>
                 </div>
 
@@ -1989,7 +2265,7 @@ export default function OpManagement() {
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Select Doctor <span className="text-blue-600">*</span></label>
                     <div className="relative">
                       <FaStethoscope className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                      <select name="doctorId" value={formData.doctorId} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none" required>
+                      <select name="doctorId" value={formData.doctorId} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-8 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none" required>
                         <option value="">Select Doctor</option>
                         {doctors.map((doc) => <option key={doc._id || doc.id} value={doc._id || doc.id}>{doc.name || "Doctor"}</option>)}
                       </select>
@@ -1998,7 +2274,7 @@ export default function OpManagement() {
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Appointment Date <span className="text-blue-600">*</span></label>
-                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} min={new Date().toISOString().split("T")[0]} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" required />
+                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} min={new Date().toISOString().split("T")[0]} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" required />
                   </div>
                 </div>
 
@@ -2026,12 +2302,11 @@ export default function OpManagement() {
                         {availableSlots.map((slot) => {
                           const isSelected = formData.slotId === slot._id;
                           const isBooked = slot.status === "booked";
-                          
-                          // If slot is selected, ONLY show selected slot; otherwise show all
+
                           if (formData.slotId && !isSelected) {
                             return null;
                           }
-                          
+
                           return (
                             <button
                               key={slot._id}
@@ -2047,7 +2322,7 @@ export default function OpManagement() {
                               disabled={isBooked}
                             >
                               <div className="font-bold text-xs">{slot.startTime} – {slot.endTime}</div>
-                              <div className="text-[10px] text-gray-500">₹{slot.consultationFee || 300}</div>
+                              <div className="text-[10px] text-gray-500">₹{slot.consultationFee || 0}</div>
                               {isBooked && <span className="text-[9px] font-bold text-red-500 block mt-0.5">Booked</span>}
                               {isSelected && <span className="text-[9px] font-bold text-emerald-600 block mt-0.5">✓ Selected</span>}
                             </button>
@@ -2055,8 +2330,7 @@ export default function OpManagement() {
                         })}
                       </div>
                     )}
-                    
-                    {/* Change Slot button */}
+
                     {formData.slotId && (
                       <button
                         type="button"
@@ -2074,44 +2348,30 @@ export default function OpManagement() {
                   </div>
                 )}
 
-                {/* Fee Type & Amount */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Fee Type <span className="text-blue-600">*</span></label>
-                    <div className="relative">
-                      <select name="feeType" value={formData.feeType} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none">
-                        {FEE_TYPE_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                      </select>
-                      <span className="text-gray-400 text-xs absolute right-3 top-2.5 pointer-events-none">▾</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Fee Amount (₹) <span className="text-blue-600">*</span></label>
-                    <input type="number" name="feeAmount" value={formData.feeAmount} onChange={handleInputChange} min="0" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" required />
-                  </div>
-                </div>
-
                 {/* ===== SERVICES SECTION ===== */}
                 <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
                   <div className="flex items-center justify-between mb-3">
-                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2"><FaServicestack className="text-blue-600" /> Services</label>
-                    <span className="text-[10px] text-gray-400">{formData.selectedServices.length} service{formData.selectedServices.length !== 1 ? 's' : ''} added</span>
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+                      <FaServicestack className="text-blue-600" /> Services <span className="text-blue-600">*</span>
+                      <span className="text-[10px] font-normal text-gray-400">(Consultation, Lab, etc.)</span>
+                    </label>
+                    <span className="text-[10px] text-gray-400">{formData.serviceItems.length} service{formData.serviceItems.length !== 1 ? 's' : ''} added</span>
                   </div>
 
-                  {formData.selectedServices.length > 0 && (
+                  {formData.serviceItems.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {formData.selectedServices.map((svc) => (
-                        <div key={svc._id} className="flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
+                      {formData.serviceItems.map((svc, idx) => (
+                        <div key={`${svc._id}-${idx}`} className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
                           <span>{svc.name}</span>
                           <span className="font-bold text-emerald-600">₹{svc.price}</span>
-                          <button type="button" onClick={() => handleRemoveServiceFromPatient(svc._id)} className="ml-1 text-red-400 hover:text-red-600 transition-colors"><FaMinusCircle className="w-3 h-3" /></button>
+                          <button type="button" onClick={() => handleRemoveServiceItem(svc._id)} className="ml-1 text-red-400 hover:text-red-600 transition-colors"><FaMinusCircle className="w-3 h-3" /></button>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 relative">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex-1 min-w-[150px] relative">
                       <input
                         type="text"
                         value={formData.serviceName || ""}
@@ -2119,7 +2379,9 @@ export default function OpManagement() {
                           const value = e.target.value;
                           setFormData((prev) => ({ ...prev, serviceName: value }));
                           if (value.trim().length > 0) {
-                            const filtered = services.filter(s => s.name.toLowerCase().includes(value.toLowerCase()));
+                            const filtered = services.filter(s => 
+                              s.name.toLowerCase().includes(value.toLowerCase())
+                            );
                             setFilteredServices(filtered);
                             setShowServiceSuggestions(true);
                           } else {
@@ -2129,13 +2391,15 @@ export default function OpManagement() {
                         }}
                         onFocus={() => {
                           if (formData.serviceName?.trim().length > 0) {
-                            const filtered = services.filter(s => s.name.toLowerCase().includes(formData.serviceName.toLowerCase()));
+                            const filtered = services.filter(s => 
+                              s.name.toLowerCase().includes(formData.serviceName.toLowerCase())
+                            );
                             setFilteredServices(filtered);
                             setShowServiceSuggestions(true);
                           }
                         }}
-                        placeholder="Service name..."
-                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                        placeholder="Service name (e.g. Consultation Fee)"
+                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
                       />
                       {showServiceSuggestions && filteredServices.length > 0 && (
                         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
@@ -2156,147 +2420,145 @@ export default function OpManagement() {
                     </div>
                     <div className="relative w-24">
                       <FaRupeeSign className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                      <input type="number" value={formData.servicePrice || ""} onChange={(e) => setFormData((prev) => ({ ...prev, servicePrice: e.target.value }))} placeholder="Price" min="0" className="w-full bg-white border border-gray-300 rounded-lg pl-8 pr-2 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" />
+                      <input type="number" value={formData.servicePrice || ""} onChange={(e) => setFormData((prev) => ({ ...prev, servicePrice: e.target.value }))} placeholder="Price" min="0" className="w-full bg-white border border-gray-300 rounded-lg pl-8 pr-2 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" />
                     </div>
-                    <button type="button" onClick={handleAddCustomService} className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-all flex items-center gap-1 whitespace-nowrap shadow-sm"><FaPlus className="w-3 h-3" /> Add</button>
+                    <button type="button" onClick={handleAddCustomServiceItem} className="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-all flex items-center gap-1 whitespace-nowrap shadow-sm"><FaPlus className="w-3 h-3" /> Add</button>
                   </div>
 
-                  {formData.serviceName && formData.serviceName.trim().length > 0 && (
-                    <div className="mt-1 text-[10px] text-gray-400 flex items-center gap-1">
-                      <FiAlertCircle className="w-3 h-3" />
-                      {services.some(s => s.name.toLowerCase() === formData.serviceName?.toLowerCase()) ? "✓ Existing service - Click Add to add" : "⚡ New service will be created with price"}
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-[9px] text-gray-400">
+                    <span className="flex items-center gap-1"><FiAlertCircle className="w-3 h-3" /> Type service name, set price, click <strong className="text-emerald-600">Add</strong></span>
+                    <span className="text-gray-300">|</span>
+                    <span>Add Consultation Fee, Lab Fee, or any other service</span>
+                  </div>
+
+                  {formData.serviceItems.length > 0 && (
+                    <div className="mt-3 p-2.5 bg-white rounded-lg border border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-gray-600">Subtotal:</span>
+                        <span className="text-sm font-extrabold text-blue-700">
+                          ₹{formData.serviceItems.reduce((sum, s) => sum + (s.price || 0), 0)}
+                        </span>
+                      </div>
                     </div>
                   )}
-                  <div className="mt-1 text-[9px] text-gray-400 flex items-center gap-1"><FiAlertCircle className="w-3 h-3" /> Type service name, click suggestion to fill, then click <strong className="text-emerald-600">Add</strong></div>
                 </div>
 
-                {/* ===== REFERRED BY SECTION ===== */}
+                {/* ===== REFERRED BY SECTION - SPLIT WITH ADD BUTTONS ===== */}
                 <div className="border border-gray-200 rounded-xl p-4 bg-blue-50/30">
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <FaShareAlt className="text-blue-600" /> Referred By
                   </label>
 
-                  <select
-                    value={formData.referralContactId}
-                    onChange={(e) => {
-                      const contactId = e.target.value;
-                      if (contactId) {
-                        const contact = referralContacts.find(c => c._id === contactId);
-                        if (contact) {
-                          let displayName = "";
-                          if (contact.referralType === "customer") {
-                            displayName = contact.customerName || "";
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* ===== LEFT: Customer Referrals ===== */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <FaUserFriends className="text-blue-500" /> Customer
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleAddCustomerReferral}
+                          className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5 transition-colors"
+                        >
+                          <FaPlus className="w-2.5 h-2.5" /> Add
+                        </button>
+                      </div>
+                      <select
+                        value={formData.referralCustomerId}
+                        onChange={(e) => {
+                          const contactId = e.target.value;
+                          if (contactId) {
+                            const contact = referralContacts.find(c => c._id === contactId && c.referralType === "customer");
+                            if (contact) {
+                              handleReferralCustomerSelect(contact);
+                            }
                           } else {
-                            displayName = contact.doctorName || "";
+                            setFormData((prev) => ({ ...prev, referredByCustomer: "", referralCustomerId: "" }));
                           }
-                          setFormData((prev) => ({
-                            ...prev,
-                            referralContactId: contactId,
-                            referredBy: displayName,
-                            referralCommission: "",
-                            referralCommissionType: ""
-                          }));
-                        }
-                      } else {
-                        setFormData((prev) => ({ ...prev, referralContactId: "", referredBy: "", referralCommission: "", referralCommissionType: "" }));
-                      }
-                    }}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none"
-                  >
-                    <option value="">-- Select Referral Contact --</option>
-                    {referralContacts.map((contact) => {
-                      let displayName = "";
-                      if (contact.referralType === "customer") {
-                        displayName = contact.customerName || "";
-                      } else {
-                        displayName = contact.doctorName || "";
-                      }
-                      return (
-                        <option key={contact._id} value={contact._id}>
-                          {displayName} ({contact.referralType})
-                        </option>
-                      );
-                    })}
-                  </select>
-
-                  {formData.referralContactId && (
-                    <div className="mt-3 p-3 bg-white rounded-lg border border-blue-200">
-                      <div className="text-xs font-bold text-gray-600 mb-2">Select Commission Type:</div>
-                      <div className="flex gap-3 flex-wrap">
-                        {["clinic", "pharmacy", "lab"].map((type) => {
-                          const contact = referralContacts.find(c => c._id === formData.referralContactId);
-                          if (!contact) return null;
-                          const value = parseFloat(contact[`${type}Commission`]) || 0;
-                          const label = type.charAt(0).toUpperCase() + type.slice(1);
-                          const isSelected = formData.referralCommissionType === label;
-                          return (
-                            <button
-                              key={type}
-                              type="button"
-                              onClick={() => handleReferralContactSelect(contact, type)}
-                              className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${isSelected
-                                  ? "border-blue-500 bg-blue-50 text-blue-700 shadow-xs ring-2 ring-blue-400/20"
-                                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                                }`}
-                            >
-                              {label}: {value}%
-                            </button>
-                          );
-                        })}
-                      </div>
+                        }}
+                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none"
+                      >
+                        <option value="">-- Select Customer --</option>
+                        {referralContacts
+                          .filter(contact => contact.referralType === "customer")
+                          .map((contact) => (
+                            <option key={contact._id} value={contact._id}>
+                              {contact.customerName || "N/A"} 
+                              {contact.customerPhone ? ` (${contact.customerPhone})` : ''}
+                            </option>
+                          ))}
+                      </select>
+                      {formData.referredByCustomer && (
+                        <div className="mt-2 text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 flex items-center gap-1.5">
+                          <FaUserFriends className="text-blue-500 text-[10px]" />
+                          <span className="font-medium">{formData.referredByCustomer}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  {formData.referredBy && formData.referralCommission && formData.referralCommissionType && (
-                    <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <FaUserPlus className="text-green-600" />
-                          <span className="font-bold text-gray-800">{formData.referredBy}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <FaPercent className="text-amber-600" />
-                          <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                            {formData.referralCommissionType}: {formData.referralCommission}%
-                          </span>
-                        </div>
-                        {(() => {
-                          const contact = referralContacts.find(c => c._id === formData.referralContactId);
-                          if (contact) {
-                            const clinic = parseFloat(contact.clinicCommission) || 0;
-                            const pharmacy = parseFloat(contact.pharmacyCommission) || 0;
-                            const lab = parseFloat(contact.labCommission) || 0;
-                            const total = clinic + pharmacy + lab;
-                            return (
-                              <div className="flex items-center gap-2 text-[10px] text-gray-500 border-l border-green-200 pl-3">
-                                <span className="flex items-center gap-1"><FaClinicMedical className="text-blue-500" /> C: {clinic}%</span>
-                                <span className="flex items-center gap-1"><FaPills className="text-green-500" /> P: {pharmacy}%</span>
-                                <span className="flex items-center gap-1"><FaFlask className="text-purple-500" /> L: {lab}%</span>
-                                <span className="font-bold text-gray-700">| Total: {total}%</span>
-                              </div>
-                            );
+                    {/* ===== RIGHT: Doctor Referrals ===== */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <FaUserMdIcon className="text-indigo-500" /> Doctor
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleAddDoctorReferral}
+                          className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5 transition-colors"
+                        >
+                          <FaPlus className="w-2.5 h-2.5" /> Add
+                        </button>
+                      </div>
+                      <select
+                        value={formData.referralDoctorId}
+                        onChange={(e) => {
+                          const contactId = e.target.value;
+                          if (contactId) {
+                            const contact = referralContacts.find(c => c._id === contactId && c.referralType === "doctor");
+                            if (contact) {
+                              handleReferralDoctorSelect(contact);
+                            }
+                          } else {
+                            setFormData((prev) => ({ ...prev, referredByDoctor: "", referralDoctorId: "" }));
                           }
-                          return null;
-                        })()}
-                      </div>
+                        }}
+                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none"
+                      >
+                        <option value="">-- Select Doctor --</option>
+                        {referralContacts
+                          .filter(contact => contact.referralType === "doctor")
+                          .map((contact) => (
+                            <option key={contact._id} value={contact._id}>
+                              {contact.doctorName || "N/A"} 
+                              {contact.doctorSpecialization ? ` (${contact.doctorSpecialization})` : ''}
+                            </option>
+                          ))}
+                      </select>
+                      {formData.referredByDoctor && (
+                        <div className="mt-2 text-xs text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 flex items-center gap-1.5">
+                          <FaUserMdIcon className="text-indigo-500 text-[10px]" />
+                          <span className="font-medium">{formData.referredByDoctor}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
 
-                  <p className="text-[9px] text-gray-400 mt-1.5 flex items-center gap-1">
-                    <FiAlertCircle className="w-3 h-3" /> Select contact, then choose Clinic/Pharmacy/Lab commission
+                  <p className="text-[9px] text-gray-400 mt-3 flex items-center gap-1">
+                    <FiAlertCircle className="w-3 h-3" /> Select a customer or doctor referral (or both if applicable)
                   </p>
                 </div>
 
-                {/* ===== PAYMENT DETAILS WITH FULL CALCULATIONS ===== */}
+                {/* ===== PAYMENT DETAILS ===== */}
                 <div className="border border-gray-200 rounded-xl p-4 bg-purple-50/30">
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <FaMoneyBillWave className="text-purple-600" /> Payment Details
                   </label>
 
                   {(() => {
-                    const consultationFee = formData.feeAmount || 0;
-                    const servicesTotal = formData.selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
-                    const subtotal = consultationFee + servicesTotal;
+                    const servicesTotal = formData.serviceItems.reduce((sum, s) => sum + (s.price || 0), 0);
+                    const subtotal = servicesTotal;
                     const commissionPercent = parseFloat(formData.referralCommission) || 0;
                     const commissionAmount = (subtotal * commissionPercent) / 100;
                     const finalPayable = subtotal - commissionAmount;
@@ -2304,18 +2566,13 @@ export default function OpManagement() {
                     return (
                       <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
                         <div className="space-y-1.5 text-xs">
-                          <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                            <span className="text-gray-700 font-medium">Consultation Fee</span>
-                            <span className="font-bold text-gray-900">₹{consultationFee}</span>
-                          </div>
-
-                          {formData.selectedServices.length > 0 && (
+                          {formData.serviceItems.length > 0 && (
                             <>
                               <div className="flex justify-between items-center py-1 border-b border-gray-100">
                                 <span className="text-gray-700 font-medium">Services</span>
-                                <span className="text-gray-500 text-[10px]">{formData.selectedServices.length} service{formData.selectedServices.length > 1 ? 's' : ''}</span>
+                                <span className="text-gray-500 text-[10px]">{formData.serviceItems.length} service{formData.serviceItems.length > 1 ? 's' : ''}</span>
                               </div>
-                              {formData.selectedServices.map((svc, idx) => (
+                              {formData.serviceItems.map((svc, idx) => (
                                 <div key={idx} className="flex justify-between items-center py-1 border-b border-gray-100 pl-4">
                                   <span className="text-gray-600 text-[10px]">• {svc.name}</span>
                                   <span className="font-medium text-gray-800">₹{svc.price || 0}</span>
@@ -2387,12 +2644,11 @@ export default function OpManagement() {
                       <label className="block text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-1">Partial Amount (₹) <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <FaRupeeSign className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                        <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="Enter amount paid" min="0" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" required={formData.paymentStatus === "Partial"} />
+                        <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="Enter amount paid" min="0" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium" required={formData.paymentStatus === "Partial"} />
                       </div>
                       {(() => {
-                        const consultationFee = formData.feeAmount || 0;
-                        const servicesTotal = formData.selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
-                        const subtotal = consultationFee + servicesTotal;
+                        const servicesTotal = formData.serviceItems.reduce((sum, s) => sum + (s.price || 0), 0);
+                        const subtotal = servicesTotal;
                         const commissionPercent = parseFloat(formData.referralCommission) || 0;
                         const commissionAmount = (subtotal * commissionPercent) / 100;
                         const finalPayable = subtotal - commissionAmount;
@@ -2416,12 +2672,42 @@ export default function OpManagement() {
                   <textarea name="reason" value={formData.reason} onChange={handleInputChange} placeholder="Brief description of symptoms..." rows={2} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium resize-none" />
                 </div>
 
+                {/* ===== FORM SUBMIT BUTTON ===== */}
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                  <button type="button" onClick={cancelForm} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">Cancel</button>
-                  <button type="submit" disabled={submitting || !formData.slotId || !formData.doctorId} className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50">
-                    {submitting ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCalendar className="w-3.5 h-3.5" />}
-                    {submitting ? "Processing..." : editingId ? "Update & Book Slot" : "Confirm & Book Slot"}
+                  <button type="button" onClick={cancelForm} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">
+                    Cancel
                   </button>
+                  
+                  {editingId ? (
+                    <button 
+                      type="submit" 
+                      disabled={submitting || !formData.slotId || !formData.doctorId || formData.serviceItems.length === 0} 
+                      className="px-5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      {submitting ? (
+                        <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <FiEdit2 className="w-3.5 h-3.5" />
+                      )}
+                      {submitting ? "Updating..." : "Update Appointment"}
+                    </button>
+                  ) : (
+                    <button 
+                      type="submit" 
+                      disabled={submitting || !formData.slotId || !formData.doctorId || formData.serviceItems.length === 0} 
+                      className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      {submitting ? (
+                        <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <FiCalendar className="w-3.5 h-3.5" />
+                      )}
+                      {submitting ? "Processing..." : "Confirm & Book Slot"}
+                    </button>
+                  )}
+                </div>
+                <div className="text-[9px] text-gray-400 text-center mt-1">
+                  * At least one service is required
                 </div>
               </form>
             </div>
@@ -2440,17 +2726,7 @@ export default function OpManagement() {
               {hasActiveFilters ? (
                 <button onClick={clearFilters} className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm">Clear Filters</button>
               ) : (
-                <button onClick={() => {
-                  const today = new Date().toISOString().split("T")[0];
-                  setFormData({ ...EMPTY_FORM, appointmentDate: today });
-                  setEditingId(null);
-                  setShowForm(true);
-                  setAvailableSlots([]);
-                  setExistingPatient(null);
-                  setShowExistingPatientPopup(false);
-                  setFilteredServices([]);
-                  setShowServiceSuggestions(false);
-                }} className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm inline-flex items-center gap-1.5"><FiPlus className="w-3.5 h-3.5" /> Add Patient</button>
+                <button onClick={handleAddNewPatient} className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm inline-flex items-center gap-1.5"><FiPlus className="w-3.5 h-3.5" /> Add Patient</button>
               )}
             </div>
           ) : (
@@ -2466,12 +2742,11 @@ export default function OpManagement() {
                       <th style={{ textAlign: "center" }}>Appt. Date</th>
                       <th style={{ textAlign: "center" }}>Slot Timing</th>
                       <th style={{ textAlign: "center" }}>Booking Status</th>
-                      <th style={{ textAlign: "center" }}>Cons. Fee</th>
-                      <th style={{ textAlign: "center" }}>Payment Status</th>
                       <th style={{ textAlign: "center" }}>Services</th>
                       <th style={{ textAlign: "center" }}>Total</th>
-                      <th style={{ textAlign: "center" }}>Referred By</th>
-                      <th style={{ textAlign: "center" }}>Referred %</th>
+                      <th style={{ textAlign: "center" }}>Payment Status</th>
+                      <th style={{ textAlign: "center" }}>Referred By (Customer)</th>
+                      <th style={{ textAlign: "center" }}>Referred By (Doctor)</th>
                       <th style={{ textAlign: "center" }}>Created At</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
                     </tr>
@@ -2481,15 +2756,13 @@ export default function OpManagement() {
                       const matchingBooking = getMatchingBooking(patient);
                       const totalFee = getPatientTotalFee(patient);
                       const services = getPatientServices(patient);
-                      const consultationFee = matchingBooking?.consultationFee || patient.feeAmount || 300;
                       const consultationPaymentStatus = getConsultationPaymentStatus(patient);
                       const bookingStatus = getBookingStatus(patient);
                       const appointmentDate = getAppointmentDate(patient);
                       const slotTiming = getSlotTiming(patient);
                       const statusColors = getStatusColors(bookingStatus);
-                      const referredBy = matchingBooking?.referredBy || patient.referredBy || "";
-                      const referralCommission = matchingBooking?.referralCommission || patient.referralCommission || "";
-                      const referralCommissionType = matchingBooking?.referralCommissionType || patient.referralCommissionType || "";
+                      const referredByCustomer = matchingBooking?.referredByCustomer || patient.referredByCustomer || "";
+                      const referredByDoctor = matchingBooking?.referredByDoctor || patient.referredByDoctor || "";
                       const paymentColors = getPaymentStatusColors(consultationPaymentStatus);
                       const createdAt = matchingBooking?.createdAt || matchingBooking?.bookedAt || patient.createdAt;
 
@@ -2499,7 +2772,12 @@ export default function OpManagement() {
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-[10px] shadow-sm">{patient.name ? patient.name.charAt(0).toUpperCase() : "P"}</div>
-                              <div className="min-w-0"><div className="font-semibold text-slate-800 text-xs truncate max-w-[80px]">{patient.name || "N/A"}</div></div>
+                              <div className="min-w-0">
+                                <div className="font-semibold text-slate-800 text-xs truncate max-w-[80px]">
+                                  {patient.title || ""} {patient.name || "N/A"}
+                                </div>
+                                <div className="text-[9px] text-gray-400">{patient.age || "?"} yrs</div>
+                              </div>
                             </div>
                           </td>
                           <td className="px-3 py-3 whitespace-nowrap"><span className="text-xs font-medium text-slate-700">{patient.phone || "N/A"}</span></td>
@@ -2536,7 +2814,23 @@ export default function OpManagement() {
                               </div>
                             ) : <span className="text-[10px] text-gray-400 italic">No Booking</span>}
                           </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-slate-800">₹{consultationFee}</span></td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {services.length > 0 ? (
+                              <div className="flex flex-col gap-0.5 items-center">
+                                {services.slice(0, 2).map((s, i) => (
+                                  <span key={i} className="text-[9px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100" title={s.name}>
+                                    {s.name}
+                                  </span>
+                                ))}
+                                {services.length > 2 && <span className="text-[9px] text-gray-400">+{services.length - 2}</span>}
+                              </div>
+                            ) : <span className="text-[10px] text-gray-400 italic">-</span>}
+                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            <span className="text-xs font-bold text-slate-800">
+                              ₹{Math.round(matchingBooking?.finalPayable || matchingBooking?.totalAmount || totalFee)}
+                            </span>
+                          </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {matchingBooking ? (
                               <div className="relative inline-block payment-dropdown">
@@ -2559,23 +2853,20 @@ export default function OpManagement() {
                             ) : <span className="text-[10px] text-gray-400 italic">-</span>}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {services.length > 0 ? (
-                              <div className="flex flex-col gap-0.5 items-center">
-                                {services.slice(0, 2).map((s, i) => <span key={i} className="text-[9px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100" title={s.name}>{s.name} (₹{s.price})</span>)}
-                                {services.length > 2 && <span className="text-[9px] text-gray-400">+{services.length - 2}</span>}
+                            {referredByCustomer ? (
+                              <div className="flex items-center justify-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                                <FaUserFriends className="text-[9px]" />
+                                <span className="truncate max-w-[80px]">{referredByCustomer}</span>
                               </div>
                             ) : <span className="text-[10px] text-gray-400 italic">-</span>}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className="text-xs font-bold text-slate-800">
-                              ₹{Math.round(matchingBooking?.finalPayable || matchingBooking?.totalAmount || totalFee)}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {referredBy ? <div className="flex items-center justify-center gap-1 text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100"><FaUserPlus className="text-[9px]" /><span className="truncate max-w-[80px]">{referredBy}</span></div> : <span className="text-[10px] text-gray-400 italic">-</span>}
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {referralCommission ? <div className="flex items-center justify-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100"><FaPercent className="text-[9px]" />{referralCommissionType ? `${referralCommissionType}: ` : ''}{referralCommission}%</div> : <span className="text-[10px] text-gray-400 italic">-</span>}
+                            {referredByDoctor ? (
+                              <div className="flex items-center justify-center gap-1 text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                                <FaUserMdIcon className="text-[9px]" />
+                                <span className="truncate max-w-[80px]">{referredByDoctor}</span>
+                              </div>
+                            ) : <span className="text-[10px] text-gray-400 italic">-</span>}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className="text-[10px] font-medium text-gray-500">
@@ -2585,7 +2876,7 @@ export default function OpManagement() {
                           <td className="px-3 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1.5">
                               <button onClick={() => handleRowClick(patient)} className="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-all duration-200 shadow-sm border border-indigo-100 hover:shadow-md hover:scale-105"><FiEye className="w-3.5 h-3.5" /></button>
-                              <button onClick={() => handleEdit(patient)} className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 shadow-sm border border-blue-100 hover:shadow-md hover:scale-105"><FiEdit2 className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => handleEdit(patient, matchingBooking)} className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 shadow-sm border border-blue-100 hover:shadow-md hover:scale-105"><FiEdit2 className="w-3.5 h-3.5" /></button>
                               {matchingBooking && (
                                 <>
                                   <button onClick={() => openPrescriptionModal(matchingBooking)} className="p-1.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg transition-all duration-200 shadow-sm border border-teal-100 hover:shadow-md hover:scale-105"><FaPrescription className="w-3.5 h-3.5" /></button>
@@ -2628,14 +2919,14 @@ export default function OpManagement() {
           )}
         </div>
 
-        {/* ===== PATIENT DETAIL MODAL ===== */}
+        {/* ===== PATIENT DETAIL MODAL - Keep existing ===== */}
         {showPatientModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-gray-200">
               <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-500/20"><FaUserInjured className="w-5 h-5" /></div>
-                  <div><h3 className="font-bold text-gray-900 text-base">Patient Profile &amp; Appointments</h3><p className="text-xs text-gray-500">{selectedPatient.name} • {selectedPatient.phone}</p></div>
+                  <div><h3 className="font-bold text-gray-900 text-base">Patient Profile &amp; Appointments</h3><p className="text-xs text-gray-500">{selectedPatient.title || ""} {selectedPatient.name} • {selectedPatient.phone}</p></div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-purple-700 font-semibold bg-purple-50 px-3 py-1 rounded-full border border-purple-200">{patientBookings.length} Bookings</span>
@@ -2650,12 +2941,12 @@ export default function OpManagement() {
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                       <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold flex items-center justify-center text-lg shadow-md flex-shrink-0">{selectedPatient.name ? selectedPatient.name.charAt(0).toUpperCase() : "P"}</div>
-                        <div><div className="font-bold text-gray-900 text-base">{selectedPatient.name}</div><div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5"><FaPhoneAlt className="text-gray-400 text-[10px]" />{selectedPatient.phone || "N/A"}</div></div>
+                        <div><div className="font-bold text-gray-900 text-base">{selectedPatient.title || ""} {selectedPatient.name}</div><div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5"><FaPhoneAlt className="text-gray-400 text-[10px]" />{selectedPatient.phone || "N/A"}</div></div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                         <div><div className="text-[10px] font-bold uppercase text-gray-400">Age</div><div className="font-semibold text-gray-900">{selectedPatient.age || "N/A"} Yrs</div></div>
                         <div><div className="text-[10px] font-bold uppercase text-gray-400">Gender</div><div className="font-semibold text-gray-900 capitalize">{selectedPatient.gender || "N/A"}</div></div>
-                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Fee Type</div><span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200">{selectedPatient.feeType === "lab" ? "Lab" : "Consultation"}</span></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400">DOB</div><div className="font-semibold text-gray-900">{formatDateToDDMMYYYY(selectedPatient.dob) || "N/A"}</div></div>
                         <div><div className="text-[10px] font-bold uppercase text-gray-400">Payment Mode</div><div className="font-semibold text-gray-900 capitalize">{selectedPatient.paymentType || "Cash"}</div></div>
                       </div>
                       {selectedPatient.address && (
@@ -2664,9 +2955,14 @@ export default function OpManagement() {
                       {selectedPatient.reason && (
                         <div className="mt-2 text-xs"><div className="text-[10px] font-bold uppercase text-gray-400">Reason</div><div className="text-gray-700 bg-white p-2 rounded-lg border border-gray-200">{selectedPatient.reason}</div></div>
                       )}
-                      {selectedPatient.referredBy && (
-                        <div className="mt-2 text-xs"><div className="text-[10px] font-bold uppercase text-gray-400">Referred By</div><div className="text-gray-700 bg-white p-2 rounded-lg border border-gray-200 flex items-center gap-2"><FaUserPlus className="text-indigo-600" />{selectedPatient.referredBy}{selectedPatient.referralCommission && <span className="ml-2 text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">{selectedPatient.referralCommissionType ? `${selectedPatient.referralCommissionType}: ` : ''}{selectedPatient.referralCommission}% Commission</span>}</div></div>
-                      )}
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                        {selectedPatient.referredByCustomer && (
+                          <div><div className="text-[10px] font-bold uppercase text-gray-400">Customer Referral</div><div className="text-gray-700 bg-white p-1.5 rounded-lg border border-gray-200 flex items-center gap-1.5"><FaUserFriends className="text-blue-500 text-[10px]" />{selectedPatient.referredByCustomer}</div></div>
+                        )}
+                        {selectedPatient.referredByDoctor && (
+                          <div><div className="text-[10px] font-bold uppercase text-gray-400">Doctor Referral</div><div className="text-gray-700 bg-white p-1.5 rounded-lg border border-gray-200 flex items-center gap-1.5"><FaUserMdIcon className="text-indigo-500 text-[10px]" />{selectedPatient.referredByDoctor}</div></div>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-3"><FaCalendarAlt className="text-purple-600 text-sm" /><h4 className="font-bold text-gray-900 text-sm">Appointment Records ({patientBookings.length})</h4></div>
@@ -2675,7 +2971,8 @@ export default function OpManagement() {
                       ) : (
                         <div className="space-y-4">
                           {patientBookings.map((booking, bIdx) => {
-                            const hasServices = booking.services && booking.services.length > 0;
+                            const hasServices = (booking.serviceItems && booking.serviceItems.length > 0) || (booking.services && booking.services.length > 0);
+                            const items = booking.serviceItems || booking.services || [];
                             const totalFee = getTotalBookingFee(booking);
                             const statusColors = getStatusColors(booking.status);
                             const slotTiming = booking.startTime && booking.endTime ? `${booking.startTime} - ${booking.endTime}` : "-";
@@ -2699,21 +2996,23 @@ export default function OpManagement() {
                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                                     <div><div className="text-[10px] font-bold uppercase text-gray-400">Doctor</div><div className="font-bold text-gray-900">{booking.doctorName || "N/A"}</div></div>
                                     <div><div className="text-[10px] font-bold uppercase text-gray-400">Slot</div><div className="font-bold text-gray-900">{booking.startTime || "N/A"} – {booking.endTime || "N/A"}</div></div>
-                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Cons. Payment</div><span onClick={(e) => { e.stopPropagation(); const newStatus = booking.paymentStatus === "Paid" ? "Pending" : "Paid"; handlePaymentSelect(booking, newStatus, e); }} className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border cursor-pointer hover:scale-105 transition-transform ${booking.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{booking.paymentStatus || "Pending"}</span></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Payment</div><span onClick={(e) => { e.stopPropagation(); const newStatus = booking.paymentStatus === "Paid" ? "Pending" : "Paid"; handlePaymentSelect(booking, newStatus, e); }} className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border cursor-pointer hover:scale-105 transition-transform ${booking.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{booking.paymentStatus || "Pending"}</span></div>
                                     <div><div className="text-[10px] font-bold uppercase text-gray-400">Total Fee</div><div className="text-sm font-extrabold text-blue-950">₹{totalFee}</div></div>
                                   </div>
-                                  {booking.referredBy && (
+                                  {(booking.referredByCustomer || booking.referredByDoctor) && (
                                     <div className="text-xs bg-indigo-50 p-2 rounded-lg border border-indigo-100 flex items-center gap-2 flex-wrap">
-                                      <FaUserPlus className="text-indigo-600 text-xs" /><span className="font-medium text-gray-700">Referred By: {booking.referredBy}</span>
-                                      {booking.referralCommission && <span className="text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">{booking.referralCommissionType ? `${booking.referralCommissionType}: ` : ''}{booking.referralCommission}%</span>}
+                                      <FaShareAlt className="text-indigo-600 text-xs" />
+                                      {booking.referredByCustomer && <span className="font-medium text-gray-700">Customer: {booking.referredByCustomer}</span>}
+                                      {booking.referredByCustomer && booking.referredByDoctor && <span className="text-gray-300">|</span>}
+                                      {booking.referredByDoctor && <span className="font-medium text-gray-700">Doctor: {booking.referredByDoctor}</span>}
                                     </div>
                                   )}
                                   <div><div className="text-[10px] font-bold uppercase text-gray-400">Services</div>
                                     {hasServices ? (
                                       <div className="flex flex-wrap gap-1.5 mt-1">
-                                        {booking.services.map((svc, sIdx) => (
+                                        {items.map((svc, sIdx) => (
                                           <span key={sIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                                            {svc.name} (₹{svc.price})
+                                            {svc.name} ₹{svc.price}
                                           </span>
                                         ))}
                                       </div>
@@ -2739,22 +3038,99 @@ export default function OpManagement() {
         {/* ===== PRESCRIPTION MODAL ===== */}
         {showPrescriptionModal && selectedBookingForPrescription && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="relative max-w-[650px] w-full rounded-2xl overflow-hidden shadow-2xl bg-white">
-              <button onClick={() => { setShowPrescriptionModal(false); setSelectedBookingForPrescription(null); }} className="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all z-30"><FaTimes className="w-5 h-5 text-gray-700" /></button>
-              <div className="absolute top-3 left-3 flex gap-2 z-30">
-                <button onClick={handlePrintPrescription} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-lg transition-all"><FaPrint className="w-4 h-4" /> Print / PDF</button>
-                <button onClick={handlePrintPrescription} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold shadow-lg transition-all"><FaFilePdf className="w-4 h-4" /> Download PDF</button>
+            <div className="relative max-w-[480px] w-full rounded-2xl overflow-hidden shadow-2xl bg-white max-h-[90vh] overflow-y-auto">
+              
+              <button 
+                onClick={() => { 
+                  setShowPrescriptionModal(false); 
+                  setSelectedBookingForPrescription(null); 
+                }} 
+                className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full p-1.5 shadow-lg transition-all z-30"
+              >
+                <FaTimes className="w-4 h-4 text-gray-700" />
+              </button>
+              
+              <div className="absolute top-2 left-2 flex gap-1.5 z-30">
+                <button 
+                  onClick={handlePrintPrescription} 
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold shadow-lg transition-all"
+                >
+                  <FaPrint className="w-3 h-3" /> Print
+                </button>
+                <button 
+                  onClick={handlePrintPrescription} 
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-lg transition-all"
+                >
+                  <FaFilePdf className="w-3 h-3" /> PDF
+                </button>
               </div>
-              <div ref={prescriptionRef} className="relative">
-                <img src={prescriptionTemplate} alt="Prescription Template" className="w-full h-auto object-contain rounded-2xl" />
-                <div className="absolute inset-0 text-black" style={{ padding: 0 }}>
-                  <div style={{ position: 'absolute', top: '78px', left: '90px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>{selectedBookingForPrescription.patientName || "N/A"}</div>
-                  <div style={{ position: 'absolute', top: '78px', right: '20px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>{formatDateToDDMMYYYY(selectedBookingForPrescription.appointmentDate || selectedBookingForPrescription.date)}</div>
-                  <div style={{ position: 'absolute', top: '104px', left: '90px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>{selectedBookingForPrescription.patientAge || "N/A"}</div>
-                  <div style={{ position: 'absolute', top: '104px', left: '230px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>{selectedBookingForPrescription.patientGender || "N/A"}</div>
-                  <div style={{ position: 'absolute', top: '104px', right: '100px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>{selectedBookingForPrescription.patientPhone || "N/A"}</div>
-                  <div style={{ position: 'absolute', top: '130px', left: '90px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>{selectedBookingForPrescription.purpose || selectedBookingForPrescription.reason || "N/A"}</div>
+              
+              <div className="border-b border-gray-200 pb-2 mb-2">
+                <div className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider py-1 bg-gray-50">
+                  Front Side - Prescription
                 </div>
+                <div 
+                  ref={prescriptionRef} 
+                  className="relative w-full overflow-hidden"
+                  style={{ 
+                    transform: 'scale(0.75)', 
+                    transformOrigin: 'top center',
+                    width: '133.33%',
+                    marginLeft: '-16.66%'
+                  }}
+                >
+                  <img 
+                    src={prescriptionTemplate} 
+                    alt="Prescription Template - Front" 
+                    className="w-full h-auto object-contain" 
+                  />
+                  
+                  <div className="absolute inset-0 text-black" style={{ padding: 0 }}>
+                    <div style={{ position: 'absolute', top: '78px', left: '90px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>
+                      {selectedBookingForPrescription?.patientTitle || ""} {selectedBookingForPrescription?.patientName || "N/A"}
+                    </div>
+                    <div style={{ position: 'absolute', top: '78px', right: '20px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>
+                      {formatDateToDDMMYYYY(selectedBookingForPrescription?.appointmentDate || selectedBookingForPrescription?.date)}
+                    </div>
+                    <div style={{ position: 'absolute', top: '104px', left: '90px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>
+                      {selectedBookingForPrescription?.patientAge || "N/A"}
+                    </div>
+                    <div style={{ position: 'absolute', top: '104px', left: '230px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>
+                      {selectedBookingForPrescription?.patientGender || "N/A"}
+                    </div>
+                    <div style={{ position: 'absolute', top: '104px', right: '100px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>
+                      {selectedBookingForPrescription?.patientPhone || "N/A"}
+                    </div>
+                    <div style={{ position: 'absolute', top: '130px', left: '90px', fontSize: '15px', fontWeight: '600', color: '#1a1a1a', letterSpacing: '0.2px', lineHeight: '1.3' }}>
+                      {selectedBookingForPrescription?.purpose || selectedBookingForPrescription?.reason || "N/A"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider py-1 bg-gray-50">
+                  Back Side
+                </div>
+                <div 
+                  className="relative w-full overflow-hidden"
+                  style={{ 
+                    transform: 'scale(0.75)', 
+                    transformOrigin: 'top center',
+                    width: '133.33%',
+                    marginLeft: '-16.66%'
+                  }}
+                >
+                  <img 
+                    src={prescriptionBackTemplate} 
+                    alt="Prescription Template - Back" 
+                    className="w-full h-auto object-contain" 
+                  />
+                </div>
+              </div>
+              
+              <div className="text-center text-[8px] text-gray-400 py-1 border-t border-gray-100">
+                Scroll to view both sides
               </div>
             </div>
           </div>
@@ -2780,7 +3156,7 @@ export default function OpManagement() {
                   </div>
                   <div className="text-center bg-gray-100 border-y border-gray-300 py-1.5 mb-4"><span className="text-sm font-bold tracking-widest text-gray-800 uppercase">Bill Cum Receipt</span></div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs mb-5">
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Name</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling?.patientName || "N/A"}</span></div>
+                    <div><span className="font-bold text-gray-500 inline-block w-28">Name</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling?.patientTitle || ""} {selectedBookingForBilling?.patientName || "N/A"}</span></div>
                     <div><span className="font-bold text-gray-500 inline-block w-28">Invoice No / Date</span>: <span className="font-semibold text-gray-900">{billingData.invoiceNo} / {billingData.invoiceDate}</span></div>
                     <div><span className="font-bold text-gray-500 inline-block w-28">Age</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling?.patientAge || "N/A"} Yrs</span></div>
                     <div><span className="font-bold text-gray-500 inline-block w-28">Gender</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling?.patientGender || "N/A"}</span></div>

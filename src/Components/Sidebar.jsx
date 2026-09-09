@@ -1746,7 +1746,9 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/op-management": "OP Management",
       "/op-dashboard": "OP Dashboard",
       "/doctor-management": "Doctors",
-      "/referral-management": "Referral Contacts",
+      // "/referral-management": "Referral Contacts", // ✅ REMOVED
+      "/customer-referrals": "Customer Referrals", // ✅ NEW
+      "/doctor-referrals": "Doctor Referrals", // ✅ NEW
       "/referredop": "Referred OP",
       "/services": "Services",
       "/letterhead": "Letter Head"
@@ -1798,7 +1800,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
   const isDropdownActive = (dropdownItems) =>
     dropdownItems?.some((item) => isActive(item.path));
 
-  // ─── Function to handle Hire navigation (EXACTLY like Navbar) ───
+  // ─── Function to handle Hire navigation ───
   const navigateToIngrainHire = () => {
     const userRole = localStorage.getItem('userRole');
     let email = '', password = '';
@@ -1899,7 +1901,9 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       dropdown: [
         { name: "OP Dashboard", path: "/op-dashboard" },
         { name: "Doctors", path: "/doctor-management" },
-        { name: "Referral Contacts", path: "/referral-management" },
+        // { name: "Referral Contacts", path: "/referral-management" }, // ✅ REMOVED
+        { name: "Customer Referrals", path: "/customer-referrals" }, // ✅ NEW
+        { name: "Doctor Referrals", path: "/doctor-referrals" }, // ✅ NEW
         { name: "Referred OP", path: "/referredop" },
         { name: "OP Records", path: "/op-management" },
         { name: "Appointment Slots", path: "/appointment-slots" },

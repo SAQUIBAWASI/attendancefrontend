@@ -135,7 +135,9 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       // ===== OP Management Routes =====
       "/op-dashboard": "",
       "/doctor-management": "",
-      "/referral-management": "",
+      // "/referral-management": "", // ✅ REMOVED
+      "/customer-referrals": "", // ✅ NEW
+      "/doctor-referrals": "", // ✅ NEW
       "/referredop": "",
       "/op-management": "",
       "/appointment-slots": "",
@@ -198,11 +200,13 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     (tab) => tab.path === location.pathname
   );
 
-  // ===== OP MANAGEMENT TABS - UPDATED WITH ALL SECTIONS =====
+  // ===== OP MANAGEMENT TABS - UPDATED =====
   const opTabs = [
     { path: "/op-dashboard", label: "OP Dashboard" },
     { path: "/doctor-management", label: "Doctors" },
-    { path: "/referral-management", label: "Referral Contacts" },
+    // { path: "/referral-management", label: "Referral Contacts" }, // ✅ REMOVED
+    { path: "/customer-referrals", label: "Customer Referrals" }, // ✅ NEW
+    { path: "/doctor-referrals", label: "Doctor Referrals" }, // ✅ NEW
     { path: "/referredop", label: "Referred OP" },
     { path: "/op-management", label: "OP Records" },
     { path: "/appointment-slots", label: "Appointment Slots" },

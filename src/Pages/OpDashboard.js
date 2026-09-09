@@ -121,6 +121,7 @@ const OpDashboard = () => {
     }
   };
 
+  // ===== FETCH BOOKINGS - WITH finalPayable =====
   const fetchBookingsData = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings`);
@@ -147,7 +148,11 @@ const OpDashboard = () => {
             services: b.services || [],
             purpose: b.purpose || "",
             createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
-            bookedAt: b.bookedAt || b.createdAt || new Date().toISOString()
+            bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
+            finalPayable: b.finalPayable || b.totalAmount || b.consultationFee || 0,
+            totalAmount: b.totalAmount || b.finalPayable || b.consultationFee || 0,
+            subtotal: b.subtotal || 0,
+            commissionAmount: b.commissionAmount || 0
           };
         });
         setBookings(transformed);
@@ -202,18 +207,15 @@ const OpDashboard = () => {
     }
   };
 
-  const handleQuickAction = (path) => {
-    navigate(path);
-  };
-
-  // ===== HELPER FUNCTIONS =====
+  // ===== HELPER FUNCTIONS - FIXED =====
   const getTotalServiceFee = (booking) => {
     if (!booking.services || booking.services.length === 0) return 0;
     return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
   };
 
+  // ✅ USE finalPayable
   const getTotalBookingFee = (booking) => {
-    return (booking.consultationFee || 0) + getTotalServiceFee(booking);
+    return booking.finalPayable || booking.totalAmount || booking.consultationFee || 0;
   };
 
   // ===== CHECK IF DATE IS IN RANGE =====
@@ -623,6 +625,28 @@ const OpDashboard = () => {
     );
   };
 
+  // ===== QUICK ACTION - FIXED (Role based navigation) =====
+  const handleQuickAction = (path) => {
+    const userRole = localStorage.getItem("userRole");
+    
+    // If user is admin, navigate directly to path
+    if (userRole === "admin") {
+      navigate(path);
+      return;
+    }
+    
+    // If user is employee, add /employee prefix
+    if (userRole === "employee") {
+      // Remove leading slash if present to avoid double slash
+      const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+      navigate(`/employee/${cleanPath}`);
+      return;
+    }
+    
+    // Fallback - try both
+    navigate(path);
+  };
+
   // ===== LOADING =====
   if (loading) {
     return (
@@ -736,7 +760,7 @@ const OpDashboard = () => {
         {/* QUICK ACTION BUTTONS */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <button
-            onClick={() => handleQuickAction("/employee/doctor-management")}
+            onClick={() => handleQuickAction("/doctor-management")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all group"
           >
             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
@@ -750,7 +774,7 @@ const OpDashboard = () => {
           </button>
 
           <button
-            onClick={() => handleQuickAction("/employee/appointment-slots")}
+            onClick={() => handleQuickAction("/appointment-slots")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-purple-300 transition-all group"
           >
             <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
@@ -764,7 +788,7 @@ const OpDashboard = () => {
           </button>
 
           <button
-            onClick={() => handleQuickAction("/employee/op-management")}
+            onClick={() => handleQuickAction("/op-management")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-300 transition-all group"
           >
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
@@ -778,7 +802,7 @@ const OpDashboard = () => {
           </button>
 
           <button
-            onClick={() => handleQuickAction("/employee/bookings")}
+            onClick={() => handleQuickAction("/bookings")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-amber-300 transition-all group"
           >
             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
@@ -792,6 +816,7 @@ const OpDashboard = () => {
           </button>
         </div>
 
+        {/* ===== REST OF THE COMPONENT REMAINS SAME ===== */}
         {/* KPI STATS CARDS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           <div className="emp-dash__stat">
@@ -1174,7 +1199,7 @@ const OpDashboard = () => {
               <p className="text-xs text-gray-500">Latest appointments and payment status</p>
             </div>
             <button
-              onClick={() => navigate("/bookings")}
+              onClick={() => handleQuickAction("/bookings")}
               className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
             >
               View All Bookings <ArrowRight className="w-3.5 h-3.5" />
@@ -1215,7 +1240,7 @@ const OpDashboard = () => {
                     const statusClass = statusColors[b.status] || statusColors.pending;
                     
                     return (
-                      <tr key={b._id || idx} className="hover:bg-slate-50/50 cursor-pointer" onClick={() => navigate("/bookings")}>
+                      <tr key={b._id || idx} className="hover:bg-slate-50/50 cursor-pointer" onClick={() => handleQuickAction("/bookings")}>
                         <td className="px-3 py-2.5 font-semibold text-gray-400 text-xs text-center">{idx + 1}</td>
                         <td className="px-3 py-2.5 font-semibold text-gray-800 text-xs">{b.patientName || "N/A"}</td>
                         <td className="px-3 py-2.5 text-xs text-gray-700">{b.doctorName || "N/A"}</td>

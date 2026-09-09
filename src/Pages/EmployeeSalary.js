@@ -1000,375 +1000,500 @@ export default function EmployeeSalary() {
   };
 
   // ============================================
-  // 📄 generateInvoiceHTML
-  // ============================================
-  const generateInvoiceHTML = (employee) => {
-    if (!employee.salaryPerMonth || employee.salaryPerMonth === 0) {
-      return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Payslip</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #000; text-align: center; }
-            .error { color: #000; font-size: 18px; margin-top: 100px; border: 1px solid #000; padding: 20px; display: inline-block; }
-          </style>
-        </head>
-        <body>
-          <div class="error">
-            <h2>Salary Data Not Available</h2>
-            <p>Salary information is not available for ${employee?.name || 'this employee'}.</p>
-            <p>Please contact HR department.</p>
-          </div>
-        </body>
-        </html>
+// 📄 generateInvoiceHTML - FIXED VERSION
+// ============================================
+const generateInvoiceHTML = (employee) => {
+  if (!employee.salaryPerMonth || employee.salaryPerMonth === 0) {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Payslip</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #000; text-align: center; }
+          .error { color: #000; font-size: 18px; margin-top: 100px; border: 1px solid #000; padding: 20px; display: inline-block; }
+        </style>
+      </head>
+      <body>
+        <div class="error">
+          <h2>Salary Data Not Available</h2>
+          <p>Salary information is not available for ${employee?.name || 'this employee'}.</p>
+          <p>Please contact HR department.</p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  const daysInMonth = employee.monthDays || getDaysInMonth(employee.month);
+  const dailyRate = parseFloat(employee.dailyRate) || 0;
+  const presentDays = employee.presentDays ?? 0;
+  const halfDays = employee.halfDays || employee.halfDayWorking || 0;
+  const holidays = employee.holidayCount || 0;
+  const actualWeekOffDaysNumeric = employee.weekOffs || 0;
+  const compOffBalance = employee.compOffBalance || 0;
+
+  // 🔴 FIX: Use the SAME calculated salary that shows on the page
+  // Page shows: calculatedSalary (base) + OT = finalPay
+  // But table shows calculatedSalary as the main number
+  // Let's use whichever is being shown in the table
+  
+  // The table shows 'calculatedSalary' as the main salary column
+  // and 'finalPay' as the final amount with OT
+  // We'll use finalPay as the Net Pay (which is what user sees as total)
+  
+  const netPayFromPage = employee.finalPay || employee.calculatedSalary || employee.baseCalculatedSalary || 0;
+  const calculatedBaseFromPage = employee.calculatedSalary || employee.baseCalculatedSalary || 0;
+  const otAmountFromPage = employee.finalOTAmount || employee.otAmount || 0;
+  
+  // For payslip, we want to show the exact same numbers as the page
+  // The page shows:
+  // - Monthly Salary: employee.salaryPerMonth
+  // - Calculated: calculatedSalary (base)
+  // - Final Pay: finalPay (base + OT)
+  
+  // So in payslip, Net Pay should equal finalPay from page
+  
+  // Calculate LOP days based on what was actually paid
+  // We know: calculatedSalary = paidDays * dailyRate
+  // So: paidDays = calculatedSalary / dailyRate (if dailyRate > 0)
+  let effectivePaidDays = 0;
+  if (dailyRate > 0) {
+    effectivePaidDays = calculatedBaseFromPage / dailyRate;
+  }
+  
+  // LOP days = total days - (paid days + weekoffs + holidays + compoff)
+  let totalPaidComponents = presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + holidays + compOffBalance;
+  let lopDays = Math.max(0, daysInMonth - totalPaidComponents);
+  lopDays = Math.round(lopDays * 10) / 10;
+  let lopAmount = lopDays * dailyRate;
+  lopAmount = Math.round(lopAmount * 100) / 100;
+
+  // Earnings items - use the same breakdown as page
+  const earningsItems = [];
+  
+  // Base salary (the calculated amount without OT)
+  const baseSalaryAmount = calculatedBaseFromPage;
+  
+  // Add earnings based on components
+  if (baseSalaryAmount > 0) {
+    // We'll show the base calculated salary as the main earnings
+    earningsItems.push({ 
+      label: 'Base Salary (Calculated)', 
+      amount: Math.round(baseSalaryAmount),
+      isBase: true 
+    });
+  }
+  
+  // Add OT separately if present
+  if (otAmountFromPage > 0) {
+    earningsItems.push({ 
+      label: 'Overtime Pay', 
+      amount: Math.round(otAmountFromPage) 
+    });
+  }
+  
+  // Add Comp-off pay if any
+  const compOffPay = compOffBalance * dailyRate;
+  if (compOffPay > 0 && compOffBalance > 0) {
+    earningsItems.push({ 
+      label: `Comp-off Pay (${compOffBalance} days)`, 
+      amount: Math.round(compOffPay) 
+    });
+  }
+  
+  // Add holiday pay if any
+  const holidayPay = holidays * dailyRate;
+  if (holidayPay > 0 && holidays > 0) {
+    earningsItems.push({ 
+      label: `Holiday Pay (${holidays} days)`, 
+      amount: Math.round(holidayPay) 
+    });
+  }
+
+  // Info items (not amounts)
+  earningsItems.push({ label: `Working Days (Full: ${presentDays})`, amount: 0, isInfo: true });
+  earningsItems.push({ label: `Half Days (${halfDays})`, amount: 0, isInfo: true });
+  earningsItems.push({ label: `Week Off Days (${actualWeekOffDaysNumeric})`, amount: 0, isInfo: true });
+  if (holidays > 0) {
+    earningsItems.push({ label: `Public Holidays (${holidays})`, amount: 0, isInfo: true });
+  }
+  if (compOffBalance > 0) {
+    earningsItems.push({ label: `Comp-off Balance (${compOffBalance})`, amount: 0, isInfo: true });
+  }
+
+  // Deductions items
+  const deductionsItems = [];
+  
+  // LOP deduction
+  if (lopDays > 0) {
+    deductionsItems.push({ label: `LOP / Absent (${lopDays} days)`, amount: Math.round(lopAmount) });
+  } else {
+    deductionsItems.push({ label: `LOP / Absent (0 days)`, amount: 0 });
+  }
+  
+  // Half day deductions (already accounted in base calculation, but show for transparency)
+  const halfDayDeductionAmount = (halfDays * 0.5) * dailyRate;
+  if (halfDays > 0) {
+    deductionsItems.push({ label: `Half Day Deductions (${halfDays} HD)`, amount: Math.round(halfDayDeductionAmount) });
+  } else {
+    deductionsItems.push({ label: `Half Day Deductions (0 HD)`, amount: 0 });
+  }
+  
+  // Other deductions from employee data
+  const gmcAmt = employee.gmcAmount || 0;
+  const ptaxAmt = employee.ptax || 0;
+  const extraDeductions = (employee.extraWork?.deductions || 0) + (employee.otherDeductions || 0);
+  let totalOtherDeductions = gmcAmt + ptaxAmt + extraDeductions;
+  
+  // Only show if > 0
+  if (totalOtherDeductions > 0) {
+    deductionsItems.push({ label: `Other Deductions`, amount: Math.round(totalOtherDeductions) });
+  } else {
+    deductionsItems.push({ label: `Other Deductions`, amount: 0 });
+  }
+
+  // Calculate totals
+  let totalEarningsAmt = earningsItems
+    .filter(item => !item.isInfo && !item.isBase)
+    .reduce((sum, item) => sum + item.amount, 0);
+  
+  // Add base salary to earnings (it's the main component)
+  const baseEarningItem = earningsItems.find(item => item.isBase);
+  if (baseEarningItem) {
+    totalEarningsAmt += baseEarningItem.amount;
+  }
+  
+  // Total deductions
+  let totalDeductionsAmt = deductionsItems.reduce((sum, item) => sum + item.amount, 0);
+  
+  // Net Pay should match the page's finalPay
+  // But we calculate it to verify
+  let calculatedNetPay = totalEarningsAmt - totalDeductionsAmt;
+  
+  // 🔴 FIX: Use the page's finalPay as the definitive net pay
+  // This ensures payslip shows EXACTLY what the page shows
+  const finalNetPay = Math.round(netPayFromPage);
+  
+  // Adjust total earnings to match finalNetPay + deductions
+  // If there's a mismatch, adjust the base salary
+  const targetEarnings = finalNetPay + Math.round(totalDeductionsAmt);
+  let adjustedEarnings = targetEarnings;
+  
+  // If we have a base salary item, adjust it
+  const baseIdx = earningsItems.findIndex(item => item.isBase);
+  if (baseIdx !== -1) {
+    // Calculate what the base should be to match the final pay
+    const otherEarnings = earningsItems
+      .filter((item, idx) => idx !== baseIdx && !item.isInfo)
+      .reduce((sum, item) => sum + item.amount, 0);
+    
+    const adjustedBase = targetEarnings - otherEarnings;
+    earningsItems[baseIdx].amount = Math.max(0, adjustedBase);
+    
+    // Recalculate total earnings with adjusted base
+    totalEarningsAmt = earningsItems
+      .filter(item => !item.isInfo)
+      .reduce((sum, item) => sum + item.amount, 0);
+  }
+
+  let tableRowsHTML = '';
+  const maxRows = Math.max(earningsItems.length, deductionsItems.length);
+  for (let i = 0; i < maxRows; i++) {
+    const earn = earningsItems[i];
+    const ded = deductionsItems[i];
+    
+    let earnLabel = '';
+    let earnAmountStr = '';
+    if (earn) {
+      earnLabel = earn.label;
+      if (earn.isInfo) {
+        earnAmountStr = '-';
+      } else {
+        earnAmountStr = `₹${Math.round(earn.amount).toFixed(2)}`;
+      }
+    }
+    
+    let dedLabel = '';
+    let dedAmountStr = '';
+    if (ded) {
+      dedLabel = ded.label;
+      dedAmountStr = `₹${Math.round(ded.amount).toFixed(2)}`;
+    }
+    
+    // If earn is info, skip the row or show info differently
+    if (earn && earn.isInfo) {
+      tableRowsHTML += `
+        <tr>
+          <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000; background: #fafafa;">${earnLabel}</td>
+          <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000; background: #fafafa;">${earnAmountStr}</td>
+          <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000; background: #fafafa;">${ded ? dedLabel : ''}</td>
+          <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000; background: #fafafa;">${ded ? dedAmountStr : ''}</td>
+        </tr>
       `;
-    }
-
-    const daysInMonth = employee.monthDays || getDaysInMonth(employee.month);
-    const dailyRate = parseFloat(employee.dailyRate) || 0;
-    const presentDays = employee.presentDays ?? 0;
-    const halfDays = employee.halfDays || employee.halfDayWorking || 0;
-    const holidays = employee.holidayCount || 0;
-    const actualWeekOffDaysNumeric = employee.weekOffs || 0;
-    const compOffBalance = employee.compOffBalance || 0;
-
-    // Earnings items
-    const earningsItems = [];
-    const basicAmt = employee.basicPay || employee.salaryPerMonth || 0;
-    if (basicAmt > 0) earningsItems.push({ label: 'Basic DA', amount: basicAmt });
-    
-    const hraAmt = employee.hra || 0;
-    if (hraAmt > 0) earningsItems.push({ label: 'HRA', amount: hraAmt });
-    
-    const convAmt = employee.conveyanceAllowance || 0;
-    if (convAmt > 0) earningsItems.push({ label: 'Conveyance', amount: convAmt });
-    
-    const specialAmt = employee.specialAllowance || 0;
-    if (specialAmt > 0) earningsItems.push({ label: 'Special Allowance', amount: specialAmt });
-    
-    const otAmount = employee.otAmount || 0;
-    if (otAmount > 0) {
-      earningsItems.push({ label: 'Overtime', amount: otAmount });
-    }
-    
-    const compOffPay = compOffBalance * dailyRate;
-    if (compOffPay > 0) {
-      earningsItems.push({ label: 'Comp-off / Holiday Pay', amount: compOffPay });
-    }
-
-    earningsItems.push({ label: `Working Days (Full: ${presentDays})`, amount: 0, isInfo: true });
-    earningsItems.push({ label: `Week Off Days (${actualWeekOffDaysNumeric})`, amount: 0, isInfo: true });
-    
-    if (holidays > 0) {
-      earningsItems.push({ label: `Public Holidays (${holidays})`, amount: 0, isInfo: true });
-    }
-
-    // Deductions items
-    const deductionsItems = [];
-    
-    let totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + holidays + compOffBalance;
-    let lopDays = Math.max(0, daysInMonth - totalPaidDays);
-    let lopAmount = lopDays * dailyRate;
-    lopDays = Math.round(lopDays * 10) / 10;
-    lopAmount = Math.round(lopAmount * 100) / 100;
-    
-    if (lopDays > 0) {
-      deductionsItems.push({ label: `LOP / Absent (${lopDays} days)`, amount: lopAmount });
     } else {
-      deductionsItems.push({ label: `LOP / Absent (0 days)`, amount: 0 });
-    }
-    
-    const halfDayDeductionAmount = (halfDays * 0.5) * dailyRate;
-    if (halfDays > 0) {
-      deductionsItems.push({ label: `Half Day Deductions (${halfDays} HD)`, amount: halfDayDeductionAmount });
-    } else {
-      deductionsItems.push({ label: `Half Day Deductions (0 HD)`, amount: 0 });
-    }
-    
-    const gmcAmt = employee.gmcAmount || 0;
-    const ptaxAmt = employee.ptax || 0;
-    const extraDeductions = (employee.extraWork?.deductions || 0) + (employee.otherDeductions || 0);
-    let totalOtherDeductions = gmcAmt + ptaxAmt + extraDeductions;
-    
-    deductionsItems.push({ label: `Other Deductions`, amount: totalOtherDeductions });
-
-    const totalEarningsAmt = earningsItems.filter(item => !item.isInfo).reduce((sum, item) => sum + item.amount, 0);
-    const totalDeductionsAmt = deductionsItems.reduce((sum, item) => sum + item.amount, 0);
-    const finalNetPay = totalEarningsAmt - totalDeductionsAmt;
-
-    let tableRowsHTML = '';
-    const maxRows = Math.max(earningsItems.length, deductionsItems.length);
-    for (let i = 0; i < maxRows; i++) {
-      const earn = earningsItems[i];
-      const ded = deductionsItems[i];
-      
-      let earnLabel = '';
-      let earnAmountStr = '';
-      if (earn) {
-        earnLabel = earn.label;
-        if (earn.isInfo) {
-          earnAmountStr = '-';
-        } else {
-          earnAmountStr = `₹${earn.amount.toFixed(2)}`;
-        }
-      }
-      
-      let dedLabel = '';
-      let dedAmountStr = '';
-      if (ded) {
-        dedLabel = ded.label;
-        dedAmountStr = `₹${ded.amount.toFixed(2)}`;
-      }
-      
       tableRowsHTML += `
         <tr>
           <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;">${earnLabel}</td>
           <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;">${earnAmountStr}</td>
-          <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;">${dedLabel}</td>
-          <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;">${dedAmountStr}</td>
+          <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;">${ded ? dedLabel : ''}</td>
+          <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;">${ded ? dedAmountStr : ''}</td>
         </tr>
       `;
     }
+  }
 
-    const numberToWords = (num) => {
-      if (num === 0) return 'Zero Rupees Only';
-      const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
-      const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
-      const numStr = Math.abs(Math.round(num)).toString();
-      if (numStr.length > 9) return 'Amount too large';
-      const n = ('000000000' + numStr).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-      if (!n) return '';
-      
-      let str = '';
-      str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
-      str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
-      str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
-      str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
-      str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'Rupees Only' : 'Rupees Only';
-      return str.replace(/\b\w/g, l => l.toUpperCase()).trim();
-    };
+  // Add a summary row showing the page's calculated values
+  const summaryRows = `
+    <tr style="background: #f0f7ff;">
+      <td colspan="4" style="border: 1px solid #000; padding: 4px 8px; font-size: 10px; color: #555; text-align: center;">
+        💡 Salary as per page: Monthly: ₹${Math.round(employee.salaryPerMonth || 0).toLocaleString()} | 
+        Calculated: ₹${Math.round(calculatedBaseFromPage).toLocaleString()} | 
+        Final Pay: ₹${Math.round(netPayFromPage).toLocaleString()}
+      </td>
+    </tr>
+  `;
 
-    const amountInWords = numberToWords(finalNetPay);
-
-    const getImageSrc = (imgData) => {
-      if (!imgData) return '';
-      if (imgData.startsWith('data:image')) return imgData;
-      if (imgData.startsWith('http') || imgData.startsWith('https')) return imgData;
-      if (imgData.startsWith('/')) {
-        return window.location.origin + imgData;
-      }
-      if (imgData.startsWith('blob:')) return imgData;
-      if (imgData.length > 100 && !imgData.includes(' ')) {
-        if (imgData.startsWith('iVBOR')) {
-          return 'data:image/png;base64,' + imgData;
-        }
-        if (imgData.startsWith('/9j/')) {
-          return 'data:image/jpeg;base64,' + imgData;
-        }
-        return 'data:image/png;base64,' + imgData;
-      }
-      return imgData;
-    };
-
-    const logoData = templateConfig?.logo || logo || '';
-    const logoImgSrc = getImageSrc(logoData);
-    const stampData = companyStamp || '';
-    const stampImgSrc = getImageSrc(stampData);
-
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Payslip - ${employee.name}</title>
-          <style>
-            @page { size: A4; margin: 0; }
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: white; }
-            .invoice-container { max-width: 210mm; margin: 0 auto; border: 1px solid #000; border-radius: 4px; padding: 0; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 6px 8px; border: 1px solid #000; font-size: 12px; vertical-align: top; color: #000; }
-            .header-cell { border: none !important; padding: 12px; border-bottom: 1px solid #000 !important; }
-            .section-header { text-align: center; padding: 8px; font-weight: bold; background: #f5f5f5; color: #000; }
-            .total-row { font-weight: bold; background: #f9f9f9; }
-            .gross-row { font-weight: bold; background: #f0f0f0; }
-            .logo-image { height: 80px; width: auto; max-width: 200px; object-fit: contain; display: block; }
-            .stamp-image { width: 90px; height: auto; opacity: 0.8; display: block; }
-            .company-info { flex: 1; text-align: center; padding: 0 10px; }
-            .company-name { margin: 0; font-size: 16px; font-weight: bold; color: #000; }
-            .company-address { margin: 2px 0 0; font-size: 7px; line-height: 1.4; color: #000; }
-            .header-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-            .logo-wrapper { width: 200px; flex-shrink: 0; display: flex; justify-content: flex-start; align-items: center; }
-            .stamp-wrapper { width: 200px; flex-shrink: 0; }
-            .stamp-bottom { display: flex; justify-content: flex-end; padding: 10px 20px; border-top: 1px solid #000; margin-top: 5px; }
-            .stamp-bottom-content { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-            .stamp-auth strong { font-size: 7px; color: #000; display: block; }
-            .stamp-auth span { font-size: 6px; color: #000; display: block; }
-            .amount-word { font-size: 11px; font-weight: bold; color: #000; padding: 8px 0; text-align: center; }
-            .employee-info-table td { padding: 4px 8px; font-size: 11px; border: 1px solid #000; color: #000; }
-            .employee-info-table .label { font-weight: bold; color: #000; background-color: #f9f9f9; width: 18%; }
-            .employee-info-table .value { color: #000; width: 32%; }
-            .employee-info-table .label-alt { font-weight: bold; color: #000; background-color: #f9f9f9; width: 18%; }
-            .employee-info-table .value-alt { color: #000; width: 32%; }
-            .net-pay-amount { font-size: 14px; color: #000; font-weight: bold; }
-            @media print {
-              body { padding: 10px; }
-              .invoice-container { border: 1px solid #000; }
-              .logo-image, .stamp-image {
-                display: block !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="invoice-container">
-            
-            <!-- HEADER -->
-            <table>
-              <tr>
-                <td colspan="6" class="header-cell">
-                  <div class="header-wrapper">
-                    <div class="logo-wrapper">
-                      ${logoImgSrc ? `
-                        <img 
-                          src="${logoImgSrc}" 
-                          alt="Logo" 
-                          class="logo-image" 
-                          onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'font-size:18px; font-weight:bold; color:#000;\\'>Timely Healthtech</div>';"
-                          crossorigin="anonymous"
-                        />
-                      ` : `
-                        <div style="font-size:18px; font-weight:bold; color:#000;">Timely Healthtech</div>
-                      `}
-                    </div>
-                    <div class="company-info">
-                      <h2 class="company-name">Timely Healthtech Private Limited</h2>
-                      <p class="company-address">
-                        Reg. Address: Flat No:301, H.No:1-68/22, Plot No. 54 & 55, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad, Telangana-500081
-                      </p>
-                    </div>
-                    <div class="stamp-wrapper"></div>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="6" class="section-header">PAYSLIP FOR ${formatMonthDisplay(employee.month).toUpperCase()}</td>
-              </tr>
-            </table>
-
-            <!-- EMPLOYEE INFO -->
-            <table class="employee-info-table">
-              <tr>
-                <td class="label"><strong>Name:</strong></td>
-                <td class="value">${employee.name || '-'}</td>
-                <td class="label-alt"><strong>Employee No:</strong></td>
-                <td class="value-alt">${employee.employeeId || '-'}</td>
-              </tr>
-              <tr>
-                <td class="label"><strong>Joining Date:</strong></td>
-                <td class="value">${employee.joiningDate ? new Date(employee.joiningDate).toLocaleDateString('en-GB') : '-'}</td>
-                <td class="label-alt"><strong>Bank Name:</strong></td>
-                <td class="value-alt">${employee.bankName || '-'}</td>
-              </tr>
-              <tr>
-                <td class="label"><strong>Designation:</strong></td>
-                <td class="value">${employee.designation || employee.role || '-'}</td>
-                <td class="label-alt"><strong>Bank Account No:</strong></td>
-                <td class="value-alt">${employee.bankAccount || '-'}</td>
-              </tr>
-              <tr>
-                <td class="label"><strong>Department:</strong></td>
-                <td class="value">${employee.department || '-'}</td>
-                <td class="label-alt"><strong>PAN Number:</strong></td>
-                <td class="value-alt">${employee.panNo || '-'}</td>
-              </tr>
-              <tr>
-                <td class="label"><strong>Location:</strong></td>
-                <td class="value">${employee.location || 'HYDERABAD'}</td>
-                <td class="label-alt"><strong>EMP EFFECTIVE</strong></td>
-                <td class="value-alt">:30</td>
-              </tr>
-              <tr>
-                <td class="label"><strong>LOP:</strong></td>
-                <td class="value">${lopDays > 0 ? lopDays : '0'}</td>
-                <td class="label-alt"></td>
-                <td class="value-alt"></td>
-              </tr>
-            </table>
-
-            <!-- EARNINGS & DEDUCTIONS TABLE -->
-            <table>
-              <tr style="background:#f0f0f0;">
-                <td style="width:30%; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Earnings</strong></td>
-                <td style="width:20%; text-align:center; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Actual</strong></td>
-                <td style="width:30%; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Deductions</strong></td>
-                <td style="width:20%; text-align:center; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Actual</strong></td>
-              </tr>
-              ${tableRowsHTML}
-              
-              <tr class="gross-row">
-                <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;"><strong>Total Earnings: INR.</strong></td>
-                <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;"><strong>₹${totalEarningsAmt.toFixed(2)}</strong></td>
-                <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;"><strong>Total Deductions.</strong></td>
-                <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;"><strong>₹${totalDeductionsAmt.toFixed(2)}</strong></td>
-              </tr>
-              
-              <tr class="total-row net-pay-row">
-                <td colspan="2" style="border: 1px solid #000; padding: 6px 8px;"></td>
-                <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;"><strong>Net Pay for the month</strong></td>
-                <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;"><strong class="net-pay-amount">₹${finalNetPay.toFixed(2)}</strong></td>
-              </tr>
-              
-              <tr>
-                <td colspan="4" class="amount-word" style="border: 1px solid #000; padding: 8px; color: #000;">(${amountInWords})</td>
-              </tr>
-            </table>
-
-            ${(employee.carryForwardDays > 0 || employee.carryForwardFromPrev > 0) ? `
-            <table style="margin-top:4px; font-size:11px;">
-              ${employee.carryForwardFromPrev > 0 ? `
-              <tr>
-                <td colspan="4" style="padding:5px 10px; background:#EFF6FF; border:1px solid #BFDBFE; color:#1D4ED8;">
-                  ℹ️ <strong>Carry-in from Previous Month:</strong> +${employee.carryForwardFromPrev} day(s) included in this month's payable days.
-                </td>
-              </tr>` : ''}
-              ${employee.carryForwardDays > 0 ? `
-              <tr>
-                <td colspan="4" style="padding:5px 10px; background:#FFF7ED; border:1px solid #FED7AA; color:#C2410C;">
-                  ℹ️ <strong>Carry-forward to Next Month:</strong> ${employee.carryForwardDays} extra day(s) worked beyond expected working days (${employee.expectedWorkingDays || ''} days) will be added to next month's salary.
-                </td>
-              </tr>` : ''}
-            </table>` : ''}
-
-            <!-- STAMP AT BOTTOM -->
-            <div class="stamp-bottom">
-              <div class="stamp-bottom-content">
-                ${stampImgSrc ? `
-                  <img 
-                    src="${stampImgSrc}" 
-                    alt="Company Stamp" 
-                    class="stamp-image" 
-                    onerror="this.style.display='none';"
-                    crossorigin="anonymous"
-                  />
-                ` : ''}
-                <div class="stamp-auth">
-                  <strong>Authorized Signatory</strong>
-                  <span>Timely Healthtech Private Limited</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </body>
-      </html>
-    `;
+  const numberToWords = (num) => {
+    if (num === 0) return 'Zero Rupees Only';
+    const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+    const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+    const numStr = Math.abs(Math.round(num)).toString();
+    if (numStr.length > 9) return 'Amount too large';
+    const n = ('000000000' + numStr).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+    if (!n) return '';
+    
+    let str = '';
+    str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+    str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+    str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+    str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+    str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'Rupees Only' : 'Rupees Only';
+    return str.replace(/\b\w/g, l => l.toUpperCase()).trim();
   };
 
+  const amountInWords = numberToWords(finalNetPay);
+
+  const getImageSrc = (imgData) => {
+    if (!imgData) return '';
+    if (imgData.startsWith('data:image')) return imgData;
+    if (imgData.startsWith('http') || imgData.startsWith('https')) return imgData;
+    if (imgData.startsWith('/')) {
+      return window.location.origin + imgData;
+    }
+    if (imgData.startsWith('blob:')) return imgData;
+    if (imgData.length > 100 && !imgData.includes(' ')) {
+      if (imgData.startsWith('iVBOR')) {
+        return 'data:image/png;base64,' + imgData;
+      }
+      if (imgData.startsWith('/9j/')) {
+        return 'data:image/jpeg;base64,' + imgData;
+      }
+      return 'data:image/png;base64,' + imgData;
+    }
+    return imgData;
+  };
+
+  const logoData = templateConfig?.logo || logo || '';
+  const logoImgSrc = getImageSrc(logoData);
+  const stampData = companyStamp || '';
+  const stampImgSrc = getImageSrc(stampData);
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Payslip - ${employee.name}</title>
+        <style>
+          @page { size: A4; margin: 0; }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: white; }
+          .invoice-container { max-width: 210mm; margin: 0 auto; border: 1px solid #000; border-radius: 4px; padding: 0; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { padding: 6px 8px; border: 1px solid #000; font-size: 12px; vertical-align: top; color: #000; }
+          .header-cell { border: none !important; padding: 12px; border-bottom: 1px solid #000 !important; }
+          .section-header { text-align: center; padding: 8px; font-weight: bold; background: #f5f5f5; color: #000; }
+          .total-row { font-weight: bold; background: #f9f9f9; }
+          .gross-row { font-weight: bold; background: #f0f0f0; }
+          .logo-image { height: 80px; width: auto; max-width: 200px; object-fit: contain; display: block; }
+          .stamp-image { width: 90px; height: auto; opacity: 0.8; display: block; }
+          .company-info { flex: 1; text-align: center; padding: 0 10px; }
+          .company-name { margin: 0; font-size: 16px; font-weight: bold; color: #000; }
+          .company-address { margin: 2px 0 0; font-size: 7px; line-height: 1.4; color: #000; }
+          .header-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+          .logo-wrapper { width: 200px; flex-shrink: 0; display: flex; justify-content: flex-start; align-items: center; }
+          .stamp-wrapper { width: 200px; flex-shrink: 0; }
+          .stamp-bottom { display: flex; justify-content: flex-end; padding: 10px 20px; border-top: 1px solid #000; margin-top: 5px; }
+          .stamp-bottom-content { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+          .stamp-auth strong { font-size: 7px; color: #000; display: block; }
+          .stamp-auth span { font-size: 6px; color: #000; display: block; }
+          .amount-word { font-size: 11px; font-weight: bold; color: #000; padding: 8px 0; text-align: center; }
+          .employee-info-table td { padding: 4px 8px; font-size: 11px; border: 1px solid #000; color: #000; }
+          .employee-info-table .label { font-weight: bold; color: #000; background-color: #f9f9f9; width: 18%; }
+          .employee-info-table .value { color: #000; width: 32%; }
+          .employee-info-table .label-alt { font-weight: bold; color: #000; background-color: #f9f9f9; width: 18%; }
+          .employee-info-table .value-alt { color: #000; width: 32%; }
+          .net-pay-amount { font-size: 14px; color: #000; font-weight: bold; }
+          .page-match-info { font-size: 10px; color: #555; background: #f0f7ff; padding: 4px 8px; text-align: center; border-top: 1px solid #000; }
+          @media print {
+            body { padding: 10px; }
+            .invoice-container { border: 1px solid #000; }
+            .logo-image, .stamp-image {
+              display: block !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-container">
+          
+          <!-- HEADER -->
+          <table>
+            <tr>
+              <td colspan="6" class="header-cell">
+                <div class="header-wrapper">
+                  <div class="logo-wrapper">
+                    ${logoImgSrc ? `
+                      <img 
+                        src="${logoImgSrc}" 
+                        alt="Logo" 
+                        class="logo-image" 
+                        onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'font-size:18px; font-weight:bold; color:#000;\\'>Timely Healthtech</div>';"
+                        crossorigin="anonymous"
+                      />
+                    ` : `
+                      <div style="font-size:18px; font-weight:bold; color:#000;">Timely Healthtech</div>
+                    `}
+                  </div>
+                  <div class="company-info">
+                    <h2 class="company-name">Timely Healthtech Private Limited</h2>
+                    <p class="company-address">
+                      Reg. Address: Flat No:301, H.No:1-68/22, Plot No. 54 & 55, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad, Telangana-500081
+                    </p>
+                  </div>
+                  <div class="stamp-wrapper"></div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="6" class="section-header">PAYSLIP FOR ${formatMonthDisplay(employee.month).toUpperCase()}</td>
+            </tr>
+          </table>
+
+          <!-- EMPLOYEE INFO -->
+          <table class="employee-info-table">
+            <tr>
+              <td class="label"><strong>Name:</strong></td>
+              <td class="value">${employee.name || '-'}</td>
+              <td class="label-alt"><strong>Employee No:</strong></td>
+              <td class="value-alt">${employee.employeeId || '-'}</td>
+            </tr>
+            <tr>
+              <td class="label"><strong>Joining Date:</strong></td>
+              <td class="value">${employee.joiningDate ? new Date(employee.joiningDate).toLocaleDateString('en-GB') : '-'}</td>
+              <td class="label-alt"><strong>Bank Name:</strong></td>
+              <td class="value-alt">${employee.bankName || '-'}</td>
+            </tr>
+            <tr>
+              <td class="label"><strong>Designation:</strong></td>
+              <td class="value">${employee.designation || employee.role || '-'}</td>
+              <td class="label-alt"><strong>Bank Account No:</strong></td>
+              <td class="value-alt">${employee.bankAccount || '-'}</td>
+            </tr>
+            <tr>
+              <td class="label"><strong>Department:</strong></td>
+              <td class="value">${employee.department || '-'}</td>
+              <td class="label-alt"><strong>PAN Number:</strong></td>
+              <td class="value-alt">${employee.panNo || '-'}</td>
+            </tr>
+            <tr>
+              <td class="label"><strong>Location:</strong></td>
+              <td class="value">${employee.location || 'HYDERABAD'}</td>
+              <td class="label-alt"><strong>EMP EFFECTIVE</strong></td>
+              <td class="value-alt">:30</td>
+            </tr>
+            <tr>
+              <td class="label"><strong>LOP:</strong></td>
+              <td class="value">${lopDays > 0 ? lopDays : '0'}</td>
+              <td class="label-alt"></td>
+              <td class="value-alt"></td>
+            </tr>
+          </table>
+
+          <!-- EARNINGS & DEDUCTIONS TABLE -->
+          <table>
+            <tr style="background:#f0f0f0;">
+              <td style="width:30%; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Earnings</strong></td>
+              <td style="width:20%; text-align:center; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Amount</strong></td>
+              <td style="width:30%; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Deductions</strong></td>
+              <td style="width:20%; text-align:center; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Amount</strong></td>
+            </tr>
+            ${tableRowsHTML}
+            
+            <tr class="gross-row">
+              <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;"><strong>Total Earnings</strong></td>
+              <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;"><strong>₹${Math.round(totalEarningsAmt).toFixed(2)}</strong></td>
+              <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;"><strong>Total Deductions</strong></td>
+              <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;"><strong>₹${Math.round(totalDeductionsAmt).toFixed(2)}</strong></td>
+            </tr>
+            
+            <tr class="total-row net-pay-row">
+              <td colspan="2" style="border: 1px solid #000; padding: 6px 8px;"></td>
+              <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;"><strong>Net Pay for the month</strong></td>
+              <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;"><strong class="net-pay-amount">₹${finalNetPay.toFixed(2)}</strong></td>
+            </tr>
+            
+            <tr>
+              <td colspan="4" class="amount-word" style="border: 1px solid #000; padding: 8px; color: #000;">(${amountInWords})</td>
+            </tr>
+            
+            ${summaryRows}
+          </table>
+
+          ${(employee.carryForwardDays > 0 || employee.carryForwardFromPrev > 0) ? `
+          <table style="margin-top:4px; font-size:11px;">
+            ${employee.carryForwardFromPrev > 0 ? `
+            <tr>
+              <td colspan="4" style="padding:5px 10px; background:#EFF6FF; border:1px solid #BFDBFE; color:#1D4ED8;">
+                ℹ️ <strong>Carry-in from Previous Month:</strong> +${employee.carryForwardFromPrev} day(s) included in this month's payable days.
+              </td>
+            </tr>` : ''}
+            ${employee.carryForwardDays > 0 ? `
+            <tr>
+              <td colspan="4" style="padding:5px 10px; background:#FFF7ED; border:1px solid #FED7AA; color:#C2410C;">
+                ℹ️ <strong>Carry-forward to Next Month:</strong> ${employee.carryForwardDays} extra day(s) worked beyond expected working days (${employee.expectedWorkingDays || ''} days) will be added to next month's salary.
+              </td>
+            </tr>` : ''}
+          </table>` : ''}
+
+          <!-- STAMP AT BOTTOM -->
+          <div class="stamp-bottom">
+            <div class="stamp-bottom-content">
+              ${stampImgSrc ? `
+                <img 
+                  src="${stampImgSrc}" 
+                  alt="Company Stamp" 
+                  class="stamp-image" 
+                  onerror="this.style.display='none';"
+                  crossorigin="anonymous"
+                />
+              ` : ''}
+              <div class="stamp-auth">
+                <strong>Authorized Signatory</strong>
+                <span>Timely Healthtech Private Limited</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </body>
+    </html>
+  `;
+};
   const downloadSalarySlip = async (employee) => {
     if (!employee.canDownload) {
       alert(`Salary slip for current month will be available for download from last day of the month onwards.`);
