@@ -1746,10 +1746,10 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/op-management": "OP Management",
       "/op-dashboard": "OP Dashboard",
       "/doctor-management": "Doctors",
-      // "/referral-management": "Referral Contacts", // ✅ REMOVED
-      "/customer-referrals": "Customer Referrals", // ✅ NEW
-      "/doctor-referrals": "Doctor Referrals", // ✅ NEW
-      "/referredop": "Referred OP",
+      "/customer-referrals": "Customer Referrals",
+      "/doctor-referrals": "Doctor Referrals",
+      "/customerreffredop": "Customer Referred OP", // ✅ NEW
+      "/doctorreffredop": "Doctor Referred OP",     // ✅ NEW
       "/services": "Services",
       "/letterhead": "Letter Head"
     };
@@ -1895,16 +1895,18 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Shifts", path: "/shift" },
       ],
     },
+
+    // ✅ CLEANED OP MANAGEMENT SECTION
     {
       icon: <i className="ri-hospital-line"></i>,
       name: "OP Management",
       dropdown: [
         { name: "OP Dashboard", path: "/op-dashboard" },
         { name: "Doctors", path: "/doctor-management" },
-        // { name: "Referral Contacts", path: "/referral-management" }, // ✅ REMOVED
-        { name: "Customer Referrals", path: "/customer-referrals" }, // ✅ NEW
-        { name: "Doctor Referrals", path: "/doctor-referrals" }, // ✅ NEW
-        { name: "Referred OP", path: "/referredop" },
+        { name: "Customer Referrals", path: "/customer-referrals" },
+        { name: "Doctor Referrals", path: "/doctor-referrals" },
+        { name: "Customer Referred OP", path: "/customerreffredop" }, // ✅ NEW
+        { name: "Doctor Referred OP", path: "/doctorreffredop" },     // ✅ NEW
         { name: "OP Records", path: "/op-management" },
         { name: "Appointment Slots", path: "/appointment-slots" },
         { name: "Services", path: "/services" },

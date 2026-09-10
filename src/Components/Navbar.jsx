@@ -135,10 +135,10 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       // ===== OP Management Routes =====
       "/op-dashboard": "",
       "/doctor-management": "",
-      // "/referral-management": "", // ✅ REMOVED
-      "/customer-referrals": "", // ✅ NEW
-      "/doctor-referrals": "", // ✅ NEW
-      "/referredop": "",
+      "/customer-referrals": "",
+      "/doctor-referrals": "",
+      "/customerreffredop": "", // ✅ NEW
+      "/doctorreffredop": "",   // ✅ NEW
       "/op-management": "",
       "/appointment-slots": "",
       "/services": "",
@@ -200,14 +200,14 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     (tab) => tab.path === location.pathname
   );
 
-  // ===== OP MANAGEMENT TABS - UPDATED =====
+  // ===== OP MANAGEMENT TABS - CLEANED =====
   const opTabs = [
     { path: "/op-dashboard", label: "OP Dashboard" },
     { path: "/doctor-management", label: "Doctors" },
-    // { path: "/referral-management", label: "Referral Contacts" }, // ✅ REMOVED
-    { path: "/customer-referrals", label: "Customer Referrals" }, // ✅ NEW
-    { path: "/doctor-referrals", label: "Doctor Referrals" }, // ✅ NEW
-    { path: "/referredop", label: "Referred OP" },
+    { path: "/customer-referrals", label: "Customer Referrals" },
+    { path: "/doctor-referrals", label: "Doctor Referrals" },
+    { path: "/customerreffredop", label: "Customer Referred OP" }, // ✅ NEW
+    { path: "/doctorreffredop", label: "Doctor Referred OP" },     // ✅ NEW
     { path: "/op-management", label: "OP Records" },
     { path: "/appointment-slots", label: "Appointment Slots" },
     { path: "/services", label: "Services" },
@@ -470,7 +470,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
           </div>
         )}
 
-        {/* ===== OP MANAGEMENT MODULE TABS - UPDATED ===== */}
+        {/* ===== OP MANAGEMENT MODULE TABS - CLEANED ===== */}
         {isOPModule && (
           <div className="flex items-center gap-1 ml-4">
             {opTabs.map((tab) => {

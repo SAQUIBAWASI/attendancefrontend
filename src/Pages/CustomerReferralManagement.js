@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   FaSearch,
   FaCalendarAlt,
@@ -40,7 +41,10 @@ import {
   FaGift,
   FaMoneyBillWave,
   FaHandshake,
-  FaFilter
+  FaFilter,
+  FaIdCard,
+  FaMapPin,
+  FaAddressCard
 } from "react-icons/fa";
 import {
   FiUsers,
@@ -68,12 +72,16 @@ import {
   FiPercent,
   FiFileText,
   FiActivity,
-  FiGift
+  FiGift,
+  FiExternalLink,
+  FiMapPin,
+  FiPhone
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 
-const API_BASE_URL = "https://api.timelyhealth.in/api/referralcontacts";
+const API_BASE_URL = "http://localhost:5001/api/referralcontacts";
+const BASE_API = "http://localhost:5001/api";
 
 const STATUS_OPTIONS = ["active", "inactive"];
 
@@ -97,13 +105,113 @@ const COMMISSION_FIELDS = [
   { key: "labCommission", label: "Lab", icon: FaFlask, color: "purple" }
 ];
 
+// ✅ SAFE ID EXTRACTION
+const extractId = (val) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object" && val._id) return String(val._id);
+  return "";
+};
+
+const extractName = (val) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object") {
+    return val.doctorName || val.customerName || val.name || "";
+  }
+  return "";
+};
+
+// ✅ Detect category from service object
+const detectCategory = (svc) => {
+  if (!svc) return "clinic";
+  const raw = (
+    svc.category ||
+    svc.serviceCategory ||
+    svc.type ||
+    svc.serviceType ||
+    svc.department ||
+    ""
+  )
+    .toString()
+    .toLowerCase();
+
+  if (raw.includes("pharm") || raw.includes("medic")) return "pharmacy";
+  if (raw.includes("lab") || raw.includes("test") || raw.includes("diagnos")) return "lab";
+  return "clinic";
+};
+
+// ✅ Get commission % for a given category — STRICT, no fallback mixing
+const getCommissionPercent = (customer, category) => {
+  if (!customer) return 0;
+  const clinicP = parseFloat(customer.clinicCommission) || 0;
+  const pharmacyP = parseFloat(customer.pharmacyCommission) || 0;
+  const labP = parseFloat(customer.labCommission) || 0;
+
+  if (category === "pharmacy") return pharmacyP;
+  if (category === "lab") return labP;
+  return clinicP; // default = clinic
+};
+
+// ✅ FINAL FIX — Customer payable calculation
+// Rule: Each service price × its category's commission %
+// For consultation-only bookings (category=clinic) → clinicCommission × consultation price
+const getServiceCustomerPayable = (customer, booking) => {
+  if (!customer || !booking) return 0;
+
+  // Try all possible service array fields
+  const rawServices =
+    (Array.isArray(booking.services) && booking.services.length > 0 && booking.services) ||
+    (Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0 && booking.serviceItems) ||
+    (Array.isArray(booking.selectedServices) && booking.selectedServices.length > 0 && booking.selectedServices) ||
+    [];
+
+  // ✅ If services exist → calculate per-service using strict category mapping
+  if (rawServices.length > 0) {
+    let total = 0;
+    rawServices.forEach((svc) => {
+      const price =
+        Number(svc.price) ||
+        Number(svc.amount) ||
+        Number(svc.fee) ||
+        Number(svc.rate) ||
+        0;
+
+      const category = detectCategory(svc);
+      const pct = getCommissionPercent(customer, category);
+
+      total += (price * pct) / 100;
+    });
+    return Math.round(total);
+  }
+
+  // ✅ Fallback — NO services array at all
+  // Use consultationFee as clinic-category amount (NOT finalPayable/totalAmount)
+  const consultationFee = Number(booking.consultationFee) || 0;
+  if (consultationFee > 0) {
+    const pct = getCommissionPercent(customer, "clinic");
+    return Math.round((consultationFee * pct) / 100);
+  }
+
+  // Final fallback: use total amount with clinic commission
+  const totalAmount = Number(booking.finalPayable) || Number(booking.totalAmount) || 0;
+  if (totalAmount > 0) {
+    const pct = getCommissionPercent(customer, "clinic");
+    return Math.round((totalAmount * pct) / 100);
+  }
+
+  return 0;
+};
+
 export default function CustomerReferralManagement() {
+  const navigate = useNavigate();
+
   const [referrals, setReferrals] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [apiConnected, setApiConnected] = useState(true);
-  
+
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [editingId, setEditingId] = useState(null);
   const [editingType, setEditingType] = useState(null);
@@ -132,14 +240,6 @@ export default function CustomerReferralManagement() {
     return saved ? parseInt(saved, 10) : 10;
   });
 
-  const [showPartnerFilter, setShowPartnerFilter] = useState(false);
-  const [partnerSearch, setPartnerSearch] = useState("");
-  const [selectedPartner, setSelectedPartner] = useState(null);
-  const [filterFromDate, setFilterFromDate] = useState("");
-  const [filterToDate, setFilterToDate] = useState("");
-  const [filterMonth, setFilterMonth] = useState("");
-  const [filterResults, setFilterResults] = useState(null);
-
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) {
@@ -160,23 +260,35 @@ export default function CustomerReferralManagement() {
 
   const fetchBookingsData = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL.replace("/referralcontacts", "")}/appointment-slots/getallbookings`);
+      const res = await axios.get(`${BASE_API}/appointment-slots/getallreferralbookings`);
       if (res.data && res.data.success) {
-        const bookingsData = res.data.bookings || res.data.data || [];
+        const bookingsData = res.data.bookings || [];
+        setBookings(bookingsData);
+        return bookingsData;
+      }
+      const res2 = await axios.get(`${BASE_API}/appointment-slots/getallbookings`);
+      if (res2.data && res2.data.success) {
+        const bookingsData = res2.data.bookings || res2.data.data || [];
         const transformed = bookingsData.map((b) => {
           const slotDetails = b.slotDetails || {};
           return {
             _id: b._id || b.id,
             referralContactId: b.referralContactId || "",
+            referralDoctorId: b.referralDoctorId || "",
+            referralCustomerId: b.referralCustomerId || "",
+            referredByDoctor: b.referredByDoctor || "",
+            referredBy: b.referredBy || "",
             patientName: b.patientName || "",
             patientPhone: b.patientPhone || "",
             date: slotDetails.date || b.appointmentDate || b.date || "",
             doctorName: slotDetails.doctorName || b.doctorName || "",
             consultationFee: b.consultationFee || 0,
             commissionAmount: b.commissionAmount || 0,
+            finalPayable: b.finalPayable || b.totalAmount || 0,
             paymentStatus: b.paymentStatus || "Pending",
             status: b.status || "confirmed",
             services: b.services || [],
+            serviceItems: b.serviceItems || [],
             isOP: b.isOP === true,
             createdAt: b.createdAt || b.bookedAt || new Date().toISOString()
           };
@@ -197,14 +309,14 @@ export default function CustomerReferralManagement() {
     setLoading(true);
     setError("");
     setApiConnected(true);
-    
+
     try {
       await fetchBookingsData();
-      
+
       const res = await axios.get(`${API_BASE_URL}/getallreferralcontacts`);
-      
+
       let referralsData = [];
-      
+
       if (res.data && res.data.success) {
         if (res.data.data && Array.isArray(res.data.data)) {
           referralsData = res.data.data;
@@ -214,10 +326,9 @@ export default function CustomerReferralManagement() {
       } else if (Array.isArray(res.data)) {
         referralsData = res.data;
       }
-      
-      // Filter ONLY customer referrals
-      const customerReferrals = referralsData.filter(r => r.referralType === "customer");
-      
+
+      const customerReferrals = referralsData.filter((r) => r.referralType === "customer");
+
       if (customerReferrals.length === 0) {
         setApiConnected(false);
         setReferrals([]);
@@ -226,7 +337,6 @@ export default function CustomerReferralManagement() {
         setReferrals(customerReferrals);
         showToast(`Loaded ${customerReferrals.length} customer referrals!`, "success");
       }
-      
     } catch (err) {
       console.error("=== ERROR FETCHING REFERRALS ===", err);
       setApiConnected(false);
@@ -243,28 +353,52 @@ export default function CustomerReferralManagement() {
   }, []);
 
   const getReferralMetrics = (referral) => {
-    const matchedBookings = bookings.filter(b => 
-      b.referralContactId === referral._id
-    );
-    
-    const opCount = matchedBookings.filter(b => b.isOP === true).length;
+    if (!referral) {
+      return { opCount: 0, revenue: 0, patientCount: 0, lastVisit: null, bookingIds: [], bookings: [] };
+    }
+
+    const refId = String(referral._id || "");
+    const refName = (referral.customerName || "").trim().toLowerCase();
+
+    const matchedBookings = bookings.filter((b) => {
+      const cId = extractId(b.referralContactId);
+      const cuId = extractId(b.referralCustomerId);
+      const dId = extractId(b.referralDoctorId);
+
+      if (cId && cId === refId) return true;
+      if (cuId && cuId === refId) return true;
+      if (dId && dId === refId) return true;
+
+      const refCustomerName = (extractName(b.referralCustomerId) || "").trim().toLowerCase();
+      const refDoctorName = (extractName(b.referralDoctorId) || b.referredByDoctor || "").trim().toLowerCase();
+      const referredBy = (b.referredBy || "").trim().toLowerCase();
+
+      if (refName && (refCustomerName === refName || refDoctorName === refName || referredBy === refName)) {
+        return true;
+      }
+      return false;
+    });
+
+    const opCount = matchedBookings.filter((b) => b.isOP === true).length;
+
     const revenue = matchedBookings.reduce((sum, b) => {
-      return sum + (b.commissionAmount || 0);
+      return sum + getServiceCustomerPayable(referral, b);
     }, 0);
-    
-    const patientCount = new Set(matchedBookings.map(b => b.patientName)).size;
-    
+
+    const patientCount = new Set(matchedBookings.map((b) => b.patientName)).size;
+
     return {
       opCount,
       revenue,
       patientCount,
-      lastVisit: matchedBookings.length > 0 
-        ? matchedBookings.reduce((latest, b) => {
-            const d = new Date(b.createdAt || b.bookedAt || b.createdAt);
-            return d > latest ? d : latest;
-          }, new Date(0))
-        : null,
-      bookingIds: matchedBookings.map(b => b._id),
+      lastVisit:
+        matchedBookings.length > 0
+          ? matchedBookings.reduce((latest, b) => {
+              const d = new Date(b.createdAt || b.bookedAt);
+              return d > latest ? d : latest;
+            }, new Date(0))
+          : null,
+      bookingIds: matchedBookings.map((b) => b._id),
       bookings: matchedBookings
     };
   };
@@ -287,7 +421,7 @@ export default function CustomerReferralManagement() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     if (name === "clinicCommission" || name === "pharmacyCommission" || name === "labCommission") {
       const clinic = parseFloat(name === "clinicCommission" ? value : formData.clinicCommission) || 0;
       const pharmacy = parseFloat(name === "pharmacyCommission" ? value : formData.pharmacyCommission) || 0;
@@ -301,7 +435,7 @@ export default function CustomerReferralManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.customerName || !formData.customerPhone) {
       showToast("Please fill in Customer Name and Phone", "error");
       return;
@@ -309,11 +443,11 @@ export default function CustomerReferralManagement() {
 
     setSubmitting(true);
     try {
-      const payload = { 
+      const payload = {
         ...formData,
         referralType: "customer"
       };
-      
+
       if (editingId) {
         const res = await updateReferral(editingId, payload);
         if (res.data.success) {
@@ -326,7 +460,11 @@ export default function CustomerReferralManagement() {
       } else {
         const res = await addReferral(payload);
         if (res.data.success) {
-          const newData = res.data.data || { _id: Date.now().toString(), ...payload, createdAt: new Date().toISOString() };
+          const newData = res.data.data || {
+            _id: Date.now().toString(),
+            ...payload,
+            createdAt: new Date().toISOString()
+          };
           setReferrals((prev) => [newData, ...prev]);
           showToast("Customer referral added successfully!");
         }
@@ -431,7 +569,7 @@ export default function CustomerReferralManagement() {
     const filtered = referrals.filter((r) => {
       if (monthFilter && monthFilter !== "") {
         const createdAt = new Date(r.createdAt);
-        const referralMonth = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
+        const referralMonth = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, "0")}`;
         if (referralMonth !== monthFilter) return false;
       }
 
@@ -441,8 +579,8 @@ export default function CustomerReferralManagement() {
         const q = searchQuery.toLowerCase();
         const name = (r.customerName || "").toLowerCase().includes(q);
         const phone = (r.customerPhone || "").toLowerCase().includes(q);
-        const org = (r.customerAddress || "").toLowerCase().includes(q);
-        if (!name && !phone && !org) return false;
+        const address = (r.customerAddress || "").toLowerCase().includes(q);
+        if (!name && !phone && !address) return false;
       }
       return true;
     });
@@ -457,15 +595,15 @@ export default function CustomerReferralManagement() {
     const total = referrals.length;
     const active = referrals.filter((r) => r.status === "active").length;
     const inactive = referrals.filter((r) => r.status === "inactive").length;
-    
+
     let totalOps = 0;
     let totalRevenue = 0;
-    referrals.forEach(r => {
+    referrals.forEach((r) => {
       const metrics = getReferralMetrics(r);
       totalOps += metrics.opCount;
       totalRevenue += metrics.revenue;
     });
-    
+
     return { total, active, inactive, totalOps, totalRevenue };
   }, [referrals, bookings]);
 
@@ -506,10 +644,19 @@ export default function CustomerReferralManagement() {
     }
 
     const headers = [
-      "Sl No", "Referral ID", "Name", "Phone", "Address",
-      "Clinic Commission (%)", "Pharmacy Commission (%)", 
-      "Lab Commission (%)", "Total Commission (%)", "Status", "Date",
-      "No. of OPs", "Revenue (₹)"
+      "Sl No",
+      "Referral ID",
+      "Name",
+      "Phone",
+      "Address",
+      "Clinic Commission (%)",
+      "Pharmacy Commission (%)",
+      "Lab Commission (%)",
+      "Total Commission (%)",
+      "Status",
+      "Date",
+      "No. of OPs",
+      "Revenue (₹)"
     ];
 
     const csvRows = [
@@ -584,12 +731,21 @@ export default function CustomerReferralManagement() {
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
-
         {toast && (
-          <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
-            toast.type === "error" ? "bg-red-600" : toast.type === "info" ? "bg-cyan-600" : "bg-emerald-600"
-          }`}>
-            {toast.type === "error" ? <FiXCircle className="w-5 h-5" /> : <FiCheckCircle className="w-5 h-5" />}
+          <div
+            className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
+              toast.type === "error"
+                ? "bg-red-600"
+                : toast.type === "info"
+                ? "bg-cyan-600"
+                : "bg-emerald-600"
+            }`}
+          >
+            {toast.type === "error" ? (
+              <FiXCircle className="w-5 h-5" />
+            ) : (
+              <FiCheckCircle className="w-5 h-5" />
+            )}
             <span className="font-medium text-sm">{toast.message}</span>
           </div>
         )}
@@ -601,13 +757,13 @@ export default function CustomerReferralManagement() {
               Customer <span>Referrals</span>
             </h1>
           </div>
-          
+
           <div className="flex items-center gap-2 flex-wrap">
             <div className="emp-dash__date-pill flex-shrink-0">
               <FaUser />
               <span>{referrals.length} Customers</span>
             </div>
-            
+
             <div className="relative min-w-[150px]">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
               <input
@@ -627,12 +783,9 @@ export default function CustomerReferralManagement() {
               title="Filter by month"
             />
 
-            {/* Status Filter */}
             <div className="relative" ref={statusDropdownRef}>
               <button
-                onClick={() => {
-                  setShowStatusDropdown(!showStatusDropdown);
-                }}
+                onClick={() => setShowStatusDropdown(!showStatusDropdown)}
                 className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
                   statusFilter !== "All"
                     ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
@@ -648,8 +801,12 @@ export default function CustomerReferralManagement() {
                   className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[150px]"
                   style={{
                     zIndex: 99999,
-                    top: statusDropdownRef.current ? statusDropdownRef.current.getBoundingClientRect().bottom + 4 : "auto",
-                    left: statusDropdownRef.current ? statusDropdownRef.current.getBoundingClientRect().left : "auto"
+                    top: statusDropdownRef.current
+                      ? statusDropdownRef.current.getBoundingClientRect().bottom + 4
+                      : "auto",
+                    left: statusDropdownRef.current
+                      ? statusDropdownRef.current.getBoundingClientRect().left
+                      : "auto"
                   }}
                 >
                   <div
@@ -658,7 +815,9 @@ export default function CustomerReferralManagement() {
                       setShowStatusDropdown(false);
                     }}
                     className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      statusFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      statusFilter === "All"
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-gray-700"
                     }`}
                   >
                     <span>All Status</span>
@@ -672,11 +831,15 @@ export default function CustomerReferralManagement() {
                         setShowStatusDropdown(false);
                       }}
                       className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                        statusFilter === status ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                        statusFilter === status
+                          ? "bg-blue-50 text-blue-700 font-semibold"
+                          : "text-gray-700"
                       }`}
                     >
                       <span className="capitalize">{status}</span>
-                      {statusFilter === status && <FiCheck className="w-3 h-3 text-blue-600" />}
+                      {statusFilter === status && (
+                        <FiCheck className="w-3 h-3 text-blue-600" />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -709,6 +872,17 @@ export default function CustomerReferralManagement() {
               <FiDownload className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Export CSV</span>
             </button>
+
+            {/* ✅ Customer Referred OP Button — NOW WITH CUSTOMER ICON */}
+            <button
+              onClick={() => navigate("/customerreffredop")}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
+              title="View Customer Referred OP Bookings"
+            >
+              <FaUsers className="w-3.5 h-3.5" />
+              <span>Customer Referred OP</span>
+            </button>
+
             <button
               onClick={() => {
                 setFormData({ ...EMPTY_FORM });
@@ -735,7 +909,7 @@ export default function CustomerReferralManagement() {
               <span>{referrals.length} Customers</span>
             </div>
           </div>
-          
+
           <div className="relative flex-1">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
             <input
@@ -746,7 +920,7 @@ export default function CustomerReferralManagement() {
               className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
             />
           </div>
-          
+
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setShowMobileFilters(!showMobileFilters)}
@@ -760,7 +934,7 @@ export default function CustomerReferralManagement() {
                 <FiChevronDown className="text-gray-400 text-xs" />
               )}
             </button>
-            
+
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
@@ -770,7 +944,16 @@ export default function CustomerReferralManagement() {
                 Clear
               </button>
             )}
-            
+
+            {/* ✅ Customer Referred OP Button - Mobile — NOW WITH CUSTOMER ICON */}
+            <button
+              onClick={() => navigate("/customerreffredop")}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
+            >
+              <FaUsers className="w-3.5 h-3.5" />
+              <span>Referred OP</span>
+            </button>
+
             <button
               onClick={() => {
                 setFormData({ ...EMPTY_FORM });
@@ -805,7 +988,9 @@ export default function CustomerReferralManagement() {
                 >
                   <option value="All">All Status</option>
                   {STATUS_OPTIONS.map((status) => (
-                    <option key={status} value={status} className="capitalize">{status}</option>
+                    <option key={status} value={status} className="capitalize">
+                      {status}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -913,7 +1098,9 @@ export default function CustomerReferralManagement() {
               <div className="mb-3 text-4xl text-gray-300">
                 <FaUser className="w-12 h-12 text-gray-300 mx-auto" />
               </div>
-              <p className="mb-1 text-sm font-semibold text-gray-800">No customer referrals found</p>
+              <p className="mb-1 text-sm font-semibold text-gray-800">
+                No customer referrals found
+              </p>
               <p className="text-xs text-gray-500 mb-5 max-w-xs mx-auto">
                 Click "Add Customer" to create a new customer referral.
               </p>
@@ -934,7 +1121,9 @@ export default function CustomerReferralManagement() {
               <div className="mb-3 text-4xl text-gray-300">
                 <FaUser className="w-12 h-12 text-gray-300 mx-auto" />
               </div>
-              <p className="mb-1 text-sm font-semibold text-gray-800">No matching records found</p>
+              <p className="mb-1 text-sm font-semibold text-gray-800">
+                No matching records found
+              </p>
               <p className="text-xs text-gray-500 mb-5 max-w-xs mx-auto">
                 No customer referrals matching your current filter criteria.
               </p>
@@ -975,7 +1164,10 @@ export default function CustomerReferralManagement() {
                       const metrics = getReferralMetrics(referral);
 
                       return (
-                        <tr key={referral._id} className="transition-colors hover:bg-slate-50/50">
+                        <tr
+                          key={referral._id}
+                          className="transition-colors hover:bg-slate-50/50"
+                        >
                           <td className="px-3 py-3 font-semibold text-center text-slate-500 text-[11px]">
                             {indexOfFirstItem + idx + 1}
                           </td>
@@ -983,28 +1175,31 @@ export default function CustomerReferralManagement() {
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full bg-indigo-500 text-white font-bold flex items-center justify-center flex-shrink-0 text-xs shadow-sm">
-                                {referral.customerName ? referral.customerName.charAt(0).toUpperCase() : "C"}
+                                {referral.customerName
+                                  ? referral.customerName.charAt(0).toUpperCase()
+                                  : "C"}
                               </div>
                               <div className="min-w-0">
                                 <div className="font-semibold text-slate-800 text-xs truncate">
                                   {referral.customerName || "N/A"}
-                                </div>
-                                <div className="text-[10px] text-gray-400 flex items-center gap-1">
-                                  <FaPhoneAlt className="text-[9px]" />
-                                  {referral.customerPhone || "N/A"}
                                 </div>
                               </div>
                             </div>
                           </td>
 
                           <td className="px-3 py-3 whitespace-nowrap">
-                            <span className="text-xs font-medium text-slate-700">{referral.customerPhone || "N/A"}</span>
+                            <span className="text-xs font-medium text-slate-700 flex items-center gap-1">
+                              <FaPhoneAlt className="text-gray-400 text-[10px]" />
+                              {referral.customerPhone || "N/A"}
+                            </span>
                           </td>
 
                           <td className="px-3 py-3 whitespace-nowrap">
                             <div className="text-xs font-medium text-slate-700 flex items-center gap-1">
                               <FaMapMarkerAlt className="text-gray-400 text-[11px]" />
-                              <span className="truncate max-w-[150px]">{referral.customerAddress || "N/A"}</span>
+                              <span className="truncate max-w-[150px]">
+                                {referral.customerAddress || "N/A"}
+                              </span>
                             </div>
                           </td>
 
@@ -1035,19 +1230,31 @@ export default function CustomerReferralManagement() {
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <div className="flex flex-col items-center gap-1">
                               <span
-                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${getStatusBadgeColor(referral.status)}`}
+                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${getStatusBadgeColor(
+                                  referral.status
+                                )}`}
                               >
-                                <span className={`w-1.5 h-1.5 rounded-full ${referral.status === "active" ? "bg-emerald-500" : "bg-red-500"}`}></span>
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full ${
+                                    referral.status === "active"
+                                      ? "bg-emerald-500"
+                                      : "bg-red-500"
+                                  }`}
+                                ></span>
                                 {referral.status}
                               </span>
                               <div className="flex items-center gap-1">
                                 <select
                                   value={referral.status}
-                                  onChange={(e) => handleStatusChange(referral, e.target.value)}
+                                  onChange={(e) =>
+                                    handleStatusChange(referral, e.target.value)
+                                  }
                                   className="text-[9px] font-medium border border-gray-200 rounded px-1.5 py-0.5 bg-white focus:outline-none"
                                 >
                                   {STATUS_OPTIONS.map((status) => (
-                                    <option key={status} value={status} className="capitalize">{status}</option>
+                                    <option key={status} value={status} className="capitalize">
+                                      {status}
+                                    </option>
                                   ))}
                                 </select>
                               </div>
@@ -1058,7 +1265,9 @@ export default function CustomerReferralManagement() {
                             <div className="font-semibold text-slate-700 text-[11px]">
                               {formatDate(referral.createdAt)}
                             </div>
-                            <div className="text-[10px] text-gray-400">{formatTime(referral.createdAt)}</div>
+                            <div className="text-[10px] text-gray-400">
+                              {formatTime(referral.createdAt)}
+                            </div>
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
@@ -1070,8 +1279,8 @@ export default function CustomerReferralManagement() {
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                              <FaRupeeSign className="text-[10px]" />
-                              ₹{metrics.revenue.toLocaleString()}
+                              <FaRupeeSign className="text-[10px]" />₹
+                              {metrics.revenue.toLocaleString()}
                             </span>
                           </td>
 
@@ -1133,7 +1342,8 @@ export default function CustomerReferralManagement() {
                       {filteredReferrals.length === 0 ? 0 : indexOfFirstItem + 1} -{" "}
                       {Math.min(indexOfLastItem, filteredReferrals.length)}
                     </strong>{" "}
-                    of <strong className="text-gray-800">{filteredReferrals.length}</strong> records
+                    of <strong className="text-gray-800">{filteredReferrals.length}</strong>{" "}
+                    records
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -1194,9 +1404,13 @@ export default function CustomerReferralManagement() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base">
-                      {editingType === "customer" ? "Edit Customer Referral" : "Add Customer Referral"}
+                      {editingType === "customer"
+                        ? "Edit Customer Referral"
+                        : "Add Customer Referral"}
                     </h3>
-                    <p className="text-xs text-gray-500">Fill in the customer referral details</p>
+                    <p className="text-xs text-gray-500">
+                      Fill in the customer referral details
+                    </p>
                   </div>
                 </div>
                 <button
@@ -1262,7 +1476,6 @@ export default function CustomerReferralManagement() {
                   </div>
                 </div>
 
-                {/* Commission Fields */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Commission Distribution (%)
@@ -1292,13 +1505,17 @@ export default function CustomerReferralManagement() {
                               max="100"
                               className={`w-full bg-white border rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 ${colorMap[field.color]} font-medium`}
                             />
-                            <span className="absolute right-3 top-2.5 text-xs font-bold text-gray-400">%</span>
+                            <span className="absolute right-3 top-2.5 text-xs font-bold text-gray-400">
+                              %
+                            </span>
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                  {(formData.clinicCommission || formData.pharmacyCommission || formData.labCommission) && (
+                  {(formData.clinicCommission ||
+                    formData.pharmacyCommission ||
+                    formData.labCommission) && (
                     <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-blue-700 flex items-center gap-1">
@@ -1340,7 +1557,9 @@ export default function CustomerReferralManagement() {
                       className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium"
                     >
                       {STATUS_OPTIONS.map((status) => (
-                        <option key={status} value={status} className="capitalize">{status}</option>
+                        <option key={status} value={status} className="capitalize">
+                          {status}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -1398,7 +1617,9 @@ export default function CustomerReferralManagement() {
                     <FaShareAlt className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-base">Customer Referral Details</h3>
+                    <h3 className="font-bold text-gray-900 text-base">
+                      Customer Referral Details
+                    </h3>
                     <p className="text-xs text-gray-500">ID: {selectedReferral._id}</p>
                   </div>
                 </div>
@@ -1415,12 +1636,18 @@ export default function CustomerReferralManagement() {
 
               <div className="my-5 bg-gray-50 p-5 rounded-xl border border-gray-200 space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${getTypeBadgeColor("customer")}`}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${getTypeBadgeColor(
+                      "customer"
+                    )}`}
+                  >
                     <FaUser className="text-[11px]" />
                     Customer
                   </span>
                   <span
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${getStatusBadgeColor(selectedReferral.status)}`}
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${getStatusBadgeColor(
+                      selectedReferral.status
+                    )}`}
                   >
                     {selectedReferral.status}
                   </span>
@@ -1450,23 +1677,33 @@ export default function CustomerReferralManagement() {
                 </div>
 
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="text-[10px] font-bold uppercase text-gray-400">Commission Distribution</div>
+                  <div className="text-[10px] font-bold uppercase text-gray-400">
+                    Commission Distribution
+                  </div>
                   <div className="grid grid-cols-3 gap-2 mt-1">
                     <div className="bg-blue-50 p-2 rounded-lg text-center border border-blue-100">
                       <div className="text-[9px] text-blue-600 font-bold">Clinic</div>
-                      <div className="text-sm font-extrabold text-blue-900">{selectedReferral.clinicCommission || 0}%</div>
+                      <div className="text-sm font-extrabold text-blue-900">
+                        {selectedReferral.clinicCommission || 0}%
+                      </div>
                     </div>
                     <div className="bg-green-50 p-2 rounded-lg text-center border border-green-100">
                       <div className="text-[9px] text-green-600 font-bold">Pharmacy</div>
-                      <div className="text-sm font-extrabold text-green-900">{selectedReferral.pharmacyCommission || 0}%</div>
+                      <div className="text-sm font-extrabold text-green-900">
+                        {selectedReferral.pharmacyCommission || 0}%
+                      </div>
                     </div>
                     <div className="bg-purple-50 p-2 rounded-lg text-center border border-purple-100">
                       <div className="text-[9px] text-purple-600 font-bold">Lab</div>
-                      <div className="text-sm font-extrabold text-purple-900">{selectedReferral.labCommission || 0}%</div>
+                      <div className="text-sm font-extrabold text-purple-900">
+                        {selectedReferral.labCommission || 0}%
+                      </div>
                     </div>
                   </div>
                   <div className="mt-1 p-2 bg-blue-50 rounded-lg border border-blue-100 text-center">
-                    <span className="text-xs font-semibold text-blue-700">Total Commission</span>
+                    <span className="text-xs font-semibold text-blue-700">
+                      Total Commission
+                    </span>
                     <span className="ml-2 text-base font-extrabold text-blue-900">
                       {selectedReferral.totalCommission || 0}%
                     </span>
@@ -1474,7 +1711,9 @@ export default function CustomerReferralManagement() {
                 </div>
 
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="text-[10px] font-bold uppercase text-gray-400">OP Metrics</div>
+                  <div className="text-[10px] font-bold uppercase text-gray-400">
+                    OP Metrics
+                  </div>
                   <div className="grid grid-cols-2 gap-2 mt-1">
                     <div className="bg-blue-50 p-2 rounded-lg text-center border border-blue-100">
                       <div className="text-[9px] text-blue-600 font-bold">Total OPs</div>
@@ -1485,7 +1724,8 @@ export default function CustomerReferralManagement() {
                     <div className="bg-emerald-50 p-2 rounded-lg text-center border border-emerald-100">
                       <div className="text-[9px] text-emerald-600 font-bold">Revenue</div>
                       <div className="text-sm font-extrabold text-emerald-900">
-                        ₹{getReferralMetrics(selectedReferral).revenue.toLocaleString()}
+                        ₹
+                        {getReferralMetrics(selectedReferral).revenue.toLocaleString()}
                       </div>
                     </div>
                   </div>
@@ -1493,7 +1733,9 @@ export default function CustomerReferralManagement() {
 
                 {selectedReferral.referralNotes && (
                   <div className="pt-2 border-t border-gray-200">
-                    <div className="text-[10px] font-bold uppercase text-gray-400">Notes</div>
+                    <div className="text-[10px] font-bold uppercase text-gray-400">
+                      Notes
+                    </div>
                     <div className="text-xs font-medium text-gray-700 mt-0.5 p-2 bg-white rounded-lg border border-gray-200">
                       {selectedReferral.referralNotes}
                     </div>
@@ -1501,9 +1743,12 @@ export default function CustomerReferralManagement() {
                 )}
 
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="text-[10px] font-bold uppercase text-gray-400">Created</div>
+                  <div className="text-[10px] font-bold uppercase text-gray-400">
+                    Created
+                  </div>
                   <div className="text-xs font-medium text-gray-700 mt-0.5">
-                    {formatDate(selectedReferral.createdAt)} at {formatTime(selectedReferral.createdAt)}
+                    {formatDate(selectedReferral.createdAt)} at{" "}
+                    {formatTime(selectedReferral.createdAt)}
                   </div>
                 </div>
               </div>

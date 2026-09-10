@@ -1071,7 +1071,7 @@ const PayrollDashboard = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-slate-50 text-slate-500 font-bold border-b">
+              <tr className="bg-gray-500 text-slate-200 font-bold border-b">
                 <th className="p-3">Employee</th>
                 <th className="p-3">Department</th>
                 <th className="p-3 text-center">Days Worked</th>

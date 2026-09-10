@@ -1980,44 +1980,74 @@ const PayRoll = () => {
 
     const targetWeekOffCount = selectedEmployee?.targetWeekOffCount || selectedEmployee?.weekOffs || 4;
     
-    const getWeekOffDatesForMonth = () => {
+        const getWeekOffDatesForMonth = () => {
       const weekOffDatesSet = new Set();
       if (!selectedEmployee || monthDates.length === 0) return weekOffDatesSet;
-      
+
       const employeeId = selectedEmployee.employeeId;
-      
-      if (targetWeekOffCount === 4) {
+
+      // ─── Department detection ───
+      const deptRaw =
+        selectedEmployee.department ||
+        employeesMasterData[employeeId]?.department ||
+        '';
+      const deptLower = deptRaw.toLowerCase().trim();
+
+      const isMedical = deptLower.includes('medical');
+      const isNursingOrLab =
+        deptLower.includes('nursing') ||
+        deptLower.includes('laboratory') ||
+        deptLower.includes('lab');
+
+      // Helper: collect absent days (Sunday chhod kar)
+      const collectAbsentDays = () => {
+        const absentDays = [];
         monthDates.forEach(date => {
-          if (date.toLocaleDateString('en-US', { weekday: 'long' }) === 'Sunday') {
-            weekOffDatesSet.add(date.toLocaleDateString('en-CA'));
+          const dateKey = date.toLocaleDateString('en-CA');
+          const hasAttendance = attendanceMap.has(dateKey);
+          const isLeave = isLeaveDay(date, employeeId, employeeLeaves);
+          const isSunday =
+            date.toLocaleDateString('en-US', { weekday: 'long' }) === 'Sunday';
+
+          if (!hasAttendance && !isLeave && !isSunday) {
+            absentDays.push(date);
           }
         });
+        absentDays.sort((a, b) => a - b);
+        return absentDays;
+      };
+
+      // ─── CASE 1: Medical → max 2 din weekoff from absent ───
+      if (isMedical) {
+        const maxWeekOffs = 2;
+        const absentDays = collectAbsentDays();
+        const weekOffDaysCount = Math.min(maxWeekOffs, absentDays.length);
+        for (let i = 0; i < weekOffDaysCount; i++) {
+          weekOffDatesSet.add(absentDays[i].toLocaleDateString('en-CA'));
+        }
         return weekOffDatesSet;
       }
-      
-      const absentDays = [];
-      
+
+      // ─── CASE 2: Nursing / Laboratory → max 4 din weekoff from absent ───
+      if (isNursingOrLab) {
+        const maxWeekOffs = 4;
+        const absentDays = collectAbsentDays();
+        const weekOffDaysCount = Math.min(maxWeekOffs, absentDays.length);
+        for (let i = 0; i < weekOffDaysCount; i++) {
+          weekOffDatesSet.add(absentDays[i].toLocaleDateString('en-CA'));
+        }
+        return weekOffDatesSet;
+      }
+
+      // ─── CASE 3: Developer / Marketing / Baaki sab → har Sunday weekoff ───
       monthDates.forEach(date => {
-        const dateKey = date.toLocaleDateString('en-CA');
-        const hasAttendance = attendanceMap.has(dateKey);
-        const isLeave = isLeaveDay(date, employeeId, employeeLeaves);
-        const isSunday = date.toLocaleDateString('en-US', { weekday: 'long' }) === 'Sunday';
-        
-        if (!hasAttendance && !isLeave && !isSunday) {
-          absentDays.push(date);
+        if (date.toLocaleDateString('en-US', { weekday: 'long' }) === 'Sunday') {
+          weekOffDatesSet.add(date.toLocaleDateString('en-CA'));
         }
       });
-      
-      absentDays.sort((a, b) => a - b);
-      
-      const weekOffDaysCount = Math.min(targetWeekOffCount, absentDays.length);
-      for (let i = 0; i < weekOffDaysCount; i++) {
-        weekOffDatesSet.add(absentDays[i].toLocaleDateString('en-CA'));
-      }
-      
+
       return weekOffDatesSet;
     };
-    
     const weekOffDatesSet = getWeekOffDatesForMonth();
 
     const isWeekOffDay = (date) => {

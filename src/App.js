@@ -230,6 +230,8 @@ import ReferralManagement from "./Pages/ReferralManagement.js";
 import ReferredOP from "./Pages/ReferredOP.js";
 import CustomerReferralManagement from "./Pages/CustomerReferralManagement.js";
 import DoctorReferralManagement from "./Pages/DoctorReferralManagement.js";
+import DoctorReferralOP from "./Pages/DoctorReferralOP.js";
+import CustomerReferralOP from "./Pages/CustomerReferralOP.js";
 
 function App() {
   return (
@@ -281,6 +283,8 @@ function App() {
       <Route path="/customer-referrals" element={<AdminLayout><CustomerReferralManagement /></AdminLayout>} />
       <Route path="/doctor-referrals" element={<AdminLayout><DoctorReferralManagement /></AdminLayout>} />
       <Route path="/referredop" element={<AdminLayout><ReferredOP /></AdminLayout>} />
+      <Route path="/doctorreffredop" element={<AdminLayout><DoctorReferralOP /></AdminLayout>} />
+      <Route path="/customerreffredop" element={<AdminLayout><CustomerReferralOP /></AdminLayout>} />
       <Route path="/op-management" element={<AdminLayout><OpManagement /></AdminLayout>} />
       <Route path="/appointment-slots" element={<AdminLayout><AppointmentSlots /></AdminLayout>} />
       <Route path="/services" element={<AdminLayout><Services /></AdminLayout>} />

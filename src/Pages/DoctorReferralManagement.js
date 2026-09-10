@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   FaSearch,
   FaCalendarAlt,
@@ -40,7 +41,8 @@ import {
   FaGift,
   FaMoneyBillWave,
   FaHandshake,
-  FaFilter
+  FaFilter,
+  FaStethoscope as FaStethoscopeIcon
 } from "react-icons/fa";
 import {
   FiUsers,
@@ -68,12 +70,14 @@ import {
   FiPercent,
   FiFileText,
   FiActivity,
-  FiGift
+  FiGift,
+  FiExternalLink
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 
-const API_BASE_URL = "https://api.timelyhealth.in/api/referralcontacts";
+const API_BASE_URL = "http://localhost:5001/api/referralcontacts";
+const BASE_API = "http://localhost:5001/api";
 
 const STATUS_OPTIONS = ["active", "inactive"];
 
@@ -98,7 +102,55 @@ const COMMISSION_FIELDS = [
   { key: "labCommission", label: "Lab", icon: FaFlask, color: "purple" }
 ];
 
+// ✅ SAFE ID EXTRACTION — handles both string and populated object
+const extractId = (val) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object" && val._id) return String(val._id);
+  return "";
+};
+
+const extractName = (val) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object") {
+    return val.doctorName || val.customerName || val.name || "";
+  }
+  return "";
+};
+
+// ✅ Service payable calculator (per-category)
+const getServiceDoctorPayable = (doctor, booking) => {
+  if (!doctor || !booking) return 0;
+
+  const rawServices =
+    (Array.isArray(booking.services) && booking.services.length > 0 && booking.services) ||
+    (Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0 && booking.serviceItems) ||
+    [];
+
+  if (!rawServices.length) return 0;
+
+  const clinicP = parseFloat(doctor.clinicCommission) || 0;
+  const pharmacyP = parseFloat(doctor.pharmacyCommission) || 0;
+  const labP = parseFloat(doctor.labCommission) || 0;
+
+  let total = 0;
+  rawServices.forEach((svc) => {
+    const price = Number(svc.price) || 0;
+    const cat = (svc.category || svc.serviceCategory || svc.type || "clinic").toString().toLowerCase();
+    let pct = clinicP;
+    if (cat.includes("pharm") || cat.includes("medic")) pct = pharmacyP;
+    else if (cat.includes("lab") || cat.includes("test") || cat.includes("diagnos")) pct = labP;
+    else pct = clinicP;
+    total += (price * pct) / 100;
+  });
+
+  return Math.round(total);
+};
+
 export default function DoctorReferralManagement() {
+  const navigate = useNavigate();
+
   const [referrals, setReferrals] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -161,23 +213,37 @@ export default function DoctorReferralManagement() {
 
   const fetchBookingsData = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL.replace("/referralcontacts", "")}/appointment-slots/getallbookings`);
+      // ✅ Use the getallreferralbookings endpoint (has referralContactId populated)
+      const res = await axios.get(`${BASE_API}/appointment-slots/getallreferralbookings`);
       if (res.data && res.data.success) {
-        const bookingsData = res.data.bookings || res.data.data || [];
+        const bookingsData = res.data.bookings || [];
+        setBookings(bookingsData);
+        return bookingsData;
+      }
+      // Fallback to old endpoint
+      const res2 = await axios.get(`${BASE_API}/appointment-slots/getallbookings`);
+      if (res2.data && res2.data.success) {
+        const bookingsData = res2.data.bookings || res2.data.data || [];
         const transformed = bookingsData.map((b) => {
           const slotDetails = b.slotDetails || {};
           return {
             _id: b._id || b.id,
             referralContactId: b.referralContactId || "",
+            referralDoctorId: b.referralDoctorId || "",
+            referralCustomerId: b.referralCustomerId || "",
+            referredByDoctor: b.referredByDoctor || "",
+            referredBy: b.referredBy || "",
             patientName: b.patientName || "",
             patientPhone: b.patientPhone || "",
             date: slotDetails.date || b.appointmentDate || b.date || "",
             doctorName: slotDetails.doctorName || b.doctorName || "",
             consultationFee: b.consultationFee || 0,
             commissionAmount: b.commissionAmount || 0,
+            finalPayable: b.finalPayable || b.totalAmount || 0,
             paymentStatus: b.paymentStatus || "Pending",
             status: b.status || "confirmed",
             services: b.services || [],
+            serviceItems: b.serviceItems || [],
             isOP: b.isOP === true,
             createdAt: b.createdAt || b.bookedAt || new Date().toISOString()
           };
@@ -216,7 +282,6 @@ export default function DoctorReferralManagement() {
         referralsData = res.data;
       }
       
-      // Filter ONLY doctor referrals
       const doctorReferrals = referralsData.filter(r => r.referralType === "doctor");
       
       if (doctorReferrals.length === 0) {
@@ -243,17 +308,43 @@ export default function DoctorReferralManagement() {
     fetchReferrals();
   }, []);
 
+  // ✅ FIXED — Match bookings to referral using safe ID extraction + name fallback
   const getReferralMetrics = (referral) => {
-    const matchedBookings = bookings.filter(b => 
-      b.referralContactId === referral._id
-    );
+    if (!referral) {
+      return { opCount: 0, revenue: 0, patientCount: 0, lastVisit: null, bookingIds: [], bookings: [] };
+    }
+
+    const refId = String(referral._id || "");
+    const refName = (referral.doctorName || "").trim().toLowerCase();
+
+    const matchedBookings = bookings.filter((b) => {
+      const cId = extractId(b.referralContactId);
+      const dId = extractId(b.referralDoctorId);
+      const cuId = extractId(b.referralCustomerId);
+
+      if (cId && cId === refId) return true;
+      if (dId && dId === refId) return true;
+      if (cuId && cuId === refId) return true;
+
+      // Fallback: match by name
+      const refDoctorName = (extractName(b.referralDoctorId) || b.referredByDoctor || "").trim().toLowerCase();
+      const refCustomerName = (extractName(b.referralCustomerId) || b.referredByCustomer || "").trim().toLowerCase();
+      const referredBy = (b.referredBy || "").trim().toLowerCase();
+
+      if (refName && (refDoctorName === refName || refCustomerName === refName || referredBy === refName)) {
+        return true;
+      }
+      return false;
+    });
     
-    const opCount = matchedBookings.filter(b => b.isOP === true).length;
+    const opCount = matchedBookings.filter((b) => b.isOP === true).length;
+
+    // ✅ Revenue = sum of per-service doctor payable (using doctor's commission %)
     const revenue = matchedBookings.reduce((sum, b) => {
-      return sum + (b.commissionAmount || 0);
+      return sum + getServiceDoctorPayable(referral, b);
     }, 0);
     
-    const patientCount = new Set(matchedBookings.map(b => b.patientName)).size;
+    const patientCount = new Set(matchedBookings.map((b) => b.patientName)).size;
     
     return {
       opCount,
@@ -261,11 +352,11 @@ export default function DoctorReferralManagement() {
       patientCount,
       lastVisit: matchedBookings.length > 0 
         ? matchedBookings.reduce((latest, b) => {
-            const d = new Date(b.createdAt || b.bookedAt || b.createdAt);
+            const d = new Date(b.createdAt || b.bookedAt);
             return d > latest ? d : latest;
           }, new Date(0))
         : null,
-      bookingIds: matchedBookings.map(b => b._id),
+      bookingIds: matchedBookings.map((b) => b._id),
       bookings: matchedBookings
     };
   };
@@ -713,6 +804,17 @@ export default function DoctorReferralManagement() {
               <FiDownload className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Export CSV</span>
             </button>
+
+            {/* Doctor Referred OP Button */}
+            <button
+              onClick={() => navigate("/doctorreffredop")}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
+              title="View Doctor Referred OP Bookings"
+            >
+              <FaStethoscopeIcon className="w-3.5 h-3.5" />
+              <span>Doctor Referred OP</span>
+            </button>
+
             <button
               onClick={() => {
                 setFormData({ ...EMPTY_FORM });
@@ -774,6 +876,14 @@ export default function DoctorReferralManagement() {
                 Clear
               </button>
             )}
+
+            <button
+              onClick={() => navigate("/doctorreffredop")}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
+            >
+              <FaStethoscopeIcon className="w-3.5 h-3.5" />
+              <span>Referred OP</span>
+            </button>
             
             <button
               onClick={() => {
