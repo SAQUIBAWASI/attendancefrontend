@@ -1,4 +1,4 @@
-// OpManagement.js — Full Refactored Version
+// OpManagement.js — Full Refactored Version (with City→Pincode Auto-Fetch + Clean B/W Bill + Discount)
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -10,13 +10,16 @@ import {
   FaHistory, FaPrescription, FaFilePdf, FaServicestack, FaUserPlus, FaShareAlt,
   FaPercent, FaGift, FaBuilding, FaClinicMedical, FaPills, FaFlask,
   FaMinusCircle, FaPlusCircle, FaUserTag, FaUserFriends,
-  FaUserMd as FaUserMdIcon, FaExternalLinkAlt, FaMicroscope
+  FaUserMd as FaUserMdIcon, FaExternalLinkAlt, FaMicroscope, FaLock,
+  FaHeartbeat, FaNotesMedical, FaAllergies, FaTint, FaBirthdayCake, FaVenusMars,
+  FaEnvelope, FaIdCard, FaStickyNote, FaCommentMedical, FaUserCheck, FaUserClock,
+  FaToggleOn, FaToggleOff
 } from "react-icons/fa";
 import {
   FiUsers, FiUserCheck, FiClock, FiFilter, FiDownload, FiTrash2, FiPlus,
   FiEdit2, FiEye, FiRefreshCw, FiCheckCircle, FiXCircle, FiCalendar,
   FiFileText, FiDollarSign, FiPlusCircle, FiChevronDown, FiChevronUp,
-  FiAlertCircle
+  FiAlertCircle, FiLock
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -43,7 +46,9 @@ const GENDER_OPTIONS = [
 
 const PAYMENT_TYPE_OPTIONS = [
   { value: "cash", label: "Cash" },
-  { value: "online", label: "Online" }
+  { value: "online", label: "Online" },
+  { value: "insurance", label: "Insurance" },
+  { value: "card", label: "Card" }
 ];
 
 const PAYMENT_STATUS_OPTIONS = [
@@ -69,6 +74,8 @@ const EMPTY_FORM = {
   gender: "",
   phone: "",
   address: "",
+  city: "",
+  pincode: "",
   serviceItems: [],
   paymentType: "cash",
   reason: "",
@@ -84,6 +91,7 @@ const EMPTY_FORM = {
   referralCommission: "",
   referralCommissionType: "",
   partialAmount: "",
+  discount: "",
   bookingId: "",
   status: "confirmed"
 };
@@ -106,6 +114,16 @@ const calculateAgeFromDOB = (dob) => {
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
     return age > 0 ? age.toString() : "";
   } catch { return ""; }
+};
+
+const genderFromTitle = (title) => {
+  if (!title) return "";
+  const t = title.toString().trim();
+  if (t === "Mr." || t === "Master") return "Male";
+  if (t === "Mrs." || t === "Miss") return "Female";
+  if (t === "Baby" || t === "BabyOf") return "Other";
+  if (t === "Dr.") return "";
+  return "";
 };
 
 const autoSelectTitleFromDob = (dob, gender) => {
@@ -189,7 +207,7 @@ const numberToWords = (num) => {
     if (n < 10000000) return convert(Math.floor(n / 100000)) + " Lakh" + (n % 100000 ? " " + convert(n % 100000) : "");
     return convert(Math.floor(n / 10000000)) + " Crore" + (n % 10000000 ? " " + convert(n % 10000000) : "");
   };
-  return convert(num) + " Rupees Only";
+  return convert(Math.round(num)) + " Rupees Only";
 };
 
 const getBookingServices = (booking) => {
@@ -218,8 +236,11 @@ const classifyService = (svc) => {
 };
 
 const getAmountBreakdown = (booking) => {
+  if (!booking) return { clinic: 0, lab: 0, pharmacy: 0, total: 0, manualMedicineTotal: 0, manualLabTotal: 0 };
+
   const services = getBookingServices(booking);
   let clinic = 0, lab = 0, pharmacy = 0;
+
   services.forEach((s) => {
     const cat = classifyService(s);
     const price = Number(s.price) || 0;
@@ -227,7 +248,32 @@ const getAmountBreakdown = (booking) => {
     else if (cat === "pharmacy") pharmacy += price;
     else clinic += price;
   });
-  return { clinic, lab, pharmacy, total: clinic + lab + pharmacy };
+
+  const manualMedicineTotal = Number(booking?.medicineTotal) || 0;
+  const manualLabTotal = Number(booking?.labTotal) || 0;
+
+  pharmacy += manualMedicineTotal;
+  lab += manualLabTotal;
+
+  const computed = clinic + lab + pharmacy;
+  if (computed === 0) {
+    const fallback =
+      Number(booking.finalPayable) ||
+      Number(booking.finalPayableAmount) ||
+      Number(booking.grandTotal) ||
+      Number(booking.totalAmount) ||
+      0;
+    clinic = fallback;
+  }
+
+  return {
+    clinic,
+    lab,
+    pharmacy,
+    total: clinic + lab + pharmacy,
+    manualMedicineTotal,
+    manualLabTotal,
+  };
 };
 
 const getBookingSubtotal = (booking) => {
@@ -247,7 +293,8 @@ const getBookingFinalPayable = (booking) => {
   if (final > 0) return final;
   const subtotal = getBookingSubtotal(booking);
   const commission = Number(booking.commissionAmount) || 0;
-  return subtotal - commission;
+  const discount = Number(booking.discount) || 0;
+  return subtotal - commission - discount;
 };
 
 const getBookingPaidInfo = (booking) => {
@@ -259,6 +306,31 @@ const getBookingPaidInfo = (booking) => {
   else if (status === "Pending" || status === "Due") paid = 0;
   const balance = Math.max(0, final - paid);
   return { final, paid, balance, status };
+};
+
+const fetchCityFromPincode = async (pincode) => {
+  if (!pincode || pincode.trim().length < 6) return null;
+  try {
+    const res = await axios.get(
+      `https://api.postalpincode.in/pincode/${encodeURIComponent(pincode.trim())}`
+    );
+    if (Array.isArray(res.data) && res.data[0]?.Status === "Success") {
+      const offices = res.data[0].PostOffice || [];
+      if (offices.length > 0) {
+        const first = offices[0];
+        return {
+          city: first.District || first.Block || first.Name || "",
+          state: first.State || "",
+          area: first.Name || "",
+          allOffices: offices,
+        };
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn("City fetch failed:", err);
+    return null;
+  }
 };
 
 export default function OpManagement() {
@@ -284,14 +356,6 @@ export default function OpManagement() {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [openPaymentDropdown, setOpenPaymentDropdown] = useState(null);
   const [paymentUpdating, setPaymentUpdating] = useState(false);
-
-  const [showStatusUpdateModal, setShowStatusUpdateModal] = useState(false);
-  const [selectedBookingForStatus, setSelectedBookingForStatus] = useState(null);
-  const [newBookingStatus, setNewBookingStatus] = useState("");
-
-  const [showPaymentUpdateModal, setShowPaymentUpdateModal] = useState(false);
-  const [selectedBookingForPayment, setSelectedBookingForPayment] = useState(null);
-  const [newPaymentStatus, setNewPaymentStatus] = useState("");
 
   const [existingPatient, setExistingPatient] = useState(null);
   const [showExistingPatientPopup, setShowExistingPatientPopup] = useState(false);
@@ -326,12 +390,14 @@ export default function OpManagement() {
 
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [selectedBookingForBilling, setSelectedBookingForBilling] = useState(null);
-  const [billingData, setBillingData] = useState({
-    invoiceNo: "", invoiceDate: "", receiptNo: "", receiptDate: "",
-    paymentMode: "Cash", receivedBy: "Front Desk", branch: "", doctorName: "",
-    items: [], grossAmount: 0, netAmount: 0, paidAmount: 0, balanceAmount: 0,
-    paymentStatus: "Pending", amountInWords: ""
-  });
+const [billingData, setBillingData] = useState({
+  invoiceNo: "", invoiceDate: "", receiptNo: "", receiptDate: "",
+  paymentMode: "Cash", receivedBy: "Front Desk", branch: "", doctorName: "",
+  items: [], grossAmount: 0, netAmount: 0, paidAmount: 0, balanceAmount: 0,
+  discount: 0,
+  paymentStatus: "Pending", amountInWords: "",
+  breakdown: { clinic: 0, lab: 0, pharmacy: 0 }
+});
 
   const [showMedicineTotalModal, setShowMedicineTotalModal] = useState(false);
   const [medicineTotalBooking, setMedicineTotalBooking] = useState(null);
@@ -347,6 +413,18 @@ export default function OpManagement() {
   const [partialBooking, setPartialBooking] = useState(null);
   const [partialAmountInput, setPartialAmountInput] = useState("");
   const [savingPartial, setSavingPartial] = useState(false);
+
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [fetchingCity, setFetchingCity] = useState(false);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const pincodeDebounceRef = useRef(null);
+
+  const [showVitalsModal, setShowVitalsModal] = useState(false);
+  const [vitalsBooking, setVitalsBooking] = useState(null);
+  const [vitalsData, setVitalsData] = useState({ temp: "", bp: "", pr: "", weight: "" });
+  const [savingVitals, setSavingVitals] = useState(false);
+
+  const [togglingStatus, setTogglingStatus] = useState(null);
 
   const phoneInputRef = useRef(null);
   const nameInputRef = useRef(null);
@@ -379,7 +457,14 @@ export default function OpManagement() {
           age: b.patientAge || "",
           gender: b.patientGender || "",
           phone: b.patientPhone || "",
+          email: b.patientEmail || "",
           address: b.patientAddress || "",
+          city: b.patientCity || "",
+          pincode: b.patientPincode || "",
+          bloodGroup: b.patientBloodGroup || "",
+          medicalHistory: b.patientMedicalHistory || "",
+          allergies: b.patientAllergies || "",
+          medications: b.patientMedications || "",
           reason: b.purpose || "",
           paymentType: b.paymentType || "cash",
           paymentStatus: b.paymentStatus || "Pending",
@@ -392,6 +477,7 @@ export default function OpManagement() {
           referralCommissionType: b.referralCommissionType || "",
           createdAt: b.createdAt || b.bookedAt,
           latestBookingId: b._id,
+          isActive: b.isActive !== undefined ? b.isActive : true,
         });
       }
     });
@@ -415,9 +501,16 @@ export default function OpManagement() {
       if (!e.target.closest(".status-dropdown")) setOpenStatusDropdown(null);
       if (!e.target.closest(".payment-dropdown")) setOpenPaymentDropdown(null);
       if (!e.target.closest(".service-dropdown-add-patient")) setShowServiceSuggestions(false);
+      if (!e.target.closest(".city-dropdown-add-patient")) setShowCitySuggestions(false);
     };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (pincodeDebounceRef.current) clearTimeout(pincodeDebounceRef.current);
+    };
   }, []);
 
   const fetchAllData = () => {
@@ -460,9 +553,10 @@ export default function OpManagement() {
         const servicesTotal = normalizedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
         const subtotal = Number(b.subtotal) || servicesTotal;
         const commissionAmount = Number(b.commissionAmount) || 0;
+        const discount = Number(b.discount) || 0;
         const finalPayable =
           Number(b.finalPayable) || Number(b.finalPayableAmount) || Number(b.grandTotal) ||
-          Number(b.totalAmount) || (subtotal - commissionAmount) || 0;
+          Number(b.totalAmount) || (subtotal - commissionAmount - discount) || 0;
         const totalAmount = Number(b.totalAmount) || Number(b.grandTotal) || finalPayable;
         const amountPaid = Number(b.amountPaid) || 0;
         const balanceAmount = Number(b.balanceAmount) || Math.max(0, finalPayable - amountPaid);
@@ -475,10 +569,16 @@ export default function OpManagement() {
           patientAge: b.patientAge || "",
           patientGender: b.patientGender || "",
           patientPhone: b.patientPhone || "",
+          patientEmail: b.patientEmail || "",
           patientAddress: b.patientAddress || "",
+          patientCity: b.patientCity || "",
+          patientPincode: b.patientPincode || "",
           patientTitle: b.patientTitle || "Mr.",
           patientDob: b.patientDob || "",
-          patientEmail: b.patientEmail || "",
+          patientBloodGroup: b.patientBloodGroup || "",
+          patientMedicalHistory: b.patientMedicalHistory || "",
+          patientAllergies: b.patientAllergies || "",
+          patientMedications: b.patientMedications || "",
           dayOfWeek: slotDetails.dayOfWeek || b.dayOfWeek || "",
           date: slotDetails.date || b.appointmentDate || b.date || "",
           startTime: slotDetails.startTime || b.startTime || "",
@@ -489,12 +589,12 @@ export default function OpManagement() {
           purpose: b.purpose || "",
           symptoms: b.symptoms || "",
           appointmentType: b.appointmentType || "Consultation",
+          priority: b.priority || "Normal",
           paymentType: b.paymentType || "cash",
           paymentStatus: b.paymentStatus || "Pending",
           partialAmount: Number(b.partialAmount) || 0,
-          subtotal, commissionAmount, finalPayable, finalPayableAmount: finalPayable,
+          subtotal, commissionAmount, discount, finalPayable, finalPayableAmount: finalPayable,
           totalAmount, grandTotal: totalAmount, amountPaid, balanceAmount,
-          discount: Number(b.discount) || 0,
           tax: Number(b.tax) || 0,
           status: b.status || "confirmed",
           services: normalizedServices,
@@ -503,6 +603,7 @@ export default function OpManagement() {
           bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
           appointmentDate: b.appointmentDate || slotDetails.date || "",
           isOP: b.isOP || false,
+          isActive: b.isActive !== undefined ? b.isActive : true,
           referredBy: b.referredBy || "",
           referralContactId: b.referralContactId || "",
           referredByCustomer: b.referredByCustomer || "",
@@ -517,6 +618,19 @@ export default function OpManagement() {
           medicines: Array.isArray(b.medicines) ? b.medicines : [],
           medicineTotal: Number(b.medicineTotal) || 0,
           labTotal: Number(b.labTotal) || 0,
+          vitalsTemp: b.vitalsTemp || "",
+          vitalsBp: b.vitalsBp || "",
+          vitalsPr: b.vitalsPr || "",
+          vitalsWeight: b.vitalsWeight || "",
+          followUpRequired: b.followUpRequired || false,
+          followUpDate: b.followUpDate || "",
+          followUpNotes: b.followUpNotes || "",
+          checkInTime: b.checkInTime || null,
+          checkOutTime: b.checkOutTime || null,
+          waitingTime: Number(b.waitingTime) || 0,
+          notes: b.notes || "",
+          patientRating: b.patientRating ?? null,
+          patientFeedback: b.patientFeedback || "",
         };
       });
       setBookings(transformedBookings);
@@ -606,6 +720,8 @@ export default function OpManagement() {
           gender: latest.patientGender || "",
           phone: latest.patientPhone || "",
           address: latest.patientAddress || "",
+          city: latest.patientCity || "",
+          pincode: latest.patientPincode || "",
           reason: latest.purpose || "",
           paymentType: latest.paymentType || "cash",
           paymentStatus: latest.paymentStatus || "Pending",
@@ -638,6 +754,8 @@ export default function OpManagement() {
       gender: existingPatient.gender || "",
       phone: existingPatient.phone || "",
       address: existingPatient.address || "",
+      city: existingPatient.city || "",
+      pincode: existingPatient.pincode || "",
       serviceItems: existingPatient.serviceItems || [],
       paymentType: existingPatient.paymentType || "cash",
       reason: existingPatient.reason || "",
@@ -649,6 +767,8 @@ export default function OpManagement() {
       referralCommission: existingPatient.referralCommission || "",
       referralCommissionType: existingPatient.referralCommissionType || ""
     }));
+    setCitySuggestions([]);
+    setShowCitySuggestions(false);
     setShowExistingPatientPopup(false);
     showToast(`Patient ${existingPatient.name} details auto-filled!`, "info");
   };
@@ -657,24 +777,68 @@ export default function OpManagement() {
     const newAge = calculateAgeFromDOB(dob);
     setFormData((prev) => {
       const autoTitle = autoSelectTitleFromDob(dob, prev.gender);
-      return {
-        ...prev,
-        dob,
-        age: newAge,
-        title: autoTitle || prev.title,
-      };
+      return { ...prev, dob, age: newAge, title: autoTitle || prev.title };
     });
   };
 
   const handleGenderChange = (gender) => {
     setFormData((prev) => {
       const autoTitle = autoSelectTitleFromDob(prev.dob, gender);
-      return {
-        ...prev,
-        gender,
-        title: autoTitle || prev.title,
-      };
+      return { ...prev, gender, title: autoTitle || prev.title };
     });
+  };
+
+  const handleTitleChange = (title) => {
+    setFormData((prev) => {
+      const autoGender = genderFromTitle(title);
+      const newGender = autoGender || prev.gender;
+      return { ...prev, title, gender: newGender };
+    });
+  };
+
+  const handlePincodeChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    setFormData((prev) => ({ ...prev, pincode: value }));
+
+    if (pincodeDebounceRef.current) clearTimeout(pincodeDebounceRef.current);
+
+    if (!value || value.length < 6) {
+      setCitySuggestions([]);
+      setShowCitySuggestions(false);
+      return;
+    }
+
+    pincodeDebounceRef.current = setTimeout(async () => {
+      setFetchingCity(true);
+      const result = await fetchCityFromPincode(value);
+      setFetchingCity(false);
+
+      if (result) {
+        setCitySuggestions(result.allOffices.map((o) => ({
+          pincode: o.Pincode,
+          area: o.Name,
+          district: o.District,
+          state: o.State,
+        })));
+        setShowCitySuggestions(true);
+        setFormData((prev) => ({
+          ...prev,
+          city: prev.city || result.city,
+        }));
+      } else {
+        setCitySuggestions([]);
+        setShowCitySuggestions(false);
+      }
+    }, 500);
+  };
+
+  const handleSelectCity = (suggestion) => {
+    setFormData((prev) => ({
+      ...prev,
+      city: suggestion.district || suggestion.area || prev.city,
+      pincode: suggestion.pincode,
+    }));
+    setShowCitySuggestions(false);
   };
 
   const handleReferralCustomerSelect = (contact) => {
@@ -762,6 +926,8 @@ export default function OpManagement() {
       handleDobChange(value);
     } else if (name === "gender") {
       handleGenderChange(value);
+    } else if (name === "title") {
+      handleTitleChange(value);
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -784,6 +950,8 @@ export default function OpManagement() {
       gender: existingBooking?.patientGender || patient.gender || "",
       phone: existingBooking?.patientPhone || patient.phone || "",
       address: existingBooking?.patientAddress || patient.address || "",
+      city: existingBooking?.patientCity || patient.city || "",
+      pincode: existingBooking?.patientPincode || patient.pincode || "",
       serviceItems: getBookingServices(existingBooking),
       paymentType: existingBooking?.paymentType || patient.paymentType || "cash",
       reason: existingBooking?.purpose || patient.reason || "",
@@ -797,6 +965,7 @@ export default function OpManagement() {
       referralCommission: existingBooking?.referralCommission || patient.referralCommission || "",
       referralCommissionType: existingBooking?.referralCommissionType || patient.referralCommissionType || "",
       partialAmount: existingBooking?.amountPaid || existingBooking?.partialAmount || "",
+      discount: existingBooking?.discount || "",
       serviceName: "", servicePrice: "",
       status: existingBooking?.status || "confirmed"
     });
@@ -808,6 +977,8 @@ export default function OpManagement() {
     setFilteredServices([]);
     setShowServiceSuggestions(false);
     setAvailableSlots([]);
+    setCitySuggestions([]);
+    setShowCitySuggestions(false);
 
     if (doctorId && appointmentDate) {
       setTimeout(() => filterSlotsByDoctorAndDate(doctorId, appointmentDate), 200);
@@ -824,28 +995,8 @@ export default function OpManagement() {
     setShowExistingPatientPopup(false);
     setFilteredServices([]);
     setShowServiceSuggestions(false);
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this patient record (all appointments)?")) return;
-    try {
-      const patient = patients.find((p) => p._id === id);
-      if (!patient) { showToast("Patient not found", "error"); return; }
-      const relatedBookings = bookings.filter(
-        (b) => b.patientPhone === patient.phone ||
-          (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase())
-      );
-      await Promise.all(
-        relatedBookings.map((b) =>
-          axios.delete(`${API_BASE_URL}/appointment-slots/${b._id}`).catch(() => null)
-        )
-      );
-      showToast("Patient record deleted successfully", "info");
-      fetchBookings();
-    } catch (err) {
-      console.error("Error deleting:", err);
-      showToast("Failed to delete patient record", "error");
-    }
+    setCitySuggestions([]);
+    setShowCitySuggestions(false);
   };
 
   const cancelForm = () => {
@@ -858,6 +1009,37 @@ export default function OpManagement() {
     setShowExistingPatientPopup(false);
     setFilteredServices([]);
     setShowServiceSuggestions(false);
+    setCitySuggestions([]);
+    setShowCitySuggestions(false);
+  };
+
+  const handleToggleActiveStatus = async (patient) => {
+    const matchingBooking = getMatchingBooking(patient);
+    if (!matchingBooking) {
+      showToast("No booking found for this patient", "error");
+      return;
+    }
+    const currentStatus = matchingBooking.isActive !== undefined ? matchingBooking.isActive : true;
+    const newStatus = !currentStatus;
+
+    setTogglingStatus(patient._id);
+    try {
+      const res = await axios.put(
+        `${API_BASE_URL}/appointment-slots/toggle-active/${matchingBooking._id}`,
+        { isActive: newStatus }
+      );
+      if (res?.data?.success) {
+        showToast(`Patient marked as ${newStatus ? "Active" : "Inactive"}!`, "success");
+        await fetchBookings();
+        refreshPatientBookings();
+      } else {
+        showToast(res.data.message || "Failed to update status", "error");
+      }
+    } catch (error) {
+      showToast(error.response?.data?.message || "Failed to update status", "error");
+    } finally {
+      setTogglingStatus(null);
+    }
   };
 
   const handleRowClick = (patient) => fetchPatientData(patient);
@@ -950,28 +1132,20 @@ export default function OpManagement() {
     setShowPartialModal(true);
   };
 
-  const handleSavePartial = async () => {
+  const handleMarkFullPaid = async () => {
     if (!partialBooking) return;
-    const parsedPartial = parseFloat(partialAmountInput) || 0;
     const finalPayable = getBookingFinalPayable(partialBooking);
-    if (parsedPartial <= 0) { showToast("Please enter a valid amount", "error"); return; }
-    if (parsedPartial > finalPayable) { showToast("Amount cannot exceed total payable", "error"); return; }
 
     setSavingPartial(true);
     try {
-      let newStatus = "Partial";
-      let amountPaid = parsedPartial;
-      let balanceAmount = finalPayable - parsedPartial;
-      if (balanceAmount <= 0) { newStatus = "Paid"; amountPaid = finalPayable; balanceAmount = 0; }
-
       const res = await axios.put(`${API_BASE_URL}/appointment-slots/${partialBooking._id}`, {
-        paymentStatus: newStatus,
-        amountPaid,
-        partialAmount: parsedPartial,
-        balanceAmount,
+        paymentStatus: "Paid",
+        amountPaid: finalPayable,
+        partialAmount: finalPayable,
+        balanceAmount: 0,
       });
       if (res?.data?.success) {
-        showToast(`Payment updated to ${newStatus}!`, "success");
+        showToast(`✅ Payment marked as Fully Paid! ₹${Math.round(finalPayable)} cleared.`, "success");
         setShowPartialModal(false);
         setPartialBooking(null);
         setPartialAmountInput("");
@@ -980,7 +1154,9 @@ export default function OpManagement() {
       } else showToast(res.data.message || "Failed to update payment", "error");
     } catch (error) {
       showToast(error.response?.data?.message || "Failed to update payment", "error");
-    } finally { setSavingPartial(false); }
+    } finally {
+      setSavingPartial(false);
+    }
   };
 
   const openMedicineTotalModal = (booking) => {
@@ -995,11 +1171,12 @@ export default function OpManagement() {
     if (total < 0) { showToast("Invalid amount", "error"); return; }
     setSavingMedicineTotal(true);
     try {
-      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${medicineTotalBooking._id}`, {
-        medicineTotal: total,
-      });
+      const res = await axios.put(
+        `${API_BASE_URL}/appointment-slots/updatecharges/${medicineTotalBooking._id}`,
+        { medicineTotal: total }
+      );
       if (res?.data?.success) {
-        showToast(`Medicine total updated to ₹${total}`, "success");
+        showToast(`Medicine ₹${total} saved. New Total: ₹${res.data.data.totalAmount}`, "success");
         setShowMedicineTotalModal(false);
         setMedicineTotalBooking(null);
         await fetchBookings();
@@ -1022,11 +1199,12 @@ export default function OpManagement() {
     if (total < 0) { showToast("Invalid amount", "error"); return; }
     setSavingLabTotal(true);
     try {
-      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${labTotalBooking._id}`, {
-        labTotal: total,
-      });
+      const res = await axios.put(
+        `${API_BASE_URL}/appointment-slots/updatecharges/${labTotalBooking._id}`,
+        { labTotal: total }
+      );
       if (res?.data?.success) {
-        showToast(`Lab total updated to ₹${total}`, "success");
+        showToast(`Lab ₹${total} saved. New Total: ₹${res.data.data.totalAmount}`, "success");
         setShowLabTotalModal(false);
         setLabTotalBooking(null);
         await fetchBookings();
@@ -1035,6 +1213,47 @@ export default function OpManagement() {
     } catch (error) {
       showToast(error.response?.data?.message || "Failed to update", "error");
     } finally { setSavingLabTotal(false); }
+  };
+
+  const openVitalsModal = (booking) => {
+    setVitalsBooking(booking);
+    setVitalsData({
+      temp: booking.vitalsTemp || "",
+      bp: booking.vitalsBp || "",
+      pr: booking.vitalsPr || "",
+      weight: booking.vitalsWeight || "",
+    });
+    setShowVitalsModal(true);
+  };
+
+  const handleSaveVitals = async () => {
+    if (!vitalsBooking) return;
+    setSavingVitals(true);
+    try {
+      const res = await axios.put(
+        `${API_BASE_URL}/appointment-slots/vitals/${vitalsBooking._id}`,
+        {
+          vitalsTemp: vitalsData.temp,
+          vitalsBp: vitalsData.bp,
+          vitalsPr: vitalsData.pr,
+          vitalsWeight: vitalsData.weight,
+        }
+      );
+      if (res?.data?.success) {
+        showToast("Vitals saved successfully!", "success");
+        setShowVitalsModal(false);
+        setVitalsBooking(null);
+        setVitalsData({ temp: "", bp: "", pr: "", weight: "" });
+        await fetchBookings();
+        refreshPatientBookings();
+      } else {
+        showToast(res.data.message || "Failed to save vitals", "error");
+      }
+    } catch (error) {
+      showToast(error.response?.data?.message || "Failed to save vitals", "error");
+    } finally {
+      setSavingVitals(false);
+    }
   };
 
   const handleBookNow = async (e) => {
@@ -1054,7 +1273,8 @@ export default function OpManagement() {
       const subtotal = formData.serviceItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
       const commissionPercent = parseFloat(formData.referralCommission) || 0;
       const commissionAmount = (subtotal * commissionPercent) / 100;
-      const finalPayable = subtotal - commissionAmount;
+      const discountAmount = parseFloat(formData.discount) || 0;
+      const finalPayable = subtotal - commissionAmount - discountAmount;
 
       const parsedPartial = parseFloat(formData.partialAmount) || 0;
       let paymentStatus = formData.paymentStatus;
@@ -1079,12 +1299,15 @@ export default function OpManagement() {
         patientDob: formData.dob,
         patientGender: formData.gender,
         patientAddress: formData.address,
+        patientCity: formData.city,
+        patientPincode: formData.pincode,
         purpose: formData.reason,
         paymentType: formData.paymentType,
         paymentStatus,
         partialAmount: parsedPartial,
         amountPaid,
         balanceAmount,
+        discount: discountAmount,
         doctorId: formData.doctorId,
         appointmentDate: formData.appointmentDate,
         isOP: true,
@@ -1116,6 +1339,7 @@ export default function OpManagement() {
         setEditingId(null); setShowForm(false); setAvailableSlots([]);
         setExistingPatient(null); setShowExistingPatientPopup(false);
         setFilteredServices([]); setShowServiceSuggestions(false);
+        setCitySuggestions([]); setShowCitySuggestions(false);
       } else {
         showToast(slotRes.data.message || "Failed to book appointment", "error");
       }
@@ -1125,94 +1349,146 @@ export default function OpManagement() {
   };
 
   const handleUpdateNow = async (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.phone || formData.age === "" || !formData.gender) {
-      showToast("Please fill all required fields", "error"); return;
-    }
-    if (!formData.doctorId || !formData.slotId) { showToast("Please select doctor and slot", "error"); return; }
-    if (formData.serviceItems.length === 0) { showToast("Please add at least one service", "error"); return; }
-    if (!formData.bookingId) { showToast("❌ No booking to update", "error"); return; }
-    if (formData.paymentStatus === "Partial" && (!formData.partialAmount || parseFloat(formData.partialAmount) <= 0)) {
-      showToast("Please enter partial amount received", "error"); return;
-    }
+  e.preventDefault();
 
-    setSubmitting(true);
-    try {
-      const subtotal = formData.serviceItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
-      const commissionPercent = parseFloat(formData.referralCommission) || 0;
-      const commissionAmount = (subtotal * commissionPercent) / 100;
-      const finalPayable = subtotal - commissionAmount;
+  if (!formData.bookingId) {
+    showToast("❌ No booking to update", "error");
+    return;
+  }
 
-      const parsedPartial = parseFloat(formData.partialAmount) || 0;
-      let paymentStatus = formData.paymentStatus;
-      let amountPaid = 0;
-      let balanceAmount = finalPayable;
+  setSubmitting(true);
+  try {
+    // ✅ Services subtotal
+    const servicesSubtotal = formData.serviceItems.reduce(
+      (sum, s) => sum + (Number(s.price) || 0),
+      0
+    );
 
-      if (paymentStatus === "Paid") {
-        amountPaid = finalPayable; balanceAmount = 0;
-      } else if (paymentStatus === "Partial" && parsedPartial > 0) {
-        amountPaid = parsedPartial;
-        balanceAmount = finalPayable - parsedPartial;
-        if (balanceAmount <= 0) { paymentStatus = "Paid"; amountPaid = finalPayable; balanceAmount = 0; }
-      } else if (paymentStatus === "Due") {
-        amountPaid = 0; balanceAmount = finalPayable;
+    // ✅ Lab + Medicine totals from matching booking
+    const matchBForUpdate = getMatchingBooking({
+      phone: formData.phone,
+      name: formData.name,
+      _id: formData.bookingId,
+    });
+    const labTotalForUpdate = Number(matchBForUpdate?.labTotal) || 0;
+    const medicineTotalForUpdate = Number(matchBForUpdate?.medicineTotal) || 0;
+
+    // ✅ Grand subtotal (Clinic + Lab + Pharmacy)
+    const subtotal = servicesSubtotal + labTotalForUpdate + medicineTotalForUpdate;
+
+    // ✅ Commission + Discount
+    const commissionPercent = parseFloat(formData.referralCommission) || 0;
+    const commissionAmount = (subtotal * commissionPercent) / 100;
+    const discountAmount = parseFloat(formData.discount) || 0;
+
+    // ✅ Final Payable = Subtotal − Commission − Discount
+    const finalPayable = subtotal - commissionAmount - discountAmount;
+
+    // ✅ Payment handling
+    const parsedPartial = parseFloat(formData.partialAmount) || 0;
+    let paymentStatus = formData.paymentStatus;
+    let amountPaid = 0;
+    let balanceAmount = finalPayable;
+
+    if (paymentStatus === "Paid") {
+      amountPaid = finalPayable;
+      balanceAmount = 0;
+    } else if (paymentStatus === "Partial" && parsedPartial > 0) {
+      amountPaid = parsedPartial;
+      balanceAmount = finalPayable - parsedPartial;
+      if (balanceAmount <= 0) {
+        paymentStatus = "Paid";
+        amountPaid = finalPayable;
+        balanceAmount = 0;
       }
+    } else if (paymentStatus === "Due") {
+      amountPaid = 0;
+      balanceAmount = finalPayable;
+    }
 
-      const bookingPayload = {
-        patientTitle: formData.title,
-        patientName: formData.name,
-        patientPhone: formData.phone,
-        patientAge: formData.age,
-        patientDob: formData.dob,
-        patientGender: formData.gender,
-        patientAddress: formData.address,
-        purpose: formData.reason,
-        paymentType: formData.paymentType,
-        paymentStatus,
-        partialAmount: parsedPartial,
-        amountPaid,
-        balanceAmount,
-        doctorId: formData.doctorId,
-        appointmentDate: formData.appointmentDate,
-        isOP: true,
-        status: formData.status || "confirmed",
-        serviceItems: formData.serviceItems.map((s) => ({
-          serviceId: s._id, name: s.name, price: Number(s.price) || 0, description: s.description || ""
-        })),
-        services: formData.serviceItems.map((s) => ({
-          serviceId: s._id, name: s.name, price: Number(s.price) || 0, description: s.description || ""
-        })),
-        referredByCustomer: formData.referredByCustomer,
-        referredByDoctor: formData.referredByDoctor,
-        referralCustomerId: formData.referralCustomerId,
-        referralDoctorId: formData.referralDoctorId,
-        referralCommission: formData.referralCommission,
-        referralCommissionType: formData.referralCommissionType,
-      };
+    const bookingPayload = {
+      patientTitle: formData.title,
+      patientName: formData.name,
+      patientPhone: formData.phone,
+      patientAge: formData.age,
+      patientDob: formData.dob,
+      patientGender: formData.gender,
+      patientAddress: formData.address,
+      patientCity: formData.city,
+      patientPincode: formData.pincode,
+      purpose: formData.reason,
+      paymentType: formData.paymentType,
+      paymentStatus,
+      partialAmount: parsedPartial,
+      amountPaid,
+      balanceAmount,
+      discount: discountAmount,
+      doctorId: formData.doctorId,
+      appointmentDate: formData.appointmentDate,
+      isOP: true,
+      status: formData.status || "confirmed",
+      serviceItems: formData.serviceItems.map((s) => ({
+        serviceId: s._id || s.serviceId,
+        name: s.name,
+        price: Number(s.price) || 0,
+        description: s.description || "",
+      })),
+      services: formData.serviceItems.map((s) => ({
+        serviceId: s._id || s.serviceId,
+        name: s.name,
+        price: Number(s.price) || 0,
+        description: s.description || "",
+      })),
+      referredByCustomer: formData.referredByCustomer,
+      referredByDoctor: formData.referredByDoctor,
+      referralCustomerId: formData.referralCustomerId,
+      referralDoctorId: formData.referralDoctorId,
+      referralCommission: formData.referralCommission,
+      referralCommissionType: formData.referralCommissionType,
+    };
 
-      const slotRes = await axios.put(
-        `${API_BASE_URL}/appointment-slots/updateop/${formData.bookingId}`,
-        bookingPayload
-      );
+    if (formData.slotId) {
+      bookingPayload.slotId = formData.slotId;
+    }
 
-      if (slotRes.data.success) {
-        showToast(`✅ Appointment updated successfully for ${formData.title} ${formData.name}!`, "success");
-        await fetchBookings();
-        fetchAllSlots();
+    console.log("📤 PUT URL:", `${API_BASE_URL}/appointment-slots/updateop/${formData.bookingId}`);
+    console.log("📦 Payload:", bookingPayload);
+
+    const slotRes = await axios.put(
+      `${API_BASE_URL}/appointment-slots/updateop/${formData.bookingId}`,
+      bookingPayload
+    );
+
+    console.log("📥 Response:", slotRes.data);
+
+    if (slotRes.data.success) {
+      showToast(`✅ Appointment updated successfully for ${formData.title} ${formData.name}!`, "success");
+      await fetchBookings();
+      fetchAllSlots();
+      if (formData.doctorId && formData.appointmentDate) {
         filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
-        const today = new Date().toISOString().split("T")[0];
-        setFormData({ ...EMPTY_FORM, appointmentDate: today });
-        setEditingId(null); setShowForm(false); setAvailableSlots([]);
-        setExistingPatient(null); setShowExistingPatientPopup(false);
-        setFilteredServices([]); setShowServiceSuggestions(false);
-      } else {
-        showToast(slotRes.data.message || "Failed to update appointment", "error");
       }
-    } catch (err) {
-      showToast(err.response?.data?.message || "Failed to update appointment", "error");
-    } finally { setSubmitting(false); }
-  };
-
+      const today = new Date().toISOString().split("T")[0];
+      setFormData({ ...EMPTY_FORM, appointmentDate: today });
+      setEditingId(null);
+      setShowForm(false);
+      setAvailableSlots([]);
+      setExistingPatient(null);
+      setShowExistingPatientPopup(false);
+      setFilteredServices([]);
+      setShowServiceSuggestions(false);
+      setCitySuggestions([]);
+      setShowCitySuggestions(false);
+    } else {
+      showToast(slotRes.data.message || "Failed to update appointment", "error");
+    }
+  } catch (err) {
+    console.error("❌ API Error:", err);
+    showToast(err.response?.data?.message || "Failed to update appointment", "error");
+  } finally {
+    setSubmitting(false);
+  }
+};
   const openPrescriptionModal = (booking) => {
     setSelectedBookingForPrescription(booking);
     setShowPrescriptionModal(true);
@@ -1244,6 +1520,10 @@ export default function OpManagement() {
           <div class="fld" style="top:104px;left:230px;">${selectedBookingForPrescription?.patientGender || "N/A"}</div>
           <div class="fld" style="top:104px;right:100px;">${selectedBookingForPrescription?.patientPhone || "N/A"}</div>
           <div class="fld" style="top:130px;left:90px;max-width:320px;">${selectedBookingForPrescription?.purpose || "N/A"}</div>
+          <div class="fld" style="top:160px;left:90px;">${selectedBookingForPrescription?.vitalsTemp || ""}</div>
+          <div class="fld" style="top:160px;left:230px;">${selectedBookingForPrescription?.vitalsBp || ""}</div>
+          <div class="fld" style="top:160px;left:400px;">${selectedBookingForPrescription?.vitalsPr || ""}</div>
+          <div class="fld" style="top:160px;right:80px;">${selectedBookingForPrescription?.vitalsWeight || ""}</div>
         </div>
       </div>
       <div class="prescription-page"><div class="page-label">📄 Back Side</div><img src="${prescriptionBackTemplate}" alt="Back" /></div>
@@ -1297,13 +1577,97 @@ export default function OpManagement() {
     return b ? (b.bookedAt || b.createdAt || "-") : "-";
   };
 
+  const getPatientActiveStatus = (patient) => {
+    const b = getMatchingBooking(patient);
+    return b ? (b.isActive !== undefined ? b.isActive : true) : true;
+  };
+
   const openBillingModal = (booking) => {
     setSelectedBookingForBilling(booking);
+
     const normalizedItems = getBookingServices(booking);
-    const grossAmount = normalizedItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0) || getBookingSubtotal(booking);
+    const breakdown = getAmountBreakdown(booking);
+
+    const items = [];
+
+    normalizedItems.forEach((s, idx) => {
+      const cat = classifyService(s);
+      items.push({
+        no: items.length + 1,
+        name: s.name,
+        serviceCode: s.serviceId
+          ? String(s.serviceId).slice(-6).toUpperCase()
+          : `SVC-${String(idx + 1).padStart(2, "0")}`,
+        remarks: cat === "lab" ? "Lab Test" : cat === "pharmacy" ? "Pharmacy" : "Consultation",
+        category: cat,
+        amount: Number(s.price) || 0,
+        paymentStatus: booking.paymentStatus || "Pending",
+      });
+    });
+
+    const hasPharmacyService = normalizedItems.some((s) => classifyService(s) === "pharmacy");
+    if (Number(booking.medicineTotal) > 0 && !hasPharmacyService) {
+      items.push({
+        no: items.length + 1,
+        name: "Medicines",
+        serviceCode: "PHARM",
+        remarks: "Pharmacy",
+        category: "pharmacy",
+        amount: Number(booking.medicineTotal),
+        paymentStatus: booking.paymentStatus || "Pending",
+      });
+    }
+
+    const hasLabService = normalizedItems.some((s) => classifyService(s) === "lab");
+    if (Number(booking.labTotal) > 0 && !hasLabService) {
+      items.push({
+        no: items.length + 1,
+        name: "Lab Tests",
+        serviceCode: "LAB",
+        remarks: "Lab Test",
+        category: "lab",
+        amount: Number(booking.labTotal),
+        paymentStatus: booking.paymentStatus || "Pending",
+      });
+    }
+
+    if (items.length === 0) {
+      const fallback =
+        Number(booking.finalPayable) ||
+        Number(booking.finalPayableAmount) ||
+        Number(booking.grandTotal) ||
+        Number(booking.totalAmount) ||
+        0;
+      if (fallback > 0) {
+        items.push({
+          no: 1,
+          name: "Consultation Fee",
+          serviceCode: "CONS",
+          remarks: "Consultation",
+          category: "clinic",
+          amount: fallback,
+          paymentStatus: booking.paymentStatus || "Pending",
+        });
+      }
+    }
+
+    const finalBreakdown = { clinic: 0, lab: 0, pharmacy: 0 };
+    items.forEach((it) => {
+      if (it.category === "lab") finalBreakdown.lab += it.amount;
+      else if (it.category === "pharmacy") finalBreakdown.pharmacy += it.amount;
+      else finalBreakdown.clinic += it.amount;
+    });
+
+    const grossAmount = items.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
     const commissionPercent = parseFloat(booking.referralCommission) || 0;
     const commissionAmount = Number(booking.commissionAmount) || (grossAmount * commissionPercent) / 100;
-    const netAmount = Number(booking.finalPayable) || Number(booking.finalPayableAmount) || Number(booking.grandTotal) || (grossAmount - commissionAmount);
+    const discountAmount = Number(booking.discount) || 0;
+    const netAmount =
+      Number(booking.finalPayable) ||
+      Number(booking.finalPayableAmount) ||
+      Number(booking.grandTotal) ||
+      (grossAmount - commissionAmount - discountAmount);
+
     const isPaid = booking.paymentStatus === "Paid";
     const isPartial = booking.paymentStatus === "Partial";
     const paidAmount = isPaid ? netAmount : isPartial ? (Number(booking.amountPaid) || 0) : 0;
@@ -1315,28 +1679,31 @@ export default function OpManagement() {
     const invoiceNo = `${dateStamp}-${shortId}`;
     const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
 
-    const items = normalizedItems.map((s, idx) => ({
-      no: idx + 1, name: s.name,
-      serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
-      remarks: "Service", amount: s.price || 0,
-      paymentStatus: isPaid ? "Paid" : (isPartial ? (booking.paymentStatus || "Partial") : (s.paymentStatus || booking.paymentStatus || "Pending"))
-    }));
-
-    setBillingData({
-      invoiceNo, invoiceDate: dateTimeLabel,
-      receiptNo: `R-${shortId.slice(-4)}`, receiptDate: dateTimeLabel,
-      paymentMode: booking.paymentType ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1) : "Cash",
-      receivedBy: "Front Desk",
-      branch: booking.doctorSpecialization || "Main Branch",
-      doctorName: booking.doctorName || "General OP Doctor",
-      items,
-      grossAmount,
-      netAmount,
-      paidAmount,
-      balanceAmount,
-      paymentStatus: booking.paymentStatus || "Pending",
-      amountInWords: numberToWords(netAmount)
-    });
+   setBillingData({
+  invoiceNo,
+  invoiceDate: dateTimeLabel,
+  receiptNo: `R-${shortId.slice(-4)}`,
+  receiptDate: dateTimeLabel,
+  paymentMode: booking.paymentType
+    ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1)
+    : "Cash",
+  receivedBy: "Front Desk",
+  branch: booking.doctorSpecialization || "Main Branch",
+  doctorName: booking.doctorName || "General OP Doctor",
+  items,
+  breakdown: {
+    clinic: Math.round(finalBreakdown.clinic || 0),
+    lab: Math.round(finalBreakdown.lab || 0),
+    pharmacy: Math.round(finalBreakdown.pharmacy || 0),
+  },
+  grossAmount,
+  discount: discountAmount,
+  netAmount,
+  paidAmount,
+  balanceAmount,
+  paymentStatus: booking.paymentStatus || "Pending",
+  amountInWords: numberToWords(netAmount),
+});
     setShowBillingModal(true);
   };
 
@@ -1362,13 +1729,82 @@ export default function OpManagement() {
   };
 
   const printBill = () => {
-    const itemsRows = billingData.items.map((item) => `
-      <tr>
-        <td>${item.no}</td><td>${item.name}</td><td>${item.serviceCode}</td>
-        <td>${item.remarks}</td><td class="text-right">${Number(item.amount).toFixed(2)}</td>
-        <td class="text-center">${item.paymentStatus || "Pending"}</td>
+    const groups = { clinic: [], lab: [], pharmacy: [] };
+    billingData.items.forEach((it) => {
+      const cat = it.category || "clinic";
+      if (groups[cat]) groups[cat].push(it);
+      else groups.clinic.push(it);
+    });
+
+    const categoryLabel = {
+      clinic: "CONSULTATION",
+      lab: "LAB",
+      pharmacy: "PHARMACY",
+    };
+
+    let runningIdx = 0;
+    let rowsHtml = "";
+
+    ["clinic", "lab", "pharmacy"].forEach((catKey) => {
+      const items = groups[catKey];
+      const subtotal = items.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+
+      if (items.length === 0) {
+        runningIdx++;
+        rowsHtml += `
+          <tr>
+            <td style="padding:7px 6px;font-size:11px;color:#555;border-bottom:1px solid #eee;text-align:center;">${runningIdx}</td>
+            <td style="padding:7px 6px;border-bottom:1px solid #eee;">
+              <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:.3px;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">
+                ${categoryLabel[catKey]}
+              </span>
+            </td>
+            <td style="padding:7px 6px;font-size:12px;color:#555;text-align:right;border-bottom:1px solid #eee;font-weight:600;">₹ 0.00</td>
+          </tr>
+        `;
+      } else {
+        items.forEach((item) => {
+          runningIdx++;
+          rowsHtml += `
+            <tr>
+              <td style="padding:6px 6px;font-size:11px;color:#333;border-bottom:1px solid #eee;text-align:center;">${runningIdx}</td>
+              <td style="padding:6px 6px;font-size:12px;color:#111;border-bottom:1px solid #eee;">${item.name}</td>
+              <td style="padding:6px 6px;font-size:12px;font-weight:600;color:#111;text-align:right;border-bottom:1px solid #eee;">
+                ₹ ${Number(item.amount).toFixed(2)}
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      rowsHtml += `
+        <tr style="background:#f9fafb;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;">
+          <td colspan="2" style="text-align:right;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#374151;padding:7px 8px;">
+            Subtotal — ${categoryLabel[catKey]}
+          </td>
+          <td style="text-align:right;font-size:12px;font-weight:bold;color:#111;padding:7px 8px;">
+            ₹ ${subtotal.toFixed(2)}
+          </td>
+        </tr>
+      `;
+    });
+
+    const grossTotal =
+      (billingData.breakdown?.clinic || 0) +
+      (billingData.breakdown?.lab || 0) +
+      (billingData.breakdown?.pharmacy || 0);
+
+    rowsHtml += `
+      <tr style="background:#e5e7eb;border-top:2px solid #111;border-bottom:2px solid #111;">
+        <td colspan="2" style="text-align:right;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#111;padding:9px 8px;">
+          Gross Total
+        </td>
+        <td style="text-align:right;font-size:14px;font-weight:bold;color:#111;padding:9px 8px;">
+          ₹ ${grossTotal.toFixed(2)}
+        </td>
       </tr>
-    `).join("");
+    `;
+
     const win = window.open("", "_blank", "width=900,height=1000");
     if (!win) return;
     win.document.write(`
@@ -1377,29 +1813,28 @@ export default function OpManagement() {
         *{margin:0;padding:0;box-sizing:border-box;}
         body{font-family:Arial,sans-serif;color:#222;padding:24px;background:#fff;}
         .bill-wrap{max-width:820px;margin:0 auto;border:1px solid #999;padding:24px 28px;background:#fff;overflow:hidden;position:relative;}
-        .watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:.08;z-index:0;width:300px;height:300px;}
+        .watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:.06;z-index:0;width:300px;height:300px;}
         .watermark img{width:100%;height:100%;object-fit:contain;}
         .bill-content{position:relative;z-index:1;}
         .top-header{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:14px;}
         .top-header .brand{display:flex;align-items:center;gap:14px;}
         .top-header .brand img{width:60px;height:60px;object-fit:contain;}
         .top-header .brand h1{font-size:20px;font-weight:bold;color:#111;}
-        .top-header .brand p{font-size:11px;color:#555;max-width:440px;}
+        .top-header .brand p{font-size:11px;color:#555;max-width:440px;line-height:1.4;}
         .top-header .contact{text-align:right;font-size:11px;color:#555;white-space:nowrap;}
         .bar-title{text-align:center;background:#f1f1f1;border-top:1px solid #999;border-bottom:1px solid #999;padding:6px 0;font-size:13px;font-weight:bold;letter-spacing:1.5px;margin:10px 0 14px;text-transform:uppercase;}
-        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;font-size:12px;margin-bottom:14px;}
+        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;font-size:12px;margin-bottom:16px;}
         .info-grid .label{color:#666;font-weight:bold;display:inline-block;width:120px;}
-        table.items{width:100%;border-collapse:collapse;border-top:2px solid #222;border-bottom:2px solid #222;margin-bottom:12px;}
-        table.items th{text-align:left;font-size:11px;color:#555;padding:6px 4px;border-bottom:1px solid #bbb;text-transform:uppercase;}
-        table.items td{font-size:12px;padding:6px 4px;border-bottom:1px solid #eee;color:#333;}
-        table.items td.text-right,table.items th.text-right{text-align:right;}
-        table.items td.text-center,table.items th.text-center{text-align:center;}
-        .totals-box{width:100%;max-width:300px;margin-left:auto;font-size:12px;margin-bottom:12px;}
-        .totals-box .row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;}
-        .totals-box .row.final{border-top:2px solid #222;border-bottom:none;font-weight:bold;padding-top:8px;margin-top:4px;font-size:13px;}
+        table.items{width:100%;border-collapse:collapse;margin-bottom:16px;border-top:2px solid #222;border-bottom:2px solid #222;}
+        table.items th{text-align:left;font-size:11px;color:#555;padding:8px 6px;border-bottom:1px solid #bbb;text-transform:uppercase;letter-spacing:.4px;background:#f9fafb;}
+        .totals-box{width:100%;max-width:340px;margin-left:auto;font-size:12px;margin-bottom:12px;}
+        .totals-box .row{display:flex;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #eee;}
+        .totals-box .row.paid{color:#15803d;font-weight:bold;}
+        .totals-box .row.final{border-top:2px solid #222;border-bottom:none;font-weight:bold;padding-top:10px;margin-top:2px;font-size:14px;background:#f3f4f6;color:#111;}
+        .amount-words{text-align:right;font-size:11px;color:#555;font-style:italic;margin-bottom:14px;padding-right:10px;}
         .footer-row{display:flex;justify-content:flex-end;gap:8px;font-size:11px;color:#555;border-top:1px solid #ddd;padding-top:12px;margin-top:10px;}
         .signature-section{display:flex;justify-content:flex-end;margin-top:8px;}
-        .signature-section .sig{font-weight:bold;color:#333;}
+        .signature-section .sig{font-weight:bold;color:#333;border-top:1px solid #333;padding-top:4px;min-width:140px;text-align:center;}
         @media print{body{padding:0;}.bill-wrap{border:none;}}
       </style></head><body>
       <div class="bill-wrap">
@@ -1420,22 +1855,26 @@ export default function OpManagement() {
             <div><span class="label">Doctor</span>: ${billingData.doctorName}</div>
             <div><span class="label">Appt. Date</span>: ${formatDateToDDMMYYYY(selectedBookingForBilling?.date)}</div>
           </div>
+
           <table class="items">
             <thead><tr>
-              <th style="width:6%;">No.</th><th style="width:30%;">Service / Item</th>
-              <th style="width:16%;">Service Code</th><th style="width:22%;">Remarks</th>
-              <th style="width:14%;" class="text-right">Amount</th>
-              <th style="width:12%;" class="text-center">Payment Status</th>
+              <th style="width:8%;text-align:center;">No.</th>
+              <th style="width:62%;">Service / Item</th>
+              <th style="width:30%;text-align:right;">Amount</th>
             </tr></thead>
-            <tbody>${itemsRows}</tbody>
+            <tbody>${rowsHtml}</tbody>
           </table>
-          <div class="totals-box">
-            <div class="row"><span>Net Amount</span><span>₹ ${billingData.netAmount.toFixed(2)}</span></div>
-            <div class="row"><span>Paid Amount</span><span>₹ ${billingData.paidAmount.toFixed(2)}</span></div>
-            <div class="row final"><span>Balance to Pay</span><span>₹ ${billingData.balanceAmount.toFixed(2)}</span></div>
-          </div>
+
+       <div class="totals-box">
+  <div class="row"><span>Gross Amount</span><span style="font-weight:bold;">₹ ${billingData.grossAmount.toFixed(2)}</span></div>
+  ${billingData.discount > 0 ? `<div class="row"><span>Discount</span><span style="color:#dc2626;">− ₹ ${billingData.discount.toFixed(2)}</span></div>` : ""}
+  <div class="row" style="background:#eff6ff;font-weight:bold;"><span>Net Amount</span><span>₹ ${billingData.netAmount.toFixed(2)}</span></div>
+  <div class="row paid"><span>Paid Amount</span><span>₹ ${billingData.paidAmount.toFixed(2)}</span></div>
+  <div class="row final"><span>Balance to Pay</span><span>₹ ${billingData.balanceAmount.toFixed(2)}</span></div>
+</div>
+          <div class="amount-words">Amount in words: <b>${billingData.amountInWords}</b></div>
           <div class="footer-row"><span>Printed Date : ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} ${new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></div>
-          <div class="signature-section"><span class="sig">Signature</span></div>
+          <div class="signature-section"><span class="sig">Authorised Signature</span></div>
         </div>
       </div>
     </body></html>`);
@@ -1468,6 +1907,8 @@ export default function OpManagement() {
 
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
+      if (!getPatientActiveStatus(p)) return false;
+
       const paymentStatus = getPatientPaymentStatus(p);
       if (statusFilter !== "All" && paymentStatus !== statusFilter) return false;
       if (feeTypeFilter !== "All") {
@@ -1503,6 +1944,8 @@ export default function OpManagement() {
         const m = (p.name || "").toLowerCase().includes(q) ||
           (p.phone || "").toLowerCase().includes(q) ||
           (p.address || "").toLowerCase().includes(q) ||
+          (p.city || "").toLowerCase().includes(q) ||
+          (p.pincode || "").toLowerCase().includes(q) ||
           (p.reason || "").toLowerCase().includes(q);
         if (!m) return false;
       }
@@ -1554,8 +1997,8 @@ export default function OpManagement() {
 
   const downloadCSV = () => {
     if (!filteredPatients.length) { alert("No patient records available to export!"); return; }
-    const headers = ["#", "Patient Name", "Phone", "Doctor", "Appointment Date & Time", "Booking Status",
-      "Services", "Clinic Amount", "Lab Amount", "Pharmacy Amount", "Medicine Total", "Total Fee", "Paid Amount", "Balance Amount", "Payment Status", "Payment Mode", "Reason", "Referred By Customer", "Referred By Doctor", "Created At", "Registered"];
+    const headers = ["#", "Patient Name", "Phone", "Address", "City", "Pincode", "Doctor", "Appointment Date & Time", "Booking Status", "Active Status",
+      "Services", "Clinic Amount", "Lab Amount", "Pharmacy Amount", "Medicine Total", "Discount", "Total Fee", "Paid Amount", "Balance Amount", "Payment Status", "Payment Mode", "Reason", "Referred By Customer", "Referred By Doctor", "Created At", "Registered"];
     const csvRows = [headers.join(","), ...filteredPatients.map((p, idx) => {
       const totalFee = getPatientTotalFee(p);
       const services = getPatientServices(p);
@@ -1565,18 +2008,24 @@ export default function OpManagement() {
       const regTime = p.createdAt ? formatTime(p.createdAt) : "-";
       const breakdown = getAmountBreakdown(booking);
       const slotTiming = getSlotTiming(p);
+      const isActive = getPatientActiveStatus(p);
       return [
         idx + 1,
         `"${(p.title || "")} ${(p.name || "").replace(/"/g, '""')}"`,
         `"${p.phone || ""}"`,
+        `"${(p.address || "").replace(/"/g, '""')}"`,
+        `"${(p.city || "").replace(/"/g, '""')}"`,
+        `"${p.pincode || ""}"`,
         `"${booking?.doctorName || "N/A"}"`,
         `"${formatDateToDDMMYYYY(getAppointmentDate(p))} ${slotTiming !== "-" ? slotTiming : ""}"`,
         `"${getBookingStatus(p)}"`,
+        `"${isActive ? "Active" : "Inactive"}"`,
         `"${services.map((s) => s.name).join("; ")}"`,
         breakdown.clinic,
         breakdown.lab,
         breakdown.pharmacy,
         booking?.medicineTotal || 0,
+        booking?.discount || 0,
         totalFee,
         paidInfo.paid,
         paidInfo.balance,
@@ -1599,11 +2048,95 @@ export default function OpManagement() {
     showToast(`Exported ${filteredPatients.length} patient records to CSV!`);
   };
 
+  const isEditMode = Boolean(editingId);
+
+  const buildBillingTableRows = () => {
+    const groups = { clinic: [], lab: [], pharmacy: [] };
+    billingData.items.forEach((it) => {
+      const cat = it.category || "clinic";
+      if (groups[cat]) groups[cat].push(it);
+      else groups.clinic.push(it);
+    });
+
+    const labels = {
+      clinic: "CONSULTATION",
+      lab: "LAB",
+      pharmacy: "PHARMACY",
+    };
+
+    const rows = [];
+    let runningIdx = 0;
+
+    ["clinic", "lab", "pharmacy"].forEach((catKey) => {
+      const items = groups[catKey];
+      const subtotal = items.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+
+      if (items.length === 0) {
+        runningIdx++;
+        rows.push(
+          <tr key={`empty-${catKey}`} className="border-b border-gray-100">
+            <td className="py-2 px-2 text-xs text-gray-500 text-center">{runningIdx}</td>
+            <td className="py-2 px-2">
+              <span className="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-gray-100 text-gray-700 border border-gray-300">
+                {labels[catKey]}
+              </span>
+            </td>
+            <td className="py-2 px-2 text-xs text-right font-semibold text-gray-500">
+              ₹0.00
+            </td>
+          </tr>
+        );
+      } else {
+        items.forEach((item) => {
+          runningIdx++;
+          rows.push(
+            <tr key={item.no} className="border-b border-gray-100">
+              <td className="py-2 px-2 text-xs text-gray-700 text-center">{runningIdx}</td>
+              <td className="py-2 px-2 text-xs font-medium text-gray-800">{item.name}</td>
+              <td className="py-2 px-2 text-xs text-right font-semibold text-gray-800">
+                ₹{Number(item.amount).toFixed(2)}
+              </td>
+            </tr>
+          );
+        });
+      }
+
+      rows.push(
+        <tr key={`sub-${catKey}`} className="bg-gray-50 border-b-2 border-gray-300">
+          <td colSpan={2} className="py-1.5 px-2 text-[10px] font-bold uppercase tracking-wider text-right text-gray-700">
+            Subtotal — {labels[catKey]}
+          </td>
+          <td className="py-1.5 px-2 text-xs text-right font-extrabold text-gray-800">
+            ₹{subtotal.toFixed(2)}
+          </td>
+        </tr>
+      );
+    });
+
+    const gross =
+      (billingData.breakdown?.clinic || 0) +
+      (billingData.breakdown?.lab || 0) +
+      (billingData.breakdown?.pharmacy || 0);
+
+    rows.push(
+      <tr key="gross" className="bg-gray-200 border-t-2 border-b-2 border-gray-800">
+        <td colSpan={2} className="py-2 px-2 text-xs font-extrabold uppercase text-gray-900 text-right tracking-wider">
+          Gross Total
+        </td>
+        <td className="py-2 px-2 text-sm text-right font-extrabold text-gray-900">
+          ₹{gross.toFixed(2)}
+        </td>
+      </tr>
+    );
+
+    return rows;
+  };
+
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
         {toast && (
-          <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white ${toast.type === "error" ? "bg-red-600" : toast.type === "info" ? "bg-cyan-600" : "bg-emerald-600"}`}>
+          <div className={`fixed top-5 right-5 z-[99999] flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white ${toast.type === "error" ? "bg-red-600" : toast.type === "info" ? "bg-cyan-600" : "bg-emerald-600"}`}>
             {toast.type === "error" ? <FiXCircle className="w-5 h-5" /> : <FiCheckCircle className="w-5 h-5" />}
             <span className="font-medium text-sm">{toast.message}</span>
           </div>
@@ -1637,6 +2170,9 @@ export default function OpManagement() {
             </button>
             <button onClick={handleAddNewPatient} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">
               <FiPlus className="w-3 h-3" /> Add Patient
+            </button>
+            <button onClick={() => navigate("/inactive-patients")} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
+              <FiClock className="w-3 h-3 text-amber-600" /> Inactive Patients
             </button>
             {hasActiveFilters && (
               <button onClick={clearFilters} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
@@ -1728,368 +2264,480 @@ export default function OpManagement() {
           </div>
         </div>
 
-        {/* ADD/EDIT MODAL */}
-        {showForm && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold"><FaUserInjured className="w-5 h-5" /></div>
-                  <div><h3 className="font-bold text-gray-900 text-base">{editingId ? "Edit Patient Details" : "Register OPD Patient & Book Slot"}</h3><p className="text-xs text-gray-500">Fill in patient and consultation details below</p></div>
-                </div>
-                <button onClick={cancelForm} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
+       {/* ADD/EDIT MODAL */}
+{showForm && (
+  <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
+      <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold"><FaUserInjured className="w-5 h-5" /></div>
+          <div>
+            <h3 className="font-bold text-gray-900 text-base">{isEditMode ? "Edit Patient Details" : "Register OPD Patient & Book Slot"}</h3>
+            <p className="text-xs text-gray-500">
+              {isEditMode ? "Patient info editable — amount/lab/medicine locked" : "Fill in patient and consultation details below"}
+            </p>
+          </div>
+        </div>
+        <button onClick={cancelForm} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
+      </div>
+
+      {showExistingPatientPopup && existingPatient && !editingId && (
+        <div className="mt-4 p-3.5 bg-blue-50 border border-blue-200 rounded-xl">
+          <div className="flex items-start gap-3">
+            <FiAlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-blue-900">Existing Patient Record Found!</p>
+              <div className="mt-1 text-xs text-blue-800 space-y-0.5">
+                <p><span className="font-semibold">Name:</span> {existingPatient.title} {existingPatient.name} | <span className="font-semibold">Phone:</span> {existingPatient.phone}</p>
+                <p><span className="font-semibold">Age:</span> {existingPatient.age} yrs | <span className="font-semibold">Gender:</span> {existingPatient.gender}</p>
               </div>
-
-              {showExistingPatientPopup && existingPatient && !editingId && (
-                <div className="mt-4 p-3.5 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <FiAlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-blue-900">Existing Patient Record Found!</p>
-                      <div className="mt-1 text-xs text-blue-800 space-y-0.5">
-                        <p><span className="font-semibold">Name:</span> {existingPatient.title} {existingPatient.name} | <span className="font-semibold">Phone:</span> {existingPatient.phone}</p>
-                        <p><span className="font-semibold">Age:</span> {existingPatient.age} yrs | <span className="font-semibold">Gender:</span> {existingPatient.gender}</p>
-                      </div>
-                      <button type="button" onClick={autoFillPatientDetails} className="mt-2 px-3.5 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg inline-flex items-center gap-1.5"><FaCheck className="text-[10px]" /> Auto-Fill Details</button>
-                    </div>
-                    <button type="button" onClick={() => setShowExistingPatientPopup(false)} className="text-gray-400 hover:text-gray-600"><FaTimes className="w-3.5 h-3.5" /></button>
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={editingId ? handleUpdateNow : handleBookNow} className="mt-5 space-y-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
-                    <FaPhoneAlt className="text-blue-600" /> Phone Number <span className="text-blue-600">*</span>
-                  </label>
-                  <div className="relative">
-                    <FaPhoneAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                    <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm" required />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-4 gap-3">
-                  <div className="col-span-1">
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Title <span className="text-blue-600">*</span></label>
-                    <select name="title" value={formData.title} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2.5 text-sm" required>
-                      {TITLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </div>
-                  <div className="col-span-3">
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Patient Name <span className="text-blue-600">*</span></label>
-                    <input ref={nameInputRef} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter patient full name" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" required />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">DOB <span className="text-blue-600">*</span></label>
-                    <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} max={new Date().toISOString().split("T")[0]} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" required />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Age <span className="text-blue-600">*</span></label>
-                    <input type="number" name="age" value={formData.age} onChange={handleInputChange} placeholder="Auto" min="0" max="120" className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2.5 text-sm" required readOnly />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Gender <span className="text-blue-600">*</span></label>
-                    <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" required>
-                      <option value="">Select Gender</option>
-                      {GENDER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Address</label>
-                  <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Patient street address" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Select Doctor <span className="text-blue-600">*</span></label>
-                    <select name="doctorId" value={formData.doctorId} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" required>
-                      <option value="">Select Doctor</option>
-                      {doctors.map((d) => <option key={d._id || d.id} value={d._id || d.id}>{d.name || "Doctor"}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Appointment Date <span className="text-blue-600">*</span></label>
-                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} min={new Date().toISOString().split("T")[0]} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" required />
-                  </div>
-                </div>
-
-                {formData.doctorId && formData.appointmentDate && (
-                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">Available Slots ({getDayNameFromDate(formData.appointmentDate)})</label>
-                    {slotsLoading ? (
-                      <div className="text-xs text-gray-500 py-3 text-center"><FiRefreshCw className="w-4 h-4 animate-spin inline" /> Loading...</div>
-                    ) : availableSlots.length === 0 ? (
-                      <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">No slots available.</div>
-                    ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto p-1">
-                        {availableSlots.map((slot) => {
-                          const isSelected = formData.slotId === slot._id;
-                          const isBooked = slot.status === "booked";
-                          if (formData.slotId && !isSelected) return null;
-                          return (
-                            <button key={slot._id} type="button" onClick={() => !isBooked && handleSlotSelect(slot._id)}
-                              className={`p-2 text-xs font-semibold rounded-lg border text-left ${isSelected ? "border-blue-500 bg-blue-50 text-blue-700" : isBooked ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
-                              disabled={isBooked}>
-                              <div className="font-bold text-xs">{slot.startTime} – {slot.endTime}</div>
-                              <div className="text-[10px] text-gray-500">₹{slot.consultationFee || 0}</div>
-                              {isBooked && <span className="text-[9px] font-bold text-red-500 block">Booked</span>}
-                              {isSelected && <span className="text-[9px] font-bold text-emerald-600 block">✓ Selected</span>}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {formData.slotId && (
-                      <button type="button" onClick={() => { setFormData((p) => ({ ...p, slotId: "" })); filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate); }} className="mt-2 text-[10px] text-blue-600 underline">Change Slot</button>
-                    )}
-                  </div>
-                )}
-
-                {/* SERVICES */}
-                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2"><FaServicestack className="text-blue-600" /> Services <span className="text-blue-600">*</span></label>
-                    <span className="text-[10px] text-gray-400">{formData.serviceItems.length} added</span>
-                  </div>
-                  {formData.serviceItems.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {formData.serviceItems.map((svc, i) => (
-                        <div key={`${svc._id}-${i}`} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                          <span>{svc.name}</span>
-                          <span className="font-bold text-emerald-600">₹{svc.price}</span>
-                          <button type="button" onClick={() => handleRemoveServiceItem(svc._id)} className="text-red-400 hover:text-red-600"><FaMinusCircle className="w-3 h-3" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex-1 min-w-[150px] relative">
-                      <input type="text" value={formData.serviceName || ""} onChange={(e) => {
-                        const v = e.target.value;
-                        setFormData((p) => ({ ...p, serviceName: v }));
-                        if (v.trim()) { setFilteredServices(services.filter((s) => s.name.toLowerCase().includes(v.toLowerCase()))); setShowServiceSuggestions(true); }
-                        else { setFilteredServices([]); setShowServiceSuggestions(false); }
-                      }} placeholder="Service name" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
-                      {showServiceSuggestions && filteredServices.length > 0 && (
-                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
-                          {filteredServices.map((svc) => (
-                            <button key={svc._id} type="button" onClick={() => { setFormData((p) => ({ ...p, serviceName: svc.name, servicePrice: svc.price.toString() })); setFilteredServices([]); setShowServiceSuggestions(false); }} className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-gray-50 flex items-center justify-between border-b last:border-0">
-                              <span>{svc.name}</span><span className="font-bold text-emerald-700">₹{svc.price}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <input type="number" value={formData.servicePrice || ""} onChange={(e) => setFormData((p) => ({ ...p, servicePrice: e.target.value }))} placeholder="Price" className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
-                    <button type="button" onClick={handleAddCustomServiceItem} className="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-lg flex items-center gap-1"><FaPlus className="w-3 h-3" /> Add</button>
-                  </div>
-                  {formData.serviceItems.length > 0 && (
-                    <div className="mt-3 p-2.5 bg-white rounded-lg border border-gray-200 flex justify-between">
-                      <span className="text-xs font-bold">Subtotal:</span>
-                      <span className="text-sm font-extrabold text-blue-700">₹{formData.serviceItems.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* REFERRALS */}
-                <div className="border border-gray-200 rounded-xl p-4 bg-blue-50/30">
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
-                    <FaShareAlt className="text-blue-600" /> Referred By
-                  </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[10px] font-semibold text-gray-500 uppercase flex items-center gap-1.5">
-                          <FaUserFriends className="text-blue-500" /> Customer
-                        </label>
-                        <button type="button" onClick={handleAddCustomerReferral} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5 transition-colors">
-                          <FaPlus className="w-2.5 h-2.5" /> Add
-                        </button>
-                      </div>
-                      <select value={formData.referralCustomerId} onChange={(e) => {
-                        const id = e.target.value;
-                        if (id) { const c = referralContacts.find((x) => x._id === id && x.referralType === "customer"); if (c) handleReferralCustomerSelect(c); }
-                        else { setFormData((p) => ({ ...p, referredByCustomer: "", referralCustomerId: "" })); }
-                      }} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm appearance-none">
-                        <option value="">-- Select Customer --</option>
-                        {referralContacts.filter((c) => c.referralType === "customer").map((c) => (
-                          <option key={c._id} value={c._id}>{c.customerName || "N/A"} {c.customerPhone ? `(${c.customerPhone})` : ""}</option>
-                        ))}
-                      </select>
-                      {formData.referredByCustomer && (
-                        <div className="mt-2 text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 flex items-center gap-1.5">
-                          <FaUserFriends className="text-blue-500 text-[10px]" />
-                          <span className="font-medium truncate">{formData.referredByCustomer}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[10px] font-semibold text-gray-500 uppercase flex items-center gap-1.5">
-                          <FaUserMdIcon className="text-indigo-500" /> Doctor
-                        </label>
-                        <button type="button" onClick={handleAddDoctorReferral} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5 transition-colors">
-                          <FaPlus className="w-2.5 h-2.5" /> Add
-                        </button>
-                      </div>
-                      <select value={formData.referralDoctorId} onChange={(e) => {
-                        const id = e.target.value;
-                        if (id) { const c = referralContacts.find((x) => x._id === id && x.referralType === "doctor"); if (c) handleReferralDoctorSelect(c); }
-                        else { setFormData((p) => ({ ...p, referredByDoctor: "", referralDoctorId: "" })); }
-                      }} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm appearance-none">
-                        <option value="">-- Select Doctor --</option>
-                        {referralContacts.filter((c) => c.referralType === "doctor").map((c) => (
-                          <option key={c._id} value={c._id}>{c.doctorName || "N/A"} {c.doctorSpecialization ? `(${c.doctorSpecialization})` : ""}</option>
-                        ))}
-                      </select>
-                      {formData.referredByDoctor && (
-                        <div className="mt-2 text-xs text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 flex items-center gap-1.5">
-                          <FaUserMdIcon className="text-indigo-500 text-[10px]" />
-                          <span className="font-medium truncate">{formData.referredByDoctor}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* PAYMENT DETAILS */}
-                <div className="border border-gray-200 rounded-xl p-4 bg-purple-50/30">
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2"><FaMoneyBillWave className="text-purple-600" /> Payment Details</label>
-
-                  {(() => {
-                    const subtotal = formData.serviceItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
-                    const commissionPercent = parseFloat(formData.referralCommission) || 0;
-                    const commissionAmount = (subtotal * commissionPercent) / 100;
-                    const finalPayable = subtotal - commissionAmount;
-
-                    return (
-                      <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
-                        <div className="space-y-1.5 text-xs">
-                          {formData.serviceItems.length > 0 && (
-                            <>
-                              <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                                <span className="text-gray-700 font-medium">Services</span>
-                                <span className="text-gray-500 text-[10px]">{formData.serviceItems.length} service{formData.serviceItems.length > 1 ? "s" : ""}</span>
-                              </div>
-                              {formData.serviceItems.map((svc, idx) => (
-                                <div key={idx} className="flex justify-between items-center py-1 border-b border-gray-100 pl-4">
-                                  <span className="text-gray-600 text-[10px]">• {svc.name}</span>
-                                  <span className="font-medium text-gray-800">₹{svc.price || 0}</span>
-                                </div>
-                              ))}
-                            </>
-                          )}
-
-                          <div className="flex justify-between items-center py-2 border-t-2 border-gray-800">
-                            <span className="font-bold text-gray-800">Payable Amount</span>
-                            <span className="font-bold text-emerald-700 text-sm">₹{Math.round(finalPayable)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Payment Mode</label>
-                      <div className="flex gap-2">
-                        {PAYMENT_TYPE_OPTIONS.map((o) => (
-                          <button key={o.value} type="button" onClick={() => setFormData((p) => ({ ...p, paymentType: o.value }))}
-                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold ${formData.paymentType === o.value ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-600"}`}>
-                            {o.value === "cash" ? <FaMoneyBillWave className="w-3.5 h-3.5" /> : <FaCreditCard className="w-3.5 h-3.5" />}{o.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Payment Status</label>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {PAYMENT_STATUS_OPTIONS.map((st) => {
-                          const c = getPaymentStatusColors(st.value);
-                          const Icon = c.icon;
-                          return <button key={st.value} type="button" onClick={() => setFormData((p) => ({ ...p, paymentStatus: st.value, partialAmount: st.value === "Partial" ? p.partialAmount : "" }))}
-                            className={`px-2 py-1.5 rounded-lg border text-[10px] font-bold flex items-center justify-center gap-1 ${formData.paymentStatus === st.value ? `${c.bg} ${c.text} border-blue-500 ring-2 ring-blue-400/20` : "border-gray-200 bg-white text-gray-600"}`}>
-                            <Icon className={`w-3 h-3 ${c.iconColor}`} /> {st.label}
-                          </button>;
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {formData.paymentStatus === "Partial" && (
-                    <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                      <label className="block text-[10px] font-bold text-amber-700 uppercase mb-1">
-                        Partial Amount (₹) <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        name="partialAmount"
-                        value={formData.partialAmount}
-                        onChange={handleInputChange}
-                        placeholder="Enter amount received"
-                        min="0"
-                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-                      />
-                      {(() => {
-                        const subtotal = formData.serviceItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
-                        const commissionPercent = parseFloat(formData.referralCommission) || 0;
-                        const finalPayable = subtotal - (subtotal * commissionPercent) / 100;
-                        const partial = parseFloat(formData.partialAmount) || 0;
-                        const remaining = Math.max(0, finalPayable - partial);
-                        const isFullyPaid = partial >= finalPayable && finalPayable > 0;
-
-                        return (
-                          <div className="mt-2 space-y-1 text-[10px]">
-                            <div className="flex justify-between text-amber-800">
-                              <span>Total Payable:</span>
-                              <span className="font-bold">₹{Math.round(finalPayable)}</span>
-                            </div>
-                            <div className="flex justify-between text-emerald-700">
-                              <span>Amount Receiving:</span>
-                              <span className="font-bold">₹{Math.round(partial)}</span>
-                            </div>
-                            <div className={`flex justify-between border-t border-amber-300 pt-1 mt-1 ${isFullyPaid ? "text-emerald-700" : "text-red-700"}`}>
-                              <span>{isFullyPaid ? "Status:" : "Balance Remaining:"}</span>
-                              <span className="font-bold">
-                                {isFullyPaid ? "✓ Will be marked Paid" : `₹${Math.round(remaining)}`}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {formData.paymentStatus === "Due" && (
-                    <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                      <p className="text-[10px] text-red-700 font-medium flex items-center gap-2"><FaTimesCircle className="w-4 h-4" /> This payment is marked as Due. No amount will be collected now.</p>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Reason / Symptoms</label>
-                  <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows={2} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" />
-                </div>
-
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                  <button type="button" onClick={cancelForm} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200">Cancel</button>
-                  <button type="submit" disabled={submitting || !formData.slotId || !formData.doctorId || formData.serviceItems.length === 0}
-                    className={`px-5 py-2 rounded-lg text-xs font-bold text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50 ${editingId ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}`}>
-                    {submitting ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : editingId ? <FiEdit2 className="w-3.5 h-3.5" /> : <FiCalendar className="w-3.5 h-3.5" />}
-                    {submitting ? "Saving..." : editingId ? "Update Appointment" : "Confirm & Book Slot"}
-                  </button>
-                </div>
-              </form>
+              <button type="button" onClick={autoFillPatientDetails} className="mt-2 px-3.5 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg inline-flex items-center gap-1.5"><FaCheck className="text-[10px]" /> Auto-Fill Details</button>
             </div>
+            <button type="button" onClick={() => setShowExistingPatientPopup(false)} className="text-gray-400 hover:text-gray-600"><FaTimes className="w-3.5 h-3.5" /></button>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={isEditMode ? handleUpdateNow : handleBookNow} className="mt-5 space-y-4">
+        <div>
+          <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+            <FaPhoneAlt className="text-blue-600" /> Phone Number <span className="text-blue-600">*</span>
+          </label>
+          <div className="relative">
+            <FaPhoneAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
+            <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className={`w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-3">
+          <div className="col-span-1">
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Title <span className="text-blue-600">*</span></label>
+            <select name="title" value={formData.title} onChange={handleInputChange} className={`w-full border rounded-lg px-2 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required>
+              {TITLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+          <div className="col-span-3">
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Patient Name <span className="text-blue-600">*</span></label>
+            <input ref={nameInputRef} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter patient full name" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">DOB <span className="text-blue-600">*</span></label>
+            <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} max={new Date().toISOString().split("T")[0]} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required />
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Age <span className="text-blue-600">*</span></label>
+            <input type="number" name="age" value={formData.age} onChange={(e) => { const val = e.target.value; setFormData((prev) => ({ ...prev, age: val })); }} placeholder="Auto or enter manually" min="0" max="120" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required />
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Gender <span className="text-blue-600">*</span></label>
+            <select name="gender" value={formData.gender} onChange={handleInputChange} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required>
+              <option value="">Select Gender</option>
+              {GENDER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+            <FaMapMarkerAlt className="text-blue-600 text-[10px]" /> Address
+          </label>
+          <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Patient street address" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center justify-between">
+              <span>Pincode <span className="text-blue-600">*</span></span>
+              {fetchingCity && <FiRefreshCw className="w-3 h-3 text-blue-500 animate-spin" />}
+            </label>
+            <input type="text" name="pincode" value={formData.pincode} onChange={handlePincodeChange} onFocus={() => { if (citySuggestions.length > 0) setShowCitySuggestions(true); }} placeholder="Enter 6-digit pincode" maxLength="6" inputMode="numeric" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+          </div>
+
+          <div className="relative city-dropdown-add-patient">
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              City
+              {formData.city && !isEditMode && (
+                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">✓ Auto</span>
+              )}
+            </label>
+            <input type="text" name="city" value={formData.city} onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))} onFocus={() => { if (!isEditMode && citySuggestions.length > 0) setShowCitySuggestions(true); }} placeholder="Auto-filled from pincode" autoComplete="off" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+            {!isEditMode && showCitySuggestions && citySuggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-52 overflow-y-auto z-50">
+                <div className="px-3 py-1.5 bg-blue-50 border-b border-blue-100 sticky top-0">
+                  <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">{citySuggestions.length} area{citySuggestions.length > 1 ? "s" : ""} found — select to fill city</p>
+                </div>
+                {citySuggestions.map((sug, i) => (
+                  <button key={`${sug.pincode}-${i}`} type="button" onMouseDown={(e) => { e.preventDefault(); handleSelectCity(sug); }} className="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0">
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-800">{sug.area}</span>
+                      <span className="text-[10px] text-gray-500">{sug.district}, {sug.state}</span>
+                    </div>
+                    <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-[11px] border border-blue-200">{sug.pincode}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+              Select Doctor <span className="text-blue-600">*</span>
+              {isEditMode && <FaLock className="text-amber-500 text-[10px]" />}
+            </label>
+            <select name="doctorId" value={formData.doctorId} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} required>
+              <option value="">Select Doctor</option>
+              {doctors.map((d) => <option key={d._id || d.id} value={d._id || d.id}>{d.name || "Doctor"}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+              Appointment Date <span className="text-blue-600">*</span>
+              {isEditMode && <FaLock className="text-amber-500 text-[10px]" />}
+            </label>
+            <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} disabled={isEditMode} min={new Date().toISOString().split("T")[0]} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} required />
+          </div>
+        </div>
+
+        {formData.doctorId && formData.appointmentDate && !isEditMode && (
+          <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
+            <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">Available Slots ({getDayNameFromDate(formData.appointmentDate)})</label>
+            {slotsLoading ? (
+              <div className="text-xs text-gray-500 py-3 text-center"><FiRefreshCw className="w-4 h-4 animate-spin inline" /> Loading...</div>
+            ) : availableSlots.length === 0 ? (
+              <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">No slots available.</div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto p-1">
+                {availableSlots.map((slot) => {
+                  const isSelected = formData.slotId === slot._id;
+                  const isBooked = slot.status === "booked";
+                  if (formData.slotId && !isSelected) return null;
+                  return (
+                    <button key={slot._id} type="button" onClick={() => !isBooked && handleSlotSelect(slot._id)} className={`p-2 text-xs font-semibold rounded-lg border text-left ${isSelected ? "border-blue-500 bg-blue-50 text-blue-700" : isBooked ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} disabled={isBooked}>
+                      <div className="font-bold text-xs">{slot.startTime} – {slot.endTime}</div>
+                      <div className="text-[10px] text-gray-500">₹{slot.consultationFee || 0}</div>
+                      {isBooked && <span className="text-[9px] font-bold text-red-500 block">Booked</span>}
+                      {isSelected && <span className="text-[9px] font-bold text-emerald-600 block">✓ Selected</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {formData.slotId && (
+              <button type="button" onClick={() => { setFormData((p) => ({ ...p, slotId: "" })); filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate); }} className="mt-2 text-[10px] text-blue-600 underline">Change Slot</button>
+            )}
           </div>
         )}
 
+        {/* Services */}
+        <div className="border rounded-xl p-4 bg-gray-50/50 border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+              <FaServicestack className="text-blue-600" /> Services <span className="text-blue-600">*</span>
+            </label>
+            <span className="text-[10px] text-gray-400">{formData.serviceItems.length} added</span>
+          </div>
+          {formData.serviceItems.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {formData.serviceItems.map((svc, i) => (
+                <div key={`${svc._id}-${i}`} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                  <span>{svc.name}</span>
+                  <span className="font-bold text-emerald-600">₹{svc.price}</span>
+                  <button type="button" onClick={() => handleRemoveServiceItem(svc._id)} className="text-red-400 hover:text-red-600"><FaMinusCircle className="w-3 h-3" /></button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex-1 min-w-[150px] relative">
+              <input type="text" value={formData.serviceName || ""} onChange={(e) => {
+                const v = e.target.value;
+                setFormData((p) => ({ ...p, serviceName: v }));
+                if (v.trim()) { setFilteredServices(services.filter((s) => s.name.toLowerCase().includes(v.toLowerCase()))); setShowServiceSuggestions(true); }
+                else { setFilteredServices([]); setShowServiceSuggestions(false); }
+              }} placeholder="Service name" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
+              {showServiceSuggestions && filteredServices.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
+                  {filteredServices.map((svc) => (
+                    <button key={svc._id} type="button" onClick={() => { setFormData((p) => ({ ...p, serviceName: svc.name, servicePrice: svc.price.toString() })); setFilteredServices([]); setShowServiceSuggestions(false); }} className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-gray-50 flex items-center justify-between border-b last:border-0">
+                      <span>{svc.name}</span><span className="font-bold text-emerald-700">₹{svc.price}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <input type="number" value={formData.servicePrice || ""} onChange={(e) => setFormData((p) => ({ ...p, servicePrice: e.target.value }))} placeholder="Price" className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
+            <button type="button" onClick={handleAddCustomServiceItem} className="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-lg flex items-center gap-1"><FaPlus className="w-3 h-3" /> Add</button>
+          </div>
+          {formData.serviceItems.length > 0 && (
+            <div className="mt-3 p-2.5 bg-white rounded-lg border border-gray-200 flex justify-between">
+              <span className="text-xs font-bold">Subtotal:</span>
+              <span className="text-sm font-extrabold text-blue-700">₹{formData.serviceItems.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Referred By */}
+        <div className={`border rounded-xl p-4 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-blue-50/30 border-gray-200"}`}>
+          <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
+            <FaShareAlt className="text-blue-600" /> Referred By
+            {isEditMode && <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200"><FaLock /> Locked</span>}
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase flex items-center gap-1.5">
+                  <FaUserFriends className="text-blue-500" /> Customer
+                </label>
+                {!isEditMode && (
+                  <button type="button" onClick={handleAddCustomerReferral} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5" title="Add new customer referral">
+                    <FaPlus className="w-2.5 h-2.5" /> Add
+                  </button>
+                )}
+              </div>
+              <select value={formData.referralCustomerId} onChange={(e) => {
+                const id = e.target.value;
+                if (id) { const c = referralContacts.find((x) => x._id === id && x.referralType === "customer"); if (c) handleReferralCustomerSelect(c); }
+                else { setFormData((p) => ({ ...p, referredByCustomer: "", referralCustomerId: "" })); }
+              }} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
+                <option value="">-- Select Customer --</option>
+                {referralContacts.filter((c) => c.referralType === "customer").map((c) => (
+                  <option key={c._id} value={c._id}>{c.customerName || "N/A"} {c.customerPhone ? `(${c.customerPhone})` : ""}</option>
+                ))}
+              </select>
+              {formData.referredByCustomer && (
+                <div className="mt-2 text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 flex items-center gap-1.5">
+                  <FaUserFriends className="text-blue-500 text-[10px]" />
+                  <span className="font-medium truncate">{formData.referredByCustomer}</span>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase flex items-center gap-1.5">
+                  <FaUserMdIcon className="text-indigo-500" /> Doctor
+                </label>
+                {!isEditMode && (
+                  <button type="button" onClick={handleAddDoctorReferral} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5" title="Add new doctor referral">
+                    <FaPlus className="w-2.5 h-2.5" /> Add
+                  </button>
+                )}
+              </div>
+              <select value={formData.referralDoctorId} onChange={(e) => {
+                const id = e.target.value;
+                if (id) { const c = referralContacts.find((x) => x._id === id && x.referralType === "doctor"); if (c) handleReferralDoctorSelect(c); }
+                else { setFormData((p) => ({ ...p, referredByDoctor: "", referralDoctorId: "" })); }
+              }} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
+                <option value="">-- Select Doctor --</option>
+                {referralContacts.filter((c) => c.referralType === "doctor").map((c) => (
+                  <option key={c._id} value={c._id}>{c.doctorName || "N/A"} {c.doctorSpecialization ? `(${c.doctorSpecialization})` : ""}</option>
+                ))}
+              </select>
+              {formData.referredByDoctor && (
+                <div className="mt-2 text-xs text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 flex items-center gap-1.5">
+                  <FaUserMdIcon className="text-indigo-500 text-[10px]" />
+                  <span className="font-medium truncate">{formData.referredByDoctor}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Reason / Symptoms</label>
+          <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows={2} className={`w-full border rounded-lg px-3 py-2 text-sm resize-none ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} placeholder="Enter reason or symptoms" />
+        </div>
+
+        {/* ✅ Payment Details — Services + Lab + Pharmacy + Discount */}
+        <div className={`border rounded-xl p-4 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-purple-50/30 border-gray-200"}`}>
+          <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
+            <FaMoneyBillWave className="text-purple-600" /> Payment Details
+            {isEditMode && <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200"><FaLock /> Amount Locked</span>}
+          </label>
+
+          {(() => {
+            // ✅ Services subtotal
+            const servicesSubtotal = formData.serviceItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+
+            // ✅ Lab + Medicine totals from matching booking
+            const matchB = getMatchingBooking({
+              phone: formData.phone,
+              name: formData.name,
+              _id: formData.bookingId,
+            });
+            const labTotal = Number(matchB?.labTotal) || 0;
+            const medicineTotal = Number(matchB?.medicineTotal) || 0;
+
+            // ✅ Grand subtotal
+            const subtotal = servicesSubtotal + labTotal + medicineTotal;
+
+            const commissionPercent = parseFloat(formData.referralCommission) || 0;
+            const commissionAmount = (subtotal * commissionPercent) / 100;
+            const discountAmount = parseFloat(formData.discount) || 0;
+            const finalPayable = subtotal - commissionAmount - discountAmount;
+
+            return (
+              <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
+                <div className="space-y-1.5 text-xs">
+                  {formData.serviceItems.length > 0 && (
+                    <>
+                      <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                        <span className="text-gray-700 font-medium flex items-center gap-1.5"><FaClinicMedical className="text-[10px] text-blue-600" /> Clinic Services</span>
+                        <span className="text-gray-500 text-[10px]">{formData.serviceItems.length} service{formData.serviceItems.length > 1 ? "s" : ""}</span>
+                      </div>
+                      {formData.serviceItems.map((svc, idx) => (
+                        <div key={idx} className="flex justify-between items-center py-1 border-b border-gray-100 pl-4">
+                          <span className="text-gray-600 text-[10px]">• {svc.name}</span>
+                          <span className="font-medium text-gray-800">₹{svc.price || 0}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  {labTotal > 0 && (
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-purple-700 text-[11px] font-semibold flex items-center gap-1">
+                        <FaFlask className="text-[9px]" /> Lab Total
+                      </span>
+                      <span className="font-bold text-purple-700">₹{labTotal}</span>
+                    </div>
+                  )}
+
+                  {medicineTotal > 0 && (
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-green-700 text-[11px] font-semibold flex items-center gap-1">
+                        <FaPills className="text-[9px]" /> Pharmacy Total
+                      </span>
+                      <span className="font-bold text-green-700">₹{medicineTotal}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center py-1.5 border-b border-t-2 border-gray-800 bg-gray-50 px-2 -mx-2 mt-1">
+                    <span className="text-gray-900 text-[11px] font-bold">SUBTOTAL</span>
+                    <span className="font-extrabold text-gray-900">₹{subtotal}</span>
+                  </div>
+
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-red-600 text-[11px] font-semibold flex items-center gap-1">
+                        <FaPercent className="text-[9px]" /> Discount
+                      </span>
+                      <span className="font-bold text-red-600">− ₹{Math.round(discountAmount)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center py-2 border-t-2 border-gray-800">
+                    <span className="font-bold text-gray-800">Payable Amount</span>
+                    <span className="font-bold text-emerald-700 text-sm">₹{Math.round(finalPayable)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ✅ Discount Input Field — Always Editable */}
+          <div className="mb-4">
+            <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1 flex items-center gap-1.5">
+              <FaPercent className="text-[10px]" /> Discount Amount (₹)
+            </label>
+            <input
+              type="number"
+              name="discount"
+              value={formData.discount}
+              onChange={handleInputChange}
+              placeholder="0"
+              min="0"
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+            />
+            <p className="text-[10px] text-gray-500 mt-1">Discount will be deducted from total payable amount</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Payment Mode</label>
+              <select name="paymentType" value={formData.paymentType} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
+                {PAYMENT_TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                Payment Status
+                {isEditMode && formData.paymentStatus === "Paid" && (
+                  <span className="ml-2 text-[9px] text-emerald-600 font-bold">✓ Already Paid (Locked)</span>
+                )}
+              </label>
+              <select name="paymentStatus" value={formData.paymentStatus} onChange={handleInputChange} disabled={isEditMode && formData.paymentStatus === "Paid"} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode && formData.paymentStatus === "Paid" ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
+                {PAYMENT_STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {formData.paymentStatus === "Partial" && (
+            <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <label className="block text-[10px] font-bold text-amber-700 uppercase mb-1">
+                Partial Amount (₹) <span className="text-red-500">*</span>
+              </label>
+              <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="Enter amount received" min="0" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
+              {(() => {
+                const servicesSubtotal = formData.serviceItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+                const matchB = getMatchingBooking({ phone: formData.phone, name: formData.name, _id: formData.bookingId });
+                const labTotal = Number(matchB?.labTotal) || 0;
+                const medicineTotal = Number(matchB?.medicineTotal) || 0;
+                const subtotal = servicesSubtotal + labTotal + medicineTotal;
+                const commissionPercent = parseFloat(formData.referralCommission) || 0;
+                const discountAmount = parseFloat(formData.discount) || 0;
+                const finalPayable = subtotal - (subtotal * commissionPercent) / 100 - discountAmount;
+                const partial = parseFloat(formData.partialAmount) || 0;
+                const remaining = Math.max(0, finalPayable - partial);
+                const isFullyPaid = partial >= finalPayable && finalPayable > 0;
+
+                return (
+                  <div className="mt-2 space-y-1 text-[10px]">
+                    <div className="flex justify-between text-amber-800">
+                      <span>Total Payable:</span>
+                      <span className="font-bold">₹{Math.round(finalPayable)}</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-700">
+                      <span>Amount Receiving:</span>
+                      <span className="font-bold">₹{Math.round(partial)}</span>
+                    </div>
+                    <div className={`flex justify-between border-t border-amber-300 pt-1 mt-1 ${isFullyPaid ? "text-emerald-700" : "text-red-700"}`}>
+                      <span>{isFullyPaid ? "Status:" : "Balance Remaining:"}</span>
+                      <span className="font-bold">{isFullyPaid ? "✓ Will be marked as Paid" : `₹${Math.round(remaining)}`}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {formData.paymentStatus === "Due" && (
+            <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
+              <p className="text-[10px] text-red-700 font-medium flex items-center gap-2"><FaTimesCircle className="w-4 h-4" /> This payment is marked as Due. No amount will be collected now.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <button type="button" onClick={cancelForm} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200">Cancel</button>
+          <button type="submit" className={`px-5 py-2 rounded-lg text-xs font-bold text-white shadow-sm flex items-center gap-1.5 ${isEditMode ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}`}>
+            {submitting ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : isEditMode ? <FiEdit2 className="w-3.5 h-3.5" /> : <FiCalendar className="w-3.5 h-3.5" />}
+            {submitting ? "Saving..." : isEditMode ? "Update Appointment" : "Confirm & Book Slot"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
         {/* TABLE */}
         <div className="emp-dash__card">
           {loading ? (
@@ -2116,6 +2764,7 @@ export default function OpManagement() {
                       <th style={{ textAlign: "center" }}>Appt. Date & Time</th>
                       <th style={{ textAlign: "center" }}>Booking Status</th>
                       <th style={{ textAlign: "center", minWidth: "150px" }}>Amount</th>
+                      <th style={{ textAlign: "center" }}>Discount</th>
                       <th style={{ textAlign: "center" }}>Total</th>
                       <th style={{ textAlign: "center" }}>Paid</th>
                       <th style={{ textAlign: "center" }}>DUE</th>
@@ -2123,6 +2772,7 @@ export default function OpManagement() {
                       <th style={{ textAlign: "center" }}>Referred By (Customer)</th>
                       <th style={{ textAlign: "center" }}>Referred By (Doctor)</th>
                       <th style={{ textAlign: "center" }}>Created At</th>
+                      <th style={{ textAlign: "center" }}>Active</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
                     </tr>
                   </thead>
@@ -2143,22 +2793,24 @@ export default function OpManagement() {
                       const amountBreakdown = getAmountBreakdown(matchingBooking);
                       const isPaid = consultationPaymentStatus === "Paid";
                       const isPartial = consultationPaymentStatus === "Partial";
+                      const isActive = getPatientActiveStatus(patient);
+                      const isToggling = togglingStatus === patient._id;
+                      const discountAmount = Number(matchingBooking?.discount) || 0;
 
                       return (
-                        <tr key={patient._id} className="hover:bg-blue-50/40 cursor-pointer" onClick={() => handleRowClick(patient)}>
+                        <tr key={patient._id} className="hover:bg-blue-50/40">
                           <td className="px-2 py-3 text-center text-slate-500 text-[11px]">{indexOfFirstItem + idx + 1}</td>
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-[10px]">{patient.name ? patient.name.charAt(0).toUpperCase() : "P"}</div>
                               <div>
                                 <div className="font-semibold text-slate-800 text-xs truncate max-w-[80px]">{patient.title || ""} {patient.name || "N/A"}</div>
-                                <div className="text-[9px] text-gray-400">{patient.age || "?"} yrs</div>
+                                <div className="text-[9px] text-gray-400">{patient.age || "N/A"} yrs</div>
                               </div>
                             </div>
                           </td>
                           <td className="px-3 py-3 whitespace-nowrap text-xs">{patient.phone || "N/A"}</td>
                           <td className="px-3 py-3"><div className="text-xs font-semibold text-purple-800 truncate max-w-[90px]">{matchingBooking?.doctorName || "N/A"}</div></td>
-                          {/* Merged Appt Date & Time */}
                           <td className="px-3 py-3 text-center whitespace-nowrap text-xs">
                             <div className="font-semibold text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</div>
                             {slotTiming !== "-" && (
@@ -2174,16 +2826,15 @@ export default function OpManagement() {
                                 {openStatusDropdown === matchingBooking._id && (
                                   <div className="fixed z-[9999] bg-white rounded-lg shadow-2xl border py-1 min-w-[140px]" style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} onClick={(e) => e.stopPropagation()}>
                                     {BOOKING_STATUS_OPTIONS.map((st) => {
-                                      const isActive = st.value === bookingStatus;
+                                      const isActive_ = st.value === bookingStatus;
                                       const colors = getStatusColors(st.value);
-                                      return <button key={st.value} onClick={(e) => { e.stopPropagation(); handleStatusSelect(matchingBooking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 flex items-center gap-2 ${isActive ? colors.text : "text-gray-600"}`}><span className={`w-2 h-2 rounded-full ${colors.bg} border ${colors.border}`}></span> {st.label} {isActive && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}</button>;
+                                      return <button key={st.value} onClick={(e) => { e.stopPropagation(); handleStatusSelect(matchingBooking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 flex items-center gap-2 ${isActive_ ? colors.text : "text-gray-600"}`}><span className={`w-2 h-2 rounded-full ${colors.bg} border ${colors.border}`}></span> {st.label} {isActive_ && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}</button>;
                                     })}
                                   </div>
                                 )}
                               </div>
-                            ) : <span className="text-[10px] text-gray-400 italic">No Booking</span>}
+                            ) : <span className="text-[10px] text-gray-400 italic">N/A</span>}
                           </td>
-                          {/* ✅ AMOUNT COLUMN — Always shows all 3 (Clinic / Lab / Pharmacy) */}
                           <td className="px-3 py-3" style={{ minWidth: "150px" }}>
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center justify-between gap-1 px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 text-[10px]">
@@ -2192,13 +2843,28 @@ export default function OpManagement() {
                               </div>
                               <div className="flex items-center justify-between gap-1 px-2 py-1 rounded border border-purple-200 bg-purple-50 text-purple-700 text-[10px]">
                                 <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaFlask className="text-[9px]" /> Lab:</span>
-                                <span className="font-bold whitespace-nowrap">₹{Math.round(Number(amountBreakdown?.lab) || 0)}</span>
+                                <span className="font-bold whitespace-nowrap flex items-center gap-1">
+                                  ₹{Math.round(Number(amountBreakdown?.lab) || 0)}
+                                  <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openLabTotalModal(matchingBooking); }} className="p-0.5 rounded hover:bg-purple-100" title="Edit Lab Total">
+                                    <FaRupeeSign className="w-2.5 h-2.5 text-purple-600" />
+                                  </button>
+                                </span>
                               </div>
                               <div className="flex items-center justify-between gap-1 px-2 py-1 rounded border border-green-200 bg-green-50 text-green-700 text-[10px]">
                                 <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaPills className="text-[9px]" /> Pharmacy:</span>
-                                <span className="font-bold whitespace-nowrap">₹{Math.round(Number(amountBreakdown?.pharmacy) || 0)}</span>
+                                <span className="font-bold whitespace-nowrap flex items-center gap-1">
+                                  ₹{Math.round(Number(amountBreakdown?.pharmacy) || 0)}
+                                  <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openMedicineTotalModal(matchingBooking); }} className="p-0.5 rounded hover:bg-green-100" title="Edit Medicine Total">
+                                    <FaRupeeSign className="w-2.5 h-2.5 text-green-600" />
+                                  </button>
+                                </span>
                               </div>
                             </div>
+                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {discountAmount > 0 ? (
+                              <span className="text-xs font-bold text-red-600">− ₹{Math.round(discountAmount)}</span>
+                            ) : <span className="text-xs text-gray-400">—</span>}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className="text-xs font-bold text-slate-800">₹{Math.round(paidInfo.final)}</span>
@@ -2209,7 +2875,6 @@ export default function OpManagement() {
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className={`text-xs font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</span>
                           </td>
-                          {/* PAYMENT STATUS — Paid not clickable | Partial → modal | others → dropdown */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {matchingBooking ? (
                               isPaid ? (
@@ -2217,11 +2882,7 @@ export default function OpManagement() {
                                   <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> Paid
                                 </span>
                               ) : isPartial ? (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); openPartialModal(matchingBooking); }}
-                                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 transition-colors"
-                                  title="Click to update payment"
-                                >
+                                <button onClick={(e) => { e.stopPropagation(); openPartialModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100" title="Click to update payment">
                                   <FaClock className="w-2.5 h-2.5 text-amber-600" /> Partial <FiChevronDown className="w-3 h-3" />
                                 </button>
                               ) : (
@@ -2232,37 +2893,44 @@ export default function OpManagement() {
                                   {openPaymentDropdown === matchingBooking._id && (
                                     <div className="fixed z-[9999] bg-white rounded-lg shadow-2xl border py-1 min-w-[140px]" style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} onClick={(e) => e.stopPropagation()}>
                                       {PAYMENT_STATUS_OPTIONS.map((st) => {
-                                        const isActive = st.value === consultationPaymentStatus;
+                                        const isActive_ = st.value === consultationPaymentStatus;
                                         const colors = getPaymentStatusColors(st.value);
                                         const Icon = colors.icon;
-                                        return <button key={st.value} onClick={(e) => { e.stopPropagation(); handlePaymentSelect(matchingBooking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 flex items-center gap-2 ${isActive ? colors.text : "text-gray-600"}`}><Icon className={`w-3 h-3 ${colors.iconColor}`} /> {st.label} {isActive && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}</button>;
+                                        return <button key={st.value} onClick={(e) => { e.stopPropagation(); handlePaymentSelect(matchingBooking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 flex items-center gap-2 ${isActive_ ? colors.text : "text-gray-600"}`}><Icon className={`w-3 h-3 ${colors.iconColor}`} /> {st.label} {isActive_ && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}</button>;
                                       })}
                                     </div>
                                   )}
                                 </div>
                               )
-                            ) : <span className="text-[10px] text-gray-400 italic">-</span>}
+                            ) : <span className="text-[10px] text-gray-400 italic">N/A</span>}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {referredByCustomer ? <div className="flex items-center justify-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100"><FaUserFriends className="text-[9px]" /><span className="truncate max-w-[80px]">{referredByCustomer}</span></div> : <span className="text-[10px] text-gray-400 italic">-</span>}
+                            {referredByCustomer ? <div className="flex items-center justify-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100"><FaUserFriends className="text-[9px]" /><span className="truncate max-w-[80px]">{referredByCustomer}</span></div> : <span className="text-[10px] text-gray-400 italic">N/A</span>}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {referredByDoctor ? <div className="flex items-center justify-center gap-1 text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100"><FaUserMdIcon className="text-[9px]" /><span className="truncate max-w-[80px]">{referredByDoctor}</span></div> : <span className="text-[10px] text-gray-400 italic">-</span>}
+                            {referredByDoctor ? <div className="flex items-center justify-center gap-1 text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100"><FaUserMdIcon className="text-[9px]" /><span className="truncate max-w-[80px]">{referredByDoctor}</span></div> : <span className="text-[10px] text-gray-400 italic">N/A</span>}
                           </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap text-[10px] text-gray-500">{formatDateTimeToDDMMYYYY(createdAt)}</td>
-                          <td className="px-3 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            <div className="text-[10px] font-semibold text-slate-700">{formatDateToDDMMYYYY(createdAt)}</div>
+                            <div className="text-[9px] text-gray-400 mt-0.5">{createdAt ? new Date(createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "N/A"}</div>
+                          </td>
+                          <td className="px-3 py-4 text-center whitespace-nowrap">
+                            <button onClick={(e) => { e.stopPropagation(); handleToggleActiveStatus(patient); }} disabled={isToggling} className={`inline-flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-full uppercase border-2 transition-all shadow-sm ${isActive ? "bg-emerald-50 text-emerald-700 border-emerald-400 hover:bg-emerald-100 hover:shadow-md" : "bg-gray-100 text-gray-600 border-gray-400 hover:bg-gray-200 hover:shadow-md"} disabled:opacity-50`} title={isActive ? "Click to deactivate" : "Click to activate"}>
+                              {isToggling ? <FiRefreshCw className="w-5 h-5 animate-spin" /> : isActive ? <FaToggleOn className="w-6 h-6 text-emerald-600" /> : <FaToggleOff className="w-6 h-6 text-gray-500" />}
+                              <span className="text-[11px]">{isActive ? "Active" : "Inactive"}</span>
+                            </button>
+                          </td>
+                          <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <button onClick={() => handleRowClick(patient)} className="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg" title="View"><FiEye className="w-3.5 h-3.5" /></button>
-                              <button onClick={() => handleEdit(patient, matchingBooking)} className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg" title="Edit"><FiEdit2 className="w-3.5 h-3.5" /></button>
+                              <button onClick={(e) => { e.stopPropagation(); handleRowClick(patient); }} className="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg" title="View"><FiEye className="w-3.5 h-3.5" /></button>
+                              <button onClick={(e) => { e.stopPropagation(); handleEdit(patient, matchingBooking); }} className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg" title="Edit"><FiEdit2 className="w-3.5 h-3.5" /></button>
                               {matchingBooking && (
                                 <>
-                                  <button onClick={() => openPrescriptionModal(matchingBooking)} className="p-1.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg" title="Prescription"><FaPrescription className="w-3.5 h-3.5" /></button>
-                                  <button onClick={() => openMedicineTotalModal(matchingBooking)} className="p-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg" title="Medicine Total"><FaPills className="w-3.5 h-3.5" /></button>
-                                  <button onClick={() => openLabTotalModal(matchingBooking)} className="p-1.5 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg" title="Lab Total"><FaMicroscope className="w-3.5 h-3.5" /></button>
-                                  <button onClick={() => openBillingModal(matchingBooking)} className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg" title="Billing"><FaFileInvoiceDollar className="w-3.5 h-3.5" /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); openPrescriptionModal(matchingBooking); }} className="p-1.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg" title="Prescription"><FaPrescription className="w-3.5 h-3.5" /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); openVitalsModal(matchingBooking); }} className="p-1.5 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg" title="Vitals"><FaHeartbeat className="w-3.5 h-3.5" /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); openBillingModal(matchingBooking); }} className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg" title="Billing"><FaFileInvoiceDollar className="w-3.5 h-3.5" /></button>
                                 </>
                               )}
-                              <button onClick={() => handleDelete(patient._id)} className="p-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg" title="Delete"><FiTrash2 className="w-3.5 h-3.5" /></button>
                             </div>
                           </td>
                         </tr>
@@ -2295,10 +2963,10 @@ export default function OpManagement() {
           )}
         </div>
 
-        {/* PATIENT MODAL */}
+        {/* COMPLETE PATIENT MODAL */}
         {showPatientModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border">
+            <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border">
               <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center"><FaUserInjured /></div>
@@ -2314,18 +2982,29 @@ export default function OpManagement() {
                   <div className="py-12 text-center"><FiRefreshCw className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-3" /><p className="text-sm text-gray-500">Loading...</p></div>
                 ) : (
                   <>
-                    <div className="bg-gray-50 p-4 rounded-xl border">
-                      <div className="flex items-center gap-3 mb-4 pb-3 border-b">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold flex items-center justify-center text-lg">{selectedPatient.name ? selectedPatient.name.charAt(0).toUpperCase() : "P"}</div>
-                        <div><div className="font-bold text-gray-900 text-base">{selectedPatient.title} {selectedPatient.name}</div><div className="text-xs text-gray-500">{selectedPatient.phone}</div></div>
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-xl border border-purple-100">
+                      <div className="flex items-center gap-4 mb-4 pb-4 border-b border-purple-200">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold flex items-center justify-center text-2xl">
+                          {selectedPatient.name ? selectedPatient.name.charAt(0).toUpperCase() : "P"}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold text-gray-900 text-lg">{selectedPatient.title} {selectedPatient.name}</div>
+                          <div className="text-sm text-gray-600 flex items-center gap-1 mt-0.5"><FaPhoneAlt className="text-[10px]" /> {selectedPatient.phone}</div>
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Age</div><div className="font-semibold">{selectedPatient.age || "N/A"} Yrs</div></div>
-                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Gender</div><div className="font-semibold">{selectedPatient.gender || "N/A"}</div></div>
-                        <div><div className="text-[10px] font-bold uppercase text-gray-400">DOB</div><div className="font-semibold">{formatDateToDDMMYYYY(selectedPatient.dob) || "N/A"}</div></div>
-                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Payment Mode</div><div className="font-semibold">{selectedPatient.paymentType || "Cash"}</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><FaBirthdayCake className="text-[10px]" /> Age</div><div className="font-semibold mt-0.5">{selectedPatient.age || "N/A"} Yrs</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><FaVenusMars className="text-[10px]" /> Gender</div><div className="font-semibold mt-0.5">{selectedPatient.gender || "N/A"}</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><FaCalendarAlt className="text-[10px]" /> DOB</div><div className="font-semibold mt-0.5">{formatDateToDDMMYYYY(selectedPatient.dob)}</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><FaTint className="text-[10px]" /> Blood Group</div><div className="font-semibold mt-0.5">{selectedPatient.bloodGroup || "N/A"}</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><FaCreditCard className="text-[10px]" /> Payment Mode</div><div className="font-semibold mt-0.5 capitalize">{selectedPatient.paymentType || "N/A"}</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><FaMapMarkerAlt className="text-[10px]" /> City</div><div className="font-semibold mt-0.5">{selectedPatient.city || "N/A"}</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><FaMapMarkerAlt className="text-[10px]" /> Pincode</div><div className="font-semibold mt-0.5">{selectedPatient.pincode || "N/A"}</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><FaEnvelope className="text-[10px]" /> Email</div><div className="font-semibold mt-0.5 truncate">{selectedPatient.email || "N/A"}</div></div>
+                        <div className="col-span-2 md:col-span-4"><div className="text-[10px] font-bold uppercase text-gray-400 flex items-center gap-1"><FaMapMarkerAlt className="text-[10px]" /> Address</div><div className="font-semibold mt-0.5">{selectedPatient.address || "N/A"}</div></div>
                       </div>
                     </div>
+
                     <div>
                       <div className="flex items-center gap-2 mb-3"><FaCalendarAlt className="text-purple-600" /><h4 className="font-bold text-gray-900 text-sm">Appointment Records ({patientBookings.length})</h4></div>
                       {patientBookings.length === 0 ? (
@@ -2338,67 +3017,83 @@ export default function OpManagement() {
                             const totalFee = getBookingFinalPayable(booking);
                             const paidInfo = getBookingPaidInfo(booking);
                             const statusColors = getStatusColors(booking.status);
-                            const slotTiming = booking.startTime && booking.endTime ? `${booking.startTime} - ${booking.endTime}` : "-";
+                            const slotTiming = booking.startTime && booking.endTime ? `${booking.startTime} - ${booking.endTime}` : "N/A";
                             const breakdown = getAmountBreakdown(booking);
+                            const hasVitals = booking.vitalsTemp || booking.vitalsBp || booking.vitalsPr || booking.vitalsWeight;
                             return (
                               <div key={booking._id} className="bg-white border rounded-xl overflow-hidden shadow-sm">
                                 <div className={`px-4 py-2.5 ${statusColors.bg} border-b ${statusColors.border} flex items-center justify-between flex-wrap gap-2`}>
-                                  <div className="flex items-center gap-2.5">
+                                  <div className="flex items-center gap-2.5 flex-wrap">
                                     <span className="font-bold text-gray-500 text-xs">#{bIdx + 1}</span>
-                                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${statusColors.text} ${statusColors.bg} ${statusColors.border}`}>{booking.status || "confirmed"}</span>
+                                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${statusColors.text} ${statusColors.bg} ${statusColors.border}`}>{booking.status || "N/A"}</span>
                                     <span className="text-xs text-gray-600">{formatDateToDDMMYYYY(booking.appointmentDate || booking.date)}</span>
-                                    {slotTiming !== "-" && <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">{slotTiming}</span>}
+                                    {slotTiming !== "N/A" && <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">{slotTiming}</span>}
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <button onClick={() => openBillingModal(booking)} className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded-lg"><FaFileInvoiceDollar className="w-3.5 h-3.5" /></button>
-                                    <button onClick={() => openPrescriptionModal(booking)} className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg"><FaPrescription className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => openBillingModal(booking)} className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded-lg" title="Billing"><FaFileInvoiceDollar className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => openPrescriptionModal(booking)} className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg" title="Prescription"><FaPrescription className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => openVitalsModal(booking)} className="p-1.5 text-pink-600 hover:bg-pink-50 rounded-lg" title="Vitals"><FaHeartbeat className="w-3.5 h-3.5" /></button>
                                   </div>
                                 </div>
-                                <div className="p-4 space-y-3">
-                                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
-                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Doctor</div><div className="font-bold">{booking.doctorName || "N/A"}</div></div>
-                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Slot</div><div className="font-bold">{booking.startTime} – {booking.endTime}</div></div>
-                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Total Fee</div><div className="text-sm font-extrabold text-slate-800">₹{Math.round(totalFee)}</div></div>
-                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Paid</div><div className="text-sm font-extrabold text-emerald-700">₹{Math.round(paidInfo.paid)}</div></div>
-                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Balance</div><div className={`text-sm font-extrabold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</div></div>
+                                <div className="p-4 space-y-4">
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Doctor</div><div className="font-bold">{booking.doctorName || "N/A"}</div><div className="text-[10px] text-gray-500">{booking.doctorSpecialization || ""}</div></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Appointment Type</div><div className="font-bold">{booking.appointmentType || "Consultation"}</div></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Purpose</div><div className="font-bold">{booking.purpose || "N/A"}</div></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Booked At</div><div className="font-bold text-[11px]">{formatDateTimeToDDMMYYYY(booking.bookedAt || booking.createdAt)}</div></div>
                                   </div>
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${booking.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : booking.paymentStatus === "Partial" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-red-50 text-red-700 border-red-200"}`}>
-                                      Payment: {booking.paymentStatus || "Pending"}
-                                    </span>
-                                    {booking.paymentStatus === "Partial" && booking.partialAmount > 0 && (
-                                      <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 font-semibold">
-                                        Partial Received: ₹{Math.round(booking.partialAmount)}
-                                      </span>
-                                    )}
-                                  </div>
+
+                                  {hasVitals && (
+                                    <div className="p-3 bg-pink-50 rounded-lg border border-pink-200">
+                                      <div className="text-[10px] font-bold uppercase text-pink-700 flex items-center gap-1 mb-2"><FaHeartbeat className="text-[10px]" /> Vitals</div>
+                                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                                        {booking.vitalsTemp && <div><span className="text-gray-500">Temp:</span> <span className="font-bold">{booking.vitalsTemp} °F</span></div>}
+                                        {booking.vitalsBp && <div><span className="text-gray-500">BP:</span> <span className="font-bold">{booking.vitalsBp} mmHg</span></div>}
+                                        {booking.vitalsPr && <div><span className="text-gray-500">PR:</span> <span className="font-bold">{booking.vitalsPr} bpm</span></div>}
+                                        {booking.vitalsWeight && <div><span className="text-gray-500">Weight:</span> <span className="font-bold">{booking.vitalsWeight} kg</span></div>}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {(booking.referredByCustomer || booking.referredByDoctor) && (
+                                    <div className="flex flex-wrap gap-2">
+                                      {booking.referredByCustomer && (
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                          <FaUserFriends className="text-[9px]" /> Customer: {booking.referredByCustomer}
+                                        </span>
+                                      )}
+                                      {booking.referredByDoctor && (
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                          <FaUserMdIcon className="text-[9px]" /> Doctor: {booking.referredByDoctor}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+
                                   {hasServices && (
                                     <div>
                                       <div className="text-[10px] font-bold uppercase text-gray-400">Services</div>
                                       <div className="flex flex-wrap gap-1.5 mt-1">
-                                        {items.map((svc, sIdx) => <span key={sIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">{svc.name} ₹{svc.price}</span>)}
+                                        {items.map((svc, sIdx) => (
+                                          <span key={sIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                            {svc.name} ₹{svc.price}
+                                          </span>
+                                        ))}
                                       </div>
                                     </div>
                                   )}
-                                  {breakdown.total > 0 && (
-                                    <div>
-                                      <div className="text-[10px] font-bold uppercase text-gray-400">Amount Breakdown</div>
-                                      <div className="flex flex-wrap gap-1.5 mt-1">
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200"><FaClinicMedical className="text-[10px]" /> Clinic ₹{Math.round(breakdown.clinic || 0)}</span>
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200"><FaFlask className="text-[10px]" /> Lab ₹{Math.round(breakdown.lab || 0)}</span>
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200"><FaPills className="text-[10px]" /> Pharmacy ₹{Math.round(breakdown.pharmacy || 0)}</span>
-                                      </div>
+
+                                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs p-3 bg-gray-50 rounded-lg border">
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Total Fee</div><div className="text-sm font-extrabold text-slate-800">₹{Math.round(totalFee)}</div></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Paid</div><div className="text-sm font-extrabold text-emerald-700">₹{Math.round(paidInfo.paid)}</div></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Balance</div><div className={`text-sm font-extrabold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</div></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Mode</div><div className="font-bold capitalize">{booking.paymentType || "cash"}</div></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Status</div>
+                                      <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${booking.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : booking.paymentStatus === "Partial" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-red-50 text-red-700 border-red-200"}`}>
+                                        {booking.paymentStatus || "N/A"}
+                                      </span>
                                     </div>
-                                  )}
-                                  {(booking.medicineTotal > 0 || booking.labTotal > 0) && (
-                                    <div>
-                                      <div className="text-[10px] font-bold uppercase text-gray-400">Other Totals</div>
-                                      <div className="flex flex-wrap gap-1.5 mt-1">
-                                        {booking.medicineTotal > 0 && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200"><FaPills className="text-[10px]" /> Medicines ₹{booking.medicineTotal}</span>}
-                                        {booking.labTotal > 0 && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200"><FaMicroscope className="text-[10px]" /> Lab ₹{booking.labTotal}</span>}
-                                      </div>
-                                    </div>
-                                  )}
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -2409,7 +3104,7 @@ export default function OpManagement() {
                   </>
                 )}
               </div>
-              <div className="flex justify-end px-6 py-4 border-t bg-gray-50/50">
+              <div className="flex justify-end px-6 py-4 border-t bg-gray-50/50 sticky bottom-0">
                 <button onClick={() => { setShowPatientModal(false); setPatientBookings([]); setSelectedPatient(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300">Close</button>
               </div>
             </div>
@@ -2436,6 +3131,10 @@ export default function OpManagement() {
                     <div style={{ position: "absolute", top: "104px", left: "230px", fontSize: "15px", fontWeight: 600 }}>{selectedBookingForPrescription?.patientGender || "N/A"}</div>
                     <div style={{ position: "absolute", top: "104px", right: "100px", fontSize: "15px", fontWeight: 600 }}>{selectedBookingForPrescription?.patientPhone || "N/A"}</div>
                     <div style={{ position: "absolute", top: "130px", left: "90px", fontSize: "15px", fontWeight: 600 }}>{selectedBookingForPrescription?.purpose || "N/A"}</div>
+                    <div style={{ position: "absolute", top: "160px", left: "90px", fontSize: "15px", fontWeight: 600 }}>{selectedBookingForPrescription?.vitalsTemp || ""}</div>
+                    <div style={{ position: "absolute", top: "160px", left: "230px", fontSize: "15px", fontWeight: 600 }}>{selectedBookingForPrescription?.vitalsBp || ""}</div>
+                    <div style={{ position: "absolute", top: "160px", left: "370px", fontSize: "15px", fontWeight: 600 }}>{selectedBookingForPrescription?.vitalsPr || ""}</div>
+                    <div style={{ position: "absolute", top: "160px", right: "100px", fontSize: "15px", fontWeight: 600 }}>{selectedBookingForPrescription?.vitalsWeight || ""}</div>
                   </div>
                 </div>
               </div>
@@ -2476,31 +3175,60 @@ export default function OpManagement() {
                     <div><span className="font-bold text-gray-500 inline-block w-28">Contact No</span>: {selectedBookingForBilling?.patientPhone || "N/A"}</div>
                     <div><span className="font-bold text-gray-500 inline-block w-28">Doctor</span>: {billingData.doctorName}</div>
                   </div>
-                  <table className="w-full mb-3 border-t-2 border-b-2 border-gray-800">
-                    <thead><tr>
-                      <th className="text-left py-1.5 text-[11px] font-bold text-gray-600">No.</th>
-                      <th className="text-left py-1.5 text-[11px] font-bold text-gray-600">Service / Item</th>
-                      <th className="text-right py-1.5 text-[11px] font-bold text-gray-600">Amount</th>
-                      <th className="text-center py-1.5 text-[11px] font-bold text-gray-600">Status</th>
-                    </tr></thead>
+
+                  <table className="w-full mb-4 border-t-2 border-b-2 border-gray-800">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="text-center py-2 px-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider" style={{ width: "8%" }}>No.</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider" style={{ width: "62%" }}>Service / Item</th>
+                        <th className="text-right py-2 px-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider" style={{ width: "30%" }}>Amount</th>
+                      </tr>
+                    </thead>
                     <tbody>
-                      {billingData.items.map((item) => (
-                        <tr key={item.no} className="border-b border-gray-100">
-                          <td className="py-1.5 text-xs">{item.no}</td>
-                          <td className="py-1.5 text-xs font-medium">{item.name}</td>
-                          <td className="py-1.5 text-xs text-right font-semibold">₹{Number(item.amount).toFixed(2)}</td>
-                          <td className="py-1.5 text-xs text-center"><span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${item.paymentStatus === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{item.paymentStatus || "Pending"}</span></td>
-                        </tr>
-                      ))}
+                      {buildBillingTableRows()}
                     </tbody>
                   </table>
-                  <div className="flex flex-col items-end mb-3">
-                    <div className="w-full max-w-xs text-xs">
-                      <div className="flex justify-between py-1 border-b"><span>Net Amount</span><span className="font-bold">₹ {billingData.netAmount.toFixed(2)}</span></div>
-                      <div className="flex justify-between py-1 border-b"><span>Paid Amount</span><span className="font-bold text-emerald-700">₹ {billingData.paidAmount.toFixed(2)}</span></div>
-                      <div className="flex justify-between py-1.5 mt-1 border-t-2 border-gray-800"><span className="font-bold">Balance to Pay</span><span className={`font-bold ${billingData.balanceAmount > 0 ? "text-red-600" : "text-emerald-700"}`}>₹ {billingData.balanceAmount.toFixed(2)}</span></div>
-                    </div>
-                  </div>
+
+                 <div className="flex flex-col items-end mb-3">
+  <div className="w-full max-w-xs text-xs bg-gray-50 rounded-lg border border-gray-200 p-3">
+
+    {/* ✅ Gross Amount */}
+    <div className="flex justify-between py-1.5 border-b border-gray-200">
+      <span className="text-gray-600">Gross Amount</span>
+      <span className="font-bold text-gray-900">₹ {billingData.grossAmount.toFixed(2)}</span>
+    </div>
+
+    {/* ✅ Discount (only if > 0) */}
+    {billingData.discount > 0 && (
+      <div className="flex justify-between py-1.5 border-b border-gray-200">
+        <span className="text-red-600 flex items-center gap-1">
+          <FaPercent className="text-[9px]" /> Discount
+        </span>
+        <span className="font-bold text-red-600">− ₹ {billingData.discount.toFixed(2)}</span>
+      </div>
+    )}
+
+    {/* ✅ Net Amount */}
+    <div className="flex justify-between py-1.5 border-b border-gray-200 bg-blue-50/50 -mx-3 px-3">
+      <span className="text-gray-900 font-bold">Net Amount</span>
+      <span className="font-bold text-gray-900">₹ {billingData.netAmount.toFixed(2)}</span>
+    </div>
+
+    <div className="flex justify-between py-1.5 border-b border-gray-200">
+      <span className="text-gray-600">Paid Amount</span>
+      <span className="font-bold text-emerald-700">₹ {billingData.paidAmount.toFixed(2)}</span>
+    </div>
+    <div className="flex justify-between py-2 mt-1 border-t-2 border-gray-800">
+      <span className="font-extrabold text-gray-900">Balance to Pay</span>
+      <span className={`font-extrabold ${billingData.balanceAmount > 0 ? "text-red-600" : "text-emerald-700"}`}>
+        ₹ {billingData.balanceAmount.toFixed(2)}
+      </span>
+    </div>
+  </div>
+  <div className="mt-2 text-[10px] text-gray-500 italic">
+    Amount in words: <span className="font-semibold text-gray-700">{billingData.amountInWords}</span>
+  </div>
+</div>
                 </div>
               </div>
               <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50/50">
@@ -2512,17 +3240,15 @@ export default function OpManagement() {
           </div>
         )}
 
-        {/* PARTIAL PAYMENT MODAL */}
+        {/* PARTIAL PAYMENT MODAL — Mark as Fully Paid */}
         {showPartialModal && partialBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border relative max-h-[92vh] overflow-y-auto">
-              <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10 rounded-t-2xl">
+            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border relative">
+              <div className="flex items-center justify-between px-6 py-4 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center">
-                    <FaClock className="w-5 h-5" />
-                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center"><FaClock className="w-5 h-5" /></div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-base">Update Partial Payment</h3>
+                    <h3 className="font-bold text-gray-900 text-base">Update Payment</h3>
                     <p className="text-xs text-gray-500">{partialBooking.patientName} • {partialBooking.patientPhone}</p>
                   </div>
                 </div>
@@ -2530,83 +3256,42 @@ export default function OpManagement() {
               </div>
 
               {(() => {
-                const services = getBookingServices(partialBooking);
                 const finalPayable = getBookingFinalPayable(partialBooking);
                 const paidInfo = getBookingPaidInfo(partialBooking);
                 return (
                   <div className="p-6 space-y-4">
                     <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-2">Bill Details</div>
-                      <div className="space-y-1.5 text-xs">
-                        {services.length > 0 ? services.map((s, i) => (
-                          <div key={i} className="flex justify-between items-center py-1 border-b border-gray-100">
-                            <span className="text-gray-600">• {s.name}</span>
-                            <span className="font-semibold text-gray-800">₹{s.price}</span>
-                          </div>
-                        )) : <div className="text-gray-400 text-center italic">No services</div>}
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-3">Payment Summary</div>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Total Payable</span>
+                          <span className="font-bold text-gray-900 text-sm">₹{Math.round(finalPayable)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Already Paid</span>
+                          <span className="font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span>
+                        </div>
                         <div className="flex justify-between items-center pt-2 border-t-2 border-gray-800">
-                          <span className="font-bold text-gray-800">Total Payable</span>
-                          <span className="font-bold text-emerald-700">₹{Math.round(finalPayable)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[11px]">
-                          <span className="text-gray-500">Already Paid:</span>
-                          <span className="font-bold text-blue-700">₹{Math.round(paidInfo.paid)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[11px]">
-                          <span className="text-gray-500">Balance:</span>
-                          <span className="font-bold text-red-600">₹{Math.round(paidInfo.balance)}</span>
+                          <span className="font-bold text-gray-800">Due Amount</span>
+                          <span className="font-bold text-red-600 text-lg">₹{Math.round(paidInfo.balance)}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold text-amber-700 uppercase tracking-wider mb-2">
-                        Update Paid Amount (₹) <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={partialAmountInput}
-                        onChange={(e) => setPartialAmountInput(e.target.value)}
-                        placeholder="Enter total amount received"
-                        min="0"
-                        max={finalPayable}
-                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
-                      />
-                      {(() => {
-                        const partial = parseFloat(partialAmountInput) || 0;
-                        const remaining = Math.max(0, finalPayable - partial);
-                        const isFullyPaid = partial >= finalPayable && finalPayable > 0;
-                        return (
-                          <div className="mt-2 space-y-1 text-[10px]">
-                            <div className="flex justify-between text-amber-800">
-                              <span>Total Payable:</span>
-                              <span className="font-bold">₹{Math.round(finalPayable)}</span>
-                            </div>
-                            <div className="flex justify-between text-emerald-700">
-                              <span>Amount Receiving:</span>
-                              <span className="font-bold">₹{Math.round(partial)}</span>
-                            </div>
-                            <div className={`flex justify-between border-t border-amber-300 pt-1 mt-1 ${isFullyPaid ? "text-emerald-700" : "text-red-700"}`}>
-                              <span>{isFullyPaid ? "Status:" : "Balance Remaining:"}</span>
-                              <span className="font-bold">{isFullyPaid ? "✓ Will be marked Paid" : `₹${Math.round(remaining)}`}</span>
-                            </div>
-                          </div>
-                        );
-                      })()}
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-[11px] text-blue-800">
+                        Clicking <b>"Mark as Fully Paid"</b> will clear the entire due amount of <b>₹{Math.round(paidInfo.balance)}</b>.
+                      </p>
                     </div>
                   </div>
                 );
               })()}
 
-              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50/50 sticky bottom-0 rounded-b-2xl">
+              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50/50">
                 <button onClick={() => { setShowPartialModal(false); setPartialBooking(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
-                <button
-                  onClick={handleSavePartial}
-                  disabled={savingPartial || !partialAmountInput}
-                  className="px-5 py-2 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  {savingPartial ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
-                  {savingPartial ? "Saving..." : "Update Payment"}
+                <button onClick={handleMarkFullPaid} disabled={savingPartial} className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
+                  {savingPartial ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaCheckCircle className="w-3.5 h-3.5" />}
+                  {savingPartial ? "Saving..." : "Mark as Fully Paid"}
                 </button>
               </div>
             </div>
@@ -2619,7 +3304,7 @@ export default function OpManagement() {
             <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border">
               <div className="flex items-center justify-between px-5 py-4 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center"><FaPills className="w-4 h-4" /></div>
+                  <div className="w-9 h-9 rounded-xl bg-green-500 text-white flex items-center justify-center"><FaPills className="w-4 h-4" /></div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-sm">Medicine Total</h3>
                     <p className="text-[10px] text-gray-500">{medicineTotalBooking.patientName}</p>
@@ -2628,22 +3313,13 @@ export default function OpManagement() {
                 <button onClick={() => { setShowMedicineTotalModal(false); setMedicineTotalBooking(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
               <div className="p-5 space-y-3">
-                <label className="block text-[11px] font-bold text-orange-700 uppercase tracking-wider">
-                  Total Medicine Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  value={editingMedicineTotal}
-                  onChange={(e) => setEditingMedicineTotal(e.target.value)}
-                  placeholder="0"
-                  min="0"
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                />
+                <label className="block text-[11px] font-bold text-green-700 uppercase tracking-wider">Total Medicine Amount (₹)</label>
+                <input type="number" value={editingMedicineTotal} onChange={(e) => setEditingMedicineTotal(e.target.value)} placeholder="0" min="0" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
                 <p className="text-[10px] text-gray-500">Update the total medicine amount for this booking.</p>
               </div>
               <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
                 <button onClick={() => { setShowMedicineTotalModal(false); setMedicineTotalBooking(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
-                <button onClick={handleSaveMedicineTotal} disabled={savingMedicineTotal} className="px-5 py-2 rounded-lg text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
+                <button onClick={handleSaveMedicineTotal} disabled={savingMedicineTotal} className="px-5 py-2 rounded-lg text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
                   {savingMedicineTotal ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
                   {savingMedicineTotal ? "Saving..." : "Update"}
                 </button>
@@ -2667,17 +3343,8 @@ export default function OpManagement() {
                 <button onClick={() => { setShowLabTotalModal(false); setLabTotalBooking(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
               <div className="p-5 space-y-3">
-                <label className="block text-[11px] font-bold text-purple-700 uppercase tracking-wider">
-                  Total Lab Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  value={editingLabTotal}
-                  onChange={(e) => setEditingLabTotal(e.target.value)}
-                  placeholder="0"
-                  min="0"
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                />
+                <label className="block text-[11px] font-bold text-purple-700 uppercase tracking-wider">Total Lab Amount (₹)</label>
+                <input type="number" value={editingLabTotal} onChange={(e) => setEditingLabTotal(e.target.value)} placeholder="0" min="0" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
                 <p className="text-[10px] text-gray-500">Update the total lab amount for this booking.</p>
               </div>
               <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
@@ -2685,6 +3352,49 @@ export default function OpManagement() {
                 <button onClick={handleSaveLabTotal} disabled={savingLabTotal} className="px-5 py-2 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
                   {savingLabTotal ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
                   {savingLabTotal ? "Saving..." : "Update"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VITALS MODAL */}
+        {showVitalsModal && vitalsBooking && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border">
+              <div className="flex items-center justify-between px-5 py-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-pink-500 text-white flex items-center justify-center"><FaHeartbeat className="w-4 h-4" /></div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Vitals</h3>
+                    <p className="text-[10px] text-gray-500">{vitalsBooking.patientName}</p>
+                  </div>
+                </div>
+                <button onClick={() => { setShowVitalsModal(false); setVitalsBooking(null); setVitalsData({ temp: "", bp: "", pr: "", weight: "" }); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">Temp (°F)</label>
+                  <input type="text" value={vitalsData.temp} onChange={(e) => setVitalsData((prev) => ({ ...prev, temp: e.target.value }))} placeholder="e.g. 98.6" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">BP (mmHg)</label>
+                  <input type="text" value={vitalsData.bp} onChange={(e) => setVitalsData((prev) => ({ ...prev, bp: e.target.value }))} placeholder="e.g. 120/80" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">PR (bpm)</label>
+                  <input type="text" value={vitalsData.pr} onChange={(e) => setVitalsData((prev) => ({ ...prev, pr: e.target.value }))} placeholder="e.g. 72" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">Weight (kg)</label>
+                  <input type="text" value={vitalsData.weight} onChange={(e) => setVitalsData((prev) => ({ ...prev, weight: e.target.value }))} placeholder="e.g. 70" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
+                <button onClick={() => { setShowVitalsModal(false); setVitalsBooking(null); setVitalsData({ temp: "", bp: "", pr: "", weight: "" }); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
+                <button onClick={handleSaveVitals} disabled={savingVitals} className="px-5 py-2 rounded-lg text-xs font-bold bg-pink-600 hover:bg-pink-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
+                  {savingVitals ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
+                  {savingVitals ? "Saving..." : "Save Vitals"}
                 </button>
               </div>
             </div>

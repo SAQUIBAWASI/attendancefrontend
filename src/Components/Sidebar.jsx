@@ -1741,17 +1741,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/visits-data": "Visit Data",
       "/letters-section": "Reliving Letters",
       "/late-today": "Late Today",
-      "/appointment-slots": "Appointments Slots",
-      "/bookings": "Bookings",
-      "/op-management": "OP Management",
+      "/bookings": "Online Bookings",
+      "/op-management": "WalkIn OP",
       "/op-dashboard": "OP Dashboard",
       "/doctor-management": "Doctors",
-      "/customer-referrals": "Customer Referrals",
-      "/doctor-referrals": "Doctor Referrals",
-      "/customerreffredop": "Customer Referred OP", // ✅ NEW
-      "/doctorreffredop": "Doctor Referred OP",     // ✅ NEW
       "/services": "Services",
-      "/letterhead": "Letter Head"
+      "/letterhead": "Letter Head",
+      "/referral-management": "Referral Management",
+      "/referral-bookings": "Referral Bookings"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1896,21 +1893,18 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       ],
     },
 
-    // ✅ CLEANED OP MANAGEMENT SECTION
+    // ✅ OP MANAGEMENT — Referral items BACK inside
     {
       icon: <i className="ri-hospital-line"></i>,
       name: "OP Management",
       dropdown: [
         { name: "OP Dashboard", path: "/op-dashboard" },
-        { name: "Doctors", path: "/doctor-management" },
-        { name: "Customer Referrals", path: "/customer-referrals" },
-        { name: "Doctor Referrals", path: "/doctor-referrals" },
-        { name: "Customer Referred OP", path: "/customerreffredop" }, // ✅ NEW
-        { name: "Doctor Referred OP", path: "/doctorreffredop" },     // ✅ NEW
-        { name: "OP Records", path: "/op-management" },
-        { name: "Appointment Slots", path: "/appointment-slots" },
-        { name: "Services", path: "/services" },
-        { name: "Bookings", path: "/bookings" },
+        { name: "WalkIn OP", path: "/op-management" },
+        { name: "Online Bookings", path: "/bookings" },
+        { name: "Referral Management", path: "/referral-management" },   // ✅ Combined contacts (doctor+customer tabs)
+        { name: "Referral Bookings", path: "/referral-bookings" },       // ✅ Combined OP bookings (doctor+customer tabs)
+                { name: "Doctors", path: "/doctor-management" },
+                        { name: "Services", path: "/services" },
         { name: "Letter Head", path: "/letterhead" },
       ],
     },

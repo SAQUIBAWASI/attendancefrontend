@@ -107,6 +107,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       "/leavelist": "",
       "/leaves-report": "",
       "/payroll": "",
+      "/payroll-dashboard": "",
       "/role-management": "",
       "/permission-settings": "",
       "/addlocation": "",
@@ -135,14 +136,12 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       // ===== OP Management Routes =====
       "/op-dashboard": "",
       "/doctor-management": "",
-      "/customer-referrals": "",
-      "/doctor-referrals": "",
-      "/customerreffredop": "", // ✅ NEW
-      "/doctorreffredop": "",   // ✅ NEW
       "/op-management": "",
       "/appointment-slots": "",
       "/services": "",
       "/bookings": "",
+      "/referral-management": "",   // ✅ Combined (doctor + customer tabs)
+      "/referral-bookings": "",     // ✅ Combined (doctor + customer tabs)
       "/letterhead": "",
     };
 
@@ -162,6 +161,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
 
   // ===== ADMIN MODULE TABS =====
   const adminTabs = [
+    { path: "/payroll-dashboard", label: "Payroll Dashboard" },
     { path: "/payroll", label: "Payroll" },
     { path: "/all-expensives", label: "Expenses" },
     { path: "/useractivity", label: "User Activity" },
@@ -200,18 +200,15 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     (tab) => tab.path === location.pathname
   );
 
-  // ===== OP MANAGEMENT TABS - CLEANED =====
+  // ===== OP MANAGEMENT TABS - CLEANED & COMBINED =====
   const opTabs = [
     { path: "/op-dashboard", label: "OP Dashboard" },
-    { path: "/doctor-management", label: "Doctors" },
-    { path: "/customer-referrals", label: "Customer Referrals" },
-    { path: "/doctor-referrals", label: "Doctor Referrals" },
-    { path: "/customerreffredop", label: "Customer Referred OP" }, // ✅ NEW
-    { path: "/doctorreffredop", label: "Doctor Referred OP" },     // ✅ NEW
-    { path: "/op-management", label: "OP Records" },
-    { path: "/appointment-slots", label: "Appointment Slots" },
-    { path: "/services", label: "Services" },
-    { path: "/bookings", label: "Bookings" },
+    { path: "/op-management", label: "WalkIn OP" },
+    { path: "/bookings", label: "Online Bookings" },
+    { path: "/referral-management", label: "Referral Management" },  // ✅ Combined (doctor + customer tabs)
+    { path: "/referral-bookings", label: "Referral Bookings" },      // ✅ Combined (doctor + customer tabs)
+        { path: "/doctor-management", label: "Doctors" },
+            { path: "/services", label: "Services" },
     { path: "/letterhead", label: "Letter Head" },
   ];
 
@@ -470,7 +467,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
           </div>
         )}
 
-        {/* ===== OP MANAGEMENT MODULE TABS - CLEANED ===== */}
+        {/* ===== OP MANAGEMENT MODULE TABS - CLEANED & COMBINED ===== */}
         {isOPModule && (
           <div className="flex items-center gap-1 ml-4">
             {opTabs.map((tab) => {
@@ -643,7 +640,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
 
         <div className="hidden items-center gap-2 sm:flex">
           <img
-            src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
+            src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658650_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
             alt="Logo"
             className="h-9 w-9 rounded-lg object-cover"
           />

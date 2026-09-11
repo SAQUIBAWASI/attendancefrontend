@@ -193,11 +193,10 @@ const PayrollDashboard = () => {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("All");
-  const [filterStatus, setFilterStatus] = useState("active"); // default to active
+  const [filterStatus, setFilterStatus] = useState("active");
 
   const navigate = useNavigate();
 
-  // API URLs exactly matching PayRoll.js
   const EMPLOYEES_API_URL = `${API_BASE_URL}/employees/get-employees`;
   const LEAVES_API_URL = `${API_BASE_URL}/leaves/leaves?status=approved`;
   const ATTENDANCE_SUMMARY_API_URL = `${API_BASE_URL}/attendancesummary/get`;
@@ -334,7 +333,6 @@ const PayrollDashboard = () => {
     }
   }, []);
 
-  // Main fetch function modeled directly off PayRoll.js
   const fetchData = useCallback(async (month = "") => {
     try {
       setLoading(true);
@@ -443,15 +441,14 @@ const PayrollDashboard = () => {
 
         const deptLower = (emp.department || "").toLowerCase().trim();
         const isDevOrMarketing = deptLower.includes("developer") || deptLower.includes("digital marketing") || deptLower.includes("development");
-        const isSpecialDept = ["laboratory medicine", "nursing", "medical"].includes(deptLower) || deptLower.includes("laboratory") || deptLower.includes("nursing") || deptLower.includes("medical");
+        const isConsultant = deptLower.includes("consultant");
+        const isSpecialDept = ["laboratory medicine", "nursing", "medical"].includes(deptLower) || deptLower.includes("laboratory") || deptLower.includes("nursing") || deptLower.includes("medical") || isConsultant;
 
         let earnedWeekOffs = weekOffData.earnedWeekOffs;
-        let defaultWeekOffs = emp.weekOffPerMonth || 4;
+        let defaultWeekOffs = isConsultant ? 2 : (emp.weekOffPerMonth || 4);
         if (isDevOrMarketing) {
           defaultWeekOffs = weekOffData.totalWeekOffDays || 5;
           earnedWeekOffs = defaultWeekOffs;
-        } else if (isSpecialDept) {
-          defaultWeekOffs = 4;
         }
         const finalWeekOffs = Math.min(earnedWeekOffs, defaultWeekOffs);
 
@@ -515,7 +512,6 @@ const PayrollDashboard = () => {
           }
         }
 
-        // OT Calculations
         let totalOTHours = overTimeHours || 0;
         let calculatedOTHours = 0;
         allAttendanceRecords.forEach(record => {
@@ -564,7 +560,6 @@ const PayrollDashboard = () => {
 
         const isInactive = isEmployeeHidden(emp);
 
-        // Deductions breakups (removed the 150 ptax, pf, and esic defaults since we are not doing deductions)
         const basicPay = Math.round(salaryForMonth * 0.5);
         const hra = Math.round(salaryForMonth * 0.2);
         const conveyance = Math.round(salaryForMonth * 0.1);
@@ -606,7 +601,8 @@ const PayrollDashboard = () => {
           esic: esic,
           ptax: ptax,
           otherDeductions: otherDeductions,
-          holidayCount: holidayCount,
+          // ✅ Consultant = 0 holiday
+          holidayCount: isConsultant ? 0 : holidayCount,
           weekOffs: finalWeekOffs,
           isInactive: isInactive,
           paymentStatus: paymentStatus,
@@ -655,18 +651,16 @@ const PayrollDashboard = () => {
     }
   };
 
-  // Aggregate Calculations strictly matching the filter status tab selected
   const activeRecords = records.filter(record => {
     if (filterStatus === "active") return !record.isInactive;
     if (filterStatus === "inactive") return record.isInactive;
-    return true; // "all"
+    return true;
   });
 
   const totalEmployeesCount = activeRecords.length;
   const processedRecords = activeRecords.filter(r => r.paymentStatus === "Paid");
   const pendingRecords = activeRecords.filter(r => r.paymentStatus === "Pending");
 
-  // Sum calculations
   const totalGrossPayroll = activeRecords.reduce((sum, emp) => sum + emp.finalPay, 0);
   const totalNetPay = activeRecords.filter(r => r.paymentStatus === "Paid").reduce((sum, emp) => sum + emp.finalPay, 0);
   const totalPendingAmount = activeRecords.filter(r => r.paymentStatus === "Pending").reduce((sum, emp) => sum + emp.finalPay, 0);
@@ -682,7 +676,6 @@ const PayrollDashboard = () => {
   const totalWeekoffs = activeRecords.reduce((sum, emp) => sum + emp.weekOffs, 0);
   const totalOTHours = activeRecords.reduce((sum, emp) => sum + emp.otHours, 0);
 
-  // Table filtering logic
   const filteredEmployeesList = activeRecords.filter(emp => {
     const matchesSearch = !searchTerm || 
       emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -693,7 +686,6 @@ const PayrollDashboard = () => {
 
   const uniqueDepts = Array.from(new Set(records.map(r => r.department))).filter(Boolean);
 
-  // 6 Month Trend Data
   const months = ["Mar", "Apr", "May", "Jun", "Jul", "Aug"];
   const trendData = months.map((m, idx) => {
     const scaleFactor = 0.8 + (idx * 0.04);
@@ -704,7 +696,6 @@ const PayrollDashboard = () => {
     };
   });
 
-  // Pie Chart data
   const paymentStatusData = [
     { name: "Paid", value: processedRecords.length, color: "#10b981" },
     { name: "Pending", value: pendingRecords.length, color: "#f59e0b" },
@@ -712,7 +703,6 @@ const PayrollDashboard = () => {
     { name: "Draft", value: 0, color: "#6b7280" }
   ].filter(d => d.value > 0 || d.name === "Paid" || d.name === "Pending");
 
-  // Radial Bar Chart: Processed Gauge
   const processedPercentage = totalEmployeesCount > 0 
     ? Math.round((processedRecords.length / totalEmployeesCount) * 100) 
     : 0;
@@ -732,17 +722,14 @@ const PayrollDashboard = () => {
   return (
     <div className="p-4 bg-slate-50 min-h-screen text-slate-800">
       
-      {/* 🚀 Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b pb-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             Payroll Dashboard <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">Live</span>
           </h1>
-          {/* <p className="text-xs text-slate-500 mt-1">Complete payroll overview & insights for {formatMonthDisplay(selectedMonth)}</p> */}
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Status Tabs (All, Active, Inactive) directly in Header */}
           <div className="flex items-center bg-white border rounded-lg p-1 shadow-sm text-xs font-semibold mr-2">
             <button
               onClick={() => setFilterStatus("all")}
@@ -770,7 +757,6 @@ const PayrollDashboard = () => {
             </button>
           </div>
 
-          {/* Month Picker */}
           <div className="relative flex items-center bg-white border rounded-lg px-3 py-1.5 shadow-sm text-xs font-semibold">
             <FaCalendarAlt className="text-slate-400 mr-2" />
             <input 
@@ -787,19 +773,10 @@ const PayrollDashboard = () => {
           >
             Payroll
           </button>
-          
-          {/* <button 
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-white border rounded-lg hover:bg-slate-50 transition shadow-sm cursor-pointer"
-          >
-            <FaFileExport className="text-slate-500" /> Export
-          </button> */}
         </div>
       </div>
 
-      {/* 📊 Top Stats Row (Styled exactly like other pages with emp-dash__stat classes) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Stat 1: Total Payroll */}
         <div className="emp-dash__stat">
           <div className="emp-dash__stat-top">
             <span className="emp-dash__stat-label">Total Payroll</span>
@@ -811,7 +788,6 @@ const PayrollDashboard = () => {
           <div className="emp-dash__stat-meta">paid + pending net payroll</div>
         </div>
 
-        {/* Stat 2: Paid Amount */}
         <div className="emp-dash__stat">
           <div className="emp-dash__stat-top">
             <span className="emp-dash__stat-label">Paid Amount</span>
@@ -825,7 +801,6 @@ const PayrollDashboard = () => {
           </div>
         </div>
 
-        {/* Stat 3: Pending Amount */}
         <div className="emp-dash__stat">
           <div className="emp-dash__stat-top">
             <span className="emp-dash__stat-label">Pending Amount</span>
@@ -839,7 +814,6 @@ const PayrollDashboard = () => {
           </div>
         </div>
 
-        {/* Stat 4: Total Employees */}
         <div className="emp-dash__stat">
           <div className="emp-dash__stat-top">
             <span className="emp-dash__stat-label">Total Employees</span>
@@ -854,10 +828,7 @@ const PayrollDashboard = () => {
         </div>
       </div>
 
-      {/* 📊 Charts Section Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        
-        {/* 📉 Chart 1: Payroll Trend */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 lg:col-span-1">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-slate-900 font-sans">Payroll Trend (Last 6 Months)</h3>
@@ -880,7 +851,6 @@ const PayrollDashboard = () => {
           </div>
         </div>
 
-        {/* 🍩 Chart 2: Payment Status */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
           <h3 className="text-sm font-bold text-slate-900 mb-4 font-sans">Payment Status</h3>
           <div className="flex items-center justify-around h-60">
@@ -923,7 +893,6 @@ const PayrollDashboard = () => {
           </div>
         </div>
 
-        {/* 🌀 Chart 3: Radial Progress */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
           <h3 className="text-sm font-bold text-slate-900 mb-4 font-sans">Payroll Processing Progress</h3>
           <div className="flex flex-col items-center justify-center h-60">
@@ -954,7 +923,6 @@ const PayrollDashboard = () => {
               </div>
             </div>
             
-            {/* Action Checkpoints */}
             <div className="grid grid-cols-4 gap-2 text-[10px] w-full text-center mt-3 border-t pt-3">
               <div className="flex flex-col items-center">
                 <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-1 font-bold">✓</span>
@@ -977,13 +945,9 @@ const PayrollDashboard = () => {
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* 📊 Earnings, Deductions & Quick Actions Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        
-        {/* Earnings Summary Card */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5 font-sans">
             💰 Earnings Summary
@@ -1000,7 +964,6 @@ const PayrollDashboard = () => {
           </div>
         </div>
 
-        {/* Deductions Summary Card */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5 font-sans">
             🛑 Deductions Summary
@@ -1017,7 +980,6 @@ const PayrollDashboard = () => {
           </div>
         </div>
 
-        {/* Attendance Impact Card */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5 font-sans">
             📅 Attendance Impact
@@ -1033,16 +995,13 @@ const PayrollDashboard = () => {
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* 📊 Employee Details Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
           <h3 className="text-sm font-bold text-slate-900 font-sans">Employee Payroll Details</h3>
           
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Search */}
             <div className="relative">
               <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]" />
               <input 
@@ -1054,7 +1013,6 @@ const PayrollDashboard = () => {
               />
             </div>
 
-            {/* Department */}
             <select 
               value={filterDepartment} 
               onChange={(e) => setFilterDepartment(e.target.value)}

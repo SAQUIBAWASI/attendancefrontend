@@ -226,12 +226,12 @@ import LetterHeadDesigner from "./Pages/LetterHeadDesigner.js";
 import PayrollDashboard from "./Pages/PayrollDashboard.js";
 import EmployeeEvents from "./Pages/EmployeeEvents.js";
 import EmployeeReferral from "./Pages/EmployeeReferral.js";
-import ReferralManagement from "./Pages/ReferralManagement.js";
 import ReferredOP from "./Pages/ReferredOP.js";
 import CustomerReferralManagement from "./Pages/CustomerReferralManagement.js";
 import DoctorReferralManagement from "./Pages/DoctorReferralManagement.js";
 import DoctorReferralOP from "./Pages/DoctorReferralOP.js";
 import CustomerReferralOP from "./Pages/CustomerReferralOP.js";
+import InactivePatients from "./Pages/InactivePatients.js";
 
 function App() {
   return (
@@ -279,13 +279,13 @@ function App() {
       {/* 🔥 OP MANAGEMENT - ADMIN LAYOUT (WITHOUT /employee/ PREFIX) */}
       <Route path="/op-dashboard" element={<AdminLayout><OpDashboard /></AdminLayout>} />
       <Route path="/doctor-management" element={<AdminLayout><DoctorManagement /></AdminLayout>} />
-      <Route path="/referral-management" element={<AdminLayout><ReferralManagement /></AdminLayout>} />
       <Route path="/customer-referrals" element={<AdminLayout><CustomerReferralManagement /></AdminLayout>} />
-      <Route path="/doctor-referrals" element={<AdminLayout><DoctorReferralManagement /></AdminLayout>} />
+      <Route path="/referral-management" element={<AdminLayout><DoctorReferralManagement /></AdminLayout>} />
       <Route path="/referredop" element={<AdminLayout><ReferredOP /></AdminLayout>} />
-      <Route path="/doctorreffredop" element={<AdminLayout><DoctorReferralOP /></AdminLayout>} />
+      <Route path="/referral-bookings" element={<AdminLayout><DoctorReferralOP /></AdminLayout>} />
       <Route path="/customerreffredop" element={<AdminLayout><CustomerReferralOP /></AdminLayout>} />
       <Route path="/op-management" element={<AdminLayout><OpManagement /></AdminLayout>} />
+      <Route path="/inactive-patients" element={<AdminLayout><InactivePatients /></AdminLayout>} />
       <Route path="/appointment-slots" element={<AdminLayout><AppointmentSlots /></AdminLayout>} />
       <Route path="/services" element={<AdminLayout><Services /></AdminLayout>} />
       <Route path="/bookings" element={<AdminLayout><Bookings /></AdminLayout>} />

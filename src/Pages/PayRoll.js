@@ -693,7 +693,7 @@ const PayRoll = () => {
   // ============================================
   // 🎯 MAIN fetchData FUNCTION
   // ============================================
-  const fetchData = useCallback(async (month = "") => {
+ const fetchData = useCallback(async (month = "") => {
     let isMounted = true;
 
     try {
@@ -760,13 +760,12 @@ const PayRoll = () => {
 
       const employeesForMonth = filterEmployeesByJoiningDate(employeesData, targetMonth);
       
-      // ✅ Store ALL employees (active + inactive) in employeesMap
       const employeesMap = {};
       employeesForMonth.forEach(emp => {
         employeesMap[emp.employeeId] = {
           salaryPerMonth: emp.salaryPerMonth || 0,
           shiftHours: emp.shiftHours || 8,
-          weekOffPerMonth: emp.weekOffPerMonth || 0,
+          weekOffPerMonth: emp.weekOffPerMonth || 4,
           weekOffDay: emp.weekOffDay || 'Sunday',
           name: emp.name,
           employeeId: emp.employeeId,
@@ -837,15 +836,15 @@ const PayRoll = () => {
       const daysInMonthValue = getDaysInMonth(targetMonth);
       const processedSalaries = [];
       
-      // ✅ Process ALL employees (including inactive)
       for (const emp of employeesForMonth) {
         const summary = summaryData.find(x => x.employeeId === emp.employeeId) || {};
         
         const deptLower = (emp.department || '').toLowerCase().trim();
         const isDevOrMarketing = deptLower.includes("developer") || deptLower.includes("digital marketing") || deptLower.includes("development");
-        const isSpecialDept = ["laboratory medicine", "nursing", "medical"].includes(deptLower) || deptLower.includes("laboratory") || deptLower.includes("nursing") || deptLower.includes("medical");
+        const isConsultant = deptLower.includes("consultant");
+        const isSpecialDept = ["laboratory medicine", "nursing", "medical"].includes(deptLower) || deptLower.includes("laboratory") || deptLower.includes("nursing") || deptLower.includes("medical") || isConsultant;
 
-        let targetWeekOffCount = emp.weekOffPerMonth || 4;
+        let targetWeekOffCount = isConsultant ? 2 : (emp.weekOffPerMonth || 4);
         
         const employeeRole = summary.role || emp.role || emp.designation || '';
         const isMedicalStaff = isMedicalRole(employeeRole);
@@ -865,12 +864,10 @@ const PayRoll = () => {
         );
 
         let earnedWeekOffs = weekOffData.earnedWeekOffs;
-        let defaultWeekOffs = emp.weekOffPerMonth || 4;
+        let defaultWeekOffs = isConsultant ? 2 : (emp.weekOffPerMonth || 4);
         if (isDevOrMarketing) {
           defaultWeekOffs = weekOffData.totalWeekOffDays || 5;
           earnedWeekOffs = defaultWeekOffs;
-        } else if (isSpecialDept) {
-          defaultWeekOffs = 4;
         }
         const finalWeekOffs = Math.min(earnedWeekOffs, defaultWeekOffs);
 
@@ -907,9 +904,6 @@ const PayRoll = () => {
         
         const compOffData = currentCompOffsMap[emp.employeeId] || { balance: 0 };
 
-        // ============================================
-        // 📅 CARRY-FORWARD LOGIC
-        // ============================================
         const expectedWorkingDays = daysInMonthValue - finalWeekOffs;
         const actualDaysWorked = presentDaysCount + (halfDaysCount * 0.5);
 
@@ -940,6 +934,7 @@ const PayRoll = () => {
           if (presentDaysCount === 0 && halfDaysCount === 0) {
             calculatedSalary = 0;
           } else {
+            // ✅ isSpecialDept (including consultant) = holiday 0
             const holidayAddition = isSpecialDept ? 0 : holidayCount;
             const effectivePaidDays = payablePresentDays + (includeWeekOffInSalary ? finalWeekOffs : 0) + holidayAddition + compOffData.balance;
             calculatedSalary = effectivePaidDays * dailyRate;
@@ -1004,7 +999,6 @@ const PayRoll = () => {
           }
         }
 
-        // ✅ Check if employee is inactive
         const isInactive = isEmployeeHidden(emp);
 
         const salaryObj = {
@@ -1041,7 +1035,8 @@ const PayRoll = () => {
           approvedOTAmount: approvedOTAmount,
           approvedOTHours: approvedOTHours,
           
-          holidayCount: holidayCount,
+          // ✅ Consultant ka holidayCount 0 show karo
+          holidayCount: isConsultant ? 0 : holidayCount,
           monthDays: daysInMonthValue,
           includeWeekOffInSalary: includeWeekOffInSalary,
           isHistoricalMonth: isHistorical,
@@ -1060,20 +1055,17 @@ const PayRoll = () => {
           ptax: emp.profTax,
           otherDeductions: emp.otherDeductions,
 
-          // 📅 CARRY-FORWARD FIELDS
           expectedWorkingDays: expectedWorkingDays,
           payablePresentDays: payablePresentDays,
           carryForwardDays: carryForwardDays,
           carryForwardFromPrev: prevCarryForward,
           
-          // ✅ STATUS FIELD
           isInactive: isInactive
         };
 
         processedSalaries.push(salaryObj);
       }
 
-      // ✅ Store ALL employees in records (not filtered)
       if (isMounted) {
         setRecords(processedSalaries);
         setFilteredRecords(processedSalaries);
@@ -1936,280 +1928,367 @@ const PayRoll = () => {
   // ============================================
   // 📅 AttendancePopupModal
   // ============================================
-  const AttendancePopupModal = () => {
-    if (!showAttendancePopup) return null;
-    
-    const getEmployeeShiftHours = (employeeId) => employeesMasterData[employeeId]?.shiftHours || 8;
+  // ✅ PayRoll component ke BAHAR — top level pe
+const AttendancePopupModal = () => {
+  // ✅ HOOKS TOP PE (always called — Rules of Hooks)
+  const [holidays, setHolidays] = useState([]);
 
-    const getAllDatesOfMonth = (month) => {
-      if (!month) return [];
-      const [year, monthNum] = month.split('-').map(Number);
-      const startDate = new Date(year, monthNum - 1, 1);
-      const endDate = new Date(year, monthNum, 0);
-      const dates = [];
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        dates.push(new Date(d));
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const res = await fetch('https://api.timelyhealth.in/api/holidays/all');
+        const data = await res.json();
+        setHolidays(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to fetch holidays:", err);
+        setHolidays([]);
       }
-      return dates;
     };
+    fetchHolidays();
+  }, []);
 
-    const monthDates = getAllDatesOfMonth(selectedMonth);
+  // ✅ Ab condition (hooks ke BAAD)
+  if (!showAttendancePopup) return null;
 
-    const isLeaveDay = (date, employeeId, employeeLeavesData) => {
-      if (!date || !employeeId) return false;
-      const leaves = employeeLeavesData[employeeId];
-      if (!leaves || !leaves.leaveDetails) return false;
-      const dateStr = date.toLocaleDateString('en-CA');
-      return leaves.leaveDetails.some(leave => {
-        const startDate = new Date(leave.startDate);
-        const endDate = new Date(leave.endDate);
-        const checkDate = new Date(dateStr);
-        return checkDate >= startDate && checkDate <= endDate;
-      });
-    };
+  const getEmployeeShiftHours = (employeeId) => employeesMasterData[employeeId]?.shiftHours || 8;
 
-    const shiftHours = getEmployeeShiftHours(selectedEmployee?.employeeId);
+  const getAllDatesOfMonth = (month) => {
+    if (!month) return [];
+    const [year, monthNum] = month.split('-').map(Number);
+    const startDate = new Date(year, monthNum - 1, 1);
+    const endDate = new Date(year, monthNum, 0);
+    const dates = [];
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      dates.push(new Date(d));
+    }
+    return dates;
+  };
 
-    const attendanceMap = new Map();
-    selectedEmployeeAttendance.forEach(record => {
-      if (record.checkInTime) {
-        const dateKey = new Date(record.checkInTime).toLocaleDateString('en-CA');
-        attendanceMap.set(dateKey, record);
-      }
+  const monthDates = getAllDatesOfMonth(selectedMonth);
+
+  const isLeaveDay = (date, employeeId, employeeLeavesData) => {
+    if (!date || !employeeId) return false;
+    const leaves = employeeLeavesData[employeeId];
+    if (!leaves || !leaves.leaveDetails) return false;
+    const dateStr = date.toLocaleDateString('en-CA');
+    return leaves.leaveDetails.some(leave => {
+      const startDate = new Date(leave.startDate);
+      const endDate = new Date(leave.endDate);
+      const checkDate = new Date(dateStr);
+      return checkDate >= startDate && checkDate <= endDate;
     });
+  };
 
-    const targetWeekOffCount = selectedEmployee?.targetWeekOffCount || selectedEmployee?.weekOffs || 4;
-    
-        const getWeekOffDatesForMonth = () => {
-      const weekOffDatesSet = new Set();
-      if (!selectedEmployee || monthDates.length === 0) return weekOffDatesSet;
+  const shiftHours = getEmployeeShiftHours(selectedEmployee?.employeeId);
 
-      const employeeId = selectedEmployee.employeeId;
+  const attendanceMap = new Map();
+  selectedEmployeeAttendance.forEach(record => {
+    if (record.checkInTime) {
+      const dateKey = new Date(record.checkInTime).toLocaleDateString('en-CA');
+      attendanceMap.set(dateKey, record);
+    }
+  });
 
-      // ─── Department detection ───
-      const deptRaw =
-        selectedEmployee.department ||
-        employeesMasterData[employeeId]?.department ||
-        '';
-      const deptLower = deptRaw.toLowerCase().trim();
+  // ✅ Holiday dates set
+  const holidayDatesSet = new Set();
+  holidays.forEach(h => {
+    if (h.isActive === false) return;
+    if (!h.fromDate || !h.toDate) return;
+    const start = new Date(h.fromDate);
+    const end = new Date(h.toDate);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      holidayDatesSet.add(d.toLocaleDateString('en-CA'));
+    }
+  });
 
-      const isMedical = deptLower.includes('medical');
-      const isNursingOrLab =
-        deptLower.includes('nursing') ||
-        deptLower.includes('laboratory') ||
-        deptLower.includes('lab');
+  const isHoliday = (date) => {
+    if (!date) return false;
+    return holidayDatesSet.has(date.toLocaleDateString('en-CA'));
+  };
 
-      // Helper: collect absent days (Sunday chhod kar)
-      const collectAbsentDays = () => {
-        const absentDays = [];
-        monthDates.forEach(date => {
-          const dateKey = date.toLocaleDateString('en-CA');
-          const hasAttendance = attendanceMap.has(dateKey);
-          const isLeave = isLeaveDay(date, employeeId, employeeLeaves);
-          const isSunday =
-            date.toLocaleDateString('en-US', { weekday: 'long' }) === 'Sunday';
+  const targetWeekOffCount = selectedEmployee?.targetWeekOffCount || selectedEmployee?.weekOffs || 4;
 
-          if (!hasAttendance && !isLeave && !isSunday) {
-            absentDays.push(date);
-          }
-        });
-        absentDays.sort((a, b) => a - b);
-        return absentDays;
-      };
+  const getWeekOffDatesForMonth = () => {
+    const weekOffDatesSet = new Set();
+    if (!selectedEmployee || monthDates.length === 0) return weekOffDatesSet;
 
-      // ─── CASE 1: Medical → max 2 din weekoff from absent ───
-      if (isMedical) {
-        const maxWeekOffs = 2;
-        const absentDays = collectAbsentDays();
-        const weekOffDaysCount = Math.min(maxWeekOffs, absentDays.length);
-        for (let i = 0; i < weekOffDaysCount; i++) {
-          weekOffDatesSet.add(absentDays[i].toLocaleDateString('en-CA'));
-        }
-        return weekOffDatesSet;
+    const employeeId = selectedEmployee.employeeId;
+
+    const deptRaw =
+      selectedEmployee.department ||
+      employeesMasterData[employeeId]?.department ||
+      '';
+    const deptLower = deptRaw.toLowerCase().trim();
+
+    const isDevOrMarketing = 
+      deptLower.includes("developer") || 
+      deptLower.includes("development") ||
+      deptLower.includes("digital marketing") ||
+      deptLower.includes("marketing");
+
+    const isFlexibleWeekOff = 
+      deptLower.includes("laboratory") || 
+      deptLower.includes("nursing") || 
+      deptLower.includes("medical") ||
+      deptLower.includes("lab");
+
+    // ✅ weekOffPerMonth — 0 skip karke valid value lo
+    let weekOffPerMonth = 4;
+    const candidates = [
+      selectedEmployee.weekOffPerMonth,
+      employeesMasterData[employeeId]?.weekOffPerMonth,
+      selectedEmployee.defaultWeekOffs,
+      selectedEmployee.targetWeekOffCount
+    ];
+    for (const c of candidates) {
+      if (typeof c === 'number' && c > 0) {
+        weekOffPerMonth = c;
+        break;
       }
+    }
 
-      // ─── CASE 2: Nursing / Laboratory → max 4 din weekoff from absent ───
-      if (isNursingOrLab) {
-        const maxWeekOffs = 4;
-        const absentDays = collectAbsentDays();
-        const weekOffDaysCount = Math.min(maxWeekOffs, absentDays.length);
-        for (let i = 0; i < weekOffDaysCount; i++) {
-          weekOffDatesSet.add(absentDays[i].toLocaleDateString('en-CA'));
-        }
-        return weekOffDatesSet;
-      }
-
-      // ─── CASE 3: Developer / Marketing / Baaki sab → har Sunday weekoff ───
+    // CASE 1: Dev/Marketing → Har Sunday
+    if (isDevOrMarketing) {
       monthDates.forEach(date => {
         if (date.toLocaleDateString('en-US', { weekday: 'long' }) === 'Sunday') {
           weekOffDatesSet.add(date.toLocaleDateString('en-CA'));
         }
       });
-
       return weekOffDatesSet;
-    };
-    const weekOffDatesSet = getWeekOffDatesForMonth();
+    }
 
-    const isWeekOffDay = (date) => {
-      if (!date || !selectedEmployee) return false;
-      return weekOffDatesSet.has(date.toLocaleDateString('en-CA'));
-    };
+    // CASE 2: Medical/Nursing/Lab → Flexible (absent days se week off)
+    if (isFlexibleWeekOff) {
+      const absentDays = [];
+      monthDates.forEach(date => {
+        const dateKey = date.toLocaleDateString('en-CA');
+        const hasAttendance = attendanceMap.has(dateKey);
+        const isLeave = isLeaveDay(date, employeeId, employeeLeaves);
+        const isHol = isHoliday(date);
 
-    let weekOffCount = 0, leaveCount = 0, absentCount = 0, presentCount = 0;
+        // ✅ Holiday, Leave, ya Attendance wale din skip karo
+        if (!hasAttendance && !isLeave && !isHol) {
+          absentDays.push(date);
+        }
+      });
+      absentDays.sort((a, b) => a - b);
+      const weekOffDaysCount = Math.min(weekOffPerMonth, absentDays.length);
+      for (let i = 0; i < weekOffDaysCount; i++) {
+        weekOffDatesSet.add(absentDays[i].toLocaleDateString('en-CA'));
+      }
+      return weekOffDatesSet;
+    }
+
+    // CASE 3: Others → emp.weekOffDay fixed
+    const weekOffDay = 
+      selectedEmployee.weekOffDay ||
+      employeesMasterData[employeeId]?.weekOffDay ||
+      'Sunday';
+
+    const weekOffDayNum = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(weekOffDay);
 
     monthDates.forEach(date => {
-      const dateKey = date.toLocaleDateString('en-CA');
-      const record = attendanceMap.get(dateKey);
-      const isWO = isWeekOffDay(date);
-      const hasAttendance = !!record;
-      const isLV = !isWO && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
-      
-      if (isWO && !hasAttendance) weekOffCount++;
-      else if (isLV) leaveCount++;
-      else if (!record) absentCount++;
-      else presentCount++;
+      if (date.getDay() === weekOffDayNum) {
+        weekOffDatesSet.add(date.toLocaleDateString('en-CA'));
+      }
     });
 
-    const formatTime = (dateString) => {
-      if (!dateString) return '-';
-      return new Date(dateString).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-    };
+    return weekOffDatesSet;
+  };
 
-    const getRecordForDate = (dateKey) => {
-      return attendanceMap.get(dateKey) || null;
-    };
+  const weekOffDatesSet = getWeekOffDatesForMonth();
 
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg w-full max-w-7xl mx-4 max-h-[85vh] flex flex-col">
-          <div className="sticky top-0 flex items-center justify-between p-3 bg-white border-b rounded-t-lg">
-            <div>
-              <h2 className="text-lg font-bold text-gray-700">Attendance Records - {selectedEmployee?.name}</h2>
-              <p className="text-xs text-gray-500">ID: {selectedEmployee?.employeeId} | Shift: {shiftHours} hrs/day | Week-offs: {targetWeekOffCount} days</p>
-            </div>
-            <button onClick={() => setShowAttendancePopup(false)} className="text-gray-500 hover:text-gray-700">
-              <FaTimes className="w-5 h-5" />
-            </button>
+  const isWeekOffDay = (date) => {
+    if (!date || !selectedEmployee) return false;
+    return weekOffDatesSet.has(date.toLocaleDateString('en-CA'));
+  };
+
+  // ✅ UPDATED: Single Punch bhi Present count mein add hoga
+  let weekOffCount = 0, leaveCount = 0, absentCount = 0, presentCount = 0, holidayCount = 0, singlePunchCount = 0;
+
+  monthDates.forEach(date => {
+    const dateKey = date.toLocaleDateString('en-CA');
+    const record = attendanceMap.get(dateKey);
+    const isWO = isWeekOffDay(date);
+    const hasAttendance = !!record;
+    const isLV = !isWO && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
+    const isHol = isHoliday(date);
+
+    if (isHol && !hasAttendance) {
+      holidayCount++;
+    } else if (isWO && !hasAttendance) {
+      weekOffCount++;
+    } else if (isLV) {
+      leaveCount++;
+    } else if (!record) {
+      absentCount++;
+    } else if (record && record.checkInTime && !record.checkOutTime) {
+      // ✅ Single Punch: count karo AUR Present mein bhi add karo
+      singlePunchCount++;
+      presentCount++;
+    } else {
+      presentCount++;
+    }
+  });
+
+  const formatTime = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
+
+  const getRecordForDate = (dateKey) => {
+    return attendanceMap.get(dateKey) || null;
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg w-full max-w-7xl mx-4 max-h-[85vh] flex flex-col">
+        <div className="sticky top-0 flex items-center justify-between p-3 bg-white border-b rounded-t-lg">
+          <div>
+            <h2 className="text-lg font-bold text-gray-700">Attendance Records - {selectedEmployee?.name}</h2>
+            <p className="text-xs text-gray-500">ID: {selectedEmployee?.employeeId} | Shift: {shiftHours} hrs/day | Week-offs: {targetWeekOffCount} days</p>
           </div>
-          
-          <div className="flex items-center justify-between px-4 py-2 bg-white border-b">
-            <div className="flex gap-4 text-xs">
-              <span className="font-medium">Total Days: <strong>{monthDates.length}</strong></span>
-              <span className="text-orange-600">Week Off: <strong>{weekOffCount}</strong></span>
-              <span className="text-red-600">Leaves: <strong>{leaveCount}</strong></span>
-              <span className="text-gray-500">Absent: <strong>{absentCount}</strong></span>
-              <span className="text-green-600">Present: <strong>{presentCount}</strong></span>
-            </div>
-            <div className="flex gap-3 text-xs">
-              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded"></div><span>Week Off</span></div>
-              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div><span>Leave</span></div>
-              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div><span>Absent</span></div>
-              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-blue-100 border border-green-300 rounded"></div><span>Present</span></div>
-            </div>
+          <button onClick={() => setShowAttendancePopup(false)} className="text-gray-500 hover:text-gray-700">
+            <FaTimes className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* ✅ Stats Bar */}
+        <div className="flex items-center justify-between px-4 py-2 bg-white border-b flex-wrap gap-2">
+          <div className="flex gap-3 text-xs flex-wrap">
+            <span className="font-medium">Total Days: <strong>{monthDates.length}</strong></span>
+            <span className="text-purple-600">PH: <strong>{holidayCount}</strong></span>
+            <span className="text-orange-600">Week Off: <strong>{weekOffCount}</strong></span>
+            <span className="text-red-600">Leaves: <strong>{leaveCount}</strong></span>
+            <span className="text-gray-500">Absent: <strong>{absentCount}</strong></span>
+            <span className="text-blue-600">Single Punch: <strong>{singlePunchCount}</strong></span>
+            <span className="text-green-600">Present: <strong>{presentCount}</strong></span>
           </div>
-          
-          <div className="flex-1 p-2 overflow-y-auto">
-            {attendanceLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-center">
-                  <div className="w-8 h-8 mx-auto mb-2 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-                  <p className="text-sm text-gray-500">Loading...</p>
-                </div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 text-white bg-gradient-to-r from-green-500 to-blue-600">
-                    <tr>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Date</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Check-In</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Check-Out</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Reason</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Hours</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Status</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Admin Comment</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {monthDates.map((date) => {
-                      const dateKey = date.toLocaleDateString('en-CA');
-                      const record = getRecordForDate(dateKey);
-                      const hasAttendance = !!record;
-                      
-                      const workHours = record ? calculateWorkHours(record.checkInTime, record.checkOutTime) : null;
-                      
-                      const isWeekOff = isWeekOffDay(date);
-                      const isLeave = !isWeekOff && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
-                      
-                      const effectiveWeekOff = isWeekOff && !hasAttendance;
-                      
-                      let bgColor = '';
-                      let dayType = '';
-                      let statusText = '';
-                      
-                      if (effectiveWeekOff) {
-                        bgColor = 'bg-orange-50';
-                        dayType = 'Week Off';
-                        statusText = 'Week Off';
-                      } else if (isLeave) {
-                        bgColor = 'bg-red-50';
-                        dayType = 'Leave';
-                        statusText = 'On Leave';
-                      } else if (!hasAttendance) {
-                        bgColor = 'bg-white';
-                        dayType = 'Absent';
-                        statusText = 'Absent';
-                      } else {
-                        bgColor = 'bg-white';
-                        const hoursNum = parseFloat(workHours);
-                        if (hoursNum >= shiftHours * 0.9) dayType = 'Full Day';
-                        else if (hoursNum >= shiftHours * 0.5) dayType = 'Half Day';
-                        else dayType = 'Absent';
-                        statusText = record?.checkOutTime ? 'Completed' : (record?.status === "checked-in" ? 'Active' : 'Unknown');
-                      }
-                      
-                      return (
-                        <tr key={dateKey} className={`${bgColor} hover:bg-gray-50 transition-colors`}>
-                          <td className="px-2 py-1 text-xs text-center">{date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
-                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance ? formatTime(record?.checkInTime) : '-'}</td>
-                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance ? formatTime(record?.checkOutTime) : '-'}</td>
-                          <td className="px-2 py-1 text-xs text-center">{record?.reason || '-'}</td>
-                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance && workHours ? `${workHours}h` : '-'}</td>
-                          <td className="px-2 py-1 text-center">
-                            <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${effectiveWeekOff ? 'bg-orange-100 text-orange-700' : isLeave ? 'bg-red-100 text-red-700' : !hasAttendance ? 'bg-gray-100 text-gray-500' : dayType === 'Full Day' ? 'bg-green-100 text-green-700' : dayType === 'Half Day' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{dayType}</span>
-                          </td>
-                          <td className="px-2 py-1 text-xs text-center">{record?.comment || '-'}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex justify-between items-center p-3 bg-white border-t rounded-b-lg">
-            <button 
-              onClick={async () => {
-                if (selectedEmployee) {
-                  await fetchEmployeeAttendance(selectedEmployee.employeeId, selectedMonth);
-                }
-              }}
-              className="px-3 py-1.5 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-200 flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
-            <button onClick={() => setShowAttendancePopup(false)} className="px-4 py-1.5 text-sm text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700">
-              Close
-            </button>
+          <div className="flex gap-3 text-xs flex-wrap">
+            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-purple-100 border border-purple-300 rounded"></div><span>PH</span></div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded"></div><span>Week Off</span></div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div><span>Leave</span></div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div><span>Absent</span></div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div><span>Single Punch</span></div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div><span>Present</span></div>
           </div>
         </div>
+
+        <div className="flex-1 p-2 overflow-y-auto">
+          {attendanceLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="w-8 h-8 mx-auto mb-2 border-b-2 border-blue-600 rounded-full animate-spin"></div>
+                <p className="text-sm text-gray-500">Loading...</p>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 text-white bg-gradient-to-r from-green-500 to-blue-600">
+                  <tr>
+                    <th className="px-2 py-1.5 text-center text-xs font-medium">Date</th>
+                    <th className="px-2 py-1.5 text-center text-xs font-medium">Check-In</th>
+                    <th className="px-2 py-1.5 text-center text-xs font-medium">Check-Out</th>
+                    <th className="px-2 py-1.5 text-center text-xs font-medium">Reason</th>
+                    <th className="px-2 py-1.5 text-center text-xs font-medium">Hours</th>
+                    <th className="px-2 py-1.5 text-center text-xs font-medium">Status</th>
+                    <th className="px-2 py-1.5 text-center text-xs font-medium">Admin Comment</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {monthDates.map((date) => {
+                    const dateKey = date.toLocaleDateString('en-CA');
+                    const record = getRecordForDate(dateKey);
+                    const hasAttendance = !!record;
+
+                    const workHours = record ? calculateWorkHours(record.checkInTime, record.checkOutTime) : null;
+
+                    const isWeekOff = isWeekOffDay(date);
+                    const isLeave = !isWeekOff && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
+                    const holidayCheck = isHoliday(date);
+
+                    const effectiveWeekOff = isWeekOff && !hasAttendance;
+                    const singlePunch = record && record.checkInTime && !record.checkOutTime;
+
+                    let bgColor = '';
+                    let dayType = '';
+
+                    // ✅ Priority: Holiday > WeekOff > Leave > Single Punch > Absent > Present
+                    if (holidayCheck && !hasAttendance) {
+                      bgColor = 'bg-purple-50';
+                      dayType = 'Public Holiday';
+                    } else if (effectiveWeekOff) {
+                      bgColor = 'bg-orange-50';
+                      dayType = 'Week Off';
+                    } else if (isLeave) {
+                      bgColor = 'bg-red-50';
+                      dayType = 'Leave';
+                    } else if (!hasAttendance) {
+                      bgColor = 'bg-white';
+                      dayType = 'Absent';
+                    } else if (singlePunch) {
+                      bgColor = 'bg-blue-50';
+                      dayType = 'Single Punch';
+                    } else {
+                      bgColor = 'bg-white';
+                      const hoursNum = parseFloat(workHours);
+                      if (hoursNum >= shiftHours * 0.9) dayType = 'Full Day';
+                      else if (hoursNum >= shiftHours * 0.5) dayType = 'Half Day';
+                      else dayType = 'Absent';
+                    }
+
+                    return (
+                      <tr key={dateKey} className={`${bgColor} hover:bg-gray-50 transition-colors`}>
+                        <td className="px-2 py-1 text-xs text-center">{date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
+                        <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance ? formatTime(record?.checkInTime) : '-'}</td>
+                        <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance ? formatTime(record?.checkOutTime) : '-'}</td>
+                        <td className="px-2 py-1 text-xs text-center">{record?.reason || '-'}</td>
+                        <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance && workHours ? `${workHours}h` : '-'}</td>
+                        <td className="px-2 py-1 text-center">
+                          <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${
+                            holidayCheck && !hasAttendance ? 'bg-purple-100 text-purple-700'
+                            : effectiveWeekOff ? 'bg-orange-100 text-orange-700'
+                            : isLeave ? 'bg-red-100 text-red-700'
+                            : !hasAttendance ? 'bg-gray-100 text-gray-500'
+                            : dayType === 'Single Punch' ? 'bg-blue-100 text-blue-700'
+                            : dayType === 'Full Day' ? 'bg-green-100 text-green-700'
+                            : dayType === 'Half Day' ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-gray-100 text-gray-500'
+                          }`}>{dayType}</span>
+                        </td>
+                        <td className="px-2 py-1 text-xs text-center">{record?.comment || '-'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-between items-center p-3 bg-white border-t rounded-b-lg">
+          <button 
+            onClick={async () => {
+              if (selectedEmployee) {
+                await fetchEmployeeAttendance(selectedEmployee.employeeId, selectedMonth);
+              }
+            }}
+            className="px-3 py-1.5 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-200 flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+          <button onClick={() => setShowAttendancePopup(false)} className="px-4 py-1.5 text-sm text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700">
+            Close
+          </button>
+        </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   if (loading) {
     return (

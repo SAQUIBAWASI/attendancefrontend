@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
+import { useNavigate } from "react-router-dom";
 import {
   FaSearch,
   FaCalendarAlt,
@@ -100,6 +101,8 @@ const EMPTY_FORM = {
 };
 
 export default function DoctorManagement() {
+    const navigate = useNavigate();
+
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -800,25 +803,36 @@ export default function DoctorManagement() {
               <FiRefreshCw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Refresh</span>
             </button>
-            <button
-              onClick={downloadCSV}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
-              title="Export CSV"
-            >
-              <FiDownload className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Export CSV</span>
-            </button>
-            <button
-              onClick={() => {
-                setFormData({ ...EMPTY_FORM });
-                setEditingId(null);
-                setShowForm(true);
-              }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-            >
-              <FiPlus className="w-3.5 h-3.5" />
-              <span>Add Doctor</span>
-            </button>
+           <button
+  onClick={downloadCSV}
+  className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+  title="Export CSV"
+>
+  <FiDownload className="w-3.5 h-3.5" />
+  <span className="hidden sm:inline">Export CSV</span>
+</button>
+
+{/* ✅ NEW — Appointment Slots Redirect */}
+<button
+  onClick={() => navigate("/appointment-slots")}
+  className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all shadow-sm"
+  title="Manage Appointment Slots"
+>
+  <FaCalendarAlt className="w-3.5 h-3.5" />
+  <span>Appointment Slots</span>
+</button>
+
+<button
+  onClick={() => {
+    setFormData({ ...EMPTY_FORM });
+    setEditingId(null);
+    setShowForm(true);
+  }}
+  className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+>
+  <FiPlus className="w-3.5 h-3.5" />
+  <span>Add Doctor</span>
+</button>
           </div>
         </div>
 
