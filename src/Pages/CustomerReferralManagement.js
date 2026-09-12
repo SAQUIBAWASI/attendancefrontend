@@ -80,8 +80,8 @@ import {
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 
-const API_BASE_URL = "http://localhost:5001/api/referralcontacts";
-const BASE_API = "http://localhost:5001/api";
+const API_BASE_URL = "https://api.timelyhealth.in/api/referralcontacts";
+const BASE_API = "https://api.timelyhealth.in/api";
 
 const STATUS_OPTIONS = ["active", "inactive"];
 

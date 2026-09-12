@@ -1,6 +1,8 @@
 // ReferralManagement.js — Combined Doctor + Customer Referrals Management
 // ✅ Tabs: Doctor Referrals | Customer Referrals
 // ✅ Removed: No. of OPs & Revenue columns
+// ✅ Removed: Total Revenue stat card (ab 4 cards hain)
+// ✅ Mobile Card View Added
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -23,8 +25,8 @@ import {
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 
-const API_BASE_URL = "http://localhost:5001/api/referralcontacts";
-const BASE_API = "http://localhost:5001/api";
+const API_BASE_URL = "https://api.timelyhealth.in/api/referralcontacts";
+const BASE_API = "https://api.timelyhealth.in/api";
 
 const STATUS_OPTIONS = ["active", "inactive"];
 
@@ -583,14 +585,12 @@ export default function ReferralManagement() {
     const inactive = activeReferrals.filter((r) => r.status === "inactive").length;
 
     let totalOps = 0;
-    let totalRevenue = 0;
     activeReferrals.forEach((r) => {
       const metrics = getReferralMetrics(r);
       totalOps += metrics.opCount;
-      totalRevenue += metrics.revenue;
     });
 
-    return { total, active, inactive, totalOps, totalRevenue };
+    return { total, active, inactive, totalOps };
   }, [activeReferrals, bookings, activeTab]);
 
   // ==================== FORMATTERS ====================
@@ -896,7 +896,7 @@ export default function ReferralManagement() {
             </button>
 
             <button
-              onClick={() => navigate(isDoctorTab ? "/doctorreffredop" : "/customerreffredop")}
+              onClick={() => navigate(isDoctorTab ? "/referral-bookings" : "/referral-bookings")}
               className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
               title={`View ${referrerLabel} Referred OP Bookings`}
             >
@@ -963,7 +963,7 @@ export default function ReferralManagement() {
             )}
 
             <button
-              onClick={() => navigate(isDoctorTab ? "/doctorreffredop" : "/customerreffredop")}
+              onClick={() => navigate(isDoctorTab ? "/referral-bookings" : "/referral-bookings")}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
             >
               {isDoctorTab ? <FaStethoscope className="w-3.5 h-3.5" /> : <FaUsers className="w-3.5 h-3.5" />}
@@ -1031,7 +1031,7 @@ export default function ReferralManagement() {
         </div>
 
         {/* ==================== STATS CARDS ==================== */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           <div
             className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
               activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""
@@ -1084,22 +1084,9 @@ export default function ReferralManagement() {
             <div className="emp-dash__stat-value text-blue-600">{stats.totalOps}</div>
             <div className="emp-dash__stat-meta">total OP visits</div>
           </div>
-
-          <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Revenue</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FaRupeeSign className="w-4 h-4 text-emerald-600" />
-              </div>
-            </div>
-            <div className="emp-dash__stat-value text-emerald-600">
-              ₹{stats.totalRevenue.toLocaleString()}
-            </div>
-            <div className="emp-dash__stat-meta">total revenue</div>
-          </div>
         </div>
 
-        {/* ==================== MAIN TABLE ==================== */}
+        {/* ==================== MAIN TABLE / CARD ==================== */}
         <div className="emp-dash__card">
           {activeReferrals.length === 0 && !loading ? (
             <div className="emp-dash__card-body py-12 text-center text-gray-500">
@@ -1141,7 +1128,8 @@ export default function ReferralManagement() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* ===== DESKTOP TABLE VIEW ===== */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="emp-dash__table">
                   <thead>
                     <tr>
@@ -1282,6 +1270,128 @@ export default function ReferralManagement() {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* ===== MOBILE CARD VIEW ===== */}
+              <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
+                {currentReferrals.map((referral, idx) => {
+                  const clinic = parseFloat(referral.clinicCommission) || 0;
+                  const pharmacy = parseFloat(referral.pharmacyCommission) || 0;
+                  const lab = parseFloat(referral.labCommission) || 0;
+                  const total = parseFloat(referral.totalCommission) || 0;
+                  const name = isDoctorTab ? (referral.doctorName || "N/A") : (referral.customerName || "N/A");
+
+                  return (
+                    <div key={referral._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className={`w-9 h-9 rounded-full ${avatarBg} text-white font-bold flex items-center justify-center text-xs flex-shrink-0`}>
+                            {name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-slate-800 text-sm truncate">{name}</div>
+                            <div className="text-[11px] text-gray-500 flex items-center gap-1">
+                              <FaPhoneAlt className="text-[9px]" />
+                              {isDoctorTab ? (referral.doctorPhone || "N/A") : (referral.customerPhone || "N/A")}
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border ${getStatusBadgeColor(referral.status)} flex-shrink-0`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${referral.status === "active" ? "bg-emerald-500" : "bg-red-500"}`}></span>
+                          {referral.status}
+                        </span>
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="p-3 space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          {isDoctorTab ? (
+                            <>
+                              <div>
+                                <div className="text-[9px] font-bold uppercase text-gray-400">Organization</div>
+                                <div className="font-semibold text-slate-700 truncate">{referral.doctorOrganization || "N/A"}</div>
+                              </div>
+                              <div>
+                                <div className="text-[9px] font-bold uppercase text-gray-400">Specialization</div>
+                                <div className="font-semibold text-slate-700 truncate">{referral.doctorSpecialization || "General"}</div>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="col-span-2">
+                              <div className="text-[9px] font-bold uppercase text-gray-400">Address</div>
+                              <div className="font-semibold text-slate-700 truncate">{referral.customerAddress || "N/A"}</div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Commission Breakdown */}
+                        <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-gray-100">
+                          <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200">
+                            <div className="text-[8px] font-bold text-blue-600 uppercase">Clinic</div>
+                            <div className="text-xs font-extrabold text-blue-800">{clinic}%</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded-lg bg-green-50 border border-green-200">
+                            <div className="text-[8px] font-bold text-green-600 uppercase">Pharm</div>
+                            <div className="text-xs font-extrabold text-green-800">{pharmacy}%</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200">
+                            <div className="text-[8px] font-bold text-purple-600 uppercase">Lab</div>
+                            <div className="text-xs font-extrabold text-purple-800">{lab}%</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded-lg bg-gray-100 border border-gray-200">
+                            <div className="text-[8px] font-bold text-gray-600 uppercase">Total</div>
+                            <div className="text-xs font-extrabold text-gray-800">{total}%</div>
+                          </div>
+                        </div>
+
+                        {/* Status Change + Date */}
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-bold uppercase text-gray-400">Status:</span>
+                            <select
+                              value={referral.status}
+                              onChange={(e) => handleStatusChange(referral, e.target.value)}
+                              className="text-[10px] font-medium border border-gray-200 rounded px-1.5 py-0.5 bg-white focus:outline-none"
+                            >
+                              {STATUS_OPTIONS.map((status) => (
+                                <option key={status} value={status} className="capitalize">{status}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="text-[10px] text-slate-600 font-medium">
+                            {formatDate(referral.createdAt)}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
+                          <button
+                            onClick={() => { setSelectedReferral(referral); setShowDetailModal(true); }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold"
+                            title="View Details"
+                          >
+                            <FiEye className="w-3.5 h-3.5" /> View
+                          </button>
+                          <button
+                            onClick={() => handleEdit(referral)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold"
+                            title="Edit Referral"
+                          >
+                            <FiEdit2 className="w-3.5 h-3.5" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(referral._id)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-[10px] font-bold"
+                            title="Delete Record"
+                          >
+                            <FiTrash2 className="w-3.5 h-3.5" /> Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* ==================== PAGINATION ==================== */}

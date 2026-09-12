@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useNavigate } from "react-router-dom";
 import {
   FaSearch,
   FaCalendarAlt,
-  FaClock,
   FaUserMd,
   FaStethoscope,
   FaTimes,
@@ -16,17 +15,16 @@ import {
   FaMoneyBillWave,
   FaPrint,
   FaCheckCircle,
-  FaTimesCircle,
   FaFileInvoiceDollar,
   FaUserInjured,
   FaPlus,
-  FaTrashAlt,
-  FaEdit,
   FaEye,
   FaCheck,
-  FaClipboardList,
   FaCalendarCheck,
-  FaHistory
+  FaUserFriends,
+  FaToggleOn,
+  FaToggleOff,
+  FaClock
 } from "react-icons/fa";
 import {
   FiUsers,
@@ -42,32 +40,13 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiCalendar,
-  FiFileText,
-  FiDollarSign,
   FiPlusCircle,
   FiChevronDown,
-  FiChevronUp,
   FiAlertCircle
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 import logo from "../Images/Timelyhealth logo.png";
-
-const GENDER_OPTIONS = [
-  { value: "Male", label: "Male" },
-  { value: "Female", label: "Female" },
-  { value: "Other", label: "Other" }
-];
-
-const FEE_TYPE_OPTIONS = [
-  { value: "consultation", label: "Consultation Fee" },
-  { value: "lab", label: "Lab Fee" }
-];
-
-const PAYMENT_TYPE_OPTIONS = [
-  { value: "cash", label: "Cash" },
-  { value: "online", label: "Online" }
-];
 
 const PAYMENT_STATUS_OPTIONS = [
   { value: "Pending", label: "Pending" },
@@ -82,33 +61,11 @@ const BOOKING_STATUS_OPTIONS = [
   { value: "cancelled", label: "Cancelled" }
 ];
 
-const EMPTY_FORM = {
-  name: "",
-  age: "",
-  gender: "",
-  phone: "",
-  address: "",
-  feeType: "consultation",
-  feeAmount: 300,
-  paymentType: "cash",
-  reason: "",
-  paymentStatus: "Pending",
-  doctorId: "",
-  slotId: "",
-  appointmentDate: ""
-};
-
 const CLINIC_INFO = {
   name: "TimelyHealth",
   address:
     "Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, H. No: 1-98/9/25/p, Opp Style on Studio, VIP Hills, near Bank of Baroda, Arunodaya Colony, Sri Sai Nagar, Madhapur, Hyderabad, Telangana 500081",
   contact: "9505397000"
-};
-
-const getDayNameFromDate = (dateStr) => {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", { weekday: "long" });
 };
 
 const formatDateToDDMMYYYY = (dateString) => {
@@ -153,69 +110,28 @@ const getStatusColors = (status) => {
   return statusMap[status?.toLowerCase()] || statusMap.booked;
 };
 
+// ✅ STRICT NON-OP CHECK
+const isNonOPBooking = (b) => {
+  if (!b) return false;
+  if (b.isOP === false) return true;
+  if (b.isOP === "false") return true;
+  if (b.isOP === 0) return true;
+  if (b.isOP === undefined || b.isOP === null) return true;
+  return false;
+};
+
 const numberToWords = (num) => {
   if (num === 0) return "Zero";
-  const ones = [
-    "",
-    "One",
-    "Two",
-    "Three",
-    "Four",
-    "Five",
-    "Six",
-    "Seven",
-    "Eight",
-    "Nine",
-    "Ten",
-    "Eleven",
-    "Twelve",
-    "Thirteen",
-    "Fourteen",
-    "Fifteen",
-    "Sixteen",
-    "Seventeen",
-    "Eighteen",
-    "Nineteen"
-  ];
-  const tens = [
-    "",
-    "",
-    "Twenty",
-    "Thirty",
-    "Forty",
-    "Fifty",
-    "Sixty",
-    "Seventy",
-    "Eighty",
-    "Ninety"
-  ];
+  const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
 
   const convert = (n) => {
     if (n < 20) return ones[n];
     if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
-    if (n < 1000)
-      return (
-        ones[Math.floor(n / 100)] +
-        " Hundred" +
-        (n % 100 ? " and " + convert(n % 100) : "")
-      );
-    if (n < 100000)
-      return (
-        convert(Math.floor(n / 1000)) +
-        " Thousand" +
-        (n % 1000 ? " " + convert(n % 1000) : "")
-      );
-    if (n < 10000000)
-      return (
-        convert(Math.floor(n / 100000)) +
-        " Lakh" +
-        (n % 100000 ? " " + convert(n % 100000) : "")
-      );
-    return (
-      convert(Math.floor(n / 10000000)) +
-      " Crore" +
-      (n % 10000000 ? " " + convert(n % 10000000) : "")
-    );
+    if (n < 1000) return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " and " + convert(n % 100) : "");
+    if (n < 100000) return convert(Math.floor(n / 1000)) + " Thousand" + (n % 1000 ? " " + convert(n % 1000) : "");
+    if (n < 10000000) return convert(Math.floor(n / 100000)) + " Lakh" + (n % 100000 ? " " + convert(n % 100000) : "");
+    return convert(Math.floor(n / 10000000)) + " Crore" + (n % 10000000 ? " " + convert(n % 10000000) : "");
   };
 
   return convert(num) + " Rupees Only";
@@ -223,18 +139,10 @@ const numberToWords = (num) => {
 
 export default function Bookings() {
   const navigate = useNavigate();
-  
-  // ===== MAIN DATA STATES =====
-  const [patients, setPatients] = useState([]);
+
   const [bookings, setBookings] = useState([]);
-  const [doctors, setDoctors] = useState([]);
   const [allSlots, setAllSlots] = useState([]);
-  const [availableSlots, setAvailableSlots] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState({ ...EMPTY_FORM });
-  const [editingId, setEditingId] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [slotsLoading, setSlotsLoading] = useState(false);
 
   const [services, setServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(false);
@@ -256,25 +164,15 @@ export default function Bookings() {
   const [paymentUpdating, setPaymentUpdating] = useState(false);
 
   const [openPaymentDropdown, setOpenPaymentDropdown] = useState(null);
-
-  // Status Dropdown state
   const [openStatusDropdown, setOpenStatusDropdown] = useState(null);
 
-  const [existingPatient, setExistingPatient] = useState(null);
-  const [showExistingPatientPopup, setShowExistingPatientPopup] = useState(false);
-  const [searchingPatient, setSearchingPatient] = useState(false);
-
-  // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [feeTypeFilter, setFeeTypeFilter] = useState("All");
   const [doctorFilter, setDoctorFilter] = useState("All");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-
-  // Card filter state
   const [activeCardFilter, setActiveCardFilter] = useState("all");
 
   const [toast, setToast] = useState(null);
@@ -282,16 +180,13 @@ export default function Bookings() {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [patientBookings, setPatientBookings] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
     const saved = localStorage.getItem("bookings_itemsPerPage");
     return saved ? parseInt(saved, 10) : 10;
   });
 
-  // ===== BILLING STATE =====
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [selectedBookingForBilling, setSelectedBookingForBilling] = useState(null);
   const [billingData, setBillingData] = useState({
@@ -312,49 +207,25 @@ export default function Bookings() {
     amountInWords: ""
   });
 
-  const phoneInputRef = useRef(null);
-  const nameInputRef = useRef(null);
-  const searchTimeoutRef = useRef(null);
-
-  const getDefaultMonth = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  };
-  const isDefaultMonth = selectedMonth === getDefaultMonth();
-
-  const hasActiveFilters = 
+  const hasActiveFilters =
     searchQuery !== "" ||
     statusFilter !== "All" ||
-    feeTypeFilter !== "All" ||
     doctorFilter !== "All" ||
     fromDate !== "" ||
     toDate !== "" ||
     (selectedMonth && selectedMonth !== "");
 
-  const formatMonthDisplay = (monthValue) => {
-    if (!monthValue) return '';
-    const [year, month] = monthValue.split('-');
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${monthNames[parseInt(month) - 1]} ${year}`;
-  };
-
-  // Toast helper
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Fetch initial data
   useEffect(() => {
     fetchAllData();
-    const today = new Date().toISOString().split("T")[0];
-    setFormData((prev) => ({ ...prev, appointmentDate: today }));
   }, []);
 
   const fetchAllData = () => {
-    fetchPatients();
     fetchBookings();
-    fetchDoctors();
     fetchAllSlots();
     fetchServices();
   };
@@ -370,43 +241,11 @@ export default function Bookings() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // ===== fetchPatients =====
-  const fetchPatients = async () => {
+  const fetchBookings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/patients`);
-      console.log("=== PATIENTS API RESPONSE ===", res.data);
-      
-      let patientsData = [];
-      if (res.data && res.data.success) {
-        if (res.data.data && Array.isArray(res.data.data)) {
-          patientsData = res.data.data;
-        } else if (Array.isArray(res.data)) {
-          patientsData = res.data;
-        } else {
-          patientsData = res.data.data || [];
-        }
-      } else if (Array.isArray(res.data)) {
-        patientsData = res.data;
-      }
-      
-      console.log("=== EXTRACTED PATIENTS ===", patientsData);
-      setPatients(patientsData);
-    } catch (err) {
-      console.error("Error fetching patients:", err);
-      setPatients([]);
-      showToast("Failed to fetch patient records", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ===== fetchBookings =====
-  const fetchBookings = async () => {
-    try {
       const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings`);
-      console.log("=== BOOKINGS API RESPONSE ===", res.data);
-      
+
       let bookingsData = [];
       if (res.data && res.data.success) {
         if (res.data.bookings && Array.isArray(res.data.bookings)) {
@@ -421,13 +260,9 @@ export default function Bookings() {
       } else if (Array.isArray(res.data)) {
         bookingsData = res.data;
       }
-      
-      console.log("=== EXTRACTED BOOKINGS ===", bookingsData);
-      
-      // Filter out OP bookings (isOP === true) - ONLY SHOW isOP === false
-      const nonOPBookings = bookingsData.filter((b) => b.isOP === false || b.isOP === undefined);
-      console.log("=== NON-OP BOOKINGS (isOP === false) ===", nonOPBookings);
-      
+
+      const nonOPBookings = bookingsData.filter(isNonOPBooking);
+
       const transformedBookings = nonOPBookings.map((b) => {
         const slotDetails = b.slotDetails || {};
         return {
@@ -436,13 +271,11 @@ export default function Bookings() {
           patientName: b.patientName || "",
           patientAge: b.patientAge || "",
           patientGender: b.patientGender || "Male",
+          patientTitle: b.patientTitle || "",
           patientPhone: b.patientPhone || "",
           patientAddress: b.patientAddress || "",
           patientEmail: b.patientEmail || "",
-          patientBloodGroup: b.patientBloodGroup || "",
-          patientMedicalHistory: b.patientMedicalHistory || "",
-          patientAllergies: b.patientAllergies || "",
-          patientMedications: b.patientMedications || "",
+          patientDob: b.patientDob || "",
           dayOfWeek: slotDetails.dayOfWeek || b.dayOfWeek || "",
           date: slotDetails.date || b.appointmentDate || b.date || "",
           startTime: slotDetails.startTime || b.startTime || "",
@@ -454,10 +287,10 @@ export default function Bookings() {
           symptoms: b.symptoms || "",
           appointmentType: b.appointmentType || "Consultation",
           priority: b.priority || "Normal",
-          consultationFee: b.consultationFee || 300,
+          consultationFee: b.servicesTotal || b.consultationFee || 300,
           paymentType: b.paymentType || "cash",
           paymentStatus: b.paymentStatus || "Pending",
-          totalAmount: b.totalAmount || b.consultationFee || 300,
+          totalAmount: b.totalAmount || b.finalPayable || 0,
           amountPaid: b.amountPaid || 0,
           balanceAmount: b.balanceAmount || 0,
           status: b.status || "confirmed",
@@ -467,42 +300,16 @@ export default function Bookings() {
           bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
           shift: b.shift || slotDetails.shift || "Morning Shift",
           appointmentDate: b.appointmentDate || slotDetails.date || "",
-          billNumber: b.billNumber || "",
-          billingDate: b.billingDate || null,
-          completedAt: b.completedAt || null,
-          followUpRequired: b.followUpRequired || false,
-          followUpDate: b.followUpDate || "",
-          followUpNotes: b.followUpNotes || "",
-          notes: b.notes || "",
-          clinicalNotes: b.clinicalNotes || "",
-          diagnosis: b.diagnosis || "",
-          prescription: b.prescription || "",
-          labTestsOrdered: b.labTestsOrdered || [],
-          imagingOrdered: b.imagingOrdered || [],
-          referralToSpecialist: b.referralToSpecialist || "",
-          patientRating: b.patientRating || null,
-          patientFeedback: b.patientFeedback || "",
-          isOP: b.isOP || false
+          isOP: false
         };
       });
-      
-      console.log("=== TRANSFORMED NON-OP BOOKINGS ===", transformedBookings);
+
       setBookings(transformedBookings);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setBookings([]);
-    }
-  };
-
-  const fetchDoctors = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/doctors/getalldoctors`);
-      if (res.data && res.data.success) {
-        setDoctors(res.data.data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching doctors:", error);
-      setDoctors([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -534,210 +341,6 @@ export default function Bookings() {
     }
   };
 
-  // Filter slots for appointment booking
-  const filterSlotsByDoctorAndDate = (doctorId, date) => {
-    if (!doctorId || !date) {
-      setAvailableSlots([]);
-      return;
-    }
-    setSlotsLoading(true);
-    setAvailableSlots([]);
-    setFormData((prev) => ({ ...prev, slotId: "" }));
-    try {
-      const selectedDay = getDayNameFromDate(date);
-      let filtered = allSlots.filter((slot) => {
-        const isSameDoctor = slot.doctorId === doctorId;
-        const isSameDay = slot.dayOfWeek === selectedDay;
-        const isNotBreak = slot.type !== "break";
-        return isSameDoctor && isSameDay && isNotBreak;
-      });
-      const seenTimes = new Set();
-      filtered = filtered.filter((slot) => {
-        const key = slot.startTime;
-        if (seenTimes.has(key)) return false;
-        seenTimes.add(key);
-        return true;
-      });
-      filtered.sort((a, b) => a.startTime.localeCompare(b.startTime));
-      setAvailableSlots(filtered);
-    } catch (error) {
-      console.error("Error filtering slots:", error);
-      setAvailableSlots([]);
-      showToast("Failed to filter slots", "error");
-    } finally {
-      setSlotsLoading(false);
-    }
-  };
-
-  // Existing patient lookup
-  const checkExistingPatient = (value, field) => {
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    if (editingId) {
-      setExistingPatient(null);
-      setShowExistingPatientPopup(false);
-      return;
-    }
-    if (!value || value.length < 2) {
-      setExistingPatient(null);
-      setShowExistingPatientPopup(false);
-      return;
-    }
-    setSearchingPatient(true);
-    searchTimeoutRef.current = setTimeout(() => {
-      let found = null;
-      if (field === "phone") {
-        found = patients.find((p) => p.phone === value);
-      } else if (field === "name") {
-        const searchTerm = value.toLowerCase().trim();
-        found = patients.find((p) => p.name && p.name.toLowerCase().includes(searchTerm));
-      }
-      if (found) {
-        setExistingPatient(found);
-        setShowExistingPatientPopup(true);
-      } else {
-        setExistingPatient(null);
-        setShowExistingPatientPopup(false);
-      }
-      setSearchingPatient(false);
-    }, 500);
-  };
-
-  const autoFillPatientDetails = () => {
-    if (!existingPatient) return;
-    setFormData((prev) => ({
-      ...prev,
-      name: existingPatient.name || "",
-      age: existingPatient.age ?? "",
-      gender: existingPatient.gender || "",
-      phone: existingPatient.phone || "",
-      address: existingPatient.address || "",
-      feeType: existingPatient.feeType || "consultation",
-      feeAmount: existingPatient.feeAmount ?? 300,
-      paymentType: existingPatient.paymentType || "cash",
-      reason: existingPatient.reason || "",
-      paymentStatus: existingPatient.paymentStatus || "Pending"
-    }));
-    setEditingId(existingPatient._id);
-    setShowExistingPatientPopup(false);
-    showToast(`Patient ${existingPatient.name} details auto-filled!`, "info");
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (name === "phone") checkExistingPatient(value, "phone");
-    else if (name === "name") checkExistingPatient(value, "name");
-    if (name === "doctorId" || name === "appointmentDate") {
-      const doctorId = name === "doctorId" ? value : formData.doctorId;
-      const date = name === "appointmentDate" ? value : formData.appointmentDate;
-      if (doctorId && date) filterSlotsByDoctorAndDate(doctorId, date);
-      else setAvailableSlots([]);
-    }
-  };
-
-  const handleSlotSelect = (slotId) => {
-    setFormData((prev) => ({ ...prev, slotId }));
-  };
-
-  // Submit patient & book slot
-  const handleBookNow = async (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.phone || formData.age === "" || !formData.gender) {
-      showToast("Please fill all required fields", "error");
-      return;
-    }
-    if (!formData.doctorId) {
-      showToast("Please select a doctor", "error");
-      return;
-    }
-    if (!formData.slotId) {
-      showToast("Please select an available slot", "error");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      let patientData;
-      if (editingId) {
-        const res = await axios.put(`${API_BASE_URL}/patients/${editingId}`, {
-          name: formData.name,
-          age: formData.age,
-          gender: formData.gender,
-          phone: formData.phone,
-          address: formData.address,
-          feeType: formData.feeType,
-          feeAmount: formData.feeAmount,
-          paymentType: formData.paymentType,
-          reason: formData.reason,
-          paymentStatus: formData.paymentStatus
-        });
-        if (res.data.success) {
-          patientData = res.data.data;
-          setPatients((prev) => prev.map((p) => (p._id === editingId ? patientData : p)));
-        }
-      } else {
-        const res = await axios.post(`${API_BASE_URL}/patients`, {
-          name: formData.name,
-          age: formData.age,
-          gender: formData.gender,
-          phone: formData.phone,
-          address: formData.address,
-          feeType: formData.feeType,
-          feeAmount: formData.feeAmount,
-          paymentType: formData.paymentType,
-          reason: formData.reason,
-          paymentStatus: formData.paymentStatus
-        });
-        if (res.data.success) {
-          patientData = res.data.data;
-          setPatients((prev) => [patientData, ...prev]);
-        }
-      }
-      if (!patientData) {
-        showToast("Failed to save patient data", "error");
-        setSubmitting(false);
-        return;
-      }
-      const bookingPayload = {
-        slotId: formData.slotId,
-        patientId: patientData._id,
-        patientName: formData.name,
-        patientPhone: formData.phone,
-        patientAge: formData.age,
-        patientGender: formData.gender,
-        patientAddress: formData.address,
-        purpose: formData.reason,
-        consultationFee: formData.feeAmount,
-        paymentType: formData.paymentType,
-        paymentStatus: formData.paymentStatus,
-        doctorId: formData.doctorId,
-        appointmentDate: formData.appointmentDate,
-        isOP: false  // <-- Always false for this component
-      };
-      const slotRes = await axios.post(`${API_BASE_URL}/appointment-slots/book`, bookingPayload);
-      if (slotRes.data.success) {
-        showToast(`Appointment booked successfully for ${formData.name}!`, "success");
-        fetchBookings();
-        fetchAllSlots();
-        filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
-        const today = new Date().toISOString().split("T")[0];
-        setFormData({ ...EMPTY_FORM, appointmentDate: today });
-        setEditingId(null);
-        setShowForm(false);
-        setAvailableSlots([]);
-        setExistingPatient(null);
-        setShowExistingPatientPopup(false);
-      } else {
-        showToast(slotRes.data.message || "Failed to book appointment", "error");
-      }
-    } catch (err) {
-      console.error("Error booking appointment:", err);
-      showToast(err.response?.data?.message || "Failed to book appointment", "error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // ==================== STATUS SELECT HANDLER ====================
   const handleStatusSelect = async (booking, status, e) => {
     if (e) {
       e.stopPropagation();
@@ -750,15 +353,11 @@ export default function Bookings() {
     }
     setStatusUpdating(true);
     try {
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/${booking._id}`,
-        { status: status }
-      );
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, { status });
       if (res && res.data && res.data.success) {
         showToast(`Status updated to ${status}!`, "success");
         setOpenStatusDropdown(null);
         fetchBookings();
-        fetchPatients();
         refreshPatientBookings();
       } else {
         showToast(res.data.message || "Failed to update status", "error");
@@ -771,7 +370,6 @@ export default function Bookings() {
     }
   };
 
-  // ==================== PAYMENT SELECT HANDLER ====================
   const handlePaymentSelect = async (booking, paymentStatus, e) => {
     if (e) {
       e.stopPropagation();
@@ -784,15 +382,11 @@ export default function Bookings() {
     }
     setPaymentUpdating(true);
     try {
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/${booking._id}`,
-        { paymentStatus: paymentStatus }
-      );
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, { paymentStatus });
       if (res && res.data && res.data.success) {
         showToast(`Payment updated to ${paymentStatus}!`, "success");
         setOpenPaymentDropdown(null);
         fetchBookings();
-        fetchPatients();
         refreshPatientBookings();
       } else {
         showToast(res.data.message || "Failed to update payment", "error");
@@ -805,7 +399,6 @@ export default function Bookings() {
     }
   };
 
-  // Add Service Modal Handlers
   const openAddServiceModal = (booking) => {
     setSelectedBookingForService(booking);
     setSelectedServiceId("");
@@ -867,7 +460,6 @@ export default function Bookings() {
     }
   };
 
-  // Status Update Handlers
   const openStatusUpdateModal = (booking) => {
     setSelectedBookingForStatus(booking);
     setNewBookingStatus(booking.status || "confirmed");
@@ -894,7 +486,6 @@ export default function Bookings() {
         showToast(`Booking status updated to ${newBookingStatus}!`, "success");
         setShowStatusUpdateModal(false);
         fetchBookings();
-        fetchPatients();
         refreshPatientBookings();
       } else {
         showToast(res.data.message || "Failed to update status", "error");
@@ -907,7 +498,6 @@ export default function Bookings() {
     }
   };
 
-  // Payment Update Handlers
   const openPaymentUpdateModal = (booking) => {
     setSelectedBookingForPayment(booking);
     setNewPaymentStatus(booking.paymentStatus || "Pending");
@@ -934,7 +524,6 @@ export default function Bookings() {
         showToast(`Booking payment status updated to ${newPaymentStatus}!`, "success");
         setShowPaymentUpdateModal(false);
         fetchBookings();
-        fetchPatients();
         refreshPatientBookings();
       } else {
         showToast(res.data.message || "Failed to update payment status", "error");
@@ -947,36 +536,14 @@ export default function Bookings() {
     }
   };
 
-  // Inline Quick Payment Status Switch
-  const handleInlinePaymentUpdate = async (bookingId, newPaymentStatus, patientName) => {
-    try {
-      setBookings((prev) =>
-        prev.map((b) => (b._id === bookingId ? { ...b, paymentStatus: newPaymentStatus } : b))
-      );
-
-      await axios.put(`${API_BASE_URL}/appointment-slots/${bookingId}`, {
-        paymentStatus: newPaymentStatus
-      });
-
-      showToast(`Payment status updated to '${newPaymentStatus}' for ${patientName}!`, "success");
-      setOpenPaymentDropdown(null);
-      fetchPatients();
-      refreshPatientBookings();
-    } catch (error) {
-      console.error("Error updating payment status:", error);
-      showToast("Failed to update payment status. Please try again.", "error");
-      fetchBookings();
-    }
-  };
-
   const refreshPatientBookings = () => {
     if (selectedPatient) {
       const updatedBookings = bookings.filter(
         (b) =>
-          b.patientPhone === selectedPatient.phone ||
+          b.patientPhone === selectedPatient.patientPhone ||
           (b.patientName &&
-            selectedPatient.name &&
-            b.patientName.toLowerCase() === selectedPatient.name.toLowerCase())
+            selectedPatient.patientName &&
+            b.patientName.toLowerCase() === selectedPatient.patientName.toLowerCase())
       );
       updatedBookings.sort(
         (a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
@@ -985,67 +552,32 @@ export default function Bookings() {
     }
   };
 
-  const handleEdit = (patient) => {
-    const today = new Date().toISOString().split("T")[0];
-    setFormData({
-      name: patient.name || "",
-      age: patient.age ?? "",
-      gender: patient.gender || "",
-      phone: patient.phone || "",
-      address: patient.address || "",
-      feeType: patient.feeType || "consultation",
-      feeAmount: patient.feeAmount ?? 300,
-      paymentType: patient.paymentType || "cash",
-      reason: patient.reason || "",
-      paymentStatus: patient.paymentStatus || "Pending",
-      doctorId: "",
-      slotId: "",
-      appointmentDate: today
-    });
-    setEditingId(patient._id);
-    setShowForm(true);
-    setAvailableSlots([]);
-    setExistingPatient(null);
-    setShowExistingPatientPopup(false);
-  };
-
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this patient record?")) return;
+    if (!window.confirm("Are you sure you want to delete this booking?")) return;
     try {
-      await axios.delete(`${API_BASE_URL}/patients/${id}`);
-      setPatients((prev) => prev.filter((p) => p._id !== id));
-      showToast("Patient record deleted successfully", "info");
+      await axios.delete(`${API_BASE_URL}/appointment-slots/${id}`);
+      setBookings((prev) => prev.filter((b) => b._id !== id));
+      showToast("Booking deleted successfully", "info");
     } catch (err) {
       console.error("Error deleting:", err);
-      showToast("Failed to delete patient record", "error");
+      showToast("Failed to delete booking", "error");
     }
   };
 
-  const cancelForm = () => {
-    const today = new Date().toISOString().split("T")[0];
-    setFormData({ ...EMPTY_FORM, appointmentDate: today });
-    setEditingId(null);
-    setShowForm(false);
-    setAvailableSlots([]);
-    setExistingPatient(null);
-    setShowExistingPatientPopup(false);
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+  const handleRowClick = (booking) => {
+    fetchPatientData(booking);
   };
 
-  const handleRowClick = (patient) => {
-    fetchPatientData(patient);
-  };
-
-  const fetchPatientData = async (patient) => {
+  const fetchPatientData = async (booking) => {
     setHistoryLoading(true);
-    setSelectedPatient(patient);
+    setSelectedPatient(booking);
     try {
       const patientBookingsList = bookings.filter(
         (b) =>
-          b.patientPhone === patient.phone ||
+          b.patientPhone === booking.patientPhone ||
           (b.patientName &&
-            patient.name &&
-            b.patientName.toLowerCase() === patient.name.toLowerCase())
+            booking.patientName &&
+            b.patientName.toLowerCase() === booking.patientName.toLowerCase())
       );
       patientBookingsList.sort(
         (a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
@@ -1060,7 +592,6 @@ export default function Bookings() {
     }
   };
 
-  // Billing helpers
   const getTotalServiceFee = (booking) => {
     if (!booking.services || booking.services.length === 0) return 0;
     return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
@@ -1070,117 +601,6 @@ export default function Bookings() {
     return (booking.consultationFee || 0) + getTotalServiceFee(booking);
   };
 
-  // Get patient's total fee (consultation + services)
-  const getPatientTotalFee = (patient) => {
-    const patientBookings = bookings.filter(
-      (b) =>
-        b.patientPhone === patient.phone ||
-        (b.patientName &&
-          patient.name &&
-          b.patientName.toLowerCase() === patient.name.toLowerCase())
-    );
-    if (patientBookings.length === 0) return patient.feeAmount || 300;
-    return patientBookings.reduce((total, b) => total + getTotalBookingFee(b), 0);
-  };
-
-  // Get patient's services list
-  const getPatientServices = (patient) => {
-    const patientBookings = bookings.filter(
-      (b) =>
-        b.patientPhone === patient.phone ||
-        (b.patientName &&
-          patient.name &&
-          b.patientName.toLowerCase() === patient.name.toLowerCase())
-    );
-    const allServices = [];
-    patientBookings.forEach((b) => {
-      if (b.services && b.services.length > 0) {
-        b.services.forEach((s) => {
-          allServices.push({
-            name: s.name,
-            price: s.price || 0,
-            paymentStatus: s.paymentStatus || "Pending",
-            bookingDate: b.date || b.appointmentDate
-          });
-        });
-      }
-    });
-    return allServices;
-  };
-
-  // Get patient's payment status from bookings
-  const getPatientPaymentStatus = (patient) => {
-    const patientBookings = bookings.filter(
-      (b) =>
-        b.patientPhone === patient.phone ||
-        (b.patientName &&
-          patient.name &&
-          b.patientName.toLowerCase() === patient.name.toLowerCase())
-    );
-    if (patientBookings.length === 0) return patient.paymentStatus || "Pending";
-    const hasPaid = patientBookings.some((b) => b.paymentStatus === "Paid");
-    return hasPaid ? "Paid" : "Pending";
-  };
-
-  // Get matching booking for patient
-  const getMatchingBooking = (patient) => {
-    return bookings.find(
-      (b) =>
-        b.patientPhone === patient.phone ||
-        (b.patientName &&
-          patient.name &&
-          b.patientName.toLowerCase() === patient.name.toLowerCase())
-    );
-  };
-
-  // Get consultation payment status
-  const getConsultationPaymentStatus = (patient) => {
-    const booking = getMatchingBooking(patient);
-    if (!booking) return patient.paymentStatus || "Pending";
-    return booking.paymentStatus || "Pending";
-  };
-
-  // Get booking status
-  const getBookingStatus = (patient) => {
-    const booking = getMatchingBooking(patient);
-    if (!booking) return "No Booking";
-    return booking.status || "confirmed";
-  };
-
-  // Get appointment date
-  const getAppointmentDate = (patient) => {
-    const booking = getMatchingBooking(patient);
-    if (!booking) return "-";
-    return booking.appointmentDate || booking.date || "-";
-  };
-
-  // Get slot timing
-  const getSlotTiming = (patient) => {
-    const booking = getMatchingBooking(patient);
-    if (!booking) return "-";
-    if (booking.startTime && booking.endTime) {
-      return `${booking.startTime} - ${booking.endTime}`;
-    }
-    return "-";
-  };
-
-  // Get booking created date
-  const getBookingCreatedDate = (patient) => {
-    const booking = getMatchingBooking(patient);
-    if (!booking) return "-";
-    return booking.bookedAt || booking.createdAt || "-";
-  };
-
-  // Get service payment statuses
-  const getServicePaymentStatuses = (patient) => {
-    const services = getPatientServices(patient);
-    return services.map(s => ({
-      name: s.name,
-      price: s.price,
-      paymentStatus: s.paymentStatus || "Pending"
-    }));
-  };
-
   const openBillingModal = (booking) => {
     setSelectedBookingForBilling(booking);
 
@@ -1188,23 +608,15 @@ export default function Bookings() {
     const totalServiceFee = getTotalServiceFee(booking);
     const grossAmount = consultationFee + totalServiceFee;
     const isPaid = booking.paymentStatus === "Paid";
-    const paidAmount = isPaid ? grossAmount : 0;
-    const balanceAmount = isPaid ? 0 : grossAmount;
+    const paidAmount = isPaid ? grossAmount : (booking.amountPaid || 0);
+    const balanceAmount = isPaid ? 0 : (booking.balanceAmount || grossAmount);
 
     const now = new Date();
-    const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(
-      now.getDate()
-    ).padStart(2, "0")}`;
+    const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
     const shortId = String(booking._id || "").slice(-6).toUpperCase() || "000000";
     const invoiceNo = `${dateStamp}-${shortId}`;
-    const dateTimeLabel = `${now.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
-    const receiptNo = `R-${shortId.slice(-4)}-${String(now.getFullYear()).slice(-2)}-${
-      now.getMonth() + 1
-    }-${Math.floor(1000 + Math.random() * 9000)}`;
+    const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
+    const receiptNo = `R-${shortId.slice(-4)}-${String(now.getFullYear()).slice(-2)}-${now.getMonth() + 1}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const items = [
       {
@@ -1218,9 +630,7 @@ export default function Bookings() {
       ...(booking.services || []).map((s, idx) => ({
         no: idx + 2,
         name: s.name,
-        serviceCode: s.serviceId
-          ? String(s.serviceId).slice(-6).toUpperCase()
-          : `SVC-${String(idx + 1).padStart(2, "0")}`,
+        serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
         remarks: s.description || s.paymentStatus || "Additional Service",
         amount: s.price || 0,
         paymentStatus: s.paymentStatus || "Pending"
@@ -1232,9 +642,7 @@ export default function Bookings() {
       invoiceDate: dateTimeLabel,
       receiptNo,
       receiptDate: dateTimeLabel,
-      paymentMode: booking.paymentType
-        ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1)
-        : "Cash",
+      paymentMode: booking.paymentType ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1) : "Cash",
       receivedBy: "Front Desk",
       branch: booking.doctorSpecialization || "Main Branch",
       doctorName: booking.doctorName || "General OP Doctor",
@@ -1252,34 +660,25 @@ export default function Bookings() {
 
   const handleMarkAsPaid = async () => {
     if (!selectedBookingForBilling) return;
-
     try {
       const res = await axios.put(
         `${API_BASE_URL}/appointment-slots/${selectedBookingForBilling._id}`,
         { paymentStatus: "Paid" }
       );
-
       if (res && res.data && res.data.success) {
         setBookings((prev) =>
           prev.map((b) =>
             b._id === selectedBookingForBilling._id ? { ...b, paymentStatus: "Paid" } : b
           )
         );
-
         setBillingData((prev) => ({
           ...prev,
           paymentStatus: "Paid",
           paidAmount: prev.netAmount,
           balanceAmount: 0
         }));
-
-        fetchPatients();
         refreshPatientBookings();
-
-        showToast(
-          `Payment marked as Paid for ${selectedBookingForBilling.patientName}!`,
-          "success"
-        );
+        showToast(`Payment marked as Paid for ${selectedBookingForBilling.patientName}!`, "success");
       } else {
         showToast(res.data.message || "Failed to update payment", "error");
       }
@@ -1290,9 +689,6 @@ export default function Bookings() {
   };
 
   const printBill = () => {
-    const billContent = document.getElementById("bill-content");
-    if (!billContent) return;
-
     const itemsRows = billingData.items
       .map(
         (item) => `
@@ -1318,184 +714,37 @@ export default function Bookings() {
             <title>Bill - ${billingData.invoiceNo}</title>
             <style>
               * { margin: 0; padding: 0; box-sizing: border-box; }
-              body {
-                font-family: Arial, Helvetica, sans-serif;
-                color: #222222;
-                padding: 24px;
-                background: #ffffff;
-                position: relative;
-              }
-              .bill-wrap {
-                max-width: 820px;
-                margin: 0 auto;
-                border: 1px solid #999999;
-                padding: 24px 28px;
-                position: relative;
-                background: #ffffff;
-                overflow: hidden;
-              }
-              .watermark {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                opacity: 0.08;
-                z-index: 0;
-                pointer-events: none;
-                width: 300px;
-                height: 300px;
-              }
-              .watermark img {
-                width: 100%;
-                height: 100%;
-                object-fit: contain;
-              }
-              .bill-content {
-                position: relative;
-                z-index: 1;
-              }
-              .top-header {
-                display: flex;
-                align-items: flex-start;
-                justify-content: space-between;
-                border-bottom: 2px solid #222222;
-                padding-bottom: 14px;
-              }
-              .top-header .brand {
-                display: flex;
-                align-items: center;
-                gap: 14px;
-              }
-              .top-header .brand img {
-                width: 60px;
-                height: 60px;
-                object-fit: contain;
-              }
-              .top-header .brand h1 {
-                font-size: 20px;
-                font-weight: bold;
-                color: #111111;
-                letter-spacing: 0.3px;
-              }
-              .top-header .brand p {
-                font-size: 11px;
-                color: #555555;
-                margin-top: 2px;
-                max-width: 440px;
-              }
-              .top-header .contact {
-                text-align: right;
-                font-size: 11px;
-                color: #555555;
-                white-space: nowrap;
-              }
-              .bar-title {
-                text-align: center;
-                background: #f1f1f1;
-                border-top: 1px solid #999999;
-                border-bottom: 1px solid #999999;
-                padding: 6px 0;
-                font-size: 13px;
-                font-weight: bold;
-                letter-spacing: 1.5px;
-                margin: 10px 0 14px 0;
-                text-transform: uppercase;
-              }
-              .info-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 4px 24px;
-                font-size: 12px;
-                margin-bottom: 14px;
-              }
-              .info-grid .label {
-                color: #666666;
-                font-weight: bold;
-                display: inline-block;
-                width: 120px;
-              }
-              table.items {
-                width: 100%;
-                border-collapse: collapse;
-                border-top: 2px solid #222222;
-                border-bottom: 2px solid #222222;
-                margin-bottom: 12px;
-              }
-              table.items th {
-                text-align: left;
-                font-size: 11px;
-                color: #555555;
-                padding: 6px 4px;
-                border-bottom: 1px solid #bbbbbb;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-              }
-              table.items td {
-                font-size: 12px;
-                padding: 6px 4px;
-                border-bottom: 1px solid #eeeeee;
-                color: #333333;
-              }
-              table.items td.text-right,
-              table.items th.text-right {
-                text-align: right;
-              }
-              table.items td.text-center,
-              table.items th.text-center {
-                text-align: center;
-              }
-              .totals-box {
-                width: 100%;
-                max-width: 300px;
-                margin-left: auto;
-                font-size: 12px;
-                margin-bottom: 12px;
-              }
-              .totals-box .row {
-                display: flex;
-                justify-content: space-between;
-                padding: 4px 0;
-                border-bottom: 1px solid #eeeeee;
-              }
-              .totals-box .row.final {
-                border-top: 2px solid #222222;
-                border-bottom: none;
-                font-weight: bold;
-                padding-top: 8px;
-                margin-top: 4px;
-                font-size: 13px;
-              }
-              .footer-row {
-                display: flex;
-                justify-content: flex-end;
-                gap: 8px;
-                font-size: 11px;
-                color: #555555;
-                border-top: 1px solid #dddddd;
-                padding-top: 12px;
-                margin-top: 10px;
-              }
-              .signature-section {
-                display: flex;
-                justify-content: flex-end;
-                margin-top: 8px;
-              }
-              .signature-section .sig {
-                font-weight: bold;
-                color: #333;
-              }
-              @media print {
-                body { padding: 0; }
-                .bill-wrap { border: none; }
-              }
+              body { font-family: Arial, Helvetica, sans-serif; color: #222222; padding: 24px; background: #ffffff; position: relative; }
+              .bill-wrap { max-width: 820px; margin: 0 auto; border: 1px solid #999999; padding: 24px 28px; position: relative; background: #ffffff; overflow: hidden; }
+              .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; width: 300px; height: 300px; }
+              .watermark img { width: 100%; height: 100%; object-fit: contain; }
+              .bill-content { position: relative; z-index: 1; }
+              .top-header { display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 2px solid #222222; padding-bottom: 14px; }
+              .top-header .brand { display: flex; align-items: center; gap: 14px; }
+              .top-header .brand img { width: 60px; height: 60px; object-fit: contain; }
+              .top-header .brand h1 { font-size: 20px; font-weight: bold; color: #111111; }
+              .top-header .brand p { font-size: 11px; color: #555555; margin-top: 2px; max-width: 440px; }
+              .top-header .contact { text-align: right; font-size: 11px; color: #555555; white-space: nowrap; }
+              .bar-title { text-align: center; background: #f1f1f1; border-top: 1px solid #999999; border-bottom: 1px solid #999999; padding: 6px 0; font-size: 13px; font-weight: bold; letter-spacing: 1.5px; margin: 10px 0 14px 0; text-transform: uppercase; }
+              .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; font-size: 12px; margin-bottom: 14px; }
+              .info-grid .label { color: #666666; font-weight: bold; display: inline-block; width: 120px; }
+              table.items { width: 100%; border-collapse: collapse; border-top: 2px solid #222222; border-bottom: 2px solid #222222; margin-bottom: 12px; }
+              table.items th { text-align: left; font-size: 11px; color: #555555; padding: 6px 4px; border-bottom: 1px solid #bbbbbb; text-transform: uppercase; }
+              table.items td { font-size: 12px; padding: 6px 4px; border-bottom: 1px solid #eeeeee; color: #333333; }
+              table.items td.text-right, table.items th.text-right { text-align: right; }
+              table.items td.text-center, table.items th.text-center { text-align: center; }
+              .totals-box { width: 100%; max-width: 300px; margin-left: auto; font-size: 12px; margin-bottom: 12px; }
+              .totals-box .row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eeeeee; }
+              .totals-box .row.final { border-top: 2px solid #222222; font-weight: bold; padding-top: 8px; margin-top: 4px; font-size: 13px; }
+              .footer-row { display: flex; justify-content: flex-end; gap: 8px; font-size: 11px; color: #555555; border-top: 1px solid #dddddd; padding-top: 12px; margin-top: 10px; }
+              .signature-section { display: flex; justify-content: flex-end; margin-top: 8px; }
+              .signature-section .sig { font-weight: bold; color: #333; }
+              @media print { body { padding: 0; } .bill-wrap { border: none; } }
             </style>
           </head>
           <body>
             <div class="bill-wrap">
-              <div class="watermark">
-                <img src="${logo}" alt="${CLINIC_INFO.name}" />
-              </div>
-              
+              <div class="watermark"><img src="${logo}" alt="${CLINIC_INFO.name}" /></div>
               <div class="bill-content">
                 <div class="top-header">
                   <div class="brand">
@@ -1505,13 +754,9 @@ export default function Bookings() {
                       <p>${CLINIC_INFO.address}</p>
                     </div>
                   </div>
-                  <div class="contact">
-                    Contact No : ${CLINIC_INFO.contact}
-                  </div>
+                  <div class="contact">Contact No : ${CLINIC_INFO.contact}</div>
                 </div>
-
                 <div class="bar-title">Bill Cum Receipt</div>
-
                 <div class="info-grid">
                   <div><span class="label">Name</span>: ${selectedBookingForBilling?.patientName || "N/A"}</div>
                   <div><span class="label">Invoice No / Date</span>: ${billingData.invoiceNo} / ${billingData.invoiceDate}</div>
@@ -1522,7 +767,6 @@ export default function Bookings() {
                   <div><span class="label">Doctor</span>: ${billingData.doctorName}</div>
                   <div><span class="label">Appt. Date</span>: ${formatDateToDDMMYYYY(selectedBookingForBilling?.date)}</div>
                 </div>
-
                 <table class="items">
                   <thead>
                     <tr>
@@ -1534,31 +778,18 @@ export default function Bookings() {
                       <th style="width:12%;" class="text-center">Payment Status</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    ${itemsRows}
-                  </tbody>
+                  <tbody>${itemsRows}</tbody>
                 </table>
-
                 <div class="totals-box">
                   <div class="row"><span>Gross Bill Amount</span><span>₹ ${billingData.grossAmount.toFixed(2)}</span></div>
                   <div class="row"><span>Net Amount</span><span>₹ ${billingData.netAmount.toFixed(2)}</span></div>
                   <div class="row"><span>Paid Amount</span><span>₹ ${billingData.paidAmount.toFixed(2)}</span></div>
                   <div class="row final"><span>Balance to Pay</span><span>₹ ${billingData.balanceAmount.toFixed(2)}</span></div>
                 </div>
-
                 <div class="footer-row">
-                  <span>Printed Date : ${new Date().toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric"
-                  })} ${new Date().toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit"
-      })}</span>
+                  <span>Printed Date : ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} ${new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
                 </div>
-                <div class="signature-section">
-                  <span class="sig">Signature</span>
-                </div>
+                <div class="signature-section"><span class="sig">Signature</span></div>
                 <div class="footer-note">* Bills cannot be cancelled once registered.</div>
               </div>
             </div>
@@ -1575,16 +806,12 @@ export default function Bookings() {
 
   const handleFromDateChange = (e) => {
     setFromDate(e.target.value);
-    if (e.target.value) {
-      setSelectedMonth("");
-    }
+    if (e.target.value) setSelectedMonth("");
   };
 
   const handleToDateChange = (e) => {
     setToDate(e.target.value);
-    if (e.target.value) {
-      setSelectedMonth("");
-    }
+    if (e.target.value) setSelectedMonth("");
   };
 
   const handleMonthChange = (e) => {
@@ -1596,28 +823,21 @@ export default function Bookings() {
   const clearFilters = () => {
     setSearchQuery("");
     setStatusFilter("All");
-    setFeeTypeFilter("All");
     setDoctorFilter("All");
     setFromDate("");
     setToDate("");
     setSelectedMonth("");
     setActiveCardFilter("all");
     setCurrentPage(1);
-    if (window.innerWidth < 1024) {
-      setShowMobileFilters(false);
-    }
+    if (window.innerWidth < 1024) setShowMobileFilters(false);
   };
 
   const handleCardClick = (type) => {
     setActiveCardFilter(type);
     setCurrentPage(1);
-    if (type === "all") {
-      setStatusFilter("All");
-    } else if (type === "Paid") {
-      setStatusFilter("Paid");
-    } else if (type === "Pending") {
-      setStatusFilter("Pending");
-    }
+    if (type === "all") setStatusFilter("All");
+    else if (type === "Paid") setStatusFilter("Paid");
+    else if (type === "Pending") setStatusFilter("Pending");
   };
 
   const getUniqueDoctors = () => {
@@ -1633,54 +853,20 @@ export default function Bookings() {
     return Array.from(doctorMap.values());
   };
 
-  // Filtered Patients - Only patients with non-OP bookings (isOP === false)
-  const filteredPatients = useMemo(() => {
-    console.log("=== FILTERING PATIENTS (NON-OP ONLY) ===");
-    console.log("All Patients:", patients);
-    console.log("Selected Month:", selectedMonth);
-    
-    // Get patients that have at least one booking with isOP === false
-    const patientsWithNonOPBookings = patients.filter((p) => {
-      const hasNonOPBooking = bookings.some(
-        (b) =>
-          (b.patientPhone === p.phone ||
-            (b.patientName &&
-              p.name &&
-              b.patientName.toLowerCase() === p.name.toLowerCase())) &&
-          b.isOP === false
-      );
-      return hasNonOPBooking;
-    });
-    
-    console.log("Patients with non-OP bookings:", patientsWithNonOPBookings.length);
-    
-    const filtered = patientsWithNonOPBookings.filter((p) => {
-      const paymentStatus = getPatientPaymentStatus(p);
-      
-      if (statusFilter !== "All" && paymentStatus !== statusFilter) return false;
-      if (feeTypeFilter !== "All" && p.feeType !== feeTypeFilter) return false;
-
-      if (doctorFilter !== "All") {
-        const hasBookingWithDoctor = bookings.some(
-          (b) =>
-            (b.patientPhone === p.phone ||
-              (b.patientName &&
-                p.name &&
-                b.patientName.toLowerCase() === p.name.toLowerCase())) &&
-            b.doctorName === doctorFilter &&
-            b.isOP === false
-        );
-        if (!hasBookingWithDoctor) return false;
-      }
+  const filteredBookings = useMemo(() => {
+    return bookings.filter((b) => {
+      if (statusFilter !== "All" && b.paymentStatus !== statusFilter) return false;
+      if (doctorFilter !== "All" && b.doctorName !== doctorFilter) return false;
 
       if (selectedMonth && selectedMonth !== "") {
-        const recordDate = new Date(p.createdAt);
+        const recordDate = new Date(b.appointmentDate || b.date || b.createdAt);
         const recordMonth = recordDate.toISOString().slice(0, 7);
         if (recordMonth !== selectedMonth) return false;
       }
 
-      if (p.createdAt) {
-        const recordDate = new Date(p.createdAt);
+      const dateToCheck = b.appointmentDate || b.date || b.createdAt;
+      if (dateToCheck) {
+        const recordDate = new Date(dateToCheck);
         if (fromDate && toDate) {
           const from = new Date(fromDate);
           from.setHours(0, 0, 0, 0);
@@ -1698,47 +884,30 @@ export default function Bookings() {
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchName = (p.name || "").toLowerCase().includes(q);
-        const matchPhone = (p.phone || "").toLowerCase().includes(q);
-        const matchAddress = (p.address || "").toLowerCase().includes(q);
-        const matchReason = (p.reason || "").toLowerCase().includes(q);
-        if (!matchName && !matchPhone && !matchAddress && !matchReason) return false;
+        const matchName = (b.patientName || "").toLowerCase().includes(q);
+        const matchPhone = (b.patientPhone || "").toLowerCase().includes(q);
+        const matchAddress = (b.patientAddress || "").toLowerCase().includes(q);
+        const matchPurpose = (b.purpose || "").toLowerCase().includes(q);
+        const matchDoctor = (b.doctorName || "").toLowerCase().includes(q);
+        if (!matchName && !matchPhone && !matchAddress && !matchPurpose && !matchDoctor) return false;
       }
       return true;
     });
-    
-    console.log("=== FILTERED PATIENTS COUNT (NON-OP) ===", filtered.length);
-    return filtered;
-  }, [
-    patients,
-    statusFilter,
-    feeTypeFilter,
-    doctorFilter,
-    searchQuery,
-    fromDate,
-    toDate,
-    selectedMonth,
-    bookings
-  ]);
+  }, [bookings, statusFilter, doctorFilter, searchQuery, fromDate, toDate, selectedMonth]);
 
-  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, fromDate, toDate, selectedMonth]);
+  }, [searchQuery, statusFilter, doctorFilter, fromDate, toDate, selectedMonth]);
 
-  // Stats - Only for non-OP bookings
   const stats = useMemo(() => {
-    const nonOPBookings = bookings.filter((b) => b.isOP === false);
-    const total = nonOPBookings.length;
-    
+    const total = bookings.length;
     let paidTotal = 0;
     let paidCount = 0;
     let pendingCount = 0;
-    
-    nonOPBookings.forEach((b) => {
+
+    bookings.forEach((b) => {
       const totalFee = getTotalBookingFee(b);
       const isPaid = b.paymentStatus === "Paid";
-      
       if (isPaid) {
         paidCount++;
         paidTotal += totalFee;
@@ -1746,58 +915,14 @@ export default function Bookings() {
         pendingCount++;
       }
     });
-    
-    const totalRevenue = paidTotal;
-    
-    return { 
-      total, 
-      paid: paidCount, 
-      pending: pendingCount, 
-      totalRevenue 
-    };
+
+    return { total, paid: paidCount, pending: pendingCount, totalRevenue: paidTotal };
   }, [bookings]);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
-  };
-
-  const formatTime = (dateStr) => {
-    if (!dateStr) return "";
-    return new Date(dateStr).toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true
-    });
-  };
-
-  const formatDateTime = (dateStr) => {
-    if (!dateStr) return "-";
-    try {
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return "-";
-      return date.toLocaleString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true
-      });
-    } catch {
-      return "-";
-    }
-  };
-
-  // Pagination Calculations
-  const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentPatients = filteredPatients.slice(indexOfFirstItem, indexOfLastItem);
+  const currentBookings = filteredBookings.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleItemsPerPageChange = (e) => {
     const newValue = Number(e.target.value);
@@ -1821,11 +946,7 @@ export default function Bookings() {
   const getPageNumbers = () => {
     const pageNumbers = [];
     for (let i = 1; i <= totalPages; i++) {
-      if (
-        i === 1 ||
-        i === totalPages ||
-        (i >= currentPage - 2 && i <= currentPage + 2)
-      ) {
+      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
         pageNumbers.push(i);
       } else if (i === currentPage - 3 || i === currentPage + 3) {
         pageNumbers.push("...");
@@ -1835,49 +956,33 @@ export default function Bookings() {
   };
 
   const downloadCSV = () => {
-    if (filteredPatients.length === 0) {
+    if (filteredBookings.length === 0) {
       alert("No records available to export!");
       return;
     }
-    const headers = [
-      "#", "Patient Name", "Phone", "Doctor", "Appointment Date", "Slot Timing", "Booking Status",
-      "Consultation Fee", "Cons. Payment", "Services", "Services Payment",
-      "Total Fee", "Payment Mode", "Reason", "Booked On", "Registered"
-    ];
+    const headers = ["#", "Patient Name", "Phone", "Doctor", "Appointment Date", "Slot Timing", "Booking Status", "Consultation Fee", "Cons. Payment", "Services", "Total Fee", "Payment Mode", "Reason", "Booked On"];
     const csvRows = [
       headers.join(","),
-      ...filteredPatients.map((p, idx) => {
-        const regDate = p.createdAt ? formatDateToDDMMYYYY(p.createdAt) : "-";
-        const regTime = p.createdAt ? formatTime(p.createdAt) : "-";
-        const totalFee = getPatientTotalFee(p);
-        const services = getPatientServices(p);
-        const servicesTotal = services.reduce((sum, s) => sum + s.price, 0);
-        const consPaymentStatus = getConsultationPaymentStatus(p);
-        const bookingStatus = getBookingStatus(p);
-        const appointmentDate = getAppointmentDate(p);
-        const slotTiming = getSlotTiming(p);
-        const bookingCreated = getBookingCreatedDate(p);
+      ...filteredBookings.map((b, idx) => {
+        const totalFee = getTotalBookingFee(b);
+        const services = b.services || [];
         const serviceNames = services.map(s => s.name).join("; ");
-        const serviceStatuses = services.map(s => s.paymentStatus).join("; ");
-        const booking = getMatchingBooking(p);
-        const consultationFee = booking?.consultationFee || p.feeAmount || 300;
+        const slotTiming = b.startTime && b.endTime ? `${b.startTime} - ${b.endTime}` : "-";
         return [
           idx + 1,
-          `"${(p.name || "").replace(/"/g, '""')}"`,
-          `"${p.phone || ""}"`,
-          `"${booking?.doctorName || "N/A"}"`,
-          `"${formatDateToDDMMYYYY(appointmentDate)}"`,
+          `"${(b.patientName || "").replace(/"/g, '""')}"`,
+          `"${b.patientPhone || ""}"`,
+          `"${b.doctorName || "N/A"}"`,
+          `"${formatDateToDDMMYYYY(b.appointmentDate || b.date)}"`,
           `"${slotTiming}"`,
-          `"${bookingStatus}"`,
-          consultationFee,
-          `"${consPaymentStatus}"`,
+          `"${b.status || "confirmed"}"`,
+          b.consultationFee || 300,
+          `"${b.paymentStatus || "Pending"}"`,
           `"${serviceNames}"`,
-          `"${serviceStatuses}"`,
           totalFee,
-          `"${p.paymentType || "cash"}"`,
-          `"${(p.reason || "").replace(/"/g, '""')}"`,
-          `"${formatDateTimeToDDMMYYYY(bookingCreated)}"`,
-          `${regDate} ${regTime}`
+          `"${b.paymentType || "cash"}"`,
+          `"${(b.purpose || "").replace(/"/g, '""')}"`,
+          `"${formatDateTimeToDDMMYYYY(b.bookedAt || b.createdAt)}"`
         ].join(",");
       })
     ];
@@ -1889,41 +994,28 @@ export default function Bookings() {
     a.download = `Bookings_Records_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast(`Exported ${filteredPatients.length} records to CSV!`);
+    showToast(`Exported ${filteredBookings.length} records to CSV!`);
   };
-
-  // ============================================================
-  // ===================== JSX RENDER ============================
-  // ============================================================
 
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
-        {/* Toast Notification */}
         {toast && (
           <div
-            className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
-              toast.type === "error"
-                ? "bg-red-600"
-                : toast.type === "info"
-                ? "bg-cyan-600"
-                : "bg-emerald-600"
+            className={`fixed top-5 right-5 z-[9999] flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
+              toast.type === "error" ? "bg-red-600" : toast.type === "info" ? "bg-cyan-600" : "bg-emerald-600"
             }`}
           >
-            {toast.type === "error" ? (
-              <FiXCircle className="w-5 h-5" />
-            ) : (
-              <FiCheckCircle className="w-5 h-5" />
-            )}
+            {toast.type === "error" ? <FiXCircle className="w-5 h-5" /> : <FiCheckCircle className="w-5 h-5" />}
             <span className="font-medium text-sm">{toast.message}</span>
           </div>
         )}
 
-        {/* ===================== HEADER WITH FILTERS ===================== */}
+        {/* HEADER DESKTOP */}
         <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-6">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
-              Appointment <span>Bookings</span>
+              Online <span>OP</span>
             </h1>
           </div>
 
@@ -1943,110 +1035,44 @@ export default function Bookings() {
               />
             </div>
 
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            >
-              <option value="All">All Status</option>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+              <option value="All">All Payment Status</option>
               <option value="Pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="consulting">Consulting</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="Paid">Paid</option>
             </select>
 
-            <select
-              value={feeTypeFilter}
-              onChange={(e) => setFeeTypeFilter(e.target.value)}
-              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            >
-              <option value="All">All Fee Types</option>
-              <option value="consultation">Consultation</option>
-              <option value="lab">Lab</option>
-            </select>
-
-            <select
-              value={doctorFilter}
-              onChange={(e) => setDoctorFilter(e.target.value)}
-              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[130px] truncate"
-            >
+            <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[130px] truncate">
               <option value="All">All Doctors</option>
               {getUniqueDoctors().map((doc) => (
-                <option key={doc.name} value={doc.name}>
-                  {doc.name}
-                </option>
+                <option key={doc.name} value={doc.name}>{doc.name}</option>
               ))}
             </select>
 
-            <input
-              type="date"
-              value={fromDate}
-              onChange={handleFromDateChange}
-              className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            />
+            <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+            <input type="date" value={toDate} onChange={handleToDateChange} className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+            <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
 
-            <input
-              type="date"
-              value={toDate}
-              onChange={handleToDateChange}
-              className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            />
-
-            <input
-              type="month"
-              value={selectedMonth}
-              onChange={handleMonthChange}
-              className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              placeholder="Select Month"
-            />
-
-            <button
-              onClick={() => { fetchPatients(); fetchBookings(); fetchAllSlots(); fetchDoctors(); fetchServices(); }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-            >
+            <button onClick={fetchAllData} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap">
               <FiRefreshCw className="w-3 h-3" /> Refresh
             </button>
 
-            <button
-              onClick={downloadCSV}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
-            >
+            <button onClick={downloadCSV} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap">
               <FiDownload className="w-3 h-3" /> Export CSV
             </button>
 
-            <button
-              onClick={() => {
-                const today = new Date().toISOString().split("T")[0];
-                setFormData({ ...EMPTY_FORM, appointmentDate: today });
-                setEditingId(null);
-                setShowForm(true);
-                setAvailableSlots([]);
-                setExistingPatient(null);
-                setShowExistingPatientPopup(false);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
-            >
-              <FiPlus className="w-3 h-3" /> Add Booking
-            </button>
-
             {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-              >
-                <FiTrash2 className="w-3 h-3 text-red-500" />
-                Clear
+              <button onClick={clearFilters} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap">
+                <FiTrash2 className="w-3 h-3 text-red-500" /> Clear
               </button>
             )}
           </div>
         </div>
 
-        {/* Mobile Header */}
+        {/* HEADER MOBILE */}
         <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
           <div className="flex items-baseline gap-2">
             <h1 className="text-base font-bold whitespace-nowrap">
-              Appointment <span className="text-indigo-600">Bookings</span>
+              Online <span className="text-indigo-600">OP</span>
             </h1>
             <div className="emp-dash__date-pill text-[10px] px-2 py-1">
               <FaCalendarCheck className="w-3 h-3 text-blue-600" />
@@ -2054,31 +1080,13 @@ export default function Bookings() {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => {
-                const today = new Date().toISOString().split("T")[0];
-                setFormData({ ...EMPTY_FORM, appointmentDate: today });
-                setEditingId(null);
-                setShowForm(true);
-                setAvailableSlots([]);
-                setExistingPatient(null);
-                setShowExistingPatientPopup(false);
-              }}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
-            >
-              <FiPlus className="w-3 h-3" /> Add
-            </button>
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-            >
-              <FiFilter className="w-3 h-3" />
-              Filters
+            <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+              <FiFilter className="w-3 h-3" /> Filters
             </button>
           </div>
         </div>
 
-        {/* Mobile Filters Panel */}
+        {/* MOBILE FILTERS */}
         <div className="lg:hidden">
           {showMobileFilters && (
             <div className="mb-4 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
@@ -2086,174 +1094,83 @@ export default function Bookings() {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
+                  <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  >
-                    <option value="All">All Status</option>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <option value="All">All Payment Status</option>
                     <option value="Pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="consulting">Consulting</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="Paid">Paid</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Fee Type</label>
-                  <select
-                    value={feeTypeFilter}
-                    onChange={(e) => setFeeTypeFilter(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  >
-                    <option value="All">All Fee Types</option>
-                    <option value="consultation">Consultation</option>
-                    <option value="lab">Lab</option>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Doctor</label>
+                  <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <option value="All">All Doctors</option>
+                    {getUniqueDoctors().map((doc) => (
+                      <option key={doc.name} value={doc.name}>{doc.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Doctor</label>
-                <select
-                  value={doctorFilter}
-                  onChange={(e) => setDoctorFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                >
-                  <option value="All">All Doctors</option>
-                  {getUniqueDoctors().map((doc) => (
-                    <option key={doc.name} value={doc.name}>
-                      {doc.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={handleFromDateChange}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
+                  <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={handleToDateChange}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
+                  <input type="date" value={toDate} onChange={handleToDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
                 </div>
               </div>
-
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={handleMonthChange}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
+                <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
-
               <div className="pt-3 border-t border-gray-200 flex gap-2">
-                <button
-                  onClick={() => {
-                    const today = new Date().toISOString().split("T")[0];
-                    setFormData({ ...EMPTY_FORM, appointmentDate: today });
-                    setEditingId(null);
-                    setShowForm(true);
-                    setAvailableSlots([]);
-                    setExistingPatient(null);
-                    setShowExistingPatientPopup(false);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Booking
-                </button>
-                <button
-                  onClick={downloadCSV}
-                  disabled={filteredPatients.length === 0}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                <button onClick={downloadCSV} disabled={filteredBookings.length === 0} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                   <FiDownload className="w-4 h-4" /> Export
+                </button>
+                <button onClick={fetchAllData} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
+                  <FiRefreshCw className="w-4 h-4" /> Refresh
                 </button>
               </div>
               {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                >
-                  <FiTrash2 className="w-4 h-4 text-red-500" />
-                  Clear All Filters
+                <button onClick={clearFilters} className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                  <FiTrash2 className="w-4 h-4 text-red-500" /> Clear All Filters
                 </button>
               )}
             </div>
           )}
         </div>
 
-        {/* ===================== TOP KPI STATS GRID ===================== */}
+        {/* KPI STATS */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
-          <div
-            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
-              activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""
-            }`}
-            onClick={() => handleCardClick("all")}
-          >
+          <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""}`} onClick={() => handleCardClick("all")}>
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Bookings</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FiUsers />
-              </div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div>
             </div>
             <div className="emp-dash__stat-value">{stats.total}</div>
             <div className="emp-dash__stat-meta">all appointments</div>
           </div>
 
-          <div
-            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
-              activeCardFilter === "Paid" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""
-            }`}
-            onClick={() => handleCardClick("Paid")}
-          >
+          <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "Paid" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("Paid")}>
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Paid</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FiUserCheck />
-              </div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div>
             </div>
             <div className="emp-dash__stat-value text-emerald-600">{stats.paid}</div>
             <div className="emp-dash__stat-meta">completed payments</div>
           </div>
 
-          <div
-            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
-              activeCardFilter === "Pending" ? "ring-2 ring-amber-500/20 border-amber-400" : ""
-            }`}
-            onClick={() => handleCardClick("Pending")}
-          >
+          <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "Pending" ? "ring-2 ring-amber-500/20 border-amber-400" : ""}`} onClick={() => handleCardClick("Pending")}>
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Pending</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
-                <FiClock />
-              </div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiClock /></div>
             </div>
             <div className="emp-dash__stat-value text-amber-600">{stats.pending}</div>
             <div className="emp-dash__stat-meta">awaiting payment</div>
@@ -2262,73 +1179,44 @@ export default function Bookings() {
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Revenue</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FaRupeeSign />
-              </div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FaRupeeSign /></div>
             </div>
-            <div className="emp-dash__stat-value text-blue-700">
-              ₹{stats.totalRevenue.toLocaleString()}
-            </div>
+            <div className="emp-dash__stat-value text-blue-700">₹{stats.totalRevenue.toLocaleString()}</div>
             <div className="emp-dash__stat-meta">collected revenue</div>
           </div>
 
           <div className="emp-dash__stat col-span-2 lg:col-span-1">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Filtered Records</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FiFilter />
-              </div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiFilter /></div>
             </div>
-            <div className="emp-dash__stat-value text-base sm:text-lg md:text-xl font-bold truncate">
-              {filteredPatients.length}
-            </div>
+            <div className="emp-dash__stat-value text-base sm:text-lg md:text-xl font-bold truncate">{filteredBookings.length}</div>
             <div className="emp-dash__stat-meta">matching filters</div>
           </div>
         </div>
 
-        {/* ===================== BOOKINGS TABLE SECTION ===================== */}
+        {/* ===== MAIN TABLE / CARD SECTION ===== */}
         <div className="emp-dash__card">
           {loading ? (
             <div className="py-12 text-center text-gray-500">
               <FiRefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
               <p className="text-sm font-medium text-gray-500">Loading booking records...</p>
             </div>
-          ) : filteredPatients.length === 0 ? (
+          ) : filteredBookings.length === 0 ? (
             <div className="py-12 text-center text-gray-500">
               <FaUserInjured className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-gray-700">No Booking Records Found</h3>
+              <h3 className="text-base font-bold text-gray-700">No Online OP Records Found</h3>
               <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto mb-4">
-                {stats.total === 0
-                  ? "Click 'Add Booking' to create a new appointment."
-                  : "No records match your current search/date filters."}
+                {stats.total === 0 ? "Online OP bookings yahan dikhengi." : "No records match your current search/date filters."}
               </p>
-              {hasActiveFilters ? (
-                <button
-                  onClick={clearFilters}
-                  className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
-                >
-                  Clear Filters
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    const today = new Date().toISOString().split("T")[0];
-                    setFormData({ ...EMPTY_FORM, appointmentDate: today });
-                    setEditingId(null);
-                    setShowForm(true);
-                    setAvailableSlots([]);
-                    setExistingPatient(null);
-                    setShowExistingPatientPopup(false);
-                  }}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm inline-flex items-center gap-1.5"
-                >
-                  <FiPlus className="w-3.5 h-3.5" /> Add Booking
-                </button>
+              {hasActiveFilters && (
+                <button onClick={clearFilters} className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm">Clear Filters</button>
               )}
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* ===== DESKTOP TABLE VIEW ===== */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="emp-dash__table">
                   <thead>
                     <tr>
@@ -2342,7 +1230,6 @@ export default function Bookings() {
                       <th style={{ textAlign: "center" }}>Cons. Fee</th>
                       <th style={{ textAlign: "center" }}>Cons. Payment</th>
                       <th style={{ textAlign: "center" }}>Services</th>
-                      <th style={{ textAlign: "center" }}>Services Payment</th>
                       <th style={{ textAlign: "center" }}>Total</th>
                       <th style={{ textAlign: "center" }}>Payment Mode</th>
                       <th style={{ textAlign: "center" }}>Booked On</th>
@@ -2350,358 +1237,128 @@ export default function Bookings() {
                     </tr>
                   </thead>
                   <tbody>
-                    {currentPatients.map((patient, idx) => {
-                      const matchingBooking = getMatchingBooking(patient);
-                      const totalFee = getPatientTotalFee(patient);
-                      const services = getPatientServices(patient);
-                      const consultationFee = matchingBooking?.consultationFee || patient.feeAmount || 300;
-                      const consultationPaymentStatus = getConsultationPaymentStatus(patient);
+                    {currentBookings.map((booking, idx) => {
+                      const totalFee = getTotalBookingFee(booking);
+                      const services = booking.services || [];
+                      const consultationFee = booking.consultationFee || 300;
+                      const consultationPaymentStatus = booking.paymentStatus || "Pending";
                       const isConsultationPaid = consultationPaymentStatus === "Paid";
-                      const bookingStatus = getBookingStatus(patient);
-                      const appointmentDate = getAppointmentDate(patient);
-                      const slotTiming = getSlotTiming(patient);
-                      const bookingCreated = getBookingCreatedDate(patient);
+                      const bookingStatus = booking.status || "confirmed";
+                      const appointmentDate = booking.appointmentDate || booking.date;
+                      const slotTiming = booking.startTime && booking.endTime ? `${booking.startTime} - ${booking.endTime}` : "-";
+                      const bookingCreated = booking.bookedAt || booking.createdAt;
                       const statusColors = getStatusColors(bookingStatus);
 
-                      // Service payment status handler
-                      const handleServicePaymentToggle = async (service) => {
-                        const booking = bookings.find(b => b._id === matchingBooking?._id);
-                        if (!booking) return;
-                        const serviceId = service.serviceId || service._id;
-                        const newStatus = service.paymentStatus === "Paid" ? "Pending" : "Paid";
-                        try {
-                          const res = await axios.put(
-                            `${API_BASE_URL}/services/updateservicepayment/${booking._id}/${serviceId}`,
-                            { paymentStatus: newStatus }
-                          );
-                          if (res && res.data && res.data.success) {
-                            showToast(`Service payment updated to ${newStatus}!`, "success");
-                            fetchBookings();
-                            fetchPatients();
-                            refreshPatientBookings();
-                          }
-                        } catch (error) {
-                          console.error("Error updating service payment:", error);
-                          showToast("Failed to update service payment", "error");
-                        }
-                      };
-
                       return (
-                        <tr
-                          key={patient._id}
-                          className="transition-colors hover:bg-blue-50/40 cursor-pointer group"
-                          onClick={() => handleRowClick(patient)}
-                        >
-                          <td className="px-2 py-3 font-semibold text-center text-slate-500 text-[11px]">
-                            {indexOfFirstItem + idx + 1}
-                          </td>
-
+                        <tr key={booking._id} className="transition-colors hover:bg-blue-50/40 group">
+                          <td className="px-2 py-3 font-semibold text-center text-slate-500 text-[11px]">{indexOfFirstItem + idx + 1}</td>
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-[10px] shadow-sm">
-                                {patient.name ? patient.name.charAt(0).toUpperCase() : "P"}
+                                {booking.patientName ? booking.patientName.charAt(0).toUpperCase() : "P"}
                               </div>
                               <div className="min-w-0">
-                                <div className="font-semibold text-slate-800 text-xs truncate max-w-[80px]">
-                                  {patient.name || "N/A"}
-                                </div>
+                                <div className="font-semibold text-slate-800 text-xs truncate max-w-[80px]">{booking.patientName || "N/A"}</div>
                               </div>
                             </div>
                           </td>
-
-                          <td className="px-3 py-3 whitespace-nowrap">
-                            <span className="text-xs font-medium text-slate-700">
-                              {patient.phone || "N/A"}
-                            </span>
-                          </td>
-
-                          <td className="px-3 py-3">
-                            <div className="text-xs font-semibold text-purple-800 truncate max-w-[90px]">
-                              {matchingBooking?.doctorName || "N/A"}
-                            </div>
-                          </td>
-
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className="text-xs font-medium text-slate-700">
-                              {formatDateToDDMMYYYY(appointmentDate)}
-                            </span>
-                          </td>
-
+                          <td className="px-3 py-3 whitespace-nowrap"><span className="text-xs font-medium text-slate-700">{booking.patientPhone || "N/A"}</span></td>
+                          <td className="px-3 py-3"><div className="text-xs font-semibold text-purple-800 truncate max-w-[90px]">{booking.doctorName || "N/A"}</div></td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-medium text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {slotTiming !== "-" ? (
                               <div className="flex flex-col items-center">
-                                <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                                  {slotTiming}
-                                </span>
+                                <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">{slotTiming}</span>
                               </div>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic">-</span>
-                            )}
+                            ) : (<span className="text-[10px] text-gray-400 italic">-</span>)}
                           </td>
 
-                          {/* ===== BOOKING STATUS DROPDOWN ===== */}
                           <td className="px-3 py-3 text-center whitespace-nowrap relative status-dropdown">
-                            {bookingStatus !== "No Booking" && matchingBooking ? (
-                              <div className="relative inline-block">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenStatusDropdown(openStatusDropdown === matchingBooking._id ? null : matchingBooking._id);
-                                  }}
-                                  className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border} hover:opacity-80 transition-all`}
-                                >
-                                  <FaCheckCircle className="w-2.5 h-2.5" />
-                                  {bookingStatus}
-                                  <FiChevronDown className="w-3 h-3 ml-0.5" />
-                                </button>
-                                {openStatusDropdown === matchingBooking._id && (
-                                  <div 
-                                    className="fixed z-[9999] bg-white rounded-lg shadow-2xl border border-gray-200 py-1 min-w-[140px] max-h-[200px] overflow-y-auto"
-                                    style={{
-                                      top: '50%',
-                                      left: '50%',
-                                      transform: 'translate(-50%, -50%)',
-                                      boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white to-transparent pointer-events-none"></div>
-                                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
-                                    {BOOKING_STATUS_OPTIONS.map((st) => {
-                                      const isActive = st.value === bookingStatus.toLowerCase();
-                                      const colors = getStatusColors(st.value);
-                                      return (
-                                        <button
-                                          key={st.value}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (matchingBooking) {
-                                              handleStatusSelect(matchingBooking, st.value, e);
-                                            }
-                                          }}
-                                          className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${isActive ? colors.text : "text-gray-600"}`}
-                                        >
-                                          <span className={`w-2 h-2 rounded-full ${colors.bg} border ${colors.border}`}></span>
-                                          {st.label}
-                                          {isActive && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic">No Booking</span>
-                            )}
+                            <div className="relative inline-block">
+                              <button onClick={(e) => { e.stopPropagation(); setOpenStatusDropdown(openStatusDropdown === booking._id ? null : booking._id); }} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border} hover:opacity-80 transition-all`}>
+                                <FaCheckCircle className="w-2.5 h-2.5" />
+                                {bookingStatus}
+                                <FiChevronDown className="w-3 h-3 ml-0.5" />
+                              </button>
+                              {openStatusDropdown === booking._id && (
+                                <div className="fixed z-[9999] bg-white rounded-lg shadow-2xl border border-gray-200 py-1 min-w-[140px] max-h-[200px] overflow-y-auto" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }} onClick={(e) => e.stopPropagation()}>
+                                  {BOOKING_STATUS_OPTIONS.map((st) => {
+                                    const isActive = st.value === bookingStatus.toLowerCase();
+                                    const colors = getStatusColors(st.value);
+                                    return (
+                                      <button key={st.value} onClick={(e) => { e.stopPropagation(); handleStatusSelect(booking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${isActive ? colors.text : "text-gray-600"}`}>
+                                        <span className={`w-2 h-2 rounded-full ${colors.bg} border ${colors.border}`}></span>
+                                        {st.label}
+                                        {isActive && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
                           </td>
 
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className="text-xs font-bold text-slate-800">
-                              ₹{consultationFee}
-                            </span>
-                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-slate-800">₹{consultationFee}</span></td>
 
-                          {/* ===== CONSULTATION PAYMENT DROPDOWN ===== */}
                           <td className="px-3 py-3 text-center whitespace-nowrap relative payment-dropdown">
-                            {matchingBooking ? (
-                              <div className="relative inline-block">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenPaymentDropdown(openPaymentDropdown === matchingBooking._id ? null : matchingBooking._id);
-                                  }}
-                                  className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
-                                    isConsultationPaid
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                      : "bg-amber-50 text-amber-700 border-amber-200"
-                                  } hover:opacity-80 transition-all`}
-                                >
-                                  {isConsultationPaid ? (
-                                    <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" />
-                                  ) : (
-                                    <FaClock className="w-2.5 h-2.5 text-amber-600" />
-                                  )}
-                                  {consultationPaymentStatus}
-                                  <FiChevronDown className="w-3 h-3 ml-0.5" />
-                                </button>
-                                {openPaymentDropdown === matchingBooking._id && (
-                                  <div 
-                                    className="fixed z-[9999] bg-white rounded-lg shadow-2xl border border-gray-200 py-1 min-w-[140px] max-h-[200px] overflow-y-auto"
-                                    style={{
-                                      top: '50%',
-                                      left: '50%',
-                                      transform: 'translate(-50%, -50%)',
-                                      boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white to-transparent pointer-events-none"></div>
-                                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
-                                    {PAYMENT_STATUS_OPTIONS.map((st) => {
-                                      const isActive = st.value === consultationPaymentStatus;
-                                      return (
-                                        <button
-                                          key={st.value}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handlePaymentSelect(matchingBooking, st.value, e);
-                                          }}
-                                          className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${isActive ? st.value === "Paid" ? "text-emerald-700" : "text-amber-700" : "text-gray-600"}`}
-                                        >
-                                          {st.value === "Paid" ? (
-                                            <FaCheckCircle className="w-3 h-3 text-emerald-500" />
-                                          ) : (
-                                            <FaClock className="w-3 h-3 text-amber-500" />
-                                          )}
-                                          {st.label}
-                                          {isActive && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic">-</span>
-                            )}
+                            <div className="relative inline-block">
+                              <button onClick={(e) => { e.stopPropagation(); setOpenPaymentDropdown(openPaymentDropdown === booking._id ? null : booking._id); }} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${isConsultationPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"} hover:opacity-80 transition-all`}>
+                                {isConsultationPaid ? <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> : <FiClock className="w-2.5 h-2.5 text-amber-600" />}
+                                {consultationPaymentStatus}
+                                <FiChevronDown className="w-3 h-3 ml-0.5" />
+                              </button>
+                              {openPaymentDropdown === booking._id && (
+                                <div className="fixed z-[9999] bg-white rounded-lg shadow-2xl border border-gray-200 py-1 min-w-[140px] max-h-[200px] overflow-y-auto" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }} onClick={(e) => e.stopPropagation()}>
+                                  {PAYMENT_STATUS_OPTIONS.map((st) => {
+                                    const isActive = st.value === consultationPaymentStatus;
+                                    return (
+                                      <button key={st.value} onClick={(e) => { e.stopPropagation(); handlePaymentSelect(booking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${isActive ? st.value === "Paid" ? "text-emerald-700" : "text-amber-700" : "text-gray-600"}`}>
+                                        {st.value === "Paid" ? <FaCheckCircle className="w-3 h-3 text-emerald-500" /> : <FiClock className="w-3 h-3 text-amber-500" />}
+                                        {st.label}
+                                        {isActive && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {services.length > 0 ? (
                               <div className="flex flex-col gap-0.5 items-center">
                                 {services.slice(0, 2).map((s, i) => (
-                                  <span
-                                    key={i}
-                                    className="text-[9px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100"
-                                    title={s.name}
-                                  >
-                                    {s.name} (₹{s.price})
-                                  </span>
+                                  <span key={i} className="text-[9px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100" title={s.name}>{s.name} (₹{s.price})</span>
                                 ))}
-                                {services.length > 2 && (
-                                  <span className="text-[9px] text-gray-400">+{services.length - 2}</span>
-                                )}
+                                {services.length > 2 && (<span className="text-[9px] text-gray-400">+{services.length - 2}</span>)}
                               </div>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic">-</span>
-                            )}
+                            ) : (<span className="text-[10px] text-gray-400 italic">-</span>)}
                           </td>
 
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {services.length > 0 ? (
-                              <div className="flex flex-col gap-0.5 items-center">
-                                {services.slice(0, 2).map((s, i) => {
-                                  const isPaid = s.paymentStatus === "Paid";
-                                  return (
-                                    <span
-                                      key={i}
-                                      onClick={() => {
-                                        handleServicePaymentToggle(s);
-                                      }}
-                                      className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full border cursor-pointer hover:scale-105 transition-transform ${
-                                        isPaid
-                                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                          : "bg-amber-50 text-amber-700 border-amber-200"
-                                      }`}
-                                      title="Click to toggle service payment"
-                                    >
-                                      {s.paymentStatus}
-                                    </span>
-                                  );
-                                })}
-                                {services.length > 2 && (
-                                  <span className="text-[8px] text-gray-400">+{services.length - 2}</span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic">-</span>
-                            )}
-                          </td>
-
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className="text-xs font-bold text-slate-800">
-                              ₹{totalFee}
-                            </span>
-                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-slate-800">₹{totalFee}</span></td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 capitalize">
-                              {patient.paymentType === "online" ? (
-                                <FaCreditCard className="text-indigo-500 text-[11px]" />
-                              ) : (
-                                <FaMoneyBillWave className="text-green-600 text-[11px]" />
-                              )}
-                              {patient.paymentType || "cash"}
+                              {booking.paymentType === "online" ? <FaCreditCard className="text-indigo-500 text-[11px]" /> : <FaMoneyBillWave className="text-green-600 text-[11px]" />}
+                              {booking.paymentType || "cash"}
                             </span>
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <div className="text-[10px] font-semibold text-slate-700">
-                              {formatDateTimeToDDMMYYYY(bookingCreated)}
-                            </div>
+                            <div className="text-[10px] font-semibold text-slate-700">{formatDateTimeToDDMMYYYY(bookingCreated)}</div>
                           </td>
 
-                          <td
-                            className="px-3 py-3 text-right whitespace-nowrap"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <td className="px-3 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
-                              <button
-                                onClick={() => handleRowClick(patient)}
-                                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
-                                title="View Details"
-                              >
+                              <button onClick={() => handleRowClick(booking)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="View Details">
                                 <FiEye className="w-4 h-4" />
                               </button>
-                              <button
-                                onClick={() => handleEdit(patient)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
-                                title="Edit"
-                              >
-                                <FiEdit2 className="w-4 h-4" />
+                              <button onClick={() => openBillingModal(booking)} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100" title="Invoice / Bill">
+                                <FaFileInvoiceDollar className="w-3.5 h-3.5" />
                               </button>
-                              {matchingBooking && (
-                                <>
-                                  <button
-                                    onClick={() => openBillingModal(matchingBooking)}
-                                    className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100"
-                                    title="Bill"
-                                  >
-                                    <FaFileInvoiceDollar className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={() => openPaymentUpdateModal(matchingBooking)}
-                                    className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors border border-transparent hover:border-purple-100"
-                                    title="Update Payment"
-                                  >
-                                    <FaCreditCard className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={() => openStatusUpdateModal(matchingBooking)}
-                                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
-                                    title="Update Status"
-                                  >
-                                    <FiCheckCircle className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={() => openAddServiceModal(matchingBooking)}
-                                    className="p-1.5 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors border border-transparent hover:border-cyan-100"
-                                    title="Add Service"
-                                  >
-                                    <FiPlusCircle className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (!window.confirm(`Delete booking for "${patient.name}"?`)) return;
-                                      handleDelete(patient._id);
-                                    }}
-                                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-                                    title="Delete"
-                                  >
-                                    <FiTrash2 className="w-4 h-4" />
-                                  </button>
-                                </>
-                              )}
+                              <button onClick={() => { if (!window.confirm(`Delete booking for "${booking.patientName}"?`)) return; handleDelete(booking._id); }} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100" title="Delete">
+                                <FiTrash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -2711,16 +1368,118 @@ export default function Bookings() {
                 </table>
               </div>
 
-              {/* Pagination */}
+              {/* ===== MOBILE CARD VIEW ===== */}
+              <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
+                {currentBookings.map((booking, idx) => {
+                  const totalFee = getTotalBookingFee(booking);
+                  const services = booking.services || [];
+                  const consultationFee = booking.consultationFee || 300;
+                  const consultationPaymentStatus = booking.paymentStatus || "Pending";
+                  const isConsultationPaid = consultationPaymentStatus === "Paid";
+                  const bookingStatus = booking.status || "confirmed";
+                  const appointmentDate = booking.appointmentDate || booking.date;
+                  const slotTiming = booking.startTime && booking.endTime ? `${booking.startTime} - ${booking.endTime}` : "-";
+                  const bookingCreated = booking.bookedAt || booking.createdAt;
+                  const statusColors = getStatusColors(bookingStatus);
+
+                  return (
+                    <div key={booking._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                            {booking.patientName ? booking.patientName.charAt(0).toUpperCase() : "P"}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-slate-800 text-sm truncate">
+                              {booking.patientName || "N/A"}
+                            </div>
+                            <div className="text-[11px] text-gray-500 flex items-center gap-1">
+                              <FaPhoneAlt className="text-[9px]" /> {booking.patientPhone || "N/A"}
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border} flex-shrink-0`}>
+                          <FaCheckCircle className="w-2.5 h-2.5" /> {bookingStatus}
+                        </span>
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="p-3 space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Doctor</div>
+                            <div className="font-semibold text-purple-700 truncate">{booking.doctorName || "N/A"}</div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Age / Gender</div>
+                            <div className="font-semibold text-slate-700">{booking.patientAge || "N/A"} yrs · {booking.patientGender || "N/A"}</div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Appt. Date</div>
+                            <div className="font-semibold text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Slot Time</div>
+                            <div className="font-semibold text-blue-700">{slotTiming !== "-" ? slotTiming : "N/A"}</div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-gray-100">
+                          <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200">
+                            <div className="text-[8px] font-bold text-blue-600 uppercase">Cons. Fee</div>
+                            <div className="text-xs font-extrabold text-blue-800">₹{consultationFee}</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200">
+                            <div className="text-[8px] font-bold text-purple-600 uppercase">Services</div>
+                            <div className="text-xs font-extrabold text-purple-800">
+                              {services.length > 0 ? services.map(s => s.name).join(", ") : "None"}
+                            </div>
+                          </div>
+                          <div className="text-center p-1.5 rounded-lg bg-emerald-50 border border-emerald-200">
+                            <div className="text-[8px] font-bold text-emerald-600 uppercase">Total</div>
+                            <div className="text-xs font-extrabold text-emerald-800">₹{totalFee}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-bold uppercase text-gray-400">Payment:</span>
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${isConsultationPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                              {isConsultationPaid ? <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> : <FiClock className="w-2.5 h-2.5 text-amber-600" />}
+                              {consultationPaymentStatus}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-slate-600">
+                            {booking.paymentType === "online" ? <FaCreditCard className="text-indigo-500 text-[10px]" /> : <FaMoneyBillWave className="text-green-600 text-[10px]" />}
+                            {booking.paymentType || "cash"}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
+                          <button onClick={(e) => { e.stopPropagation(); handleRowClick(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold" title="View">
+                            <FiEye className="w-3.5 h-3.5" /> View
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); openBillingModal(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-[10px] font-bold" title="Invoice">
+                            <FaFileInvoiceDollar className="w-3.5 h-3.5" /> Bill
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); if (!window.confirm(`Delete booking for "${booking.patientName}"?`)) return; handleDelete(booking._id); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-[10px] font-bold" title="Delete">
+                            <FiTrash2 className="w-3.5 h-3.5" /> Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* PAGINATION */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <span>Show</span>
-                    <select
-                      value={itemsPerPage}
-                      onChange={handleItemsPerPageChange}
-                      className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none"
-                    >
+                    <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none">
                       <option value={5}>5</option>
                       <option value={10}>10</option>
                       <option value={20}>20</option>
@@ -2729,485 +1488,37 @@ export default function Bookings() {
                     <span>entries</span>
                   </div>
                   <div className="text-xs text-gray-500 font-medium">
-                    Showing{" "}
-                    <strong className="text-gray-800">
-                      {filteredPatients.length === 0 ? 0 : indexOfFirstItem + 1} -{" "}
-                      {Math.min(indexOfLastItem, filteredPatients.length)}
-                    </strong>{" "}
-                    of <strong className="text-gray-800">{filteredPatients.length}</strong> records
+                    Showing <strong className="text-gray-800">{filteredBookings.length === 0 ? 0 : indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredBookings.length)}</strong> of <strong className="text-gray-800">{filteredBookings.length}</strong> records
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                      currentPage === 1
-                        ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
-                        : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
-                    }`}
-                  >
-                    Prev
-                  </button>
-
+                  <button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${currentPage === 1 ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"}`}>Prev</button>
                   {getPageNumbers().map((page, index) => (
-                    <button
-                      key={index}
-                      onClick={() => (typeof page === "number" ? handlePageClick(page) : null)}
-                      disabled={page === "..."}
-                      className={`px-3 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[32px] ${
-                        page === "..."
-                          ? "text-gray-400 bg-transparent border-transparent cursor-default"
-                          : currentPage === page
-                          ? "text-white bg-blue-600 border-blue-600 shadow-sm"
-                          : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"
-                      }`}
-                    >
-                      {page}
-                    </button>
+                    <button key={index} onClick={() => (typeof page === "number" ? handlePageClick(page) : null)} disabled={page === "..."} className={`px-3 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[32px] ${page === "..." ? "text-gray-400 bg-transparent border-transparent cursor-default" : currentPage === page ? "text-white bg-blue-600 border-blue-600 shadow-sm" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"}`}>{page}</button>
                   ))}
-
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                      currentPage === totalPages || totalPages === 0
-                        ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
-                        : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
-                    }`}
-                  >
-                    Next
-                  </button>
+                  <button onClick={handleNextPage} disabled={currentPage === totalPages || totalPages === 0} className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${currentPage === totalPages || totalPages === 0 ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"}`}>Next</button>
                 </div>
               </div>
             </>
           )}
         </div>
 
-        {/* ============================================================ */}
-        {/* ===== ALL MODALS ===== */}
-        {/* ============================================================ */}
-        
-        {/* ===================== ADD / EDIT PATIENT & BOOKING MODAL ===================== */}
-        {showForm && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
-                    <FaUserInjured className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base">
-                      {editingId ? "Edit Patient Details" : "Register Patient & Book Slot"}
-                    </h3>
-                    <p className="text-xs text-gray-500">Fill in patient and consultation details below</p>
-                  </div>
-                </div>
-                <button
-                  onClick={cancelForm}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <FaTimes className="w-4 h-4" />
-                </button>
-              </div>
-
-              {showExistingPatientPopup && existingPatient && !editingId && (
-                <div className="mt-4 p-3.5 bg-blue-50 border border-blue-200 rounded-xl shadow-xs">
-                  <div className="flex items-start gap-3">
-                    <FiAlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-blue-900">Existing Patient Record Found!</p>
-                      <div className="mt-1 text-xs text-blue-800 space-y-0.5">
-                        <p>
-                          <span className="font-semibold">Name:</span> {existingPatient.name} |{" "}
-                          <span className="font-semibold">Phone:</span> {existingPatient.phone}
-                        </p>
-                        <p>
-                          <span className="font-semibold">Age:</span> {existingPatient.age} yrs |{" "}
-                          <span className="font-semibold">Gender:</span> {existingPatient.gender}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={autoFillPatientDetails}
-                        className="mt-2 px-3.5 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-xs inline-flex items-center gap-1.5"
-                      >
-                        <FaCheck className="text-[10px]" />
-                        Auto-Fill Details
-                      </button>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowExistingPatientPopup(false)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <FaTimes className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={handleBookNow} className="mt-5 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Patient Name <span className="text-blue-600">*</span>
-                    </label>
-                    <div className="relative">
-                      <FaUserInjured className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                      <input
-                        ref={nameInputRef}
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="Enter patient full name"
-                        className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Phone Number <span className="text-blue-600">*</span>
-                    </label>
-                    <div className="relative">
-                      <FaPhoneAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                      <input
-                        ref={phoneInputRef}
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="+91 9876543210"
-                        className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Age (Years) <span className="text-blue-600">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="age"
-                      value={formData.age}
-                      onChange={handleInputChange}
-                      placeholder="28"
-                      min="0"
-                      max="120"
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Gender <span className="text-blue-600">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="gender"
-                        value={formData.gender}
-                        onChange={handleInputChange}
-                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none"
-                        required
-                      >
-                        <option value="">Select Gender</option>
-                        {GENDER_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="text-gray-400 text-xs absolute right-3 top-2.5 pointer-events-none">▾</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Address
-                  </label>
-                  <div className="relative">
-                    <FaMapMarkerAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      placeholder="Patient street address"
-                      className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Select Doctor <span className="text-blue-600">*</span>
-                    </label>
-                    <div className="relative">
-                      <FaStethoscope className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                      <select
-                        name="doctorId"
-                        value={formData.doctorId}
-                        onChange={handleInputChange}
-                        className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none"
-                        required
-                      >
-                        <option value="">Select Doctor</option>
-                        {doctors.map((doc) => (
-                          <option key={doc._id || doc.id} value={doc._id || doc.id}>
-                            {doc.name || "Doctor"}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="text-gray-400 text-xs absolute right-3 top-2.5 pointer-events-none">▾</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Appointment Date <span className="text-blue-600">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      name="appointmentDate"
-                      value={formData.appointmentDate}
-                      onChange={handleInputChange}
-                      min={new Date().toISOString().split("T")[0]}
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {formData.doctorId && formData.appointmentDate && (
-                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center justify-between">
-                      <span>Available Time Slots ({getDayNameFromDate(formData.appointmentDate)})</span>
-                      {formData.slotId && (
-                        <span className="text-emerald-600 font-semibold flex items-center gap-1 normal-case text-xs">
-                          <FiCheckCircle /> Slot Selected
-                        </span>
-                      )}
-                    </label>
-                    {slotsLoading ? (
-                      <div className="flex items-center gap-2 text-gray-500 text-xs py-3 justify-center">
-                        <FiRefreshCw className="w-4 h-4 animate-spin text-blue-600" />
-                        Loading slots...
-                      </div>
-                    ) : availableSlots.length === 0 ? (
-                      <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-                        No slots available for this doctor on selected date.
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto p-1">
-                        {availableSlots.map((slot) => {
-                          const isSelected = formData.slotId === slot._id;
-                          const isBooked = slot.status === "booked";
-                          return (
-                            <button
-                              key={slot._id}
-                              type="button"
-                              onClick={() => !isBooked && handleSlotSelect(slot._id)}
-                              className={`relative p-2 text-xs font-semibold rounded-lg border transition-all text-left ${
-                                isSelected
-                                  ? "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-400/20 shadow-xs"
-                                  : isBooked
-                                  ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
-                                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-                              }`}
-                              disabled={isBooked}
-                            >
-                              <div className="font-bold text-xs">
-                                {slot.startTime} – {slot.endTime}
-                              </div>
-                              <div className="text-[10px] text-gray-500">₹{slot.consultationFee || 300}</div>
-                              {isBooked && (
-                                <span className="text-[9px] font-bold text-red-500 block mt-0.5">Booked</span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Fee Type <span className="text-blue-600">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="feeType"
-                        value={formData.feeType}
-                        onChange={handleInputChange}
-                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium appearance-none"
-                      >
-                        {FEE_TYPE_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="text-gray-400 text-xs absolute right-3 top-2.5 pointer-events-none">▾</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Fee Amount (₹) <span className="text-blue-600">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="feeAmount"
-                      value={formData.feeAmount}
-                      onChange={handleInputChange}
-                      min="0"
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Payment Mode <span className="text-blue-600">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      {PAYMENT_TYPE_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => setFormData((prev) => ({ ...prev, paymentType: opt.value }))}
-                          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold transition-all ${
-                            formData.paymentType === opt.value
-                              ? "border-blue-500 bg-blue-50 text-blue-700 shadow-xs"
-                              : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                          }`}
-                        >
-                          {opt.value === "cash" ? (
-                            <FaMoneyBillWave className="w-3.5 h-3.5" />
-                          ) : (
-                            <FaCreditCard className="w-3.5 h-3.5" />
-                          )}
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Payment Status
-                    </label>
-                    <div className="flex gap-2">
-                      {PAYMENT_STATUS_OPTIONS.map((st) => (
-                        <button
-                          key={st.value}
-                          type="button"
-                          onClick={() => setFormData((prev) => ({ ...prev, paymentStatus: st.value }))}
-                          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold transition-all ${
-                            formData.paymentStatus === st.value
-                              ? st.value === "Paid"
-                                ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-xs"
-                                : "border-amber-500 bg-amber-50 text-amber-700 shadow-xs"
-                              : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                          }`}
-                        >
-                          {st.value === "Paid" ? (
-                            <FaCheckCircle className="w-3 h-3 text-emerald-600" />
-                          ) : (
-                            <FaClock className="w-3 h-3 text-amber-600" />
-                          )}
-                          {st.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Reason / Symptoms
-                  </label>
-                  <textarea
-                    name="reason"
-                    value={formData.reason}
-                    onChange={handleInputChange}
-                    placeholder="Brief description of symptoms..."
-                    rows={2}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium resize-none"
-                  />
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={cancelForm}
-                    className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting || !formData.slotId || !formData.doctorId}
-                    className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {submitting ? (
-                      <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <FiCalendar className="w-3.5 h-3.5" />
-                    )}
-                    {submitting ? "Processing..." : "Confirm & Book Slot"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* ===================== PATIENT DETAIL & HISTORY MODAL ===================== */}
+        {/* ===== PATIENT DETAIL MODAL ===== */}
         {showPatientModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-gray-200">
               <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-500/20">
-                    <FaUserInjured className="w-5 h-5" />
-                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-500/20"><FaUserInjured className="w-5 h-5" /></div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base">Patient Profile &amp; Appointments</h3>
-                    <p className="text-xs text-gray-500">
-                      {selectedPatient.name} • {selectedPatient.phone}
-                    </p>
+                    <p className="text-xs text-gray-500">{selectedPatient.patientName} • {selectedPatient.patientPhone}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-purple-700 font-semibold bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
-                    {patientBookings.length} Bookings
-                  </span>
-                  <button
-                    onClick={() => {
-                      setShowPatientModal(false);
-                      setPatientBookings([]);
-                      setSelectedPatient(null);
-                    }}
-                    className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <FaTimes className="w-4 h-4" />
-                  </button>
+                  <span className="text-xs text-purple-700 font-semibold bg-purple-50 px-3 py-1 rounded-full border border-purple-200">{patientBookings.length} Bookings</span>
+                  <button onClick={() => { setShowPatientModal(false); setPatientBookings([]); setSelectedPatient(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"><FaTimes className="w-4 h-4" /></button>
                 </div>
               </div>
 
@@ -3222,158 +1533,62 @@ export default function Bookings() {
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                       <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold flex items-center justify-center text-lg shadow-md flex-shrink-0">
-                          {selectedPatient.name ? selectedPatient.name.charAt(0).toUpperCase() : "P"}
+                          {selectedPatient.patientName ? selectedPatient.patientName.charAt(0).toUpperCase() : "P"}
                         </div>
                         <div>
-                          <div className="font-bold text-gray-900 text-base">{selectedPatient.name}</div>
-                          <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
-                            <FaPhoneAlt className="text-gray-400 text-[10px]" />
-                            {selectedPatient.phone || "N/A"}
-                          </div>
+                          <div className="font-bold text-gray-900 text-base">{selectedPatient.patientName}</div>
+                          <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5"><FaPhoneAlt className="text-gray-400 text-[10px]" />{selectedPatient.patientPhone || "N/A"}</div>
                         </div>
                       </div>
-
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                        <div>
-                          <div className="text-[10px] font-bold uppercase text-gray-400">Age</div>
-                          <div className="font-semibold text-gray-900">{selectedPatient.age || "N/A"} Yrs</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] font-bold uppercase text-gray-400">Gender</div>
-                          <div className="font-semibold text-gray-900 capitalize">{selectedPatient.gender || "N/A"}</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] font-bold uppercase text-gray-400">Fee Type</div>
-                          <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200">
-                            {selectedPatient.feeType === "lab" ? "Lab" : "Consultation"}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="text-[10px] font-bold uppercase text-gray-400">Payment Mode</div>
-                          <div className="font-semibold text-gray-900 capitalize">{selectedPatient.paymentType || "Cash"}</div>
-                        </div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Age</div><div className="font-semibold text-gray-900">{selectedPatient.patientAge || "N/A"} Yrs</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Gender</div><div className="font-semibold text-gray-900 capitalize">{selectedPatient.patientGender || "N/A"}</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Doctor</div><div className="font-semibold text-gray-900">{selectedPatient.doctorName || "N/A"}</div></div>
+                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Payment Mode</div><div className="font-semibold text-gray-900 capitalize">{selectedPatient.paymentType || "Cash"}</div></div>
                       </div>
-
-                      {selectedPatient.address && (
-                        <div className="mt-3 pt-3 border-t border-gray-200 text-xs">
-                          <div className="text-[10px] font-bold uppercase text-gray-400">Address</div>
-                          <div className="text-gray-700">{selectedPatient.address}</div>
-                        </div>
-                      )}
-                      {selectedPatient.reason && (
-                        <div className="mt-2 text-xs">
-                          <div className="text-[10px] font-bold uppercase text-gray-400">Reason</div>
-                          <div className="text-gray-700 bg-white p-2 rounded-lg border border-gray-200">{selectedPatient.reason}</div>
-                        </div>
-                      )}
+                      {selectedPatient.patientAddress && (<div className="mt-3 pt-3 border-t border-gray-200 text-xs"><div className="text-[10px] font-bold uppercase text-gray-400">Address</div><div className="text-gray-700">{selectedPatient.patientAddress}</div></div>)}
+                      {selectedPatient.purpose && (<div className="mt-2 text-xs"><div className="text-[10px] font-bold uppercase text-gray-400">Reason</div><div className="text-gray-700 bg-white p-2 rounded-lg border border-gray-200">{selectedPatient.purpose}</div></div>)}
                     </div>
 
                     <div>
                       <div className="flex items-center gap-2 mb-3">
                         <FaCalendarAlt className="text-purple-600 text-sm" />
-                        <h4 className="font-bold text-gray-900 text-sm">
-                          Appointment Records ({patientBookings.length})
-                        </h4>
+                        <h4 className="font-bold text-gray-900 text-sm">Appointment Records ({patientBookings.length})</h4>
                       </div>
 
                       {patientBookings.length === 0 ? (
-                        <div className="text-center py-8 text-gray-400 text-sm bg-gray-50 rounded-xl border border-gray-200">
-                          No appointments booked yet.
-                        </div>
+                        <div className="text-center py-8 text-gray-400 text-sm bg-gray-50 rounded-xl border border-gray-200">No appointments booked yet.</div>
                       ) : (
                         <div className="space-y-4">
                           {patientBookings.map((booking, bIdx) => {
                             const hasServices = booking.services && booking.services.length > 0;
                             const totalFee = getTotalBookingFee(booking);
                             const statusColors = getStatusColors(booking.status);
-                            const slotTiming = booking.startTime && booking.endTime 
-                              ? `${booking.startTime} - ${booking.endTime}` 
-                              : "-";
+                            const slotTiming = booking.startTime && booking.endTime ? `${booking.startTime} - ${booking.endTime}` : "-";
 
                             return (
-                              <div
-                                key={booking._id}
-                                className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-shadow"
-                              >
-                                <div
-                                  className={`px-4 py-2.5 ${statusColors.bg} border-b ${statusColors.border} flex items-center justify-between flex-wrap gap-2`}
-                                >
+                              <div key={booking._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-shadow">
+                                <div className={`px-4 py-2.5 ${statusColors.bg} border-b ${statusColors.border} flex items-center justify-between flex-wrap gap-2`}>
                                   <div className="flex items-center gap-2.5">
                                     <span className="font-bold text-gray-500 text-xs">#{bIdx + 1}</span>
-                                    <span
-                                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${statusColors.text} ${statusColors.bg} ${statusColors.border}`}
-                                    >
-                                      {booking.status || "confirmed"}
-                                    </span>
-                                    <span className="text-xs text-gray-600 font-medium">
-                                      {formatDateToDDMMYYYY(booking.appointmentDate || booking.date)}
-                                    </span>
-                                    {slotTiming !== "-" && (
-                                      <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">
-                                        {slotTiming}
-                                      </span>
-                                    )}
+                                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${statusColors.text} ${statusColors.bg} ${statusColors.border}`}>{booking.status || "confirmed"}</span>
+                                    <span className="text-xs text-gray-600 font-medium">{formatDateToDDMMYYYY(booking.appointmentDate || booking.date)}</span>
+                                    {slotTiming !== "-" && (<span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">{slotTiming}</span>)}
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <button
-                                      onClick={() => openStatusUpdateModal(booking)}
-                                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                      title="Update Status"
-                                    >
-                                      <FiCheckCircle className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => openPaymentUpdateModal(booking)}
-                                      className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                                      title="Update Payment"
-                                    >
-                                      <FaCreditCard className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => openAddServiceModal(booking)}
-                                      className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                                      title="Add Service"
-                                    >
-                                      <FiPlusCircle className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => openBillingModal(booking)}
-                                      className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
-                                      title="View Bill"
-                                    >
-                                      <FaFileInvoiceDollar className="w-3.5 h-3.5" />
-                                    </button>
+                                    <button onClick={() => openStatusUpdateModal(booking)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Update Status"><FiCheckCircle className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => openPaymentUpdateModal(booking)} className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Update Payment"><FaCreditCard className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => openAddServiceModal(booking)} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Add Service"><FiPlusCircle className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => openBillingModal(booking)} className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors" title="View Bill"><FaFileInvoiceDollar className="w-3.5 h-3.5" /></button>
                                   </div>
                                 </div>
 
                                 <div className="p-4 space-y-3">
                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                                    <div>
-                                      <div className="text-[10px] font-bold uppercase text-gray-400">Doctor</div>
-                                      <div className="font-bold text-gray-900">{booking.doctorName || "N/A"}</div>
-                                    </div>
-                                    <div>
-                                      <div className="text-[10px] font-bold uppercase text-gray-400">Slot</div>
-                                      <div className="font-bold text-gray-900">
-                                        {booking.startTime || "N/A"} – {booking.endTime || "N/A"}
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <div className="text-[10px] font-bold uppercase text-gray-400">Cons. Payment</div>
-                                      <span
-                                        className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
-                                          booking.paymentStatus === "Paid"
-                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                            : "bg-amber-50 text-amber-700 border-amber-200"
-                                        }`}
-                                      >
-                                        {booking.paymentStatus || "Pending"}
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <div className="text-[10px] font-bold uppercase text-gray-400">Total Fee</div>
-                                      <div className="text-sm font-extrabold text-blue-950">₹{totalFee}</div>
-                                    </div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Doctor</div><div className="font-bold text-gray-900">{booking.doctorName || "N/A"}</div></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Slot</div><div className="font-bold text-gray-900">{booking.startTime || "N/A"} – {booking.endTime || "N/A"}</div></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Cons. Payment</div><span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${booking.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{booking.paymentStatus || "Pending"}</span></div>
+                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Total Fee</div><div className="text-sm font-extrabold text-blue-950">₹{totalFee}</div></div>
                                   </div>
 
                                   <div>
@@ -3381,53 +1596,15 @@ export default function Bookings() {
                                     {hasServices ? (
                                       <div className="flex flex-wrap gap-1.5 mt-1">
                                         {booking.services.map((svc, sIdx) => (
-                                          <span
-                                            key={sIdx}
-                                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200"
-                                          >
+                                          <span key={sIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                                             {svc.name} (₹{svc.price})
-                                            <span
-                                              className={`text-[8px] font-bold px-1 py-0.5 rounded ${
-                                                svc.paymentStatus === "Paid"
-                                                  ? "bg-emerald-100 text-emerald-700"
-                                                  : "bg-amber-100 text-amber-700"
-                                              }`}
-                                            >
-                                              {svc.paymentStatus || "Pending"}
-                                            </span>
-                                            <button
-                                              onClick={() => {
-                                                const serviceId = svc.serviceId || svc._id;
-                                                if (serviceId) handleRemoveService(booking, serviceId, svc.name);
-                                              }}
-                                              className="text-red-500 hover:text-red-700 ml-1"
-                                            >
-                                              <FaTimes className="w-2.5 h-2.5" />
-                                            </button>
+                                            <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${svc.paymentStatus === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{svc.paymentStatus || "Pending"}</span>
+                                            <button onClick={() => { const serviceId = svc.serviceId || svc._id; if (serviceId) handleRemoveService(booking, serviceId, svc.name); }} className="text-red-500 hover:text-red-700 ml-1"><FaTimes className="w-2.5 h-2.5" /></button>
                                           </span>
                                         ))}
                                       </div>
-                                    ) : (
-                                      <span className="text-xs text-gray-400 italic">No services added</span>
-                                    )}
+                                    ) : (<span className="text-xs text-gray-400 italic">No services added</span>)}
                                   </div>
-
-                                  {(booking.diagnosis || booking.prescription || booking.notes) && (
-                                    <div className="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-100 text-xs space-y-1">
-                                      {booking.diagnosis && (
-                                        <div>
-                                          <strong className="text-emerald-900">Diagnosis:</strong>{" "}
-                                          <span className="text-gray-700">{booking.diagnosis}</span>
-                                        </div>
-                                      )}
-                                      {booking.prescription && (
-                                        <div>
-                                          <strong className="text-emerald-900">Prescription:</strong>{" "}
-                                          <span className="text-gray-700">{booking.prescription}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
                                 </div>
                               </div>
                             );
@@ -3440,53 +1617,31 @@ export default function Bookings() {
               </div>
 
               <div className="flex items-center justify-end px-6 py-4 border-t border-gray-200 bg-gray-50/50">
-                <button
-                  onClick={() => {
-                    setShowPatientModal(false);
-                    setPatientBookings([]);
-                    setSelectedPatient(null);
-                  }}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
-                >
-                  Close
-                </button>
+                <button onClick={() => { setShowPatientModal(false); setPatientBookings([]); setSelectedPatient(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all">Close</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ===================== BILLING MODAL ===================== */}
+        {/* ===== BILLING MODAL ===== */}
         {showBillingModal && selectedBookingForBilling && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-500/20">
-                    <FaFileInvoiceDollar className="w-5 h-5" />
-                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-500/20"><FaFileInvoiceDollar className="w-5 h-5" /></div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base">Bill Cum Receipt</h3>
-                    <p className="text-xs text-gray-500">
-                      {selectedBookingForBilling.patientName} • {billingData.invoiceNo}
-                    </p>
+                    <p className="text-xs text-gray-500">{selectedBookingForBilling.patientName} • {billingData.invoiceNo}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setShowBillingModal(false);
-                    setSelectedBookingForBilling(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
-                >
-                  <FaTimes className="w-4 h-4" />
-                </button>
+                <button onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
 
               <div id="bill-content" className="p-6 md:p-8 relative overflow-hidden">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none w-64 h-64">
                   <img src={logo} alt={CLINIC_INFO.name} className="w-full h-full object-contain" />
                 </div>
-
                 <div className="relative z-10">
                   <div className="flex items-start justify-between border-b-2 border-gray-800 pb-4 mb-3 flex-wrap gap-2">
                     <div className="flex items-center gap-3">
@@ -3496,9 +1651,7 @@ export default function Bookings() {
                         <p className="text-[11px] text-gray-500 max-w-sm">{CLINIC_INFO.address}</p>
                       </div>
                     </div>
-                    <div className="text-right text-[11px] text-gray-500">
-                      Contact No : {CLINIC_INFO.contact}
-                    </div>
+                    <div className="text-right text-[11px] text-gray-500">Contact No : {CLINIC_INFO.contact}</div>
                   </div>
 
                   <div className="text-center bg-gray-100 border-y border-gray-300 py-1.5 mb-4">
@@ -3536,9 +1689,7 @@ export default function Bookings() {
                           <td className="py-1.5 text-xs text-gray-500">{item.remarks}</td>
                           <td className="py-1.5 text-xs text-right font-semibold text-gray-800">₹{Number(item.amount).toFixed(2)}</td>
                           <td className="py-1.5 text-xs text-center">
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${item.paymentStatus === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                              {item.paymentStatus || "Pending"}
-                            </span>
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${item.paymentStatus === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{item.paymentStatus || "Pending"}</span>
                           </td>
                         </tr>
                       ))}
@@ -3552,9 +1703,7 @@ export default function Bookings() {
                       <div className="flex justify-between py-1 border-b border-gray-200"><span className="text-gray-600">Paid Amount</span><span className="font-bold text-emerald-700">₹ {billingData.paidAmount.toFixed(2)}</span></div>
                       <div className="flex justify-between py-1.5 mt-1 border-t-2 border-gray-800">
                         <span className="font-bold text-gray-800">Balance to Pay</span>
-                        <span className={`font-bold ${billingData.balanceAmount > 0 ? "text-red-600" : "text-emerald-700"}`}>
-                          ₹ {billingData.balanceAmount.toFixed(2)}
-                        </span>
+                        <span className={`font-bold ${billingData.balanceAmount > 0 ? "text-red-600" : "text-emerald-700"}`}>₹ {billingData.balanceAmount.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -3569,22 +1718,16 @@ export default function Bookings() {
 
               <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50/50">
                 {billingData.paymentStatus === "Pending" && (
-                  <button onClick={handleMarkAsPaid} className="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center gap-1.5">
-                    <FaCheckCircle className="w-3.5 h-3.5" /> Mark as Paid
-                  </button>
+                  <button onClick={handleMarkAsPaid} className="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center gap-1.5"><FaCheckCircle className="w-3.5 h-3.5" /> Mark as Paid</button>
                 )}
-                <button onClick={printBill} className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5">
-                  <FaPrint className="w-3.5 h-3.5" /> Print Bill
-                </button>
-                <button onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all">
-                  Close
-                </button>
+                <button onClick={printBill} className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5"><FaPrint className="w-3.5 h-3.5" /> Print Bill</button>
+                <button onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all">Close</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ===================== STATUS UPDATE MODAL ===================== */}
+        {/* ===== STATUS UPDATE MODAL ===== */}
         {showStatusUpdateModal && selectedBookingForStatus && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200">
@@ -3614,10 +1757,7 @@ export default function Bookings() {
                       const isSelected = newBookingStatus === st.value;
                       const colors = getStatusColors(st.value);
                       return (
-                        <button key={st.value} onClick={() => setNewBookingStatus(st.value)}
-                          className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${isSelected ? `${colors.bg} ${colors.text} border-blue-500 shadow-xs ring-2 ring-blue-400/20` : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}>
-                          {st.label}
-                        </button>
+                        <button key={st.value} onClick={() => setNewBookingStatus(st.value)} className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${isSelected ? `${colors.bg} ${colors.text} border-blue-500 shadow-xs ring-2 ring-blue-400/20` : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}>{st.label}</button>
                       );
                     })}
                   </div>
@@ -3635,7 +1775,7 @@ export default function Bookings() {
           </div>
         )}
 
-        {/* ===================== BOOKING PAYMENT UPDATE MODAL ===================== */}
+        {/* ===== PAYMENT UPDATE MODAL ===== */}
         {showPaymentUpdateModal && selectedBookingForPayment && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200">
@@ -3664,9 +1804,8 @@ export default function Bookings() {
                     {PAYMENT_STATUS_OPTIONS.map((st) => {
                       const isSelected = newPaymentStatus === st.value;
                       return (
-                        <button key={st.value} onClick={() => setNewPaymentStatus(st.value)}
-                          className={`px-4 py-2.5 rounded-lg text-xs font-bold border transition-all ${isSelected ? st.value === "Paid" ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-xs ring-2 ring-emerald-400/20" : "border-amber-500 bg-amber-50 text-amber-700 shadow-xs ring-2 ring-amber-400/20" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}>
-                          {st.value === "Paid" ? <FaCheckCircle className="w-3.5 h-3.5 inline mr-1.5 text-emerald-600" /> : <FaClock className="w-3.5 h-3.5 inline mr-1.5 text-amber-600" />}
+                        <button key={st.value} onClick={() => setNewPaymentStatus(st.value)} className={`px-4 py-2.5 rounded-lg text-xs font-bold border transition-all ${isSelected ? st.value === "Paid" ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-xs ring-2 ring-emerald-400/20" : "border-amber-500 bg-amber-50 text-amber-700 shadow-xs ring-2 ring-amber-400/20" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}>
+                          {st.value === "Paid" ? <FaCheckCircle className="w-3.5 h-3.5 inline mr-1.5 text-emerald-600" /> : <FiClock className="w-3.5 h-3.5 inline mr-1.5 text-amber-600" />}
                           {st.label}
                         </button>
                       );
@@ -3686,7 +1825,7 @@ export default function Bookings() {
           </div>
         )}
 
-        {/* ===================== ADD SERVICE MODAL ===================== */}
+        {/* ===== ADD SERVICE MODAL ===== */}
         {showAddServiceModal && selectedBookingForService && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200">
@@ -3710,25 +1849,17 @@ export default function Bookings() {
                         {selectedBookingForService.services.map((svc, idx) => (
                           <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                             {svc.name} (₹{svc.price})
-                            <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${svc.paymentStatus === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                              {svc.paymentStatus || "Pending"}
-                            </span>
                           </span>
                         ))}
                       </div>
-                    ) : (
-                      <span className="text-gray-400 italic">No services currently added</span>
-                    )}
+                    ) : (<span className="text-gray-400 italic">No services currently added</span>)}
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Select Service <span className="text-red-500">*</span></label>
-                  <button onClick={() => setServiceDropdownOpen(!serviceDropdownOpen)}
-                    className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white flex items-center justify-between">
-                    <span className={selectedServiceForBooking ? "text-gray-900 font-semibold" : "text-gray-400"}>
-                      {selectedServiceForBooking ? `${selectedServiceForBooking.name} (₹${selectedServiceForBooking.price})` : "Choose a service..."}
-                    </span>
+                  <button onClick={() => setServiceDropdownOpen(!serviceDropdownOpen)} className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white flex items-center justify-between">
+                    <span className={selectedServiceForBooking ? "text-gray-900 font-semibold" : "text-gray-400"}>{selectedServiceForBooking ? `${selectedServiceForBooking.name} (₹${selectedServiceForBooking.price})` : "Choose a service..."}</span>
                     <FiChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${serviceDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
                   {serviceDropdownOpen && (
@@ -3741,9 +1872,7 @@ export default function Bookings() {
                         services.map((service) => {
                           const alreadyAdded = (selectedBookingForService.services || []).some((s) => s.serviceId === service._id);
                           return (
-                            <button key={service._id} onClick={() => !alreadyAdded && handleServiceSelect(service)}
-                              className={`w-full px-3.5 py-2 text-left text-xs hover:bg-gray-50 transition-colors flex items-center justify-between ${alreadyAdded ? "opacity-50 cursor-not-allowed bg-gray-50" : ""} ${selectedServiceId === service._id ? "bg-emerald-50" : ""}`}
-                              disabled={alreadyAdded}>
+                            <button key={service._id} onClick={() => !alreadyAdded && handleServiceSelect(service)} className={`w-full px-3.5 py-2 text-left text-xs hover:bg-gray-50 transition-colors flex items-center justify-between ${alreadyAdded ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`} disabled={alreadyAdded}>
                               <span className="font-medium text-gray-800">{service.name}</span>
                               <span className="font-bold text-emerald-700">{alreadyAdded ? "✓ Added" : `₹${service.price}`}</span>
                             </button>

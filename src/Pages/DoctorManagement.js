@@ -1,4 +1,4 @@
-// DoctorManagement.js - Complete fixed component
+// DoctorManagement.js - Complete fixed component with Mobile Card View
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
@@ -370,7 +370,7 @@ export default function DoctorManagement() {
     setSearchQuery("");
     setSpecializationFilter("All");
     setStatusFilter("All");
-    setSelectedMonth(""); // FIX: Clear month filter
+    setSelectedMonth("");
     setActiveCardFilter("all");
     setCurrentPage(1);
     if (window.innerWidth < 1024) {
@@ -613,7 +613,7 @@ export default function DoctorManagement() {
 
         {toast && (
           <div
-            className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
+            className={`fixed top-5 right-5 z-[99999] flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
               toast.type === "error"
                 ? "bg-red-600"
                 : toast.type === "info"
@@ -654,7 +654,6 @@ export default function DoctorManagement() {
               />
             </div>
 
-            {/* Month Filter - ADDED */}
             <div className="relative">
               <input
                 type="month"
@@ -881,6 +880,15 @@ export default function DoctorManagement() {
                 Clear
               </button>
             )}
+
+            <button
+              onClick={() => navigate("/appointment-slots")}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all shadow-sm"
+              title="Manage Appointment Slots"
+            >
+              <FaCalendarAlt className="w-3.5 h-3.5" />
+              <span>Slots</span>
+            </button>
             
             <button
               onClick={() => {
@@ -1063,7 +1071,8 @@ export default function DoctorManagement() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* ===== DESKTOP TABLE VIEW ===== */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="emp-dash__table">
                   <thead>
                     <tr>
@@ -1233,6 +1242,143 @@ export default function DoctorManagement() {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* ===== MOBILE CARD VIEW ===== */}
+              <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
+                {currentDoctors.map((doctor, idx) => {
+                  const isActive = doctor.status === "active";
+                  const specBadgeClass = getSpecializationBadgeStyle(doctor.specialization);
+
+                  return (
+                    <div key={doctor._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                            {doctor.name ? doctor.name.replace(/^Dr\.\s*/i, "").charAt(0).toUpperCase() : "D"}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-slate-800 text-sm truncate">{doctor.name || "N/A"}</div>
+                            <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                              <FaPhoneAlt className="text-[8px]" /> {doctor.phone || "N/A"}
+                            </div>
+                          </div>
+                        </div>
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border flex-shrink-0 ${
+                            isActive
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-red-50 text-red-700 border-red-200"
+                          }`}
+                        >
+                          {isActive ? (
+                            <span className="relative flex w-1.5 h-1.5">
+                              <span className="absolute inline-flex w-full h-full bg-emerald-400 rounded-full opacity-75 animate-ping"></span>
+                              <span className="relative inline-flex w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                            </span>
+                          ) : (
+                            <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
+                          )}
+                          {doctor.status || "active"}
+                        </span>
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="p-3 space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Specialization</div>
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${specBadgeClass}`}>
+                              <FiAward className="text-[10px]" />
+                              {doctor.specialization || "General"}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Experience</div>
+                            <div className="font-semibold text-slate-700">{doctor.experience ? `${doctor.experience} yrs` : "-"}</div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Qualification</div>
+                            <div className="font-semibold text-slate-700 truncate">{doctor.qualification || "-"}</div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Consultation Fee</div>
+                            <div className="font-bold text-blue-900">₹{doctor.consultationFee || 0}</div>
+                          </div>
+                        </div>
+
+                        {/* Available Schedule */}
+                        <div className="pt-2 border-t border-gray-100">
+                          <div className="text-[9px] font-bold uppercase text-gray-400 mb-1">Available Schedule</div>
+                          <div className="flex flex-wrap gap-1">
+                            {doctor.availableDays && doctor.availableDays.length > 0 ? (
+                              doctor.availableDays.map((day, i) => (
+                                <span key={i} className="text-[9px] font-semibold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100">
+                                  {day.slice(0, 3)}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">No days set</span>
+                            )}
+                          </div>
+                          {doctor.availableTime && (
+                            <div className="text-[10px] font-medium text-slate-600 flex items-center gap-1 mt-1">
+                              <FiClock className="text-gray-400 text-[10px]" />
+                              <span>{doctor.availableTime}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Status Change + Joined */}
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                          <button
+                            onClick={() => handleStatusToggle(doctor)}
+                            className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${
+                              isActive
+                                ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                                : "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
+                            }`}
+                          >
+                            {isActive ? "Set Inactive" : "Set Active"}
+                          </button>
+                          <div className="text-[10px] text-slate-600 font-medium">
+                            Joined: {formatDate(doctor.createdAt)}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
+                          <button
+                            onClick={() => {
+                              setSelectedDoctor(doctor);
+                              setShowDetailModal(true);
+                              setShowPasswordInModal(false);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold"
+                            title="View Details"
+                          >
+                            <FiEye className="w-3.5 h-3.5" /> View
+                          </button>
+                          <button
+                            onClick={() => handleEdit(doctor)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold"
+                            title="Edit Doctor"
+                          >
+                            <FiEdit2 className="w-3.5 h-3.5" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(doctor._id)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-[10px] font-bold"
+                            title="Delete Record"
+                          >
+                            <FiTrash2 className="w-3.5 h-3.5" /> Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">

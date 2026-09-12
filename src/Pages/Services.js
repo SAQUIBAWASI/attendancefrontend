@@ -400,7 +400,7 @@ const Services = () => {
         {/* Toast Notification */}
         {toast && (
           <div
-            className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
+            className={`fixed top-5 right-5 z-[99999] flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
               toast.type === "error"
                 ? "bg-red-600"
                 : toast.type === "info"
@@ -719,7 +719,7 @@ const Services = () => {
           </div>
         </div>
 
-        {/* ===================== SERVICES TABLE ===================== */}
+        {/* ===================== SERVICES TABLE / CARD ===================== */}
         <div className="emp-dash__card">
           {loading ? (
             <div className="py-12 text-center text-gray-500">
@@ -753,7 +753,8 @@ const Services = () => {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* ===== DESKTOP TABLE VIEW ===== */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="emp-dash__table">
                   <thead>
                     <tr>
@@ -862,6 +863,89 @@ const Services = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* ===== MOBILE CARD VIEW ===== */}
+              <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
+                {currentRecords.map((service, index) => (
+                  <div
+                    key={service._id}
+                    className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+                  >
+                    {/* Card Header */}
+                    <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                          {service.name ? service.name.charAt(0).toUpperCase() : "S"}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-slate-800 text-sm truncate">
+                            {service.name}
+                          </div>
+                          <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 inline-block mt-0.5">
+                            Clinical Item
+                          </span>
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-0.5 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex-shrink-0">
+                        <FaRupeeSign className="text-[10px]" />
+                        {service.price || 0}
+                      </span>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="p-3 space-y-2.5">
+                      {/* Description */}
+                      <div>
+                        <div className="text-[9px] font-bold uppercase text-gray-400 mb-0.5">Description</div>
+                        <div className="text-xs text-slate-600 leading-relaxed">
+                          {service.description || "No description provided"}
+                        </div>
+                      </div>
+
+                      {/* Created Date */}
+                      <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                        <div className="text-[10px] text-gray-500">
+                          Created: {service.createdAt
+                            ? new Date(service.createdAt).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric"
+                              })
+                            : "-"}
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
+                        <button
+                          onClick={() => {
+                            setSelectedService(service);
+                            setShowViewModal(true);
+                          }}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold"
+                          title="View Details"
+                        >
+                          <FiEye className="w-3.5 h-3.5" /> View
+                        </button>
+                        <button
+                          onClick={() => openEditForm(service)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold"
+                          title="Edit Service"
+                        >
+                          <FiEdit2 className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteService(service)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-[10px] font-bold"
+                          title="Delete Service"
+                        >
+                          <FiTrash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* ===================== PAGINATION ===================== */}

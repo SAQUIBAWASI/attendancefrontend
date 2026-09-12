@@ -380,6 +380,7 @@ import { MdNotificationsNone } from "react-icons/md";
 import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
+import logo from "../Images/Timelyhealth logo.png";
 
 const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
   const location = useLocation();
@@ -397,7 +398,6 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
     };
     
     window.addEventListener('storage', handleStorageChange);
-    // Also listen for custom event
     window.addEventListener('viewChanged', handleStorageChange);
     
     return () => {
@@ -539,11 +539,10 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
 
         <div className="hidden items-center gap-2 sm:flex">
           <img
-            src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
-            alt="Logo"
-            className="h-9 w-9 rounded-lg object-cover"
+            src={logo}
+            alt="TimelyHealth Logo"
+            className="h-9 w-auto max-w-[120px] object-contain"
           />
-          <span className="text-sm font-semibold text-[#101828]">Timely Health</span>
         </div>
       </div>
     </nav>

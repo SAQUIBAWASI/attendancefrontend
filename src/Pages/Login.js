@@ -4,6 +4,7 @@ import { BsCamera } from "react-icons/bs";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
 import axios from 'axios';
+import logo from "../Images/Timelyhealth logo.png";
 
 const BASE_URL = API_BASE_URL.endsWith("/") ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
 const cleanBaseUrl = BASE_URL.replace(/\/api\/?$/, "");
@@ -156,7 +157,6 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Login states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -170,8 +170,7 @@ const LoginPage = () => {
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [isSpeechSupported, setIsSpeechSupported] = useState(true);
-  
-  // Employee data
+
   const [isImageCaptureAllowed, setIsImageCaptureAllowed] = useState(false);
   const [employeeId, setEmployeeId] = useState('');
   const [employeeEmail, setEmployeeEmail] = useState('');
@@ -181,10 +180,8 @@ const LoginPage = () => {
   const [position, setPosition] = useState(null);
   const [distance, setDistance] = useState(null);
   const [checkedIn, setCheckedIn] = useState(false);
-
   const [reason, setReason] = useState("");
 
-  // Camera states
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -196,17 +193,13 @@ const LoginPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // Reason popup
   const [showReasonPopup, setShowReasonPopup] = useState(false);
   const [tempReason, setTempReason] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
   const [isReasonProcessing, setIsReasonProcessing] = useState(false);
 
-  // Success popup
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-
-  // Toast
   const [toastMessage, setToastMessage] = useState(null);
 
   const loginButtonRef = useRef(null);
@@ -214,86 +207,33 @@ const LoginPage = () => {
   const redirectTimerRef = useRef(null);
   const welcomeTimerRef = useRef(null);
 
-  // ─── CLEAR ALL USER DATA ───
   const clearAllUserData = () => {
-    // 1. Cancel all speech
     if ('speechSynthesis' in window) {
       try { window.speechSynthesis.cancel(); } catch (e) {}
     }
-    
-    // 2. Clear all timeouts
-    if (speechTimeoutRef.current) {
-      clearTimeout(speechTimeoutRef.current);
-      speechTimeoutRef.current = null;
-    }
-    if (redirectTimerRef.current) {
-      clearTimeout(redirectTimerRef.current);
-      redirectTimerRef.current = null;
-    }
-    if (welcomeTimerRef.current) {
-      clearTimeout(welcomeTimerRef.current);
-      welcomeTimerRef.current = null;
-    }
-    
-    // 3. Clear ALL localStorage items
+    if (speechTimeoutRef.current) { clearTimeout(speechTimeoutRef.current); speechTimeoutRef.current = null; }
+    if (redirectTimerRef.current) { clearTimeout(redirectTimerRef.current); redirectTimerRef.current = null; }
+    if (welcomeTimerRef.current) { clearTimeout(welcomeTimerRef.current); welcomeTimerRef.current = null; }
     const allKeys = Object.keys(localStorage);
-    const keysToKeep = ['_persist']; // Keep only redux persist if needed
-    allKeys.forEach(key => {
-      if (!keysToKeep.includes(key)) {
-        localStorage.removeItem(key);
-      }
+    const keysToKeep = ['_persist'];
+    allKeys.forEach(key => { if (!keysToKeep.includes(key)) localStorage.removeItem(key); });
+    try { sessionStorage.clear(); } catch (e) {}
+    document.cookie.split(";").forEach(function(c) {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
     });
-    
-    // 4. Clear sessionStorage
-    try {
-      sessionStorage.clear();
-    } catch (e) {}
-    
-    // 5. Clear cookies
-    document.cookie.split(";").forEach(function(c) { 
-      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-    });
-    
-    // 6. Reset ALL state variables
-    setEmployeeId('');
-    setEmployeeEmail('');
-    setEmployeeName('');
-    setEmployeeDepartment('');
-    setIsImageCaptureAllowed(false);
-    setCheckedIn(false);
-    setAssignedLocation(null);
-    setDistance(null);
-    setPosition(null);
-    setUserName('');
-    setUserRole('');
-    setShowWelcome(false);
-    setShowSuccessPopup(false);
-    setShowReasonPopup(false);
-    setShowCameraModal(false);
-    setCapturedImage(null);
-    setError('');
-    setToastMessage(null);
-    setIsLoading(false);
-    setIsSpeaking(false);
-    setIsCapturing(false);
-    setIsCameraReady(false);
-    setSubmitting(false);
-    setReason('');
-    setTempReason('');
-    setPendingAction(null);
-    setIsReasonProcessing(false);
-    setCameraError(null);
-    
-    // 7. Reset speech synthesis
+    setEmployeeId(''); setEmployeeEmail(''); setEmployeeName(''); setEmployeeDepartment('');
+    setIsImageCaptureAllowed(false); setCheckedIn(false); setAssignedLocation(null);
+    setDistance(null); setPosition(null); setUserName(''); setUserRole('');
+    setShowWelcome(false); setShowSuccessPopup(false); setShowReasonPopup(false);
+    setShowCameraModal(false); setCapturedImage(null); setError(''); setToastMessage(null);
+    setIsLoading(false); setIsSpeaking(false); setIsCapturing(false); setIsCameraReady(false);
+    setSubmitting(false); setReason(''); setTempReason(''); setPendingAction(null);
+    setIsReasonProcessing(false); setCameraError(null);
     if ('speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.getVoices();
-      } catch (e) {}
+      try { window.speechSynthesis.cancel(); window.speechSynthesis.getVoices(); } catch (e) {}
     }
   };
 
-  // ─── Fetch Location ───
   const fetchLocation = () => {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
@@ -305,10 +245,7 @@ const LoginPage = () => {
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
-          setLatitude(lat);
-          setLongitude(lng);
-          setLocationFetched(true);
-          setLocationError('');
+          setLatitude(lat); setLongitude(lng); setLocationFetched(true); setLocationError('');
           resolve({ lat, lng });
         },
         (error) => {
@@ -321,37 +258,25 @@ const LoginPage = () => {
     });
   };
 
-  // ─── Get Current Location ───
   const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error("Geolocation not supported"));
-        return;
-      }
+      if (!navigator.geolocation) { reject(new Error("Geolocation not supported")); return; }
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setPosition(coords);
           if (assignedLocation) {
-            const dist = haversineDistance(
-              coords.lat,
-              coords.lng,
-              assignedLocation.latitude,
-              assignedLocation.longitude
-            );
+            const dist = haversineDistance(coords.lat, coords.lng, assignedLocation.latitude, assignedLocation.longitude);
             setDistance(dist);
           }
           resolve(coords);
         },
-        (err) => {
-          reject(new Error("Error getting location: " + err.message));
-        },
+        (err) => { reject(new Error("Error getting location: " + err.message)); },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     });
   };
 
-  // ─── Fetch Employee Assigned Location ───
   const fetchAssignedLocation = async (empId) => {
     if (!empId) return;
     try {
@@ -359,25 +284,15 @@ const LoginPage = () => {
       const res = await axios.get(url);
       if (res.data) {
         let locationData = null;
-        if (res.data.success && res.data.data) {
-          locationData = res.data.data.location || res.data.data;
-        } else if (res.data.location) {
-          locationData = res.data.location;
-        } else if (res.data.data) {
-          locationData = res.data.data;
-        } else if (res.data.latitude || res.data.coordinates) {
-          locationData = res.data;
-        }
-        if (locationData) {
-          setAssignedLocation(locationData);
-        }
+        if (res.data.success && res.data.data) locationData = res.data.data.location || res.data.data;
+        else if (res.data.location) locationData = res.data.location;
+        else if (res.data.data) locationData = res.data.data;
+        else if (res.data.latitude || res.data.coordinates) locationData = res.data;
+        if (locationData) setAssignedLocation(locationData);
       }
-    } catch (err) {
-      console.error("Error fetching location:", err);
-    }
+    } catch (err) { console.error("Error fetching location:", err); }
   };
 
-  // ─── Check today's attendance ───
   const fetchTodayAttendance = async (empId) => {
     if (!empId) return;
     try {
@@ -391,19 +306,13 @@ const LoginPage = () => {
         return checkInTime >= today && (rec.status === "checked-in" || rec.status === "on-break");
       });
       setCheckedIn(!!todayRecord);
-    } catch (err) {
-      console.error("Error fetching attendance:", err);
-    }
+    } catch (err) { console.error("Error fetching attendance:", err); }
   };
 
-  // ─── Camera Functions ───
   const startCamera = async () => {
     try {
       setCameraError(null);
-      const constraints = {
-        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
-        audio: false,
-      };
+      const constraints = { video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
       if (videoRef.current) {
@@ -422,18 +331,13 @@ const LoginPage = () => {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
+    if (videoRef.current) videoRef.current.srcObject = null;
     setIsCameraReady(false);
     setCapturedImage(null);
   };
 
   const handleCloseCamera = () => {
-    stopCamera();
-    setShowCameraModal(false);
-    setCapturedImage(null);
-    setIsCapturing(false);
+    stopCamera(); setShowCameraModal(false); setCapturedImage(null); setIsCapturing(false);
   };
 
   const captureImage = () => {
@@ -450,12 +354,8 @@ const LoginPage = () => {
     return imageData;
   };
 
-  // ─── Handle Capture Now ───
   const handleCaptureNow = () => {
-    if (!videoRef.current || !isCameraReady) {
-      alert("Camera is not ready. Please wait.");
-      return;
-    }
+    if (!videoRef.current || !isCameraReady) { alert("Camera is not ready. Please wait."); return; }
     setIsCapturing(true);
     const imageData = captureImage();
     if (imageData) {
@@ -463,10 +363,7 @@ const LoginPage = () => {
         const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
         if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
           if (!isReasonProcessing && !showReasonPopup) {
-            setPendingAction("submit");
-            setTempReason("");
-            setShowReasonPopup(true);
-            setIsCapturing(false);
+            setPendingAction("submit"); setTempReason(""); setShowReasonPopup(true); setIsCapturing(false);
           }
           return;
         }
@@ -486,49 +383,25 @@ const LoginPage = () => {
     }
   };
 
-  // ─── Submit Check-In with Photo ───
   const handleSubmitCheckIn = async (imageData) => {
-    if (!employeeId || !employeeEmail) {
-      alert("Employee data missing.");
-      setIsCapturing(false);
-      return;
-    }
-
-    try {
-      await getCurrentLocation();
-    } catch (err) {
-      alert("Could not get location: " + err.message);
-      setIsCapturing(false);
-      return;
-    }
-
+    if (!employeeId || !employeeEmail) { alert("Employee data missing."); setIsCapturing(false); return; }
+    try { await getCurrentLocation(); }
+    catch (err) { alert("Could not get location: " + err.message); setIsCapturing(false); return; }
     const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
-
     if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
       alert(`Outside office range (${distance}m). Must be within ${ONSITE_RADIUS_M}m.`);
-      setIsCapturing(false);
-      return;
+      setIsCapturing(false); return;
     }
-
     if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
       if (!isReasonProcessing && !showReasonPopup) {
-        setPendingAction("submit");
-        setTempReason("");
-        setShowReasonPopup(true);
+        setPendingAction("submit"); setTempReason(""); setShowReasonPopup(true);
       }
       return;
     }
-
     setSubmitting(true);
     try {
       const imageFile = base64ToFile(imageData, `checkin-${employeeId}-${Date.now()}.jpg`);
-      if (!imageFile) {
-        alert("Failed to process image.");
-        setIsCapturing(false);
-        setSubmitting(false);
-        return;
-      }
-
+      if (!imageFile) { alert("Failed to process image."); setIsCapturing(false); setSubmitting(false); return; }
       const formData = new FormData();
       formData.append("employeeId", employeeId);
       formData.append("employeeEmail", employeeEmail);
@@ -536,237 +409,126 @@ const LoginPage = () => {
       formData.append("longitude", position.lng.toString());
       formData.append("reason", isOnsiteOnlyDepartment ? "Onsite" : reason || "Onsite");
       formData.append("image", imageFile);
-
-      await axios.post(`${cleanBaseUrl}/api/attendance/checkin`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      handleCloseCamera();
-      setIsCapturing(false);
+      await axios.post(`${cleanBaseUrl}/api/attendance/checkin`, formData, { headers: { "Content-Type": "multipart/form-data" } });
+      handleCloseCamera(); setIsCapturing(false);
       setSuccessMessage("✅ Check-in Successful with Photo! 📸");
-      setShowSuccessPopup(true);
-      setCheckedIn(true);
-      
+      setShowSuccessPopup(true); setCheckedIn(true);
       playSuccessSound();
       setTimeout(async () => {
-        setIsSpeaking(true);
-        await speakCheckInSuccess(employeeName);
-        setIsSpeaking(false);
+        setIsSpeaking(true); await speakCheckInSuccess(employeeName); setIsSpeaking(false);
       }, 500);
-      
       setShowWelcome(false);
-      
-      redirectTimerRef.current = setTimeout(() => {
-        navigate('/employeedashboard', { replace: true });
-      }, 2000);
-      
+      redirectTimerRef.current = setTimeout(() => { navigate('/employeedashboard', { replace: true }); }, 2000);
     } catch (err) {
       alert(err.response?.data?.message || "Check-in failed.");
       setIsCapturing(false);
-    } finally {
-      setSubmitting(false);
-    }
+    } finally { setSubmitting(false); }
   };
 
-  // ─── Reason Popup Handlers ───
   const handleReasonConfirm = () => {
-    if (!tempReason.trim()) {
-      alert("Please select a reason.");
-      return;
-    }
-    setIsReasonProcessing(true);
-    setReason(tempReason);
-    setShowReasonPopup(false);
-
+    if (!tempReason.trim()) { alert("Please select a reason."); return; }
+    setIsReasonProcessing(true); setReason(tempReason); setShowReasonPopup(false);
     setTimeout(() => {
-      if (pendingAction === "submit") {
-        handleSubmitCheckIn(capturedImage);
-      }
-      setPendingAction(null);
-      setIsReasonProcessing(false);
+      if (pendingAction === "submit") { handleSubmitCheckIn(capturedImage); }
+      setPendingAction(null); setIsReasonProcessing(false);
     }, 300);
   };
 
   const handleReasonCancel = () => {
-    setShowReasonPopup(false);
-    setTempReason("");
-    setPendingAction(null);
-    setIsReasonProcessing(false);
+    setShowReasonPopup(false); setTempReason(""); setPendingAction(null); setIsReasonProcessing(false);
   };
 
-  // ─── Open Camera for Attendance ───
   const handleOpenCameraForAttendance = async () => {
     setShowWelcome(false);
-    
-    try {
-      await getCurrentLocation();
-    } catch (err) {
-      alert("Could not get location: " + err.message);
-      return;
-    }
-
+    try { await getCurrentLocation(); }
+    catch (err) { alert("Could not get location: " + err.message); return; }
     const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
-
     if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
       alert(`Department must be within ${ONSITE_RADIUS_M}m. Current distance: ${distance}m`);
       return;
     }
-
     if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
-      setPendingAction("camera");
-      setTempReason("");
-      setShowReasonPopup(true);
-      return;
+      setPendingAction("camera"); setTempReason(""); setShowReasonPopup(true); return;
     }
-
     setShowCameraModal(true);
     setTimeout(() => startCamera(), 300);
   };
 
-  // ─── Speak Welcome ───
   const speakWelcome = (name, role) => {
     return new Promise((resolve) => {
-      if (!('speechSynthesis' in window)) {
-        resolve();
-        return;
-      }
+      if (!('speechSynthesis' in window)) { resolve(); return; }
       try {
         window.speechSynthesis.cancel();
         const message = `Welcome ${name}! You are logged in as ${role}. Have a great day!`;
         const utterance = new SpeechSynthesisUtterance(message);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.9;
-        utterance.pitch = 1.1;
-        utterance.volume = 1;
+        utterance.lang = 'en-US'; utterance.rate = 0.9; utterance.pitch = 1.1; utterance.volume = 1;
         const voices = window.speechSynthesis.getVoices();
         const femaleVoice = getFemaleVoice(voices);
-        if (femaleVoice) {
-          utterance.voice = femaleVoice;
-        }
+        if (femaleVoice) utterance.voice = femaleVoice;
         let isResolved = false;
-        utterance.onend = () => {
-          if (!isResolved) { isResolved = true; resolve(); }
-        };
-        utterance.onerror = () => {
-          if (!isResolved) { isResolved = true; resolve(); }
-        };
-        setTimeout(() => {
-          window.speechSynthesis.speak(utterance);
-        }, 100);
-        speechTimeoutRef.current = setTimeout(() => {
-          if (!isResolved) { isResolved = true; resolve(); }
-        }, 10000);
-      } catch (error) {
-        resolve();
-      }
+        utterance.onend = () => { if (!isResolved) { isResolved = true; resolve(); } };
+        utterance.onerror = () => { if (!isResolved) { isResolved = true; resolve(); } };
+        setTimeout(() => { window.speechSynthesis.speak(utterance); }, 100);
+        speechTimeoutRef.current = setTimeout(() => { if (!isResolved) { isResolved = true; resolve(); } }, 10000);
+      } catch (error) { resolve(); }
     });
   };
 
-  // ─── Auto Redirect to Dashboard ───
   const goToDashboard = () => {
     setShowWelcome(false);
-    if (speechTimeoutRef.current) {
-      clearTimeout(speechTimeoutRef.current);
-      speechTimeoutRef.current = null;
-    }
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    if (speechTimeoutRef.current) { clearTimeout(speechTimeoutRef.current); speechTimeoutRef.current = null; }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     const role = localStorage.getItem('userRole');
-    if (role === 'admin') {
-      navigate('/dashboard', { replace: true });
-    } else if (role === 'employee') {
-      navigate('/employeedashboard', { replace: true });
-    } else {
-      navigate('/', { replace: true });
-    }
+    if (role === 'admin') navigate('/dashboard', { replace: true });
+    else if (role === 'employee') navigate('/employeedashboard', { replace: true });
+    else navigate('/', { replace: true });
   };
 
-  // ─── Check if attendance prompt should be shown ───
   const shouldShowAttendancePrompt = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour <= 21 && !checkedIn) {
       const role = localStorage.getItem('userRole');
       if (role === 'employee') {
         const storedEmpId = localStorage.getItem('employeeId');
-        // ✅ IMPORTANT: Check if stored employeeId matches current employeeId
-        if (storedEmpId && storedEmpId === employeeId && employeeId) {
-          return true;
-        }
+        if (storedEmpId && storedEmpId === employeeId && employeeId) return true;
       }
     }
     return false;
   };
 
-  // ─── Auto-login check ───
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const autoLogin = urlParams.get('autoLogin');
     const emailParam = urlParams.get('email');
     const passwordParam = urlParams.get('password');
-
     fetchLocation();
-
     if (autoLogin === 'true' && emailParam && passwordParam) {
-      setEmail(emailParam);
-      setPassword(passwordParam);
-      setTimeout(() => {
-        if (loginButtonRef.current) {
-          loginButtonRef.current.click();
-        }
-      }, 1000);
+      setEmail(emailParam); setPassword(passwordParam);
+      setTimeout(() => { if (loginButtonRef.current) loginButtonRef.current.click(); }, 1000);
     }
-    
-    // ✅ Cleanup on unmount
     return () => {
-      if (speechTimeoutRef.current) {
-        clearTimeout(speechTimeoutRef.current);
-        speechTimeoutRef.current = null;
-      }
-      if (redirectTimerRef.current) {
-        clearTimeout(redirectTimerRef.current);
-        redirectTimerRef.current = null;
-      }
-      if (welcomeTimerRef.current) {
-        clearTimeout(welcomeTimerRef.current);
-        welcomeTimerRef.current = null;
-      }
-      if ('speechSynthesis' in window) {
-        try { window.speechSynthesis.cancel(); } catch (e) {}
-      }
+      if (speechTimeoutRef.current) { clearTimeout(speechTimeoutRef.current); speechTimeoutRef.current = null; }
+      if (redirectTimerRef.current) { clearTimeout(redirectTimerRef.current); redirectTimerRef.current = null; }
+      if (welcomeTimerRef.current) { clearTimeout(welcomeTimerRef.current); welcomeTimerRef.current = null; }
+      if ('speechSynthesis' in window) { try { window.speechSynthesis.cancel(); } catch (e) {} }
     };
   }, [location]);
 
-  // ─── Auto close welcome popup after 5 seconds ───
   useEffect(() => {
     if (showWelcome) {
-      if (welcomeTimerRef.current) {
-        clearTimeout(welcomeTimerRef.current);
-        welcomeTimerRef.current = null;
-      }
-      welcomeTimerRef.current = setTimeout(() => {
-        goToDashboard();
-      }, 5000);
+      if (welcomeTimerRef.current) { clearTimeout(welcomeTimerRef.current); welcomeTimerRef.current = null; }
+      welcomeTimerRef.current = setTimeout(() => { goToDashboard(); }, 5000);
     }
     return () => {
-      if (welcomeTimerRef.current) {
-        clearTimeout(welcomeTimerRef.current);
-        welcomeTimerRef.current = null;
-      }
+      if (welcomeTimerRef.current) { clearTimeout(welcomeTimerRef.current); welcomeTimerRef.current = null; }
     };
   }, [showWelcome]);
 
-  // ─── Speech support ───
   useEffect(() => {
-    if (!('speechSynthesis' in window)) {
-      setIsSpeechSupported(false);
-    }
+    if (!('speechSynthesis' in window)) setIsSpeechSupported(false);
     const resumeSpeech = () => {
       if ('speechSynthesis' in window) {
-        try {
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.getVoices();
-        } catch (e) {}
+        try { window.speechSynthesis.cancel(); window.speechSynthesis.getVoices(); } catch (e) {}
       }
     };
     document.addEventListener('click', resumeSpeech);
@@ -777,18 +539,12 @@ const LoginPage = () => {
     };
   }, []);
 
-  // ─── Login Submit ───
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    
-    // ✅ CRITICAL: Clear all old user data BEFORE login
     clearAllUserData();
-    
-    // ✅ Reset error and loading
     setError('');
     setIsLoading(true);
 
-    // Get location
     let lat = latitude;
     let lng = longitude;
     if (!locationFetched || lat === null || lng === null) {
@@ -798,7 +554,6 @@ const LoginPage = () => {
     }
 
     try {
-      // ─── TRY ADMIN LOGIN ───
       const adminResponse = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -809,8 +564,6 @@ const LoginPage = () => {
       if (adminResponse.ok) {
         const admin = adminData.admin || {};
         const name = admin.name || 'Admin';
-        
-        // ✅ Set admin data in localStorage
         localStorage.setItem('adminToken', adminData.token);
         localStorage.setItem('userRole', 'admin');
         localStorage.setItem('adminEmail', email);
@@ -821,19 +574,12 @@ const LoginPage = () => {
           localStorage.setItem('userId', admin.id || admin._id);
         }
         localStorage.setItem('userData', JSON.stringify({ name, email, role: 'admin', password }));
-        
-        // ✅ Update state for admin
-        setUserName(name);
-        setUserRole('Admin');
-        setIsImageCaptureAllowed(false);
-        setEmployeeId(''); // Clear employee ID for admin
-        
+        setUserName(name); setUserRole('Admin'); setIsImageCaptureAllowed(false); setEmployeeId('');
         setIsLoading(false);
         navigate('/dashboard', { replace: true });
         return;
       }
 
-      // ─── TRY EMPLOYEE LOGIN ───
       const empResponse = await fetch(`${API_BASE_URL}/employees/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -850,7 +596,6 @@ const LoginPage = () => {
         const dept = employee.department || '';
         const isAllowed = employee.isAllowedImageCapturedAttendance === true || employee.isAllowedImageCapturedAttendance === "true";
 
-        // ✅ Set employee data in localStorage
         localStorage.setItem('employeeId', empId);
         localStorage.setItem('employeeEmail', empEmail);
         localStorage.setItem('employeeName', name);
@@ -859,7 +604,7 @@ const LoginPage = () => {
         localStorage.setItem('isAllowedImageCapturedAttendance', String(isAllowed));
         localStorage.setItem('employeePassword', password);
         if (empData.token) localStorage.setItem('token', empData.token);
-        
+
         const userData = {
           _id: employee.id || employee._id,
           name, email: empEmail, employeeId: empId, role, department: dept,
@@ -872,43 +617,25 @@ const LoginPage = () => {
         localStorage.setItem('employeeData', JSON.stringify(userDataWithPass));
         localStorage.setItem('userId', employee.id || employee._id);
 
-        // ✅ Update state for employee
-        setEmployeeId(empId);
-        setEmployeeEmail(empEmail);
-        setEmployeeName(name);
-        setEmployeeDepartment(dept);
-        setIsImageCaptureAllowed(isAllowed);
+        setEmployeeId(empId); setEmployeeEmail(empEmail); setEmployeeName(name);
+        setEmployeeDepartment(dept); setIsImageCaptureAllowed(isAllowed);
 
-        // ✅ Check if already checked in
         let isAlreadyCheckedIn = false;
         if (employee.lastCheckInLocation && employee.lastCheckInLocation.timestamp) {
           isAlreadyCheckedIn = isToday(employee.lastCheckInLocation.timestamp);
         }
         await fetchTodayAttendance(empId);
-        if (isAlreadyCheckedIn) {
-          setCheckedIn(true);
-        }
+        if (isAlreadyCheckedIn) setCheckedIn(true);
         await fetchAssignedLocation(empId);
 
-        setUserName(name);
-        setUserRole(role);
-
-        setIsLoading(false);
-
-        // ✅ Show welcome popup
+        setUserName(name); setUserRole(role); setIsLoading(false);
         setShowWelcome(true);
         await speakWelcome(name, role);
-        
         return;
       }
 
-      // ─── LOGIN FAILED ───
-      if (empData && empData.message) {
-        throw new Error(empData.message);
-      } else {
-        throw new Error('Invalid credentials - Admin or Employee login only');
-      }
-
+      if (empData && empData.message) throw new Error(empData.message);
+      else throw new Error('Invalid credentials - Admin or Employee login only');
     } catch (err) {
       setError(err.message);
       setIsLoading(false);
@@ -918,7 +645,6 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
 
-      {/* ─── TOAST ─── */}
       {toastMessage && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
           <div className={`px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-sm text-white font-medium text-sm flex items-center gap-2.5 border border-white/20 ${toastMessage.type === "success" ? "bg-gradient-to-r from-green-500 to-emerald-500" : "bg-gradient-to-r from-red-500 to-rose-500"}`}>
@@ -928,7 +654,6 @@ const LoginPage = () => {
         </div>
       )}
 
-      {/* ─── SUCCESS POPUP ─── */}
       {showSuccessPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
           <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 transform animate-scale-up border border-green-200/50">
@@ -962,7 +687,6 @@ const LoginPage = () => {
         </div>
       )}
 
-      {/* ─── REASON POPUP ─── */}
       {showReasonPopup && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 transform animate-scale-up border border-yellow-200/50">
@@ -982,11 +706,7 @@ const LoginPage = () => {
                 <span className="text-xs text-gray-500">Please select a reason for check-in.</span>
               </p>
               <div className="mt-4">
-                <select
-                  value={tempReason}
-                  onChange={(e) => setTempReason(e.target.value)}
-                  className="w-full p-3 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
-                >
+                <select value={tempReason} onChange={(e) => setTempReason(e.target.value)} className="w-full p-3 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
                   <option value="">-- Select Reason --</option>
                   <option value="Field Work">📋 Field Work</option>
                   <option value="Work From Home">🏠 Work From Home</option>
@@ -995,17 +715,8 @@ const LoginPage = () => {
                 </select>
               </div>
               <div className="mt-4 flex gap-3">
-                <button
-                  onClick={handleReasonCancel}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleReasonConfirm}
-                  disabled={isReasonProcessing}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-lg shadow-yellow-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-                >
+                <button onClick={handleReasonCancel} className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">Cancel</button>
+                <button onClick={handleReasonConfirm} disabled={isReasonProcessing} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-lg shadow-yellow-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50">
                   {isReasonProcessing ? "Processing..." : "Confirm"}
                 </button>
               </div>
@@ -1014,7 +725,6 @@ const LoginPage = () => {
         </div>
       )}
 
-      {/* ─── CAMERA MODAL ─── */}
       {showCameraModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/90 backdrop-blur-md animate-fade-in">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] flex flex-col overflow-hidden">
@@ -1028,10 +738,7 @@ const LoginPage = () => {
                   <p className="text-xs text-gray-500 font-medium">For attendance verification</p>
                 </div>
               </div>
-              <button
-                onClick={handleCloseCamera}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/80 hover:bg-red-50 hover:text-red-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:rotate-90"
-              >
+              <button onClick={handleCloseCamera} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/80 hover:bg-red-50 hover:text-red-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:rotate-90">
                 <FaTimes className="text-gray-600 hover:text-red-500 transition-colors text-lg" />
               </button>
             </div>
@@ -1042,13 +749,7 @@ const LoginPage = () => {
                   <img src={capturedImage} alt="Captured" className="w-full h-full object-contain" />
                 ) : (
                   <>
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className={`w-full h-full object-cover ${!isCameraReady ? "hidden" : ""}`}
-                    />
+                    <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${!isCameraReady ? "hidden" : ""}`} />
                     {!isCameraReady && !cameraError && (
                       <div className="text-center text-white">
                         <FaSpinner className="w-10 h-10 animate-spin mx-auto mb-3 text-indigo-400" />
@@ -1059,12 +760,7 @@ const LoginPage = () => {
                       <div className="text-center text-white p-4">
                         <FaExclamationTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
                         <p className="text-sm font-medium text-red-400">{cameraError}</p>
-                        <button
-                          onClick={startCamera}
-                          className="mt-3 px-5 py-2.5 bg-indigo-600 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
-                        >
-                          Retry
-                        </button>
+                        <button onClick={startCamera} className="mt-3 px-5 py-2.5 bg-indigo-600 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">Retry</button>
                       </div>
                     )}
                   </>
@@ -1090,10 +786,7 @@ const LoginPage = () => {
                           const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
                           if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
                             if (!isReasonProcessing && !showReasonPopup) {
-                              setPendingAction("submit");
-                              setTempReason("");
-                              setShowReasonPopup(true);
-                              setIsCapturing(false);
+                              setPendingAction("submit"); setTempReason(""); setShowReasonPopup(true); setIsCapturing(false);
                             }
                             return;
                           }
@@ -1109,19 +802,9 @@ const LoginPage = () => {
                   </>
                 ) : (
                   <>
-                    <button onClick={handleCloseCamera} className="px-6 py-3 rounded-xl text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors">
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleCaptureNow}
-                      disabled={!isCameraReady || isCapturing}
-                      className="relative px-10 py-3 rounded-xl text-base font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-lg shadow-indigo-500/30 transition-all duration-200 flex items-center gap-3 disabled:opacity-50"
-                    >
-                      {isCapturing ? (
-                        <><FaSpinner className="animate-spin text-lg" /> Capturing...</>
-                      ) : (
-                        <><BsCamera className="text-lg" /> Capture Now</>
-                      )}
+                    <button onClick={handleCloseCamera} className="px-6 py-3 rounded-xl text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors">Cancel</button>
+                    <button onClick={handleCaptureNow} disabled={!isCameraReady || isCapturing} className="relative px-10 py-3 rounded-xl text-base font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-lg shadow-indigo-500/30 transition-all duration-200 flex items-center gap-3 disabled:opacity-50">
+                      {isCapturing ? (<><FaSpinner className="animate-spin text-lg" /> Capturing...</>) : (<><BsCamera className="text-lg" /> Capture Now</>)}
                     </button>
                   </>
                 )}
@@ -1137,10 +820,8 @@ const LoginPage = () => {
         </div>
       )}
 
-      {/* ─── HIDDEN CANVAS ─── */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* ─── LOCATION STATUS ─── */}
       <div className="fixed top-4 right-4 z-50">
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
           locationFetched && latitude !== null && longitude !== null
@@ -1152,38 +833,19 @@ const LoginPage = () => {
           <span className={`w-2 h-2 rounded-full ${
             locationFetched && latitude !== null && longitude !== null
               ? 'bg-green-500 animate-pulse'
-              : locationError
-              ? 'bg-yellow-500'
-              : 'bg-gray-400'
+              : locationError ? 'bg-yellow-500' : 'bg-gray-400'
           }`}></span>
           {locationFetched && latitude !== null && longitude !== null
             ? `📍 ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-            : locationError
-            ? '⚠️ Location off'
-            : '⏳ Fetching location...'}
+            : locationError ? '⚠️ Location off' : '⏳ Fetching location...'}
         </div>
       </div>
 
-      {/* ─── WELCOME POPUP ─── */}
       {showWelcome && (
-        <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-md animate-fadeIn" 
-          onClick={goToDashboard}
-        >
-          <div 
-            className="relative bg-white rounded-3xl p-8 sm:p-12 max-w-md w-full mx-4 shadow-2xl animate-scaleUp border border-gray-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              goToDashboard();
-            }}
-          >
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                goToDashboard();
-              }}
-              className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 transition-all duration-200 hover:rotate-90 group"
-            >
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-md animate-fadeIn" onClick={goToDashboard}>
+          <div className="relative bg-white rounded-3xl p-8 sm:p-12 max-w-md w-full mx-4 shadow-2xl animate-scaleUp border border-gray-100"
+            onClick={(e) => { e.stopPropagation(); goToDashboard(); }}>
+            <button onClick={(e) => { e.stopPropagation(); goToDashboard(); }} className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 transition-all duration-200 hover:rotate-90 group">
               <FaTimes className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
             </button>
 
@@ -1207,9 +869,7 @@ const LoginPage = () => {
                 You have been successfully logged in to <strong className="text-gray-800">INGRAIN'S TMS</strong>
               </p>
 
-              <p className="text-xs text-gray-400 mb-4 animate-pulse">
-                ⏳ Redirecting to dashboard in 5 seconds...
-              </p>
+              <p className="text-xs text-gray-400 mb-4 animate-pulse">⏳ Redirecting to dashboard in 5 seconds...</p>
 
               {isSpeechSupported && (
                 <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-4">
@@ -1218,7 +878,6 @@ const LoginPage = () => {
                 </div>
               )}
 
-              {/* ─── ATTENDANCE PROMPT ─── ✅ ONLY FOR CURRENT EMPLOYEE */}
               {!checkedIn && isImageCaptureAllowed && shouldShowAttendancePrompt() && (
                 <div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100">
                   <div className="flex items-center gap-3 mb-3">
@@ -1230,24 +889,13 @@ const LoginPage = () => {
                       <p className="text-xs text-gray-500">Capture photo & check in instantly</p>
                     </div>
                   </div>
-
                   <div className="flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenCameraForAttendance();
-                      }}
-                      className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 shadow-md shadow-indigo-500/30 flex items-center justify-center gap-2"
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); handleOpenCameraForAttendance(); }}
+                      className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 shadow-md shadow-indigo-500/30 flex items-center justify-center gap-2">
                       <FaCamera className="w-4 h-4" /> 📸 Capture & Check In
                     </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        goToDashboard();
-                      }}
-                      className="px-4 py-2.5 rounded-xl text-gray-500 text-sm font-medium hover:bg-gray-100 transition-all duration-200"
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); goToDashboard(); }}
+                      className="px-4 py-2.5 rounded-xl text-gray-500 text-sm font-medium hover:bg-gray-100 transition-all duration-200">
                       Skip
                     </button>
                   </div>
@@ -1269,20 +917,21 @@ const LoginPage = () => {
       {/* ─── LOGIN CARD ─── */}
       <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden bg-white rounded-3xl shadow-2xl border border-gray-100 md:grid-cols-2">
 
+        {/* LEFT: Login Form */}
         <div className="flex flex-col justify-center p-6 sm:p-8 md:p-12">
           <div className="mb-6 text-center">
-            <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-blue-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-              <span className="text-2xl text-white font-bold">🚀</span>
-            </div>
+            {/* ✅ LOGO INSTEAD OF ROCKET */}
+            <img
+              src={logo}
+              alt="TimelyHealth"
+              className="w-32 h-auto mx-auto mb-4 object-contain"
+            />
             <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text">LOG IN</h1>
             <p className="mt-1 text-sm text-gray-500">Admin / Employee Login</p>
           </div>
 
-          {/* ERROR MESSAGE */}
           {error && (
-            <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
-              ❌ {error}
-            </div>
+            <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">❌ {error}</div>
           )}
 
           {locationError && !error && (
@@ -1294,15 +943,8 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700" htmlFor="email">Email Address</label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@domain.com"
-                className="w-full px-4 py-3 mt-1 text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                required
-              />
+              <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@domain.com"
+                className="w-full px-4 py-3 mt-1 text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required />
             </div>
 
             <div>
@@ -1311,30 +953,16 @@ const LoginPage = () => {
                 <button type="button" onClick={() => navigate('/forgot-password')} className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors">Forgot Password?</button>
               </div>
               <div className="relative mt-1">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-10 text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 flex items-center text-gray-400 right-3 hover:text-gray-600 focus:outline-none transition-colors"
-                >
+                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
+                  className="w-full px-4 py-3 pr-10 text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 flex items-center text-gray-400 right-3 hover:text-gray-600 focus:outline-none transition-colors">
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
             </div>
 
-            <button
-              ref={loginButtonRef}
-              type="submit"
-              disabled={isLoading}
-              className={`w-full py-3.5 text-white text-sm font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 transition-all duration-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-            >
+            <button ref={loginButtonRef} type="submit" disabled={isLoading}
+              className={`w-full py-3.5 text-white text-sm font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 transition-all duration-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}>
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Verifying...
@@ -1349,8 +977,35 @@ const LoginPage = () => {
           </div>
         </div>
 
-        <div className="hidden md:flex items-center justify-center p-8 bg-gradient-to-br from-emerald-50/50 to-blue-50/50">
-          <img src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg" alt="Login Illustration" className="relative object-contain h-auto max-w-full rounded-2xl shadow-lg" />
+        {/* ─── RIGHT: Logo Section — TILTED WITH SHADOW ─── */}
+        <div className="hidden md:flex flex-col items-center justify-center p-10 bg-gradient-to-br from-slate-50 via-white to-slate-100 relative overflow-hidden">
+
+          <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-300/40 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3"></div>
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-300/40 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
+          <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-purple-300/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+
+          <div
+            className="relative z-10 w-full max-w-md bg-white rounded-3xl p-8 transition-all duration-700 hover:scale-105"
+            style={{
+              transform: 'rotate(-6deg)',
+              boxShadow: '0 30px 60px -15px rgba(16, 185, 129, 0.35), 0 20px 40px -20px rgba(59, 130, 246, 0.35), 0 10px 20px -10px rgba(0, 0, 0, 0.15)',
+            }}
+          >
+            <img src={logo} alt="TimelyHealth Logo" className="w-full h-auto object-contain" />
+            <p className="text-center mt-4 text-sm font-medium text-gray-500 tracking-wide">
+              Connecting Communities
+            </p>
+          </div>
+
+          <p className="relative z-10 mt-10 text-xs text-gray-500 tracking-[0.3em] uppercase font-semibold">
+            Healthcare Management System
+          </p>
+
+          <div className="relative z-10 mt-4 flex items-center gap-2">
+            <span className="w-12 h-1 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full"></span>
+            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+            <span className="w-1 h-1 bg-emerald-500 rounded-full"></span>
+          </div>
         </div>
       </div>
 

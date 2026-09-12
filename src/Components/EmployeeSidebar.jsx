@@ -69,6 +69,18 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     "Healthcare Administrator"
   ];
 
+  // ✅ OP Management related permissions
+  const OP_MANAGEMENT_PERMISSIONS = [
+    "op_dashboard_view",
+    "op_patient_records_view",
+    "op_patient_add_edit",
+    "op_patient_delete",
+    "op_appointment_slots_manage",
+    "op_bookings_view",
+    "op_payment_status_update",
+    "op_export_csv"
+  ];
+
   const ADMIN_PERMISSIONS = [
     "dashboard_view", "attendance_view_all", "shifts_manage", "leave_approve",
     "leave_approve_manager", "reports_view", "payroll_manage", "employee_view_all", "employee_add",
@@ -151,6 +163,81 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       role.toLowerCase().includes(r.toLowerCase()) || 
       r.toLowerCase().includes(role.toLowerCase())
     );
+  };
+
+  // ✅ Check if user has OP Management access based on permissions
+  const hasOPManagementPermission = (perms) => {
+    if (!perms || !Array.isArray(perms)) return false;
+    return perms.some(p => OP_MANAGEMENT_PERMISSIONS.includes(p));
+  };
+
+  // ✅ Combined check: role OR permission
+  const shouldShowOPManagement = () => {
+    return hasOPManagementAccess(employeeRole) || hasOPManagementPermission(permissions);
+  };
+
+  // ✅ NEW — Build OP Management dropdown based on user's actual permissions
+  const buildOPManagementDropdown = () => {
+    const items = [];
+
+    // OP Dashboard — requires op_dashboard_view OR role-based access
+    if (permissions.includes("op_dashboard_view") || hasOPManagementAccess(employeeRole)) {
+      items.push({ name: "OP Dashboard", path: "/employee/op-dashboard" });
+    }
+
+    // Doctors — requires op_patient_records_view OR op_patient_add_edit OR role-based
+    if (
+      permissions.includes("op_patient_records_view") ||
+      permissions.includes("op_patient_add_edit") ||
+      hasOPManagementAccess(employeeRole)
+    ) {
+      items.push({ name: "Doctors", path: "/employee/doctor-management" });
+    }
+
+    // OP Records — requires op_patient_records_view OR op_patient_add_edit OR role-based
+    if (
+      permissions.includes("op_patient_records_view") ||
+      permissions.includes("op_patient_add_edit") ||
+      hasOPManagementAccess(employeeRole)
+    ) {
+      items.push({ name: "OP Records", path: "/employee/op-management" });
+    }
+
+    // Appointments Slots — requires op_appointment_slots_manage OR role-based
+    if (
+      permissions.includes("op_appointment_slots_manage") ||
+      hasOPManagementAccess(employeeRole)
+    ) {
+      items.push({ name: "Appointments Slots", path: "/employee/appointment-slots" });
+    }
+
+    // Services — requires op_appointment_slots_manage OR op_patient_add_edit OR role-based
+    if (
+      permissions.includes("op_appointment_slots_manage") ||
+      permissions.includes("op_patient_add_edit") ||
+      hasOPManagementAccess(employeeRole)
+    ) {
+      items.push({ name: "Services", path: "/employee/services" });
+    }
+
+    // Bookings — requires op_bookings_view OR role-based
+    if (
+      permissions.includes("op_bookings_view") ||
+      hasOPManagementAccess(employeeRole)
+    ) {
+      items.push({ name: "Bookings", path: "/employee/bookings" });
+    }
+
+    // Letter Head — requires op_bookings_view OR op_patient_add_edit OR role-based
+    if (
+      permissions.includes("op_bookings_view") ||
+      permissions.includes("op_patient_add_edit") ||
+      hasOPManagementAccess(employeeRole)
+    ) {
+      items.push({ name: "Letter Head", path: "/employee/letterhead" });
+    }
+
+    return items;
   };
 
   const handleMouseEnterSidebar = () => {
@@ -477,30 +564,27 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
     ];
 
-    // 🔥 Insert OP Management section if user has access based on role
-    const hasOPAccess = hasOPManagementAccess(employeeRole);
+    // 🔥 Insert OP Management section if user has access based on role OR permission
+    const hasOPAccess = shouldShowOPManagement();
     
     if (hasOPAccess) {
-      const dashboardIndex = menu.findIndex(item => item.path === "/employeedashboard");
-      
-      const opManagementSection = {
-        icon: <i className="ri-hospital-line"></i>,
-        name: "OP Management",
-        dropdown: [
-          { name: "OP Dashboard", path: "/employee/op-dashboard" },
-          { name: "Doctors", path: "/employee/doctor-management" },
-          { name: "OP Records", path: "/employee/op-management" },
-          { name: "Appointments Slots", path: "/employee/appointment-slots" },
-          { name: "Services", path: "/employee/services" },
-          { name: "Bookings", path: "/employee/bookings" },
-          { name: "Letter Head", path: "/employee/letterhead" },
-        ]
-      };
+      const opDropdownItems = buildOPManagementDropdown();
 
-      if (dashboardIndex !== -1) {
-        menu.splice(dashboardIndex + 1, 0, opManagementSection);
-      } else {
-        menu.splice(1, 0, opManagementSection);
+      // ✅ Only add the OP Management section if there is at least 1 accessible item
+      if (opDropdownItems.length > 0) {
+        const dashboardIndex = menu.findIndex(item => item.path === "/employeedashboard");
+        
+        const opManagementSection = {
+          icon: <i className="ri-hospital-line"></i>,
+          name: "OP Management",
+          dropdown: opDropdownItems
+        };
+
+        if (dashboardIndex !== -1) {
+          menu.splice(dashboardIndex + 1, 0, opManagementSection);
+        } else {
+          menu.splice(1, 0, opManagementSection);
+        }
       }
     }
 
@@ -632,23 +716,19 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
     }
 
-    // 🔥 OP Management in Admin Menu - based on role (WITH /employee/ prefix for employee admin view)
-    const hasOPAccess = hasOPManagementAccess(employeeRole);
+    // 🔥 OP Management in Admin Menu - based on role OR permission (WITH /employee/ prefix for employee admin view)
+    const hasOPAccess = shouldShowOPManagement();
     
     if (hasOPAccess) {
-      menu.push({
-        icon: <i className="ri-hospital-line"></i>,
-        name: "OP Management",
-        dropdown: [
-          { name: "OP Dashboard", path: "/employee/op-dashboard" },
-          { name: "Doctors", path: "/employee/doctor-management" },
-          { name: "OP Records", path: "/employee/op-management" },
-          { name: "Appointments Slots", path: "/employee/appointment-slots" },
-          { name: "Services", path: "/employee/services" },
-          { name: "Bookings", path: "/employee/bookings" },
-          { name: "Letter Head", path: "/employee/letterhead" },
-        ]
-      });
+      const opDropdownItems = buildOPManagementDropdown();
+
+      if (opDropdownItems.length > 0) {
+        menu.push({
+          icon: <i className="ri-hospital-line"></i>,
+          name: "OP Management",
+          dropdown: opDropdownItems
+        });
+      }
     }
 
     // My Visits - Admin Side
@@ -827,8 +907,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                               <i className="ri-external-link-line ml-1 text-xs" />
                             </a>
                           ) : (
-                            <Link
-                              to={sub.path}
+                            <Link                              to={sub.path}
                               onClick={() => handleDropdownItemClick(sub.path)}
                               className={`emp-sidebar__subitem ${
                                 isActive(sub.path) ? "emp-sidebar__subitem--active" : ""

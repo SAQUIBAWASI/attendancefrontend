@@ -90,13 +90,103 @@ export default function AttendanceSummary() {
   const [showPerformerDetailModal, setShowPerformerDetailModal] = useState(false);
 
   // ============================================
+  // HARDCODED SHIFT HOURS MAP (Fallback)
+  // ============================================
+  const HARDCODED_SHIFT_HOURS = {
+    "A": 10, "B": 9, "C": 9, "D": 12, "E": 11, "F": 12,
+    "G": 7, "H": 5, "I": 4, "J": 12, "K": 11.5, "L": 11,
+    "M": 6, "N": 5, "O": 6, "P": 10.5, "BR": 11,
+  };
+
+  // ============================================
+  // ✅✅✅ SABSE IMPORTANT FIX - getEmployeeShiftHours
+  // Ab ye PayRoll page jaisa hi kaam karega
+  // ============================================
+  const getEmployeeShiftHours = (employeeId) => {
+    if (!employeeId) return 8;
+
+    const employee = employees.find(emp => emp.employeeId === employeeId);
+    if (employee && employee.shiftHours && employee.shiftHours > 0) {
+      return employee.shiftHours;
+    }
+
+    const attendanceRecord = records.find(r => r.employeeId === employeeId);
+    if (attendanceRecord && attendanceRecord.assignedShiftHours && attendanceRecord.assignedShiftHours > 0) {
+      return attendanceRecord.assignedShiftHours;
+    }
+
+    const masterData = employeesMasterData[employeeId];
+    if (masterData && masterData.shiftHours && masterData.shiftHours > 0) {
+      return masterData.shiftHours;
+    }
+
+    const shiftAssignment = shiftsData.find(s =>
+      s.employeeAssignment?.employeeId === employeeId ||
+      s.employeeId === employeeId
+    );
+    
+    let shiftType = null;
+    if (shiftAssignment) {
+      shiftType = shiftAssignment.shiftType;
+    }
+
+    if (shiftType && HARDCODED_SHIFT_HOURS[shiftType]) {
+      return HARDCODED_SHIFT_HOURS[shiftType];
+    }
+
+    if (shiftType) {
+      const masterShift = masterShifts.find(shift => shift.shiftType === shiftType);
+      
+      if (masterShift && masterShift.timeSlots && masterShift.timeSlots.length > 0) {
+        const isBrakeShift = masterShift.isBrakeShift || 
+                             masterShift.shiftCategory === 'Brake' ||
+                             (shiftAssignment?.isBrakeShift === true);
+        
+        if (isBrakeShift && masterShift.timeSlots.length >= 2) {
+          let totalDuration = 0;
+          masterShift.timeSlots.forEach(slot => {
+            if (slot.timeRange) {
+              const parsed = parseShiftTimeRange(slot.timeRange);
+              if (parsed.start && parsed.end) {
+                const [startHour, startMinute] = parsed.start.split(':').map(Number);
+                const [endHour, endMinute] = parsed.end.split(':').map(Number);
+                let startMinutes = startHour * 60 + startMinute;
+                let endMinutes = endHour * 60 + endMinute;
+                if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+                totalDuration += (endMinutes - startMinutes) / 60;
+              }
+            }
+          });
+          if (totalDuration > 0) return totalDuration;
+        } else {
+          const timeSlot = masterShift.timeSlots[0];
+          if (timeSlot.timeRange) {
+            const parsed = parseShiftTimeRange(timeSlot.timeRange);
+            if (parsed.start && parsed.end) {
+              const [startHour, startMinute] = parsed.start.split(':').map(Number);
+              const [endHour, endMinute] = parsed.end.split(':').map(Number);
+              let startMinutes = startHour * 60 + startMinute;
+              let endMinutes = endHour * 60 + endMinute;
+              if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+              return (endMinutes - startMinutes) / 60;
+            }
+          }
+        }
+      }
+    }
+
+    return 8;
+  };
+
+  // ============================================
   // ATTENDANCE STATUS HELPER FUNCTIONS
   // ============================================
 
-  // Helper function to get employee shift timing
   const getEmployeeShiftTimings = (employeeId) => {
     const shift = getEmployeeShift(employeeId);
-    if (!shift) return { start: "09:00", end: "18:00", shiftHours: 9, startHour: 9, startMinute: 0, endHour: 18, endMinute: 0 };
+    if (!shift) {
+      return { start: "09:00", end: "18:00", shiftHours: 9, startHour: 9, startMinute: 0, endHour: 18, endMinute: 0 };
+    }
     
     const [startHour, startMinute] = shift.start.split(':').map(Number);
     const [endHour, endMinute] = shift.end.split(':').map(Number);
@@ -116,7 +206,6 @@ export default function AttendanceSummary() {
     };
   };
 
-  // Helper function to calculate attendance status based on check-in time and shift
   const calculateAttendanceStatus = (employeeId, checkInTime, checkOutTime, totalHours) => {
     if (!checkInTime) { 
       return { 
@@ -133,25 +222,13 @@ export default function AttendanceSummary() {
     const shiftStart = new Date(checkInTime);
     shiftStart.setHours(shiftTimings.startHour, shiftTimings.startMinute, 0, 0);
     
-    // Calculate minutes difference from shift start
     const diffMinutes = (checkInDate - shiftStart) / (1000 * 60);
     
-    // Get shift hours
-    const shiftHours = shiftTimings.shiftHours || 9;
+    const shiftHours = getEmployeeShiftHours(employeeId) || shiftTimings.shiftHours || 8;
     const actualHours = totalHours || 0;
-    const checkOutExists = !!checkOutTime;
     
-    // Calculate threshold for full day (85% of shift hours)
     const fullDayThreshold = shiftHours * 0.85;
     
-    // Determine status based on rules:
-    // 1. If check-in is 1+ hour late → Half Day
-    // 2. If check-in is 30+ minutes late → Late Coming
-    // 3. If no check-out → Single Punch (Partial)
-    // 4. If check-out exists but hours < 85% of shift → Early Logout (Partial)
-    // 5. If completed full shift hours (85%+) → Full Day
-    
-    // Check for Single Punch (check-in exists but no check-out)
     if (checkInTime && !checkOutTime) {
       return { 
         status: 'single_punch', 
@@ -162,7 +239,6 @@ export default function AttendanceSummary() {
       };
     }
     
-    // Check for Early Logout (check-out exists but didn't complete enough hours)
     if (checkOutTime && actualHours < fullDayThreshold && actualHours > 0) {
       const remainingHours = (shiftHours - actualHours).toFixed(1);
       return { 
@@ -174,9 +250,7 @@ export default function AttendanceSummary() {
       };
     }
     
-    // Check for Late Coming (30+ mins late)
     if (diffMinutes >= 60) {
-      // 1+ hour late → Half Day
       return { 
         status: 'half_day', 
         message: `🌓 Half Day (${Math.round(diffMinutes)} mins late)`, 
@@ -185,7 +259,6 @@ export default function AttendanceSummary() {
         icon: '🌓'
       };
     } else if (diffMinutes >= 30) {
-      // 30+ minutes late → Late Coming
       return { 
         status: 'late', 
         message: `⏰ Late (${Math.round(diffMinutes)} mins)`, 
@@ -194,7 +267,6 @@ export default function AttendanceSummary() {
         icon: '⏰'
       };
     } else if (actualHours >= fullDayThreshold) {
-      // Completed full shift (85% or more of shift hours)
       return { 
         status: 'full_day', 
         message: '✅ Full Day', 
@@ -203,7 +275,6 @@ export default function AttendanceSummary() {
         icon: '✅'
       };
     } else {
-      // Default: Present (on time but didn't complete full shift)
       return { 
         status: 'present', 
         message: '📌 Present', 
@@ -214,7 +285,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  // Get employee attendance status for summary view
   const getEmployeeAttendanceStatus = (employeeId, month) => {
     if (!employeeId || !month) { 
       return { 
@@ -226,7 +296,6 @@ export default function AttendanceSummary() {
       };
     }
     
-    // Get employee records for the month
     const empRecords = records.filter(r => {
       if (r.employeeId !== employeeId) return false;
       if (!r.checkInTime) return false;
@@ -244,32 +313,26 @@ export default function AttendanceSummary() {
       };
     }
     
-    // Check the most recent record's status
     const latestRecord = empRecords.reduce((a, b) => 
       new Date(a.checkInTime) > new Date(b.checkInTime) ? a : b
     );
     
-    const status = calculateAttendanceStatus(
+    return calculateAttendanceStatus(
       employeeId, 
       latestRecord.checkInTime, 
       latestRecord.checkOutTime, 
       latestRecord.totalHours || latestRecord.hours || 0
     );
-    
-    return status;
   };
 
   // ============================================
-  // OT CALCULATION HELPER FUNCTIONS - ✅ FIXED
+  // OT CALCULATION HELPER FUNCTIONS
   // ============================================
 
-  // Get shift hours for an employee
   const getEmployeeShiftHoursForOT = (employeeId) => {
-    const shiftTimings = getEmployeeShiftTimings(employeeId);
-    return shiftTimings.shiftHours || 9;
+    return getEmployeeShiftHours(employeeId) || 8;
   };
 
-  // Calculate OT for a single record
   const calculateOTForRecord = (employeeId, totalHours) => {
     const shiftHours = getEmployeeShiftHoursForOT(employeeId);
     if (!totalHours || totalHours === 0) return 0;
@@ -277,29 +340,20 @@ export default function AttendanceSummary() {
     return ot > 0 ? parseFloat(ot.toFixed(2)) : 0;
   };
 
-  // ✅ FIXED: Calculate total OT for an employee for the month
   const calculateEmployeeOT = (employeeId) => {
     if (!employeeId) return 0;
-    
     let totalOT = 0;
-    
-    // ✅ Agar records empty hain toh 0 return karo
     if (!records || records.length === 0) return 0;
     
     records.forEach((rec) => {
-      // ✅ Skip if employeeId doesn't match
       if (rec.employeeId !== employeeId) return;
-      
-      // ✅ Skip if no check-in time
       if (!rec.checkInTime) return;
       
-      // ✅ Month filter
       if (selectedMonth && rec.checkInTime) {
         const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
         if (recMonth !== selectedMonth) return;
       }
       
-      // ✅ Date range filter
       if (fromDate && toDate && rec.checkInTime) {
         const recordDate = new Date(rec.checkInTime).toISOString().split('T')[0];
         if (recordDate < fromDate || recordDate > toDate) return;
@@ -313,7 +367,6 @@ export default function AttendanceSummary() {
     return parseFloat(totalOT.toFixed(2));
   };
 
-  // Format decimal hours to HH:MM format for display
   const formatDecimalHours = (decimalHours) => {
     if (!decimalHours && decimalHours !== 0) return "0h 0m";
     const hours = Math.floor(decimalHours);
@@ -324,7 +377,6 @@ export default function AttendanceSummary() {
     return `${hours}h ${minutes}m`;
   };
 
-  // ✅ FIXED: Format OT hours to 1 decimal place with proper null handling
   const formatOTHours = (decimalHours) => {
     if (decimalHours === null || decimalHours === undefined || isNaN(decimalHours)) {
       return "0.0";
@@ -333,11 +385,6 @@ export default function AttendanceSummary() {
     return decimalHours.toFixed(1);
   };
 
-  // ============================================
-  // END OF HELPER FUNCTIONS
-  // ============================================
-
-  // Helper function to get all dates of a month
   const getAllDatesOfMonth = (month) => {
     if (!month) return [];
     const [year, m] = month.split("-");
@@ -350,7 +397,6 @@ export default function AttendanceSummary() {
     return dates;
   };
 
-  // Get weekoff dates (Sundays - max 4)
   const getWeekoffDatesForEmployee = (month) => {
     if (!month) return [];
     const monthDates = getAllDatesOfMonth(month);
@@ -360,7 +406,6 @@ export default function AttendanceSummary() {
       .map(date => date.toLocaleDateString('en-CA'));
   };
 
-  // Get working days for an employee (Monday to Saturday, excluding Sundays)
   const getWorkingDaysForEmployee = (month) => {
     if (!month) return [];
     const monthDates = getAllDatesOfMonth(month);
@@ -379,7 +424,6 @@ export default function AttendanceSummary() {
     });
   };
 
-  // Helper function to get missing attendance dates for a specific employee
   const getMissingAttendanceDates = (employeeId, month) => {
     if (!month) return [];
     
@@ -407,7 +451,6 @@ export default function AttendanceSummary() {
     return workingDays;
   };
 
-  // Get all active employees with their attendance status
   const getAllActiveEmployeesAttendanceStatus = (month) => {
     if (!month) return [];
     
@@ -476,7 +519,6 @@ export default function AttendanceSummary() {
     });
   };
 
-  // Calculate OT Hours
   const calculateOTHours = (totalHours, assignedShiftHours) => {
     if (!totalHours || totalHours === 0) return 0;
     if (!assignedShiftHours || assignedShiftHours === 0) return 0;
@@ -484,7 +526,6 @@ export default function AttendanceSummary() {
     return ot > 0 ? ot : 0;
   };
 
-  // Calculate work hours
   const calculateWorkHours = (checkIn, checkOut) => {
     if (!checkIn || !checkOut) return null;
     const checkInTime = new Date(checkIn);
@@ -493,7 +534,6 @@ export default function AttendanceSummary() {
     return diffHours.toFixed(1);
   };
 
-  // Format time with AM/PM for popup
   const formatTimeWithAMPM = (dateString) => {
     if (!dateString) return '--:--';
     const date = new Date(dateString);
@@ -504,7 +544,6 @@ export default function AttendanceSummary() {
     return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
   };
 
-  // Format date for popup
   const formatDateDisplay = (date) => {
     if (!date) return '';
     return date.toLocaleDateString('en-IN', { 
@@ -549,7 +588,6 @@ export default function AttendanceSummary() {
     }));
   };
 
-  // Click outside handlers for filter dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
@@ -639,73 +677,43 @@ export default function AttendanceSummary() {
 
   const getDefaultShiftTime = (shiftType) => {
     const shiftTimes = {
-      "A": { start: "10:00", end: "19:00", grace: 5, isBrakeShift: false },
-      "B": { start: "14:00", end: "22:00", grace: 5, isBrakeShift: false },
-      "C": { start: "18:00", end: "21:00", grace: 5, isBrakeShift: false },
-      "D": { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false },
-      "E": { start: "10:00", end: "21:00", grace: 5, isBrakeShift: false },
-      "F": { start: "14:00", end: "23:00", grace: 5, isBrakeShift: false },
-      "G": { start: "09:00", end: "21:00", grace: 5, isBrakeShift: false },
-      "H": { start: "09:00", end: "21:00", grace: 5, isBrakeShift: false },
-      "I": { start: "07:00", end: "17:00", grace: 5, isBrakeShift: false },
+      "A": { start: "07:00", end: "17:00", grace: 5, isBrakeShift: false },
+      "B": { start: "10:00", end: "19:00", grace: 5, isBrakeShift: false },
+      "C": { start: "11:00", end: "20:00", grace: 5, isBrakeShift: false },
+      "D": { start: "09:00", end: "21:00", grace: 5, isBrakeShift: false },
+      "E": { start: "07:00", end: "21:30", grace: 5, isBrakeShift: true },
+      "F": { start: "06:30", end: "22:00", grace: 5, isBrakeShift: true },
+      "G": { start: "16:00", end: "23:00", grace: 5, isBrakeShift: false },
+      "H": { start: "17:00", end: "22:00", grace: 5, isBrakeShift: false },
+      "I": { start: "18:00", end: "22:00", grace: 5, isBrakeShift: false },
+      "J": { start: "10:00", end: "22:00", grace: 5, isBrakeShift: false },
+      "K": { start: "10:00", end: "21:30", grace: 5, isBrakeShift: false },
+      "L": { start: "01:00", end: "12:00", grace: 5, isBrakeShift: false },
+      "M": { start: "08:00", end: "14:00", grace: 5, isBrakeShift: false },
+      "N": { start: "18:00", end: "23:00", grace: 5, isBrakeShift: false },
+      "O": { start: "17:00", end: "23:00", grace: 5, isBrakeShift: false },
+      "P": { start: "06:30", end: "17:00", grace: 5, isBrakeShift: false },
       "BR": { start: "07:00", end: "21:30", grace: 5, isBrakeShift: true },
     };
     return shiftTimes[shiftType] || { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
   };
 
-  const getEmployeeShiftHours = (employeeId) => {
-    const attendanceRecord = records.find(r => r.employeeId === employeeId);
-    if (attendanceRecord && attendanceRecord.assignedShiftHours) {
-      return attendanceRecord.assignedShiftHours;
-    }
-    const employee = employees.find(emp => emp.employeeId === employeeId);
-    if (employee && employee.shiftHours) {
-      return employee.shiftHours;
-    }
-    const shiftAssignment = shiftsData.find(s =>
-      s.employeeAssignment?.employeeId === employeeId ||
-      s.employeeId === employeeId
-    );
-    if (shiftAssignment) {
-      const shiftType = shiftAssignment.shiftType;
-      const masterShift = masterShifts.find(shift => shift.shiftType === shiftType);
-      if (masterShift && masterShift.timeSlots && masterShift.timeSlots.length > 0) {
-        const timeSlot = masterShift.timeSlots[0];
-        if (timeSlot.timeRange) {
-          const parsed = parseShiftTimeRange(timeSlot.timeRange);
-          if (parsed.start && parsed.end) {
-            const [startHour, startMinute] = parsed.start.split(':').map(Number);
-            const [endHour, endMinute] = parsed.end.split(':').map(Number);
-            let startMinutes = startHour * 60 + startMinute;
-            let endMinutes = endHour * 60 + endMinute;
-            if (endMinutes <= startMinutes) endMinutes += 24 * 60;
-            const hours = (endMinutes - startMinutes) / 60;
-            return hours;
-          }
-        }
-      }
-    }
-    return 9;
-  };
-
   const calculateDayType = (employeeId, hours) => {
     const numericHours = parseFloat(hours) || 0;
     const shiftHours = getEmployeeShiftHours(employeeId);
-    if (shiftHours >= 3 && shiftHours <= 6) {
-      if (numericHours >= shiftHours * 0.9) return "full";
-      if (numericHours >= shiftHours * 0.5) return "half";
-      return "full_leave";
-    } else if (shiftHours >= 7 && shiftHours <= 12) {
-      if (numericHours >= 8.8) return "full";
-      if (numericHours >= 4.5) return "half";
-      return "full_leave";
-    } else {
-      if (numericHours >= shiftHours * 0.9) return "full";
-      if (numericHours >= shiftHours * 0.5) return "half";
-      return "full_leave";
-    }
+    const effectiveShiftHours = (shiftHours && shiftHours > 0) ? shiftHours : 8;
+    const fullDayThreshold = effectiveShiftHours * 0.90;
+    const halfDayThreshold = effectiveShiftHours * 0.50;
+    
+    if (numericHours >= fullDayThreshold) return "full";
+    if (numericHours >= halfDayThreshold) return "half";
+    return "full_leave";
   };
 
+  // ============================================
+  // ✅ UPDATED: Ye function ab LIVE records se counts nikalega
+  // (Popup jaisa hi logic)
+  // ============================================
   const calculateEmployeeWorkingDays = (employeeId) => {
     let presentDays = 0;
     let halfDays = 0;
@@ -727,6 +735,7 @@ export default function AttendanceSummary() {
     return presentDays + (halfDays * 0.5);
   };
 
+  // ✅ UPDATED: Late days bhi live records se
   const calculateEmployeeLateDays = (employeeId, customRecords = null, customShiftsData = null) => {
     let lateDays = 0;
     const shift = getEmployeeShift(employeeId, customShiftsData);
@@ -798,10 +807,9 @@ export default function AttendanceSummary() {
   };
 
   // ============================================
-  // TOP PERFORMERS API FUNCTIONS - FIXED
+  // TOP PERFORMERS API FUNCTIONS
   // ============================================
 
-  // Fetch Top Performers with month filter - ENRICHED WITH LATE DAYS
   const fetchTopPerformers = async (month = null, customRecords = null, customShiftsData = null) => {
     try {
       let url = `${BASE_URL}/dashboard/top-performers`;
@@ -812,13 +820,9 @@ export default function AttendanceSummary() {
       const response = await fetch(url);
       const result = await response.json();
       if (result.success) {
-        // ENRICH performer data with calculated late days from records
         const enrichedPerformers = (result.performers || []).map(perf => {
-          // Calculate late days using the same function as the main table
           const empCode = perf.employeeCode || perf.employeeId;
           const lateDays = calculateEmployeeLateDays(empCode, customRecords, customShiftsData);
-          
-          // Also get other metrics for completeness
           const presentDays = perf.presentDays || perf.attendedDays || 0;
           const workingDays = perf.expectedWorkingDays || perf.totalWorkingDays || 0;
           const otHours = perf.actualWorkingHours || perf.overtimeHours || 0;
@@ -827,9 +831,8 @@ export default function AttendanceSummary() {
           return {
             ...perf,
             employeeId: empCode,
-            // Override with calculated values from our records
             lateDays: lateDays,
-            lateComingDays: lateDays, // This is what the popup uses
+            lateComingDays: lateDays,
             presentDays: presentDays,
             attendedDays: presentDays,
             expectedWorkingDays: workingDays,
@@ -838,7 +841,6 @@ export default function AttendanceSummary() {
             overtimeHours: otHours,
             performancePercentage: performance,
             rate: performance,
-            // Also fetch from employee summary if available
             name: perf.name || perf.employeeName || employees.find(e => e.employeeId === empCode)?.name || 'Unknown',
             department: perf.department || getEmployeeDepartment(empCode),
           };
@@ -864,13 +866,9 @@ export default function AttendanceSummary() {
       const response = await fetch(url);
       const result = await response.json();
       if (result.success) {
-        // ENRICH performer data with calculated late days from records
         const enrichedPerformers = (result.performers || []).map(perf => {
-          // Calculate late days using the same function as the main table
           const empCode = perf.employeeCode || perf.employeeId;
           const lateDays = calculateEmployeeLateDays(empCode, customRecords, customShiftsData);
-          
-          // Also get other metrics for completeness
           const presentDays = perf.presentDays || perf.attendedDays || 0;
           const workingDays = perf.expectedWorkingDays || perf.totalWorkingDays || 0;
           const otHours = perf.actualWorkingHours || perf.overtimeHours || 0;
@@ -879,9 +877,8 @@ export default function AttendanceSummary() {
           return {
             ...perf,
             employeeId: empCode,
-            // Override with calculated values from our records
             lateDays: lateDays,
-            lateComingDays: lateDays, // This is what the popup uses
+            lateComingDays: lateDays,
             presentDays: presentDays,
             attendedDays: presentDays,
             expectedWorkingDays: workingDays,
@@ -890,7 +887,6 @@ export default function AttendanceSummary() {
             overtimeHours: otHours,
             performancePercentage: performance,
             rate: performance,
-            // Also fetch from employee summary if available
             name: perf.name || perf.employeeName || employees.find(e => e.employeeId === empCode)?.name || 'Unknown',
             department: perf.department || getEmployeeDepartment(empCode),
           };
@@ -905,10 +901,6 @@ export default function AttendanceSummary() {
       setAllPerformers([]);
     }
   };
-
-  // ============================================
-  // END OF TOP PERFORMERS API FUNCTIONS
-  // ============================================
 
   const downloadSingleEmployeeExcel = async (employeeId) => {
     try {
@@ -1304,7 +1296,6 @@ export default function AttendanceSummary() {
       setRecords(sortedRecords);
       setFilteredRecords(sortedRecords);
       
-      // Fetch top performers and all performers with month filter
       await fetchTopPerformers(selectedMonth, sortedRecords, assignmentsList);
       await fetchAllPerformers(selectedMonth, sortedRecords, assignmentsList);
       
@@ -1446,7 +1437,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  // Handle adding missing punches with weekoff logic
   const handleAddMissingPunchesWithWeekoff = async () => {
     try {
       const missingDates = getMissingAttendanceDates(selectedEmployee, selectedMonth);
@@ -1565,7 +1555,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  // Show employees with no attendance in a popup/modal
   const handleShowZeroAttendanceEmployees = () => {
     const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
     const zeroAttendanceEmployees = status.filter(emp => emp.hasNoAttendance);
@@ -1581,7 +1570,6 @@ export default function AttendanceSummary() {
     setShowZeroAttendanceModal(true);
   };
 
-  // Bulk add attendance for all employees with zero attendance
   const handleBulkAddAttendanceForZeroAttendanceEmployees = async (employeesList) => {
     try {
       if (!employeesList || employeesList.length === 0) {
@@ -1740,7 +1728,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  // handleBulkAction - collects records, updates state, waits, then saves
   const handleBulkAction = async (actionType, inputId, defaultHours) => {
     try {
       const val = parseFloat(document.getElementById(inputId)?.value) || defaultHours;
@@ -1823,7 +1810,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  // Bulk save with pre-collected records
   const handleBulkSaveAttendanceWithRecords = async (recordsToUpdate) => {
     try {
       if (recordsToUpdate.length === 0) {
@@ -1926,7 +1912,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  // Kept for backward compatibility
   const handleBulkSaveAttendance = async () => {
     try {
       const currentEditedRows = { ...editedRows };
@@ -2057,7 +2042,6 @@ export default function AttendanceSummary() {
     try {
       setLoading(true);
       await calculateSummaryFromBackend();
-      // Re-fetch performers with current month filter
       await fetchTopPerformers(selectedMonth);
       await fetchAllPerformers(selectedMonth);
       setCurrentPage(1);
@@ -2076,7 +2060,6 @@ export default function AttendanceSummary() {
     try {
       setLoading(true);
       await calculateSummaryFromBackend();
-      // Re-fetch performers with new month filter
       await fetchTopPerformers(month);
       await fetchAllPerformers(month);
       setCurrentPage(1);
@@ -2097,7 +2080,6 @@ export default function AttendanceSummary() {
     try {
       setLoading(true);
       await calculateSummaryFromBackend();
-      // Re-fetch performers with current month
       await fetchTopPerformers(new Date().toISOString().slice(0, 7));
       await fetchAllPerformers(new Date().toISOString().slice(0, 7));
       setCurrentPage(1);
@@ -2175,24 +2157,20 @@ export default function AttendanceSummary() {
     }
   };
 
-  // Show Top Performers Modal
   const handleShowTopPerformers = () => {
     setShowTopPerformersModal(true);
   };
 
-  // Show All Performers Modal
   const handleShowAllPerformers = () => {
     setShowAllPerformersModal(true);
   };
 
-  // Show Performer Details
   const handleShowPerformerDetails = (performer) => {
     setSelectedPerformer(performer);
     setPerformerDetails(performer);
     setShowPerformerDetailModal(true);
   };
 
-  // Format Month Label
   const formatMonthLabel = (ymStr) => {
     if (!ymStr) return "Current Month";
     const [y, m] = ymStr.split('-');
@@ -2288,7 +2266,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  // KPI Card Calculations
   const averageWorkingDays = filteredSummary.length > 0
     ? (filteredSummary.reduce((sum, emp) => sum + calculateEmployeeWorkingDays(emp.employeeId), 0) / filteredSummary.length).toFixed(1)
     : "0.0";
@@ -2341,7 +2318,7 @@ export default function AttendanceSummary() {
           </div>
         )}
 
-        {/* Header with Top Performers, All Performers, Zero Attendance and Filters - Desktop Only */}
+        {/* Header */}
         <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap mb-4">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
@@ -2349,9 +2326,7 @@ export default function AttendanceSummary() {
             </h1>
           </div>
           
-          {/* Right side: Performer Tags + Zero Attendance + Filters (Desktop only) */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Top Performers Tag */}
             {topPerformers.length > 0 && (
               <button
                 onClick={handleShowTopPerformers}
@@ -2363,7 +2338,6 @@ export default function AttendanceSummary() {
               </button>
             )}
 
-            {/* All Performers Tag */}
             {allPerformers.length > 0 && (
               <button
                 onClick={handleShowAllPerformers}
@@ -2375,7 +2349,6 @@ export default function AttendanceSummary() {
               </button>
             )}
 
-            {/* Zero Attendance Tag */}
             {(() => {
               const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
               const zeroAttendanceEmployees = status.filter(emp => emp.hasNoAttendance);
@@ -2392,7 +2365,6 @@ export default function AttendanceSummary() {
               );
             })()}
 
-            {/* Quick Search - Compact */}
             <div className="relative">
               <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
               <input
@@ -2404,7 +2376,6 @@ export default function AttendanceSummary() {
               />
             </div>
 
-            {/* Department Dropdown - Compact */}
             <div className="relative" ref={departmentFilterRef}>
               <button
                 onClick={() => {
@@ -2457,7 +2428,6 @@ export default function AttendanceSummary() {
               )}
             </div>
 
-            {/* Designation Dropdown - Compact */}
             <div className="relative" ref={designationFilterRef}>
               <button
                 onClick={() => {
@@ -2510,7 +2480,6 @@ export default function AttendanceSummary() {
               )}
             </div>
 
-            {/* Month Picker - Compact */}
             <div className="relative">
               <input
                 type="month"
@@ -2521,7 +2490,6 @@ export default function AttendanceSummary() {
               />
             </div>
 
-            {/* Apply Filter Button */}
             <button
               onClick={handleDateRangeFilter}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
@@ -2530,7 +2498,6 @@ export default function AttendanceSummary() {
               Apply
             </button>
 
-            {/* Bulk Update Button */}
             <button
               onClick={() => {
                 const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
@@ -2549,7 +2516,6 @@ export default function AttendanceSummary() {
               Bulk Update
             </button>
 
-            {/* Clear Filters Button */}
             {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
               <button
                 onClick={clearFilters}
@@ -2560,7 +2526,6 @@ export default function AttendanceSummary() {
               </button>
             )}
 
-            {/* Export Button */}
             <button
               onClick={downloadCombinedExcel}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-md whitespace-nowrap"
@@ -2571,14 +2536,13 @@ export default function AttendanceSummary() {
           </div>
         </div>
 
-        {/* Mobile Header - Performer Tags + Zero Attendance + Title */}
+        {/* Mobile Header */}
         <div className="sm:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
           <h1 className="text-base font-bold whitespace-nowrap">
             Attendance <span className="text-indigo-600">Summary</span>
           </h1>
           
           <div className="flex items-center gap-1.5 flex-wrap">
-            {/* Top Performers - Mobile */}
             {topPerformers.length > 0 && (
               <button
                 onClick={handleShowTopPerformers}
@@ -2589,7 +2553,6 @@ export default function AttendanceSummary() {
               </button>
             )}
 
-            {/* All Performers - Mobile */}
             {allPerformers.length > 0 && (
               <button
                 onClick={handleShowAllPerformers}
@@ -2600,7 +2563,6 @@ export default function AttendanceSummary() {
               </button>
             )}
 
-            {/* Zero Attendance Tag - Mobile */}
             {(() => {
               const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
               const zeroAttendanceEmployees = status.filter(emp => emp.hasNoAttendance);
@@ -2618,7 +2580,7 @@ export default function AttendanceSummary() {
           </div>
         </div>
 
-        {/* Mobile Filters Toggle - Only visible on mobile */}
+        {/* Mobile Filters */}
         <div className="sm:hidden mb-3">
           <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
             <button
@@ -2640,7 +2602,6 @@ export default function AttendanceSummary() {
 
           {showMobileFilters && (
             <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-              {/* Search */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
                 <div className="relative">
@@ -2655,10 +2616,10 @@ export default function AttendanceSummary() {
                 </div>
               </div>
 
-              {/* Department */}
               <div className="relative" ref={departmentFilterRef}>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
-                <button                  onClick={() => {
+                <button
+                  onClick={() => {
                     setShowDepartmentFilter(!showDepartmentFilter);
                     setShowDesignationFilter(false);
                   }}
@@ -2703,7 +2664,6 @@ export default function AttendanceSummary() {
                 )}
               </div>
 
-              {/* Designation */}
               <div className="relative" ref={designationFilterRef}>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
                 <button
@@ -2725,7 +2685,8 @@ export default function AttendanceSummary() {
                 </button>
                 {showDesignationFilter && (
                   <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div                      onClick={() => {
+                    <div
+                      onClick={() => {
                         setFilterDesignation("");
                         setShowDesignationFilter(false);
                       }}
@@ -2751,7 +2712,6 @@ export default function AttendanceSummary() {
                 )}
               </div>
 
-              {/* Month Picker */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
                 <input
@@ -2763,7 +2723,6 @@ export default function AttendanceSummary() {
                 />
               </div>
 
-              {/* Mobile Action Buttons */}
               <div className="pt-3 border-t border-gray-200 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -2820,7 +2779,7 @@ export default function AttendanceSummary() {
           )}
         </div>
 
-        {/* Stats Grid - Mobile Responsive */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
@@ -2918,8 +2877,23 @@ export default function AttendanceSummary() {
                       const onsiteDays = calculateEmployeeOnsiteDays(emp.employeeId);
                       const department = getEmployeeDepartment(emp.employeeId);
                       const designation = getEmployeeDesignation(emp.employeeId);
-                      const totalOT = calculateEmployeeOT(emp.employeeId) || 0; // ✅ Ensure always a number
+                      const totalOT = calculateEmployeeOT(emp.employeeId) || 0;
                       const status = getEmployeeAttendanceStatus(emp.employeeId, emp.month || selectedMonth);
+
+                      // ✅ LIVE counts from records (Popup jaisa hi)
+                      let livePresentDays = 0;
+                      let liveHalfDays = 0;
+                      records.forEach((rec) => {
+                        if (rec.employeeId !== emp.employeeId) return;
+                        if (selectedMonth && rec.checkInTime) {
+                          const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+                          if (recMonth !== selectedMonth) return;
+                        }
+                        const hours = rec.totalHours || rec.hours || 0;
+                        const dayType = calculateDayType(emp.employeeId, hours);
+                        if (dayType === "full") livePresentDays++;
+                        else if (dayType === "half") liveHalfDays++;
+                      });
 
                       return (
                         <tr
@@ -2951,7 +2925,7 @@ export default function AttendanceSummary() {
                           </td>
                           <td className="text-center whitespace-nowrap">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                              {emp.presentDays}
+                              {livePresentDays}
                             </span>
                           </td>
                           <td className="text-center whitespace-nowrap">
@@ -2971,16 +2945,15 @@ export default function AttendanceSummary() {
                           </td>
                           <td className="text-center whitespace-nowrap hidden lg:table-cell">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-50 text-yellow-700 border border-yellow-100">
-                              {emp.halfDayWorking ?? 0}
+                              {liveHalfDays}
                             </span>
                           </td>
                           <td className="text-center whitespace-nowrap hidden lg:table-cell">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-100">
-                              {emp.fullDayNotWorking ?? 0}
+                              {livePresentDays === 0 ? (records.filter(r => r.employeeId === emp.employeeId && r.checkInTime).length) : 0}
                             </span>
                           </td>
                           <td className="text-center whitespace-nowrap">
-                            {/* ✅ FIXED: OT show as decimal with proper fallback */}
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
                               {formatOTHours(totalOT)}
                             </span>
@@ -3014,7 +2987,6 @@ export default function AttendanceSummary() {
                 </table>
               </div>
 
-              {/* Pagination Section */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -3082,11 +3054,10 @@ export default function AttendanceSummary() {
         </div>
       </main>
 
-      {/* Zero Attendance Modal Popup */}
+      {/* Zero Attendance Modal */}
       {showZeroAttendanceModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white shadow-2xl rounded-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
             <div className="flex flex-wrap items-center justify-between p-4 border-b gap-3">
               <div>
                 <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
@@ -3110,7 +3081,6 @@ export default function AttendanceSummary() {
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
               <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                 <div className="overflow-x-auto">
@@ -3202,7 +3172,6 @@ export default function AttendanceSummary() {
               </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="flex flex-wrap items-center justify-between p-4 border-t gap-3 bg-slate-50/50">
               <div className="text-xs text-slate-600">
                 <strong>{selectedZeroAttendanceEmployees.length}</strong> employee(s) selected
@@ -3243,7 +3212,6 @@ export default function AttendanceSummary() {
       {showBulkUpdateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white shadow-2xl rounded-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
             <div className="flex flex-wrap items-center justify-between p-4 border-b gap-3">
               <div>
                 <h3 className="text-base font-bold text-slate-800">
@@ -3266,7 +3234,6 @@ export default function AttendanceSummary() {
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
               <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                 <div className="overflow-x-auto">
@@ -3370,7 +3337,6 @@ export default function AttendanceSummary() {
               </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="flex flex-wrap items-center justify-between p-4 border-t gap-3 bg-slate-50/50">
               <div className="text-xs text-slate-600">
                 <strong>{selectedEmployeesForBulkUpdate.length}</strong> employee(s) selected
@@ -3408,7 +3374,7 @@ export default function AttendanceSummary() {
         </div>
       )}
 
-      {/* Top Performers Modal - FIXED with correct late days */}
+      {/* Top Performers Modal */}
       {showTopPerformersModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white shadow-2xl rounded-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
@@ -3449,10 +3415,8 @@ export default function AttendanceSummary() {
                       </thead>
                       <tbody>
                         {topPerformers.map((perf, index) => {
-                          // Use the enriched values that now include late days
                           const presentDays = perf.presentDays || perf.attendedDays || 0;
                           const workingDays = perf.expectedWorkingDays || perf.totalWorkingDays || 0;
-                          // This will now show the correct late days from our calculation
                           const lateComing = perf.lateComingDays || perf.lateDays || 0;
                           const otHours = perf.actualWorkingHours || perf.overtimeHours || 0;
                           const performance = perf.performancePercentage || perf.rate || 0;
@@ -3536,7 +3500,7 @@ export default function AttendanceSummary() {
         </div>
       )}
 
-      {/* All Performers Modal - FIXED with correct late days */}
+      {/* All Performers Modal */}
       {showAllPerformersModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white shadow-2xl rounded-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
@@ -3577,10 +3541,8 @@ export default function AttendanceSummary() {
                       </thead>
                       <tbody>
                         {allPerformers.map((perf, index) => {
-                          // Use the enriched values that now include late days
                           const presentDays = perf.presentDays || perf.attendedDays || 0;
                           const workingDays = perf.expectedWorkingDays || perf.totalWorkingDays || 0;
-                          // This will now show the correct late days from our calculation
                           const lateComing = perf.lateComingDays || perf.lateDays || 0;
                           const otHours = perf.actualWorkingHours || perf.overtimeHours || 0;
                           const performance = perf.performancePercentage || perf.rate || 0;
@@ -3664,7 +3626,7 @@ export default function AttendanceSummary() {
         </div>
       )}
 
-      {/* Performer Detail Modal - Fixed version with employee ID */}
+      {/* Performer Detail Modal */}
       {showPerformerDetailModal && performerDetails && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white shadow-2xl rounded-2xl w-full max-w-2xl flex flex-col max-h-[80vh]">
@@ -3781,7 +3743,6 @@ export default function AttendanceSummary() {
         return (
           <div className="emp-dash-modal fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
             <div className="emp-dash__modal-panel bg-white shadow-2xl rounded-2xl w-full flex flex-col max-h-[90vh]" style={{ maxWidth: 1280 }}>
-              {/* Modal Header */}
               <div className="flex flex-wrap items-center justify-between p-4 border-b gap-3" style={{ borderColor: "var(--ed-border-light)" }}>
                 <div>
                   <h3 className="text-base font-bold text-slate-800">
@@ -3793,7 +3754,6 @@ export default function AttendanceSummary() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* Half Days -> Full Day Button */}
                   <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
                     <span>Half Days ({
                       monthDates.filter(date => {
@@ -3819,7 +3779,6 @@ export default function AttendanceSummary() {
                     </button>
                   </div>
 
-                  {/* Full Leaves -> Double Punch Button */}
                   <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
                     <span>Single Punch ({
                       monthDates.filter(date => {
@@ -3845,7 +3804,6 @@ export default function AttendanceSummary() {
                     </button>
                   </div>
 
-                  {/* Missing Punches -> Add Punches Button */}
                   <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
                     <span>
                       Missing ({
@@ -3864,7 +3822,6 @@ export default function AttendanceSummary() {
                     </button>
                   </div>
 
-                  {/* Close Button */}
                   <button
                     onClick={closeModal}
                     className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
@@ -3875,7 +3832,6 @@ export default function AttendanceSummary() {
                 </div>
               </div>
 
-              {/* Modal Body */}
               <div className="emp-dash__modal-body flex-1 overflow-y-auto p-4 bg-slate-50/50">
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                   <div className="overflow-x-auto">
@@ -3932,7 +3888,6 @@ export default function AttendanceSummary() {
 
                           const otHours = calculateOTForRecord(selectedEmployee, currentHours);
                           
-                          // Calculate attendance status for this specific record
                           const attendanceStatus = rec ? calculateAttendanceStatus(
                             selectedEmployee,
                             rec.checkInTime,
@@ -4050,7 +4005,6 @@ export default function AttendanceSummary() {
                                 {rec ? formatOTHours(otHours) : "-"}
                               </td>
 
-                                 {/* Attendance Status Column */}
                               <td className="text-center">
                                 {attendanceStatus ? (
                                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${attendanceStatus.color}`}>
@@ -4062,7 +4016,6 @@ export default function AttendanceSummary() {
                               <td className="text-center">
                                 {rec ? getDayTypeBadge(currentHours) : "-"}
                               </td>
-
 
                               <td className="text-right">
                                 <button

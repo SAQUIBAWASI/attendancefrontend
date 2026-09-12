@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { getAdminEmail } from "../utils/adminSession";
+import timelyHealthLogo from "../Images/Timelyhealth logo.png";   // ✅ LOGO IMPORT
 
 const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   const navigate = useNavigate();
@@ -140,8 +141,8 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       "/appointment-slots": "",
       "/services": "",
       "/bookings": "",
-      "/referral-management": "",   // ✅ Combined (doctor + customer tabs)
-      "/referral-bookings": "",     // ✅ Combined (doctor + customer tabs)
+      "/referral-management": "",
+      "/referral-bookings": "",
       "/letterhead": "",
     };
 
@@ -200,15 +201,15 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     (tab) => tab.path === location.pathname
   );
 
-  // ===== OP MANAGEMENT TABS - CLEANED & COMBINED =====
+  // ===== OP MANAGEMENT TABS =====
   const opTabs = [
     { path: "/op-dashboard", label: "OP Dashboard" },
     { path: "/op-management", label: "WalkIn OP" },
     { path: "/bookings", label: "Online Bookings" },
-    { path: "/referral-management", label: "Referral Management" },  // ✅ Combined (doctor + customer tabs)
-    { path: "/referral-bookings", label: "Referral Bookings" },      // ✅ Combined (doctor + customer tabs)
-        { path: "/doctor-management", label: "Doctors" },
-            { path: "/services", label: "Services" },
+    { path: "/referral-management", label: "Referral Management" },
+    { path: "/referral-bookings", label: "Referral Bookings" },
+    { path: "/doctor-management", label: "Doctors" },
+    { path: "/services", label: "Services" },
     { path: "/letterhead", label: "Letter Head" },
   ];
 
@@ -467,7 +468,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
           </div>
         )}
 
-        {/* ===== OP MANAGEMENT MODULE TABS - CLEANED & COMBINED ===== */}
+        {/* ===== OP MANAGEMENT MODULE TABS ===== */}
         {isOPModule && (
           <div className="flex items-center gap-1 ml-4">
             {opTabs.map((tab) => {
@@ -638,13 +639,13 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
           </div>
         </div>
 
+        {/* ===== Logo + Brand Name (FULL LOGO VISIBLE) ===== */}
         <div className="hidden items-center gap-2 sm:flex">
           <img
-            src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658650_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
-            alt="Logo"
-            className="h-9 w-9 rounded-lg object-cover"
+            src={timelyHealthLogo}
+            alt="Timely Health Logo"
+            className="h-10 w-auto max-w-[110px] object-contain"
           />
-          <span className="text-sm font-semibold text-[#101828]">Timely Health</span>
         </div>
       </div>
     </nav>

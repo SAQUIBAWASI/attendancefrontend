@@ -1,4 +1,5 @@
 // InactivePatients.js — Inactive OPD Patients History
+// ✅ Mobile Card View Added
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -259,7 +260,8 @@ export default function InactivePatients() {
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-3 flex-wrap mb-6">
+        {/* Header Desktop */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-6">
           <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
             Inactive Patients <span className="text-gray-500 text-sm">({inactivePatients.length})</span>
           </h1>
@@ -277,12 +279,50 @@ export default function InactivePatients() {
             <button onClick={fetchBookings} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
               <FiRefreshCw className="w-3 h-3" /> Refresh
             </button>
-            {/* ✅ Active Patients button */}
             <button
               onClick={() => navigate("/op-management")}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm"
             >
               <FiUsers className="w-3 h-3" /> Active Patients
+            </button>
+          </div>
+        </div>
+
+        {/* Header Mobile */}
+        <div className="lg:hidden flex flex-col gap-2 mb-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h1 className="text-base font-bold whitespace-nowrap">
+              Inactive <span className="text-indigo-600">Patients</span>
+            </h1>
+            <div className="emp-dash__date-pill text-[10px] px-2 py-1">
+              <FaUserInjured className="w-3 h-3 text-gray-600" />
+              <span>{inactivePatients.length} Inactive</span>
+            </div>
+          </div>
+
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+            <input
+              type="text"
+              placeholder="Search inactive patients..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={fetchBookings}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+            >
+              <FiRefreshCw className="w-3.5 h-3.5" /> Refresh
+            </button>
+            <button
+              onClick={() => navigate("/op-management")}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm ml-auto"
+            >
+              <FiUsers className="w-3.5 h-3.5" /> Active Patients
             </button>
           </div>
         </div>
@@ -312,100 +352,200 @@ export default function InactivePatients() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="emp-dash__table">
-                <thead>
-                  <tr>
-                    <th style={{ width: "35px", textAlign: "center" }}>#</th>
-                    <th>Patient</th>
-                    <th>Phone</th>
-                    <th>City</th>
-                    <th style={{ textAlign: "center" }}>Last Visit</th>
-                    <th style={{ textAlign: "center" }}>Doctor</th>
-                    <th style={{ textAlign: "center" }}>Deactivated Since</th>
-                    <th style={{ textAlign: "center" }}>Status</th>
-                    <th style={{ textAlign: "right" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {inactivePatients.map((patient, idx) => {
-                    const booking = getMatchingBooking(patient);
-                    const isToggling = togglingStatus === patient._id;
-                    return (
-                      <tr key={patient._id} className="hover:bg-gray-50/60">
-                        <td className="px-2 py-3 text-center text-slate-500 text-[11px]">{idx + 1}</td>
-                        <td className="px-3 py-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 text-white font-bold flex items-center justify-center text-[10px]">
-                              {patient.name ? patient.name.charAt(0).toUpperCase() : "P"}
-                            </div>
-                            <div>
-                              <div className="font-semibold text-slate-800 text-xs truncate max-w-[120px]">
-                                {patient.title} {patient.name || "N/A"}
+            <>
+              {/* ===== DESKTOP TABLE VIEW ===== */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="emp-dash__table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "35px", textAlign: "center" }}>#</th>
+                      <th>Patient</th>
+                      <th>Phone</th>
+                      <th>City</th>
+                      <th style={{ textAlign: "center" }}>Last Visit</th>
+                      <th style={{ textAlign: "center" }}>Doctor</th>
+                      <th style={{ textAlign: "center" }}>Deactivated Since</th>
+                      <th style={{ textAlign: "center" }}>Status</th>
+                      <th style={{ textAlign: "right" }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inactivePatients.map((patient, idx) => {
+                      const booking = getMatchingBooking(patient);
+                      const isToggling = togglingStatus === patient._id;
+                      return (
+                        <tr key={patient._id} className="hover:bg-gray-50/60">
+                          <td className="px-2 py-3 text-center text-slate-500 text-[11px]">{idx + 1}</td>
+                          <td className="px-3 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 text-white font-bold flex items-center justify-center text-[10px]">
+                                {patient.name ? patient.name.charAt(0).toUpperCase() : "P"}
                               </div>
-                              <div className="text-[9px] text-gray-400">
-                                {patient.age || "N/A"} yrs • {patient.gender || "N/A"}
+                              <div>
+                                <div className="font-semibold text-slate-800 text-xs truncate max-w-[120px]">
+                                  {patient.title} {patient.name || "N/A"}
+                                </div>
+                                <div className="text-[9px] text-gray-400">
+                                  {patient.age || "N/A"} yrs • {patient.gender || "N/A"}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 whitespace-nowrap text-xs">{patient.phone || "N/A"}</td>
-                        <td className="px-3 py-3 whitespace-nowrap text-xs">
-                          {patient.city || "N/A"} {patient.pincode ? `- ${patient.pincode}` : ""}
-                        </td>
-                        <td className="px-3 py-3 text-center whitespace-nowrap text-xs">
-                          <div className="font-semibold text-slate-700">
-                            {formatDateToDDMMYYYY(booking?.appointmentDate || booking?.date)}
-                          </div>
-                          {booking?.startTime && booking?.endTime && (
-                            <div className="text-[10px] text-blue-700 font-semibold mt-0.5">
-                              {booking.startTime} - {booking.endTime}
+                          </td>
+                          <td className="px-3 py-3 whitespace-nowrap text-xs">{patient.phone || "N/A"}</td>
+                          <td className="px-3 py-3 whitespace-nowrap text-xs">
+                            {patient.city || "N/A"} {patient.pincode ? `- ${patient.pincode}` : ""}
+                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap text-xs">
+                            <div className="font-semibold text-slate-700">
+                              {formatDateToDDMMYYYY(booking?.appointmentDate || booking?.date)}
                             </div>
-                          )}
-                        </td>
-                        <td className="px-3 py-3 text-center whitespace-nowrap">
-                          <div className="text-xs font-semibold text-purple-800">
-                            {booking?.doctorName || "N/A"}
+                            {booking?.startTime && booking?.endTime && (
+                              <div className="text-[10px] text-blue-700 font-semibold mt-0.5">
+                                {booking.startTime} - {booking.endTime}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            <div className="text-xs font-semibold text-purple-800">
+                              {booking?.doctorName || "N/A"}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap text-[10px] text-gray-500">
+                            {formatDateTimeToDDMMYYYY(patient.createdAt)}
+                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-gray-100 text-gray-700 border-gray-300">
+                              <FiClock className="w-2.5 h-2.5" /> Inactive
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleView(patient); }}
+                                className="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg"
+                                title="View Details"
+                              >
+                                <FiEye className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleToggleActiveStatus(patient); }}
+                                disabled={isToggling}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-full uppercase border-2 bg-emerald-50 text-emerald-700 border-emerald-400 hover:bg-emerald-100 transition-all disabled:opacity-50"
+                                title="Click to activate"
+                              >
+                                {isToggling ? (
+                                  <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <FaToggleOff className="w-4 h-4 text-gray-500" />
+                                )}
+                                <span className="text-[10px]">Activate</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* ===== MOBILE CARD VIEW ===== */}
+              <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
+                {inactivePatients.map((patient, idx) => {
+                  const booking = getMatchingBooking(patient);
+                  const isToggling = togglingStatus === patient._id;
+
+                  return (
+                    <div key={patient._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-gray-50/80 to-slate-50/80">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                            {patient.name ? patient.name.charAt(0).toUpperCase() : "P"}
                           </div>
-                        </td>
-                        <td className="px-3 py-3 text-center whitespace-nowrap text-[10px] text-gray-500">
-                          {formatDateTimeToDDMMYYYY(patient.createdAt)}
-                        </td>
-                        <td className="px-3 py-3 text-center whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-gray-100 text-gray-700 border-gray-300">
-                            <FiClock className="w-2.5 h-2.5" /> Inactive
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleView(patient); }}
-                              className="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg"
-                              title="View Details"
-                            >
-                              <FiEye className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleToggleActiveStatus(patient); }}
-                              disabled={isToggling}
-                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-full uppercase border-2 bg-emerald-50 text-emerald-700 border-emerald-400 hover:bg-emerald-100 transition-all disabled:opacity-50"
-                              title="Click to activate"
-                            >
-                              {isToggling ? (
-                                <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
-                              ) : (
-                                <FaToggleOff className="w-4 h-4 text-gray-500" />
-                              )}
-                              <span className="text-[10px]">Activate</span>
-                            </button>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-slate-800 text-sm truncate">
+                              {patient.title} {patient.name || "N/A"}
+                            </div>
+                            <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                              <FaPhoneAlt className="text-[8px]" /> {patient.phone || "N/A"}
+                            </div>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border bg-gray-100 text-gray-700 border-gray-300 flex-shrink-0">
+                          <FiClock className="w-2.5 h-2.5" /> Inactive
+                        </span>
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="p-3 space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Age / Gender</div>
+                            <div className="font-semibold text-slate-700">
+                              {patient.age || "N/A"} yrs • {patient.gender || "N/A"}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">City</div>
+                            <div className="font-semibold text-slate-700 truncate">
+                              {patient.city || "N/A"} {patient.pincode ? `- ${patient.pincode}` : ""}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Last Visit</div>
+                            <div className="font-semibold text-slate-700">
+                              {formatDateToDDMMYYYY(booking?.appointmentDate || booking?.date)}
+                            </div>
+                            {booking?.startTime && booking?.endTime && (
+                              <div className="text-[10px] text-blue-700 font-semibold">
+                                {booking.startTime} - {booking.endTime}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Doctor</div>
+                            <div className="font-semibold text-purple-800 truncate">
+                              {booking?.doctorName || "N/A"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                          <div className="text-[10px] text-gray-500">
+                            Deactivated: {formatDateTimeToDDMMYYYY(patient.createdAt)}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleView(patient); }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold"
+                            title="View Details"
+                          >
+                            <FiEye className="w-3.5 h-3.5" /> View
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleToggleActiveStatus(patient); }}
+                            disabled={isToggling}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-[10px] font-bold border-2 border-emerald-400 transition-all disabled:opacity-50"
+                            title="Click to activate"
+                          >
+                            {isToggling ? (
+                              <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <FaToggleOff className="w-4 h-4 text-gray-500" />
+                            )}
+                            <span>Activate</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 

@@ -621,8 +621,8 @@ const TimelyNavbar = () => {
                         </div>
                     </Link>
 
-                    {/* Desktop Navigation - Center */}
-                    <div className="hidden lg:flex lg:items-center lg:justify-center lg:flex-1 lg:px-8">
+                    {/* Desktop Navigation - Center (only on xl and up) */}
+                    <div className="hidden xl:flex xl:items-center xl:justify-center xl:flex-1 xl:px-8">
                         <div className="flex items-center space-x-1">
                             {navItems.map((item) => (
                                 <Link
@@ -690,47 +690,47 @@ const TimelyNavbar = () => {
                         </div>
                     </div>
 
-                    {/* Right Side Actions - Mobile Friendly */}
-                    <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-4 flex-shrink-0">
-                        {/* Book Appointment Button - Visible on all screens, smaller on mobile */}
+                    {/* Right Side Actions - Mobile & Tablet Friendly */}
+                    <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 xl:gap-4 flex-shrink-0">
+                        {/* Book Appointment Button - Visible on all screens */}
                         <button
                             onClick={handleBookAppointment}
-                            className="flex items-center justify-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold text-white rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
+                            className="flex items-center justify-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 md:px-3.5 md:py-2 xl:px-4 xl:py-2.5 text-[10px] sm:text-xs md:text-xs xl:text-sm font-semibold text-white rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
                             style={{ backgroundColor: "#0F5C4D" }}
                         >
-                            <Calendar size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px] flex-shrink-0" />
+                            <Calendar size={14} className="sm:w-4 sm:h-4 md:w-4 md:h-4 xl:w-[18px] xl:h-[18px] flex-shrink-0" />
                             <span className="hidden xs:inline">Book</span>
                             <span className="hidden sm:inline">Appointment</span>
                         </button>
 
-                        {/* Login Button - Visible on md and up */}
+                        {/* Login Button - Visible on md (tablet) and up */}
                         <button
                             onClick={handleLogin}
-                            className="hidden md:flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
+                            className="hidden md:flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 xl:px-4 xl:py-2 text-xs sm:text-xs xl:text-sm font-semibold text-white rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
                             style={{ backgroundColor: "#007a52" }}
                         >
                             <User size={15} className="flex-shrink-0" />
                             <span>Login</span>
                         </button>
 
-                        {/* WhatsApp Button - Visible on md and up */}
+                        {/* WhatsApp Button - Visible on md (tablet) and up */}
                         <button
                             onClick={handleWhatsApp}
-                            className="hidden md:flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
+                            className="hidden md:flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 xl:px-4 xl:py-2 text-xs sm:text-xs xl:text-sm font-medium text-white rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
                             style={{ backgroundColor: "#25D366" }}
                         >
                             <img
                                 src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
                                 alt="WhatsApp"
-                                className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
+                                className="w-4 h-4 sm:w-4 sm:h-4 xl:w-5 xl:h-5 flex-shrink-0"
                             />
                             <span className="hidden sm:inline">Chat</span>
                         </button>
 
-                        {/* Mobile Menu Button */}
+                        {/* Mobile Menu Button - Visible below xl */}
                         <button
                             onClick={() => setIsOpen(!isOpen)}
-                            className="p-1.5 sm:p-2 text-gray-600 rounded-lg lg:hidden hover:bg-gray-100 transition-colors flex-shrink-0"
+                            className="p-1.5 sm:p-2 text-gray-600 rounded-lg xl:hidden hover:bg-gray-100 transition-colors flex-shrink-0"
                             aria-label="Toggle menu"
                         >
                             {isOpen ? <X size={18} className="sm:w-5 sm:h-5" /> : <Menu size={18} className="sm:w-5 sm:h-5" />}
@@ -738,8 +738,8 @@ const TimelyNavbar = () => {
                     </div>
                 </div>
 
-                {/* Mobile Navigation */}
-                <div className={`lg:hidden overflow-hidden transition-all duration-300 ${
+                {/* Mobile & Tablet Navigation (visible below xl) */}
+                <div className={`xl:hidden overflow-hidden transition-all duration-300 ${
                     isOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
                 }`}>
                     <div className="py-4 space-y-1 border-t border-gray-100">
@@ -757,7 +757,7 @@ const TimelyNavbar = () => {
                             </Link>
                         ))}
 
-                        {/* Partners Section - Mobile */}
+                        {/* Partners Section - Mobile & Tablet */}
                         <div className="mt-2 border-t border-gray-100 pt-2">
                             <div className="px-4 py-2.5 text-sm font-semibold text-gray-500 flex items-center gap-2">
                                 <Users size={16} />
@@ -781,9 +781,9 @@ const TimelyNavbar = () => {
                             ))}
                         </div>
 
-                        {/* Mobile Actions */}
+                        {/* Mobile & Tablet Actions */}
                         <div className="mt-2 border-t border-gray-100 pt-2 space-y-2">
-                            {/* Book Appointment - Mobile */}
+                            {/* Book Appointment - Mobile & Tablet */}
                             <button
                                 onClick={handleBookAppointment}
                                 className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-base font-medium transition-all duration-200 text-white"
@@ -793,7 +793,7 @@ const TimelyNavbar = () => {
                                 Book Appointment
                             </button>
 
-                            {/* Login & WhatsApp - Mobile */}
+                            {/* Login & WhatsApp - Mobile & Tablet */}
                             <div className="flex items-center gap-2 px-4">
                                 <button
                                     onClick={handleLogin}

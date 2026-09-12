@@ -1446,74 +1446,167 @@ const OpDashboard = () => {
               No bookings found for selected period
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="emp-dash__table">
-                <thead>
-                  <tr>
-                    <th style={{ width: "45px", textAlign: "center" }}>S.No</th>
-                    <th>Patient Name</th>
-                    <th>Doctor</th>
-                    <th style={{ textAlign: "center" }}>Date &amp; Slot</th>
-                    <th style={{ textAlign: "center" }}>Total</th>
-                    <th style={{ textAlign: "center" }}>Paid</th>
-                    <th style={{ textAlign: "center" }}>Balance</th>
-                    <th style={{ textAlign: "center" }}>Status</th>
-                    <th style={{ textAlign: "center" }}>Payment</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredBookings.slice(0, 10).map((b, idx) => {
-                    const totalFee = getTotalBookingFee(b);
-                    const paidAmount = b.amountPaid || 0;
-                    const balance = b.balanceAmount || Math.max(0, totalFee - paidAmount);
-                    const isPaid = isPaidBooking(b);
-                    const isPartial = b.paymentStatus === "Partial" || b.paymentStatus === "partial";
-                    const statusColors = {
-                      confirmed: "bg-blue-100 text-blue-800 border-blue-200",
-                      completed: "bg-emerald-100 text-emerald-800 border-emerald-200",
-                      consulting: "bg-purple-100 text-purple-800 border-purple-200",
-                      cancelled: "bg-red-100 text-red-800 border-red-200",
-                      pending: "bg-gray-100 text-gray-800 border-gray-200",
-                      booked: "bg-blue-100 text-blue-800 border-blue-200"
-                    };
-                    const statusClass = statusColors[b.status] || statusColors.pending;
-                    
-                    return (
-                      <tr key={b._id || idx} className="hover:bg-slate-50/50 cursor-pointer" onClick={() => handleQuickAction("/bookings")}>
-                        <td className="px-3 py-2.5 font-semibold text-gray-400 text-xs text-center">{idx + 1}</td>
-                        <td className="px-3 py-2.5 font-semibold text-gray-800 text-xs">{b.patientName || "N/A"}</td>
-                        <td className="px-3 py-2.5 text-xs text-gray-700">{b.doctorName || "N/A"}</td>
-                        <td className="px-3 py-2.5 text-xs text-gray-600 text-center">
-                          <div>{formatDate(b.date)}</div>
-                          <div className="text-[10px] text-gray-400">{b.startTime} - {b.endTime}</div>
-                        </td>
-                        <td className="px-3 py-2.5 text-xs text-center font-bold text-gray-800">₹{totalFee}</td>
-                        <td className="px-3 py-2.5 text-xs text-center font-bold text-emerald-700">₹{paidAmount}</td>
-                        <td className="px-3 py-2.5 text-xs text-center font-bold text-amber-700">₹{balance}</td>
-                        <td className="px-3 py-2.5 text-xs text-center">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusClass}`}>
-                            {b.status || "pending"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 text-xs text-center">
+            <>
+              {/* ===== DESKTOP TABLE VIEW ===== */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="emp-dash__table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "45px", textAlign: "center" }}>S.No</th>
+                      <th>Patient Name</th>
+                      <th>Doctor</th>
+                      <th style={{ textAlign: "center" }}>Date &amp; Slot</th>
+                      <th style={{ textAlign: "center" }}>Total</th>
+                      <th style={{ textAlign: "center" }}>Paid</th>
+                      <th style={{ textAlign: "center" }}>Balance</th>
+                      <th style={{ textAlign: "center" }}>Status</th>
+                      <th style={{ textAlign: "center" }}>Payment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredBookings.slice(0, 10).map((b, idx) => {
+                      const totalFee = getTotalBookingFee(b);
+                      const paidAmount = b.amountPaid || 0;
+                      const balance = b.balanceAmount || Math.max(0, totalFee - paidAmount);
+                      const isPaid = isPaidBooking(b);
+                      const isPartial = b.paymentStatus === "Partial" || b.paymentStatus === "partial";
+                      const statusColors = {
+                        confirmed: "bg-blue-100 text-blue-800 border-blue-200",
+                        completed: "bg-emerald-100 text-emerald-800 border-emerald-200",
+                        consulting: "bg-purple-100 text-purple-800 border-purple-200",
+                        cancelled: "bg-red-100 text-red-800 border-red-200",
+                        pending: "bg-gray-100 text-gray-800 border-gray-200",
+                        booked: "bg-blue-100 text-blue-800 border-blue-200"
+                      };
+                      const statusClass = statusColors[b.status] || statusColors.pending;
+                      
+                      return (
+                        <tr key={b._id || idx} className="hover:bg-slate-50/50 cursor-pointer" onClick={() => handleQuickAction("/bookings")}>
+                          <td className="px-3 py-2.5 font-semibold text-gray-400 text-xs text-center">{idx + 1}</td>
+                          <td className="px-3 py-2.5 font-semibold text-gray-800 text-xs">{b.patientName || "N/A"}</td>
+                          <td className="px-3 py-2.5 text-xs text-gray-700">{b.doctorName || "N/A"}</td>
+                          <td className="px-3 py-2.5 text-xs text-gray-600 text-center">
+                            <div>{formatDate(b.date)}</div>
+                            <div className="text-[10px] text-gray-400">{b.startTime} - {b.endTime}</div>
+                          </td>
+                          <td className="px-3 py-2.5 text-xs text-center font-bold text-gray-800">₹{totalFee}</td>
+                          <td className="px-3 py-2.5 text-xs text-center font-bold text-emerald-700">₹{paidAmount}</td>
+                          <td className="px-3 py-2.5 text-xs text-center font-bold text-amber-700">₹{balance}</td>
+                          <td className="px-3 py-2.5 text-xs text-center">
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusClass}`}>
+                              {b.status || "pending"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-xs text-center">
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                                isPaid
+                                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                  : isPartial
+                                  ? "bg-amber-100 text-amber-800 border-amber-200"
+                                  : "bg-red-100 text-red-800 border-red-200"
+                              }`}
+                            >
+                              {b.paymentStatus || "Pending"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* ===== MOBILE CARD VIEW ===== */}
+              <div className="lg:hidden space-y-3">
+                {filteredBookings.slice(0, 10).map((b, idx) => {
+                  const totalFee = getTotalBookingFee(b);
+                  const paidAmount = b.amountPaid || 0;
+                  const balance = b.balanceAmount || Math.max(0, totalFee - paidAmount);
+                  const isPaid = isPaidBooking(b);
+                  const isPartial = b.paymentStatus === "Partial" || b.paymentStatus === "partial";
+                  const statusColors = {
+                    confirmed: "bg-blue-50 text-blue-700 border-blue-200",
+                    completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                    consulting: "bg-purple-50 text-purple-700 border-purple-200",
+                    cancelled: "bg-red-50 text-red-700 border-red-200",
+                    pending: "bg-gray-50 text-gray-700 border-gray-200",
+                    booked: "bg-blue-50 text-blue-700 border-blue-200"
+                  };
+                  const statusClass = statusColors[b.status] || statusColors.pending;
+
+                  return (
+                    <div
+                      key={b._id || idx}
+                      className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+                      onClick={() => handleQuickAction("/bookings")}
+                    >
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                            {b.patientName ? b.patientName.charAt(0).toUpperCase() : "P"}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-slate-800 text-sm truncate">{b.patientName || "N/A"}</div>
+                            <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                              <Stethoscope className="w-3 h-3" /> {b.doctorName || "N/A"}
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border ${statusClass} flex-shrink-0`}>
+                          {b.status || "pending"}
+                        </span>
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="p-3 space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Date</div>
+                            <div className="font-semibold text-slate-700">{formatDate(b.date)}</div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Slot Time</div>
+                            <div className="font-semibold text-blue-700">{b.startTime} - {b.endTime}</div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-gray-100">
+                          <div className="text-center p-1.5 rounded-lg bg-gray-50 border border-gray-200">
+                            <div className="text-[8px] font-bold text-gray-600 uppercase">Total</div>
+                            <div className="text-xs font-extrabold text-slate-800">₹{totalFee}</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded-lg bg-emerald-50 border border-emerald-200">
+                            <div className="text-[8px] font-bold text-emerald-600 uppercase">Paid</div>
+                            <div className="text-xs font-extrabold text-emerald-800">₹{paidAmount}</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded-lg bg-amber-50 border border-amber-200">
+                            <div className="text-[8px] font-bold text-amber-600 uppercase">Balance</div>
+                            <div className="text-xs font-extrabold text-amber-800">₹{balance}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                          <span className="text-[9px] font-bold uppercase text-gray-400">Payment Status:</span>
                           <span
                             className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
                               isPaid
-                                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : isPartial
-                                ? "bg-amber-100 text-amber-800 border-amber-200"
-                                : "bg-red-100 text-red-800 border-red-200"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : "bg-red-50 text-red-700 border-red-200"
                             }`}
                           >
                             {b.paymentStatus || "Pending"}
                           </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </main>

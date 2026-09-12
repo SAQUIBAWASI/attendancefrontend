@@ -6,6 +6,7 @@ import { FaCalendarAlt, FaTimes } from "react-icons/fa";
 import { FiDollarSign, FiDownloadCloud, FiFileText, FiPieChart } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 import logo from "../Images/Timely-Health-Logo.png";
+import timelyHealthLogo from "../Images/Timelyhealth logo.png"; // ✅ ADDED: New logo for payslip
 import companyStamp from "../Images/company-stamp-1780465131172.png";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -1134,7 +1135,8 @@ export default function EmployeeSalary() {
       return imgData;
     };
 
-    const logoData = templateConfig?.logo || logo || '';
+    // ✅ FIXED: Use timelyHealthLogo for payslip
+    const logoData = timelyHealthLogo || logo || '';
     const logoImgSrc = getImageSrc(logoData);
     const stampImgSrc = getImageSrc(companyStamp || '');
 
@@ -1482,7 +1484,8 @@ export default function EmployeeSalary() {
                               </div>
                             ) : (<span className="text-gray-300 text-xs">—</span>)}
                           </td>
-                          <td><span className="px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">{emp.earnedWeekOffs || 0}</span></td>
+                          {/* ✅ FIXED: Earned WO now shows the actual paid weekoffs (finalWeekOffs) */}
+                          <td><span className="px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">{emp.weekOffs || 0}</span></td>
                           <td><span className="px-2 py-0.5 rounded text-xs font-bold bg-gray-50 text-gray-600 border border-gray-200">{emp.defaultWeekOffs || 4}</span></td>
                           <td>{emp.totalLeaves || 0}</td>
                           <td>

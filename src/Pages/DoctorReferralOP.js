@@ -1,5 +1,6 @@
 // ReferralBookings.js — Combined Doctor + Customer Referred OP Bookings
 // ✅ Tabs: Doctor Referred Bookings | Customer Referred Bookings
+// ✅ Mobile Card View Added
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import {
@@ -19,7 +20,7 @@ import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE_URL = "http://localhost:5001/api";
+const API_BASE_URL = "https://api.timelyhealth.in/api";
 const REFERRAL_API = `${API_BASE_URL}/referralcontacts`;
 const BOOKINGS_API = `${API_BASE_URL}/appointment-slots`;
 
@@ -841,7 +842,7 @@ export default function ReferralBookings() {
           </div>
         </div>
 
-        {/* ==================== TABLE ==================== */}
+        {/* ==================== MAIN TABLE / CARD ==================== */}
         <div className="emp-dash__card">
           {loading ? (
             <div className="py-12 text-center">
@@ -857,7 +858,8 @@ export default function ReferralBookings() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* ===== DESKTOP TABLE VIEW ===== */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="emp-dash__table">
                   <thead>
                     <tr>
@@ -1031,6 +1033,157 @@ export default function ReferralBookings() {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* ===== MOBILE CARD VIEW ===== */}
+              <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
+                {currentRows.map((row, idx) => {
+                  const { referrer, booking } = row;
+                  const name = isDoctorTab ? (referrer.doctorName || "N/A") : (referrer.customerName || "N/A");
+                  const subInfo = isDoctorTab
+                    ? (referrer.doctorOrganization || "-")
+                    : (referrer.customerPhone || "-");
+
+                  if (!booking) {
+                    return (
+                      <div key={`${referrer._id}-no-booking`} className="bg-white rounded-xl border border-gray-200 shadow-sm p-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-9 h-9 rounded-full ${avatarBg} text-white font-bold flex items-center justify-center text-xs flex-shrink-0`}>
+                            {name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className={`font-bold text-sm ${avatarText} truncate`}>{name}</div>
+                            <div className="text-[10px] text-gray-400 truncate">{subInfo}</div>
+                          </div>
+                        </div>
+                        <div className="mt-2 text-center text-xs text-gray-400 italic py-2 border-t border-gray-100">
+                          No referrals made yet
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const info = getBookingPaidInfo(booking);
+                  const paymentColors = getPaymentStatusColors(booking.paymentStatus);
+                  const payable = getReferralPayable(referrer, booking);
+                  const payStatus = isDoctorTab
+                    ? (booking.doctorPaymentStatus || "Pending")
+                    : (booking.customerPaymentStatus || "Pending");
+                  const payColors = getPaymentStatusColors(payStatus);
+                  const cats = getBookingCategoryAmounts(booking);
+                  const payAt = isDoctorTab ? booking.doctorPaymentUpdatedAt : booking.customerPaymentUpdatedAt;
+
+                  return (
+                    <div key={booking._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className={`w-9 h-9 rounded-full ${avatarBg} text-white font-bold flex items-center justify-center text-xs flex-shrink-0`}>
+                            {name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className={`font-bold text-sm ${avatarText} truncate`}>{name}</div>
+                            <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                              <FaPhoneAlt className="text-[8px]" /> {subInfo}
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border ${paymentColors.bg} ${paymentColors.text} ${paymentColors.border} flex-shrink-0`}>
+                          <paymentColors.icon className={`w-2.5 h-2.5 ${paymentColors.iconColor}`} />
+                          {booking.paymentStatus || "Pending"}
+                        </span>
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="p-3 space-y-2.5">
+                        {/* Patient */}
+                        <div className="flex items-center gap-2 text-[11px]">
+                          <FaUserInjured className="text-gray-400 text-[10px]" />
+                          <span className="font-semibold text-slate-700 truncate">{booking.patientTitle || ""} {booking.patientName || "N/A"}</span>
+                          <span className="text-[9px] text-gray-400">({booking.patientAge || "?"} yrs • {booking.patientGender || "-"})</span>
+                        </div>
+
+                        {/* Amount Breakdown */}
+                        <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-gray-100">
+                          <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200">
+                            <div className="text-[8px] font-bold text-blue-600 uppercase">Clinic</div>
+                            <div className="text-xs font-extrabold text-blue-800">₹{Math.round(cats.clinicAmount)}</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded-lg bg-green-50 border border-green-200">
+                            <div className="text-[8px] font-bold text-green-600 uppercase">Pharmacy</div>
+                            <div className="text-xs font-extrabold text-green-800">₹{Math.round(cats.pharmacyAmount)}</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200">
+                            <div className="text-[8px] font-bold text-purple-600 uppercase">Lab</div>
+                            <div className="text-xs font-extrabold text-purple-800">₹{Math.round(cats.labAmount)}</div>
+                          </div>
+                        </div>
+
+                        {/* Total + Payable */}
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                          <div className="text-center p-1.5 rounded-lg bg-gray-50 border border-gray-200">
+                            <div className="text-[9px] font-bold text-gray-500 uppercase">Total Amount</div>
+                            <div className="text-sm font-extrabold text-slate-800">₹{Math.round(info.final)}</div>
+                          </div>
+                          <div className={`text-center p-1.5 rounded-lg ${payableBgColor} border ${payableBorderColor}`}>
+                            <div className={`text-[9px] font-bold ${payableTextColor} uppercase`}>{referrerLabel} Payable</div>
+                            <div className={`text-sm font-extrabold ${statPayableColor}`}>₹{payable}</div>
+                          </div>
+                        </div>
+
+                        {/* Payment Status */}
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-bold uppercase text-gray-400">{referrerLabel} Pay:</span>
+                            <button
+                              type="button"
+                              onClick={() => openPaymentModal(referrer, booking)}
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border cursor-pointer hover:shadow-md transition-all ${payColors.bg} ${payColors.text} ${payColors.border}`}
+                              title={`Click to update ${referrerLabel.toLowerCase()} payment status`}
+                            >
+                              <payColors.icon className={`w-2.5 h-2.5 ${payColors.iconColor}`} />
+                              {payStatus}
+                            </button>
+                          </div>
+                          <div className="text-[10px] text-slate-600 font-medium">
+                            {payAt ? formatDateToDDMMYYYY(payAt) : "-"}
+                          </div>
+                        </div>
+
+                        {/* Referral % Badges */}
+                        <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
+                          <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                            Clinic: {referrer.clinicCommission || 0}%
+                          </span>
+                          <span className="text-[9px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">
+                            Pharmacy: {referrer.pharmacyCommission || 0}%
+                          </span>
+                          <span className="text-[9px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100">
+                            Lab: {referrer.labCommission || 0}%
+                          </span>
+                        </div>
+
+                        {/* Date + Actions */}
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                          <div className="text-[10px] text-gray-500">
+                            {formatDateToDDMMYYYY(booking.createdAt)}
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedReferrer(referrer);
+                              setSelectedBookingForModal(booking);
+                              setShowDetailModal(true);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold"
+                            title="View Details"
+                          >
+                            <FiEye className="w-3.5 h-3.5" /> View
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* ==================== PAGINATION ==================== */}
