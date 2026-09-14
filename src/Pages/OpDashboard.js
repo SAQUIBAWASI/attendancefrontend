@@ -809,24 +809,15 @@ const OpDashboard = () => {
     );
   };
 
-  // ===== QUICK ACTION - ROLE BASED =====
-  const handleQuickAction = (path) => {
-    const userRole = localStorage.getItem("userRole");
-    
-    if (userRole === "admin") {
-      navigate(path);
-      return;
-    }
-    
-    if (userRole === "employee") {
-      const cleanPath = path.startsWith("/") ? path.substring(1) : path;
-      navigate(`/employee/${cleanPath}`);
-      return;
-    }
-    
-    navigate(path);
-  };
-
+ const handleQuickAction = (path, state = {}) => {
+  const userRole = localStorage.getItem("userRole");
+  if (userRole === "admin") { navigate(path, { state }); return; }
+  if (userRole === "employee") {
+    const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+    navigate(`/employee/${cleanPath}`, { state }); return;
+  }
+  navigate(path, { state });
+};
   // ===== LOADING =====
   if (loading) {
     return (
@@ -929,7 +920,7 @@ const OpDashboard = () => {
 
             {/* Register New OP */}
             <button
-              onClick={() => handleQuickAction("/op-management")}
+              onClick={() => handleQuickAction("/op-management", { openAddPatient: true })}
               className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all shadow-sm"
               title="Register a new OP patient"
             >

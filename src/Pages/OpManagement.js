@@ -1,5 +1,11 @@
-// OpManagement.js — Full Refactored Version (with City→Pincode Auto-Fetch + Clean B/W Bill + Discount + Mobile Card View + Pending Popup + Review Feature + Booking Type Column + Booking Type Filter)
+// OpManagement.js — Full Refactored Version
+// (City→Pincode Auto-Fetch + Clean B/W Bill + Discount Type %/₹ + Wider Add Popup
+//  + Fixed Discount Row Overlap + Review Feature + Booking Type Filter
+//  + Auto Payment Status from Amount + Dynamic Discount Placeholder
+//  + No HTML5 Required Validation + FIXED DUE AMOUNT BUG
+//  + ACTIVE / INACTIVE COUNT CARDS + INACTIVE CARD NAVIGATION)
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import {
@@ -19,14 +25,13 @@ import {
   FiUsers, FiUserCheck, FiClock, FiFilter, FiDownload, FiTrash2, FiPlus,
   FiEdit2, FiEye, FiRefreshCw, FiCheckCircle, FiXCircle, FiCalendar,
   FiFileText, FiDollarSign, FiPlusCircle, FiChevronDown, FiChevronUp,
-  FiAlertCircle, FiLock
+  FiAlertCircle, FiLock, FiUserX, FiUserPlus as FiUserPlusIcon
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 import logo from "../Images/Timelyhealth logo.png";
 import prescriptionTemplate from "../Images/prescription.jpg";
 import prescriptionBackTemplate from "../Images/prescriptionbackside.jpg";
-import { useNavigate } from "react-router-dom";
 
 const TITLE_OPTIONS = [
   { value: "Mr.", label: "Mr." },
@@ -66,11 +71,15 @@ const BOOKING_STATUS_OPTIONS = [
   { value: "cancelled", label: "Cancelled" }
 ];
 
-// ✅ NEW — Booking Type filter options
 const BOOKING_TYPE_OPTIONS = [
   { value: "All", label: "All Booking Types" },
   { value: "Walk-In", label: "Walk-In" },
   { value: "Online", label: "Online" }
+];
+
+const DISCOUNT_TYPE_OPTIONS = [
+  { value: "₹", label: "₹ (Rupees)" },
+  { value: "%", label: "% (Percent)" }
 ];
 
 const EMPTY_FORM = {
@@ -99,6 +108,7 @@ const EMPTY_FORM = {
   referralCommissionType: "",
   partialAmount: "",
   discount: "",
+  discountType: "₹",
   bookingId: "",
   status: "confirmed"
 };
@@ -204,7 +214,6 @@ const getPaymentStatusColors = (status) => {
   return map[status] || map.Pending;
 };
 
-// ✅ Booking Type helper: isOP true → Walk-In, false → Online
 const getBookingType = (booking) => {
   if (!booking) return { label: "Walk-In", icon: FaWalking, color: "bg-amber-50 text-amber-700 border-amber-200" };
   if (booking.isOP === true) {
@@ -326,7 +335,6 @@ const getBookingPaidInfo = (booking) => {
   return { final, paid, balance, status };
 };
 
-// ✅ Review window check (3 days after appointment)
 const getReviewWindowStatus = (booking) => {
   if (!booking) return { canReview: false, daysLeft: 0, expired: true, isReviewed: false };
 
@@ -378,8 +386,61 @@ const fetchCityFromPincode = async (pincode) => {
   }
 };
 
+const computePaymentStatusFromAmount = (amountEntered, finalPayable) => {
+  const amt = parseFloat(amountEntered) || 0;
+  const final = parseFloat(finalPayable) || 0;
+
+  if (final <= 0) {
+    return amt > 0 ? "Paid" : "Pending";
+  }
+
+  if (amt <= 0) return "Pending";
+  if (amt >= final) return "Paid";
+  return "Partial";
+};
+
+const computeDiscountAmount = (subtotal, discountValue, discountType) => {
+  const val = parseFloat(discountValue) || 0;
+  if (val <= 0) return 0;
+  if (discountType === "%") {
+    return (subtotal * val) / 100;
+  }
+  return val;
+};
+
+const computeFinancials = (serviceItems, { labTotal = 0, medicineTotal = 0, referralCommission = 0, discount = 0, discountType = "₹", partialAmount = 0 } = {}) => {
+  const servicesSubtotal = (serviceItems || []).reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+  const subtotal = servicesSubtotal + (Number(labTotal) || 0) + (Number(medicineTotal) || 0);
+  const commissionPercent = parseFloat(referralCommission) || 0;
+  const commissionAmount = (subtotal * commissionPercent) / 100;
+  const discountAmount = computeDiscountAmount(subtotal, discount, discountType);
+  const finalPayable = Math.max(0, subtotal - commissionAmount - discountAmount);
+
+  const parsedPartial = parseFloat(partialAmount) || 0;
+  const paymentStatus = computePaymentStatusFromAmount(parsedPartial, finalPayable);
+  const amountPaid = paymentStatus === "Paid"
+    ? finalPayable
+    : (paymentStatus === "Partial" ? Math.min(parsedPartial, finalPayable) : 0);
+  const balanceAmount = Math.max(0, finalPayable - amountPaid);
+
+  return {
+    servicesSubtotal,
+    subtotal,
+    commissionPercent,
+    commissionAmount,
+    discountAmount,
+    finalPayable,
+    parsedPartial,
+    paymentStatus,
+    amountPaid,
+    balanceAmount,
+  };
+};
+
 export default function OpManagement() {
   const navigate = useNavigate();
+  const location = useLocation();
+
 
   const [bookings, setBookings] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -410,13 +471,15 @@ export default function OpManagement() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [feeTypeFilter, setFeeTypeFilter] = useState("All");
   const [doctorFilter, setDoctorFilter] = useState("All");
-  // ✅ NEW — Booking Type filter state
   const [bookingTypeFilter, setBookingTypeFilter] = useState("All");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeCardFilter, setActiveCardFilter] = useState("all");
+
+  // ✅ NEW: Active / Inactive filter
+  const [activeFilter, setActiveFilter] = useState("all"); // "all" | "active" | "inactive"
 
   const [toast, setToast] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -473,7 +536,6 @@ export default function OpManagement() {
 
   const [togglingStatus, setTogglingStatus] = useState(null);
 
-  // ✅ Review Feature State
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewBooking, setReviewBooking] = useState(null);
   const [reviewData, setReviewData] = useState({ isReviewed: false, reviewDate: "" });
@@ -494,6 +556,7 @@ export default function OpManagement() {
     setTimeout(() => setToast(null), 4000);
   };
 
+  // ✅ patients memo — add isActive from the latest booking
   const patients = useMemo(() => {
     const map = new Map();
     const sortedBookings = [...bookings].sort(
@@ -546,6 +609,27 @@ export default function OpManagement() {
     const today = new Date().toISOString().split("T")[0];
     setFormData((prev) => ({ ...prev, appointmentDate: today }));
   }, []);
+
+
+  // ✅ YAHAN ADD KARO — Auto-open Add Patient popup
+useEffect(() => {
+  if (location.state?.openAddPatient) {
+    setTimeout(() => {
+      const today = new Date().toISOString().split("T")[0];
+      setFormData({ ...EMPTY_FORM, appointmentDate: today });
+      setEditingId(null);
+      setShowForm(true);
+    }, 150);
+    navigate(location.pathname, { replace: true, state: {} });
+  }
+}, [location.state]);
+
+useEffect(() => {
+  if (formData.doctorId && formData.appointmentDate) {
+    filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
+  }
+}, [formData.doctorId, formData.appointmentDate]);
+
 
   useEffect(() => {
     if (formData.doctorId && formData.appointmentDate) {
@@ -734,31 +818,65 @@ export default function OpManagement() {
     } catch (error) { console.error("Error fetching referral contacts:", error); setReferralContacts([]); }
   };
 
-  const filterSlotsByDoctorAndDate = (doctorId, date) => {
-    if (!doctorId || !date) { setAvailableSlots([]); return; }
-    setSlotsLoading(true);
-    setAvailableSlots([]);
-    setFormData((prev) => ({ ...prev, slotId: "" }));
-    try {
-      const selectedDay = getDayNameFromDate(date);
-      let filtered = allSlots.filter((slot) =>
-        slot.doctorId === doctorId && slot.dayOfWeek === selectedDay && slot.type !== "break"
-      );
-      const seen = new Set();
-      filtered = filtered.filter((slot) => {
-        if (seen.has(slot.startTime)) return false;
-        seen.add(slot.startTime);
-        return true;
-      });
-      filtered.sort((a, b) => a.startTime.localeCompare(b.startTime));
-      setAvailableSlots(filtered);
-    } catch (error) {
-      console.error("Error filtering slots:", error);
-      setAvailableSlots([]);
-      showToast("Failed to filter slots", "error");
-    } finally { setSlotsLoading(false); }
-  };
+ // ✅ Helper: Convert "hh:mm AM/PM" to 24-hour minutes for comparison
+const parseSlotTimeToMinutes = (timeStr) => {
+  if (!timeStr) return 0;
+  try {
+    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (!match) return 0;
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const meridiem = (match[3] || "").toUpperCase();
 
+    if (meridiem === "PM" && hours !== 12) hours += 12;
+    if (meridiem === "AM" && hours === 12) hours = 0;
+
+    return hours * 60 + minutes;
+  } catch {
+    return 0;
+  }
+};
+
+const filterSlotsByDoctorAndDate = (doctorId, date) => {
+  if (!doctorId || !date) { setAvailableSlots([]); return; }
+  setSlotsLoading(true);
+  setAvailableSlots([]);
+  setFormData((prev) => ({ ...prev, slotId: "" }));
+  try {
+    const selectedDay = getDayNameFromDate(date);
+    let filtered = allSlots.filter((slot) =>
+      slot.doctorId === doctorId && slot.dayOfWeek === selectedDay && slot.type !== "break"
+    );
+
+    // ✅ Deduplicate by startTime
+    const seen = new Set();
+    filtered = filtered.filter((slot) => {
+      if (seen.has(slot.startTime)) return false;
+      seen.add(slot.startTime);
+      return true;
+    });
+
+    // ✅ NEW: If the selected date is TODAY, hide past slots
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+
+    if (date === todayStr) {
+      const nowMinutes = today.getHours() * 60 + today.getMinutes();
+      filtered = filtered.filter((slot) => {
+        const slotStart = parseSlotTimeToMinutes(slot.startTime);
+        // Show only slots starting NOW or in the future
+        return slotStart > nowMinutes;
+      });
+    }
+
+    filtered.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    setAvailableSlots(filtered);
+  } catch (error) {
+    console.error("Error filtering slots:", error);
+    setAvailableSlots([]);
+    showToast("Failed to filter slots", "error");
+  } finally { setSlotsLoading(false); }
+};
   const checkExistingPatient = (value) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     if (editingId) { setExistingPatient(null); setShowExistingPatientPopup(false); return; }
@@ -802,35 +920,50 @@ export default function OpManagement() {
     }, 500);
   };
 
-  const autoFillPatientDetails = () => {
-    if (!existingPatient) return;
-    setFormData((prev) => ({
-      ...prev,
-      title: existingPatient.title || "Mr.",
-      name: existingPatient.name || "",
-      dob: existingPatient.dob || "",
-      age: existingPatient.age ?? "",
-      gender: existingPatient.gender || "",
-      phone: existingPatient.phone || "",
-      address: existingPatient.address || "",
-      city: existingPatient.city || "",
-      pincode: existingPatient.pincode || "",
-      serviceItems: existingPatient.serviceItems || [],
-      paymentType: existingPatient.paymentType || "cash",
-      reason: existingPatient.reason || "",
-      paymentStatus: existingPatient.paymentStatus || "Pending",
-      referredByCustomer: existingPatient.referredByCustomer || "",
-      referredByDoctor: existingPatient.referredByDoctor || "",
-      referralCustomerId: existingPatient.referralCustomerId || "",
-      referralDoctorId: existingPatient.referralDoctorId || "",
-      referralCommission: existingPatient.referralCommission || "",
-      referralCommissionType: existingPatient.referralCommissionType || ""
-    }));
-    setCitySuggestions([]);
-    setShowCitySuggestions(false);
-    setShowExistingPatientPopup(false);
-    showToast(`Patient ${existingPatient.name} details auto-filled!`, "info");
-  };
+ const autoFillPatientDetails = () => {
+  if (!existingPatient) return;
+  setFormData((prev) => ({
+    ...prev,
+    // ✅ Basic Patient Details — auto-fill
+    title: existingPatient.title || "Mr.",
+    name: existingPatient.name || "",
+    dob: existingPatient.dob || "",
+    age: existingPatient.age ?? "",
+    gender: existingPatient.gender || "",
+    phone: existingPatient.phone || "",
+    address: existingPatient.address || "",
+    city: existingPatient.city || "",
+    pincode: existingPatient.pincode || "",
+
+    // ✅ Referral Info — auto-fill (business ke liye useful)
+    referredByCustomer: existingPatient.referredByCustomer || "",
+    referredByDoctor: existingPatient.referredByDoctor || "",
+    referralCustomerId: existingPatient.referralCustomerId || "",
+    referralDoctorId: existingPatient.referralDoctorId || "",
+    referralCommission: existingPatient.referralCommission || "",
+    referralCommissionType: existingPatient.referralCommissionType || "",
+
+    // ✅ NEW OP ke liye ye fresh rakho — carry nahi karo
+    serviceItems: [],           // 🚫 Services reset
+    paymentStatus: "Pending",   // 🚫 Payment status reset
+    partialAmount: "",          // 🚫 Amount reset
+    discount: "",               // 🚫 Discount reset
+    discountType: "₹",          // 🚫 Default
+    paymentType: "cash",        // 🚫 Default
+
+    // 🚫 Doctor, slot, appointment date — ye bhi reset
+    doctorId: "",
+    slotId: "",
+    // appointmentDate: aaj ka rakho (form already set karta hai)
+  }));
+  setCitySuggestions([]);
+  setShowCitySuggestions(false);
+  setShowExistingPatientPopup(false);
+  showToast(
+    `Patient ${existingPatient.name} ki basic details auto-filled! Ab services add karo.`,
+    "info"
+  );
+};
 
   const handleDobChange = (dob) => {
     const newAge = calculateAgeFromDOB(dob);
@@ -1025,6 +1158,7 @@ export default function OpManagement() {
       referralCommissionType: existingBooking?.referralCommissionType || patient.referralCommissionType || "",
       partialAmount: existingBooking?.amountPaid || existingBooking?.partialAmount || "",
       discount: existingBooking?.discount || "",
+      discountType: "₹",
       serviceName: "", servicePrice: "",
       status: existingBooking?.status || "confirmed"
     });
@@ -1382,37 +1516,21 @@ export default function OpManagement() {
   const handleBookNow = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || formData.age === "" || !formData.gender) {
-      showToast("Please fill all required fields", "error"); return;
     }
     if (!formData.doctorId) { showToast("Please select a doctor", "error"); return; }
     if (!formData.slotId) { showToast("Please select an available slot", "error"); return; }
     if (formData.serviceItems.length === 0) { showToast("Please add at least one service", "error"); return; }
-    if (formData.paymentStatus === "Partial" && (!formData.partialAmount || parseFloat(formData.partialAmount) <= 0)) {
-      showToast("Please enter partial amount received", "error"); return;
-    }
 
     setSubmitting(true);
     try {
-      const subtotal = formData.serviceItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
-      const commissionPercent = parseFloat(formData.referralCommission) || 0;
-      const commissionAmount = (subtotal * commissionPercent) / 100;
-      const discountAmount = parseFloat(formData.discount) || 0;
-      const finalPayable = subtotal - commissionAmount - discountAmount;
-
-      const parsedPartial = parseFloat(formData.partialAmount) || 0;
-      let paymentStatus = formData.paymentStatus;
-      let amountPaid = 0;
-      let balanceAmount = finalPayable;
-
-      if (paymentStatus === "Paid") {
-        amountPaid = finalPayable; balanceAmount = 0;
-      } else if (paymentStatus === "Partial" && parsedPartial > 0) {
-        amountPaid = parsedPartial;
-        balanceAmount = finalPayable - parsedPartial;
-        if (balanceAmount <= 0) { paymentStatus = "Paid"; amountPaid = finalPayable; balanceAmount = 0; }
-      } else if (paymentStatus === "Due") {
-        amountPaid = 0; balanceAmount = finalPayable;
-      }
+      const fin = computeFinancials(formData.serviceItems, {
+        labTotal: 0,
+        medicineTotal: 0,
+        referralCommission: formData.referralCommission,
+        discount: formData.discount,
+        discountType: formData.discountType,
+        partialAmount: formData.partialAmount,
+      });
 
       const bookingPayload = {
         patientTitle: formData.title,
@@ -1426,11 +1544,20 @@ export default function OpManagement() {
         patientPincode: formData.pincode,
         purpose: formData.reason,
         paymentType: formData.paymentType,
-        paymentStatus,
-        partialAmount: parsedPartial,
-        amountPaid,
-        balanceAmount,
-        discount: discountAmount,
+        paymentStatus: fin.paymentStatus,
+        partialAmount: fin.parsedPartial,
+        amountPaid: fin.amountPaid,
+        balanceAmount: fin.balanceAmount,
+
+        subtotal: fin.subtotal,
+        commissionAmount: fin.commissionAmount,
+        discount: fin.discountAmount,
+        discountType: formData.discountType,
+        finalPayable: fin.finalPayable,
+        finalPayableAmount: fin.finalPayable,
+        grandTotal: fin.finalPayable,
+        totalAmount: fin.finalPayable,
+
         doctorId: formData.doctorId,
         appointmentDate: formData.appointmentDate,
         isOP: true,
@@ -1481,11 +1608,6 @@ export default function OpManagement() {
 
     setSubmitting(true);
     try {
-      const servicesSubtotal = formData.serviceItems.reduce(
-        (sum, s) => sum + (Number(s.price) || 0),
-        0
-      );
-
       const matchBForUpdate = getMatchingBooking({
         phone: formData.phone,
         name: formData.name,
@@ -1494,34 +1616,14 @@ export default function OpManagement() {
       const labTotalForUpdate = Number(matchBForUpdate?.labTotal) || 0;
       const medicineTotalForUpdate = Number(matchBForUpdate?.medicineTotal) || 0;
 
-      const subtotal = servicesSubtotal + labTotalForUpdate + medicineTotalForUpdate;
-
-      const commissionPercent = parseFloat(formData.referralCommission) || 0;
-      const commissionAmount = (subtotal * commissionPercent) / 100;
-      const discountAmount = parseFloat(formData.discount) || 0;
-
-      const finalPayable = subtotal - commissionAmount - discountAmount;
-
-      const parsedPartial = parseFloat(formData.partialAmount) || 0;
-      let paymentStatus = formData.paymentStatus;
-      let amountPaid = 0;
-      let balanceAmount = finalPayable;
-
-      if (paymentStatus === "Paid") {
-        amountPaid = finalPayable;
-        balanceAmount = 0;
-      } else if (paymentStatus === "Partial" && parsedPartial > 0) {
-        amountPaid = parsedPartial;
-        balanceAmount = finalPayable - parsedPartial;
-        if (balanceAmount <= 0) {
-          paymentStatus = "Paid";
-          amountPaid = finalPayable;
-          balanceAmount = 0;
-        }
-      } else if (paymentStatus === "Due") {
-        amountPaid = 0;
-        balanceAmount = finalPayable;
-      }
+      const fin = computeFinancials(formData.serviceItems, {
+        labTotal: labTotalForUpdate,
+        medicineTotal: medicineTotalForUpdate,
+        referralCommission: formData.referralCommission,
+        discount: formData.discount,
+        discountType: formData.discountType,
+        partialAmount: formData.partialAmount,
+      });
 
       const bookingPayload = {
         patientTitle: formData.title,
@@ -1535,11 +1637,20 @@ export default function OpManagement() {
         patientPincode: formData.pincode,
         purpose: formData.reason,
         paymentType: formData.paymentType,
-        paymentStatus,
-        partialAmount: parsedPartial,
-        amountPaid,
-        balanceAmount,
-        discount: discountAmount,
+        paymentStatus: fin.paymentStatus,
+        partialAmount: fin.parsedPartial,
+        amountPaid: fin.amountPaid,
+        balanceAmount: fin.balanceAmount,
+
+        subtotal: fin.subtotal,
+        commissionAmount: fin.commissionAmount,
+        discount: fin.discountAmount,
+        discountType: formData.discountType,
+        finalPayable: fin.finalPayable,
+        finalPayableAmount: fin.finalPayable,
+        grandTotal: fin.finalPayable,
+        totalAmount: fin.finalPayable,
+
         doctorId: formData.doctorId,
         appointmentDate: formData.appointmentDate,
         isOP: true,
@@ -1602,50 +1713,50 @@ export default function OpManagement() {
     }
   };
 
-  const openPrescriptionModal = (booking) => {
-    setSelectedBookingForPrescription(booking);
-    setShowPrescriptionModal(true);
-  };
+const openPrescriptionModal = (booking) => {
+  if (!booking) { showToast("No booking data found", "error"); return; }
+  handlePrintPrescription(booking);
+};
 
-  const handlePrintPrescription = () => {
-    if (!prescriptionRef.current) { showToast("No prescription content to print", "error"); return; }
-    const win = window.open("", "_blank", "width=800,height=1100");
-    if (!win) return;
-    win.document.write(`
-      <!DOCTYPE html><html><head><title>Prescription - ${selectedBookingForPrescription?.patientName || "Patient"}</title>
-      <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:Arial,sans-serif; background:#fff; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:20px; }
-        .prescription-page { max-width:650px; width:100%; position:relative; background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.1); border-radius:12px; overflow:hidden; margin-bottom:30px; page-break-after:always; }
-        .prescription-page img { width:100%; height:auto; display:block; }
-        .page-label { text-align:center; font-size:11px; color:#888; padding:6px 0; background:#f5f5f5; border-bottom:1px solid #ddd; font-weight:bold; letter-spacing:1px; }
-        .overlay-print { position:absolute; top:0; left:0; right:0; bottom:0; }
-        .overlay-print .fld { position:absolute; font-size:15px; font-weight:600; color:#1a1a1a; letter-spacing:0.2px; line-height:1.3; }
-        @media print { body { padding:0; } .prescription-page { box-shadow:none; border-radius:0; margin-bottom:0; } .page-label { display:none; } }
-      </style></head><body>
-      <div class="prescription-page">
-        <div class="page-label">📄 Front Side - Prescription</div>
-        <img src="${prescriptionTemplate}" alt="Front" />
-        <div class="overlay-print">
-          <div class="fld" style="top:78px;left:90px;max-width:280px;">${selectedBookingForPrescription?.patientTitle || ""} ${selectedBookingForPrescription?.patientName || "N/A"}</div>
-          <div class="fld" style="top:78px;right:20px;">${formatDateToDDMMYYYY(selectedBookingForPrescription?.appointmentDate || selectedBookingForPrescription?.date)}</div>
-          <div class="fld" style="top:104px;left:90px;">${selectedBookingForPrescription?.patientAge || "N/A"}</div>
-          <div class="fld" style="top:104px;left:230px;">${selectedBookingForPrescription?.patientGender || "N/A"}</div>
-          <div class="fld" style="top:104px;right:100px;">${selectedBookingForPrescription?.patientPhone || "N/A"}</div>
-          <div class="fld" style="top:130px;left:90px;max-width:320px;">${selectedBookingForPrescription?.purpose || "N/A"}</div>
-          <div class="fld" style="top:160px;left:90px;">${selectedBookingForPrescription?.vitalsTemp || ""}</div>
-          <div class="fld" style="top:160px;left:230px;">${selectedBookingForPrescription?.vitalsBp || ""}</div>
-          <div class="fld" style="top:160px;left:400px;">${selectedBookingForPrescription?.vitalsPr || ""}</div>
-          <div class="fld" style="top:160px;right:80px;">${selectedBookingForPrescription?.vitalsWeight || ""}</div>
-        </div>
+ const handlePrintPrescription = (booking) => {
+  const b = booking || selectedBookingForPrescription;
+  if (!b) { showToast("No prescription data to print", "error"); return; }
+  const win = window.open("", "_blank", "width=800,height=1100");
+  if (!win) return;
+  win.document.write(`
+    <!DOCTYPE html><html><head><title>Prescription - ${b.patientName || "Patient"}</title>
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { font-family:Arial,sans-serif; background:#fff; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:20px; }
+      .prescription-page { max-width:650px; width:100%; position:relative; background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.1); border-radius:12px; overflow:hidden; margin-bottom:30px; page-break-after:always; }
+      .prescription-page img { width:100%; height:auto; display:block; }
+      .page-label { text-align:center; font-size:11px; color:#888; padding:6px 0; background:#f5f5f5; border-bottom:1px solid #ddd; font-weight:bold; letter-spacing:1px; }
+      .overlay-print { position:absolute; top:0; left:0; right:0; bottom:0; }
+      .overlay-print .fld { position:absolute; font-size:15px; font-weight:600; color:#1a1a1a; letter-spacing:0.2px; line-height:1.3; }
+      @media print { body { padding:0; } .prescription-page { box-shadow:none; border-radius:0; margin-bottom:0; } .page-label { display:none; } }
+    </style></head><body>
+    <div class="prescription-page">
+      <div class="page-label">📄 Front Side - Prescription</div>
+      <img src="${prescriptionTemplate}" alt="Front" />
+      <div class="overlay-print">
+        <div class="fld" style="top:78px;left:90px;max-width:280px;">${b.patientTitle || ""} ${b.patientName || "N/A"}</div>
+        <div class="fld" style="top:78px;right:20px;">${formatDateToDDMMYYYY(b.appointmentDate || b.date)}</div>
+        <div class="fld" style="top:104px;left:90px;">${b.patientAge || "N/A"}</div>
+        <div class="fld" style="top:104px;left:230px;">${b.patientGender || "N/A"}</div>
+        <div class="fld" style="top:104px;right:100px;">${b.patientPhone || "N/A"}</div>
+        <div class="fld" style="top:130px;left:90px;max-width:320px;">${b.purpose || "N/A"}</div>
+        <div class="fld" style="top:160px;left:90px;">${b.vitalsTemp || ""}</div>
+        <div class="fld" style="top:160px;left:230px;">${b.vitalsBp || ""}</div>
+        <div class="fld" style="top:160px;left:400px;">${b.vitalsPr || ""}</div>
+        <div class="fld" style="top:160px;right:80px;">${b.vitalsWeight || ""}</div>
       </div>
-      <div class="prescription-page"><div class="page-label">📄 Back Side</div><img src="${prescriptionBackTemplate}" alt="Back" /></div>
-      <script>window.onload = function() { window.print(); }</script></body></html>
-    `);
-    win.document.close();
-    win.focus();
-  };
-
+    </div>
+    <div class="prescription-page"><div class="page-label">📄 Back Side</div><img src="${prescriptionBackTemplate}" alt="Back" /></div>
+    <script>window.onload = function() { window.print(); }</script></body></html>
+  `);
+  win.document.close();
+  win.focus();
+};
   const getPatientTotalFee = (patient) => {
     const list = bookings.filter((b) => b.patientPhone === patient.phone ||
       (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
@@ -2004,13 +2115,27 @@ export default function OpManagement() {
     setSearchQuery(""); setStatusFilter("All"); setFeeTypeFilter("All"); setDoctorFilter("All");
     setBookingTypeFilter("All");
     setFromDate(""); setToDate(""); setSelectedMonth(""); setActiveCardFilter("all"); setCurrentPage(1);
+    setActiveFilter("all");
     if (window.innerWidth < 1024) setShowMobileFilters(false);
   };
 
   const handleCardClick = (type) => {
     setActiveCardFilter(type); setCurrentPage(1);
-    if (type === "all") setStatusFilter("All");
-    else setStatusFilter(type);
+    if (type === "all") {
+      setStatusFilter("All");
+      setActiveFilter("all");
+    } else if (type === "active") {
+      // ✅ Active card click → filter by active
+      setActiveFilter("active");
+      setStatusFilter("All");
+    } else if (type === "inactive") {
+      // ✅ Inactive card click → navigate to inactive-patients page
+      setActiveFilter("inactive");
+      navigate("/inactive-patients");
+    } else {
+      setStatusFilter(type);
+      setActiveFilter("all");
+    }
   };
 
   const getUniqueDoctors = () => {
@@ -2019,9 +2144,14 @@ export default function OpManagement() {
     return Array.from(map.values());
   };
 
+  // ✅ filteredPatients — Active/Inactive filter applied here (NOT excluding inactive by default)
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
-      if (!getPatientActiveStatus(p)) return false;
+      // ✅ Active/Inactive filter
+      const isActive = getPatientActiveStatus(p);
+      if (activeFilter === "active" && !isActive) return false;
+      if (activeFilter === "inactive" && isActive) return false;
+      // If activeFilter === "all", show all (both active + inactive)
 
       const paymentStatus = getPatientPaymentStatus(p);
       if (statusFilter !== "All" && paymentStatus !== statusFilter) return false;
@@ -2036,7 +2166,6 @@ export default function OpManagement() {
         );
         if (!hasBookingWithDoctor) return false;
       }
-      // ✅ NEW — Booking Type filter
       if (bookingTypeFilter !== "All") {
         const matchingBooking = getMatchingBooking(p);
         const bookingType = getBookingType(matchingBooking).label;
@@ -2071,14 +2200,21 @@ export default function OpManagement() {
       }
       return true;
     });
-  }, [patients, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, searchQuery, fromDate, toDate, selectedMonth, bookings]);
+  }, [patients, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, searchQuery, fromDate, toDate, selectedMonth, bookings, activeFilter]);
 
-  useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, fromDate, toDate, selectedMonth]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, fromDate, toDate, selectedMonth, activeFilter]);
 
+  // ✅ stats — now includes activeCount & inactiveCount
   const stats = useMemo(() => {
     const total = patients.length;
     let paidTotal = 0, paidCount = 0, pendingCount = 0, partialCount = 0, dueCount = 0;
+    let activeCount = 0, inactiveCount = 0;
+
     patients.forEach((p) => {
+      const isActive = getPatientActiveStatus(p);
+      if (isActive) activeCount++;
+      else inactiveCount++;
+
       const list = bookings.filter((b) => b.patientPhone === p.phone ||
         (b.patientName && p.name && b.patientName.toLowerCase() === p.name.toLowerCase()));
       let totalFee = 0;
@@ -2091,7 +2227,17 @@ export default function OpManagement() {
       } else if (status === "Due") dueCount++;
       else pendingCount++;
     });
-    return { total, paid: paidCount, pending: pendingCount, partial: partialCount, due: dueCount, totalRevenue: paidTotal };
+
+    return {
+      total,
+      active: activeCount,
+      inactive: inactiveCount,
+      paid: paidCount,
+      pending: pendingCount,
+      partial: partialCount,
+      due: dueCount,
+      totalRevenue: paidTotal,
+    };
   }, [patients, bookings]);
 
   const formatTime = (dateStr) => !dateStr ? "" : new Date(dateStr).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
@@ -2281,7 +2427,6 @@ export default function OpManagement() {
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
               <option value="All">All Payment</option><option value="Pending">Pending</option><option value="Partial">Partial</option><option value="Paid">Paid</option><option value="Due">Due</option>
             </select>
-            {/* ✅ NEW — Booking Type Filter (Desktop) */}
             <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
               {BOOKING_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -2324,12 +2469,9 @@ export default function OpManagement() {
             <button onClick={handleAddNewPatient} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg">
               <FiPlus className="w-3 h-3" /> Add
             </button>
-            
-            {/* ✅ YEH NAYA BUTTON ADD KIYA HAI MOBILE KE LIYE */}
             <button onClick={() => navigate("/inactive-patients")} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
               <FiClock className="w-3 h-3 text-amber-600" /> Inactive
             </button>
-
             <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
               <FiFilter className="w-3 h-3" /> Filters
             </button>
@@ -2355,7 +2497,6 @@ export default function OpManagement() {
                   {getUniqueDoctors().map((doc) => <option key={doc.name} value={doc.name}>{doc.name}</option>)}
                 </select>
               </div>
-              {/* ✅ NEW — Booking Type Filter (Mobile) */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Booking Type</label>
                 <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
@@ -2382,12 +2523,25 @@ export default function OpManagement() {
           )}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 md:gap-4 mb-6">
+        {/* ✅ Stats — Now 8 cards including Active & Inactive */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 md:gap-4 mb-6">
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""}`} onClick={() => handleCardClick("all")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Patients</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div></div>
             <div className="emp-dash__stat-value">{stats.total}</div><div className="emp-dash__stat-meta">all registered OPD</div>
           </div>
+
+          {/* ✅ NEW: Active card */}
+          <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "active" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("active")}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Active</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div></div>
+            <div className="emp-dash__stat-value text-emerald-600">{stats.active}</div><div className="emp-dash__stat-meta">active patients</div>
+          </div>
+
+          {/* ✅ NEW: Inactive card — navigates on click */}
+          <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "inactive" ? "ring-2 ring-red-500/20 border-red-400" : ""}`} onClick={() => handleCardClick("inactive")}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Inactive</span><div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiUserX /></div></div>
+            <div className="emp-dash__stat-value text-red-500">{stats.inactive}</div><div className="emp-dash__stat-meta">inactive patients</div>
+          </div>
+
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "Paid" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("Paid")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Paid</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div></div>
             <div className="emp-dash__stat-value text-emerald-600">{stats.paid}</div><div className="emp-dash__stat-meta">completed payments</div>
@@ -2414,7 +2568,7 @@ export default function OpManagement() {
         {/* ADD/EDIT MODAL */}
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl w-[98vw] max-w-[1700px] p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[95vh] overflow-y-auto">
               <div className="flex items-center justify-between pb-4 border-b border-gray-100">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold"><FaUserInjured className="w-5 h-5" /></div>
@@ -2445,42 +2599,42 @@ export default function OpManagement() {
                 </div>
               )}
 
-              <form onSubmit={isEditMode ? handleUpdateNow : handleBookNow} className="mt-5 space-y-4">
+              <form onSubmit={isEditMode ? handleUpdateNow : handleBookNow} className="mt-5 space-y-4" noValidate>
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
-                    <FaPhoneAlt className="text-blue-600" /> Phone Number <span className="text-blue-600">*</span>
+                    <FaPhoneAlt className="text-blue-600" /> Phone Number
                   </label>
                   <div className="relative">
                     <FaPhoneAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                    <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className={`w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required />
+                    <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className={`w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-3">
                   <div className="col-span-1">
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Title <span className="text-blue-600">*</span></label>
-                    <select name="title" value={formData.title} onChange={handleInputChange} className={`w-full border rounded-lg px-2 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Title</label>
+                    <select name="title" value={formData.title} onChange={handleInputChange} className={`w-full border rounded-lg px-2 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode}>
                       {TITLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   </div>
                   <div className="col-span-3">
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Patient Name <span className="text-blue-600">*</span></label>
-                    <input ref={nameInputRef} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter patient full name" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required />
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Patient Name</label>
+                    <input ref={nameInputRef} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter patient full name" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">DOB <span className="text-blue-600">*</span></label>
-                    <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} max={new Date().toISOString().split("T")[0]} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required />
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">DOB</label>
+                    <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} max={new Date().toISOString().split("T")[0]} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Age <span className="text-blue-600">*</span></label>
-                    <input type="number" name="age" value={formData.age} onChange={(e) => { const val = e.target.value; setFormData((prev) => ({ ...prev, age: val })); }} placeholder="Auto or enter manually" min="0" max="120" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required />
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Age</label>
+                    <input type="number" name="age" value={formData.age} onChange={(e) => { const val = e.target.value; setFormData((prev) => ({ ...prev, age: val })); }} placeholder="Auto or enter manually" min="0" max="120" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Gender <span className="text-blue-600">*</span></label>
-                    <select name="gender" value={formData.gender} onChange={handleInputChange} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} required>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Gender</label>
+                    <select name="gender" value={formData.gender} onChange={handleInputChange} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode}>
                       <option value="">Select Gender</option>
                       {GENDER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
@@ -2497,7 +2651,7 @@ export default function OpManagement() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center justify-between">
-                      <span>Pincode <span className="text-blue-600">*</span></span>
+                      <span>Pincode</span>
                       {fetchingCity && <FiRefreshCw className="w-3 h-3 text-blue-500 animate-spin" />}
                     </label>
                     <input type="text" name="pincode" value={formData.pincode} onChange={handlePincodeChange} onFocus={() => { if (citySuggestions.length > 0) setShowCitySuggestions(true); }} placeholder="Enter 6-digit pincode" maxLength="6" inputMode="numeric" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
@@ -2533,20 +2687,20 @@ export default function OpManagement() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
-                      Select Doctor <span className="text-blue-600">*</span>
+                      Select Doctor
                       {isEditMode && <FaLock className="text-amber-500 text-[10px]" />}
                     </label>
-                    <select name="doctorId" value={formData.doctorId} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} required>
+                    <select name="doctorId" value={formData.doctorId} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
                       <option value="">Select Doctor</option>
                       {doctors.map((d) => <option key={d._id || d.id} value={d._id || d.id}>{d.name || "Doctor"}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
-                      Appointment Date <span className="text-blue-600">*</span>
+                      Appointment Date
                       {isEditMode && <FaLock className="text-amber-500 text-[10px]" />}
                     </label>
-                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} disabled={isEditMode} min={new Date().toISOString().split("T")[0]} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} required />
+                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} disabled={isEditMode} min={new Date().toISOString().split("T")[0]} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} />
                   </div>
                 </div>
 
@@ -2584,7 +2738,7 @@ export default function OpManagement() {
                 <div className="border rounded-xl p-4 bg-gray-50/50 border-gray-200">
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
-                      <FaServicestack className="text-blue-600" /> Services <span className="text-blue-600">*</span>
+                      <FaServicestack className="text-blue-600" /> Services
                     </label>
                     <span className="text-[10px] text-gray-400">{formData.serviceItems.length} added</span>
                   </div>
@@ -2708,8 +2862,6 @@ export default function OpManagement() {
                   </label>
 
                   {(() => {
-                    const servicesSubtotal = formData.serviceItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
-
                     const matchB = getMatchingBooking({
                       phone: formData.phone,
                       name: formData.name,
@@ -2718,156 +2870,156 @@ export default function OpManagement() {
                     const labTotal = Number(matchB?.labTotal) || 0;
                     const medicineTotal = Number(matchB?.medicineTotal) || 0;
 
-                    const subtotal = servicesSubtotal + labTotal + medicineTotal;
-
-                    const commissionPercent = parseFloat(formData.referralCommission) || 0;
-                    const commissionAmount = (subtotal * commissionPercent) / 100;
-                    const discountAmount = parseFloat(formData.discount) || 0;
-                    const finalPayable = subtotal - commissionAmount - discountAmount;
+                    const fin = computeFinancials(formData.serviceItems, {
+                      labTotal,
+                      medicineTotal,
+                      referralCommission: formData.referralCommission,
+                      discount: formData.discount,
+                      discountType: formData.discountType,
+                      partialAmount: formData.partialAmount,
+                    });
 
                     return (
-                      <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
-                        <div className="space-y-1.5 text-xs">
-                          {formData.serviceItems.length > 0 && (
-                            <>
-                              <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                                <span className="text-gray-700 font-medium flex items-center gap-1.5"><FaClinicMedical className="text-[10px] text-blue-600" /> Clinic Services</span>
-                                <span className="text-gray-500 text-[10px]">{formData.serviceItems.length} service{formData.serviceItems.length > 1 ? "s" : ""}</span>
-                              </div>
-                              {formData.serviceItems.map((svc, idx) => (
-                                <div key={idx} className="flex justify-between items-center py-1 border-b border-gray-100 pl-4">
-                                  <span className="text-gray-600 text-[10px]">• {svc.name}</span>
-                                  <span className="font-medium text-gray-800">₹{svc.price || 0}</span>
+                      <>
+                        <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
+                          <div className="space-y-1.5 text-xs">
+                            {formData.serviceItems.length > 0 && (
+                              <>
+                                <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                                  <span className="text-gray-700 font-medium flex items-center gap-1.5"><FaClinicMedical className="text-[10px] text-blue-600" /> Clinic Services</span>
+                                  <span className="text-gray-500 text-[10px]">{formData.serviceItems.length} service{formData.serviceItems.length > 1 ? "s" : ""}</span>
                                 </div>
-                              ))}
-                            </>
-                          )}
+                                {formData.serviceItems.map((svc, idx) => (
+                                  <div key={idx} className="flex justify-between items-center py-1 border-b border-gray-100 pl-4">
+                                    <span className="text-gray-600 text-[10px]">• {svc.name}</span>
+                                    <span className="font-medium text-gray-800">₹{svc.price || 0}</span>
+                                  </div>
+                                ))}
+                              </>
+                            )}
 
-                          {labTotal > 0 && (
-                            <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                              <span className="text-purple-700 text-[11px] font-semibold flex items-center gap-1">
-                                <FaFlask className="text-[9px]" /> Lab Total
-                              </span>
-                              <span className="font-bold text-purple-700">₹{labTotal}</span>
+                            {labTotal > 0 && (
+                              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                                <span className="text-purple-700 text-[11px] font-semibold flex items-center gap-1">
+                                  <FaFlask className="text-[9px]" /> Lab Total
+                                </span>
+                                <span className="font-bold text-purple-700">₹{labTotal}</span>
+                              </div>
+                            )}
+
+                            {medicineTotal > 0 && (
+                              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                                <span className="text-green-700 text-[11px] font-semibold flex items-center gap-1">
+                                  <FaPills className="text-[9px]" /> Pharmacy Total
+                                </span>
+                                <span className="font-bold text-green-700">₹{medicineTotal}</span>
+                              </div>
+                            )}
+
+                            <div className="flex justify-between items-center py-1.5 border-b border-t-2 border-gray-800 bg-gray-50 px-2 -mx-2 mt-1">
+                              <span className="text-gray-900 text-[11px] font-bold">SUBTOTAL</span>
+                              <span className="font-extrabold text-gray-900">₹{fin.subtotal}</span>
                             </div>
-                          )}
 
-                          {medicineTotal > 0 && (
-                            <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                              <span className="text-green-700 text-[11px] font-semibold flex items-center gap-1">
-                                <FaPills className="text-[9px]" /> Pharmacy Total
-                              </span>
-                              <span className="font-bold text-green-700">₹{medicineTotal}</span>
+                            {fin.discountAmount > 0 && (
+                              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                                <span className="text-red-600 text-[11px] font-semibold flex items-center gap-1">
+                                  <FaPercent className="text-[9px]" /> Discount {formData.discountType === "%" ? `(${formData.discount}%)` : ""}
+                                </span>
+                                <span className="font-bold text-red-600">− ₹{Math.round(fin.discountAmount)}</span>
+                              </div>
+                            )}
+
+                            <div className="flex justify-between items-center py-2 border-t-2 border-gray-800">
+                              <span className="font-bold text-gray-800">Payable Amount</span>
+                              <span className="font-bold text-emerald-700 text-sm">₹{Math.round(fin.finalPayable)}</span>
                             </div>
-                          )}
-
-                          <div className="flex justify-between items-center py-1.5 border-b border-t-2 border-gray-800 bg-gray-50 px-2 -mx-2 mt-1">
-                            <span className="text-gray-900 text-[11px] font-bold">SUBTOTAL</span>
-                            <span className="font-extrabold text-gray-900">₹{subtotal}</span>
-                          </div>
-
-                          {discountAmount > 0 && (
-                            <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                              <span className="text-red-600 text-[11px] font-semibold flex items-center gap-1">
-                                <FaPercent className="text-[9px]" /> Discount
-                              </span>
-                              <span className="font-bold text-red-600">− ₹{Math.round(discountAmount)}</span>
-                            </div>
-                          )}
-
-                          <div className="flex justify-between items-center py-2 border-t-2 border-gray-800">
-                            <span className="font-bold text-gray-800">Payable Amount</span>
-                            <span className="font-bold text-emerald-700 text-sm">₹{Math.round(finalPayable)}</span>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })()}
 
-                  <div className="mb-4">
-                    <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1 flex items-center gap-1.5">
-                      <FaPercent className="text-[10px]" /> Discount Amount (₹)
-                    </label>
-                    <input
-                      type="number"
-                      name="discount"
-                      value={formData.discount}
-                      onChange={handleInputChange}
-                      placeholder="0"
-                      min="0"
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                    />
-                    <p className="text-[10px] text-gray-500 mt-1">Discount will be deducted from total payable amount</p>
-                  </div>
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-4">
+                          <div className="md:col-span-7">
+                            <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1 flex items-center gap-1.5">
+                              <FaPercent className="text-[10px]" /> Discount
+                            </label>
+                            <div className="flex items-stretch gap-2">
+                              <select
+                                name="discountType"
+                                value={formData.discountType}
+                                onChange={handleInputChange}
+                                className="w-[110px] flex-shrink-0 bg-white border border-gray-300 rounded-lg px-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                              >
+                                {DISCOUNT_TYPE_OPTIONS.map((o) => (
+                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                              </select>
+                              <input
+                                type="number"
+                                name="discount"
+                                value={formData.discount}
+                                onChange={handleInputChange}
+                                placeholder={formData.discountType === "%" ? "Enter %" : "Enter amount"}
+                                min="0"
+                                max={formData.discountType === "%" ? "100" : undefined}
+                                className="flex-1 min-w-0 bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                              />
+                            </div>
+                            <p className="text-[10px] text-gray-500 mt-1">
+                              {formData.discountType === "%" ? "Percentage will be applied on subtotal" : "Flat amount will be deducted"}
+                            </p>
+                          </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Payment Mode</label>
-                      <select name="paymentType" value={formData.paymentType} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
-                        {PAYMENT_TYPE_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
-                        Payment Status
-                        {isEditMode && formData.paymentStatus === "Paid" && (
-                          <span className="ml-2 text-[9px] text-emerald-600 font-bold">✓ Already Paid (Locked)</span>
-                        )}
-                      </label>
-                      <select name="paymentStatus" value={formData.paymentStatus} onChange={handleInputChange} disabled={isEditMode && formData.paymentStatus === "Paid"} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode && formData.paymentStatus === "Paid" ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
-                        {PAYMENT_STATUS_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
+                          <div className="md:col-span-5">
+                            <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Payment Mode</label>
+                            <select name="paymentType" value={formData.paymentType} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
+                              {PAYMENT_TYPE_OPTIONS.map((o) => (
+                                <option key={o.value} value={o.value}>{o.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
 
-                  {formData.paymentStatus === "Partial" && (
-                    <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                      <label className="block text-[10px] font-bold text-amber-700 uppercase mb-1">
-                        Partial Amount (₹) <span className="text-red-500">*</span>
-                      </label>
-                      <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="Enter amount received" min="0" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
-                      {(() => {
-                        const servicesSubtotal = formData.serviceItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
-                        const matchB = getMatchingBooking({ phone: formData.phone, name: formData.name, _id: formData.bookingId });
-                        const labTotal = Number(matchB?.labTotal) || 0;
-                        const medicineTotal = Number(matchB?.medicineTotal) || 0;
-                        const subtotal = servicesSubtotal + labTotal + medicineTotal;
-                        const commissionPercent = parseFloat(formData.referralCommission) || 0;
-                        const discountAmount = parseFloat(formData.discount) || 0;
-                        const finalPayable = subtotal - (subtotal * commissionPercent) / 100 - discountAmount;
-                        const partial = parseFloat(formData.partialAmount) || 0;
-                        const remaining = Math.max(0, finalPayable - partial);
-                        const isFullyPaid = partial >= finalPayable && finalPayable > 0;
-
-                        return (
+                        <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                          <label className="block text-[10px] font-bold text-amber-700 uppercase mb-1">
+                            Amount Received (₹)
+                          </label>
+                          <input
+                            type="number"
+                            name="partialAmount"
+                            value={formData.partialAmount}
+                            onChange={handleInputChange}
+                            placeholder="Enter amount received (0 for Pending)"
+                            min="0"
+                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                          />
                           <div className="mt-2 space-y-1 text-[10px]">
                             <div className="flex justify-between text-amber-800">
                               <span>Total Payable:</span>
-                              <span className="font-bold">₹{Math.round(finalPayable)}</span>
+                              <span className="font-bold">₹{Math.round(fin.finalPayable)}</span>
                             </div>
                             <div className="flex justify-between text-emerald-700">
                               <span>Amount Receiving:</span>
-                              <span className="font-bold">₹{Math.round(partial)}</span>
+                              <span className="font-bold">₹{Math.round(fin.parsedPartial)}</span>
                             </div>
-                            <div className={`flex justify-between border-t border-amber-300 pt-1 mt-1 ${isFullyPaid ? "text-emerald-700" : "text-red-700"}`}>
-                              <span>{isFullyPaid ? "Status:" : "Balance Remaining:"}</span>
-                              <span className="font-bold">{isFullyPaid ? "✓ Will be marked as Paid" : `₹${Math.round(remaining)}`}</span>
+                            <div className={`flex justify-between border-t border-amber-300 pt-1 mt-1 ${fin.balanceAmount > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                              <span>{fin.balanceAmount > 0 ? "Balance Remaining:" : "Status:"}</span>
+                              <span className="font-bold">{fin.balanceAmount > 0 ? `₹${Math.round(fin.balanceAmount)}` : "✓ Fully Paid"}</span>
+                            </div>
+                            <div className={`flex items-center justify-between border rounded-md px-2 py-1 mt-1 ${
+                              fin.paymentStatus === "Paid"
+                                ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                                : fin.paymentStatus === "Partial"
+                                ? "text-amber-700 bg-amber-50 border-amber-200"
+                                : "text-gray-600 bg-gray-50 border-gray-200"
+                            }`}>
+                              <span className="font-semibold">Payment Status:</span>
+                              <span className="font-extrabold uppercase tracking-wide">{fin.paymentStatus}</span>
                             </div>
                           </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {formData.paymentStatus === "Due" && (
-                    <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                      <p className="text-[10px] text-red-700 font-medium flex items-center gap-2"><FaTimesCircle className="w-4 h-4" /> This payment is marked as Due. No amount will be collected now.</p>
-                    </div>
-                  )}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t">
@@ -2899,7 +3051,7 @@ export default function OpManagement() {
             </div>
           ) : (
             <>
-              {/* ===== DESKTOP TABLE VIEW (lg and up) ===== */}
+              {/* DESKTOP TABLE */}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="emp-dash__table">
                   <thead>
@@ -2960,7 +3112,6 @@ export default function OpManagement() {
                           </td>
                           <td className="px-3 py-3 whitespace-nowrap text-xs">{patient.phone || "N/A"}</td>
                           <td className="px-3 py-3"><div className="text-xs font-semibold text-purple-800 truncate max-w-[90px]">{matchingBooking?.doctorName || "N/A"}</div></td>
-                          {/* ✅ Booking Type Column */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
                               <BookingTypeIcon className="w-2.5 h-2.5" />
@@ -3076,7 +3227,6 @@ export default function OpManagement() {
                             <div className="text-[10px] font-semibold text-slate-700">{formatDateToDDMMYYYY(createdAt)}</div>
                             <div className="text-[9px] text-gray-400 mt-0.5">{createdAt ? new Date(createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "N/A"}</div>
                           </td>
-                          {/* Review Status Column */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {(() => {
                               const rStatus = getReviewWindowStatus(matchingBooking);
@@ -3172,7 +3322,7 @@ export default function OpManagement() {
                 </table>
               </div>
 
-              {/* ===== MOBILE CARD VIEW (below lg) ===== */}
+              {/* MOBILE CARD VIEW */}
               <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
                 {currentPatients.map((patient, idx) => {
                   const matchingBooking = getMatchingBooking(patient);
@@ -3197,7 +3347,6 @@ export default function OpManagement() {
 
                   return (
                     <div key={patient._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                      {/* Card Header — Patient + Active Toggle */}
                       <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
@@ -3222,7 +3371,6 @@ export default function OpManagement() {
                         </button>
                       </div>
 
-                      {/* Card Body */}
                       <div className="p-3 space-y-2.5">
                         <div className="grid grid-cols-2 gap-2 text-[11px]">
                           <div>
@@ -3233,7 +3381,6 @@ export default function OpManagement() {
                             <div className="text-[9px] font-bold uppercase text-gray-400">Age / Gender</div>
                             <div className="font-semibold text-slate-700">{patient.age || "N/A"} yrs · {patient.gender || "N/A"}</div>
                           </div>
-                          {/* ✅ Booking Type (Mobile) */}
                           <div>
                             <div className="text-[9px] font-bold uppercase text-gray-400">Booking Type</div>
                             <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
@@ -3318,7 +3465,6 @@ export default function OpManagement() {
                           </div>
                         </div>
 
-                        {/* Status Badges */}
                         <div className="flex items-center justify-center gap-2 pt-2 border-t border-gray-100 flex-wrap">
                           {bookingStatus !== "No Booking" && matchingBooking ? (
                             <div className="relative status-dropdown">
@@ -3372,7 +3518,6 @@ export default function OpManagement() {
                           ) : null}
                         </div>
 
-                        {/* Review Status Row (Mobile) */}
                         <div className="flex items-center justify-center gap-2 pt-2 border-t border-gray-100">
                           {(() => {
                             const rStatus = getReviewWindowStatus(matchingBooking);
@@ -3410,7 +3555,6 @@ export default function OpManagement() {
                           })()}
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
                           <button onClick={(e) => { e.stopPropagation(); handleRowClick(patient); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold" title="View">
                             <FiEye className="w-3.5 h-3.5" /> View
@@ -3491,7 +3635,7 @@ export default function OpManagement() {
           )}
         </div>
 
-        {/* COMPLETE PATIENT MODAL */}
+        {/* PATIENT MODAL */}
         {showPatientModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border">
@@ -3649,7 +3793,7 @@ export default function OpManagement() {
         {/* PRESCRIPTION MODAL */}
         {showPrescriptionModal && selectedBookingForPrescription && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="relative max-w-[480px] w-full rounded-2xl overflow-hidden shadow-2xl bg-white max-h-[90vh] overflow-y-auto">
+            <div className="relative w-[95vw] max-w-[1200px] rounded-2xl overflow-hidden shadow-2xl bg-white max-h-[95vh] overflow-y-auto">
               <button onClick={() => { setShowPrescriptionModal(false); setSelectedBookingForPrescription(null); }} className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5 shadow-lg z-30"><FaTimes className="w-4 h-4 text-gray-700" /></button>
               <div className="absolute top-2 left-2 flex gap-1.5 z-30">
                 <button onClick={handlePrintPrescription} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold shadow-lg"><FaPrint className="w-3 h-3" /> Print</button>
@@ -3657,7 +3801,7 @@ export default function OpManagement() {
               </div>
               <div className="border-b pb-2 mb-2">
                 <div className="text-center text-[10px] font-bold text-gray-400 py-1 bg-gray-50">Front Side - Prescription</div>
-                <div ref={prescriptionRef} className="relative w-full overflow-hidden" style={{ transform: "scale(0.75)", transformOrigin: "top center", width: "133.33%", marginLeft: "-16.66%" }}>
+                <div ref={prescriptionRef} className="relative w-full overflow-hidden" style={{ transform: "scale(1)", transformOrigin: "top center", width: "100%", marginLeft: "0" }}>
                   <img src={prescriptionTemplate} alt="Front" className="w-full h-auto object-contain" />
                   <div className="absolute inset-0 text-black">
                     <div style={{ position: "absolute", top: "78px", left: "90px", fontSize: "15px", fontWeight: 600 }}>{selectedBookingForPrescription?.patientTitle || ""} {selectedBookingForPrescription?.patientName || "N/A"}</div>
@@ -3675,7 +3819,7 @@ export default function OpManagement() {
               </div>
               <div>
                 <div className="text-center text-[10px] font-bold text-gray-400 py-1 bg-gray-50">Back Side</div>
-                <div className="relative w-full overflow-hidden" style={{ transform: "scale(0.75)", transformOrigin: "top center", width: "133.33%", marginLeft: "-16.66%" }}>
+                <div className="relative w-full overflow-hidden" style={{ transform: "scale(1)", transformOrigin: "top center", width: "100%", marginLeft: "0" }}>
                   <img src={prescriptionBackTemplate} alt="Back" className="w-full h-auto object-contain" />
                 </div>
               </div>
