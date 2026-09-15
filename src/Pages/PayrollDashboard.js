@@ -36,6 +36,17 @@ import "../index.css";
 import "./EmployeeDashboard.css";
 import "./AttendanceSummary.css";
 
+// ============================================
+// 📅 HELPERS (Same as PayRoll.jsx)
+// ============================================
+const formatDateLocal = (date) => {
+  const d = new Date(date);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const getCarryForwardKey = (employeeId, month) =>
   `payroll_carryForward_${employeeId}_${month}`;
 
@@ -61,14 +72,9 @@ const isMedicalRole = (role) => {
   return medicalRoles.some(r => role.toLowerCase().includes(r.toLowerCase()));
 };
 
-const formatDateLocal = (date) => {
-  const d = new Date(date);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-};
-
+// ============================================
+// 📅 calculateEarnedWeekOffs (SAME as PayRoll.jsx)
+// ============================================
 const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, employeeLeavesData, weekOffDay, shiftHours = 8, holidayDaysInMonth = 0) => {
   const weekOffDayNum = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(weekOffDay);
   const firstDay = new Date(year, monthNum - 1, 1);
@@ -83,6 +89,10 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
         hours = parseFloat(record.totalHours);
       } else if (record.workingHours) {
         hours = parseFloat(record.workingHours);
+      } else if (record.checkOutTime) {
+        const cin = new Date(record.checkInTime);
+        const cout = new Date(record.checkOutTime);
+        hours = (cout - cin) / (1000 * 60 * 60);
       }
       const existing = attendanceMap.get(dateKey) || 0;
       attendanceMap.set(dateKey, existing + hours);
@@ -101,11 +111,13 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
     });
   };
 
+  const weeklyBreakdown = [];
   let currentWeekStart = new Date(firstDay);
   while (currentWeekStart.getDay() !== 1) {
     currentWeekStart.setDate(currentWeekStart.getDate() - 1);
   }
 
+  let weekNumber = 1;
   let eligibleWeeks = 0;
   let totalWorkingDays = 0;
   let totalLeaves = 0;
@@ -165,11 +177,23 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
       isEligibleForWeekoff = (employeeAttendedDays >= actualWorkingDaysInWeek) && (actualWorkingDaysInWeek >= 3);
     }
 
+    weeklyBreakdown.push({
+      weekNumber,
+      daysInMonth: totalDays,
+      presentDays,
+      halfDays,
+      leaves: leavesCount,
+      weekOffDays,
+      effectiveWorkingDays: Math.round(effectiveWorkingDays * 10) / 10,
+      isEligibleForWeekoff
+    });
+
     if (isEligibleForWeekoff) {
       eligibleWeeks++;
     }
 
     currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    weekNumber++;
   }
 
   let totalWeekOffDays = 0;
@@ -183,7 +207,11 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
   let earnedWeekOffs = Math.max(eligibleWeeks, Math.floor(totalActiveDays / 5));
   earnedWeekOffs = Math.min(earnedWeekOffs, totalWeekOffDays);
 
-  return { earnedWeekOffs, totalWeekOffDays };
+  return {
+    weeklyBreakdown,
+    earnedWeekOffs,
+    totalWeekOffDays
+  };
 };
 
 const PayrollDashboard = () => {
@@ -259,6 +287,9 @@ const PayrollDashboard = () => {
     return employees.filter(emp => wasEmployeeEmployedInMonth(emp, monthStr));
   }, []);
 
+  // ============================================
+  // ✅ SAME as PayRoll.jsx - processLeavesData
+  // ============================================
   const processLeavesData = useCallback((leavesData, selectedMonth) => {
     const leavesMap = {};
     const [year, monthNum] = (selectedMonth || new Date().toISOString().slice(0, 7)).split('-').map(Number);
@@ -272,31 +303,61 @@ const PayrollDashboard = () => {
       const leaveStart = new Date(leave.startDate);
       const leaveEnd = new Date(leave.endDate);
 
-      const overlapStart = new Date(Math.max(leaveStart.getTime(), startOfMonth.getTime()));
-      const overlapEnd = new Date(Math.min(leaveEnd.getTime(), endOfMonth.getTime()));
+      const overlapStart = new Date(Math.max(leaveStart, startOfMonth));
+      const overlapEnd = new Date(Math.min(leaveEnd, endOfMonth));
+      const currentMonthDays = overlapStart <= overlapEnd 
+        ? Math.ceil(Math.abs(overlapEnd - overlapStart) / (1000 * 60 * 60 * 24)) + 1 
+        : 0;
 
-      if (overlapStart <= overlapEnd) {
-        const timeDiff = overlapEnd.getTime() - overlapStart.getTime();
-        const days = Math.round(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+      const safeStartOfMonth = new Date(startOfMonth);
+      safeStartOfMonth.setDate(startOfMonth.getDate() - 6);
+      const overlapSafeStart = new Date(Math.max(leaveStart, safeStartOfMonth));
+      const inExtendedMonth = overlapSafeStart <= overlapEnd;
 
-        if (!leavesMap[employeeId]) {
-          leavesMap[employeeId] = { leaveDetails: [], CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
+      if (!leavesMap[employeeId]) {
+        leavesMap[employeeId] = {
+          CL: 0, SL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0,
+          leaveDetails: []
+        };
+      }
+
+      const leaveType = leave.leaveType || 'Other';
+
+      if (currentMonthDays > 0) {
+        if (leavesMap[employeeId][leaveType] !== undefined) {
+          leavesMap[employeeId][leaveType] += currentMonthDays;
+        } else if (["Casual Leave", "Casual", "casual", "Earned Leave", "Earned", "earned", "Sick Leave", "Sick", "sick", "Comp Off", "comp off"].includes(leaveType)) {
+          const typeMap = { 
+            "Casual Leave": "CL", "Casual": "CL", "casual": "CL", 
+            "Earned Leave": "EL", "Earned": "EL", "earned": "EL", 
+            "Sick Leave": "SL", "Sick": "SL", "sick": "SL", 
+            "Comp Off": "COFF", "comp off": "COFF" 
+          };
+          leavesMap[employeeId][typeMap[leaveType]] += currentMonthDays;
+        } else {
+          leavesMap[employeeId].Other += currentMonthDays;
         }
+      }
 
-        leavesMap[employeeId].leaveDetails.push(leave);
-        const type = leave.leaveType || "Other";
-        if (type === "CL") leavesMap[employeeId].CL += days;
-        else if (type === "EL") leavesMap[employeeId].EL += days;
-        else if (type === "COFF") leavesMap[employeeId].COFF += days;
-        else if (type === "LOP") leavesMap[employeeId].LOP += days;
-        else leavesMap[employeeId].Other += days;
+      if (inExtendedMonth) {
+        leavesMap[employeeId].leaveDetails.push({
+          type: leaveType,
+          startDate: leave.startDate,
+          endDate: leave.endDate,
+          days: Math.ceil(Math.abs(leaveEnd - leaveStart) / (1000 * 60 * 60 * 24)) + 1,
+          reason: leave.reason || '',
+          status: leave.status || 'pending'
+        });
       }
     });
 
     return leavesMap;
   }, []);
 
-  const processCompOffData = useCallback(async (selectedMonth, leavesData) => {
+  // ============================================
+  // ✅ SAME as PayRoll.jsx - processCompOffData
+  // ============================================
+  const processCompOffData = useCallback(async (selectedMonth) => {
     try {
       const [year, monthNum] = (selectedMonth || new Date().toISOString().slice(0, 7)).split('-').map(Number);
       const startOfMonth = new Date(year, monthNum - 1, 1);
@@ -306,33 +367,62 @@ const PayrollDashboard = () => {
       const compOffs = response.data || [];
 
       const compOffMap = {};
-      compOffs.forEach(co => {
-        const empId = co.employeeId;
-        if (!empId) return;
+      for (const co of compOffs) {
+        if (co.status === "approved") {
+          const employeeId = co.employeeId;
+          const workDate = new Date(co.workDate);
 
-        const isApproved = co.status === 'approved' || co.isApproved === true;
-        if (!isApproved) return;
-
-        let compOffDate = null;
-        if (co.date) compOffDate = new Date(co.date);
-        else if (co.createdAt) compOffDate = new Date(co.createdAt);
-
-        if (compOffDate && compOffDate >= startOfMonth && compOffDate <= endOfMonth) {
-          if (!compOffMap[empId]) {
-            compOffMap[empId] = { balance: 0, details: [] };
+          if (workDate >= startOfMonth && workDate <= endOfMonth) {
+            if (!compOffMap[employeeId]) {
+              compOffMap[employeeId] = { earned: 0, used: 0, balance: 0 };
+            }
+            compOffMap[employeeId].earned += 1;
+            compOffMap[employeeId].balance += 1;
           }
-          compOffMap[empId].balance += co.daysCount || 1;
-          compOffMap[empId].details.push(co);
         }
-      });
-
+      }
       return compOffMap;
-    } catch (e) {
-      console.warn("Failed to process comp-offs:", e);
+    } catch (error) {
+      console.error("Error fetching comp-offs:", error);
       return {};
     }
   }, []);
 
+  // ============================================
+  // ✅ SAME as PayRoll.jsx - getLiveAttendanceCounts
+  // ============================================
+  const getLiveAttendanceCounts = (employeeId, allAttendanceRecords, targetMonth, employeesMap) => {
+    let presentDays = 0;
+    let halfDays = 0;
+    const empRecords = allAttendanceRecords.filter(r => r.employeeId === employeeId);
+    
+    empRecords.forEach((rec) => {
+      if (targetMonth && rec.checkInTime) {
+        const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+        if (recMonth !== targetMonth) return;
+      }
+      const hours = rec.totalHours || rec.hours || 0;
+      const shiftHours = employeesMap[employeeId]?.shiftHours || 8;
+      const fullDayThreshold = shiftHours * 0.90;
+      const halfDayThreshold = shiftHours * 0.50;
+      
+      if (hours >= fullDayThreshold) {
+        presentDays++;
+      } else if (hours >= halfDayThreshold) {
+        halfDays++;
+      }
+    });
+    
+    return {
+      presentDays,
+      halfDayWorking: halfDays,
+      totalWorkingDays: presentDays + (halfDays * 0.5)
+    };
+  };
+
+  // ============================================
+  // 🎯 MAIN fetchData - EXACT same logic as PayRoll.jsx
+  // ============================================
   const fetchData = useCallback(async (month = "") => {
     try {
       setLoading(true);
@@ -343,6 +433,7 @@ const PayrollDashboard = () => {
       const isHistorical = isHistoricalMonth(targetMonth);
       const isCurrent = isCurrentMonth(targetMonth);
 
+      // Fetch all data in parallel
       const [employeesRes, leavesRes, holidaysRes, summaryRes] = await Promise.all([
         fetch(EMPLOYEES_API_URL),
         fetch(LEAVES_API_URL),
@@ -365,6 +456,7 @@ const PayrollDashboard = () => {
         summaryData = json.summary || [];
       }
 
+      // ✅ Fetch all attendance records for LIVE counts
       let allAttendanceRecords = [];
       try {
         const attendanceRes = await fetch(`${ATTENDANCE_DETAILS_API_URL}?month=${targetMonth}`);
@@ -376,12 +468,21 @@ const PayrollDashboard = () => {
         console.warn("Failed to fetch attendance records:", err);
       }
 
+      // ✅ Fetch approved OT claims
       let approvedOTClaims = [];
       try {
-        const otRes = await fetch(`${API_BASE_URL}/employees/all/ot-claims?month=${targetMonth}`);
+        const otRes = await fetch(`${API_BASE_URL}/employees/allotclaimed?status=approved`);
         if (otRes.ok) {
-          const otResult = await otRes.json();
-          approvedOTClaims = otResult.data || [];
+          const otData = await otRes.json();
+          if (otData.success) {
+            const [year, monthNum] = targetMonth.split('-').map(Number);
+            const startDate = new Date(year, monthNum - 1, 1);
+            const endDate = new Date(year, monthNum, 0);
+            approvedOTClaims = otData.claims.filter(claim => {
+              const claimDate = new Date(claim.date);
+              return claimDate >= startDate && claimDate <= endDate;
+            });
+          }
         }
       } catch (err) {
         console.warn("Failed to fetch OT claims:", err);
@@ -389,45 +490,103 @@ const PayrollDashboard = () => {
 
       const approvedOTMap = {};
       approvedOTClaims.forEach(claim => {
-        if (claim.status === "approved") {
-          approvedOTMap[claim.employeeId] = {
-            totalOTAmount: claim.totalOTAmount || 0,
-            totalOTHours: claim.totalOTHours || 0
-          };
+        const empId = claim.employeeId;
+        if (!approvedOTMap[empId]) {
+          approvedOTMap[empId] = { totalOTAmount: 0, totalOTHours: 0, count: 0 };
         }
+        approvedOTMap[empId].totalOTAmount += claim.otAmount || 0;
+        approvedOTMap[empId].totalOTHours += claim.otHours || 0;
+        approvedOTMap[empId].count += 1;
       });
 
+      // ✅ Build employees map (EXACT same as PayRoll.jsx)
+      const employeesForMonth = filterEmployeesByJoiningDate(employeesData, targetMonth);
+      
+      const employeesMap = {};
+      employeesForMonth.forEach(emp => {
+        employeesMap[emp.employeeId] = {
+          salaryPerMonth: emp.salaryPerMonth || 0,
+          shiftHours: emp.shiftHours || 8,
+          weekOffPerMonth: emp.weekOffPerMonth || 4,
+          weekOffDay: emp.weekOffDay || 'Sunday',
+          name: emp.name,
+          employeeId: emp.employeeId,
+          department: emp.department || '',
+          designation: emp.role || emp.designation || '',
+          joiningDate: emp.joinDate || emp.joiningDate || '',
+          bankAccount: emp.bankAccount || emp.bankAccountNo || '',
+          panCard: emp.panCard || emp.panNumber || '',
+          pfNo: emp.pfNumber || emp.pfNo || '',
+          uanNo: emp.uanNumber || emp.uanNo || '',
+          esicNo: emp.esicNumber || emp.esicNo || '',
+          branch: emp.branch || '',
+          weekOffType: emp.weekOffType || '0+4',
+          _id: emp._id,
+          originalSalary: emp.originalSalary || emp.salaryPerMonth,
+          basicPay: emp.basicPay || 0,
+          hra: emp.hra || 0,
+          conveyanceAllowance: emp.conveyanceAllowance || 0,
+          medicalAllowance: emp.medicalAllowance || 0,
+          performanceAllowance: emp.performanceAllowance || 0,
+          specialAllowance: emp.specialAllowance || 0,
+          gmc: emp.gmc || emp.gmcAmount || 0,
+          profTax: emp.ptax || emp.profTax || 0,
+          otherDeductions: emp.otherDeductions || 0,
+          status: emp.status || 'active',
+          isActive: emp.isActive !== false
+        };
+      });
+
+      // ✅ Holiday count (EXACT same as PayRoll.jsx)
       let holidayCount = 0;
       if (Array.isArray(holidaysData)) {
-        const [sYear, sMonth] = targetMonth.split("-").map(Number);
+        const [sYear, sMonth] = targetMonth.split('-').map(Number);
         holidaysData.forEach(h => {
           if (h.isActive !== false) {
             const hStartStr = h.fromDate;
             const hEndStr = h.toDate;
-            if (hStartStr && hStartStr.startsWith(`${sYear}-${String(sMonth).padStart(2, "0")}`)) {
+            if (hStartStr && hStartStr.startsWith(`${sYear}-${String(sMonth).padStart(2, '0')}`) &&
+                hEndStr && hEndStr.startsWith(`${sYear}-${String(sMonth).padStart(2, '0')}`)) {
               holidayCount += h.totalDays || 1;
+            } else if (hStartStr && hEndStr) {
+              const hStart = new Date(hStartStr);
+              const hEnd = new Date(hEndStr);
+              const startOfMonth = new Date(sYear, sMonth - 1, 1);
+              const endOfMonth = new Date(sYear, sMonth, 0, 23, 59, 59);
+              const overlapStart = new Date(Math.max(hStart.getTime(), startOfMonth.getTime()));
+              const overlapEnd = new Date(Math.min(hEnd.getTime(), endOfMonth.getTime()));
+              if (overlapStart <= overlapEnd) {
+                const days = Math.round((overlapEnd - overlapStart) / (1000 * 60 * 60 * 24));
+                holidayCount += Math.max(1, days);
+              }
             }
           }
         });
       }
 
       const currentLeavesMap = processLeavesData(leavesData, targetMonth);
-      const currentCompOffsMap = await processCompOffData(targetMonth, leavesData);
+      const currentCompOffsMap = await processCompOffData(targetMonth);
 
       const [year, monthNum] = targetMonth.split("-").map(Number);
       const daysInMonthValue = getDaysInMonth(targetMonth);
       const processedSalaries = [];
 
-      const employeesForMonth = filterEmployeesByJoiningDate(employeesData, targetMonth);
-
       for (const emp of employeesForMonth) {
         const summary = summaryData.find(x => x.employeeId === emp.employeeId) || {};
-        const employeeRole = summary.role || emp.role || emp.designation || "";
+        
+        const deptLower = (emp.department || '').toLowerCase().trim();
+        const isDevOrMarketing = deptLower.includes("developer") || deptLower.includes("digital marketing") || deptLower.includes("development");
+        const isConsultant = deptLower.includes("consultant");
+        const isSpecialDept = ["laboratory medicine", "nursing", "medical"].includes(deptLower) || deptLower.includes("laboratory") || deptLower.includes("nursing") || deptLower.includes("medical") || isConsultant;
+
+        let targetWeekOffCount = isConsultant ? 2 : (emp.weekOffPerMonth || 4);
+        
+        const employeeRole = summary.role || emp.role || emp.designation || '';
         const isMedicalStaff = isMedicalRole(employeeRole);
-
+        
         let attendanceForEmployee = allAttendanceRecords.filter(r => r.employeeId === emp.employeeId);
-
-        const weekOffDay = emp.weekOffDay || "Sunday";
+        
+        const weekOffDay = emp.weekOffDay || 'Sunday';
         const weekOffData = calculateEarnedWeekOffs(
           emp.employeeId,
           year,
@@ -439,11 +598,6 @@ const PayrollDashboard = () => {
           holidayCount
         );
 
-        const deptLower = (emp.department || "").toLowerCase().trim();
-        const isDevOrMarketing = deptLower.includes("developer") || deptLower.includes("digital marketing") || deptLower.includes("development");
-        const isConsultant = deptLower.includes("consultant");
-        const isSpecialDept = ["laboratory medicine", "nursing", "medical"].includes(deptLower) || deptLower.includes("laboratory") || deptLower.includes("nursing") || deptLower.includes("medical") || isConsultant;
-
         let earnedWeekOffs = weekOffData.earnedWeekOffs;
         let defaultWeekOffs = isConsultant ? 2 : (emp.weekOffPerMonth || 4);
         if (isDevOrMarketing) {
@@ -452,38 +606,56 @@ const PayrollDashboard = () => {
         }
         const finalWeekOffs = Math.min(earnedWeekOffs, defaultWeekOffs);
 
+        // ✅ Fetch salary for date (EXACT same as PayRoll.jsx)
         let salaryForMonth = emp.salaryPerMonth || 0;
+        let historicalEffectiveFrom = emp.joinDate;
         let originalSalary = emp.originalSalary || emp.salaryPerMonth;
-
+        let incrementDetails = null;
+        
         try {
           const targetDate = new Date(year, monthNum - 1, 15);
-          const formattedDate = targetDate.toISOString().split("T")[0];
+          const formattedDate = targetDate.toISOString().split('T')[0];
+          
           const salaryRes = await fetch(`${API_BASE_URL}/employees/${emp._id}/salary-for-date?date=${formattedDate}`);
           if (salaryRes.ok) {
             const salaryData = await salaryRes.json();
             if (salaryData.success && salaryData.data) {
               salaryForMonth = salaryData.data.salaryPerMonth;
+              historicalEffectiveFrom = salaryData.data.effectiveFrom || emp.joinDate;
               originalSalary = salaryData.data.originalSalary || emp.originalSalary || emp.salaryPerMonth;
+              incrementDetails = salaryData.data.incrementDetails;
             }
           }
-        } catch (e) {
-          console.warn("Failed to fetch salary snapshot:", e.message);
+        } catch (err) {
+          console.warn(`Failed to fetch salary for ${emp.name}:`, err.message);
         }
-
+        
         const dailyRate = salaryForMonth > 0 ? salaryForMonth / daysInMonthValue : 0;
-        const presentDaysCount = summary.presentDays ?? 0;
-        const halfDaysCount = summary.halfDayWorking ?? 0;
-        const totalWorkingDays = summary.totalWorkingDays ?? 0;
+        
+        // ✅✅✅ CRITICAL: LIVE attendance counts (same as PayRoll.jsx)
+        const liveCounts = getLiveAttendanceCounts(emp.employeeId, allAttendanceRecords, targetMonth, employeesMap);
+        
+        let presentDaysCount = liveCounts.presentDays;
+        let halfDaysCount = liveCounts.halfDayWorking;
+        let totalWorkingDays = liveCounts.totalWorkingDays;
+        
+        if (presentDaysCount === 0 && halfDaysCount === 0) {
+          presentDaysCount = summary.presentDays ?? 0;
+          halfDaysCount = summary.halfDayWorking ?? 0;
+          totalWorkingDays = summary.totalWorkingDays ?? 0;
+        }
+        
         const fullDayNotWorking = summary.fullDayNotWorking ?? 0;
         const overTimeHours = summary.overTimeHours ?? 0;
-
+        
         const compOffData = currentCompOffsMap[emp.employeeId] || { balance: 0 };
+
         const expectedWorkingDays = daysInMonthValue - finalWeekOffs;
-        const actualDaysWorked = presentDaysCount + halfDaysCount * 0.5;
+        const actualDaysWorked = presentDaysCount + (halfDaysCount * 0.5);
 
         const prevMonth = getPreviousMonth(targetMonth);
         const prevCarryForward = prevMonth
-          ? parseFloat(localStorage.getItem(getCarryForwardKey(emp.employeeId, prevMonth)) || "0")
+          ? parseFloat(localStorage.getItem(getCarryForwardKey(emp.employeeId, prevMonth)) || '0')
           : 0;
 
         const adjustedActualDays = actualDaysWorked + prevCarryForward;
@@ -501,6 +673,9 @@ const PayrollDashboard = () => {
           carryForwardDays = Math.round((carryForwardDays + holidayCount) * 100) / 100;
         }
 
+        // ✅ Save carry-forward (EXACT same as PayRoll.jsx)
+        localStorage.setItem(getCarryForwardKey(emp.employeeId, targetMonth), String(carryForwardDays));
+
         let calculatedSalary = 0;
         if (salaryForMonth > 0 && daysInMonthValue > 0) {
           if (presentDaysCount === 0 && halfDaysCount === 0) {
@@ -512,7 +687,9 @@ const PayrollDashboard = () => {
           }
         }
 
+        // ✅ OT Calculation (EXACT same as PayRoll.jsx)
         let totalOTHours = overTimeHours || 0;
+        
         let calculatedOTHours = 0;
         allAttendanceRecords.forEach(record => {
           if (record.employeeId !== emp.employeeId) return;
@@ -525,31 +702,41 @@ const PayrollDashboard = () => {
             hoursWorked = parseFloat(record.hours);
           } else if (record.totalHours) {
             hoursWorked = parseFloat(record.totalHours);
+          } else if (record.checkInTime && record.checkOutTime) {
+            const checkIn = new Date(record.checkInTime);
+            const checkOut = new Date(record.checkOutTime);
+            hoursWorked = (checkOut - checkIn) / (1000 * 60 * 60);
           }
           const shiftHrs = emp.shiftHours || 8;
           if (hoursWorked > shiftHrs) {
-            calculatedOTHours += hoursWorked - shiftHrs;
+            calculatedOTHours += (hoursWorked - shiftHrs);
           }
         });
-
+        
         if (totalOTHours === 0 && calculatedOTHours > 0) {
           totalOTHours = calculatedOTHours;
         }
+        
         totalOTHours = Number(totalOTHours.toFixed(2));
-
+        
         const approvedOTData = approvedOTMap[emp.employeeId] || { totalOTAmount: 0, totalOTHours: 0 };
         const approvedOTAmount = approvedOTData.totalOTAmount || 0;
-
+        const approvedOTHours = approvedOTData.totalOTHours || 0;
+        
         const baseCalculatedSalary = Math.round(calculatedSalary);
+        
         let finalOTAmount = 0;
         let finalPay = baseCalculatedSalary;
-
+        
         if (approvedOTAmount > 0) {
           finalOTAmount = approvedOTAmount;
           finalPay = Math.round(baseCalculatedSalary + approvedOTAmount);
         } else {
+          const savedOTEmpsString = localStorage.getItem("payrollSelectedOTEmployees");
+          const savedOTEmps = savedOTEmpsString ? new Set(JSON.parse(savedOTEmpsString)) : new Set();
           const isApprovedInOTPage = localStorage.getItem(`otStatus_${emp.employeeId}_${targetMonth}`) === "approved";
-          if (totalOTHours > 0 && isApprovedInOTPage) {
+          
+          if (totalOTHours > 0 && (savedOTEmps.has(emp.employeeId) || isApprovedInOTPage)) {
             const multiplier = Number(localStorage.getItem(`otMultiplier_${emp.employeeId}_${targetMonth}`)) || 2;
             const otRatePerHour = dailyRate / (emp.shiftHours || 8);
             const otAmount = totalOTHours * otRatePerHour * multiplier;
@@ -560,24 +747,25 @@ const PayrollDashboard = () => {
 
         const isInactive = isEmployeeHidden(emp);
 
-        const basicPay = Math.round(salaryForMonth * 0.5);
-        const hra = Math.round(salaryForMonth * 0.2);
-        const conveyance = Math.round(salaryForMonth * 0.1);
-        const allowances = conveyance + Math.round(salaryForMonth * 0.05);
+        // ✅ REAL earnings breakdown
+        const basicPay = emp.basicPay || 0;
+        const hra = emp.hra || 0;
+        const conveyance = emp.conveyanceAllowance || 0;
+        const medicalAllowance = emp.medicalAllowance || 0;
+        const performanceAllowance = emp.performanceAllowance || 0;
+        const specialAllowance = emp.specialAllowance || 0;
+        const allowances = conveyance + medicalAllowance + performanceAllowance + specialAllowance;
 
-        const pf = 0;
-        const esic = 0;
-        const ptax = 0;
-        const otherDeductions = emp.otherDeductions || 0;
-        const totalDeductions = otherDeductions;
+        // ✅ REAL deductions
+        const gmcAmt = emp.gmc || emp.gmcAmount || 0;
+        const ptaxAmt = emp.ptax || emp.profTax || 0;
+        const otherDeductionsAmt = emp.otherDeductions || 0;
+        const totalDeductions = gmcAmt + ptaxAmt + otherDeductionsAmt;
 
+        // ✅ Payment status
         let paymentStatus = summary.paymentStatus;
         if (!paymentStatus) {
-          if (targetMonth === "2026-06" || targetMonth === "2026-07" || isHistoricalMonth(targetMonth)) {
-            paymentStatus = "Paid";
-          } else {
-            paymentStatus = "Pending";
-          }
+          paymentStatus = isHistoricalMonth(targetMonth) ? "Paid" : "Pending";
         }
 
         processedSalaries.push({
@@ -585,28 +773,78 @@ const PayrollDashboard = () => {
           name: emp.name,
           department: emp.department || "Other",
           designation: employeeRole,
+          role: employeeRole,
+          
+          // ✅ LIVE attendance (same as Payroll page)
           presentDays: presentDaysCount,
           halfDayWorking: halfDaysCount,
+          totalWorkingDays: totalWorkingDays,
           workingDays: totalWorkingDays,
+          fullDayNotWorking: fullDayNotWorking,
+          overTimeHours: totalOTHours,
+          
+          // Week offs
+          weekOffs: finalWeekOffs,
+          earnedWeekOffs: earnedWeekOffs,
+          defaultWeekOffs: defaultWeekOffs,
+          weekOffDay: weekOffDay,
+          
+          // Salary
           salaryPerMonth: salaryForMonth,
+          currentSalary: emp.salaryPerMonth,
+          originalSalary: originalSalary,
           calculatedSalary: baseCalculatedSalary,
-          finalPay: Math.max(0, Math.round(finalPay - totalDeductions)),
+          baseCalculatedSalary: baseCalculatedSalary,
+          salaryPerDay: dailyRate,
+          
+          // OT
+          finalOTAmount: Math.round(finalOTAmount),
+          finalPay: finalPay, // ✅ EXACT same as Payroll page
           otAmount: Math.round(finalOTAmount),
           otHours: totalOTHours,
+          hasApprovedOT: approvedOTAmount > 0,
+          approvedOTAmount: approvedOTAmount,
+          approvedOTHours: approvedOTHours,
+          
+          // ✅ REAL earnings (not fake)
           basicPay: basicPay,
           hra: hra,
+          conveyanceAllowance: conveyance,
+          medicalAllowance: medicalAllowance,
+          performanceAllowance: performanceAllowance,
+          specialAllowance: specialAllowance,
           allowances: allowances,
+          
+          // ✅ REAL deductions
+          gmc: gmcAmt,
+          gmcAmount: gmcAmt,
+          ptax: ptaxAmt,
+          profTax: ptaxAmt,
+          otherDeductions: otherDeductionsAmt,
           deductions: totalDeductions,
-          pf: pf,
-          esic: esic,
-          ptax: ptax,
-          otherDeductions: otherDeductions,
-          // ✅ Consultant = 0 holiday
+          pf: 0,
+          esic: 0,
+          
+          // Holiday
           holidayCount: isConsultant ? 0 : holidayCount,
-          weekOffs: finalWeekOffs,
+          monthDays: daysInMonthValue,
+          includeWeekOffInSalary: includeWeekOffInSalary,
+          isHistoricalMonth: isHistorical,
+          isCurrentMonth: isCurrent,
+          
+          // Carry forward
+          expectedWorkingDays: expectedWorkingDays,
+          payablePresentDays: payablePresentDays,
+          carryForwardDays: carryForwardDays,
+          carryForwardFromPrev: prevCarryForward,
+          
+          // Status
           isInactive: isInactive,
           paymentStatus: paymentStatus,
-          isProcessed: paymentStatus === "Paid"
+          isProcessed: paymentStatus === "Paid",
+          isMedicalStaff: isMedicalStaff,
+          incrementDetails: incrementDetails,
+          _id: emp._id
         });
       }
 
@@ -617,7 +855,7 @@ const PayrollDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth]);
+  }, [selectedMonth, filterEmployeesByJoiningDate, processLeavesData, processCompOffData]);
 
   useEffect(() => {
     fetchData(selectedMonth);
@@ -661,20 +899,20 @@ const PayrollDashboard = () => {
   const processedRecords = activeRecords.filter(r => r.paymentStatus === "Paid");
   const pendingRecords = activeRecords.filter(r => r.paymentStatus === "Pending");
 
-  const totalGrossPayroll = activeRecords.reduce((sum, emp) => sum + emp.finalPay, 0);
-  const totalNetPay = activeRecords.filter(r => r.paymentStatus === "Paid").reduce((sum, emp) => sum + emp.finalPay, 0);
-  const totalPendingAmount = activeRecords.filter(r => r.paymentStatus === "Pending").reduce((sum, emp) => sum + emp.finalPay, 0);
-  const totalDeductions = activeRecords.reduce((sum, emp) => sum + emp.deductions, 0);
+  const totalGrossPayroll = activeRecords.reduce((sum, emp) => sum + (emp.finalPay || 0), 0);
+  const totalNetPay = activeRecords.filter(r => r.paymentStatus === "Paid").reduce((sum, emp) => sum + (emp.finalPay || 0), 0);
+  const totalPendingAmount = activeRecords.filter(r => r.paymentStatus === "Pending").reduce((sum, emp) => sum + (emp.finalPay || 0), 0);
+  const totalDeductions = activeRecords.reduce((sum, emp) => sum + (emp.deductions || 0), 0);
 
-  const totalBasic = activeRecords.reduce((sum, emp) => sum + emp.basicPay, 0);
-  const totalHra = activeRecords.reduce((sum, emp) => sum + emp.hra, 0);
-  const totalAllowances = activeRecords.reduce((sum, emp) => sum + emp.allowances, 0);
-  const totalOT = activeRecords.reduce((sum, emp) => sum + emp.otAmount, 0);
+  const totalBasic = activeRecords.reduce((sum, emp) => sum + (emp.basicPay || 0), 0);
+  const totalHra = activeRecords.reduce((sum, emp) => sum + (emp.hra || 0), 0);
+  const totalAllowances = activeRecords.reduce((sum, emp) => sum + (emp.allowances || 0), 0);
+  const totalOT = activeRecords.reduce((sum, emp) => sum + (emp.otAmount || 0), 0);
 
-  const totalPresentDays = activeRecords.reduce((sum, emp) => sum + emp.presentDays, 0);
-  const totalLeavesDays = activeRecords.reduce((sum, emp) => sum + emp.halfDayWorking * 0.5, 0);
-  const totalWeekoffs = activeRecords.reduce((sum, emp) => sum + emp.weekOffs, 0);
-  const totalOTHours = activeRecords.reduce((sum, emp) => sum + emp.otHours, 0);
+  const totalPresentDays = activeRecords.reduce((sum, emp) => sum + (emp.presentDays || 0), 0);
+  const totalLeavesDays = activeRecords.reduce((sum, emp) => sum + ((emp.halfDayWorking || 0) * 0.5), 0);
+  const totalWeekoffs = activeRecords.reduce((sum, emp) => sum + (emp.weekOffs || 0), 0);
+  const totalOTHours = activeRecords.reduce((sum, emp) => sum + (emp.otHours || 0), 0);
 
   const filteredEmployeesList = activeRecords.filter(emp => {
     const matchesSearch = !searchTerm || 
@@ -715,6 +953,19 @@ const PayrollDashboard = () => {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
         <div className="text-lg font-semibold text-blue-600 animate-pulse">Loading Payroll Dashboard Data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[500px]">
+        <div className="p-4 text-red-600 bg-red-100 rounded-lg">
+          <p className="font-semibold">Error: {error}</p>
+          <button onClick={() => fetchData(selectedMonth)} className="px-4 py-2 mt-2 text-white bg-blue-600 rounded hover:bg-blue-700">
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -971,8 +1222,8 @@ const PayrollDashboard = () => {
           <div className="space-y-2.5 text-xs">
             <div className="flex justify-between py-1 border-b border-dashed"><span className="text-slate-500 font-medium">PF (Provident Fund)</span><span className="font-bold text-slate-800">- ₹0</span></div>
             <div className="flex justify-between py-1 border-b border-dashed"><span className="text-slate-500 font-medium">ESI</span><span className="font-bold text-slate-800">- ₹0</span></div>
-            <div className="flex justify-between py-1 border-b border-dashed"><span className="text-slate-500 font-medium">Professional Tax</span><span className="font-bold text-slate-800">- ₹0</span></div>
-            <div className="flex justify-between py-1 border-b border-dashed"><span className="text-slate-500 font-medium">Other Deductions</span><span className="font-bold text-slate-800">- ₹{totalDeductions.toLocaleString()}</span></div>
+            <div className="flex justify-between py-1 border-b border-dashed"><span className="text-slate-500 font-medium">Professional Tax</span><span className="font-bold text-slate-800">- ₹{activeRecords.reduce((sum, emp) => sum + (emp.ptax || 0), 0).toLocaleString()}</span></div>
+            <div className="flex justify-between py-1 border-b border-dashed"><span className="text-slate-500 font-medium">Other Deductions</span><span className="font-bold text-slate-800">- ₹{activeRecords.reduce((sum, emp) => sum + (emp.otherDeductions || 0), 0).toLocaleString()}</span></div>
             <div className="flex justify-between py-2 font-black text-slate-900 border-t pt-2 text-sm">
               <span>Total Deductions</span>
               <span className="text-rose-600">- ₹{totalDeductions.toLocaleString()}</span>
@@ -1033,6 +1284,8 @@ const PayrollDashboard = () => {
                 <th className="p-3">Employee</th>
                 <th className="p-3">Department</th>
                 <th className="p-3 text-center">Days Worked</th>
+                <th className="p-3 text-center">Present</th>
+                <th className="p-3 text-center">Half</th>
                 <th className="p-3 text-right">Basic (₹)</th>
                 <th className="p-3 text-right">OT (₹)</th>
                 <th className="p-3 text-right">Allowances (₹)</th>
@@ -1049,8 +1302,12 @@ const PayrollDashboard = () => {
                     <div className="text-[10px] text-slate-400">{emp.employeeId}</div>
                   </td>
                   <td className="p-3 text-slate-600">{emp.department}</td>
-                  <td className="p-3 text-center font-medium text-slate-700">{emp.workingDays} days</td>
-                  <td className="p-3 text-right font-semibold text-slate-700">₹{emp.basicPay.toLocaleString()}</td>
+                  <td className="p-3 text-center font-medium text-slate-700">{emp.totalWorkingDays || 0} days</td>
+                  <td className="p-3 text-center font-bold text-emerald-600">{emp.presentDays || 0}</td>
+                  <td className="p-3 text-center font-bold text-amber-600">{emp.halfDayWorking || 0}</td>
+                  <td className="p-3 text-right font-semibold text-slate-700">
+                    {emp.basicPay > 0 ? `₹${emp.basicPay.toLocaleString()}` : "-"}
+                  </td>
                   <td className="p-3 text-right font-semibold text-emerald-600">
                     {emp.otAmount > 0 ? `₹${emp.otAmount.toLocaleString()}` : "-"}
                   </td>
@@ -1060,7 +1317,7 @@ const PayrollDashboard = () => {
                   <td className="p-3 text-right font-semibold text-rose-500">
                     {emp.deductions > 0 ? `₹${emp.deductions.toLocaleString()}` : "-"}
                   </td>
-                  <td className="p-3 text-right font-bold text-indigo-600">₹{emp.finalPay.toLocaleString()}</td>
+                  <td className="p-3 text-right font-bold text-indigo-600">₹{(emp.finalPay || 0).toLocaleString()}</td>
                   <td className="p-3 text-center">
                     <button
                       onClick={() => handleToggleStatus(emp.employeeId, emp.paymentStatus)}
@@ -1077,7 +1334,7 @@ const PayrollDashboard = () => {
               ))}
               {filteredEmployeesList.length === 0 && (
                 <tr>
-                  <td colSpan="9" className="text-center p-8 text-slate-400 font-semibold">
+                  <td colSpan="11" className="text-center p-8 text-slate-400 font-semibold">
                     No employee records found matching current criteria.
                   </td>
                 </tr>
