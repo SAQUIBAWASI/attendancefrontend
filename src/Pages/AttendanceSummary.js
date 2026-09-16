@@ -18,7 +18,30 @@ import "./EmployeeLeaves.css";
 const BASE_URL = API_BASE_URL;
 
 // Configuration: Only Sunday is weekoff (0=Sunday)
-const WEEKEND_DAYS = [0]; // Only Sunday is weekoff
+const WEEKEND_DAYS = [0];
+
+// ============================================
+// ✅ HELPER: Format date to YYYY-MM-DD (LOCAL)
+// ============================================
+const formatDateLocal = (date) => {
+  if (!date) return '';
+  const d = new Date(date);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+// ============================================
+// ✅ HELPER: Format month to YYYY-MM (LOCAL)
+// ============================================
+const formatMonthLocal = (date) => {
+  if (!date) return '';
+  const d = new Date(date);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${yyyy}-${mm}`;
+};
 
 export default function AttendanceSummary() {
   const [editedRows, setEditedRows] = useState({});
@@ -63,24 +86,20 @@ export default function AttendanceSummary() {
   const isSavingRef = useRef(false);
   const lastSaveTimestampRef = useRef(0);
 
-  // Popup states
   const [showAttendancePopup, setShowAttendancePopup] = useState(false);
   const [selectedEmployeeAttendance, setSelectedEmployeeAttendance] = useState([]);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [employeeLeaves, setEmployeeLeaves] = useState({});
   const [employeesMasterData, setEmployeesMasterData] = useState({});
 
-  // Bulk Update States
   const [selectedEmployeesForBulkUpdate, setSelectedEmployeesForBulkUpdate] = useState([]);
   const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false);
   const [bulkUpdateEmployees, setBulkUpdateEmployees] = useState([]);
 
-  // Zero Attendance Popup States
   const [showZeroAttendanceModal, setShowZeroAttendanceModal] = useState(false);
   const [zeroAttendanceEmployeesList, setZeroAttendanceEmployeesList] = useState([]);
   const [selectedZeroAttendanceEmployees, setSelectedZeroAttendanceEmployees] = useState([]);
 
-  // Top Performers States
   const [topPerformers, setTopPerformers] = useState([]);
   const [allPerformers, setAllPerformers] = useState([]);
   const [showTopPerformersModal, setShowTopPerformersModal] = useState(false);
@@ -89,9 +108,6 @@ export default function AttendanceSummary() {
   const [performerDetails, setPerformerDetails] = useState(null);
   const [showPerformerDetailModal, setShowPerformerDetailModal] = useState(false);
 
-  // ============================================
-  // HARDCODED SHIFT HOURS MAP (Fallback)
-  // ============================================
   const HARDCODED_SHIFT_HOURS = {
     "A": 10, "B": 9, "C": 9, "D": 12, "E": 11, "F": 12,
     "G": 7, "H": 5, "I": 4, "J": 12, "K": 11.5, "L": 11,
@@ -99,11 +115,10 @@ export default function AttendanceSummary() {
   };
 
   // ============================================
-  // ✅✅✅ SABSE IMPORTANT FIX - getEmployeeShiftHours
-  // Ab ye PayRoll page jaisa hi kaam karega
+  // ✅ FIXED: getEmployeeShiftHours — Default 9
   // ============================================
   const getEmployeeShiftHours = (employeeId) => {
-    if (!employeeId) return 8;
+    if (!employeeId) return 9;
 
     const employee = employees.find(emp => emp.employeeId === employeeId);
     if (employee && employee.shiftHours && employee.shiftHours > 0) {
@@ -175,12 +190,8 @@ export default function AttendanceSummary() {
       }
     }
 
-    return 8;
+    return 9;   // ✅ Default 9
   };
-
-  // ============================================
-  // ATTENDANCE STATUS HELPER FUNCTIONS
-  // ============================================
 
   const getEmployeeShiftTimings = (employeeId) => {
     const shift = getEmployeeShift(employeeId);
@@ -224,7 +235,7 @@ export default function AttendanceSummary() {
     
     const diffMinutes = (checkInDate - shiftStart) / (1000 * 60);
     
-    const shiftHours = getEmployeeShiftHours(employeeId) || shiftTimings.shiftHours || 8;
+    const shiftHours = getEmployeeShiftHours(employeeId) || shiftTimings.shiftHours || 9;
     const actualHours = totalHours || 0;
     
     const fullDayThreshold = shiftHours * 0.85;
@@ -299,7 +310,7 @@ export default function AttendanceSummary() {
     const empRecords = records.filter(r => {
       if (r.employeeId !== employeeId) return false;
       if (!r.checkInTime) return false;
-      const recMonth = new Date(r.checkInTime).toISOString().slice(0, 7);
+      const recMonth = formatMonthLocal(r.checkInTime);
       return recMonth === month;
     });
     
@@ -325,12 +336,8 @@ export default function AttendanceSummary() {
     );
   };
 
-  // ============================================
-  // OT CALCULATION HELPER FUNCTIONS
-  // ============================================
-
   const getEmployeeShiftHoursForOT = (employeeId) => {
-    return getEmployeeShiftHours(employeeId) || 8;
+    return getEmployeeShiftHours(employeeId) || 9;
   };
 
   const calculateOTForRecord = (employeeId, totalHours) => {
@@ -350,12 +357,12 @@ export default function AttendanceSummary() {
       if (!rec.checkInTime) return;
       
       if (selectedMonth && rec.checkInTime) {
-        const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+        const recMonth = formatMonthLocal(rec.checkInTime);
         if (recMonth !== selectedMonth) return;
       }
       
       if (fromDate && toDate && rec.checkInTime) {
-        const recordDate = new Date(rec.checkInTime).toISOString().split('T')[0];
+        const recordDate = formatDateLocal(rec.checkInTime);
         if (recordDate < fromDate || recordDate > toDate) return;
       }
       
@@ -411,8 +418,8 @@ export default function AttendanceSummary() {
     const monthDates = getAllDatesOfMonth(month);
     const weekoffDates = getWeekoffDatesForEmployee(month);
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const todayStr = formatDateLocal(today);
+    const currentMonth = formatMonthLocal(new Date());
     
     return monthDates.filter(date => {
       const dateKey = date.toLocaleDateString('en-CA');
@@ -456,8 +463,8 @@ export default function AttendanceSummary() {
     
     const monthDates = getAllDatesOfMonth(month);
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const todayStr = formatDateLocal(today);
+    const currentMonth = formatMonthLocal(new Date());
     
     const activeEmployees = employees.filter(emp => 
       emp.status === 'active' || emp.status === undefined
@@ -467,7 +474,7 @@ export default function AttendanceSummary() {
       const empRecords = records.filter(r => 
         r.employeeId === emp.employeeId &&
         r.checkInTime &&
-        new Date(r.checkInTime).toISOString().slice(0, 7) === month
+        formatMonthLocal(r.checkInTime) === month
       );
       
       const attendedDates = new Set(
@@ -698,10 +705,13 @@ export default function AttendanceSummary() {
     return shiftTimes[shiftType] || { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
   };
 
+  // ============================================
+  // ✅ FIXED: calculateDayType — Default 9
+  // ============================================
   const calculateDayType = (employeeId, hours) => {
     const numericHours = parseFloat(hours) || 0;
     const shiftHours = getEmployeeShiftHours(employeeId);
-    const effectiveShiftHours = (shiftHours && shiftHours > 0) ? shiftHours : 8;
+    const effectiveShiftHours = (shiftHours && shiftHours > 0) ? shiftHours : 9;
     const fullDayThreshold = effectiveShiftHours * 0.90;
     const halfDayThreshold = effectiveShiftHours * 0.50;
     
@@ -711,31 +721,85 @@ export default function AttendanceSummary() {
   };
 
   // ============================================
-  // ✅ UPDATED: Ye function ab LIVE records se counts nikalega
-  // (Popup jaisa hi logic)
+  // ✅ FIXED: calculateEmployeeWorkingDays
+  // Ab date-wise group karega (backend jaisa)
   // ============================================
   const calculateEmployeeWorkingDays = (employeeId) => {
     let presentDays = 0;
     let halfDays = 0;
+
+    // Group by date
+    const dailyRecords = {};
     records.forEach((rec) => {
       if (rec.employeeId !== employeeId) return;
-      if (selectedMonth && rec.checkInTime) {
-        const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+      if (!rec.checkInTime) return;
+      
+      if (selectedMonth) {
+        const recMonth = formatMonthLocal(rec.checkInTime);
         if (recMonth !== selectedMonth) return;
       }
-      if (fromDate && toDate && rec.checkInTime) {
-        const recordDate = new Date(rec.checkInTime).toISOString().split('T')[0];
+      if (fromDate && toDate) {
+        const recordDate = formatDateLocal(rec.checkInTime);
         if (recordDate < fromDate || recordDate > toDate) return;
       }
-      const hours = rec.totalHours || rec.hours || 0;
+      
+      const dateKey = formatDateLocal(rec.checkInTime);
+      if (!dailyRecords[dateKey]) dailyRecords[dateKey] = [];
+      dailyRecords[dateKey].push(rec);
+    });
+
+    // Har din ke liye sirf LAST record
+    Object.values(dailyRecords).forEach((recsForDay) => {
+      const lastRec = recsForDay[recsForDay.length - 1];
+      const hours = lastRec.totalHours || lastRec.hours || 0;
       const dayType = calculateDayType(employeeId, hours);
       if (dayType === "full") presentDays++;
       else if (dayType === "half") halfDays++;
     });
+
     return presentDays + (halfDays * 0.5);
   };
 
-  // ✅ UPDATED: Late days bhi live records se
+  // ============================================
+  // ✅ FIXED: calculateEmployeeLiveCounts
+  // Ab date-wise group karega (backend jaisa)
+  // ============================================
+  const calculateEmployeeLiveCounts = (employeeId) => {
+    let presentDays = 0;
+    let halfDays = 0;
+
+    // Group by date
+    const dailyRecords = {};
+    records.forEach((rec) => {
+      if (rec.employeeId !== employeeId) return;
+      if (!rec.checkInTime) return;
+      
+      if (selectedMonth) {
+        const recMonth = formatMonthLocal(rec.checkInTime);
+        if (recMonth !== selectedMonth) return;
+      }
+      if (fromDate && toDate) {
+        const recordDate = formatDateLocal(rec.checkInTime);
+        if (recordDate < fromDate || recordDate > toDate) return;
+      }
+      
+      const dateKey = formatDateLocal(rec.checkInTime);
+      if (!dailyRecords[dateKey]) dailyRecords[dateKey] = [];
+      dailyRecords[dateKey].push(rec);
+    });
+
+    // Har din ke liye sirf LAST record
+    Object.values(dailyRecords).forEach((recsForDay) => {
+      const lastRec = recsForDay[recsForDay.length - 1];
+      const hours = lastRec.totalHours || lastRec.hours || 0;
+      const dayType = calculateDayType(employeeId, hours);
+      if (dayType === "full") presentDays++;
+      else if (dayType === "half") halfDays++;
+    });
+
+    return { presentDays, halfDays };
+  };
+
   const calculateEmployeeLateDays = (employeeId, customRecords = null, customShiftsData = null) => {
     let lateDays = 0;
     const shift = getEmployeeShift(employeeId, customShiftsData);
@@ -744,11 +808,11 @@ export default function AttendanceSummary() {
     recordsToUse.forEach((rec) => {
       if (rec.employeeId !== employeeId) return;
       if (selectedMonth && rec.checkInTime) {
-        const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+        const recMonth = formatMonthLocal(rec.checkInTime);
         if (recMonth !== selectedMonth) return;
       }
       if (fromDate && toDate && rec.checkInTime) {
-        const recordDate = new Date(rec.checkInTime).toISOString().split('T')[0];
+        const recordDate = formatDateLocal(rec.checkInTime);
         if (recordDate < fromDate || recordDate > toDate) return;
       }
       if (rec.checkInTime) {
@@ -767,11 +831,11 @@ export default function AttendanceSummary() {
     records.forEach((rec) => {
       if (rec.employeeId !== employeeId) return;
       if (selectedMonth && rec.checkInTime) {
-        const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+        const recMonth = formatMonthLocal(rec.checkInTime);
         if (recMonth !== selectedMonth) return;
       }
       if (fromDate && toDate && rec.checkInTime) {
-        const recordDate = new Date(rec.checkInTime).toISOString().split('T')[0];
+        const recordDate = formatDateLocal(rec.checkInTime);
         if (recordDate < fromDate || recordDate > toDate) return;
       }
       if (rec.reason === "Onsite") onsiteDays++;
@@ -784,11 +848,11 @@ export default function AttendanceSummary() {
     records.forEach((rec) => {
       if (rec.employeeId !== employeeId) return;
       if (selectedMonth && rec.checkInTime) {
-        const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+        const recMonth = formatMonthLocal(rec.checkInTime);
         if (recMonth !== selectedMonth) return;
       }
       if (fromDate && toDate && rec.checkInTime) {
-        const recordDate = new Date(rec.checkInTime).toISOString().split('T')[0];
+        const recordDate = formatDateLocal(rec.checkInTime);
         if (recordDate < fromDate || recordDate > toDate) return;
       }
       if (rec.reason === "Work From Home") remoteDays++;
@@ -805,10 +869,6 @@ export default function AttendanceSummary() {
     const employee = employees.find(emp => emp.employeeId === employeeId);
     return employee?.role || employee?.designation || '-';
   };
-
-  // ============================================
-  // TOP PERFORMERS API FUNCTIONS
-  // ============================================
 
   const fetchTopPerformers = async (month = null, customRecords = null, customShiftsData = null) => {
     try {
@@ -918,7 +978,7 @@ export default function AttendanceSummary() {
       if (selectedMonth) {
         empAttendance = empAttendance.filter(r => {
           if (!r.checkInTime) return false;
-          const recordMonth = new Date(r.checkInTime).toISOString().slice(0, 7);
+          const recordMonth = formatMonthLocal(r.checkInTime);
           return recordMonth === selectedMonth;
         });
       }
@@ -946,6 +1006,7 @@ export default function AttendanceSummary() {
 
       const summaryWorkbook = XLSX.utils.book_new();
       const totalOT = calculateEmployeeOT(employeeId);
+      const liveCounts = calculateEmployeeLiveCounts(employeeId);
       const summaryData = [{
         "Employee ID": empSummary.employeeId,
         "Name": empSummary.name,
@@ -954,10 +1015,10 @@ export default function AttendanceSummary() {
         "Shift Time": shiftInfo,
         "Shift Hours": formatDecimalHours(shiftHours),
         "Month": empSummary.month,
-        "Present Days": empSummary.presentDays,
+        "Present Days": liveCounts.presentDays,
         "Late Days": calculateEmployeeLateDays(employeeId),
         "Onsite Days": calculateEmployeeOnsiteDays(employeeId),
-        "Half Day": empSummary.halfDayWorking || 0,
+        "Half Day": liveCounts.halfDays,
         "Full Day Leave": empSummary.fullDayNotWorking || 0,
         "Over Time": formatOTHours(totalOT),
         "Working Days": calculateEmployeeWorkingDays(employeeId).toFixed(1),
@@ -1051,6 +1112,7 @@ export default function AttendanceSummary() {
         const shiftHours = getEmployeeShiftHours(emp.employeeId);
         const totalOT = calculateEmployeeOT(emp.employeeId);
         const status = getEmployeeAttendanceStatus(emp.employeeId, emp.month || selectedMonth);
+        const liveCounts = calculateEmployeeLiveCounts(emp.employeeId);
         return {
           "Employee ID": emp.employeeId,
           "Name": emp.name,
@@ -1059,10 +1121,10 @@ export default function AttendanceSummary() {
           "Shift Time": shiftInfo,
           "Shift Hours": formatDecimalHours(shiftHours),
           "Month": emp.month,
-          "Present Days": emp.presentDays,
+          "Present Days": liveCounts.presentDays,
           "Late Days": calculateEmployeeLateDays(emp.employeeId),
           "Onsite Days": calculateEmployeeOnsiteDays(emp.employeeId),
-          "Half Day": emp.halfDayWorking || 0,
+          "Half Day": liveCounts.halfDays,
           "Full Day": emp.fullDayNotWorking || 0,
           "Over Time": formatOTHours(totalOT),
           "Working Days": calculateEmployeeWorkingDays(emp.employeeId).toFixed(1),
@@ -1088,7 +1150,7 @@ export default function AttendanceSummary() {
       if (selectedMonth) {
         filteredDetails = filteredDetails.filter(r => {
           if (!r.checkInTime) return false;
-          const recordMonth = new Date(r.checkInTime).toISOString().slice(0, 7);
+          const recordMonth = formatMonthLocal(r.checkInTime);
           return recordMonth === selectedMonth;
         });
       }
@@ -1599,8 +1661,8 @@ export default function AttendanceSummary() {
       let totalErrors = 0;
       const errors = [];
       const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
-      const currentMonth = new Date().toISOString().slice(0, 7);
+      const todayStr = formatDateLocal(today);
+      const currentMonth = formatMonthLocal(new Date());
       
       for (const emp of employeesList) {
         try {
@@ -2880,20 +2942,9 @@ export default function AttendanceSummary() {
                       const totalOT = calculateEmployeeOT(emp.employeeId) || 0;
                       const status = getEmployeeAttendanceStatus(emp.employeeId, emp.month || selectedMonth);
 
-                      // ✅ LIVE counts from records (Popup jaisa hi)
-                      let livePresentDays = 0;
-                      let liveHalfDays = 0;
-                      records.forEach((rec) => {
-                        if (rec.employeeId !== emp.employeeId) return;
-                        if (selectedMonth && rec.checkInTime) {
-                          const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
-                          if (recMonth !== selectedMonth) return;
-                        }
-                        const hours = rec.totalHours || rec.hours || 0;
-                        const dayType = calculateDayType(emp.employeeId, hours);
-                        if (dayType === "full") livePresentDays++;
-                        else if (dayType === "half") liveHalfDays++;
-                      });
+                      const liveCounts = calculateEmployeeLiveCounts(emp.employeeId);
+                      const livePresentDays = liveCounts.presentDays;
+                      const liveHalfDays = liveCounts.halfDays;
 
                       return (
                         <tr

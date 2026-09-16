@@ -3,7 +3,8 @@
 //  + Fixed Discount Row Overlap + Review Feature + Booking Type Filter
 //  + Auto Payment Status from Amount + Dynamic Discount Placeholder
 //  + No HTML5 Required Validation + FIXED DUE AMOUNT BUG
-//  + ACTIVE / INACTIVE COUNT CARDS + INACTIVE CARD NAVIGATION)
+//  + ACTIVE / INACTIVE COUNT CARDS + INACTIVE CARD NAVIGATION
+//  + PAST DATE APPOINTMENT ALLOWED)
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -837,6 +838,7 @@ const parseSlotTimeToMinutes = (timeStr) => {
   }
 };
 
+// ✅ UPDATED: Past dates ke liye time filtering bypass
 const filterSlotsByDoctorAndDate = (doctorId, date) => {
   if (!doctorId || !date) { setAvailableSlots([]); return; }
   setSlotsLoading(true);
@@ -856,7 +858,7 @@ const filterSlotsByDoctorAndDate = (doctorId, date) => {
       return true;
     });
 
-    // ✅ NEW: If the selected date is TODAY, hide past slots
+    // ✅ UPDATED: Only hide past slots when selected date is TODAY (future dates me kuch nahi hoga, past dates me bhi sab slots dikhenge)
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
 
@@ -868,6 +870,7 @@ const filterSlotsByDoctorAndDate = (doctorId, date) => {
         return slotStart > nowMinutes;
       });
     }
+    // ✅ Past dates ke liye koi filtering nahi — sab slots dikhenge
 
     filtered.sort((a, b) => a.startTime.localeCompare(b.startTime));
     setAvailableSlots(filtered);
@@ -877,6 +880,7 @@ const filterSlotsByDoctorAndDate = (doctorId, date) => {
     showToast("Failed to filter slots", "error");
   } finally { setSlotsLoading(false); }
 };
+
   const checkExistingPatient = (value) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     if (editingId) { setExistingPatient(null); setShowExistingPatientPopup(false); return; }
@@ -2626,7 +2630,8 @@ const openPrescriptionModal = (booking) => {
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">DOB</label>
-                    <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} max={new Date().toISOString().split("T")[0]} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+                    {/* ✅ PAST DATE ALLOWED: max attribute removed */}
+                    <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Age</label>
@@ -2700,7 +2705,8 @@ const openPrescriptionModal = (booking) => {
                       Appointment Date
                       {isEditMode && <FaLock className="text-amber-500 text-[10px]" />}
                     </label>
-                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} disabled={isEditMode} min={new Date().toISOString().split("T")[0]} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} />
+                    {/* ✅ PAST DATE ALLOWED: min attribute removed */}
+                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} />
                   </div>
                 </div>
 

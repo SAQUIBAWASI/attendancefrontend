@@ -42,6 +42,13 @@ const formatDateLocal = (date) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
+const formatMonthLocal = (date) => {
+  const d = new Date(date);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${yyyy}-${mm}`;
+};
+
 // ============================================
 // 📅 HELPER: Carry-Forward localStorage key
 // ============================================
@@ -240,7 +247,6 @@ const PayRoll = () => {
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
 
-  // ✅ Active/Inactive filter state (Default to 'active' as requested)
   const [filterStatus, setFilterStatus] = useState("active");
 
   const [uniqueDepartments, setUniqueDepartments] = useState([]);
@@ -262,7 +268,6 @@ const PayRoll = () => {
     manualDays: ""
   });
 
-  // ─── 🔥 FIX: PERSISTED ITEMS PER PAGE ───
   const getSavedItemsPerPage = () => {
     try {
       const saved = localStorage.getItem('payroll_itemsPerPage');
@@ -320,10 +325,9 @@ const PayRoll = () => {
     return `${hours}h ${minutes}m`;
   };
 
-  // ✅ FIXED: getEmployeeShiftHours ab sahi priority order use karega
   const getEmployeeShiftHours = (employeeId) => {
     const employeeData = employeesMasterData[employeeId] || {};
-    return employeeData.shiftHours || 8;
+    return employeeData.shiftHours || 9;
   };
 
   const calculateOTForEmployee = (employeeId, hoursWorked) => {
@@ -636,9 +640,6 @@ const PayRoll = () => {
     setUniqueDesignations(Array.from(designations).sort());
   };
 
-  // ============================================
-  // 📅 fetchEmployeeAttendance Function
-  // ============================================
   const fetchEmployeeAttendance = async (employeeId, month) => {
     setAttendanceLoading(true);
     try {
@@ -670,9 +671,6 @@ const PayRoll = () => {
     }
   };
 
-  // ============================================
-  // 📅 calculateWorkHours Function
-  // ============================================
   const calculateWorkHours = (checkIn, checkOut) => {
     if (!checkIn || !checkOut) return null;
     const checkInTime = new Date(checkIn);
@@ -681,9 +679,6 @@ const PayRoll = () => {
     return diffHours.toFixed(1);
   };
 
-  // ============================================
-  // 📅 handleRowClick Function
-  // ============================================
   const handleRowClick = async (employee) => {
     setSelectedEmployee(employee);
     const monthToFetch = selectedMonth || new Date().toISOString().slice(0, 7);
@@ -692,22 +687,34 @@ const PayRoll = () => {
   };
 
   // ============================================
-  // ✅ LIVE ATTENDANCE COUNTS - Same as AttendanceSummary
-  // Ye function attendance records se live present/half counts nikalta hai
+  // ✅ FIXED: Date-wise group karta hai (AttendanceSummary jaisa)
+  // Har din ke liye sirf LAST record count karta hai
   // ============================================
   const getLiveAttendanceCounts = (employeeId, allAttendanceRecords) => {
     let presentDays = 0;
     let halfDays = 0;
-    const empRecords = allAttendanceRecords.filter(r => r.employeeId === employeeId);
     
-    empRecords.forEach((rec) => {
-      // Month filter
-      if (selectedMonth && rec.checkInTime) {
-        const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+    // Group by date
+    const dailyRecords = {};
+    allAttendanceRecords.forEach((rec) => {
+      if (rec.employeeId !== employeeId) return;
+      if (!rec.checkInTime) return;
+      
+      if (selectedMonth) {
+        const recMonth = formatMonthLocal(rec.checkInTime);
         if (recMonth !== selectedMonth) return;
       }
-      const hours = rec.totalHours || rec.hours || 0;
-      const shiftHours = getEmployeeShiftHours(employeeId) || 8;
+      
+      const dateKey = formatDateLocal(rec.checkInTime);
+      if (!dailyRecords[dateKey]) dailyRecords[dateKey] = [];
+      dailyRecords[dateKey].push(rec);
+    });
+
+    // Har din ke liye sirf LAST record count karo (regular shift)
+    Object.values(dailyRecords).forEach((recsForDay) => {
+      const lastRec = recsForDay[recsForDay.length - 1];
+      const hours = lastRec.totalHours || lastRec.hours || 0;
+      const shiftHours = getEmployeeShiftHours(employeeId) || 9;
       const fullDayThreshold = shiftHours * 0.90;
       const halfDayThreshold = shiftHours * 0.50;
       
@@ -725,9 +732,6 @@ const PayRoll = () => {
     };
   };
 
-  // ============================================
-  // 🎯 MAIN fetchData FUNCTION
-  // ============================================
   const fetchData = useCallback(async (month = "") => {
     let isMounted = true;
 
@@ -782,7 +786,7 @@ const PayRoll = () => {
       employeesForMonth.forEach(emp => {
         employeesMap[emp.employeeId] = {
           salaryPerMonth: emp.salaryPerMonth || 0,
-          shiftHours: emp.shiftHours || 8,
+          shiftHours: emp.shiftHours || 9,
           weekOffPerMonth: emp.weekOffPerMonth || 4,
           weekOffDay: emp.weekOffDay || 'Sunday',
           name: emp.name,
@@ -914,15 +918,13 @@ const PayRoll = () => {
         
         const dailyRate = salaryForMonth > 0 ? salaryForMonth / daysInMonthValue : 0;
         
-        // ✅✅✅ CRITICAL FIX: Live attendance counts use karo (AttendanceSummary jaisa)
+        // ✅ Live attendance counts (date-wise, last record only)
         const liveCounts = getLiveAttendanceCounts(emp.employeeId, allAttendanceRecords);
         
-        // Summary se fallback (agar live counts 0 hain)
         let presentDaysCount = liveCounts.presentDays;
         let halfDaysCount = liveCounts.halfDayWorking;
         let totalWorkingDays = liveCounts.totalWorkingDays;
         
-        // Agar live counts 0 hain toh summary se use karo (backward compatibility)
         if (presentDaysCount === 0 && halfDaysCount === 0) {
           presentDaysCount = summary.presentDays ?? 0;
           halfDaysCount = summary.halfDayWorking ?? 0;
@@ -964,7 +966,6 @@ const PayRoll = () => {
           if (presentDaysCount === 0 && halfDaysCount === 0) {
             calculatedSalary = 0;
           } else {
-            // ✅ isSpecialDept (including consultant) = holiday 0
             const holidayAddition = isSpecialDept ? 0 : holidayCount;
             const effectivePaidDays = payablePresentDays + (includeWeekOffInSalary ? finalWeekOffs : 0) + holidayAddition + compOffData.balance;
             calculatedSalary = effectivePaidDays * dailyRate;
@@ -977,7 +978,7 @@ const PayRoll = () => {
         allAttendanceRecords.forEach(record => {
           if (record.employeeId !== emp.employeeId) return;
           if (record.checkInTime) {
-            const recordMonth = new Date(record.checkInTime).toISOString().slice(0, 7);
+            const recordMonth = formatMonthLocal(record.checkInTime);
             if (recordMonth !== targetMonth) return;
           }
           let hoursWorked = 0;
@@ -1065,7 +1066,6 @@ const PayRoll = () => {
           approvedOTAmount: approvedOTAmount,
           approvedOTHours: approvedOTHours,
           
-          // ✅ Consultant ka holidayCount 0 show karo
           holidayCount: isConsultant ? 0 : holidayCount,
           monthDays: daysInMonthValue,
           includeWeekOffInSalary: includeWeekOffInSalary,
@@ -1151,14 +1151,12 @@ const PayRoll = () => {
     fetchData(selectedMonth);
   }, [fetchData, selectedMonth]);
 
-  // ✅ Updated filtering logic with status filter
   useEffect(() => {
     let filtered = records.filter(record =>
       record.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.employeeId?.toString().includes(searchTerm)
     );
 
-    // ✅ Status filter using isInactive flag
     if (filterStatus === 'active') {
       filtered = filtered.filter(record => !record.isInactive);
     } else if (filterStatus === 'inactive') {
@@ -1214,7 +1212,6 @@ const PayRoll = () => {
     fetchData(currentMonth);
   };
 
-  // ─── 🔥 HANDLE ITEMS PER PAGE CHANGE WITH LOCALSTORAGE ───
   const handleItemsPerPageChange = (e) => {
     const newValue = Number(e.target.value);
     
@@ -1228,12 +1225,10 @@ const PayRoll = () => {
     setCurrentPage(1);
   };
 
-  // ✅ Count active employees from records
   const getActiveCount = () => {
     return records.filter(record => !record.isInactive).length;
   };
 
-  // ✅ Count inactive employees from records
   const getInactiveCount = () => {
     return records.filter(record => record.isInactive).length;
   };
@@ -1548,9 +1543,6 @@ const PayRoll = () => {
     }
   };
 
-  // ============================================================
-  // 🔥 generateInvoiceHTML
-  // ============================================================
   const generateInvoiceHTML = (employee) => {
     const employeeData = getEmployeeData(employee);
 
@@ -1955,9 +1947,6 @@ const PayRoll = () => {
     return `${monthNames[parseInt(monthNum) - 1]} ${year}`;
   };
 
-  // ============================================
-  // 📅 AttendancePopupModal (FULLY FIXED WITH PH=0 FOR FLEXIBLE)
-  // ============================================
   const AttendancePopupModal = () => {
     const [holidays, setHolidays] = useState([]);
 
@@ -1977,7 +1966,7 @@ const PayRoll = () => {
 
     if (!showAttendancePopup) return null;
 
-    const getEmployeeShiftHours = (employeeId) => employeesMasterData[employeeId]?.shiftHours || 8;
+    const getEmployeeShiftHoursLocal = (employeeId) => employeesMasterData[employeeId]?.shiftHours || 8;
 
     const getAllDatesOfMonth = (month) => {
       if (!month) return [];
@@ -1993,7 +1982,6 @@ const PayRoll = () => {
 
     const monthDates = getAllDatesOfMonth(selectedMonth);
 
-    // ✅ FIX 1: Smart Date Key extraction
     const getDateKey = (record) => {
       if (!record) return null;
       const timeStr = record.checkInTime || record.checkOutTime || record.date;
@@ -2002,7 +1990,6 @@ const PayRoll = () => {
       return d.toLocaleDateString('en-CA');
     };
 
-    // ✅ FIX 2: Map with latest record logic
     const attendanceMap = new Map();
     selectedEmployeeAttendance.forEach(record => {
       const dateKey = getDateKey(record);
@@ -2033,7 +2020,7 @@ const PayRoll = () => {
       });
     };
 
-    const shiftHours = getEmployeeShiftHours(selectedEmployee?.employeeId);
+    const shiftHours = getEmployeeShiftHoursLocal(selectedEmployee?.employeeId);
 
     const holidayDatesSet = new Set();
     holidays.forEach(h => {
@@ -2053,14 +2040,12 @@ const PayRoll = () => {
 
     const targetWeekOffCount = selectedEmployee?.targetWeekOffCount || selectedEmployee?.weekOffs || 4;
 
-    // ✅ FIX 3: Week Off dates ab backend logic (Flexible/Fixed) aur Join Date ke hisaab se filter honge
     const getWeekOffDatesForMonth = () => {
       const weekOffDatesSet = new Set();
       if (!selectedEmployee || monthDates.length === 0) return weekOffDatesSet;
 
       const employeeId = selectedEmployee.employeeId;
       
-      // Joining Date nikaalo
       const joiningDateStr = selectedEmployee.joiningDate || employeesMasterData[employeeId]?.joiningDate;
       const joiningDate = joiningDateStr ? new Date(joiningDateStr) : null;
       if (joiningDate) joiningDate.setHours(0, 0, 0, 0);
@@ -2071,14 +2056,13 @@ const PayRoll = () => {
         '';
       const deptLower = deptRaw.toLowerCase().trim();
 
-      // ✅ Backend jaisa hi logic: Flexible WeekOff check
       const isFlexibleWeekOff = 
         deptLower.includes("laboratory") || 
         deptLower.includes("nursing") || 
         deptLower.includes("medical") ||
         deptLower.includes("lab") ||
         deptLower.includes("consultant") ||
-        deptLower.includes("doctor"); // Doctor bhi add kiya
+        deptLower.includes("doctor");
 
       const isDevOrMarketing = 
         deptLower.includes("developer") || 
@@ -2100,7 +2084,6 @@ const PayRoll = () => {
         }
       }
 
-      // CASE 1: Dev/Marketing → Har Sunday (Join Date ke baad hi count hoga)
       if (isDevOrMarketing) {
         monthDates.forEach(date => {
           if (date.toLocaleDateString('en-US', { weekday: 'long' }) === 'Sunday') {
@@ -2112,11 +2095,10 @@ const PayRoll = () => {
         return weekOffDatesSet;
       }
 
-      // ✅ CASE 2: FLEXIBLE (Medical/Nursing/Lab/Consultant/Doctor) → Absent Days = Week Off
       if (isFlexibleWeekOff) {
         const absentDays = [];
         monthDates.forEach(date => {
-          if (joiningDate && date < joiningDate) return; // ✅ Join date filter
+          if (joiningDate && date < joiningDate) return;
 
           const dateKey = date.toLocaleDateString('en-CA');
           const hasAttendance = attendanceMap.has(dateKey);
@@ -2135,7 +2117,6 @@ const PayRoll = () => {
         return weekOffDatesSet;
       }
 
-      // CASE 3: Others → fixed day (Join Date ke baad hi count hoga)
       const weekOffDay = 
         selectedEmployee.weekOffDay ||
         employeesMasterData[employeeId]?.weekOffDay ||
@@ -2145,7 +2126,7 @@ const PayRoll = () => {
 
       monthDates.forEach(date => {
         if (date.getDay() === weekOffDayNum) {
-          if (!joiningDate || date >= joiningDate) { // ✅ Join date filter
+          if (!joiningDate || date >= joiningDate) {
             weekOffDatesSet.add(date.toLocaleDateString('en-CA'));
           }
         }
@@ -2161,7 +2142,6 @@ const PayRoll = () => {
       return weekOffDatesSet.has(date.toLocaleDateString('en-CA'));
     };
 
-    // ✅ NEW FIX: Check if Flexible Department (Consultant, Doctor, Nursing, Lab, Medical)
     const deptRaw = selectedEmployee?.department || employeesMasterData[selectedEmployee?.employeeId]?.department || '';
     const deptLower = deptRaw.toLowerCase().trim();
     const isFlexibleDept = 
@@ -2172,10 +2152,8 @@ const PayRoll = () => {
       deptLower.includes("consultant") ||
       deptLower.includes("doctor");
 
-    // ✅ UPDATED: Calculations with Join Date check & PH=0 for Flexible
     let weekOffCount = 0, leaveCount = 0, absentCount = 0, presentCount = 0, holidayCount = 0, singlePunchCount = 0;
 
-    // Joining Date nikaalo
     const joiningDateStr = selectedEmployee?.joiningDate || employeesMasterData[selectedEmployee?.employeeId]?.joiningDate;
     const joiningDate = joiningDateStr ? new Date(joiningDateStr) : null;
     if (joiningDate) joiningDate.setHours(0, 0, 0, 0);
@@ -2183,7 +2161,6 @@ const PayRoll = () => {
     monthDates.forEach(date => {
       const dateKey = date.toLocaleDateString('en-CA');
       
-      // ✅ Join date se pehle kuch bhi count nahi karna
       if (joiningDate && date < joiningDate) return;
 
       const record = attendanceMap.get(dateKey);
@@ -2194,7 +2171,6 @@ const PayRoll = () => {
       const isLV = !isWO && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
 
       if (isHol && !hasAttendance) {
-        // ✅ FIX: Agar Flexible dept hai toh holiday count 0 karo (Stats ke liye)
         if (!isFlexibleDept) {
           holidayCount++;
         }
@@ -2234,7 +2210,6 @@ const PayRoll = () => {
             </button>
           </div>
 
-          {/* ✅ Stats Bar (Yahan PH 0 show hoga flexible ke liye) */}
           <div className="flex items-center justify-between px-4 py-2 bg-white border-b flex-wrap gap-2">
             <div className="flex gap-3 text-xs flex-wrap">
               <span className="font-medium">Total Days: <strong>{monthDates.length}</strong></span>
@@ -2281,7 +2256,6 @@ const PayRoll = () => {
                     {monthDates.map((date) => {
                       const dateKey = date.toLocaleDateString('en-CA');
                       
-                      // ✅ FIX: Check if date is before joining date
                       const isBeforeJoining = joiningDate && date < joiningDate;
 
                       const record = getRecordForDate(dateKey);
@@ -2299,10 +2273,9 @@ const PayRoll = () => {
                       let bgColor = '';
                       let dayType = '';
 
-                      // ✅ Priority Logic with Join Date
                       if (isBeforeJoining) {
                         bgColor = 'bg-slate-50 opacity-60';
-                        dayType = 'Not Joined'; // ✅ Join date se pehle kuch nahi dikhayega
+                        dayType = 'Not Joined';
                       } else if (holidayCheck && !hasAttendance) {
                         bgColor = 'bg-purple-50';
                         dayType = 'Public Holiday';
@@ -2413,9 +2386,7 @@ const PayRoll = () => {
             </h1>
           </div>
 
-          {/* Right side: Filters (Desktop only) */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Status Tabs (All, Active, Inactive) */}
             <div className="flex items-center gap-1.5 mr-2">
               <button
                 onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
@@ -2449,7 +2420,6 @@ const PayRoll = () => {
               </button>
             </div>
 
-            {/* Quick Search - Compact */}
             <div className="relative min-w-[120px] flex-1 max-w-[160px]">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
               <input
@@ -2461,7 +2431,6 @@ const PayRoll = () => {
               />
             </div>
 
-            {/* Department Dropdown */}
             <div className="relative" ref={departmentFilterRef}>
               <button
                 onClick={() => {
@@ -2514,7 +2483,6 @@ const PayRoll = () => {
               )}
             </div>
 
-            {/* Designation Dropdown */}
             <div className="relative" ref={designationFilterRef}>
               <button
                 onClick={() => {
@@ -2567,7 +2535,6 @@ const PayRoll = () => {
               )}
             </div>
 
-            {/* Date Pickers */}
             <div className="relative">
               <input
                 type="date"
@@ -2600,7 +2567,6 @@ const PayRoll = () => {
               />
             </div>
 
-            {/* Action Buttons */}
             <button
               onClick={handleDateRangeFilter}
               disabled={!fromDate || !toDate}
@@ -2671,9 +2637,8 @@ const PayRoll = () => {
           </div>
         </div>
 
-        {/* Stats Grid - Updated with Active/Inactive Cards */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
-          {/* Card 1: All Employees */}
           <div 
             className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'all' ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
             onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
@@ -2688,7 +2653,6 @@ const PayRoll = () => {
             <div className="emp-dash__stat-meta">total in payroll</div>
           </div>
 
-          {/* Card 2: Active Employees */}
           <div 
             className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'active' ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
             onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}
@@ -2703,7 +2667,6 @@ const PayRoll = () => {
             <div className="emp-dash__stat-meta">active in payroll</div>
           </div>
 
-          {/* Card 3: Inactive Employees */}
           <div 
             className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'inactive' ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
             onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }}
@@ -2718,7 +2681,6 @@ const PayRoll = () => {
             <div className="emp-dash__stat-meta">hidden from reports</div>
           </div>
 
-          {/* Card 4: Total Assigned Salary */}
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Assigned Salary</span>
@@ -2736,7 +2698,6 @@ const PayRoll = () => {
             <div className="emp-dash__stat-meta">total assigned per month</div>
           </div>
 
-          {/* Card 5: Total Net Pay */}
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Net Pay</span>
@@ -2755,7 +2716,6 @@ const PayRoll = () => {
           </div>
         </div>
 
-        {/* ✅ Active/Inactive Filter Tabs - Mobile only since they are in the header on desktop */}
         <div className="flex items-center gap-3 mb-4 flex-wrap sm:hidden">
           <button
             onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
@@ -2797,7 +2757,6 @@ const PayRoll = () => {
           </div>
         )}
 
-        {/* Status Filter Info Badge */}
         {filterStatus !== 'all' && (
           <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
             <span className="text-xs font-medium text-blue-700">
@@ -2812,9 +2771,7 @@ const PayRoll = () => {
           </div>
         )}
 
-        {/* Filters Card - Mobile View Only */}
         <div className="emp-dash__card mb-6 sm:hidden">
-          {/* Mobile View */}
           <div className="sm:hidden">
             <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
               <button
@@ -2910,7 +2867,6 @@ const PayRoll = () => {
                   <input type="month" value={selectedMonth} onChange={handleMonthChange} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold" />
                 </div>
 
-                {/* ✅ Mobile Status Filter */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
                   <div className="flex bg-gray-100 p-1 rounded-lg">
@@ -3001,7 +2957,6 @@ const PayRoll = () => {
           </div>
         )}
 
-        {/* Table Card */}
         <div className="emp-dash__card mb-6">
           <div className="overflow-x-auto">
             <table className="emp-dash__table">
@@ -3087,7 +3042,6 @@ const PayRoll = () => {
                         {item.halfDayWorking || 0}
                       </span>
                     </td>
-                    {/* Carry-Forward Cell */}
                     <td className="text-center whitespace-nowrap">
                       {(item.carryForwardDays > 0 || item.carryForwardFromPrev > 0) ? (
                         <div className="flex flex-col items-center gap-0.5">
@@ -3144,7 +3098,6 @@ const PayRoll = () => {
                     <td className="text-center whitespace-nowrap">
                       <span className={`font-extrabold ${item.isInactive ? 'text-gray-400' : 'text-green-700'}`}>₹{(item.finalPay || item.calculatedSalary || 0).toLocaleString()}</span>
                     </td>
-                    {/* ✅ Status Column */}
                     <td className="text-center whitespace-nowrap">
                       <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold ${
                         item.isInactive 
@@ -3197,7 +3150,6 @@ const PayRoll = () => {
             </table>
           </div>
 
-          {/* ─── 🔥 FIXED PAGINATION SECTION ─── */}
           {filteredRecords.length > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
               <div className="flex flex-wrap items-center gap-3">
@@ -3335,7 +3287,6 @@ const PayRoll = () => {
               </div>
             </div>
 
-            {/* Weekly Breakdown in View Modal */}
             {selectedEmployee.weeklyBreakdown && selectedEmployee.weeklyBreakdown.length > 0 && (
               <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
                 <h4 className="text-xs font-bold text-gray-600 mb-2">📊 Weekly Attendance Breakdown</h4>
