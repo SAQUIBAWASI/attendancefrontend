@@ -209,7 +209,6 @@ const Appointment = () => {
   const [bookingConfirmation, setBookingConfirmation] = useState(null);
   const [toast, setToast] = useState(null);
 
-  // ✅ Tick state — refreshes every 60s so past slots disappear live
   const [nowTick, setNowTick] = useState(Date.now());
 
   const showToast = (message, type = "success") => {
@@ -224,7 +223,6 @@ const Appointment = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // ✅ Update `nowTick` every 30 seconds for live past-slot filtering
   useEffect(() => {
     const tick = setInterval(() => setNowTick(Date.now()), 30000);
     return () => clearInterval(tick);
@@ -315,6 +313,18 @@ const Appointment = () => {
 
   const removePrescription = (idx) => {
     setUploadedPrescriptions((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const clearAllReports = () => {
+    if (uploadedReports.length === 0) return;
+    setUploadedReports([]);
+    showToast("All reports removed", "success");
+  };
+
+  const clearAllPrescriptions = () => {
+    if (uploadedPrescriptions.length === 0) return;
+    setUploadedPrescriptions([]);
+    showToast("All prescriptions removed", "success");
   };
 
   const formatFileSize = (bytes) => {
@@ -527,14 +537,12 @@ const Appointment = () => {
     return 0;
   };
 
-  // ✅ Uses `nowTick` so it re-evaluates live
   const isSlotPast = (slot) => {
     if (!isToday) return false;
     const now = new Date(nowTick);
     return getSlotStartMinutes(slot) <= now.getHours() * 60 + now.getMinutes();
   };
 
-  // ✅ Only available + not-past slots
   const isSlotBookable = (slot) => {
     return slot.status !== "booked" && slot.status !== "break" && !isSlotPast(slot);
   };
@@ -858,30 +866,7 @@ const Appointment = () => {
     formData.append("serviceItems", servicesJson);
     formData.append("services", servicesJson);
 
-    formData.append(
-      "uploadedReports",
-      JSON.stringify(
-        uploadedReports.map((r) => ({
-          name: r.name,
-          size: r.size,
-          type: r.type,
-        }))
-      )
-    );
-    formData.append("reportsCount", uploadedReports.length.toString());
-
-    formData.append(
-      "uploadedPrescriptions",
-      JSON.stringify(
-        uploadedPrescriptions.map((p) => ({
-          name: p.name,
-          size: p.size,
-          type: p.type,
-        }))
-      )
-    );
-    formData.append("prescriptionsCount", uploadedPrescriptions.length.toString());
-
+    // ✅ Just append files — no JSON metadata
     uploadedReports.forEach((r) => {
       if (r.file) {
         formData.append("reports", r.file, r.name);
@@ -931,14 +916,8 @@ const Appointment = () => {
         doctorSpecialization: selectedDoc?.specialization || "",
         clinicName: selectedClinic?.name || "",
         bookingType: bookingType === "walkin" ? "Walk-In" : "Online",
-        uploadedReports: uploadedReports.map((r) => ({
-          name: r.name,
-          size: r.size,
-        })),
-        uploadedPrescriptions: uploadedPrescriptions.map((p) => ({
-          name: p.name,
-          size: p.size,
-        })),
+        reports: uploadedReports.map((r) => r.name),
+        prescriptions: uploadedPrescriptions.map((p) => p.name),
         services: selectedServices.map((s) => ({
           name: s.name,
           price: Number(s.price) || 0,
@@ -969,46 +948,79 @@ const Appointment = () => {
   const stepLabels = ["Category", "Clinic", "Doctor", "Type", "Slot", "Details"];
 
   const renderStepIndicator = () => (
-    <div className="flex items-center justify-center gap-2 mb-8 overflow-x-auto pb-2">
-      {stepLabels.map((label, idx) => {
-        const isActive = idx === currentStep;
-        const isPast = idx < currentStep;
-        const accent = idx % 2 === 0 ? BLUE : GREEN;
-        const accentDark = idx % 2 === 0 ? BLUE_DARK : GREEN_DARK;
-        const accentLight = idx % 2 === 0 ? BLUE_LIGHT : GREEN_LIGHT;
+    <div className="mb-6 md:mb-8">
+      <div className="flex md:hidden items-center gap-2 overflow-x-auto pb-2 px-1 -mx-4 scrollbar-hide">
+        {stepLabels.map((label, idx) => {
+          const isActive = idx === currentStep;
+          const isPast = idx < currentStep;
+          const accent = idx % 2 === 0 ? BLUE : GREEN;
 
-        return (
-          <React.Fragment key={label}>
+          return (
             <div
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
+              key={`m-${label}`}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-full text-[11px] font-bold whitespace-nowrap transition-all flex-shrink-0"
               style={{
-                backgroundColor: isActive ? accent : isPast ? accentLight : "#F7F8F7",
-                color: isActive ? "#FFFFFF" : isPast ? accentDark : "#B7BFBB",
-                boxShadow: isActive ? `0 4px 10px ${idx % 2 === 0 ? BLUE_SHADOW : GREEN_SHADOW}` : "none",
+                backgroundColor: isActive ? accent : isPast ? `${accent}15` : "#F2F4F3",
+                color: isActive ? "#FFFFFF" : isPast ? accent : "#9AA5A0",
+                boxShadow: isActive ? `0 4px 12px ${accent}40` : "none",
               }}
             >
               <span
-                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
                 style={{
-                  backgroundColor: isActive ? "#FFFFFF" : isPast ? accent : "#E4E7E4",
-                  color: isActive ? accent : isPast ? "#FFFFFF" : "#8A948F",
+                  backgroundColor: isActive ? "rgba(255,255,255,0.25)" : isPast ? accent : "#E2E6E3",
+                  color: isActive ? "#FFFFFF" : isPast ? "#FFFFFF" : "#8A948F",
                 }}
               >
                 {isPast ? <Check className="w-3 h-3" /> : idx + 1}
               </span>
               {label}
             </div>
-            {idx < stepLabels.length - 1 && (
+          );
+        })}
+      </div>
+
+      <div className="hidden md:flex items-center justify-center gap-2 overflow-x-auto pb-2">
+        {stepLabels.map((label, idx) => {
+          const isActive = idx === currentStep;
+          const isPast = idx < currentStep;
+          const accent = idx % 2 === 0 ? BLUE : GREEN;
+          const accentDark = idx % 2 === 0 ? BLUE_DARK : GREEN_DARK;
+          const accentLight = idx % 2 === 0 ? BLUE_LIGHT : GREEN_LIGHT;
+
+          return (
+            <React.Fragment key={`d-${label}`}>
               <div
-                className="w-4 h-px flex-shrink-0"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
                 style={{
-                  backgroundColor: idx < currentStep ? (idx % 2 === 0 ? BLUE_BORDER : GREEN_BORDER) : "#E4E7E4",
+                  backgroundColor: isActive ? accent : isPast ? accentLight : "#F7F8F7",
+                  color: isActive ? "#FFFFFF" : isPast ? accentDark : "#B7BFBB",
+                  boxShadow: isActive ? `0 4px 10px ${idx % 2 === 0 ? BLUE_SHADOW : GREEN_SHADOW}` : "none",
                 }}
-              />
-            )}
-          </React.Fragment>
-        );
-      })}
+              >
+                <span
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                  style={{
+                    backgroundColor: isActive ? "#FFFFFF" : isPast ? accent : "#E4E7E4",
+                    color: isActive ? accent : isPast ? "#FFFFFF" : "#8A948F",
+                  }}
+                >
+                  {isPast ? <Check className="w-3 h-3" /> : idx + 1}
+                </span>
+                {label}
+              </div>
+              {idx < stepLabels.length - 1 && (
+                <div
+                  className="w-4 h-px flex-shrink-0"
+                  style={{
+                    backgroundColor: idx < currentStep ? (idx % 2 === 0 ? BLUE_BORDER : GREEN_BORDER) : "#E4E7E4",
+                  }}
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 
@@ -1039,9 +1051,8 @@ const Appointment = () => {
             {BANNER_SLIDES.map((s, idx) => (
               <div
                 key={s.id}
-                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                  idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
+                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+                  }`}
               >
                 <img src={s.image} alt={s.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 max-w-7xl mx-auto px-6 md:px-10 flex items-center">
@@ -1108,26 +1119,27 @@ const Appointment = () => {
           </div>
 
           <div className="block sm:hidden px-4 pt-3">
-            <div className="relative w-full h-[110px] rounded-2xl overflow-hidden shadow-md">
+            <div className="relative w-full h-[130px] rounded-2xl overflow-hidden shadow-lg">
               {BANNER_SLIDES.map((s, idx) => (
                 <div
                   key={s.id}
-                  className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                    idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
-                  }`}
+                  className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+                    }`}
                 >
                   <img src={s.image} alt={s.title} className="w-full h-full object-cover" />
                   <div
                     className="absolute inset-0"
                     style={{
-                      background: `linear-gradient(to right, ${BLUE_DARK}F2, ${BLUE}C0 40%, transparent 100%)`,
+                      background: `linear-gradient(120deg, ${BLUE_DARK}F5 0%, ${BLUE}C0 55%, ${GREEN}60 100%)`,
                     }}
                   />
-                  <div className="absolute inset-0 px-4 flex flex-col justify-center">
-                    <p className="text-[9px] font-bold tracking-widest uppercase mb-0.5" style={{ color: "#7FDCBB" }}>
+                  <div className="absolute inset-0 px-4 py-3 flex flex-col justify-center">
+                    <p className="text-[9px] font-black tracking-widest uppercase mb-1" style={{ color: "#7FDCBB" }}>
                       {s.tagline}
                     </p>
-                    <h2 className="text-sm font-semibold text-white leading-snug pr-16 line-clamp-2">{s.title}</h2>
+                    <h2 className="text-[14px] font-bold text-white leading-snug pr-14 line-clamp-2">
+                      {s.title}
+                    </h2>
                   </div>
                 </div>
               ))}
@@ -1138,7 +1150,7 @@ const Appointment = () => {
                   onClick={prevSlide}
                   aria-label="Previous slide"
                   className="w-5 h-5 rounded-full backdrop-blur-sm flex items-center justify-center text-white"
-                  style={{ backgroundColor: `${BLUE}80` }}
+                  style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
                 >
                   <ChevronLeft className="w-3 h-3" />
                 </button>
@@ -1152,7 +1164,7 @@ const Appointment = () => {
                     style={{
                       width: idx === currentSlide ? "16px" : "6px",
                       height: "6px",
-                      backgroundColor: idx === currentSlide ? GREEN : "rgba(255,255,255,0.6)",
+                      backgroundColor: idx === currentSlide ? "#FFFFFF" : "rgba(255,255,255,0.5)",
                     }}
                   />
                 ))}
@@ -1161,7 +1173,7 @@ const Appointment = () => {
                   onClick={nextSlide}
                   aria-label="Next slide"
                   className="w-5 h-5 rounded-full backdrop-blur-sm flex items-center justify-center text-white"
-                  style={{ backgroundColor: `${GREEN}80` }}
+                  style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
                 >
                   <ChevronRight className="w-3 h-3" />
                 </button>
@@ -1171,20 +1183,20 @@ const Appointment = () => {
         </section>
 
         {/* ==================== MAIN CONTENT ==================== */}
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-10 md:py-14">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-14">
           {renderStepIndicator()}
 
           {/* STEP 1: CATEGORY */}
           {currentStep === STEPS.CATEGORY && (
             <div>
-              <div className="text-center mb-14">
-                <h2 className="text-2xl md:text-3xl font-semibold text-[#1A2421] tracking-tight">
+              <div className="text-center mb-8 md:mb-14">
+                <h2 className="text-xl md:text-3xl font-bold text-[#1A2421] tracking-tight">
                   What are you looking for?
                 </h2>
-                <p className="mt-2 text-sm text-[#5B6B65]">Select a category to get started</p>
+                <p className="mt-2 text-xs md:text-sm text-[#5B6B65]">Select a category to get started</p>
               </div>
 
-              <div className="flex flex-wrap items-start justify-center gap-10 md:gap-16 lg:gap-20 max-w-4xl mx-auto">
+              <div className="flex flex-wrap items-start justify-center gap-8 md:gap-16 lg:gap-20 max-w-4xl mx-auto">
                 <button
                   type="button"
                   onClick={() => handleCategorySelect("doctor_consultation")}
@@ -1245,29 +1257,31 @@ const Appointment = () => {
           {/* STEP 2: CLINIC */}
           {currentStep === STEPS.CLINIC && (
             <div className="max-w-5xl mx-auto">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl md:text-3xl font-semibold text-[#1A2421] tracking-tight">Choose a clinic</h2>
-                <p className="mt-2 text-sm text-[#5B6B65]">
+              <div className="text-center mb-6 md:mb-8">
+                <h2 className="text-xl md:text-3xl font-bold text-[#1A2421] tracking-tight">
+                  Choose a clinic
+                </h2>
+                <p className="mt-2 text-xs md:text-sm text-[#5B6B65]">
                   Select the clinic where you'd like to book your appointment
                 </p>
               </div>
 
-              <div className="mb-6 max-w-md mx-auto">
+              <div className="mb-5 md:mb-6 max-w-md mx-auto">
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-3" style={{ color: BLUE }} />
+                  <Search className="w-4 h-4 absolute left-3.5 top-3.5" style={{ color: BLUE }} />
                   <input
                     type="text"
                     placeholder="Search clinics by name or city..."
                     value={clinicSearch}
                     onChange={(e) => setClinicSearch(e.target.value)}
-                    className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg text-sm outline-none"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-[#D7DCD9] rounded-xl text-sm outline-none shadow-sm"
                     onFocus={(e) => {
                       e.target.style.borderColor = BLUE;
-                      e.target.style.boxShadow = `0 0 0 3px ${BLUE}22`;
+                      e.target.style.boxShadow = `0 0 0 4px ${BLUE}15`;
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = "#D7DCD9";
-                      e.target.style.boxShadow = "none";
+                      e.target.style.boxShadow = "0 1px 2px rgba(0,0,0,0.03)";
                     }}
                   />
                 </div>
@@ -1279,12 +1293,12 @@ const Appointment = () => {
                   <p className="text-sm font-medium text-[#5B6B65]">Loading clinics...</p>
                 </div>
               ) : filteredClinics.length === 0 ? (
-                <div className="bg-white rounded-xl border border-[#E4E7E4] py-16 text-center">
+                <div className="bg-white rounded-2xl border border-[#E4E7E4] py-16 text-center">
                   <Building2 className="w-12 h-12 text-[#B7BFBB] mx-auto mb-3" />
                   <p className="text-sm font-medium text-[#5B6B65]">No clinics available.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   {filteredClinics.map((clinic, cIdx) => {
                     const isDefault = (clinic._id || clinic.id) === DEFAULT_CLINIC._id;
                     const accent = cIdx % 2 === 0 ? BLUE : GREEN;
@@ -1296,30 +1310,33 @@ const Appointment = () => {
                         key={clinic._id || clinic.id}
                         type="button"
                         onClick={() => handleClinicSelect(clinic)}
-                        className="group text-left bg-white rounded-xl border-2 transition-all p-5 hover:shadow-md"
+                        className="group text-left bg-white rounded-2xl border-2 transition-all p-4 md:p-5 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99]"
                         style={{
-                          borderColor: isDefault ? `${accent}66` : "#E4E7E4",
+                          borderColor: isDefault ? `${accent}55` : "#E4E7E4",
+                          boxShadow: "0 2px 8px rgba(15,92,77,0.04)",
                         }}
                         onMouseEnter={(e) => (e.currentTarget.style.borderColor = accent)}
                         onMouseLeave={(e) =>
-                          (e.currentTarget.style.borderColor = isDefault ? `${accent}66` : "#E4E7E4")
+                          (e.currentTarget.style.borderColor = isDefault ? `${accent}55` : "#E4E7E4")
                         }
                       >
                         <div className="flex items-start gap-3 mb-3">
                           <div
-                            className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
-                            style={{ backgroundColor: accentLight }}
+                            className="w-12 h-12 md:w-11 md:h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
+                            style={{
+                              background: `linear-gradient(135deg, ${accentLight}, ${accent}25)`,
+                            }}
                           >
-                            <Building2 className="w-5 h-5" style={{ color: accent }} />
+                            <Building2 className="w-5 h-5 md:w-5 md:h-5" style={{ color: accent }} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-sm font-semibold text-[#1A2421] truncate">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-[15px] md:text-sm font-bold text-[#1A2421] truncate">
                                 {clinic.name || "Unnamed Clinic"}
                               </h3>
                               {isDefault && (
                                 <span
-                                  className="text-[9px] font-bold text-white px-1.5 py-0.5 rounded uppercase tracking-wide shrink-0"
+                                  className="text-[9px] font-black text-white px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0"
                                   style={{ backgroundColor: accent }}
                                 >
                                   Default
@@ -1327,18 +1344,23 @@ const Appointment = () => {
                               )}
                             </div>
                             {clinic.city && (
-                              <p className="text-xs text-[#8A948F] flex items-center gap-1 mt-0.5">
+                              <p className="text-[11px] md:text-xs text-[#8A948F] flex items-center gap-1 mt-1">
                                 <MapPin className="w-3 h-3" /> {clinic.city}
                               </p>
                             )}
                           </div>
                         </div>
                         {clinic.address && (
-                          <p className="text-xs text-[#5B6B65] leading-relaxed line-clamp-2 mb-3">{clinic.address}</p>
+                          <p className="text-[11px] md:text-xs text-[#5B6B65] leading-relaxed line-clamp-2 mb-3">
+                            {clinic.address}
+                          </p>
                         )}
-                        <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: accentDark }}>
-                          Select clinic{" "}
-                          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                        <div
+                          className="flex items-center justify-between text-xs font-bold pt-2 border-t border-dashed"
+                          style={{ color: accentDark, borderColor: "#EEF1EF" }}
+                        >
+                          <span>Select clinic</span>
+                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </div>
                       </button>
                     );
@@ -1346,11 +1368,11 @@ const Appointment = () => {
                 </div>
               )}
 
-              <div className="mt-8 flex justify-center">
+              <div className="mt-6 md:mt-8 flex justify-center">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white border rounded-lg transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 md:px-5 md:py-2.5 text-sm font-semibold bg-white border-2 rounded-xl transition-colors"
                   style={{ color: BLUE_DARK, borderColor: BLUE_BORDER }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_LIGHT)}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
@@ -1364,43 +1386,45 @@ const Appointment = () => {
           {/* STEP 3: DOCTOR */}
           {currentStep === STEPS.DOCTOR && (
             <div className="max-w-5xl mx-auto">
-              <div className="text-center mb-6">
+              <div className="text-center mb-5 md:mb-6">
                 <div
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-3"
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-3"
                   style={{ backgroundColor: GREEN_LIGHT, color: GREEN_DARK }}
                 >
                   <Building2 className="w-3 h-3" /> {selectedClinic?.name || "Clinic"}
                 </div>
-                <h2 className="text-2xl md:text-3xl font-semibold text-[#1A2421] tracking-tight">Choose your doctor</h2>
-                <p className="mt-2 text-sm text-[#5B6B65]">
+                <h2 className="text-xl md:text-3xl font-bold text-[#1A2421] tracking-tight">
+                  Choose your doctor
+                </h2>
+                <p className="mt-2 text-xs md:text-sm text-[#5B6B65]">
                   Pick a specialist based on their experience & expertise
                 </p>
               </div>
 
-              <div className="mb-6 space-y-3">
+              <div className="mb-5 md:mb-6 space-y-3">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
-                    <Search className="w-4 h-4 absolute left-3 top-3" style={{ color: BLUE }} />
+                    <Search className="w-4 h-4 absolute left-3.5 top-3.5" style={{ color: BLUE }} />
                     <input
                       type="text"
                       placeholder="Search doctors by name or specialization..."
                       value={doctorSearch}
                       onChange={(e) => setDoctorSearch(e.target.value)}
-                      className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg text-sm outline-none"
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-[#D7DCD9] rounded-xl text-sm outline-none shadow-sm"
                       onFocus={(e) => {
                         e.target.style.borderColor = BLUE;
-                        e.target.style.boxShadow = `0 0 0 3px ${BLUE}22`;
+                        e.target.style.boxShadow = `0 0 0 4px ${BLUE}15`;
                       }}
                       onBlur={(e) => {
                         e.target.style.borderColor = "#D7DCD9";
-                        e.target.style.boxShadow = "none";
+                        e.target.style.boxShadow = "0 1px 2px rgba(0,0,0,0.03)";
                       }}
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowFilters((v) => !v)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold border-2 transition-colors"
                     style={
                       showFilters
                         ? { backgroundColor: BLUE, color: "#FFFFFF", borderColor: BLUE }
@@ -1417,12 +1441,12 @@ const Appointment = () => {
 
                 {showFilters && (
                   <div
-                    className="bg-white rounded-xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 shadow-sm border"
+                    className="bg-white rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 shadow-sm border-2"
                     style={{ borderColor: GREEN_BORDER }}
                   >
                     <div>
                       <label
-                        className="block text-[11px] font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5"
+                        className="block text-[11px] font-black uppercase tracking-wider mb-1.5 flex items-center gap-1.5"
                         style={{ color: GREEN_DARK }}
                       >
                         <Filter className="w-3 h-3" /> Specialization
@@ -1431,7 +1455,7 @@ const Appointment = () => {
                         <select
                           value={specializationFilter}
                           onChange={(e) => setSpecializationFilter(e.target.value)}
-                          className="w-full px-3 pr-8 py-2 bg-white border border-[#D7DCD9] rounded-lg text-sm outline-none appearance-none"
+                          className="w-full px-3 pr-8 py-2.5 bg-white border border-[#D7DCD9] rounded-lg text-sm outline-none appearance-none"
                           onFocus={(e) => (e.target.style.borderColor = GREEN)}
                           onBlur={(e) => (e.target.style.borderColor = "#D7DCD9")}
                         >
@@ -1442,13 +1466,13 @@ const Appointment = () => {
                             </option>
                           ))}
                         </select>
-                        <ChevronDown className="w-4 h-4 text-[#8A948F] absolute right-2.5 top-2.5 pointer-events-none" />
+                        <ChevronDown className="w-4 h-4 text-[#8A948F] absolute right-2.5 top-3 pointer-events-none" />
                       </div>
                     </div>
 
                     <div>
                       <label
-                        className="block text-[11px] font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5"
+                        className="block text-[11px] font-black uppercase tracking-wider mb-1.5 flex items-center gap-1.5"
                         style={{ color: GREEN_DARK }}
                       >
                         <Briefcase className="w-3 h-3" /> Experience
@@ -1457,7 +1481,7 @@ const Appointment = () => {
                         <select
                           value={experienceFilter}
                           onChange={(e) => setExperienceFilter(e.target.value)}
-                          className="w-full px-3 pr-8 py-2 bg-white border border-[#D7DCD9] rounded-lg text-sm outline-none appearance-none"
+                          className="w-full px-3 pr-8 py-2.5 bg-white border border-[#D7DCD9] rounded-lg text-sm outline-none appearance-none"
                           onFocus={(e) => (e.target.style.borderColor = GREEN)}
                           onBlur={(e) => (e.target.style.borderColor = "#D7DCD9")}
                         >
@@ -1467,7 +1491,7 @@ const Appointment = () => {
                           <option value="10-15">10 – 15 years</option>
                           <option value="15+">15+ years</option>
                         </select>
-                        <ChevronDown className="w-4 h-4 text-[#8A948F] absolute right-2.5 top-2.5 pointer-events-none" />
+                        <ChevronDown className="w-4 h-4 text-[#8A948F] absolute right-2.5 top-3 pointer-events-none" />
                       </div>
                     </div>
 
@@ -1479,7 +1503,7 @@ const Appointment = () => {
                           setSpecializationFilter("all");
                           setExperienceFilter("all");
                         }}
-                        className="w-full px-3 py-2 text-xs font-semibold text-[#B3261E] bg-[#FCE9E7] hover:bg-[#F8D5D1] rounded-lg transition-colors"
+                        className="w-full px-3 py-2.5 text-xs font-bold text-[#B3261E] bg-[#FCE9E7] hover:bg-[#F8D5D1] rounded-lg transition-colors"
                       >
                         Clear all filters
                       </button>
@@ -1504,7 +1528,7 @@ const Appointment = () => {
                   <p className="text-sm font-medium text-[#5B6B65]">Loading doctors...</p>
                 </div>
               ) : filteredDoctors.length === 0 ? (
-                <div className="bg-white rounded-xl border border-[#E4E7E4] py-16 text-center">
+                <div className="bg-white rounded-2xl border border-[#E4E7E4] py-16 text-center">
                   <Stethoscope className="w-12 h-12 text-[#B7BFBB] mx-auto mb-3" />
                   <p className="text-sm font-medium text-[#5B6B65]">No doctors found matching your criteria.</p>
                   <button
@@ -1514,14 +1538,14 @@ const Appointment = () => {
                       setSpecializationFilter("all");
                       setExperienceFilter("all");
                     }}
-                    className="mt-3 text-xs font-semibold hover:underline"
+                    className="mt-3 text-xs font-bold hover:underline"
                     style={{ color: BLUE }}
                   >
                     Clear filters
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   {filteredDoctors.map((doc, dIdx) => {
                     const docId = doc._id || doc.id;
                     const isSelected = selectedDoctorId === docId;
@@ -1534,29 +1558,42 @@ const Appointment = () => {
                         key={docId}
                         type="button"
                         onClick={() => handleDoctorSelect(doc)}
-                        className="text-left bg-white rounded-xl border-2 transition-all p-5 hover:shadow-md"
-                        style={{ borderColor: isSelected ? accent : "#E4E7E4" }}
+                        className="text-left bg-white rounded-2xl border-2 transition-all p-4 md:p-5 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99]"
+                        style={{
+                          borderColor: isSelected ? accent : "#E4E7E4",
+                          boxShadow: isSelected ? `0 4px 16px ${accent}30` : "0 2px 8px rgba(15,92,77,0.04)",
+                        }}
                         onMouseEnter={(e) => (e.currentTarget.style.borderColor = accent)}
                         onMouseLeave={(e) =>
                           (e.currentTarget.style.borderColor = isSelected ? accent : "#E4E7E4")
                         }
                       >
-                        <div className="flex items-start gap-4">
-                          <div
-                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{ background: `linear-gradient(135deg, ${accent}, ${accentDark})` }}
-                          >
-                            <span className="text-white text-lg font-bold">
-                              {(doc.name || "D").charAt(0).toUpperCase()}
-                            </span>
+                        <div className="flex items-start gap-3.5 md:gap-4">
+                          <div className="relative flex-shrink-0">
+                            <div
+                              className="w-14 h-14 md:w-14 md:h-14 rounded-full flex items-center justify-center"
+                              style={{ background: `linear-gradient(135deg, ${accent}, ${accentDark})` }}
+                            >
+                              <span className="text-white text-lg md:text-lg font-bold">
+                                {(doc.name || "D").charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            {isSelected && (
+                              <div
+                                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"
+                                style={{ backgroundColor: accent }}
+                              >
+                                <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                              </div>
+                            )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h3 className="text-base font-semibold text-[#1A2421] truncate">
+                            <h3 className="text-[15px] md:text-base font-bold text-[#1A2421] truncate">
                               {doc.name || "Unnamed Doctor"}
                             </h3>
                             {doc.specialization && (
                               <div
-                                className="flex items-center gap-1.5 text-xs font-semibold mt-0.5"
+                                className="flex items-center gap-1.5 text-xs font-bold mt-1"
                                 style={{ color: accent }}
                               >
                                 <Award className="w-3 h-3" /> {doc.specialization}
@@ -1572,7 +1609,7 @@ const Appointment = () => {
                             </div>
                             {doc.consultationFee && (
                               <div
-                                className="mt-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold"
+                                className="mt-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold"
                                 style={{ backgroundColor: accentLight, color: accentDark }}
                               >
                                 Consultation: ₹{doc.consultationFee}
@@ -1586,11 +1623,11 @@ const Appointment = () => {
                 </div>
               )}
 
-              <div className="mt-8 flex justify-center">
+              <div className="mt-6 md:mt-8 flex justify-center">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white border rounded-lg transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 md:px-5 md:py-2.5 text-sm font-semibold bg-white border-2 rounded-xl transition-colors"
                   style={{ color: BLUE_DARK, borderColor: BLUE_BORDER }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_LIGHT)}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
@@ -1604,16 +1641,20 @@ const Appointment = () => {
           {/* STEP 4: BOOKING TYPE */}
           {currentStep === STEPS.BOOKING_TYPE && (
             <div className="max-w-3xl mx-auto">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl md:text-3xl font-semibold text-[#1A2421] tracking-tight">Select booking type</h2>
-                <p className="mt-2 text-sm text-[#5B6B65]">Choose how you'd like to consult with the doctor</p>
+              <div className="text-center mb-6 md:mb-8">
+                <h2 className="text-xl md:text-3xl font-bold text-[#1A2421] tracking-tight">
+                  Select booking type
+                </h2>
+                <p className="mt-2 text-xs md:text-sm text-[#5B6B65]">
+                  Choose how you'd like to consult with the doctor
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                 <button
                   type="button"
                   onClick={() => handleBookingTypeSelect("walkin")}
-                  className="group text-left bg-white rounded-2xl border-2 transition-all p-6 hover:shadow-lg"
+                  className="group text-left bg-white rounded-2xl border-2 transition-all p-5 md:p-6 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99]"
                   style={{ borderColor: bookingType === "walkin" ? GREEN : "#E4E7E4" }}
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = GREEN)}
                   onMouseLeave={(e) =>
@@ -1621,26 +1662,28 @@ const Appointment = () => {
                   }
                 >
                   <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-colors"
-                    style={{ backgroundColor: GREEN_LIGHT }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = GREEN)}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = GREEN_LIGHT)}
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-colors"
+                    style={{ background: `linear-gradient(135deg, ${GREEN_LIGHT}, ${GREEN}25)` }}
                   >
-                    <Footprints className="w-7 h-7 transition-colors" style={{ color: GREEN_DARK }} />
+                    <Footprints className="w-7 h-7" style={{ color: GREEN_DARK }} />
                   </div>
-                  <h3 className="text-lg font-semibold text-[#1A2421] mb-1.5">Walk-In</h3>
+                  <h3 className="text-base md:text-lg font-bold text-[#1A2421] mb-1.5">Walk-In</h3>
                   <p className="text-sm text-[#5B6B65] leading-relaxed">
                     Visit the clinic in person for your consultation
                   </p>
-                  <div className="mt-4 flex items-center gap-1.5 text-sm font-semibold" style={{ color: GREEN_DARK }}>
-                    Continue <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <div
+                    className="mt-4 flex items-center justify-between text-sm font-bold"
+                    style={{ color: GREEN_DARK }}
+                  >
+                    <span>Continue</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleBookingTypeSelect("online")}
-                  className="group text-left bg-white rounded-2xl border-2 transition-all p-6 hover:shadow-lg"
+                  className="group text-left bg-white rounded-2xl border-2 transition-all p-5 md:p-6 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99]"
                   style={{ borderColor: bookingType === "online" ? BLUE : "#E4E7E4" }}
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = BLUE)}
                   onMouseLeave={(e) =>
@@ -1648,28 +1691,30 @@ const Appointment = () => {
                   }
                 >
                   <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-colors"
-                    style={{ backgroundColor: BLUE_LIGHT }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE)}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BLUE_LIGHT)}
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-colors"
+                    style={{ background: `linear-gradient(135deg, ${BLUE_LIGHT}, ${BLUE}25)` }}
                   >
-                    <Video className="w-7 h-7 transition-colors" style={{ color: BLUE_DARK }} />
+                    <Video className="w-7 h-7" style={{ color: BLUE_DARK }} />
                   </div>
-                  <h3 className="text-lg font-semibold text-[#1A2421] mb-1.5">Online</h3>
+                  <h3 className="text-base md:text-lg font-bold text-[#1A2421] mb-1.5">Online</h3>
                   <p className="text-sm text-[#5B6B65] leading-relaxed">
                     Consult with the doctor via video call from home
                   </p>
-                  <div className="mt-4 flex items-center gap-1.5 text-sm font-semibold" style={{ color: BLUE_DARK }}>
-                    Continue <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <div
+                    className="mt-4 flex items-center justify-between text-sm font-bold"
+                    style={{ color: BLUE_DARK }}
+                  >
+                    <span>Continue</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </button>
               </div>
 
-              <div className="mt-8 flex justify-center">
+              <div className="mt-6 md:mt-8 flex justify-center">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white border rounded-lg transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 md:px-5 md:py-2.5 text-sm font-semibold bg-white border-2 rounded-xl transition-colors"
                   style={{ color: BLUE_DARK, borderColor: BLUE_BORDER }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_LIGHT)}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
@@ -1683,67 +1728,80 @@ const Appointment = () => {
           {/* STEP 5: SLOT */}
           {currentStep === STEPS.SLOT && (
             <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl md:text-3xl font-semibold text-[#1A2421] tracking-tight">Pick a date & slot</h2>
-                <p className="mt-2 text-sm text-[#5B6B65]">Select your preferred appointment date and time</p>
+              <div className="text-center mb-6 md:mb-8">
+                <h2 className="text-xl md:text-3xl font-bold text-[#1A2421] tracking-tight">
+                  Pick a date & slot
+                </h2>
+                <p className="mt-2 text-xs md:text-sm text-[#5B6B65]">
+                  Select your preferred appointment date and time
+                </p>
               </div>
 
               <div
-                className="bg-white rounded-xl p-5 mb-6 max-w-md mx-auto shadow-sm border"
+                className="bg-white rounded-2xl p-4 md:p-5 mb-5 md:mb-6 max-w-md mx-auto shadow-sm border-2"
                 style={{ borderColor: BLUE_BORDER }}
               >
-                <label className="text-xs font-medium mb-1.5 flex items-center gap-1.5" style={{ color: BLUE_DARK }}>
-                  <CalendarDays className="w-3.5 h-3.5" /> Appointment date <span className="text-[#B3261E]">*</span>
+                <label
+                  className="text-xs font-bold mb-2 flex items-center gap-1.5"
+                  style={{ color: BLUE_DARK }}
+                >
+                  <CalendarDays className="w-3.5 h-3.5" /> Appointment date{" "}
+                  <span className="text-[#B3261E]">*</span>
                 </label>
                 <input
                   type="date"
                   required
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg text-sm outline-none"
+                  className="w-full px-3.5 py-3 bg-white border border-[#D7DCD9] rounded-xl text-sm outline-none"
                   onFocus={(e) => {
                     e.target.style.borderColor = BLUE;
-                    e.target.style.boxShadow = `0 0 0 3px ${BLUE}22`;
+                    e.target.style.boxShadow = `0 0 0 4px ${BLUE}15`;
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = "#D7DCD9";
                     e.target.style.boxShadow = "none";
                   }}
                 />
-                <p className="mt-1.5 text-[11px] text-[#5B6B65]">
-                  Day: <span className="font-semibold text-[#1A2421]">{dayOfWeekName}</span>
+                <p className="mt-2 text-[11px] text-[#5B6B65]">
+                  Day: <span className="font-bold text-[#1A2421]">{dayOfWeekName}</span>
                 </p>
               </div>
 
               {selectedSlot && (
                 <div
-                  className="max-w-2xl mx-auto mb-6 rounded-r-lg p-4 flex items-center justify-between border-l-4"
+                  className="max-w-2xl mx-auto mb-5 md:mb-6 rounded-2xl p-4 flex items-center justify-between border-l-4"
                   style={{ backgroundColor: GREEN_LIGHT, borderLeftColor: GREEN }}
                 >
                   <div>
-                    <div className="text-[10px] uppercase tracking-wide font-semibold" style={{ color: GREEN_DARK }}>
+                    <div
+                      className="text-[10px] uppercase tracking-wider font-black"
+                      style={{ color: GREEN_DARK }}
+                    >
                       Selected slot
                     </div>
-                    <div className="text-base font-semibold text-[#1A2421]">
+                    <div className="text-base font-bold text-[#1A2421]">
                       {selectedSlot.startTime} – {selectedSlot.endTime}
                     </div>
                     <div className="text-xs text-[#5B6B65] mt-0.5">{selectedSlot.shift}</div>
                   </div>
-                  <Check className="w-5 h-5 shrink-0" style={{ color: GREEN_DARK }} />
+                  <Check className="w-6 h-6 shrink-0" style={{ color: GREEN_DARK }} strokeWidth={3} />
                 </div>
               )}
 
-              <div className="bg-white rounded-xl border border-[#E4E7E4] p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E4E7E4] pb-4 mb-6">
+              <div className="bg-white rounded-2xl border border-[#E4E7E4] p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E4E7E4] pb-4 mb-5 md:mb-6">
                   <div>
-                    <h3 className="text-base font-semibold text-[#1A2421]">Available slots for {dayOfWeekName}</h3>
-                    <p className="text-xs text-[#8A948F] mt-0.5">
+                    <h3 className="text-sm md:text-base font-bold text-[#1A2421]">
+                      Available slots for {dayOfWeekName}
+                    </h3>
+                    <p className="text-[11px] md:text-xs text-[#8A948F] mt-0.5">
                       {isToday
                         ? "Only upcoming slots are shown (past slots hidden)"
                         : "Only available slots are shown below"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#5B6B65]">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#5B6B65]">
                     <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: BLUE }} />
                     Available
                   </div>
@@ -1758,7 +1816,7 @@ const Appointment = () => {
                   <div className="space-y-6">
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2 font-semibold text-[#1A2421] text-sm">
+                        <div className="flex items-center gap-2 font-bold text-[#1A2421] text-sm">
                           <Sun className="w-4 h-4 text-[#E8A33D]" />
                           <span>
                             Morning shift{" "}
@@ -1766,7 +1824,7 @@ const Appointment = () => {
                           </span>
                         </div>
                         <span
-                          className="text-xs px-2.5 py-0.5 rounded font-semibold"
+                          className="text-xs px-2.5 py-0.5 rounded-full font-bold"
                           style={{ backgroundColor: BLUE_LIGHT, color: BLUE_DARK }}
                         >
                           {morningSlots.length} available
@@ -1778,13 +1836,14 @@ const Appointment = () => {
                           {isToday ? "No upcoming morning slots available." : "No morning slots available."}
                         </p>
                       ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 md:gap-3">
                           {morningSlots.map((slot) => (
                             <AppointmentSlotTile
                               key={slot._id || slot.slotId}
                               slot={slot}
                               isSelected={
-                                selectedSlot && (selectedSlot._id === slot._id || selectedSlot.slotId === slot.slotId)
+                                selectedSlot &&
+                                (selectedSlot._id === slot._id || selectedSlot.slotId === slot.slotId)
                               }
                               onSelect={() => handleSlotSelect(slot)}
                             />
@@ -1794,7 +1853,7 @@ const Appointment = () => {
                     </div>
 
                     {breakSlots.length > 0 && !isToday && (
-                      <div className="bg-[#F7F8F7] border border-[#E4E7E4] p-3.5 rounded-lg flex items-center justify-between text-xs">
+                      <div className="bg-[#F7F8F7] border border-[#E4E7E4] p-3.5 rounded-xl flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2 font-medium text-[#3F4A45]">
                           <Coffee className="w-4 h-4 text-[#8A948F]" />
                           <span>
@@ -1802,7 +1861,7 @@ const Appointment = () => {
                             <span className="font-normal text-[#8A948F]">(02:00 PM – 03:00 PM)</span>
                           </span>
                         </div>
-                        <span className="bg-[#E4E7E4] text-[#5B6B65] text-[10px] font-semibold px-2.5 py-0.5 rounded uppercase">
+                        <span className="bg-[#E4E7E4] text-[#5B6B65] text-[10px] font-bold px-2.5 py-0.5 rounded uppercase">
                           No booking
                         </span>
                       </div>
@@ -1810,7 +1869,7 @@ const Appointment = () => {
 
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2 font-semibold text-[#1A2421] text-sm">
+                        <div className="flex items-center gap-2 font-bold text-[#1A2421] text-sm">
                           <Moon className="w-4 h-4" style={{ color: BLUE }} />
                           <span>
                             Evening shift{" "}
@@ -1818,7 +1877,7 @@ const Appointment = () => {
                           </span>
                         </div>
                         <span
-                          className="text-xs px-2.5 py-0.5 rounded font-semibold"
+                          className="text-xs px-2.5 py-0.5 rounded-full font-bold"
                           style={{ backgroundColor: GREEN_LIGHT, color: GREEN_DARK }}
                         >
                           {eveningSlots.length} available
@@ -1826,7 +1885,7 @@ const Appointment = () => {
                       </div>
 
                       {dayOfWeekName === "Sunday" ? (
-                        <div className="bg-[#F7F8F7] p-5 rounded-lg text-center border border-[#E4E7E4] text-xs text-[#5B6B65]">
+                        <div className="bg-[#F7F8F7] p-5 rounded-xl text-center border border-[#E4E7E4] text-xs text-[#5B6B65]">
                           Evening shift is closed on Sundays. OP runs 09:00 AM – 02:00 PM.
                         </div>
                       ) : eveningSlots.length === 0 ? (
@@ -1834,13 +1893,14 @@ const Appointment = () => {
                           {isToday ? "No upcoming evening slots available." : "No evening slots available."}
                         </p>
                       ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 md:gap-3">
                           {eveningSlots.map((slot) => (
                             <AppointmentSlotTile
                               key={slot._id || slot.slotId}
                               slot={slot}
                               isSelected={
-                                selectedSlot && (selectedSlot._id === slot._id || selectedSlot.slotId === slot.slotId)
+                                selectedSlot &&
+                                (selectedSlot._id === slot._id || selectedSlot.slotId === slot.slotId)
                               }
                               onSelect={() => handleSlotSelect(slot)}
                             />
@@ -1852,11 +1912,11 @@ const Appointment = () => {
                 )}
               </div>
 
-              <div className="mt-8 flex flex-col sm:flex-row justify-between gap-3 max-w-2xl mx-auto">
+              <div className="mt-6 md:mt-8 flex flex-col sm:flex-row justify-between gap-3 max-w-2xl mx-auto">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white border rounded-lg transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-5 md:py-2.5 text-sm font-semibold bg-white border-2 rounded-xl transition-colors"
                   style={{ color: BLUE_DARK, borderColor: BLUE_BORDER }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_LIGHT)}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
@@ -1867,14 +1927,14 @@ const Appointment = () => {
                   type="button"
                   onClick={handleSlotContinue}
                   disabled={!selectedSlot}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold rounded-lg transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-6 md:py-2.5 text-sm font-bold rounded-xl transition-all"
                   style={
                     selectedSlot
                       ? {
-                          backgroundColor: GREEN,
-                          color: "#FFFFFF",
-                          boxShadow: `0 4px 12px ${GREEN_SHADOW}`,
-                        }
+                        backgroundColor: GREEN,
+                        color: "#FFFFFF",
+                        boxShadow: `0 6px 16px ${GREEN_SHADOW}`,
+                      }
                       : { backgroundColor: "#E4E7E4", color: "#8A948F", cursor: "not-allowed" }
                   }
                 >
@@ -1887,45 +1947,49 @@ const Appointment = () => {
           {/* STEP 6: DETAILS */}
           {currentStep === STEPS.DETAILS && (
             <div>
-              <div className="text-center mb-8">
-                <h2 className="text-2xl md:text-3xl font-semibold text-[#1A2421] tracking-tight">
+              <div className="text-center mb-6 md:mb-8">
+                <h2 className="text-xl md:text-3xl font-bold text-[#1A2421] tracking-tight">
                   Patient details & payment
                 </h2>
-                <p className="mt-2 text-sm text-[#5B6B65]">Fill in patient information to confirm your booking</p>
+                <p className="mt-2 text-xs md:text-sm text-[#5B6B65]">
+                  Fill in patient information to confirm your booking
+                </p>
               </div>
 
               <div
-                className="max-w-5xl mx-auto mb-6 bg-white rounded-xl p-4 shadow-sm border"
+                className="max-w-5xl mx-auto mb-5 md:mb-6 bg-white rounded-2xl p-3.5 md:p-4 shadow-sm border-2"
                 style={{ borderColor: BLUE_BORDER }}
               >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: BLUE }}>
+                    <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: BLUE }}>
                       Clinic
                     </div>
-                    <div className="font-semibold text-[#1A2421] truncate">{selectedClinic?.name || "—"}</div>
+                    <div className="font-bold text-[#1A2421] truncate mt-0.5">
+                      {selectedClinic?.name || "—"}
+                    </div>
                   </div>
                   <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: GREEN }}>
+                    <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: GREEN }}>
                       Doctor
                     </div>
-                    <div className="font-semibold text-[#1A2421] truncate">
+                    <div className="font-bold text-[#1A2421] truncate mt-0.5">
                       {doctors.find((d) => (d._id || d.id) === selectedDoctorId)?.name || "—"}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: BLUE }}>
+                    <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: BLUE }}>
                       Booking Type
                     </div>
-                    <div className="font-semibold text-[#1A2421]">
+                    <div className="font-bold text-[#1A2421] mt-0.5">
                       {bookingType === "walkin" ? "Walk-In" : bookingType === "online" ? "Online" : "—"}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: GREEN }}>
+                    <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: GREEN }}>
                       Slot
                     </div>
-                    <div className="font-semibold text-[#1A2421]">
+                    <div className="font-bold text-[#1A2421] mt-0.5">
                       {selectedSlot ? `${selectedSlot.startTime} – ${selectedSlot.endTime}` : "—"}
                     </div>
                   </div>
@@ -1933,12 +1997,12 @@ const Appointment = () => {
               </div>
 
               <form onSubmit={handleSubmitBooking}>
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-6xl mx-auto pb-40 lg:pb-0">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-6xl mx-auto pb-8 lg:pb-0">
                   {/* LEFT */}
-                  <div className="lg:col-span-7 space-y-6">
-                    <div className="bg-white rounded-xl border border-[#E4E7E4] overflow-hidden">
+                  <div className="lg:col-span-7 space-y-5 md:space-y-6">
+                    <div className="bg-white rounded-2xl border border-[#E4E7E4] overflow-hidden">
                       <div
-                        className="px-6 py-5 border-b border-[#E4E7E4]"
+                        className="px-5 md:px-6 py-4 md:py-5 border-b border-[#E4E7E4]"
                         style={{ background: `linear-gradient(to right, ${BLUE_LIGHT}, transparent)` }}
                       >
                         <div className="flex items-center gap-3">
@@ -1946,13 +2010,13 @@ const Appointment = () => {
                             <UserPlus className="w-4 h-4" style={{ color: BLUE }} />
                           </div>
                           <div>
-                            <h2 className="text-sm font-semibold text-[#1A2421]">Patient details</h2>
+                            <h2 className="text-sm font-bold text-[#1A2421]">Patient details</h2>
                             <p className="text-xs text-[#5B6B65]">Enter patient information</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="p-6 space-y-4">
+                      <div className="p-5 md:p-6 space-y-4">
                         <div className="grid grid-cols-[110px_1fr] gap-3">
                           <div>
                             <label className="block text-xs font-medium text-[#3F4A45] mb-1.5">
@@ -2165,12 +2229,15 @@ const Appointment = () => {
 
                         {isOnline && (
                           <div
-                            className="p-3.5 rounded-lg border"
+                            className="p-3.5 rounded-xl border"
                             style={{ backgroundColor: BLUE_LIGHT, borderColor: `${BLUE}33` }}
                           >
                             <div className="flex items-center gap-2 mb-1">
                               <Video className="w-3.5 h-3.5" style={{ color: BLUE }} />
-                              <span className="text-xs font-bold uppercase tracking-wide" style={{ color: BLUE_DARK }}>
+                              <span
+                                className="text-xs font-black uppercase tracking-wider"
+                                style={{ color: BLUE_DARK }}
+                              >
                                 Online Consultation
                               </span>
                             </div>
@@ -2184,25 +2251,45 @@ const Appointment = () => {
                           <div className="space-y-4">
                             {/* REPORTS UPLOAD */}
                             <div
-                              className="border-2 border-dashed rounded-xl p-4"
+                              className="border-2 border-dashed rounded-2xl p-4"
                               style={{
                                 borderColor: `${BLUE}4D`,
                                 backgroundColor: `${BLUE_LIGHT}66`,
                               }}
                             >
-                              <div className="flex items-center gap-2 mb-3">
-                                <FlaskConical className="w-4 h-4" style={{ color: BLUE }} />
-                                <label
-                                  className="text-xs font-bold uppercase tracking-wide"
-                                  style={{ color: BLUE_DARK }}
-                                >
-                                  Upload Reports
-                                </label>
-                                <span className="text-[10px] text-[#5B6B65] font-normal">(Optional)</span>
+                              <div className="flex items-center justify-between gap-2 mb-3">
+                                <div className="flex items-center gap-2">
+                                  <FlaskConical className="w-4 h-4" style={{ color: BLUE }} />
+                                  <label
+                                    className="text-xs font-black uppercase tracking-wider"
+                                    style={{ color: BLUE_DARK }}
+                                  >
+                                    Upload Reports
+                                  </label>
+                                  <span className="text-[10px] text-[#5B6B65] font-normal">(Optional)</span>
+                                  {uploadedReports.length > 0 && (
+                                    <span
+                                      className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                                      style={{ backgroundColor: BLUE, color: "#FFFFFF" }}
+                                    >
+                                      {uploadedReports.length}
+                                    </span>
+                                  )}
+                                </div>
+                                {uploadedReports.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={clearAllReports}
+                                    className="text-[10px] font-bold text-[#B3261E] hover:underline"
+                                  >
+                                    Clear all
+                                  </button>
+                                )}
                               </div>
 
                               <p className="text-[11px] text-[#5B6B65] mb-3">
                                 Share lab reports, scans, or diagnostic documents to help the doctor prepare.
+                                You can upload multiple files.
                               </p>
 
                               <input
@@ -2216,7 +2303,7 @@ const Appointment = () => {
 
                               <label
                                 htmlFor="report-upload"
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 rounded-xl text-xs font-bold cursor-pointer transition-colors"
                                 style={{ borderColor: BLUE, color: BLUE_DARK }}
                                 onMouseEnter={(e) => {
                                   e.currentTarget.style.backgroundColor = BLUE;
@@ -2228,11 +2315,11 @@ const Appointment = () => {
                                 }}
                               >
                                 <Upload className="w-3.5 h-3.5" />
-                                Choose Report Files
+                                {uploadedReports.length > 0 ? "Add More Reports" : "Choose Report Files"}
                               </label>
 
                               <p className="mt-2 text-[10px] text-[#8A948F]">
-                                PDF, JPG, PNG, WEBP • Max 10MB per file
+                                PDF, JPG, PNG, WEBP • Max 10MB per file • Multiple files allowed
                               </p>
 
                               {uploadedReports.length > 0 && (
@@ -2240,25 +2327,29 @@ const Appointment = () => {
                                   {uploadedReports.map((r, idx) => (
                                     <div
                                       key={`report-${r.name}-${idx}`}
-                                      className="flex items-center justify-between gap-2 p-2.5 bg-white border rounded-lg"
+                                      className="flex items-center justify-between gap-2 p-2.5 bg-white border rounded-xl"
                                       style={{ borderColor: `${BLUE}33` }}
                                     >
                                       <div className="flex items-center gap-2 min-w-0 flex-1">
                                         <div
-                                          className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
+                                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                           style={{ backgroundColor: BLUE_LIGHT }}
                                         >
                                           <FlaskConical className="w-4 h-4" style={{ color: BLUE }} />
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                          <div className="text-xs font-semibold text-[#1A2421] truncate">{r.name}</div>
-                                          <div className="text-[10px] text-[#8A948F]">{formatFileSize(r.size)}</div>
+                                          <div className="text-xs font-bold text-[#1A2421] truncate">
+                                            {r.name}
+                                          </div>
+                                          <div className="text-[10px] text-[#8A948F]">
+                                            {formatFileSize(r.size)}
+                                          </div>
                                         </div>
                                       </div>
                                       <button
                                         type="button"
                                         onClick={() => removeReport(idx)}
-                                        className="w-7 h-7 rounded-md bg-[#FCE9E7] text-[#B3261E] flex items-center justify-center hover:bg-[#F8D5D1] flex-shrink-0"
+                                        className="w-7 h-7 rounded-lg bg-[#FCE9E7] text-[#B3261E] flex items-center justify-center hover:bg-[#F8D5D1] flex-shrink-0"
                                         title="Remove file"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
@@ -2271,25 +2362,45 @@ const Appointment = () => {
 
                             {/* PRESCRIPTIONS UPLOAD */}
                             <div
-                              className="border-2 border-dashed rounded-xl p-4"
+                              className="border-2 border-dashed rounded-2xl p-4"
                               style={{
                                 borderColor: `${GREEN}4D`,
                                 backgroundColor: `${GREEN_LIGHT}66`,
                               }}
                             >
-                              <div className="flex items-center gap-2 mb-3">
-                                <Pill className="w-4 h-4" style={{ color: GREEN }} />
-                                <label
-                                  className="text-xs font-bold uppercase tracking-wide"
-                                  style={{ color: GREEN_DARK }}
-                                >
-                                  Upload Prescriptions
-                                </label>
-                                <span className="text-[10px] text-[#5B6B65] font-normal">(Optional)</span>
+                              <div className="flex items-center justify-between gap-2 mb-3">
+                                <div className="flex items-center gap-2">
+                                  <Pill className="w-4 h-4" style={{ color: GREEN }} />
+                                  <label
+                                    className="text-xs font-black uppercase tracking-wider"
+                                    style={{ color: GREEN_DARK }}
+                                  >
+                                    Upload Prescriptions
+                                  </label>
+                                  <span className="text-[10px] text-[#5B6B65] font-normal">(Optional)</span>
+                                  {uploadedPrescriptions.length > 0 && (
+                                    <span
+                                      className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                                      style={{ backgroundColor: GREEN, color: "#FFFFFF" }}
+                                    >
+                                      {uploadedPrescriptions.length}
+                                    </span>
+                                  )}
+                                </div>
+                                {uploadedPrescriptions.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={clearAllPrescriptions}
+                                    className="text-[10px] font-bold text-[#B3261E] hover:underline"
+                                  >
+                                    Clear all
+                                  </button>
+                                )}
                               </div>
 
                               <p className="text-[11px] text-[#5B6B65] mb-3">
-                                Share any existing prescriptions or doctor's notes for reference.
+                                Share any existing prescriptions or doctor's notes for reference. You can
+                                upload multiple files.
                               </p>
 
                               <input
@@ -2303,7 +2414,7 @@ const Appointment = () => {
 
                               <label
                                 htmlFor="prescription-upload"
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 rounded-xl text-xs font-bold cursor-pointer transition-colors"
                                 style={{ borderColor: GREEN, color: GREEN_DARK }}
                                 onMouseEnter={(e) => {
                                   e.currentTarget.style.backgroundColor = GREEN;
@@ -2315,11 +2426,13 @@ const Appointment = () => {
                                 }}
                               >
                                 <Upload className="w-3.5 h-3.5" />
-                                Choose Prescription Files
+                                {uploadedPrescriptions.length > 0
+                                  ? "Add More Prescriptions"
+                                  : "Choose Prescription Files"}
                               </label>
 
                               <p className="mt-2 text-[10px] text-[#8A948F]">
-                                PDF, JPG, PNG, WEBP • Max 10MB per file
+                                PDF, JPG, PNG, WEBP • Max 10MB per file • Multiple files allowed
                               </p>
 
                               {uploadedPrescriptions.length > 0 && (
@@ -2327,25 +2440,29 @@ const Appointment = () => {
                                   {uploadedPrescriptions.map((p, idx) => (
                                     <div
                                       key={`prescription-${p.name}-${idx}`}
-                                      className="flex items-center justify-between gap-2 p-2.5 bg-white border rounded-lg"
+                                      className="flex items-center justify-between gap-2 p-2.5 bg-white border rounded-xl"
                                       style={{ borderColor: `${GREEN}33` }}
                                     >
                                       <div className="flex items-center gap-2 min-w-0 flex-1">
                                         <div
-                                          className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
+                                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                           style={{ backgroundColor: GREEN_LIGHT }}
                                         >
                                           <Pill className="w-4 h-4" style={{ color: GREEN }} />
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                          <div className="text-xs font-semibold text-[#1A2421] truncate">{p.name}</div>
-                                          <div className="text-[10px] text-[#8A948F]">{formatFileSize(p.size)}</div>
+                                          <div className="text-xs font-bold text-[#1A2421] truncate">
+                                            {p.name}
+                                          </div>
+                                          <div className="text-[10px] text-[#8A948F]">
+                                            {formatFileSize(p.size)}
+                                          </div>
                                         </div>
                                       </div>
                                       <button
                                         type="button"
                                         onClick={() => removePrescription(idx)}
-                                        className="w-7 h-7 rounded-md bg-[#FCE9E7] text-[#B3261E] flex items-center justify-center hover:bg-[#F8D5D1] flex-shrink-0"
+                                        className="w-7 h-7 rounded-lg bg-[#FCE9E7] text-[#B3261E] flex items-center justify-center hover:bg-[#F8D5D1] flex-shrink-0"
                                         title="Remove file"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
@@ -2360,9 +2477,9 @@ const Appointment = () => {
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-xl border border-[#E4E7E4] overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-[#E4E7E4] overflow-hidden">
                       <div
-                        className="px-6 py-5 border-b border-[#E4E7E4]"
+                        className="px-5 md:px-6 py-4 md:py-5 border-b border-[#E4E7E4]"
                         style={{ background: `linear-gradient(to right, ${GREEN_LIGHT}, transparent)` }}
                       >
                         <div className="flex items-center justify-between">
@@ -2371,13 +2488,13 @@ const Appointment = () => {
                               <Receipt className="w-4 h-4" style={{ color: GREEN }} />
                             </div>
                             <div>
-                              <h2 className="text-sm font-semibold text-[#1A2421]">Services</h2>
+                              <h2 className="text-sm font-bold text-[#1A2421]">Services</h2>
                               <p className="text-xs text-[#5B6B65]">Add required services</p>
                             </div>
                           </div>
                           {selectedServices.length > 0 && (
                             <span
-                              className="text-xs px-2.5 py-1 rounded-full font-semibold"
+                              className="text-xs px-2.5 py-1 rounded-full font-bold"
                               style={{ backgroundColor: GREEN_LIGHT, color: GREEN_DARK }}
                             >
                               {selectedServices.length} selected
@@ -2386,18 +2503,18 @@ const Appointment = () => {
                         </div>
                       </div>
 
-                      <div className="p-6 space-y-4">
+                      <div className="p-5 md:p-6 space-y-4">
                         <div className="relative">
-                          <Search className="w-4 h-4 absolute left-3 top-2.5" style={{ color: GREEN }} />
+                          <Search className="w-4 h-4 absolute left-3.5 top-3.5" style={{ color: GREEN }} />
                           <input
                             type="text"
                             placeholder="Search services by name..."
                             value={serviceSearch}
                             onChange={(e) => setServiceSearch(e.target.value)}
-                            className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg text-sm outline-none"
+                            className="w-full pl-10 pr-4 py-3 bg-white border border-[#D7DCD9] rounded-xl text-sm outline-none"
                             onFocus={(e) => {
                               e.target.style.borderColor = GREEN;
-                              e.target.style.boxShadow = `0 0 0 3px ${GREEN}22`;
+                              e.target.style.boxShadow = `0 0 0 4px ${GREEN}15`;
                             }}
                             onBlur={(e) => {
                               e.target.style.borderColor = "#D7DCD9";
@@ -2406,7 +2523,7 @@ const Appointment = () => {
                           />
                         </div>
 
-                        <div className="max-h-64 overflow-y-auto border border-[#E4E7E4] rounded-lg divide-y divide-[#E4E7E4]">
+                        <div className="max-h-64 overflow-y-auto border border-[#E4E7E4] rounded-xl divide-y divide-[#E4E7E4]">
                           {servicesLoading ? (
                             <div className="p-6 text-center text-xs text-[#8A948F]">
                               <RefreshCw className="w-4 h-4 animate-spin inline-block mr-2" /> Loading services...
@@ -2426,11 +2543,13 @@ const Appointment = () => {
                                   className="flex items-center justify-between px-3.5 py-2.5 hover:bg-[#F7F8F7] transition-colors"
                                 >
                                   <div className="min-w-0 flex-1">
-                                    <div className="text-sm font-medium text-[#1A2421] truncate">{svc.name}</div>
+                                    <div className="text-sm font-medium text-[#1A2421] truncate">
+                                      {svc.name}
+                                    </div>
                                   </div>
                                   <div className="flex items-center gap-3 ml-3">
                                     <span
-                                      className="text-sm font-semibold whitespace-nowrap"
+                                      className="text-sm font-bold whitespace-nowrap"
                                       style={{ color: GREEN_DARK }}
                                     >
                                       ₹{svc.price}
@@ -2438,7 +2557,7 @@ const Appointment = () => {
                                     <button
                                       type="button"
                                       onClick={() => addService(svc)}
-                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors"
                                       style={
                                         added
                                           ? { backgroundColor: GREEN_LIGHT, color: GREEN_DARK }
@@ -2457,16 +2576,18 @@ const Appointment = () => {
 
                         {selectedServices.length > 0 && (
                           <div className="space-y-2 pt-2 border-t border-[#E4E7E4]">
-                            <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A948F]">
+                            <div className="text-[11px] font-black uppercase tracking-wider text-[#8A948F]">
                               Selected services
                             </div>
                             {selectedServices.map((s) => (
                               <div
                                 key={s._id}
-                                className="flex items-center justify-between gap-3 p-3 bg-[#F7F8F7] border border-[#E4E7E4] rounded-lg"
+                                className="flex items-center justify-between gap-3 p-3 bg-[#F7F8F7] border border-[#E4E7E4] rounded-xl"
                               >
                                 <div className="min-w-0 flex-1">
-                                  <div className="text-sm font-semibold text-[#1A2421] truncate">{s.name}</div>
+                                  <div className="text-sm font-bold text-[#1A2421] truncate">
+                                    {s.name}
+                                  </div>
                                   <div className="text-[11px] text-[#8A948F] mt-0.5">
                                     {s.quantity > 1 ? `${s.quantity} × ₹${s.price} = ` : ""}
                                     <span className="font-bold" style={{ color: GREEN_DARK }}>
@@ -2490,14 +2611,14 @@ const Appointment = () => {
                     </div>
                   </div>
 
-                  {/* RIGHT */}
-                  <div className="lg:col-span-5 space-y-6">
+                  {/* RIGHT — Billing & Payment */}
+                  <div className="lg:col-span-5 space-y-5 md:space-y-6">
                     <div
-                      className="bg-white rounded-xl overflow-hidden lg:sticky lg:top-24 shadow-sm border"
+                      className="bg-white rounded-2xl overflow-hidden lg:sticky lg:top-24 shadow-sm border-2"
                       style={{ borderColor: BLUE_BORDER }}
                     >
                       <div
-                        className="px-6 py-5 border-b"
+                        className="px-5 md:px-6 py-4 md:py-5 border-b"
                         style={{
                           borderColor: BLUE_BORDER,
                           background: `linear-gradient(to right, ${BLUE_LIGHT}, transparent)`,
@@ -2508,13 +2629,13 @@ const Appointment = () => {
                             <CreditCard className="w-4 h-4" style={{ color: BLUE }} />
                           </div>
                           <div>
-                            <h2 className="text-sm font-semibold text-[#1A2421]">Billing & payment</h2>
+                            <h2 className="text-sm font-bold text-[#1A2421]">Billing & payment</h2>
                             <p className="text-xs text-[#5B6B65]">Final step</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="p-6 space-y-4">
+                      <div className="p-5 md:p-6 space-y-4">
                         <div>
                           <label className="block text-xs font-medium text-[#3F4A45] mb-1.5 flex items-center gap-1.5">
                             <Wallet className="w-3.5 h-3.5" style={{ color: BLUE }} /> Payment type
@@ -2523,7 +2644,7 @@ const Appointment = () => {
                             <select
                               value={paymentType}
                               onChange={(e) => setPaymentType(e.target.value)}
-                              className="w-full px-3.5 pr-8 py-2.5 bg-white border border-[#D7DCD9] rounded-lg text-sm outline-none appearance-none"
+                              className="w-full px-3.5 pr-8 py-3 bg-white border border-[#D7DCD9] rounded-xl text-sm outline-none appearance-none"
                               onFocus={(e) => (e.target.style.borderColor = BLUE)}
                               onBlur={(e) => (e.target.style.borderColor = "#D7DCD9")}
                             >
@@ -2532,18 +2653,20 @@ const Appointment = () => {
                               <option value="upi">UPI</option>
                               <option value="netbanking">Net Banking</option>
                             </select>
-                            <ChevronDown className="w-4 h-4 text-[#8A948F] absolute right-3 top-2.5 pointer-events-none" />
+                            <ChevronDown className="w-4 h-4 text-[#8A948F] absolute right-3 top-3.5 pointer-events-none" />
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#FDF3DA] border border-[#F0DFA8] rounded-lg">
+                        <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#FDF3DA] border border-[#F0DFA8] rounded-xl">
                           <span className="text-xs font-medium text-[#7A5300]">Payment status</span>
-                          <span className="text-xs font-bold text-[#7A5300] uppercase tracking-wide">Pending</span>
+                          <span className="text-xs font-bold text-[#7A5300] uppercase tracking-wider">
+                            Pending
+                          </span>
                         </div>
 
                         {isOnline && (uploadedReports.length > 0 || uploadedPrescriptions.length > 0) && (
-                          <div className="bg-[#F7F8F7] border border-[#E4E7E4] rounded-lg p-3 space-y-1.5">
-                            <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8A948F]">
+                          <div className="bg-[#F7F8F7] border border-[#E4E7E4] rounded-xl p-3 space-y-1.5">
+                            <div className="text-[11px] font-black uppercase tracking-wider text-[#8A948F]">
                               Attachments
                             </div>
                             {uploadedReports.length > 0 && (
@@ -2551,7 +2674,9 @@ const Appointment = () => {
                                 <span className="flex items-center gap-1.5" style={{ color: BLUE_DARK }}>
                                   <FlaskConical className="w-3 h-3" /> Reports
                                 </span>
-                                <span className="font-semibold text-[#1A2421]">{uploadedReports.length} file(s)</span>
+                                <span className="font-bold text-[#1A2421]">
+                                  {uploadedReports.length} file(s)
+                                </span>
                               </div>
                             )}
                             {uploadedPrescriptions.length > 0 && (
@@ -2559,7 +2684,7 @@ const Appointment = () => {
                                 <span className="flex items-center gap-1.5" style={{ color: GREEN_DARK }}>
                                   <Pill className="w-3 h-3" /> Prescriptions
                                 </span>
-                                <span className="font-semibold text-[#1A2421]">
+                                <span className="font-bold text-[#1A2421]">
                                   {uploadedPrescriptions.length} file(s)
                                 </span>
                               </div>
@@ -2567,111 +2692,68 @@ const Appointment = () => {
                           </div>
                         )}
 
-                        <div className="bg-[#F7F8F7] border border-[#E4E7E4] rounded-lg p-4 space-y-2">
+                        <div className="bg-[#F7F8F7] border border-[#E4E7E4] rounded-xl p-4 space-y-2">
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-[#5B6B65]">
-                              Subtotal ({selectedServices.length} item{selectedServices.length !== 1 ? "s" : ""})
+                              Subtotal ({selectedServices.length} item
+                              {selectedServices.length !== 1 ? "s" : ""})
                             </span>
-                            <span className="font-semibold text-[#1A2421]">₹{subtotal.toLocaleString()}</span>
+                            <span className="font-bold text-[#1A2421]">
+                              ₹{subtotal.toLocaleString()}
+                            </span>
                           </div>
                           <div className="flex items-center justify-between pt-2 border-t border-[#E4E7E4]">
-                            <span className="text-sm font-semibold text-[#1A2421]">Total payable</span>
+                            <span className="text-sm font-bold text-[#1A2421]">Total payable</span>
                             <span className="text-lg font-bold" style={{ color: GREEN_DARK }}>
                               ₹{finalPayable.toLocaleString()}
                             </span>
                           </div>
                         </div>
+
+                        {/* CONFIRM + BACK BUTTONS */}
+                        <div className="space-y-2.5 pt-2 border-t border-[#E4E7E4]">
+                          <button
+                            type="submit"
+                            disabled={
+                              isSubmitting || !selectedSlot || !selectedDoctorId || selectedServices.length === 0
+                            }
+                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-sm transition-all active:scale-[0.98]"
+                            style={
+                              selectedSlot && selectedDoctorId && selectedServices.length > 0 && !isSubmitting
+                                ? {
+                                  backgroundColor: GREEN,
+                                  color: "#FFFFFF",
+                                  boxShadow: `0 6px 16px ${GREEN_SHADOW}`,
+                                }
+                                : { backgroundColor: "#E4E7E4", color: "#8A948F", cursor: "not-allowed" }
+                            }
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                Processing…
+                              </>
+                            ) : (
+                              <>
+                                Confirm booking • ₹{finalPayable.toLocaleString()}
+                                <ArrowRight className="w-4 h-4" />
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleBack}
+                            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold bg-white border-2 rounded-xl transition-colors"
+                            style={{ color: BLUE_DARK, borderColor: BLUE_BORDER }}
+                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_LIGHT)}
+                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+                          >
+                            <ArrowLeft className="w-4 h-4" /> Back
+                          </button>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="hidden lg:block space-y-3">
-                      <button
-                        type="submit"
-                        disabled={isSubmitting || !selectedSlot || !selectedDoctorId || selectedServices.length === 0}
-                        className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-sm transition-all"
-                        style={
-                          selectedSlot && selectedDoctorId && selectedServices.length > 0 && !isSubmitting
-                            ? {
-                                backgroundColor: GREEN,
-                                color: "#FFFFFF",
-                                boxShadow: `0 4px 14px ${GREEN_SHADOW}`,
-                              }
-                            : { backgroundColor: "#E4E7E4", color: "#8A948F", cursor: "not-allowed" }
-                        }
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                            Processing…
-                          </>
-                        ) : (
-                          <>
-                            Confirm booking • ₹{finalPayable.toLocaleString()}
-                            <ArrowRight className="w-4 h-4" />
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleBack}
-                        className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white border rounded-lg transition-colors"
-                        style={{ color: BLUE_DARK, borderColor: BLUE_BORDER }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_LIGHT)}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
-                      >
-                        <ArrowLeft className="w-4 h-4" /> Back
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* MOBILE / TABLET STICKY BOTTOM BAR */}
-                <div
-                  className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t px-4 py-3"
-                  style={{ borderColor: BLUE_BORDER, boxShadow: `0 -4px 12px ${BLUE_SHADOW}` }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-[#5B6B65]">Total payable</span>
-                    <span className="text-base font-bold" style={{ color: GREEN_DARK }}>
-                      ₹{finalPayable.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold bg-white border rounded-lg flex-shrink-0"
-                      style={{ color: BLUE_DARK, borderColor: BLUE_BORDER }}
-                    >
-                      <ArrowLeft className="w-3.5 h-3.5" /> Back
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || !selectedSlot || !selectedDoctorId || selectedServices.length === 0}
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all"
-                      style={
-                        selectedSlot && selectedDoctorId && selectedServices.length > 0 && !isSubmitting
-                          ? {
-                              backgroundColor: GREEN,
-                              color: "#FFFFFF",
-                              boxShadow: `0 4px 12px ${GREEN_SHADOW}`,
-                            }
-                          : { backgroundColor: "#E4E7E4", color: "#8A948F", cursor: "not-allowed" }
-                      }
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          Processing…
-                        </>
-                      ) : (
-                        <>
-                          Confirm • ₹{finalPayable.toLocaleString()}
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
               </form>
@@ -2679,209 +2761,41 @@ const Appointment = () => {
           )}
         </div>
 
-        {/* CONFIRMATION MODAL */}
+        {/* ==================== SIMPLE THANK YOU POPUP ==================== */}
         {bookingConfirmation && (
-          <div className="fixed inset-0 bg-[#1A2421]/60 z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white rounded-xl max-w-lg w-full p-6 md:p-8 border my-8" style={{ borderColor: BLUE_BORDER }}>
-              <div className="flex items-center justify-between pb-4 border-b border-[#E4E7E4]">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: GREEN_LIGHT, color: GREEN_DARK }}
-                  >
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-[#1A2421] text-lg">Appointment booked</h3>
-                    <p className="text-xs text-[#8A948F]">Reference #{bookingConfirmation.appointmentId}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setBookingConfirmation(null)}
-                  className="text-[#8A948F] hover:text-[#1A2421] p-1.5 rounded-lg"
+          <div className="fixed inset-0 bg-[#1A2421]/70 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl w-full max-w-[300px] shadow-2xl border border-[#E4E7E4] overflow-hidden">
+              <div className="py-8 px-6 flex flex-col items-center">
+                {/* Green check circle */}
+                <div
+                  className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
+                  style={{
+                    background: `linear-gradient(135deg, ${GREEN}, ${GREEN_DARK})`,
+                    boxShadow: `0 10px 25px ${GREEN_SHADOW}`,
+                  }}
                 >
-                  <XCircle className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="my-6 bg-[#F7F8F7] p-5 rounded-lg border border-[#E4E7E4] space-y-3.5">
-                <div className="flex items-center justify-between pb-3 border-b border-[#E4E7E4]">
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: BLUE }}>
-                      Patient
-                    </div>
-                    <div className="text-sm font-semibold text-[#1A2421]">
-                      {bookingConfirmation.patientTitle} {bookingConfirmation.patientName}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: GREEN }}>
-                      Age / Gender
-                    </div>
-                    <div className="text-sm font-medium text-[#3F4A45]">
-                      {bookingConfirmation.patientAge} yrs ({bookingConfirmation.patientGender})
-                    </div>
-                  </div>
+                  <Check className="w-10 h-10 text-white" strokeWidth={3} />
                 </div>
 
-                {bookingConfirmation.patientDob && (
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: BLUE }}>
-                      Date of Birth
-                    </div>
-                    <div className="text-xs font-medium text-[#3F4A45]">{bookingConfirmation.patientDob}</div>
-                  </div>
-                )}
+                <h3 className="text-xl font-bold text-[#1A2421] text-center">
+                  Thank You!
+                </h3>
+                <p className="text-sm text-[#5B6B65] mt-2 text-center leading-relaxed">
+                  Your appointment has been booked successfully
+                </p>
 
-                {bookingConfirmation.clinicName && (
-                  <div className="pb-2 border-b border-[#E4E7E4]">
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: BLUE }}>
-                      Clinic
-                    </div>
-                    <div className="text-sm font-semibold text-[#1A2421]">{bookingConfirmation.clinicName}</div>
-                  </div>
-                )}
-
-                <div className="pb-2 border-b border-[#E4E7E4]">
-                  <div className="text-[10px] font-semibold uppercase" style={{ color: GREEN }}>
-                    Doctor
-                  </div>
-                  <div className="text-sm font-semibold text-[#1A2421]">{bookingConfirmation.doctorName || "N/A"}</div>
-                  {bookingConfirmation.doctorSpecialization && (
-                    <div className="text-xs text-[#5B6B65]">{bookingConfirmation.doctorSpecialization}</div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: BLUE }}>
-                      Booking Type
-                    </div>
-                    <div className="text-xs font-medium text-[#3F4A45]">{bookingConfirmation.bookingType}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: GREEN }}>
-                      Phone
-                    </div>
-                    <div className="text-xs font-medium text-[#3F4A45]">{bookingConfirmation.patientPhone}</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: BLUE }}>
-                      Date
-                    </div>
-                    <div className="text-xs font-medium text-[#3F4A45]">
-                      {bookingConfirmation.date} ({bookingConfirmation.dayOfWeek})
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: GREEN }}>
-                      Time
-                    </div>
-                    <div className="text-xs font-medium text-[#3F4A45]">
-                      {bookingConfirmation.startTime} – {bookingConfirmation.endTime}
-                    </div>
-                  </div>
-                </div>
-
-                {bookingConfirmation.uploadedReports && bookingConfirmation.uploadedReports.length > 0 && (
-                  <div className="pb-2 border-b border-[#E4E7E4]">
-                    <div className="text-[10px] font-semibold uppercase mb-1.5" style={{ color: BLUE }}>
-                      Reports ({bookingConfirmation.uploadedReports.length})
-                    </div>
-                    <div className="space-y-1">
-                      {bookingConfirmation.uploadedReports.map((r, i) => (
-                        <div key={i} className="flex items-center gap-1.5 text-xs text-[#3F4A45]">
-                          <FlaskConical className="w-3 h-3" style={{ color: BLUE }} />
-                          <span className="truncate">{r.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {bookingConfirmation.uploadedPrescriptions && bookingConfirmation.uploadedPrescriptions.length > 0 && (
-                  <div className="pb-2 border-b border-[#E4E7E4]">
-                    <div className="text-[10px] font-semibold uppercase mb-1.5" style={{ color: GREEN }}>
-                      Prescriptions ({bookingConfirmation.uploadedPrescriptions.length})
-                    </div>
-                    <div className="space-y-1">
-                      {bookingConfirmation.uploadedPrescriptions.map((p, i) => (
-                        <div key={i} className="flex items-center gap-1.5 text-xs text-[#3F4A45]">
-                          <Pill className="w-3 h-3" style={{ color: GREEN }} />
-                          <span className="truncate">{p.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-2 border-t border-[#E4E7E4]">
-                  <div className="text-[10px] font-semibold uppercase mb-2" style={{ color: GREEN }}>
-                    Services
-                  </div>
-                  <div className="space-y-1">
-                    {bookingConfirmation.services.map((s, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs">
-                        <span className="text-[#3F4A45]">
-                          {s.name} × {s.quantity}
-                        </span>
-                        <span className="font-semibold text-[#1A2421]">₹{s.total}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-[#E4E7E4] flex items-center justify-between">
-                  <span className="text-sm font-semibold text-[#1A2421]">Total payable</span>
-                  <span className="text-base font-bold" style={{ color: GREEN_DARK }}>
-                    ₹{bookingConfirmation.finalPayable.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="text-center pt-2 border-t border-[#E4E7E4]">
-                  <span className="inline-block bg-[#FDF3DA] text-[#92600B] text-[10px] font-bold px-3 py-1 rounded uppercase">
-                    Payment: {bookingConfirmation.paymentStatus}
-                  </span>
-                </div>
-
-                {bookingConfirmation.patientAddress && (
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: BLUE }}>
-                      Address
-                    </div>
-                    <div className="text-xs text-[#3F4A45]">{bookingConfirmation.patientAddress}</div>
-                  </div>
-                )}
-
-                {bookingConfirmation.purpose && (
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase" style={{ color: GREEN }}>
-                      Purpose
-                    </div>
-                    <div className="text-xs text-[#3F4A45]">{bookingConfirmation.purpose}</div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="px-4 py-2 rounded-lg text-xs font-semibold bg-[#F7F8F7] hover:bg-[#E4E7E4] text-[#3F4A45] flex items-center gap-1.5"
-                >
-                  <Printer className="w-3.5 h-3.5" /> Print
-                </button>
                 <button
                   type="button"
                   onClick={() => setBookingConfirmation(null)}
-                  className="px-5 py-2 rounded-lg text-xs font-semibold text-white"
-                  style={{ backgroundColor: GREEN }}
+                  className="w-full mt-6 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-bold text-sm text-white transition-all active:scale-[0.98]"
+                  style={{
+                    backgroundColor: GREEN,
+                    boxShadow: `0 6px 16px ${GREEN_SHADOW}`,
+                  }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = GREEN_DARK)}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = GREEN)}
                 >
+                  <Check className="w-4 h-4" strokeWidth={3} />
                   Done
                 </button>
               </div>
@@ -2895,26 +2809,25 @@ const Appointment = () => {
 };
 
 // ---------- Sub-component: slot tile ----------
-// ✅ Booked slots AND past slots are already filtered out by parent
 const AppointmentSlotTile = ({ slot, isSelected, onSelect }) => {
   return (
     <button
       type="button"
       onClick={onSelect}
-      className="p-3 rounded-lg border text-left transition-colors flex flex-col justify-between h-20"
+      className="p-3 rounded-xl border-2 text-left transition-all flex flex-col justify-between h-20 active:scale-[0.97]"
       style={
         isSelected
           ? {
-              backgroundColor: BLUE,
-              color: "#FFFFFF",
-              borderColor: BLUE,
-              boxShadow: `0 4px 12px ${BLUE_SHADOW}`,
-            }
+            backgroundColor: BLUE,
+            color: "#FFFFFF",
+            borderColor: BLUE,
+            boxShadow: `0 6px 16px ${BLUE_SHADOW}`,
+          }
           : {
-              backgroundColor: "#FFFFFF",
-              borderColor: "#D7DCD9",
-              color: "#1A2421",
-            }
+            backgroundColor: "#FFFFFF",
+            borderColor: "#D7DCD9",
+            color: "#1A2421",
+          }
       }
       onMouseEnter={(e) => {
         if (!isSelected) {
@@ -2929,13 +2842,13 @@ const AppointmentSlotTile = ({ slot, isSelected, onSelect }) => {
         }
       }}
     >
-      <div className="text-xs font-semibold tracking-tight">
+      <div className="text-xs font-bold tracking-tight">
         {slot.startTime} – {slot.endTime}
       </div>
       <div className="flex items-center justify-between text-[10px] font-medium">
         <span style={{ color: isSelected ? "rgba(255,255,255,0.9)" : "#5B6B65" }}>{slot.shift}</span>
         <span
-          className="px-2 py-0.5 rounded text-[9px] uppercase tracking-wide font-semibold"
+          className="px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black"
           style={
             isSelected
               ? { backgroundColor: "#FFFFFF", color: BLUE }

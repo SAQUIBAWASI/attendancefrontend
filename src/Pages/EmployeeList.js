@@ -3828,37 +3828,30 @@ const EmployeeList = () => {
   const [showInactiveOnly, setShowInactiveOnly] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   
-  // ✅ Image Attendance Toggle States
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [showBulkImagePopup, setShowBulkImagePopup] = useState(false);
   const [bulkImageAction, setBulkImageAction] = useState('enable');
   const [bulkImageLoading, setBulkImageLoading] = useState(false);
   
-  // ✅ Single Image Toggle Popup
   const [showImageTogglePopup, setShowImageTogglePopup] = useState(false);
   const [imageToggleEmployee, setImageToggleEmployee] = useState(null);
   const [imageToggleAction, setImageToggleAction] = useState('');
   const [imageToggleLoading, setImageToggleLoading] = useState(false);
   
-  // Active filter type for card clicks
   const [activeFilterType, setActiveFilterType] = useState('all');
   
-  // Filter states
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDesignation, setFilterDesignation] = useState("");
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
   
-  // Unique departments and designations
   const [uniqueDepartments, setUniqueDepartments] = useState([]);
   const [uniqueDesignations, setUniqueDesignations] = useState([]);
   
-  // Refs for click outside
   const departmentFilterRef = useRef(null);
   const designationFilterRef = useRef(null);
   
-  // Pagination
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -3876,9 +3869,7 @@ const EmployeeList = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get(
-          `${API_BASE_URL}/employees/get-employees`
-        );
+        const response = await axios.get(`${API_BASE_URL}/employees/get-employees`);
         setEmployees(response.data);
         extractUniqueValues(response.data);
       } catch (error) {
@@ -3888,9 +3879,7 @@ const EmployeeList = () => {
 
     const fetchLocations = async () => {
       try {
-        const response = await axios.get(
-          `${API_BASE_URL}/location/alllocation`
-        );
+        const response = await axios.get(`${API_BASE_URL}/location/alllocation`);
         let locationsData = [];
         if (response.data?.locations) {
           locationsData = response.data.locations;
@@ -3908,7 +3897,6 @@ const EmployeeList = () => {
     fetchLocations();
   }, []);
 
-  // Click outside handlers for filter dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
@@ -3922,7 +3910,6 @@ const EmployeeList = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Extract unique departments and designations
   const extractUniqueValues = (employees) => {
     const depts = new Set();
     const designations = new Set();
@@ -3936,7 +3923,6 @@ const EmployeeList = () => {
     setUniqueDesignations(Array.from(designations).sort());
   };
 
-  // Check if employee is active based on isActive field or status
   const isEmployeeHidden = (emp) => {
     if (emp.isActive === false) return true;
     if (emp.status === 'inactive') return true;
@@ -3947,7 +3933,6 @@ const EmployeeList = () => {
   const activeEmployees = employees.filter(emp => !isEmployeeHidden(emp));
   const inactiveEmployees = employees.filter(emp => isEmployeeHidden(emp));
 
-  // Filter employees based on search and filters
   const filteredEmployees = employees.filter((emp) => {
     if (activeFilterType === 'active' && isEmployeeHidden(emp)) return false;
     if (activeFilterType === 'inactive' && !isEmployeeHidden(emp)) return false;
@@ -3987,7 +3972,6 @@ const EmployeeList = () => {
     return aHidden ? 1 : -1;
   });
 
-  // Update pagination when filtered results change
   useEffect(() => {
     setPagination(prev => ({
       ...prev,
@@ -4001,7 +3985,6 @@ const EmployeeList = () => {
   const indexOfFirst = indexOfLast - pagination.limit;
   const currentEmployees = filteredEmployees.slice(indexOfFirst, indexOfLast);
 
-  // Card click handlers
   const handleCardClick = (type) => {
     setActiveFilterType(type);
     setShowInactiveOnly(false);
@@ -4028,19 +4011,11 @@ const EmployeeList = () => {
     
     try {
       const updateData = { status: newStatus };
-      console.log("Updating status for:", emp._id, "Data:", updateData);
 
-      const response = await axios.put(
-        `${API_BASE_URL}/employees/update/${emp._id}`,
-        updateData
-      );
+      const response = await axios.put(`${API_BASE_URL}/employees/update/${emp._id}`, updateData);
 
       if (response.data.success) {
-        setEmployees(employees.map(e => 
-          e._id === emp._id 
-            ? { ...e, status: newStatus } 
-            : e
-        ));
+        setEmployees(employees.map(e => e._id === emp._id ? { ...e, status: newStatus } : e));
         alert(`✅ Employee ${action}D successfully`);
       } else {
         throw new Error(response.data.message || "Failed to update status");
@@ -4050,17 +4025,10 @@ const EmployeeList = () => {
       
       try {
         const updateData2 = { isActive: !isCurrentlyHidden };
-        const retryResponse = await axios.put(
-          `${API_BASE_URL}/employees/update/${emp._id}`,
-          updateData2
-        );
+        const retryResponse = await axios.put(`${API_BASE_URL}/employees/update/${emp._id}`, updateData2);
         
         if (retryResponse.data.success) {
-          setEmployees(employees.map(e => 
-            e._id === emp._id 
-              ? { ...e, isActive: !isCurrentlyHidden } 
-              : e
-          ));
+          setEmployees(employees.map(e => e._id === emp._id ? { ...e, isActive: !isCurrentlyHidden } : e));
           alert(`✅ Employee ${action}D successfully`);
         }
       } catch (retryError) {
@@ -4072,9 +4040,6 @@ const EmployeeList = () => {
     }
   };
 
-  // =============================================
-  // ✅ IMAGE ATTENDANCE - SINGLE UPDATE
-  // =============================================
   const handleSingleImageToggle = (emp) => {
     const currentValue = emp.isAllowedImageCapturedAttendance === "true" || emp.isAllowedImageCapturedAttendance === true;
     const action = currentValue ? 'disable' : 'enable';
@@ -4094,20 +4059,13 @@ const EmployeeList = () => {
     setShowImageTogglePopup(false);
     
     try {
-      const response = await axios.put(
-        `${API_BASE_URL}/employees/update-image-capture`,
-        {
-          employeeId: imageToggleEmployee.employeeId,
-          isAllowed: newValue
-        }
-      );
+      const response = await axios.put(`${API_BASE_URL}/employees/update-image-capture`, {
+        employeeId: imageToggleEmployee.employeeId,
+        isAllowed: newValue
+      });
 
       if (response.data.success) {
-        setEmployees(employees.map(e => 
-          e._id === imageToggleEmployee._id 
-            ? { ...e, isAllowedImageCapturedAttendance: newValue } 
-            : e
-        ));
+        setEmployees(employees.map(e => e._id === imageToggleEmployee._id ? { ...e, isAllowedImageCapturedAttendance: newValue } : e));
         alert(`✅ Image Attendance ${action}D successfully for ${imageToggleEmployee.name}`);
       } else {
         throw new Error(response.data.message || "Failed to update image attendance setting");
@@ -4122,9 +4080,6 @@ const EmployeeList = () => {
     }
   };
 
-  // =============================================
-  // ✅ IMAGE ATTENDANCE - BULK UPDATE
-  // =============================================
   const handleSelectAll = () => {
     if (selectAll) {
       setSelectedEmployees([]);
@@ -4160,21 +4115,13 @@ const EmployeeList = () => {
     setShowBulkImagePopup(false);
     
     try {
-      const response = await axios.put(
-        `${API_BASE_URL}/employees/update-image-capture`,
-        {
-          employeeIds: selectedEmployees,
-          isAllowed: isAllowed
-        }
-      );
+      const response = await axios.put(`${API_BASE_URL}/employees/update-image-capture`, {
+        employeeIds: selectedEmployees,
+        isAllowed: isAllowed
+      });
 
       if (response.data.success) {
-        // Update local state
-        setEmployees(employees.map(e => 
-          selectedEmployees.includes(e.employeeId)
-            ? { ...e, isAllowedImageCapturedAttendance: isAllowed }
-            : e
-        ));
+        setEmployees(employees.map(e => selectedEmployees.includes(e.employeeId) ? { ...e, isAllowedImageCapturedAttendance: isAllowed } : e));
         alert(`✅ ${response.data.data.success.length} employees ${action}D successfully`);
         setSelectedEmployees([]);
         setSelectAll(false);
@@ -4192,9 +4139,7 @@ const EmployeeList = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
-        await axios.delete(
-          `${API_BASE_URL}/employees/delete-employee/${id}`
-        );
+        await axios.delete(`${API_BASE_URL}/employees/delete-employee/${id}`);
         setEmployees(employees.filter((emp) => emp._id !== id));
         alert("✅ Employee deleted successfully!");
       } catch (error) {
@@ -4217,7 +4162,6 @@ const EmployeeList = () => {
     setLoading(false);
   };
 
-  // Handle itemsPerPage change with localStorage persistence
   const handleItemsPerPageChange = (limit) => {
     setPagination({
       currentPage: 1,
@@ -4230,37 +4174,24 @@ const EmployeeList = () => {
 
   const handlePrevPage = () => {
     if (pagination.currentPage > 1) {
-      setPagination(prev => ({
-        ...prev,
-        currentPage: prev.currentPage - 1
-      }));
+      setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }));
     }
   };
 
   const handleNextPage = () => {
     if (pagination.currentPage < pagination.totalPages) {
-      setPagination(prev => ({
-        ...prev,
-        currentPage: prev.currentPage + 1
-      }));
+      setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }));
     }
   };
 
   const handlePageClick = (page) => {
-    setPagination(prev => ({
-      ...prev,
-      currentPage: page
-    }));
+    setPagination(prev => ({ ...prev, currentPage: page }));
   };
 
   const getPageNumbers = () => {
     const pageNumbers = [];
     for (let i = 1; i <= pagination.totalPages; i++) {
-      if (
-        i === 1 ||
-        i === pagination.totalPages ||
-        (i >= pagination.currentPage - 2 && i <= pagination.currentPage + 2)
-      ) {
+      if (i === 1 || i === pagination.totalPages || (i >= pagination.currentPage - 2 && i <= pagination.currentPage + 2)) {
         pageNumbers.push(i);
       } else if (i === pagination.currentPage - 3 || i === pagination.currentPage + 3) {
         pageNumbers.push("...");
@@ -4277,20 +4208,10 @@ const EmployeeList = () => {
 
     setLoading(true);
     try {
-      console.log("Assigning location for employee:", selectedEmployeeForLocation.employeeId);
-      
-      const response = await axios.put(
-        `${API_BASE_URL}/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
-        { locationId: selectedLocationId }
-      );
+      const response = await axios.put(`${API_BASE_URL}/employees/assign-location/${selectedEmployeeForLocation.employeeId}`, { locationId: selectedLocationId });
 
       if (response.data.success) {
-        setEmployees(employees.map((emp) =>
-          emp._id === selectedEmployeeForLocation._id
-            ? { ...emp, location: selectedLocationId }
-            : emp
-        ));
-
+        setEmployees(employees.map((emp) => emp._id === selectedEmployeeForLocation._id ? { ...emp, location: selectedLocationId } : emp));
         alert("✅ Location assigned successfully!");
         handleCloseLocationModal();
       }
@@ -4298,17 +4219,10 @@ const EmployeeList = () => {
       console.error("Error assigning location:", error);
       
       try {
-        const fallbackResponse = await axios.put(
-          `${API_BASE_URL}/employees/update/${selectedEmployeeForLocation._id}`,
-          { location: selectedLocationId }
-        );
+        const fallbackResponse = await axios.put(`${API_BASE_URL}/employees/update/${selectedEmployeeForLocation._id}`, { location: selectedLocationId });
 
         if (fallbackResponse.data.success) {
-          setEmployees(employees.map((emp) =>
-            emp._id === selectedEmployeeForLocation._id
-              ? { ...emp, location: selectedLocationId }
-              : emp
-          ));
+          setEmployees(employees.map((emp) => emp._id === selectedEmployeeForLocation._id ? { ...emp, location: selectedLocationId } : emp));
           alert("✅ Location assigned successfully!");
           handleCloseLocationModal();
         }
@@ -4321,42 +4235,180 @@ const EmployeeList = () => {
     }
   };
 
-  // Excel Export Function
+  // ============================================
+  // ✅ EXCEL EXPORT — Full Employee Details
+  // ❌ Employment Type & Reporting Manager REMOVED
+  // ============================================
   const exportToExcel = () => {
     try {
-      const excelData = filteredEmployees.map(emp => ({
-        'Emp ID': emp.employeeId || '',
-        'Name': emp.name || '',
-        'Email': emp.email || '',
-        'Department': emp.department || '',
-        'Designation': emp.role || emp.designation || '',
-        'Join Date': emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : '',
-        'Phone': emp.phone || '',
-        'Location': getLocationName(emp.location),
-        'Salary Per Month': `₹${emp.salaryPerMonth || ''}`,
-        'Shift Hours': emp.shiftHours || '',
-        'Week Off Per Month': emp.weekOffPerMonth || '',
-        'Status': isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE',
-        'Image Attendance': emp.isAllowedImageCapturedAttendance === "true" || emp.isAllowedImageCapturedAttendance === true ? 'ENABLED' : 'DISABLED'
-      }));
+      const excelData = filteredEmployees.map(emp => {
+        const fullName = emp.name || '';
+        const nameParts = fullName.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+        return {
+          // ============================================
+          // SECTION 1: BASIC DETAILS
+          // ============================================
+          'Employee ID': emp.employeeId || '',
+          'First Name': firstName,
+          'Last Name': lastName,
+          'Full Name': fullName,
+          'Email': emp.email || '',
+          'Phone': emp.phone || '',
+          'Alternate Phone': emp.alternateNumber || emp.alternatePhone || '',
+          'Date of Birth': emp.dob || emp.dateOfBirth 
+            ? new Date(emp.dob || emp.dateOfBirth).toLocaleDateString('en-IN') 
+            : '',
+          'Gender': emp.gender || '',
+          'Parents Name': emp.parentsName || '',
+          
+          // Address Details
+          'Address Line 1': emp.addressLine1 || '',
+          'Address Line 2': emp.addressLine2 || '',
+          'City': emp.city || '',
+          'State': emp.state || '',
+          'Pin Code': emp.pinCode || '',
+          'Country': emp.country || '',
+          'Full Address': emp.address || '',
+          
+          // ============================================
+          // SECTION 2: OFFICE DETAILS
+          // ❌ Employment Type & Reporting Manager REMOVED
+          // ============================================
+          'Join Date': emp.joinDate ? new Date(emp.joinDate).toLocaleDateString('en-IN') : '',
+          'Department': emp.department || '',
+          'Designation': emp.role || emp.designation || '',
+          'Work Location': getLocationName(emp.location),
+          'Status': isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE',
+          'Image Attendance': 
+            (emp.isAllowedImageCapturedAttendance === "true" || 
+             emp.isAllowedImageCapturedAttendance === true) 
+              ? 'ENABLED' : 'DISABLED',
+          
+          // ============================================
+          // SECTION 3: BANK & DOCUMENTS
+          // ============================================
+          'Bank Name': emp.bankName || '',
+          'Bank Account Number': emp.bankAccountNo || emp.bankAccount || '',
+          'IFSC Code': emp.ifscCode || emp.ifsc || '',
+          'PAN Number': emp.panNumber || emp.panCard || '',
+          'UAN Number': emp.uanNumber || '',
+          'PF Number': emp.pfNumber || '',
+          'ESIC Number': emp.esicNumber || '',
+          
+          // ============================================
+          // SECTION 4: SALARY BREAKUP
+          // ============================================
+          'Basic Pay': emp.basicPay || 0,
+          'HRA': emp.hra || 0,
+          'Conveyance Allowance': emp.conveyanceAllowance || 0,
+          'Medical Allowance': emp.medicalAllowance || 0,
+          'Performance Allowance': emp.performanceAllowance || 0,
+          'Special Allowance': emp.specialAllowance || 0,
+          'P Tax': emp.ptax || emp.profTax || 0,
+          'GMC Type': emp.gmc || '',
+          'GMC Amount': emp.gmcAmount || 0,
+          'Other Deductions': emp.otherDeductions || 0,
+          'Salary Per Month (Net)': emp.salaryPerMonth || 0,
+          'CTC (Yearly)': emp.ctc || 0,
+          'Salary Effective From': emp.salaryEffectiveDate 
+            ? new Date(emp.salaryEffectiveDate).toLocaleDateString('en-IN') 
+            : '',
+          
+          // ============================================
+          // SECTION 5: HR & LEAVE POLICY
+          // ============================================
+          'Shift Type': emp.shiftType || '',
+          'Shift Hours': emp.shiftHours || '',
+          'Week Off Day': emp.weekOffDay || '',
+          'Week Off Per Month': emp.weekOffPerMonth || '',
+          'Max CL': emp.maxCL || 0,
+          'Max SL': emp.maxSL || 0,
+          'Max EL': emp.maxEL || 0,
+          'Max Comp Off': emp.maxCompOff || 0,
+          
+          // ============================================
+          // EXTRA / MISC
+          // ============================================
+          'Created At': emp.createdAt ? new Date(emp.createdAt).toLocaleDateString('en-IN') : '',
+          'Updated At': emp.updatedAt ? new Date(emp.updatedAt).toLocaleDateString('en-IN') : ''
+        };
+      });
 
       const ws = XLSX.utils.json_to_sheet(excelData);
       
+      // Column widths
       const wscols = [
-        {wch: 10}, {wch: 20}, {wch: 25}, {wch: 15}, {wch: 20},
-        {wch: 15}, {wch: 15}, {wch: 20}, {wch: 18}, {wch: 12},
-        {wch: 18}, {wch: 10}, {wch: 15}
+        {wch: 12},  // Employee ID
+        {wch: 15},  // First Name
+        {wch: 15},  // Last Name
+        {wch: 22},  // Full Name
+        {wch: 25},  // Email
+        {wch: 14},  // Phone
+        {wch: 14},  // Alternate Phone
+        {wch: 13},  // DOB
+        {wch: 10},  // Gender
+        {wch: 20},  // Parents Name
+        {wch: 25},  // Address Line 1
+        {wch: 25},  // Address Line 2
+        {wch: 15},  // City
+        {wch: 15},  // State
+        {wch: 12},  // Pin Code
+        {wch: 12},  // Country
+        {wch: 35},  // Full Address
+        {wch: 13},  // Join Date
+        {wch: 18},  // Department
+        {wch: 20},  // Designation
+        {wch: 18},  // Work Location
+        {wch: 10},  // Status
+        {wch: 15},  // Image Attendance
+        {wch: 18},  // Bank Name
+        {wch: 22},  // Bank Account Number
+        {wch: 15},  // IFSC Code
+        {wch: 15},  // PAN Number
+        {wch: 15},  // UAN Number
+        {wch: 15},  // PF Number
+        {wch: 15},  // ESIC Number
+        {wch: 12},  // Basic Pay
+        {wch: 10},  // HRA
+        {wch: 18},  // Conveyance Allowance
+        {wch: 15},  // Medical Allowance
+        {wch: 18},  // Performance Allowance
+        {wch: 16},  // Special Allowance
+        {wch: 10},  // P Tax
+        {wch: 10},  // GMC Type
+        {wch: 12},  // GMC Amount
+        {wch: 15},  // Other Deductions
+        {wch: 20},  // Salary Per Month
+        {wch: 12},  // CTC
+        {wch: 20},  // Salary Effective From
+        {wch: 10},  // Shift Type
+        {wch: 12},  // Shift Hours
+        {wch: 13},  // Week Off Day
+        {wch: 15},  // Week Off Per Month
+        {wch: 10},  // Max CL
+        {wch: 10},  // Max SL
+        {wch: 10},  // Max EL
+        {wch: 12},  // Max Comp Off
+        {wch: 13},  // Created At
+        {wch: 13}   // Updated At
       ];
       ws['!cols'] = wscols;
+      
+      if (!ws['!freeze']) {
+        ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+      }
       
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Employees");
       
       const date = new Date();
-      const timestamp = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      XLSX.writeFile(wb, `employees_${timestamp}.xlsx`);
+      const timestamp = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}-${String(date.getMinutes()).padStart(2, '0')}`;
+      XLSX.writeFile(wb, `employees_full_details_${timestamp}.xlsx`);
       
-      alert("✅ Excel file downloaded successfully!");
+      alert(`✅ Excel file downloaded successfully!\n${filteredEmployees.length} employees exported with full details.`);
     } catch (error) {
       console.error("Error exporting to Excel:", error);
       alert("Failed to export to Excel. Please try again.");
@@ -4364,14 +4416,11 @@ const EmployeeList = () => {
   };
 
   const getLocationName = (locationId) => {
-    if (!locationId || !Array.isArray(locations)) {
-      return "Not assigned";
-    }
+    if (!locationId || !Array.isArray(locations)) return "Not assigned";
     const location = locations.find((loc) => loc._id === locationId);
     return location ? location.name : "Not assigned";
   };
 
-  // Get display label for active filter
   const getFilterLabel = () => {
     switch(activeFilterType) {
       case 'all': return 'All Employees';
@@ -4387,7 +4436,7 @@ const EmployeeList = () => {
     <div className="emp-dash">
       <main className="p-1 sm:p-2 lg:p-6">
 
-        {/* ✅ Header with Title Only - REMOVED DATE PILL */}
+        {/* Desktop Header */}
         <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap leading-none">
@@ -4395,9 +4444,7 @@ const EmployeeList = () => {
             </h1>
           </div>
 
-          {/* Right side: All Filters */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Search */}
             <div className="relative min-w-[130px]">
               <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
               <input
@@ -4412,7 +4459,6 @@ const EmployeeList = () => {
               />
             </div>
 
-            {/* Department */}
             <div className="relative" ref={departmentFilterRef}>
               <button
                 onClick={() => {
@@ -4420,9 +4466,7 @@ const EmployeeList = () => {
                   setShowDesignationFilter(false);
                 }}
                 className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                  filterDepartment 
-                    ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  filterDepartment ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 <FaBuilding className="text-gray-400 text-[10px]" />
@@ -4439,11 +4483,7 @@ const EmployeeList = () => {
                   }}
                 >
                   <div
-                    onClick={() => {
-                      setFilterDepartment('');
-                      setShowDepartmentFilter(false);
-                      setPagination(prev => ({ ...prev, currentPage: 1 }));
-                    }}
+                    onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); setPagination(prev => ({ ...prev, currentPage: 1 })); }}
                     className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                   >
                     All Departments
@@ -4451,14 +4491,8 @@ const EmployeeList = () => {
                   {uniqueDepartments.map(dept => (
                     <div
                       key={dept}
-                      onClick={() => {
-                        setFilterDepartment(dept);
-                        setShowDepartmentFilter(false);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                        filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                      }`}
+                      onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); setPagination(prev => ({ ...prev, currentPage: 1 })); }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}
                     >
                       {dept}
                     </div>
@@ -4467,7 +4501,6 @@ const EmployeeList = () => {
               )}
             </div>
 
-            {/* Designation */}
             <div className="relative" ref={designationFilterRef}>
               <button
                 onClick={() => {
@@ -4475,9 +4508,7 @@ const EmployeeList = () => {
                   setShowDepartmentFilter(false);
                 }}
                 className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                  filterDesignation 
-                    ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  filterDesignation ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 <FaUserTag className="text-gray-400 text-[10px]" />
@@ -4494,11 +4525,7 @@ const EmployeeList = () => {
                   }}
                 >
                   <div
-                    onClick={() => {
-                      setFilterDesignation('');
-                      setShowDesignationFilter(false);
-                      setPagination(prev => ({ ...prev, currentPage: 1 }));
-                    }}
+                    onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); setPagination(prev => ({ ...prev, currentPage: 1 })); }}
                     className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                   >
                     All Designations
@@ -4506,14 +4533,8 @@ const EmployeeList = () => {
                   {uniqueDesignations.map(des => (
                     <div
                       key={des}
-                      onClick={() => {
-                        setFilterDesignation(des);
-                        setShowDesignationFilter(false);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                        filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                      }`}
+                      onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); setPagination(prev => ({ ...prev, currentPage: 1 })); }}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}
                     >
                       {des}
                     </div>
@@ -4522,39 +4543,23 @@ const EmployeeList = () => {
               )}
             </div>
 
-            {/* Status Tabs */}
             {activeFilterType === 'all' && (
               <div className="flex items-center bg-gray-100 p-0.5 rounded-lg h-8">
                 <button
-                  onClick={() => {
-                    setShowInactiveOnly(false);
-                    setPagination(prev => ({ ...prev, currentPage: 1 }));
-                  }}
-                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${
-                    !showInactiveOnly 
-                      ? 'bg-white text-blue-600 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  onClick={() => { setShowInactiveOnly(false); setPagination(prev => ({ ...prev, currentPage: 1 })); }}
+                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${!showInactiveOnly ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                 >
                   Active ({activeEmployees.length})
                 </button>
                 <button
-                  onClick={() => {
-                    setShowInactiveOnly(true);
-                    setPagination(prev => ({ ...prev, currentPage: 1 }));
-                  }}
-                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${
-                    showInactiveOnly 
-                      ? 'bg-white text-red-600 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  onClick={() => { setShowInactiveOnly(true); setPagination(prev => ({ ...prev, currentPage: 1 })); }}
+                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${showInactiveOnly ? 'bg-white text-red-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                 >
                   Inactive ({inactiveEmployees.length})
                 </button>
               </div>
             )}
 
-            {/* Export Button */}
             <button
               onClick={exportToExcel}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
@@ -4563,7 +4568,6 @@ const EmployeeList = () => {
               Export
             </button>
 
-            {/* Add Button */}
             <button
               onClick={() => navigate("/addemployee")}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
@@ -4572,7 +4576,6 @@ const EmployeeList = () => {
               Add
             </button>
 
-            {/* Clear Filters Button */}
             {(filterDepartment || filterDesignation || searchTerm || activeFilterType !== 'all') && (
               <button
                 onClick={() => {
@@ -4592,7 +4595,7 @@ const EmployeeList = () => {
           </div>
         </div>
 
-        {/* ✅ Mobile Header - REMOVED DATE PILL */}
+        {/* Mobile Header */}
         <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
           <h1 className="text-base font-bold whitespace-nowrap">
             Employee <span className="text-indigo-600">List</span>
@@ -4608,11 +4611,7 @@ const EmployeeList = () => {
             >
               <FiFilter className="text-blue-600 text-base" />
               <span>Filters &amp; Actions</span>
-              {showMobileFilters ? (
-                <FaChevronUp className="text-gray-400" />
-              ) : (
-                <FaChevronDown className="text-gray-400" />
-              )}
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
             </button>
             <span className="text-xs text-gray-500">
               <strong>{filteredEmployees.length}</strong> employees
@@ -4629,10 +4628,7 @@ const EmployeeList = () => {
                     type="text"
                     placeholder="Search ID, Name, Email..."
                     value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setPagination(prev => ({ ...prev, currentPage: 1 }));
-                    }}
+                    onChange={(e) => { setSearchTerm(e.target.value); setPagination(prev => ({ ...prev, currentPage: 1 })); }}
                     className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                   />
                 </div>
@@ -4641,48 +4637,19 @@ const EmployeeList = () => {
               <div className="relative" ref={departmentFilterRef}>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
                 <button
-                  onClick={() => {
-                    setShowDepartmentFilter(!showDepartmentFilter);
-                    setShowDesignationFilter(false);
-                  }}
+                  onClick={() => { setShowDepartmentFilter(!showDepartmentFilter); setShowDesignationFilter(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                    filterDepartment 
-                      ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
-                      : 'border-gray-300 text-gray-700'
+                    filterDepartment ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' : 'border-gray-300 text-gray-700'
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDepartment || 'All Departments'}
-                  </span>
+                  <span className="flex items-center gap-2"><FaBuilding className="text-gray-400" />{filterDepartment || 'All Departments'}</span>
                   <span className="text-gray-400">▾</span>
                 </button>
                 {showDepartmentFilter && (
                   <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div
-                      onClick={() => {
-                        setFilterDepartment('');
-                        setShowDepartmentFilter(false);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Departments
-                    </div>
+                    <div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); setPagination(prev => ({ ...prev, currentPage: 1 })); }} className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Departments</div>
                     {uniqueDepartments.map(dept => (
-                      <div
-                        key={dept}
-                        onClick={() => {
-                          setFilterDepartment(dept);
-                          setShowDepartmentFilter(false);
-                          setPagination(prev => ({ ...prev, currentPage: 1 }));
-                        }}
-                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {dept}
-                      </div>
+                      <div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); setPagination(prev => ({ ...prev, currentPage: 1 })); }} className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}>{dept}</div>
                     ))}
                   </div>
                 )}
@@ -4691,81 +4658,37 @@ const EmployeeList = () => {
               <div className="relative" ref={designationFilterRef}>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
                 <button
-                  onClick={() => {
-                    setShowDesignationFilter(!showDesignationFilter);
-                    setShowDepartmentFilter(false);
-                  }}
+                  onClick={() => { setShowDesignationFilter(!showDesignationFilter); setShowDepartmentFilter(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                    filterDesignation 
-                      ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
-                      : 'border-gray-300 text-gray-700'
+                    filterDesignation ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' : 'border-gray-300 text-gray-700'
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <FaUserTag className="text-gray-400" />
-                    {filterDesignation || 'All Designations'}
-                  </span>
+                  <span className="flex items-center gap-2"><FaUserTag className="text-gray-400" />{filterDesignation || 'All Designations'}</span>
                   <span className="text-gray-400">▾</span>
                 </button>
                 {showDesignationFilter && (
                   <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div
-                      onClick={() => {
-                        setFilterDesignation('');
-                        setShowDesignationFilter(false);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Designations
-                    </div>
+                    <div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); setPagination(prev => ({ ...prev, currentPage: 1 })); }} className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Designations</div>
                     {uniqueDesignations.map(des => (
-                      <div
-                        key={des}
-                        onClick={() => {
-                          setFilterDesignation(des);
-                          setShowDesignationFilter(false);
-                          setPagination(prev => ({ ...prev, currentPage: 1 }));
-                        }}
-                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {des}
-                      </div>
+                      <div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); setPagination(prev => ({ ...prev, currentPage: 1 })); }} className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}>{des}</div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Status Tabs */}
               {activeFilterType === 'all' && (
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
                   <div className="flex bg-gray-100 p-1 rounded-lg">
                     <button
-                      onClick={() => {
-                        setShowInactiveOnly(false);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-                        !showInactiveOnly 
-                          ? 'bg-white text-blue-600 shadow-sm' 
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
+                      onClick={() => { setShowInactiveOnly(false); setPagination(prev => ({ ...prev, currentPage: 1 })); }}
+                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${!showInactiveOnly ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                     >
                       Active ({activeEmployees.length})
                     </button>
                     <button
-                      onClick={() => {
-                        setShowInactiveOnly(true);
-                        setPagination(prev => ({ ...prev, currentPage: 1 }));
-                      }}
-                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-                        showInactiveOnly 
-                          ? 'bg-white text-red-600 shadow-sm' 
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
+                      onClick={() => { setShowInactiveOnly(true); setPagination(prev => ({ ...prev, currentPage: 1 })); }}
+                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${showInactiveOnly ? 'bg-white text-red-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                     >
                       Inactive ({inactiveEmployees.length})
                     </button>
@@ -4773,31 +4696,19 @@ const EmployeeList = () => {
                 </div>
               )}
 
-              {/* Filter Info */}
               {activeFilterType !== 'all' && (
                 <div className="p-2 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-xs font-medium text-blue-700">
-                    Showing: <strong>{getFilterLabel()}</strong>
-                  </p>
+                  <p className="text-xs font-medium text-blue-700">Showing: <strong>{getFilterLabel()}</strong></p>
                 </div>
               )}
 
-              {/* Mobile Action Buttons */}
               <div className="pt-3 border-t border-gray-200 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={exportToExcel}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
-                  >
-                    <FiDownload className="w-4 h-4" />
-                    Export
+                  <button onClick={exportToExcel} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm">
+                    <FiDownload className="w-4 h-4" /> Export
                   </button>
-                  <button
-                    onClick={() => navigate("/addemployee")}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-                  >
-                    <FiPlus className="w-4 h-4" />
-                    Add
+                  <button onClick={() => navigate("/addemployee")} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm">
+                    <FiPlus className="w-4 h-4" /> Add
                   </button>
                 </div>
                 {(filterDepartment || filterDesignation || searchTerm || activeFilterType !== 'all') && (
@@ -4812,8 +4723,7 @@ const EmployeeList = () => {
                     }}
                     className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
                   >
-                    <FiTrash2 className="w-4 h-4" />
-                    Clear All Filters
+                    <FiTrash2 className="w-4 h-4" /> Clear All Filters
                   </button>
                 )}
               </div>
@@ -4821,78 +4731,48 @@ const EmployeeList = () => {
           )}
         </div>
 
-        {/* Top KPI Stats Grid with Clickable Cards */}
+        {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
-          {/* Total Employees Card */}
-          <div 
-            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'all' ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
-            onClick={() => handleCardClick('all')}
-          >
+          <div className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'all' ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`} onClick={() => handleCardClick('all')}>
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label text-[10px] sm:text-xs">Total Employees</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FiUsers className="text-sm sm:text-base" />
-              </div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers className="text-sm sm:text-base" /></div>
             </div>
             <div className="emp-dash__stat-value text-xl sm:text-2xl">{employees.length}</div>
             <div className="emp-dash__stat-meta text-[10px] sm:text-xs">all registered staff</div>
           </div>
           
-          {/* Active Employees Card */}
-          <div 
-            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'active' ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
-            onClick={() => handleCardClick('active')}
-          >
+          <div className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'active' ? 'ring-2 ring-green-500 ring-offset-2' : ''}`} onClick={() => handleCardClick('active')}>
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label text-[10px] sm:text-xs">Active Employees</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FiUserCheck className="text-sm sm:text-base" />
-              </div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck className="text-sm sm:text-base" /></div>
             </div>
             <div className="emp-dash__stat-value text-xl sm:text-2xl text-green-600">{activeEmployees.length}</div>
             <div className="emp-dash__stat-meta text-[10px] sm:text-xs">currently working</div>
           </div>
 
-          {/* Inactive Employees Card */}
-          <div 
-            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'inactive' ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
-            onClick={() => handleCardClick('inactive')}
-          >
+          <div className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'inactive' ? 'ring-2 ring-red-500 ring-offset-2' : ''}`} onClick={() => handleCardClick('inactive')}>
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label text-[10px] sm:text-xs">Inactive Employees</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
-                <FiUserMinus className="text-sm sm:text-base" />
-              </div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent"><FiUserMinus className="text-sm sm:text-base" /></div>
             </div>
             <div className="emp-dash__stat-value text-xl sm:text-2xl text-red-600">{inactiveEmployees.length}</div>
             <div className="emp-dash__stat-meta text-[10px] sm:text-xs">hidden from reports</div>
           </div>
 
-          {/* Departments Card */}
-          <div 
-            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'departments' ? 'ring-2 ring-purple-500 ring-offset-2' : ''}`}
-            onClick={() => handleCardClick('departments')}
-          >
+          <div className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'departments' ? 'ring-2 ring-purple-500 ring-offset-2' : ''}`} onClick={() => handleCardClick('departments')}>
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label text-[10px] sm:text-xs">Departments</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FiBriefcase className="text-sm sm:text-base" />
-              </div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiBriefcase className="text-sm sm:text-base" /></div>
             </div>
             <div className="emp-dash__stat-value text-xl sm:text-2xl">{uniqueDepartments.length}</div>
             <div className="emp-dash__stat-meta text-[10px] sm:text-xs">unique dept. units</div>
           </div>
 
-          {/* Locations Card */}
-          <div 
-            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md col-span-2 lg:col-span-1 ${activeFilterType === 'locations' ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}`}
-            onClick={() => handleCardClick('locations')}
-          >
+          <div className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md col-span-2 lg:col-span-1 ${activeFilterType === 'locations' ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}`} onClick={() => handleCardClick('locations')}>
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label text-[10px] sm:text-xs">Work Locations</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FiMapPin className="text-sm sm:text-base" />
-              </div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiMapPin className="text-sm sm:text-base" /></div>
             </div>
             <div className="emp-dash__stat-value text-xl sm:text-2xl">{locations.length}</div>
             <div className="emp-dash__stat-meta text-[10px] sm:text-xs">assigned office sites</div>
@@ -4920,36 +4800,22 @@ const EmployeeList = () => {
           </div>
         )}
 
-        {/* ============================================= */}
-        {/* ✅ BULK IMAGE ATTENDANCE ACTION BAR */}
-        {/* ============================================= */}
+        {/* Bulk Action Bar */}
         {selectedEmployees.length > 0 && (
           <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="text-sm font-semibold text-purple-700">
                 <FiUsers className="inline mr-1" /> {selectedEmployees.length} selected
               </span>
-              <button
-                onClick={() => {
-                  setSelectedEmployees([]);
-                  setSelectAll(false);
-                }}
-                className="text-xs text-gray-500 hover:text-gray-700 font-medium"
-              >
+              <button onClick={() => { setSelectedEmployees([]); setSelectAll(false); }} className="text-xs text-gray-500 hover:text-gray-700 font-medium">
                 <FiX className="inline" /> Clear
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleBulkImageToggle('enable')}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
-              >
+              <button onClick={() => handleBulkImageToggle('enable')} className="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-all shadow-sm flex items-center gap-1.5">
                 <FaCamera className="text-xs" /> Enable All
               </button>
-              <button
-                onClick={() => handleBulkImageToggle('disable')}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
-              >
+              <button onClick={() => handleBulkImageToggle('disable')} className="px-3 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-sm flex items-center gap-1.5">
                 <FaCamera className="text-xs" /> Disable All
               </button>
             </div>
@@ -4962,19 +4828,11 @@ const EmployeeList = () => {
             <table className="emp-dash__table">
               <thead>
                 <tr>
-                  {/* ✅ CHECKBOX COLUMN - FIRST */}
                   <th style={{ textAlign: "center", width: "40px" }}>
-                    <input
-                      type="checkbox"
-                      checked={selectAll}
-                      onChange={handleSelectAll}
-                      className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
-                      title="Select all visible employees"
-                    />
+                    <input type="checkbox" checked={selectAll} onChange={handleSelectAll} className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer" />
                   </th>
-                  {/* ✅ CAMERA COLUMN - SECOND */}
                   <th style={{ textAlign: "center", width: "40px" }}>
-                    <FaCamera className="text-gray-500 text-sm mx-auto" title="Image Attendance" />
+                    <FaCamera className="text-gray-500 text-sm mx-auto" />
                   </th>
                   <th>Employee ID</th>
                   <th>Name</th>
@@ -4997,43 +4855,24 @@ const EmployeeList = () => {
                     const isHidden = isEmployeeHidden(emp);
                     const isImageEnabled = emp.isAllowedImageCapturedAttendance === "true" || emp.isAllowedImageCapturedAttendance === true;
                     return (
-                      <tr 
-                        key={emp._id} 
-                        className={`hover:bg-gray-50/60 transition-all ${isHidden ? 'bg-red-50/30' : ''}`}
-                      >
-                        {/* ✅ CHECKBOX COLUMN */}
+                      <tr key={emp._id} className={`hover:bg-gray-50/60 transition-all ${isHidden ? 'bg-red-50/30' : ''}`}>
                         <td style={{ textAlign: "center" }}>
-                          <input
-                            type="checkbox"
-                            checked={selectedEmployees.includes(emp.employeeId)}
-                            onChange={() => handleSelectEmployee(emp.employeeId)}
-                            className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
-                          />
+                          <input type="checkbox" checked={selectedEmployees.includes(emp.employeeId)} onChange={() => handleSelectEmployee(emp.employeeId)} className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer" />
                         </td>
-                        {/* ✅ CAMERA ICON COLUMN - TOGGLE SINGLE */}
                         <td style={{ textAlign: "center" }}>
                           <button
                             onClick={() => handleSingleImageToggle(emp)}
                             disabled={imageToggleLoading}
-                            className={`p-1.5 rounded-md transition-all ${
-                              isImageEnabled
-                                ? 'text-purple-600 bg-purple-50 hover:bg-purple-100'
-                                : 'text-gray-400 bg-gray-50 hover:bg-gray-100'
-                            }`}
-                            title={isImageEnabled ? "Disable Image Attendance" : "Enable Image Attendance"}
+                            className={`p-1.5 rounded-md transition-all ${isImageEnabled ? 'text-purple-600 bg-purple-50 hover:bg-purple-100' : 'text-gray-400 bg-gray-50 hover:bg-gray-100'}`}
                           >
                             <FaCamera className="w-3.5 h-3.5" />
                           </button>
                         </td>
-                        <td className="font-semibold text-gray-900 whitespace-nowrap text-[11px]">
-                          {emp.employeeId}
-                        </td>
-                        <td className="font-semibold text-gray-900 whitespace-nowrap text-xs">
-                          {emp.name}
-                        </td>
+                        <td className="font-semibold text-gray-900 whitespace-nowrap text-[11px]">{emp.employeeId}</td>
+                        <td className="font-semibold text-gray-900 whitespace-nowrap text-xs">{emp.name}</td>
                         <td className="text-gray-600 whitespace-nowrap hidden sm:table-cell text-[11px]">{emp.phone}</td>
-                        <td className="text-gray-600 truncate max-w-[120px] hidden md:table-cell text-[11px]" title={emp.department}>{emp.department || "N/A"}</td>
-                        <td className="text-gray-600 truncate max-w-[120px] hidden lg:table-cell text-[11px]" title={emp.role || emp.designation}>{emp.role || emp.designation || "N/A"}</td>
+                        <td className="text-gray-600 truncate max-w-[120px] hidden md:table-cell text-[11px]">{emp.department || "N/A"}</td>
+                        <td className="text-gray-600 truncate max-w-[120px] hidden lg:table-cell text-[11px]">{emp.role || emp.designation || "N/A"}</td>
                         <td style={{ textAlign: "center" }} className="text-gray-500 font-medium whitespace-nowrap hidden sm:table-cell text-[11px]">
                           {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : "-"}
                         </td>
@@ -5042,63 +4881,31 @@ const EmployeeList = () => {
                         <td style={{ textAlign: "center" }} className="font-medium text-gray-500 hidden lg:table-cell text-[11px]">{emp.weekOffPerMonth || 0}</td>
                         <td className="font-medium text-blue-600 whitespace-nowrap hidden xl:table-cell text-[11px]">{getLocationName(emp.location)}</td>
                         <td style={{ textAlign: "center" }}>
-                          <span className={`px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold ${
-                            isHidden 
-                              ? 'bg-red-50 text-red-700 border border-red-200' 
-                              : 'bg-green-50 text-green-700 border border-green-200'
-                          }`}>
+                          <span className={`px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold ${isHidden ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
                             {isHidden ? 'INACTIVE' : 'ACTIVE'}
                           </span>
                         </td>
                         <td style={{ textAlign: "center" }}>
                           <div className="flex items-center justify-center gap-1 flex-wrap">
-                            <button 
-                              className="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
-                              onClick={() => handleView(emp)} 
-                              title="View Detail"
-                            >
+                            <button className="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm" onClick={() => handleView(emp)} title="View Detail">
                               <FiEye className="w-3.5 h-3.5" />
                             </button>
-                            <button 
-                              className="inline-flex items-center justify-center p-1.5 text-yellow-600 bg-yellow-50 hover:bg-yellow-100 rounded-md transition-all shadow-sm hidden sm:inline-flex"
-                              onClick={() => handleEdit(emp)} 
-                              title="Edit Employee"
-                            >
+                            <button className="inline-flex items-center justify-center p-1.5 text-yellow-600 bg-yellow-50 hover:bg-yellow-100 rounded-md transition-all shadow-sm hidden sm:inline-flex" onClick={() => handleEdit(emp)} title="Edit Employee">
                               <FiEdit className="w-3.5 h-3.5" />
                             </button>
-                            
-                            {/* Location Button */}
-                            <button 
-                              className="inline-flex items-center justify-center p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-all shadow-sm hidden sm:inline-flex"
-                              onClick={() => handleAssignLocation(emp)} 
-                              title="Assign Location"
-                            >
+                            <button className="inline-flex items-center justify-center p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-all shadow-sm hidden sm:inline-flex" onClick={() => handleAssignLocation(emp)} title="Assign Location">
                               <FiMapPin className="w-3.5 h-3.5" />
                             </button>
-                            
-                            {/* Status Toggle Switch */}
                             <div className="flex items-center mx-0.5">
                               <button
                                 onClick={() => handleToggleStatus(emp)}
                                 disabled={loading}
-                                className={`relative inline-flex h-5 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                                  !isHidden ? 'bg-blue-600' : 'bg-gray-300'
-                                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                title={isHidden ? "Make Active" : "Make Inactive"}
+                                className={`relative inline-flex h-5 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-blue-500 ${!isHidden ? 'bg-blue-600' : 'bg-gray-300'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
-                                <span
-                                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                    !isHidden ? 'translate-x-4' : 'translate-x-0'
-                                  }`}
-                                />
+                                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${!isHidden ? 'translate-x-4' : 'translate-x-0'}`} />
                               </button>
                             </div>
-
-                            <button 
-                              className="inline-flex items-center justify-center p-1.5 text-red-650 bg-red-50 hover:bg-red-100 rounded-md transition-all shadow-sm"
-                              onClick={() => handleDelete(emp._id)} 
-                              title="Delete Employee"
-                            >
+                            <button className="inline-flex items-center justify-center p-1.5 text-red-650 bg-red-50 hover:bg-red-100 rounded-md transition-all shadow-sm" onClick={() => handleDelete(emp._id)} title="Delete Employee">
                               <FiTrash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -5124,14 +4931,7 @@ const EmployeeList = () => {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
               <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 <span>Show</span>
-                <select
-                  value={pagination.limit}
-                  onChange={(e) => {
-                    const newLimit = Number(e.target.value);
-                    handleItemsPerPageChange(newLimit);
-                  }}
-                  className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none"
-                >
+                <select value={pagination.limit} onChange={(e) => handleItemsPerPageChange(Number(e.target.value))} className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none">
                   <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
@@ -5145,15 +4945,7 @@ const EmployeeList = () => {
               </div>
 
               <div className="flex items-center gap-1.5">
-                <button
-                  onClick={handlePrevPage}
-                  disabled={pagination.currentPage === 1}
-                  className={`px-2 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                    pagination.currentPage === 1
-                      ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
-                      : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
-                  }`}
-                >
+                <button onClick={handlePrevPage} disabled={pagination.currentPage === 1} className={`px-2 py-1 text-xs font-semibold border rounded-lg transition-all ${pagination.currentPage === 1 ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"}`}>
                   Prev
                 </button>
 
@@ -5163,26 +4955,14 @@ const EmployeeList = () => {
                     onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                     disabled={page === "..."}
                     className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[28px] sm:min-w-[32px] ${
-                      page === "..."
-                        ? "text-gray-400 bg-transparent border-transparent cursor-default"
-                        : pagination.currentPage === page
-                        ? "text-white bg-blue-600 border-blue-600 shadow-sm"
-                        : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"
+                      page === "..." ? "text-gray-400 bg-transparent border-transparent cursor-default" : pagination.currentPage === page ? "text-white bg-blue-600 border-blue-600 shadow-sm" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"
                     }`}
                   >
                     {page}
                   </button>
                 ))}
 
-                <button
-                  onClick={handleNextPage}
-                  disabled={pagination.currentPage === pagination.totalPages}
-                  className={`px-2 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                    pagination.currentPage === pagination.totalPages
-                      ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
-                      : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"
-                  }`}
-                >
+                <button onClick={handleNextPage} disabled={pagination.currentPage === pagination.totalPages} className={`px-2 py-1 text-xs font-semibold border rounded-lg transition-all ${pagination.currentPage === pagination.totalPages ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"}`}>
                   Next
                 </button>
               </div>
@@ -5203,10 +4983,7 @@ const EmployeeList = () => {
                     ID: <strong className="text-gray-700">{selectedEmployee.employeeId}</strong> • Status: <strong className={isEmployeeHidden(selectedEmployee) ? "text-red-600" : "text-green-600"}>{isEmployeeHidden(selectedEmployee) ? "INACTIVE" : "ACTIVE"}</strong>
                   </p>
                 </div>
-                <button
-                  onClick={handleCloseModal}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
-                >
+                <button onClick={handleCloseModal} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
                   <FiX className="w-5 h-5" />
                 </button>
               </div>
@@ -5232,6 +5009,28 @@ const EmployeeList = () => {
                   <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
                     <span className="text-gray-400 block mb-1">Phone Number</span>
                     <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.phone || "N/A"}</span>
+                  </div>
+
+                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                    <span className="text-gray-400 block mb-1">Alternate Number</span>
+                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.alternateNumber || "N/A"}</span>
+                  </div>
+
+                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                    <span className="text-gray-400 block mb-1">Parents Name</span>
+                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.parentsName || "N/A"}</span>
+                  </div>
+
+                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                    <span className="text-gray-400 block mb-1">Gender</span>
+                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.gender || "N/A"}</span>
+                  </div>
+
+                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                    <span className="text-gray-400 block mb-1">Date of Birth</span>
+                    <span className="font-semibold text-gray-800 text-sm">
+                      {selectedEmployee.dob ? new Date(selectedEmployee.dob).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A"}
+                    </span>
                   </div>
 
                   <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
@@ -5265,6 +5064,11 @@ const EmployeeList = () => {
                   </div>
 
                   <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                    <span className="text-gray-400 block mb-1">Week Off Day</span>
+                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.weekOffDay || 'N/A'}</span>
+                  </div>
+
+                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
                     <span className="text-gray-400 block mb-1">Work Location</span>
                     <span className="font-semibold text-blue-600 text-sm">{getLocationName(selectedEmployee.location)}</span>
                   </div>
@@ -5279,17 +5083,11 @@ const EmployeeList = () => {
               </div>
 
               <div className="flex justify-end gap-2 p-4 border-t border-gray-100 bg-gray-50/50">
-                <button
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-all"
-                >
+                <button onClick={handleCloseModal} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-all">
                   Close
                 </button>
                 <button
-                  onClick={() => {
-                    handleCloseModal();
-                    handleEdit(selectedEmployee);
-                  }}
+                  onClick={() => { handleCloseModal(); handleEdit(selectedEmployee); }}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition-all shadow-md"
                 >
                   Edit Employee
@@ -5312,10 +5110,7 @@ const EmployeeList = () => {
                     Assigning office site for: <strong className="text-gray-700">{selectedEmployeeForLocation.name}</strong>
                   </p>
                 </div>
-                <button
-                  onClick={handleCloseLocationModal}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
-                >
+                <button onClick={handleCloseLocationModal} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
                   <FiX className="w-5 h-5" />
                 </button>
               </div>
@@ -5330,26 +5125,17 @@ const EmployeeList = () => {
                   >
                     <option value="">Select Location</option>
                     {locations.map((loc) => (
-                      <option key={loc._id} value={loc._id}>
-                        {loc.name}
-                      </option>
+                      <option key={loc._id} value={loc._id}>{loc.name}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
               <div className="flex justify-end gap-2 p-4 border-t border-gray-100 bg-gray-50/50">
-                <button
-                  onClick={handleCloseLocationModal}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-all"
-                >
+                <button onClick={handleCloseLocationModal} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-all">
                   Cancel
                 </button>
-                <button
-                  onClick={assignLocation}
-                  disabled={!selectedLocationId || loading}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-xs transition-all shadow-md"
-                >
+                <button onClick={assignLocation} disabled={!selectedLocationId || loading} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-xs transition-all shadow-md">
                   {loading ? 'Assigning...' : 'Assign Location'}
                 </button>
               </div>
@@ -5357,9 +5143,7 @@ const EmployeeList = () => {
           </div>
         )}
 
-        {/* ============================================= */}
-        {/* ✅ SINGLE IMAGE ATTENDANCE CONFIRMATION POPUP */}
-        {/* ============================================= */}
+        {/* Single Image Toggle Popup */}
         {showImageTogglePopup && imageToggleEmployee && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="relative w-full max-w-md bg-white shadow-2xl rounded-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
@@ -5372,26 +5156,15 @@ const EmployeeList = () => {
                     {imageToggleAction === 'enable' ? 'Enable' : 'Disable'} image attendance for <strong className="text-gray-700">{imageToggleEmployee.name}</strong>
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setShowImageTogglePopup(false);
-                    setImageToggleEmployee(null);
-                    setImageToggleAction('');
-                  }}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
-                >
+                <button onClick={() => { setShowImageTogglePopup(false); setImageToggleEmployee(null); setImageToggleAction(''); }} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
                   <FaTimes className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="flex-1 p-6 space-y-4">
                 <div className="text-center py-4">
-                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${
-                    imageToggleAction === 'enable' ? 'bg-purple-100' : 'bg-red-100'
-                  }`}>
-                    <FaCamera className={`text-2xl ${
-                      imageToggleAction === 'enable' ? 'text-purple-600' : 'text-red-600'
-                    }`} />
+                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${imageToggleAction === 'enable' ? 'bg-purple-100' : 'bg-red-100'}`}>
+                    <FaCamera className={`text-2xl ${imageToggleAction === 'enable' ? 'text-purple-600' : 'text-red-600'}`} />
                   </div>
                   <h4 className="text-base font-bold text-gray-800 mb-1">
                     {imageToggleAction === 'enable' ? 'Enable Image Attendance?' : 'Disable Image Attendance?'}
@@ -5408,9 +5181,7 @@ const EmployeeList = () => {
                     </p>
                     <p className="text-xs text-gray-600 mt-1">
                       <span className="font-semibold">Current Status:</span> 
-                      <span className={`ml-1 ${
-                        imageToggleAction === 'enable' ? 'text-red-600' : 'text-purple-600'
-                      }`}>
+                      <span className={`ml-1 ${imageToggleAction === 'enable' ? 'text-red-600' : 'text-purple-600'}`}>
                         {imageToggleAction === 'enable' ? 'DISABLED' : 'ENABLED'}
                       </span>
                     </p>
@@ -5419,23 +5190,14 @@ const EmployeeList = () => {
               </div>
 
               <div className="flex justify-end gap-2 p-4 border-t border-gray-100 bg-gray-50/50">
-                <button
-                  onClick={() => {
-                    setShowImageTogglePopup(false);
-                    setImageToggleEmployee(null);
-                    setImageToggleAction('');
-                  }}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-all"
-                >
+                <button onClick={() => { setShowImageTogglePopup(false); setImageToggleEmployee(null); setImageToggleAction(''); }} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-all">
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmSingleImageToggle}
                   disabled={imageToggleLoading}
                   className={`px-4 py-2 text-white font-semibold rounded-xl text-xs transition-all shadow-md ${
-                    imageToggleAction === 'enable'
-                      ? 'bg-purple-600 hover:bg-purple-700'
-                      : 'bg-red-600 hover:bg-red-700'
+                    imageToggleAction === 'enable' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-red-600 hover:bg-red-700'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {imageToggleLoading ? 'Processing...' : imageToggleAction === 'enable' ? 'Yes, Enable' : 'Yes, Disable'}
@@ -5445,9 +5207,7 @@ const EmployeeList = () => {
           </div>
         )}
 
-        {/* ============================================= */}
-        {/* ✅ BULK IMAGE ATTENDANCE CONFIRMATION POPUP */}
-        {/* ============================================= */}
+        {/* Bulk Image Toggle Popup */}
         {showBulkImagePopup && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="relative w-full max-w-md bg-white shadow-2xl rounded-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
@@ -5460,22 +5220,15 @@ const EmployeeList = () => {
                     {bulkImageAction === 'enable' ? 'Enable' : 'Disable'} image attendance for <strong className="text-gray-700">{selectedEmployees.length}</strong> employees
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowBulkImagePopup(false)}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
-                >
+                <button onClick={() => setShowBulkImagePopup(false)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
                   <FaTimes className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="flex-1 p-6 space-y-4">
                 <div className="text-center py-4">
-                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${
-                    bulkImageAction === 'enable' ? 'bg-purple-100' : 'bg-red-100'
-                  }`}>
-                    <FaCamera className={`text-2xl ${
-                      bulkImageAction === 'enable' ? 'text-purple-600' : 'text-red-600'
-                    }`} />
+                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${bulkImageAction === 'enable' ? 'bg-purple-100' : 'bg-red-100'}`}>
+                    <FaCamera className={`text-2xl ${bulkImageAction === 'enable' ? 'text-purple-600' : 'text-red-600'}`} />
                   </div>
                   <h4 className="text-base font-bold text-gray-800 mb-1">
                     {bulkImageAction === 'enable' ? 'Enable Image Attendance for All?' : 'Disable Image Attendance for All?'}
@@ -5491,9 +5244,7 @@ const EmployeeList = () => {
                     {selectedEmployees.slice(0, 10).map(id => {
                       const emp = employees.find(e => e.employeeId === id);
                       return (
-                        <p key={id} className="text-xs text-gray-600 py-0.5">
-                          • {emp?.name || id} ({id})
-                        </p>
+                        <p key={id} className="text-xs text-gray-600 py-0.5">• {emp?.name || id} ({id})</p>
                       );
                     })}
                     {selectedEmployees.length > 10 && (
@@ -5504,19 +5255,14 @@ const EmployeeList = () => {
               </div>
 
               <div className="flex justify-end gap-2 p-4 border-t border-gray-100 bg-gray-50/50">
-                <button
-                  onClick={() => setShowBulkImagePopup(false)}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-all"
-                >
+                <button onClick={() => setShowBulkImagePopup(false)} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-all">
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmBulkImageToggle}
                   disabled={bulkImageLoading}
                   className={`px-4 py-2 text-white font-semibold rounded-xl text-xs transition-all shadow-md ${
-                    bulkImageAction === 'enable'
-                      ? 'bg-purple-600 hover:bg-purple-700'
-                      : 'bg-red-600 hover:bg-red-700'
+                    bulkImageAction === 'enable' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-red-600 hover:bg-red-700'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {bulkImageLoading ? 'Processing...' : bulkImageAction === 'enable' ? 'Enable All' : 'Disable All'}

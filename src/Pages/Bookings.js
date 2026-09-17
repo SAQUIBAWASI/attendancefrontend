@@ -24,7 +24,13 @@ import {
   FaUserFriends,
   FaToggleOn,
   FaToggleOff,
-  FaClock
+  FaClock,
+  FaFileMedical,
+  FaClipboardList,
+  FaVideo,
+  FaWhatsapp,
+  FaDownload,
+  FaSave
 } from "react-icons/fa";
 import {
   FiUsers,
@@ -42,7 +48,11 @@ import {
   FiCalendar,
   FiPlusCircle,
   FiChevronDown,
-  FiAlertCircle
+  FiAlertCircle,
+  FiFileText,
+  FiPaperclip,
+  FiVideo,
+  FiPrinter
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -50,7 +60,9 @@ import logo from "../Images/Timelyhealth logo.png";
 
 const PAYMENT_STATUS_OPTIONS = [
   { value: "Pending", label: "Pending" },
-  { value: "Paid", label: "Paid" }
+  { value: "Paid", label: "Paid" },
+  { value: "Partial", label: "Partial" },
+  { value: "Due", label: "Due" }
 ];
 
 const BOOKING_STATUS_OPTIONS = [
@@ -67,6 +79,8 @@ const CLINIC_INFO = {
     "Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, H. No: 1-98/9/25/p, Opp Style on Studio, VIP Hills, near Bank of Baroda, Arunodaya Colony, Sri Sai Nagar, Madhapur, Hyderabad, Telangana 500081",
   contact: "9505397000"
 };
+
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
 
 const formatDateToDDMMYYYY = (dateString) => {
   if (!dateString) return "N/A";
@@ -110,14 +124,39 @@ const getStatusColors = (status) => {
   return statusMap[status?.toLowerCase()] || statusMap.booked;
 };
 
-// ✅ STRICT NON-OP CHECK
-const isNonOPBooking = (b) => {
+const isOnlineBooking = (b) => {
   if (!b) return false;
-  if (b.isOP === false) return true;
-  if (b.isOP === "false") return true;
-  if (b.isOP === 0) return true;
-  if (b.isOP === undefined || b.isOP === null) return true;
+  if (b.isOnline === true) return true;
+  if (b.isOnline === "true") return true;
+  if (b.bookingType === "Online") return true;
   return false;
+};
+
+const getFileNameFromPath = (path) => {
+  if (!path) return "File";
+  return path.split("/").pop() || "File";
+};
+
+const getFileUrl = (path) => {
+  if (!path) return "#";
+  if (path.startsWith("http")) return path;
+  return `${API_ORIGIN}${path}`;
+};
+
+const getFileType = (path) => {
+  if (!path) return "unknown";
+  const lower = path.toLowerCase();
+  if (lower.endsWith(".pdf")) return "pdf";
+  if (lower.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/)) return "image";
+  return "other";
+};
+
+const buildWhatsAppNumber = (phone) => {
+  if (!phone) return "";
+  const digits = String(phone).replace(/\D/g, "");
+  if (digits.length === 10) return `91${digits}`;
+  if (digits.length === 12 && digits.startsWith("91")) return digits;
+  return digits;
 };
 
 const numberToWords = (num) => {
@@ -176,10 +215,43 @@ export default function Bookings() {
   const [activeCardFilter, setActiveCardFilter] = useState("all");
 
   const [toast, setToast] = useState(null);
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [showPatientModal, setShowPatientModal] = useState(false);
-  const [patientBookings, setPatientBookings] = useState([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const [previewFile, setPreviewFile] = useState(null);
+
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedBookingForView, setSelectedBookingForView] = useState(null);
+
+  const [showPaymentSummaryPopup, setShowPaymentSummaryPopup] = useState(false);
+  const [selectedBookingForPaymentSummary, setSelectedBookingForPaymentSummary] = useState(null);
+  const [markingPaid, setMarkingPaid] = useState(false);
+
+  const [togglingActiveId, setTogglingActiveId] = useState(null);
+
+  // ✅ EDIT MODAL STATE
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedBookingForEdit, setSelectedBookingForEdit] = useState(null);
+  const [editForm, setEditForm] = useState({
+    patientTitle: "",
+    patientName: "",
+    patientAge: "",
+    patientGender: "Male",
+    patientPhone: "",
+    patientEmail: "",
+    patientAddress: "",
+    patientCity: "",
+    patientPincode: "",
+    patientDob: "",
+    purpose: "",
+    symptoms: "",
+    paymentType: "cash",
+    paymentStatus: "Pending",
+    status: "confirmed",
+    amountPaid: 0,
+    balanceAmount: 0,
+    discount: 0,
+    isActive: true
+  });
+  const [editSaving, setEditSaving] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
@@ -254,16 +326,14 @@ export default function Bookings() {
           bookingsData = res.data.data;
         } else if (Array.isArray(res.data)) {
           bookingsData = res.data;
-        } else {
-          bookingsData = res.data.bookings || res.data.data || [];
         }
       } else if (Array.isArray(res.data)) {
         bookingsData = res.data;
       }
 
-      const nonOPBookings = bookingsData.filter(isNonOPBooking);
+      const onlineBookings = bookingsData.filter(isOnlineBooking);
 
-      const transformedBookings = nonOPBookings.map((b) => {
+      const transformedBookings = onlineBookings.map((b) => {
         const slotDetails = b.slotDetails || {};
         return {
           _id: b._id || b.id,
@@ -276,8 +346,11 @@ export default function Bookings() {
           patientAddress: b.patientAddress || "",
           patientEmail: b.patientEmail || "",
           patientDob: b.patientDob || "",
+          patientCity: b.patientCity || "",
+          patientPincode: b.patientPincode || "",
           dayOfWeek: slotDetails.dayOfWeek || b.dayOfWeek || "",
           date: slotDetails.date || b.appointmentDate || b.date || "",
+          appointmentDate: b.appointmentDate || slotDetails.date || "",
           startTime: slotDetails.startTime || b.startTime || "",
           endTime: slotDetails.endTime || b.endTime || "",
           doctorId: slotDetails.doctorId || b.doctorId || "",
@@ -285,21 +358,37 @@ export default function Bookings() {
           doctorSpecialization: slotDetails.doctorSpecialization || b.doctorSpecialization || "",
           purpose: b.purpose || "",
           symptoms: b.symptoms || "",
-          appointmentType: b.appointmentType || "Consultation",
+          appointmentType: b.appointmentType || "Online Consultation",
           priority: b.priority || "Normal",
-          consultationFee: b.servicesTotal || b.consultationFee || 300,
+          consultationFee: b.consultationFee || 0,
           paymentType: b.paymentType || "cash",
           paymentStatus: b.paymentStatus || "Pending",
-          totalAmount: b.totalAmount || b.finalPayable || 0,
+          totalAmount: b.totalAmount || 0,
+          totalFee: b.totalFee || 0,
+          grandTotal: b.grandTotal || 0,
+          finalPayable: b.finalPayable || b.finalPayableAmount || 0,
           amountPaid: b.amountPaid || 0,
           balanceAmount: b.balanceAmount || 0,
+          discount: b.discount || 0,
+          tax: b.tax || 0,
+          subtotal: b.subtotal || 0,
           status: b.status || "confirmed",
           services: b.services || [],
+          serviceItems: b.serviceItems || [],
+          reports: b.reports || [],
+          prescriptions: b.prescriptions || [],
+          bookingType: b.bookingType || "Online",
+          isOnline: true,
+          isActive: b.isActive !== undefined ? b.isActive : true,
+          clinicId: b.clinicId || "",
+          clinicName: b.clinicName || "",
+          medicineTotal: b.medicineTotal || 0,
+          labTotal: b.labTotal || 0,
+          servicesTotal: b.servicesTotal || 0,
           createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
           updatedAt: b.updatedAt || b.createdAt || new Date().toISOString(),
           bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
           shift: b.shift || slotDetails.shift || "Morning Shift",
-          appointmentDate: b.appointmentDate || slotDetails.date || "",
           isOP: false
         };
       });
@@ -341,6 +430,26 @@ export default function Bookings() {
     }
   };
 
+  const getTotalBookingFee = (booking) => {
+    if (!booking) return 0;
+    return (
+      Number(booking.finalPayable) ||
+      Number(booking.grandTotal) ||
+      Number(booking.totalAmount) ||
+      Number(booking.totalFee) ||
+      0
+    );
+  };
+
+  // ✅ CENTRAL UPDATE FUNCTION — uses /updateop/:bookingId
+  const sendUpdateOP = async (booking, payload) => {
+    const res = await axios.put(
+      `${API_BASE_URL}/appointment-slots/updateop/${booking._id}`,
+      payload
+    );
+    return res;
+  };
+
   const handleStatusSelect = async (booking, status, e) => {
     if (e) {
       e.stopPropagation();
@@ -353,12 +462,41 @@ export default function Bookings() {
     }
     setStatusUpdating(true);
     try {
-      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, { status });
+      const res = await sendUpdateOP(booking, {
+        status,
+        // required to preserve existing fields
+        patientName: booking.patientName,
+        patientAge: booking.patientAge,
+        patientGender: booking.patientGender,
+        patientTitle: booking.patientTitle,
+        patientPhone: booking.patientPhone,
+        patientEmail: booking.patientEmail,
+        patientAddress: booking.patientAddress,
+        patientCity: booking.patientCity,
+        patientPincode: booking.patientPincode,
+        patientDob: booking.patientDob,
+        purpose: booking.purpose,
+        symptoms: booking.symptoms,
+        paymentType: booking.paymentType,
+        paymentStatus: booking.paymentStatus,
+        services: booking.services || [],
+        serviceItems: booking.services || [],
+        subtotal: booking.subtotal,
+        finalPayable: booking.finalPayable || booking.totalAmount,
+        finalPayableAmount: booking.finalPayable || booking.totalAmount,
+        grandTotal: booking.grandTotal || booking.totalAmount,
+        totalAmount: booking.totalAmount,
+        amountPaid: booking.amountPaid,
+        balanceAmount: booking.balanceAmount,
+        discount: booking.discount,
+        medicineTotal: booking.medicineTotal,
+        labTotal: booking.labTotal,
+        appointmentDate: booking.appointmentDate || booking.date
+      });
       if (res && res.data && res.data.success) {
         showToast(`Status updated to ${status}!`, "success");
         setOpenStatusDropdown(null);
         fetchBookings();
-        refreshPatientBookings();
       } else {
         showToast(res.data.message || "Failed to update status", "error");
       }
@@ -382,12 +520,44 @@ export default function Bookings() {
     }
     setPaymentUpdating(true);
     try {
-      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, { paymentStatus });
+      const totalPayable = getTotalBookingFee(booking);
+      const newAmountPaid = paymentStatus === "Paid" ? totalPayable : (booking.amountPaid || 0);
+      const newBalance = paymentStatus === "Paid" ? 0 : (booking.balanceAmount || totalPayable);
+
+      const res = await sendUpdateOP(booking, {
+        patientName: booking.patientName,
+        patientAge: booking.patientAge,
+        patientGender: booking.patientGender,
+        patientTitle: booking.patientTitle,
+        patientPhone: booking.patientPhone,
+        patientEmail: booking.patientEmail,
+        patientAddress: booking.patientAddress,
+        patientCity: booking.patientCity,
+        patientPincode: booking.patientPincode,
+        patientDob: booking.patientDob,
+        purpose: booking.purpose,
+        symptoms: booking.symptoms,
+        paymentType: booking.paymentType,
+        paymentStatus,
+        services: booking.services || [],
+        serviceItems: booking.services || [],
+        subtotal: booking.subtotal,
+        finalPayable: totalPayable,
+        finalPayableAmount: totalPayable,
+        grandTotal: totalPayable,
+        totalAmount: totalPayable,
+        amountPaid: newAmountPaid,
+        balanceAmount: newBalance,
+        discount: booking.discount,
+        medicineTotal: booking.medicineTotal,
+        labTotal: booking.labTotal,
+        status: booking.status,
+        appointmentDate: booking.appointmentDate || booking.date
+      });
       if (res && res.data && res.data.success) {
         showToast(`Payment updated to ${paymentStatus}!`, "success");
         setOpenPaymentDropdown(null);
         fetchBookings();
-        refreshPatientBookings();
       } else {
         showToast(res.data.message || "Failed to update payment", "error");
       }
@@ -396,6 +566,154 @@ export default function Bookings() {
       showToast(error.response?.data?.message || "Failed to update payment", "error");
     } finally {
       setPaymentUpdating(false);
+    }
+  };
+
+  // ✅ TOGGLE ACTIVE — uses /updateop
+  const handleToggleActive = async (booking) => {
+    if (togglingActiveId === booking._id) return;
+    setTogglingActiveId(booking._id);
+    const newValue = !booking.isActive;
+    try {
+      const res = await sendUpdateOP(booking, {
+        patientName: booking.patientName,
+        patientAge: booking.patientAge,
+        patientGender: booking.patientGender,
+        patientTitle: booking.patientTitle,
+        patientPhone: booking.patientPhone,
+        patientEmail: booking.patientEmail,
+        patientAddress: booking.patientAddress,
+        patientCity: booking.patientCity,
+        patientPincode: booking.patientPincode,
+        patientDob: booking.patientDob,
+        purpose: booking.purpose,
+        symptoms: booking.symptoms,
+        paymentType: booking.paymentType,
+        paymentStatus: booking.paymentStatus,
+        services: booking.services || [],
+        serviceItems: booking.services || [],
+        subtotal: booking.subtotal,
+        finalPayable: getTotalBookingFee(booking),
+        finalPayableAmount: getTotalBookingFee(booking),
+        grandTotal: getTotalBookingFee(booking),
+        totalAmount: getTotalBookingFee(booking),
+        amountPaid: booking.amountPaid,
+        balanceAmount: booking.balanceAmount,
+        discount: booking.discount,
+        medicineTotal: booking.medicineTotal,
+        labTotal: booking.labTotal,
+        status: booking.status,
+        isActive: newValue,
+        appointmentDate: booking.appointmentDate || booking.date
+      });
+      if (res && res.data && res.data.success) {
+        setBookings((prev) =>
+          prev.map((b) => (b._id === booking._id ? { ...b, isActive: newValue } : b))
+        );
+        showToast(
+          `${booking.patientName} marked as ${newValue ? "Active" : "Inactive"}`,
+          newValue ? "success" : "info"
+        );
+      } else {
+        showToast(res.data.message || "Failed to update status", "error");
+      }
+    } catch (error) {
+      console.error("Error toggling active:", error);
+      showToast(error.response?.data?.message || "Failed to update status", "error");
+    } finally {
+      setTogglingActiveId(null);
+    }
+  };
+
+  // ✅ OPEN EDIT MODAL
+  const openEditModal = (booking) => {
+    setSelectedBookingForEdit(booking);
+    setEditForm({
+      patientTitle: booking.patientTitle || "Mr.",
+      patientName: booking.patientName || "",
+      patientAge: booking.patientAge || "",
+      patientGender: booking.patientGender || "Male",
+      patientPhone: booking.patientPhone || "",
+      patientEmail: booking.patientEmail || "",
+      patientAddress: booking.patientAddress || "",
+      patientCity: booking.patientCity || "",
+      patientPincode: booking.patientPincode || "",
+      patientDob: booking.patientDob || "",
+      purpose: booking.purpose || "",
+      symptoms: booking.symptoms || "",
+      paymentType: booking.paymentType || "cash",
+      paymentStatus: booking.paymentStatus || "Pending",
+      status: booking.status || "confirmed",
+      amountPaid: booking.amountPaid || 0,
+      balanceAmount: booking.balanceAmount || 0,
+      discount: booking.discount || 0,
+      isActive: booking.isActive !== false
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
+  };
+
+  // ✅ SAVE EDIT — calls /updateop
+  const handleSaveEdit = async () => {
+    if (!selectedBookingForEdit) return;
+    setEditSaving(true);
+    try {
+      const totalPayable = getTotalBookingFee(selectedBookingForEdit);
+      const paidAmount = Number(editForm.amountPaid) || 0;
+      const balance = Math.max(0, totalPayable - paidAmount);
+
+      const res = await sendUpdateOP(selectedBookingForEdit, {
+        patientTitle: editForm.patientTitle,
+        patientName: editForm.patientName,
+        patientAge: editForm.patientAge,
+        patientGender: editForm.patientGender,
+        patientPhone: editForm.patientPhone,
+        patientEmail: editForm.patientEmail,
+        patientAddress: editForm.patientAddress,
+        patientCity: editForm.patientCity,
+        patientPincode: editForm.patientPincode,
+        patientDob: editForm.patientDob,
+        purpose: editForm.purpose,
+        symptoms: editForm.symptoms,
+        paymentType: editForm.paymentType,
+        paymentStatus: editForm.paymentStatus,
+        status: editForm.status,
+        services: selectedBookingForEdit.services || [],
+        serviceItems: selectedBookingForEdit.services || [],
+        subtotal: selectedBookingForEdit.subtotal,
+        finalPayable: totalPayable,
+        finalPayableAmount: totalPayable,
+        grandTotal: totalPayable,
+        totalAmount: totalPayable,
+        amountPaid: paidAmount,
+        balanceAmount: balance,
+        discount: Number(editForm.discount) || 0,
+        medicineTotal: selectedBookingForEdit.medicineTotal,
+        labTotal: selectedBookingForEdit.labTotal,
+        isActive: editForm.isActive,
+        appointmentDate: selectedBookingForEdit.appointmentDate || selectedBookingForEdit.date
+      });
+
+      if (res && res.data && res.data.success) {
+        showToast("Booking updated successfully!", "success");
+        setShowEditModal(false);
+        setSelectedBookingForEdit(null);
+        fetchBookings();
+      } else {
+        showToast(res.data.message || "Failed to update", "error");
+      }
+    } catch (error) {
+      console.error("Error saving edit:", error);
+      showToast(error.response?.data?.message || "Failed to update", "error");
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -435,7 +753,6 @@ export default function Bookings() {
         setSelectedServiceForBooking(null);
         setSelectedBookingForService(null);
         fetchBookings();
-        refreshPatientBookings();
       }
     } catch (error) {
       console.error("Error adding service:", error);
@@ -452,7 +769,6 @@ export default function Bookings() {
       if (res && res.data && res.data.success) {
         showToast(res.data.message, "info");
         fetchBookings();
-        refreshPatientBookings();
       }
     } catch (error) {
       console.error("Error removing service:", error);
@@ -478,21 +794,8 @@ export default function Bookings() {
     }
     setStatusUpdating(true);
     try {
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/${selectedBookingForStatus._id}`,
-        { status: newBookingStatus }
-      );
-      if (res && res.data && res.data.success) {
-        showToast(`Booking status updated to ${newBookingStatus}!`, "success");
-        setShowStatusUpdateModal(false);
-        fetchBookings();
-        refreshPatientBookings();
-      } else {
-        showToast(res.data.message || "Failed to update status", "error");
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-      showToast(error.response?.data?.message || "Failed to update status", "error");
+      await handleStatusSelect(selectedBookingForStatus, newBookingStatus);
+      setShowStatusUpdateModal(false);
     } finally {
       setStatusUpdating(false);
     }
@@ -516,80 +819,158 @@ export default function Bookings() {
     }
     setPaymentUpdating(true);
     try {
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/${selectedBookingForPayment._id}`,
-        { paymentStatus: newPaymentStatus }
-      );
-      if (res && res.data && res.data.success) {
-        showToast(`Booking payment status updated to ${newPaymentStatus}!`, "success");
-        setShowPaymentUpdateModal(false);
-        fetchBookings();
-        refreshPatientBookings();
-      } else {
-        showToast(res.data.message || "Failed to update payment status", "error");
-      }
-    } catch (error) {
-      console.error("Error updating payment status:", error);
-      showToast(error.response?.data?.message || "Failed to update payment status", "error");
+      await handlePaymentSelect(selectedBookingForPayment, newPaymentStatus);
+      setShowPaymentUpdateModal(false);
     } finally {
       setPaymentUpdating(false);
     }
   };
 
-  const refreshPatientBookings = () => {
-    if (selectedPatient) {
-      const updatedBookings = bookings.filter(
-        (b) =>
-          b.patientPhone === selectedPatient.patientPhone ||
-          (b.patientName &&
-            selectedPatient.patientName &&
-            b.patientName.toLowerCase() === selectedPatient.patientName.toLowerCase())
-      );
-      updatedBookings.sort(
-        (a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
-      );
-      setPatientBookings(updatedBookings);
+  const openDirectPreview = (path) => {
+    if (!path) {
+      showToast("File not available", "error");
+      return;
+    }
+    setPreviewFile({
+      url: getFileUrl(path),
+      name: getFileNameFromPath(path),
+      type: getFileType(path)
+    });
+  };
+
+  const downloadPreviewFile = async () => {
+    if (!previewFile) return;
+    try {
+      const response = await fetch(previewFile.url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = previewFile.name || "file";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      showToast("File downloaded successfully!", "success");
+    } catch (err) {
+      console.error("Download failed:", err);
+      window.open(previewFile.url, "_blank");
+      showToast("Download started in new tab", "info");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this booking?")) return;
-    try {
-      await axios.delete(`${API_BASE_URL}/appointment-slots/${id}`);
-      setBookings((prev) => prev.filter((b) => b._id !== id));
-      showToast("Booking deleted successfully", "info");
-    } catch (err) {
-      console.error("Error deleting:", err);
-      showToast("Failed to delete booking", "error");
+  const printPreviewFile = () => {
+    if (!previewFile) return;
+    const win = window.open("", "_blank", "width=900,height=1000");
+    if (!win) {
+      showToast("Please allow popups to print", "error");
+      return;
     }
+    if (previewFile.type === "image") {
+      win.document.write(`
+        <html>
+          <head><title>Print - ${previewFile.name}</title></head>
+          <body style="margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;">
+            <img src="${previewFile.url}" style="max-width:100%;max-height:100vh;object-fit:contain;" onload="window.print();window.close();" />
+          </body>
+        </html>
+      `);
+    } else if (previewFile.type === "pdf") {
+      win.document.write(`
+        <html>
+          <head><title>Print - ${previewFile.name}</title></head>
+          <body style="margin:0;">
+            <iframe src="${previewFile.url}" style="width:100%;height:100vh;border:0;" onload="setTimeout(()=>{window.print();},500);"></iframe>
+          </body>
+        </html>
+      `);
+    } else {
+      win.close();
+      showToast("This file type cannot be printed", "error");
+      return;
+    }
+    win.document.close();
   };
 
-  const handleRowClick = (booking) => {
-    fetchPatientData(booking);
+  const openViewModal = (booking) => {
+    setSelectedBookingForView(booking);
+    setShowViewModal(true);
   };
 
-  const fetchPatientData = async (booking) => {
-    setHistoryLoading(true);
-    setSelectedPatient(booking);
+  const openPaymentSummaryPopup = (booking) => {
+    setSelectedBookingForPaymentSummary(booking);
+    setShowPaymentSummaryPopup(true);
+    setOpenPaymentDropdown(null);
+  };
+
+  const handleMarkAsPaidFromSummary = async () => {
+    if (!selectedBookingForPaymentSummary) return;
+    setMarkingPaid(true);
     try {
-      const patientBookingsList = bookings.filter(
-        (b) =>
-          b.patientPhone === booking.patientPhone ||
-          (b.patientName &&
-            booking.patientName &&
-            b.patientName.toLowerCase() === booking.patientName.toLowerCase())
-      );
-      patientBookingsList.sort(
-        (a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
-      );
-      setPatientBookings(patientBookingsList);
-      setShowPatientModal(true);
-    } catch (err) {
-      console.error("Error fetching patient data:", err);
-      showToast("Failed to fetch patient data", "error");
+      const totalPayable = getTotalBookingFee(selectedBookingForPaymentSummary);
+      const res = await sendUpdateOP(selectedBookingForPaymentSummary, {
+        patientName: selectedBookingForPaymentSummary.patientName,
+        patientAge: selectedBookingForPaymentSummary.patientAge,
+        patientGender: selectedBookingForPaymentSummary.patientGender,
+        patientTitle: selectedBookingForPaymentSummary.patientTitle,
+        patientPhone: selectedBookingForPaymentSummary.patientPhone,
+        patientEmail: selectedBookingForPaymentSummary.patientEmail,
+        patientAddress: selectedBookingForPaymentSummary.patientAddress,
+        patientCity: selectedBookingForPaymentSummary.patientCity,
+        patientPincode: selectedBookingForPaymentSummary.patientPincode,
+        patientDob: selectedBookingForPaymentSummary.patientDob,
+        purpose: selectedBookingForPaymentSummary.purpose,
+        symptoms: selectedBookingForPaymentSummary.symptoms,
+        paymentType: selectedBookingForPaymentSummary.paymentType,
+        paymentStatus: "Paid",
+        services: selectedBookingForPaymentSummary.services || [],
+        serviceItems: selectedBookingForPaymentSummary.services || [],
+        subtotal: selectedBookingForPaymentSummary.subtotal,
+        finalPayable: totalPayable,
+        finalPayableAmount: totalPayable,
+        grandTotal: totalPayable,
+        totalAmount: totalPayable,
+        amountPaid: totalPayable,
+        balanceAmount: 0,
+        discount: selectedBookingForPaymentSummary.discount,
+        medicineTotal: selectedBookingForPaymentSummary.medicineTotal,
+        labTotal: selectedBookingForPaymentSummary.labTotal,
+        status: selectedBookingForPaymentSummary.status,
+        appointmentDate:
+          selectedBookingForPaymentSummary.appointmentDate || selectedBookingForPaymentSummary.date
+      });
+      if (res && res.data && res.data.success) {
+        showToast(
+          `Payment marked as Paid for ${selectedBookingForPaymentSummary.patientName}!`,
+          "success"
+        );
+        setShowPaymentSummaryPopup(false);
+        setSelectedBookingForPaymentSummary(null);
+        fetchBookings();
+      } else {
+        showToast(res.data.message || "Failed to update payment", "error");
+      }
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      showToast(error.response?.data?.message || "Failed to update payment", "error");
     } finally {
-      setHistoryLoading(false);
+      setMarkingPaid(false);
     }
+  };
+
+  const startWhatsAppVideoCall = (booking) => {
+    const number = buildWhatsAppNumber(booking.patientPhone);
+    if (!number) {
+      showToast("Patient phone number is not available", "error");
+      return;
+    }
+    if (!window.confirm(`Start WhatsApp video call with ${booking.patientName} (${booking.patientPhone})?`)) return;
+    const message = encodeURIComponent(
+      `Hello ${booking.patientName}, this is TimelyHealth. Joining for your online consultation now.`
+    );
+    const url = `https://wa.me/${number}?text=${message}`;
+    window.open(url, "_blank");
+    showToast("Opening WhatsApp — tap the video call icon to start the call.", "info");
   };
 
   const getTotalServiceFee = (booking) => {
@@ -597,19 +978,13 @@ export default function Bookings() {
     return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
   };
 
-  const getTotalBookingFee = (booking) => {
-    return (booking.consultationFee || 0) + getTotalServiceFee(booking);
-  };
-
   const openBillingModal = (booking) => {
     setSelectedBookingForBilling(booking);
 
-    const consultationFee = booking.consultationFee || 0;
-    const totalServiceFee = getTotalServiceFee(booking);
-    const grossAmount = consultationFee + totalServiceFee;
+    const totalPayable = getTotalBookingFee(booking);
     const isPaid = booking.paymentStatus === "Paid";
-    const paidAmount = isPaid ? grossAmount : (booking.amountPaid || 0);
-    const balanceAmount = isPaid ? 0 : (booking.balanceAmount || grossAmount);
+    const paidAmount = isPaid ? totalPayable : (booking.amountPaid || 0);
+    const balanceAmount = isPaid ? 0 : (booking.balanceAmount || totalPayable);
 
     const now = new Date();
     const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
@@ -618,24 +993,25 @@ export default function Bookings() {
     const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
     const receiptNo = `R-${shortId.slice(-4)}-${String(now.getFullYear()).slice(-2)}-${now.getMonth() + 1}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    const items = [
-      {
-        no: 1,
-        name: "Consultation Fee",
-        serviceCode: "CONS-01",
-        remarks: booking.purpose || "OPD Consultation",
-        amount: consultationFee,
-        paymentStatus: booking.paymentStatus || "Pending"
-      },
-      ...(booking.services || []).map((s, idx) => ({
-        no: idx + 2,
-        name: s.name,
-        serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
-        remarks: s.description || s.paymentStatus || "Additional Service",
-        amount: s.price || 0,
-        paymentStatus: s.paymentStatus || "Pending"
-      }))
-    ];
+    const items = (booking.services && booking.services.length > 0)
+      ? booking.services.map((s, idx) => ({
+          no: idx + 1,
+          name: s.name,
+          serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
+          remarks: s.description || s.paymentStatus || "Service",
+          amount: s.price || 0,
+          paymentStatus: s.paymentStatus || "Pending"
+        }))
+      : [
+          {
+            no: 1,
+            name: "Consultation Fee",
+            serviceCode: "CONS-01",
+            remarks: booking.purpose || "Online Consultation",
+            amount: totalPayable,
+            paymentStatus: booking.paymentStatus || "Pending"
+          }
+        ];
 
     setBillingData({
       invoiceNo,
@@ -644,15 +1020,15 @@ export default function Bookings() {
       receiptDate: dateTimeLabel,
       paymentMode: booking.paymentType ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1) : "Cash",
       receivedBy: "Front Desk",
-      branch: booking.doctorSpecialization || "Main Branch",
+      branch: booking.clinicName || "TimelyHealth",
       doctorName: booking.doctorName || "General OP Doctor",
       items,
-      grossAmount,
-      netAmount: grossAmount,
+      grossAmount: totalPayable,
+      netAmount: totalPayable,
       paidAmount,
       balanceAmount,
       paymentStatus: booking.paymentStatus || "Pending",
-      amountInWords: numberToWords(grossAmount)
+      amountInWords: numberToWords(totalPayable)
     });
 
     setShowBillingModal(true);
@@ -661,14 +1037,41 @@ export default function Bookings() {
   const handleMarkAsPaid = async () => {
     if (!selectedBookingForBilling) return;
     try {
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/${selectedBookingForBilling._id}`,
-        { paymentStatus: "Paid" }
-      );
+      const totalPayable = getTotalBookingFee(selectedBookingForBilling);
+      const res = await sendUpdateOP(selectedBookingForBilling, {
+        patientName: selectedBookingForBilling.patientName,
+        patientAge: selectedBookingForBilling.patientAge,
+        patientGender: selectedBookingForBilling.patientGender,
+        patientTitle: selectedBookingForBilling.patientTitle,
+        patientPhone: selectedBookingForBilling.patientPhone,
+        patientEmail: selectedBookingForBilling.patientEmail,
+        patientAddress: selectedBookingForBilling.patientAddress,
+        patientCity: selectedBookingForBilling.patientCity,
+        patientPincode: selectedBookingForBilling.patientPincode,
+        patientDob: selectedBookingForBilling.patientDob,
+        purpose: selectedBookingForBilling.purpose,
+        symptoms: selectedBookingForBilling.symptoms,
+        paymentType: selectedBookingForBilling.paymentType,
+        paymentStatus: "Paid",
+        services: selectedBookingForBilling.services || [],
+        serviceItems: selectedBookingForBilling.services || [],
+        subtotal: selectedBookingForBilling.subtotal,
+        finalPayable: totalPayable,
+        finalPayableAmount: totalPayable,
+        grandTotal: totalPayable,
+        totalAmount: totalPayable,
+        amountPaid: totalPayable,
+        balanceAmount: 0,
+        discount: selectedBookingForBilling.discount,
+        medicineTotal: selectedBookingForBilling.medicineTotal,
+        labTotal: selectedBookingForBilling.labTotal,
+        status: selectedBookingForBilling.status,
+        appointmentDate: selectedBookingForBilling.appointmentDate || selectedBookingForBilling.date
+      });
       if (res && res.data && res.data.success) {
         setBookings((prev) =>
           prev.map((b) =>
-            b._id === selectedBookingForBilling._id ? { ...b, paymentStatus: "Paid" } : b
+            b._id === selectedBookingForBilling._id ? { ...b, paymentStatus: "Paid", amountPaid: totalPayable, balanceAmount: 0 } : b
           )
         );
         setBillingData((prev) => ({
@@ -677,7 +1080,6 @@ export default function Bookings() {
           paidAmount: prev.netAmount,
           balanceAmount: 0
         }));
-        refreshPatientBookings();
         showToast(`Payment marked as Paid for ${selectedBookingForBilling.patientName}!`, "success");
       } else {
         showToast(res.data.message || "Failed to update payment", "error");
@@ -960,7 +1362,7 @@ export default function Bookings() {
       alert("No records available to export!");
       return;
     }
-    const headers = ["#", "Patient Name", "Phone", "Doctor", "Appointment Date", "Slot Timing", "Booking Status", "Consultation Fee", "Cons. Payment", "Services", "Total Fee", "Payment Mode", "Reason", "Booked On"];
+    const headers = ["#", "Patient Name", "Phone", "Doctor", "Appointment Date", "Slot Timing", "Booking Status", "Payment Status", "Services", "Reports", "Prescriptions", "Total Fee", "Payment Mode", "Reason", "Booked On"];
     const csvRows = [
       headers.join(","),
       ...filteredBookings.map((b, idx) => {
@@ -968,6 +1370,8 @@ export default function Bookings() {
         const services = b.services || [];
         const serviceNames = services.map(s => s.name).join("; ");
         const slotTiming = b.startTime && b.endTime ? `${b.startTime} - ${b.endTime}` : "-";
+        const reportCount = (b.reports || []).length;
+        const prescriptionCount = (b.prescriptions || []).length;
         return [
           idx + 1,
           `"${(b.patientName || "").replace(/"/g, '""')}"`,
@@ -976,9 +1380,10 @@ export default function Bookings() {
           `"${formatDateToDDMMYYYY(b.appointmentDate || b.date)}"`,
           `"${slotTiming}"`,
           `"${b.status || "confirmed"}"`,
-          b.consultationFee || 300,
           `"${b.paymentStatus || "Pending"}"`,
           `"${serviceNames}"`,
+          `"${reportCount} file(s)"`,
+          `"${prescriptionCount} file(s)"`,
           totalFee,
           `"${b.paymentType || "cash"}"`,
           `"${(b.purpose || "").replace(/"/g, '""')}"`,
@@ -991,7 +1396,7 @@ export default function Bookings() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Bookings_Records_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `Online_Bookings_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     showToast(`Exported ${filteredBookings.length} records to CSV!`);
@@ -1015,14 +1420,14 @@ export default function Bookings() {
         <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-6">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
-              Online <span>OP</span>
+              Online <span>Bookings</span>
             </h1>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <div className="emp-dash__date-pill">
               <FaCalendarCheck />
-              <span>{stats.total} Total Bookings</span>
+              <span>{stats.total} Online Bookings</span>
             </div>
             <div className="relative min-w-[130px]">
               <FaSearch className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
@@ -1072,11 +1477,11 @@ export default function Bookings() {
         <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
           <div className="flex items-baseline gap-2">
             <h1 className="text-base font-bold whitespace-nowrap">
-              Online <span className="text-indigo-600">OP</span>
+              Online <span className="text-indigo-600">Bookings</span>
             </h1>
             <div className="emp-dash__date-pill text-[10px] px-2 py-1">
               <FaCalendarCheck className="w-3 h-3 text-blue-600" />
-              <span>{stats.total} Bookings</span>
+              <span>{stats.total} Online</span>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -1151,11 +1556,11 @@ export default function Bookings() {
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""}`} onClick={() => handleCardClick("all")}>
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Bookings</span>
+              <span className="emp-dash__stat-label">Total Online</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div>
             </div>
             <div className="emp-dash__stat-value">{stats.total}</div>
-            <div className="emp-dash__stat-meta">all appointments</div>
+            <div className="emp-dash__stat-meta">online appointments</div>
           </div>
 
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "Paid" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("Paid")}>
@@ -1200,14 +1605,14 @@ export default function Bookings() {
           {loading ? (
             <div className="py-12 text-center text-gray-500">
               <FiRefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-500">Loading booking records...</p>
+              <p className="text-sm font-medium text-gray-500">Loading online booking records...</p>
             </div>
           ) : filteredBookings.length === 0 ? (
             <div className="py-12 text-center text-gray-500">
               <FaUserInjured className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-gray-700">No Online OP Records Found</h3>
+              <h3 className="text-base font-bold text-gray-700">No Online Booking Records Found</h3>
               <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto mb-4">
-                {stats.total === 0 ? "Online OP bookings yahan dikhengi." : "No records match your current search/date filters."}
+                {stats.total === 0 ? "Online bookings yahan dikhengi." : "No records match your current search/date filters."}
               </p>
               {hasActiveFilters && (
                 <button onClick={clearFilters} className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm">Clear Filters</button>
@@ -1227,12 +1632,14 @@ export default function Bookings() {
                       <th style={{ textAlign: "center" }}>Appt. Date</th>
                       <th style={{ textAlign: "center" }}>Slot & Timing</th>
                       <th style={{ textAlign: "center" }}>Booking Status</th>
-                      <th style={{ textAlign: "center" }}>Cons. Fee</th>
-                      <th style={{ textAlign: "center" }}>Cons. Payment</th>
+                      <th style={{ textAlign: "center" }}>Payment Status</th>
                       <th style={{ textAlign: "center" }}>Services</th>
+                      <th style={{ textAlign: "center" }}>Reports</th>
+                      <th style={{ textAlign: "center" }}>Prescriptions</th>
                       <th style={{ textAlign: "center" }}>Total</th>
                       <th style={{ textAlign: "center" }}>Payment Mode</th>
                       <th style={{ textAlign: "center" }}>Booked On</th>
+                      <th style={{ textAlign: "center" }}>Active</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
                     </tr>
                   </thead>
@@ -1240,7 +1647,6 @@ export default function Bookings() {
                     {currentBookings.map((booking, idx) => {
                       const totalFee = getTotalBookingFee(booking);
                       const services = booking.services || [];
-                      const consultationFee = booking.consultationFee || 300;
                       const consultationPaymentStatus = booking.paymentStatus || "Pending";
                       const isConsultationPaid = consultationPaymentStatus === "Paid";
                       const bookingStatus = booking.status || "confirmed";
@@ -1248,6 +1654,9 @@ export default function Bookings() {
                       const slotTiming = booking.startTime && booking.endTime ? `${booking.startTime} - ${booking.endTime}` : "-";
                       const bookingCreated = booking.bookedAt || booking.createdAt;
                       const statusColors = getStatusColors(bookingStatus);
+                      const reports = booking.reports || [];
+                      const prescriptions = booking.prescriptions || [];
+                      const isActive = booking.isActive !== false;
 
                       return (
                         <tr key={booking._id} className="transition-colors hover:bg-blue-50/40 group">
@@ -1283,13 +1692,13 @@ export default function Bookings() {
                               {openStatusDropdown === booking._id && (
                                 <div className="fixed z-[9999] bg-white rounded-lg shadow-2xl border border-gray-200 py-1 min-w-[140px] max-h-[200px] overflow-y-auto" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }} onClick={(e) => e.stopPropagation()}>
                                   {BOOKING_STATUS_OPTIONS.map((st) => {
-                                    const isActive = st.value === bookingStatus.toLowerCase();
+                                    const isActiveSt = st.value === bookingStatus.toLowerCase();
                                     const colors = getStatusColors(st.value);
                                     return (
-                                      <button key={st.value} onClick={(e) => { e.stopPropagation(); handleStatusSelect(booking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${isActive ? colors.text : "text-gray-600"}`}>
+                                      <button key={st.value} onClick={(e) => { e.stopPropagation(); handleStatusSelect(booking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${isActiveSt ? colors.text : "text-gray-600"}`}>
                                         <span className={`w-2 h-2 rounded-full ${colors.bg} border ${colors.border}`}></span>
                                         {st.label}
-                                        {isActive && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}
+                                        {isActiveSt && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}
                                       </button>
                                     );
                                   })}
@@ -1298,30 +1707,15 @@ export default function Bookings() {
                             </div>
                           </td>
 
-                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-slate-800">₹{consultationFee}</span></td>
-
-                          <td className="px-3 py-3 text-center whitespace-nowrap relative payment-dropdown">
-                            <div className="relative inline-block">
-                              <button onClick={(e) => { e.stopPropagation(); setOpenPaymentDropdown(openPaymentDropdown === booking._id ? null : booking._id); }} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${isConsultationPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"} hover:opacity-80 transition-all`}>
-                                {isConsultationPaid ? <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> : <FiClock className="w-2.5 h-2.5 text-amber-600" />}
-                                {consultationPaymentStatus}
-                                <FiChevronDown className="w-3 h-3 ml-0.5" />
-                              </button>
-                              {openPaymentDropdown === booking._id && (
-                                <div className="fixed z-[9999] bg-white rounded-lg shadow-2xl border border-gray-200 py-1 min-w-[140px] max-h-[200px] overflow-y-auto" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }} onClick={(e) => e.stopPropagation()}>
-                                  {PAYMENT_STATUS_OPTIONS.map((st) => {
-                                    const isActive = st.value === consultationPaymentStatus;
-                                    return (
-                                      <button key={st.value} onClick={(e) => { e.stopPropagation(); handlePaymentSelect(booking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${isActive ? st.value === "Paid" ? "text-emerald-700" : "text-amber-700" : "text-gray-600"}`}>
-                                        {st.value === "Paid" ? <FaCheckCircle className="w-3 h-3 text-emerald-500" /> : <FiClock className="w-3 h-3 text-amber-500" />}
-                                        {st.label}
-                                        {isActive && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); openPaymentSummaryPopup(booking); }}
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${isConsultationPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"} hover:opacity-80 transition-all`}
+                              title="Click to view payment summary"
+                            >
+                              {isConsultationPaid ? <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> : <FiClock className="w-2.5 h-2.5 text-amber-600" />}
+                              {consultationPaymentStatus}
+                            </button>
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
@@ -1332,6 +1726,30 @@ export default function Bookings() {
                                 ))}
                                 {services.length > 2 && (<span className="text-[9px] text-gray-400">+{services.length - 2}</span>)}
                               </div>
+                            ) : (<span className="text-[10px] text-gray-400 italic">-</span>)}
+                          </td>
+
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {reports.length > 0 ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openDirectPreview(reports[0]); }}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors"
+                                title="Click to view report"
+                              >
+                                <FiFileText className="w-3 h-3" /> {reports.length}
+                              </button>
+                            ) : (<span className="text-[10px] text-gray-400 italic">-</span>)}
+                          </td>
+
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {prescriptions.length > 0 ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openDirectPreview(prescriptions[0]); }}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
+                                title="Click to view prescription"
+                              >
+                                <FiPaperclip className="w-3 h-3" /> {prescriptions.length}
+                              </button>
                             ) : (<span className="text-[10px] text-gray-400 italic">-</span>)}
                           </td>
 
@@ -1348,16 +1766,55 @@ export default function Bookings() {
                             <div className="text-[10px] font-semibold text-slate-700">{formatDateTimeToDDMMYYYY(bookingCreated)}</div>
                           </td>
 
+                          <td className="px-3 py-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => handleToggleActive(booking)}
+                              disabled={togglingActiveId === booking._id}
+                              className={`relative inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
+                                isActive
+                                  ? "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                                  : "bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200"
+                              } ${togglingActiveId === booking._id ? "opacity-60 cursor-wait" : ""}`}
+                              title={isActive ? "Click to mark Inactive" : "Click to mark Active"}
+                            >
+                              <span className={`relative inline-block w-7 h-4 rounded-full transition-colors ${isActive ? "bg-emerald-500" : "bg-gray-400"}`}>
+                                <span
+                                  className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                                    isActive ? "translate-x-3" : "translate-x-0"
+                                  }`}
+                                ></span>
+                              </span>
+                              <span className="text-[9px] font-bold uppercase tracking-wide">
+                                {isActive ? "Active" : "Inactive"}
+                              </span>
+                            </button>
+                          </td>
+
                           <td className="px-3 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
-                              <button onClick={() => handleRowClick(booking)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="View Details">
+                              <button
+                                onClick={() => openViewModal(booking)}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                                title="View Details"
+                              >
                                 <FiEye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => openEditModal(booking)}
+                                className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-100"
+                                title="Edit Booking"
+                              >
+                                <FiEdit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => startWhatsAppVideoCall(booking)}
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-100"
+                                title="Start WhatsApp Video Call"
+                              >
+                                <FaVideo className="w-3.5 h-3.5" />
                               </button>
                               <button onClick={() => openBillingModal(booking)} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100" title="Invoice / Bill">
                                 <FaFileInvoiceDollar className="w-3.5 h-3.5" />
-                              </button>
-                              <button onClick={() => { if (!window.confirm(`Delete booking for "${booking.patientName}"?`)) return; handleDelete(booking._id); }} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100" title="Delete">
-                                <FiTrash2 className="w-4 h-4" />
                               </button>
                             </div>
                           </td>
@@ -1373,18 +1830,18 @@ export default function Bookings() {
                 {currentBookings.map((booking, idx) => {
                   const totalFee = getTotalBookingFee(booking);
                   const services = booking.services || [];
-                  const consultationFee = booking.consultationFee || 300;
                   const consultationPaymentStatus = booking.paymentStatus || "Pending";
                   const isConsultationPaid = consultationPaymentStatus === "Paid";
                   const bookingStatus = booking.status || "confirmed";
                   const appointmentDate = booking.appointmentDate || booking.date;
                   const slotTiming = booking.startTime && booking.endTime ? `${booking.startTime} - ${booking.endTime}` : "-";
-                  const bookingCreated = booking.bookedAt || booking.createdAt;
                   const statusColors = getStatusColors(bookingStatus);
+                  const reports = booking.reports || [];
+                  const prescriptions = booking.prescriptions || [];
+                  const isActive = booking.isActive !== false;
 
                   return (
                     <div key={booking._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                      {/* Card Header */}
                       <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
@@ -1404,7 +1861,6 @@ export default function Bookings() {
                         </span>
                       </div>
 
-                      {/* Card Body */}
                       <div className="p-3 space-y-2.5">
                         <div className="grid grid-cols-2 gap-2 text-[11px]">
                           <div>
@@ -1425,14 +1881,10 @@ export default function Bookings() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-gray-100">
-                          <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200">
-                            <div className="text-[8px] font-bold text-blue-600 uppercase">Cons. Fee</div>
-                            <div className="text-xs font-extrabold text-blue-800">₹{consultationFee}</div>
-                          </div>
+                        <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-gray-100">
                           <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200">
                             <div className="text-[8px] font-bold text-purple-600 uppercase">Services</div>
-                            <div className="text-xs font-extrabold text-purple-800">
+                            <div className="text-xs font-extrabold text-purple-800 truncate">
                               {services.length > 0 ? services.map(s => s.name).join(", ") : "None"}
                             </div>
                           </div>
@@ -1442,13 +1894,37 @@ export default function Bookings() {
                           </div>
                         </div>
 
+                        {(reports.length > 0 || prescriptions.length > 0) && (
+                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
+                            {reports.length > 0 && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openDirectPreview(reports[0]); }}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full border border-indigo-200 hover:bg-indigo-100 transition-colors"
+                              >
+                                <FiFileText className="w-3 h-3" /> {reports.length} Report{reports.length > 1 ? "s" : ""}
+                              </button>
+                            )}
+                            {prescriptions.length > 0 && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openDirectPreview(prescriptions[0]); }}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded-full border border-purple-200 hover:bg-purple-100 transition-colors"
+                              >
+                                <FiPaperclip className="w-3 h-3" /> {prescriptions.length} Prescription{prescriptions.length > 1 ? "s" : ""}
+                              </button>
+                            )}
+                          </div>
+                        )}
+
                         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                           <div className="flex items-center gap-1.5">
                             <span className="text-[9px] font-bold uppercase text-gray-400">Payment:</span>
-                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${isConsultationPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); openPaymentSummaryPopup(booking); }}
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${isConsultationPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}
+                            >
                               {isConsultationPaid ? <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> : <FiClock className="w-2.5 h-2.5 text-amber-600" />}
                               {consultationPaymentStatus}
-                            </span>
+                            </button>
                           </div>
                           <div className="flex items-center gap-1 text-[10px] text-slate-600">
                             {booking.paymentType === "online" ? <FaCreditCard className="text-indigo-500 text-[10px]" /> : <FaMoneyBillWave className="text-green-600 text-[10px]" />}
@@ -1456,16 +1932,41 @@ export default function Bookings() {
                           </div>
                         </div>
 
-                        {/* Actions */}
+                        <div className="flex items-center justify-center pt-2 border-t border-gray-100">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleToggleActive(booking); }}
+                            disabled={togglingActiveId === booking._id}
+                            className={`relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
+                              isActive
+                                ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                                : "bg-gray-100 border-gray-300 text-gray-500"
+                            } ${togglingActiveId === booking._id ? "opacity-60 cursor-wait" : ""}`}
+                          >
+                            <span className={`relative inline-block w-8 h-4 rounded-full transition-colors ${isActive ? "bg-emerald-500" : "bg-gray-400"}`}>
+                              <span
+                                className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                                  isActive ? "translate-x-4" : "translate-x-0"
+                                }`}
+                              ></span>
+                            </span>
+                            <span className="text-[10px] font-bold uppercase tracking-wide">
+                              {isActive ? "Active" : "Inactive"}
+                            </span>
+                          </button>
+                        </div>
+
                         <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
-                          <button onClick={(e) => { e.stopPropagation(); handleRowClick(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold" title="View">
+                          <button onClick={(e) => { e.stopPropagation(); openViewModal(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold" title="View Details">
                             <FiEye className="w-3.5 h-3.5" /> View
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); openEditModal(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg text-[10px] font-bold" title="Edit Booking">
+                            <FiEdit2 className="w-3.5 h-3.5" /> Edit
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); startWhatsAppVideoCall(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg text-[10px] font-bold" title="WhatsApp Video Call">
+                            <FaVideo className="w-3.5 h-3.5" /> Video
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); openBillingModal(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-[10px] font-bold" title="Invoice">
                             <FaFileInvoiceDollar className="w-3.5 h-3.5" /> Bill
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); if (!window.confirm(`Delete booking for "${booking.patientName}"?`)) return; handleDelete(booking._id); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-[10px] font-bold" title="Delete">
-                            <FiTrash2 className="w-3.5 h-3.5" /> Delete
                           </button>
                         </div>
                       </div>
@@ -1504,120 +2005,690 @@ export default function Bookings() {
           )}
         </div>
 
-        {/* ===== PATIENT DETAIL MODAL ===== */}
-        {showPatientModal && selectedPatient && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-gray-200">
-              <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-500/20"><FaUserInjured className="w-5 h-5" /></div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base">Patient Profile &amp; Appointments</h3>
-                    <p className="text-xs text-gray-500">{selectedPatient.patientName} • {selectedPatient.patientPhone}</p>
+        {/* ===== EDIT MODAL ===== */}
+        {showEditModal && selectedBookingForEdit && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[85] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-200 flex flex-col max-h-[92vh]">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-2xl flex-shrink-0 bg-gradient-to-r from-amber-50 to-orange-50">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold flex-shrink-0">
+                    <FiEdit2 className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-gray-900 text-base truncate">Edit Booking</h3>
+                    <p className="text-xs text-gray-500 truncate">
+                      {selectedBookingForEdit.patientName} • {selectedBookingForEdit.patientPhone}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-purple-700 font-semibold bg-purple-50 px-3 py-1 rounded-full border border-purple-200">{patientBookings.length} Bookings</span>
-                  <button onClick={() => { setShowPatientModal(false); setPatientBookings([]); setSelectedPatient(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"><FaTimes className="w-4 h-4" /></button>
+                <button
+                  onClick={() => { setShowEditModal(false); setSelectedBookingForEdit(null); }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                {/* Patient Info */}
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5">
+                    Patient Information
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Title</label>
+                      <select
+                        name="patientTitle"
+                        value={editForm.patientTitle}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs bg-white"
+                      >
+                        <option value="Mr.">Mr.</option>
+                        <option value="Mrs.">Mrs.</option>
+                        <option value="Ms.">Ms.</option>
+                        <option value="Master">Master</option>
+                        <option value="Baby">Baby</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        name="patientName"
+                        value={editForm.patientName}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Age</label>
+                      <input
+                        type="number"
+                        name="patientAge"
+                        value={editForm.patientAge}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Gender</label>
+                      <select
+                        name="patientGender"
+                        value={editForm.patientGender}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs bg-white"
+                      >
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Phone</label>
+                      <input
+                        type="text"
+                        name="patientPhone"
+                        value={editForm.patientPhone}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Email</label>
+                      <input
+                        type="email"
+                        name="patientEmail"
+                        value={editForm.patientEmail}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Date of Birth</label>
+                      <input
+                        type="date"
+                        name="patientDob"
+                        value={editForm.patientDob}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">City</label>
+                      <input
+                        type="text"
+                        name="patientCity"
+                        value={editForm.patientCity}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Pincode</label>
+                      <input
+                        type="text"
+                        name="patientPincode"
+                        value={editForm.patientPincode}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Address</label>
+                      <input
+                        type="text"
+                        name="patientAddress"
+                        value={editForm.patientAddress}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Appointment */}
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5">
+                    Appointment Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Purpose</label>
+                      <input
+                        type="text"
+                        name="purpose"
+                        value={editForm.purpose}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Symptoms</label>
+                      <textarea
+                        name="symptoms"
+                        value={editForm.symptoms}
+                        onChange={handleEditFormChange}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status & Payment */}
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5">
+                    Status & Payment
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Booking Status</label>
+                      <select
+                        name="status"
+                        value={editForm.status}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs bg-white capitalize"
+                      >
+                        {BOOKING_STATUS_OPTIONS.map((st) => (
+                          <option key={st.value} value={st.value}>{st.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Payment Status</label>
+                      <select
+                        name="paymentStatus"
+                        value={editForm.paymentStatus}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs bg-white"
+                      >
+                        {PAYMENT_STATUS_OPTIONS.map((st) => (
+                          <option key={st.value} value={st.value}>{st.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Payment Mode</label>
+                      <select
+                        name="paymentType"
+                        value={editForm.paymentType}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs bg-white capitalize"
+                      >
+                        <option value="cash">Cash</option>
+                        <option value="online">Online</option>
+                        <option value="card">Card</option>
+                        <option value="upi">UPI</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Discount (₹)</label>
+                      <input
+                        type="number"
+                        name="discount"
+                        value={editForm.discount}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Amount Paid (₹)</label>
+                      <input
+                        type="number"
+                        name="amountPaid"
+                        value={editForm.amountPaid}
+                        onChange={handleEditFormChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Total Payable</label>
+                      <input
+                        type="text"
+                        value={getTotalBookingFee(selectedBookingForEdit)}
+                        readOnly
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 text-xs font-bold"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          name="isActive"
+                          checked={editForm.isActive}
+                          onChange={handleEditFormChange}
+                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span className="text-[11px] font-bold uppercase text-gray-600">
+                          Active Booking
+                        </span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="p-6 space-y-6">
-                {historyLoading ? (
-                  <div className="py-12 text-center text-gray-500">
-                    <FiRefreshCw className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-3" />
-                    <p className="text-sm font-medium text-gray-500">Loading patient history...</p>
+              <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50/50 rounded-b-2xl flex-shrink-0">
+                <button
+                  onClick={() => { setShowEditModal(false); setSelectedBookingForEdit(null); }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={editSaving}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                >
+                  {editSaving ? (
+                    <>
+                      <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <FaSave className="w-3.5 h-3.5" /> Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== VIEW DETAILS MODAL ===== */}
+        {showViewModal && selectedBookingForView && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-200 flex flex-col max-h-[92vh]">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-2xl flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-sm flex-shrink-0 shadow-md">
+                    {selectedBookingForView.patientName ? selectedBookingForView.patientName.charAt(0).toUpperCase() : "P"}
                   </div>
-                ) : (
-                  <>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold flex items-center justify-center text-lg shadow-md flex-shrink-0">
-                          {selectedPatient.patientName ? selectedPatient.patientName.charAt(0).toUpperCase() : "P"}
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900 text-base">{selectedPatient.patientName}</div>
-                          <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5"><FaPhoneAlt className="text-gray-400 text-[10px]" />{selectedPatient.patientPhone || "N/A"}</div>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Age</div><div className="font-semibold text-gray-900">{selectedPatient.patientAge || "N/A"} Yrs</div></div>
-                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Gender</div><div className="font-semibold text-gray-900 capitalize">{selectedPatient.patientGender || "N/A"}</div></div>
-                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Doctor</div><div className="font-semibold text-gray-900">{selectedPatient.doctorName || "N/A"}</div></div>
-                        <div><div className="text-[10px] font-bold uppercase text-gray-400">Payment Mode</div><div className="font-semibold text-gray-900 capitalize">{selectedPatient.paymentType || "Cash"}</div></div>
-                      </div>
-                      {selectedPatient.patientAddress && (<div className="mt-3 pt-3 border-t border-gray-200 text-xs"><div className="text-[10px] font-bold uppercase text-gray-400">Address</div><div className="text-gray-700">{selectedPatient.patientAddress}</div></div>)}
-                      {selectedPatient.purpose && (<div className="mt-2 text-xs"><div className="text-[10px] font-bold uppercase text-gray-400">Reason</div><div className="text-gray-700 bg-white p-2 rounded-lg border border-gray-200">{selectedPatient.purpose}</div></div>)}
-                    </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-gray-900 text-base truncate">{selectedBookingForView.patientName || "N/A"}</h3>
+                    <p className="text-xs text-gray-500">Booking Details</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setShowViewModal(false); setSelectedBookingForView(null); }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
 
+              <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <FiUserCheck className="w-3.5 h-3.5 text-blue-500" /> Patient Information
+                  </h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 bg-blue-50/40 border border-blue-100 rounded-xl p-4 text-xs">
                     <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <FaCalendarAlt className="text-purple-600 text-sm" />
-                        <h4 className="font-bold text-gray-900 text-sm">Appointment Records ({patientBookings.length})</h4>
-                      </div>
-
-                      {patientBookings.length === 0 ? (
-                        <div className="text-center py-8 text-gray-400 text-sm bg-gray-50 rounded-xl border border-gray-200">No appointments booked yet.</div>
-                      ) : (
-                        <div className="space-y-4">
-                          {patientBookings.map((booking, bIdx) => {
-                            const hasServices = booking.services && booking.services.length > 0;
-                            const totalFee = getTotalBookingFee(booking);
-                            const statusColors = getStatusColors(booking.status);
-                            const slotTiming = booking.startTime && booking.endTime ? `${booking.startTime} - ${booking.endTime}` : "-";
-
-                            return (
-                              <div key={booking._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-shadow">
-                                <div className={`px-4 py-2.5 ${statusColors.bg} border-b ${statusColors.border} flex items-center justify-between flex-wrap gap-2`}>
-                                  <div className="flex items-center gap-2.5">
-                                    <span className="font-bold text-gray-500 text-xs">#{bIdx + 1}</span>
-                                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${statusColors.text} ${statusColors.bg} ${statusColors.border}`}>{booking.status || "confirmed"}</span>
-                                    <span className="text-xs text-gray-600 font-medium">{formatDateToDDMMYYYY(booking.appointmentDate || booking.date)}</span>
-                                    {slotTiming !== "-" && (<span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">{slotTiming}</span>)}
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <button onClick={() => openStatusUpdateModal(booking)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Update Status"><FiCheckCircle className="w-3.5 h-3.5" /></button>
-                                    <button onClick={() => openPaymentUpdateModal(booking)} className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Update Payment"><FaCreditCard className="w-3.5 h-3.5" /></button>
-                                    <button onClick={() => openAddServiceModal(booking)} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Add Service"><FiPlusCircle className="w-3.5 h-3.5" /></button>
-                                    <button onClick={() => openBillingModal(booking)} className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors" title="View Bill"><FaFileInvoiceDollar className="w-3.5 h-3.5" /></button>
-                                  </div>
-                                </div>
-
-                                <div className="p-4 space-y-3">
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Doctor</div><div className="font-bold text-gray-900">{booking.doctorName || "N/A"}</div></div>
-                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Slot</div><div className="font-bold text-gray-900">{booking.startTime || "N/A"} – {booking.endTime || "N/A"}</div></div>
-                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Cons. Payment</div><span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${booking.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{booking.paymentStatus || "Pending"}</span></div>
-                                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Total Fee</div><div className="text-sm font-extrabold text-blue-950">₹{totalFee}</div></div>
-                                  </div>
-
-                                  <div>
-                                    <div className="text-[10px] font-bold uppercase text-gray-400">Services</div>
-                                    {hasServices ? (
-                                      <div className="flex flex-wrap gap-1.5 mt-1">
-                                        {booking.services.map((svc, sIdx) => (
-                                          <span key={sIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                                            {svc.name} (₹{svc.price})
-                                            <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${svc.paymentStatus === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{svc.paymentStatus || "Pending"}</span>
-                                            <button onClick={() => { const serviceId = svc.serviceId || svc._id; if (serviceId) handleRemoveService(booking, serviceId, svc.name); }} className="text-red-500 hover:text-red-700 ml-1"><FaTimes className="w-2.5 h-2.5" /></button>
-                                          </span>
-                                        ))}
-                                      </div>
-                                    ) : (<span className="text-xs text-gray-400 italic">No services added</span>)}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Full Name</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.patientName || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Phone</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.patientPhone || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Age</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.patientAge || "N/A"} yrs</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Gender</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.patientGender || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Email</div>
+                      <div className="font-semibold text-slate-800 break-all">{selectedBookingForView.patientEmail || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Date of Birth</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.patientDob ? formatDateToDDMMYYYY(selectedBookingForView.patientDob) : "N/A"}</div>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Address</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.patientAddress || "N/A"}</div>
+                    </div>
+                    {(selectedBookingForView.patientCity || selectedBookingForView.patientPincode) && (
+                      <div className="col-span-2">
+                        <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">City / Pincode</div>
+                        <div className="font-semibold text-slate-800">
+                          {selectedBookingForView.patientCity || ""} {selectedBookingForView.patientPincode ? `- ${selectedBookingForView.patientPincode}` : ""}
                         </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <FiCalendar className="w-3.5 h-3.5 text-purple-500" /> Appointment Information
+                  </h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 bg-purple-50/40 border border-purple-100 rounded-xl p-4 text-xs">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Doctor</div>
+                      <div className="font-semibold text-purple-800">{selectedBookingForView.doctorName || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Specialization</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.doctorSpecialization || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Appointment Date</div>
+                      <div className="font-semibold text-slate-800">{formatDateToDDMMYYYY(selectedBookingForView.appointmentDate || selectedBookingForView.date)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Slot Timing</div>
+                      <div className="font-semibold text-blue-700">
+                        {selectedBookingForView.startTime && selectedBookingForView.endTime
+                          ? `${selectedBookingForView.startTime} - ${selectedBookingForView.endTime}`
+                          : "N/A"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Shift</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.shift || "N/A"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Appointment Type</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.appointmentType || "N/A"}</div>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Purpose / Reason</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.purpose || "N/A"}</div>
+                    </div>
+                    {selectedBookingForView.symptoms && (
+                      <div className="col-span-2">
+                        <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Symptoms</div>
+                        <div className="font-semibold text-slate-800">{selectedBookingForView.symptoms}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <FaRupeeSign className="w-3 h-3 text-emerald-500" /> Payment & Status
+                  </h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 bg-emerald-50/40 border border-emerald-100 rounded-xl p-4 text-xs">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Booking Status</div>
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${getStatusColors(selectedBookingForView.status).bg} ${getStatusColors(selectedBookingForView.status).text} ${getStatusColors(selectedBookingForView.status).border}`}>
+                        {selectedBookingForView.status || "confirmed"}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Payment Status</div>
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${selectedBookingForView.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                        {selectedBookingForView.paymentStatus || "Pending"}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Payment Mode</div>
+                      <div className="font-semibold text-slate-800 capitalize">{selectedBookingForView.paymentType || "cash"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Total Amount</div>
+                      <div className="font-bold text-emerald-700 text-sm">₹{getTotalBookingFee(selectedBookingForView)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Booked On</div>
+                      <div className="font-semibold text-slate-800">{formatDateTimeToDDMMYYYY(selectedBookingForView.bookedAt || selectedBookingForView.createdAt)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Booking Type</div>
+                      <div className="font-semibold text-slate-800">{selectedBookingForView.bookingType || "Online"}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedBookingForView.services && selectedBookingForView.services.length > 0 && (
+                  <div>
+                    <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5 flex items-center gap-1.5">
+                      <FiPlusCircle className="w-3.5 h-3.5 text-indigo-500" /> Services ({selectedBookingForView.services.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {selectedBookingForView.services.map((svc, idx) => (
+                        <div key={idx} className="flex items-center justify-between bg-indigo-50/40 border border-indigo-100 rounded-lg px-3 py-2 text-xs">
+                          <div className="font-semibold text-slate-800">{svc.name}</div>
+                          <div className="font-bold text-indigo-700">₹{svc.price || 0}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {((selectedBookingForView.reports || []).length > 0 || (selectedBookingForView.prescriptions || []).length > 0) && (
+                  <div>
+                    <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5 flex items-center gap-1.5">
+                      <FiFileText className="w-3.5 h-3.5 text-cyan-500" /> Attachments
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {(selectedBookingForView.reports || []).length > 0 && (
+                        <button
+                          onClick={() => {
+                            setShowViewModal(false);
+                            openDirectPreview(selectedBookingForView.reports[0]);
+                          }}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors"
+                        >
+                          <FiFileText className="w-3.5 h-3.5" /> View {(selectedBookingForView.reports || []).length} Report{(selectedBookingForView.reports || []).length > 1 ? "s" : ""}
+                        </button>
+                      )}
+                      {(selectedBookingForView.prescriptions || []).length > 0 && (
+                        <button
+                          onClick={() => {
+                            setShowViewModal(false);
+                            openDirectPreview(selectedBookingForView.prescriptions[0]);
+                          }}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-purple-50 text-purple-700 px-3 py-1.5 rounded-lg border border-purple-200 hover:bg-purple-100 transition-colors"
+                        >
+                          <FiPaperclip className="w-3.5 h-3.5" /> View {(selectedBookingForView.prescriptions || []).length} Prescription{(selectedBookingForView.prescriptions || []).length > 1 ? "s" : ""}
+                        </button>
                       )}
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-end px-6 py-4 border-t border-gray-200 bg-gray-50/50">
-                <button onClick={() => { setShowPatientModal(false); setPatientBookings([]); setSelectedPatient(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all">Close</button>
+              <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50/50 rounded-b-2xl flex-shrink-0">
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    openBillingModal(selectedBookingForView);
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <FaFileInvoiceDollar className="w-3.5 h-3.5" /> View Bill
+                </button>
+                <button
+                  onClick={() => { setShowViewModal(false); setSelectedBookingForView(null); }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== PAYMENT SUMMARY POPUP ===== */}
+        {showPaymentSummaryPopup && selectedBookingForPaymentSummary && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-gray-200 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                    <FaRupeeSign className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Payment Summary</h3>
+                    <p className="text-[10px] text-gray-500 truncate max-w-[180px]">{selectedBookingForPaymentSummary.patientName}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setShowPaymentSummaryPopup(false); setSelectedBookingForPaymentSummary(null); }}
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100"
+                >
+                  <FaTimes className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="p-4 space-y-3">
+                <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-600 font-medium">Total Amount</span>
+                    <span className="font-bold text-gray-900">
+                      ₹{getTotalBookingFee(selectedBookingForPaymentSummary)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-600 font-medium">Paid Amount</span>
+                    <span className="font-bold text-emerald-700">
+                      ₹{selectedBookingForPaymentSummary.paymentStatus === "Paid"
+                        ? getTotalBookingFee(selectedBookingForPaymentSummary)
+                        : (selectedBookingForPaymentSummary.amountPaid || 0)}
+                    </span>
+                  </div>
+                  <div className="h-px bg-gray-200" />
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-800 font-bold">Balance</span>
+                    <span className={`font-bold text-sm ${selectedBookingForPaymentSummary.paymentStatus === "Paid" ? "text-emerald-700" : "text-red-600"}`}>
+                      ₹{selectedBookingForPaymentSummary.paymentStatus === "Paid"
+                        ? 0
+                        : (selectedBookingForPaymentSummary.balanceAmount || getTotalBookingFee(selectedBookingForPaymentSummary))}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="rounded-lg bg-gray-50 border border-gray-200 p-2">
+                    <div className="text-[9px] font-bold uppercase text-gray-400 mb-0.5">Status</div>
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase border ${selectedBookingForPaymentSummary.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                      {selectedBookingForPaymentSummary.paymentStatus || "Pending"}
+                    </span>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 border border-gray-200 p-2">
+                    <div className="text-[9px] font-bold uppercase text-gray-400 mb-0.5">Payment Mode</div>
+                    <div className="font-semibold text-slate-800 capitalize">
+                      {selectedBookingForPaymentSummary.paymentType || "cash"}
+                    </div>
+                  </div>
+                </div>
+
+                {selectedBookingForPaymentSummary.paymentStatus !== "Paid" && (
+                  <button
+                    onClick={handleMarkAsPaidFromSummary}
+                    disabled={markingPaid}
+                    className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all disabled:opacity-50"
+                  >
+                    {markingPaid ? (
+                      <>
+                        <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> Marking...
+                      </>
+                    ) : (
+                      <>
+                        <FaCheckCircle className="w-3.5 h-3.5" /> Mark as Paid
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {selectedBookingForPaymentSummary.paymentStatus === "Paid" && (
+                  <div className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
+                    <FaCheckCircle className="w-3.5 h-3.5" /> Payment Completed
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+                <button
+                  onClick={() => {
+                    setShowPaymentSummaryPopup(false);
+                    openBillingModal(selectedBookingForPaymentSummary);
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all flex items-center gap-1"
+                >
+                  <FaFileInvoiceDollar className="w-3 h-3" /> View Bill
+                </button>
+                <button
+                  onClick={() => { setShowPaymentSummaryPopup(false); setSelectedBookingForPaymentSummary(null); }}
+                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== DIRECT FILE PREVIEW MODAL ===== */}
+        {previewFile && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl border border-gray-200 flex flex-col max-h-[92vh]">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-2xl flex-shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-md flex-shrink-0 ${previewFile.type === "pdf" ? "bg-red-600 text-white shadow-red-500/20" : "bg-indigo-600 text-white shadow-indigo-500/20"}`}>
+                    {previewFile.type === "pdf" ? <FiFileText className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-gray-900 text-base truncate">{previewFile.name}</h3>
+                    <p className="text-xs text-gray-500">File Preview</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPreviewFile(null)}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-auto p-4 bg-gray-100">
+                <div className="rounded-xl bg-gray-100 flex items-center justify-center min-h-[400px]">
+                  {previewFile.type === "image" ? (
+                    <img
+                      src={previewFile.url}
+                      alt={previewFile.name}
+                      className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg bg-white"
+                    />
+                  ) : previewFile.type === "pdf" ? (
+                    <iframe
+                      src={previewFile.url}
+                      title={previewFile.name}
+                      className="w-full h-[70vh] rounded-lg shadow-lg bg-white border-0"
+                    />
+                  ) : (
+                    <div className="text-center py-12">
+                      <FiFileText className="w-16 h-16 text-gray-300 mx-auto mb-3" />
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Preview not available</p>
+                      <p className="text-xs text-gray-400 mb-4">This file type cannot be previewed in the browser. Use Download button below.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50/50 rounded-b-2xl flex-shrink-0">
+                <button
+                  onClick={downloadPreviewFile}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <FaDownload className="w-3.5 h-3.5" /> Download
+                </button>
+                <button
+                  onClick={printPreviewFile}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <FiPrinter className="w-3.5 h-3.5" /> Print
+                </button>
+                <button
+                  onClick={() => setPreviewFile(null)}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
+                >
+                  Close                </button>
               </div>
             </div>
           </div>
@@ -1722,178 +2793,6 @@ export default function Bookings() {
                 )}
                 <button onClick={printBill} className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5"><FaPrint className="w-3.5 h-3.5" /> Print Bill</button>
                 <button onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all">Close</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===== STATUS UPDATE MODAL ===== */}
-        {showStatusUpdateModal && selectedBookingForStatus && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold"><FiCheckCircle className="w-5 h-5" /></div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base">Update Appointment Status</h3>
-                    <p className="text-xs text-gray-500">{selectedBookingForStatus.patientName}</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowStatusUpdateModal(false)} className="text-gray-400 hover:text-gray-600"><FaTimes className="w-4 h-4" /></button>
-              </div>
-
-              <div className="my-5 space-y-4">
-                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Patient</div><div className="font-bold text-gray-900">{selectedBookingForStatus.patientName}</div></div>
-                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Current Status</div><span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${getStatusColors(selectedBookingForStatus.status).bg} ${getStatusColors(selectedBookingForStatus.status).text} ${getStatusColors(selectedBookingForStatus.status).border}`}>{selectedBookingForStatus.status || "confirmed"}</span></div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Select New Status <span className="text-red-500">*</span></label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {BOOKING_STATUS_OPTIONS.map((st) => {
-                      const isSelected = newBookingStatus === st.value;
-                      const colors = getStatusColors(st.value);
-                      return (
-                        <button key={st.value} onClick={() => setNewBookingStatus(st.value)} className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${isSelected ? `${colors.bg} ${colors.text} border-blue-500 shadow-xs ring-2 ring-blue-400/20` : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}>{st.label}</button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
-                <button onClick={() => setShowStatusUpdateModal(false)} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">Cancel</button>
-                <button onClick={handleStatusUpdate} disabled={statusUpdating} className="px-5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5">
-                  {statusUpdating ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaCheck className="w-3.5 h-3.5" />}
-                  {statusUpdating ? "Updating..." : "Save Status"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===== PAYMENT UPDATE MODAL ===== */}
-        {showPaymentUpdateModal && selectedBookingForPayment && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold"><FaCreditCard className="w-4 h-4" /></div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base">Update Booking Payment Status</h3>
-                    <p className="text-xs text-gray-500">{selectedBookingForPayment.patientName}</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowPaymentUpdateModal(false)} className="text-gray-400 hover:text-gray-600"><FaTimes className="w-4 h-4" /></button>
-              </div>
-
-              <div className="my-5 space-y-4">
-                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Patient</div><div className="font-bold text-gray-900">{selectedBookingForPayment.patientName}</div></div>
-                    <div><div className="text-[10px] font-bold uppercase text-gray-400">Current Payment</div><span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${selectedBookingForPayment.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{selectedBookingForPayment.paymentStatus || "Pending"}</span></div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Select Payment Status <span className="text-red-500">*</span></label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {PAYMENT_STATUS_OPTIONS.map((st) => {
-                      const isSelected = newPaymentStatus === st.value;
-                      return (
-                        <button key={st.value} onClick={() => setNewPaymentStatus(st.value)} className={`px-4 py-2.5 rounded-lg text-xs font-bold border transition-all ${isSelected ? st.value === "Paid" ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-xs ring-2 ring-emerald-400/20" : "border-amber-500 bg-amber-50 text-amber-700 shadow-xs ring-2 ring-amber-400/20" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}>
-                          {st.value === "Paid" ? <FaCheckCircle className="w-3.5 h-3.5 inline mr-1.5 text-emerald-600" /> : <FiClock className="w-3.5 h-3.5 inline mr-1.5 text-amber-600" />}
-                          {st.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
-                <button onClick={() => setShowPaymentUpdateModal(false)} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">Cancel</button>
-                <button onClick={handlePaymentUpdate} disabled={paymentUpdating} className="px-5 py-2 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition-all flex items-center gap-1.5">
-                  {paymentUpdating ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaCheck className="w-3.5 h-3.5" />}
-                  {paymentUpdating ? "Updating..." : "Save Payment"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===== ADD SERVICE MODAL ===== */}
-        {showAddServiceModal && selectedBookingForService && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold"><FiPlusCircle className="w-5 h-5" /></div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base">Add Clinical Service</h3>
-                    <p className="text-xs text-gray-500">{selectedBookingForService.patientName}</p>
-                  </div>
-                </div>
-                <button onClick={() => { setShowAddServiceModal(false); setServiceDropdownOpen(false); }} className="text-gray-400 hover:text-gray-600"><FaTimes className="w-4 h-4" /></button>
-              </div>
-
-              <div className="my-5 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Current Services</label>
-                  <div className="px-3.5 py-2 bg-gray-50 rounded-lg border border-gray-200 text-xs font-medium">
-                    {selectedBookingForService.services && selectedBookingForService.services.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {selectedBookingForService.services.map((svc, idx) => (
-                          <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                            {svc.name} (₹{svc.price})
-                          </span>
-                        ))}
-                      </div>
-                    ) : (<span className="text-gray-400 italic">No services currently added</span>)}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1.5">Select Service <span className="text-red-500">*</span></label>
-                  <button onClick={() => setServiceDropdownOpen(!serviceDropdownOpen)} className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white flex items-center justify-between">
-                    <span className={selectedServiceForBooking ? "text-gray-900 font-semibold" : "text-gray-400"}>{selectedServiceForBooking ? `${selectedServiceForBooking.name} (₹${selectedServiceForBooking.price})` : "Choose a service..."}</span>
-                    <FiChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${serviceDropdownOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {serviceDropdownOpen && (
-                    <div className="mt-1 border border-gray-200 rounded-lg shadow-xl max-h-52 overflow-y-auto bg-white">
-                      {servicesLoading ? (
-                        <div className="px-4 py-3 text-center text-gray-500 text-xs"><FiRefreshCw className="w-3.5 h-3.5 animate-spin inline mr-2" /> Loading services...</div>
-                      ) : services.length === 0 ? (
-                        <div className="px-4 py-3 text-center text-gray-400 text-xs">No services found</div>
-                      ) : (
-                        services.map((service) => {
-                          const alreadyAdded = (selectedBookingForService.services || []).some((s) => s.serviceId === service._id);
-                          return (
-                            <button key={service._id} onClick={() => !alreadyAdded && handleServiceSelect(service)} className={`w-full px-3.5 py-2 text-left text-xs hover:bg-gray-50 transition-colors flex items-center justify-between ${alreadyAdded ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`} disabled={alreadyAdded}>
-                              <span className="font-medium text-gray-800">{service.name}</span>
-                              <span className="font-bold text-emerald-700">{alreadyAdded ? "✓ Added" : `₹${service.price}`}</span>
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {selectedServiceForBooking && (
-                  <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200 flex items-center justify-between text-xs">
-                    <div><div className="text-[10px] font-bold uppercase text-emerald-800">Selected Service</div><div className="font-bold text-gray-900">{selectedServiceForBooking.name}</div></div>
-                    <div className="text-right"><div className="text-[10px] font-bold uppercase text-gray-500">Service Fee</div><div className="font-bold text-emerald-700">₹{selectedServiceForBooking.price}</div></div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
-                <button onClick={() => { setShowAddServiceModal(false); setServiceDropdownOpen(false); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all">Cancel</button>
-                <button onClick={handleAddServiceToBooking} disabled={!selectedServiceForBooking} className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all disabled:opacity-50">Add Service</button>
               </div>
             </div>
           </div>

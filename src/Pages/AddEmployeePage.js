@@ -10698,6 +10698,7 @@ const AddEmployeePage = () => {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("");  // ✅ NEW
   const [parentsName, setParentsName] = useState("");
   const [alternateNumber, setAlternateNumber] = useState("");
   const [addressLine1, setAddressLine1] = useState("");
@@ -10940,6 +10941,11 @@ const AddEmployeePage = () => {
     setEmail(candidate.email || "");
     setPhone(candidate.mobile || candidate.phone || "");
     
+    // ✅ Gender autofill from candidate
+    if (candidate.gender) {
+      setGender(candidate.gender);
+    }
+    
     if (candidate.address) {
       setAddressLine1(candidate.address);
     }
@@ -11020,6 +11026,7 @@ const AddEmployeePage = () => {
     setEmail(employee.email || "");
     setPhone(employee.phone || "");
     setDob(employee.dob ? new Date(employee.dob).toISOString().split('T')[0] : "");
+    setGender(employee.gender || "");  // ✅ NEW: Load gender
     setParentsName(employee.parentsName || "");
     setAlternateNumber(employee.alternateNumber || "");
     setAddressLine1(employee.addressLine1 || "");
@@ -11137,6 +11144,7 @@ const AddEmployeePage = () => {
   const resetFormForNewEntry = () => {
     if (!editingEmployee) {
       setFirstName(""); setLastName(""); setEmail(""); setPassword(""); setDob("");
+      setGender("");  // ✅ NEW: Reset gender
       setParentsName(""); setAlternateNumber(""); setAddressLine1(""); setAddressLine2("");
       setCity(""); setState(""); setPinCode(""); setCountry("India");
       fetchNextEmployeeId(); setJoinDate(""); setDepartment(""); setRole("");
@@ -11412,10 +11420,8 @@ const AddEmployeePage = () => {
     }, () => setErrorMessage("Location access denied"));
   };
 
-  // ============ FIXED: assignShiftToEmployee with proper error handling ============
   const assignShiftToEmployee = async (empId, empName, shift, startTime, endTime) => {
     try {
-      // ✅ Validate employee ID before making API call
       if (!empId || empId.trim() === '') {
         console.error("❌ Cannot assign shift: Employee ID is missing or empty");
         return { success: false, error: "Employee ID is required" };
@@ -11435,8 +11441,6 @@ const AddEmployeePage = () => {
       return response;
     } catch (error) {
       console.error("❌ Shift assignment error:", error);
-      console.error("Response status:", error.response?.status);
-      console.error("Response data:", error.response?.data);
       return { success: false, error: error.response?.data?.message || error.message };
     }
   };
@@ -11496,7 +11500,6 @@ const AddEmployeePage = () => {
     }
   };
 
-  // ============ FIXED: handleSubmit with proper employeeId handling ============
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -11511,6 +11514,7 @@ const AddEmployeePage = () => {
 
       const payload = {
         firstName, lastName, email, phone, dob: dob || null,
+        gender: gender || "",  // ✅ NEW: Add gender to payload
         department, role, addressLine1, addressLine2, city, state,
         pinCode, country, employeeId, joinDate, locationId,
         reportingManager, employmentType, weekOffDay,
@@ -11533,7 +11537,7 @@ const AddEmployeePage = () => {
 
       if (password) payload.password = password;
 
-      let finalEmployeeId = employeeId; // Store the employee ID to use for shift assignment
+      let finalEmployeeId = employeeId;
 
       if (editingEmployee || employeeFound) {
         let employeeIdToUpdate = editingEmployee?._id;
@@ -11542,14 +11546,11 @@ const AddEmployeePage = () => {
           if (response.data.success) employeeIdToUpdate = response.data.data._id;
         }
         
-        // ✅ Update employee first
         await axios.put(`${API_BASE_URL}/employees/update/${employeeIdToUpdate}`, payload);
         
-        // ✅ Use existing employeeId for shift assignment
         const existingEmpId = editingEmployee?.employeeId || employeeFound?.employeeId || employeeId;
         finalEmployeeId = existingEmpId;
 
-        // ✅ Assign shift with proper employeeId
         if (showShiftDetails && shiftType) {
           console.log("🔄 Assigning shift for update with ID:", finalEmployeeId);
           const result = await assignShiftToEmployee(
@@ -11562,7 +11563,6 @@ const AddEmployeePage = () => {
           
           if (!result.success) {
             console.warn("⚠️ Shift assignment warning:", result.error);
-            // Don't throw error, just warn user
             setSuccessMessage(`⚠️ Employee updated but shift assignment failed: ${result.error}`);
           }
         }
@@ -11576,25 +11576,20 @@ const AddEmployeePage = () => {
 
         setSuccessMessage("✅ Employee updated successfully!");
       } else {
-        // ✅ Add new employee
         const addResponse = await axios.post(`${API_BASE_URL}/employees/add-employee`, payload);
         
-        // ✅ Get the actual employee ID from response
         if (addResponse.data.success && addResponse.data.data) {
           finalEmployeeId = addResponse.data.data.employeeId || addResponse.data.data._id || employeeId;
           console.log("✅ Employee created with ID:", finalEmployeeId);
         } else {
-          // Fallback: use the generated employeeId
           finalEmployeeId = employeeId;
           console.log("⚠️ Using fallback employee ID:", finalEmployeeId);
         }
 
-        // ✅ Validate that we have a valid employee ID
         if (!finalEmployeeId || finalEmployeeId.trim() === '') {
           throw new Error("Failed to generate employee ID. Please try again.");
         }
 
-        // ✅ Assign shift with proper employeeId
         if (showShiftDetails && shiftType) {
           console.log("🔄 Assigning shift for new employee with ID:", finalEmployeeId);
           const result = await assignShiftToEmployee(
@@ -11607,7 +11602,6 @@ const AddEmployeePage = () => {
           
           if (!result.success) {
             console.warn("⚠️ Shift assignment warning:", result.error);
-            // Don't throw error, just warn user
             setSuccessMessage(`⚠️ Employee added but shift assignment failed: ${result.error}`);
           }
         }
@@ -11721,7 +11715,6 @@ const AddEmployeePage = () => {
                     {searching && <FaSpinner className="absolute right-3 top-3 animate-spin text-blue-600" />}
                     {employeeFound && !searching && <FaCheck className="absolute right-3 top-3 text-blue-600" />}
                     
-                    {/* Phone Suggestions Dropdown */}
                     {phoneSuggestions.length > 0 && (
                       <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-64 overflow-y-auto">
                         {phoneSuggestions.map((item) => (
@@ -11770,7 +11763,6 @@ const AddEmployeePage = () => {
                   <div className="relative">
                     <input type="email" value={email} onChange={handleEmailChange} className="w-full p-2.5 border rounded-lg text-gray-900" required />
                     
-                    {/* Email Suggestions Dropdown */}
                     {emailSuggestions.length > 0 && (
                       <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-64 overflow-y-auto">
                         {emailSuggestions.map((item) => (
@@ -11807,7 +11799,7 @@ const AddEmployeePage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700">Password {!editingEmployee && !employeeFound && "*"}</label>
                   <div className="relative">
@@ -11816,6 +11808,20 @@ const AddEmployeePage = () => {
                   </div>
                 </div>
                 <div><label className="block mb-1 text-sm font-medium text-gray-700">Date of Birth</label><input type="date" value={dob} onChange={(e) => setDob(e.target.value)} max={getCurrentDate()} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
+                {/* ✅ NEW: Gender Dropdown */}
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Gender</label>
+                  <select 
+                    value={gender} 
+                    onChange={(e) => setGender(e.target.value)} 
+                    className="w-full p-2.5 border rounded-lg text-gray-900"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -11984,7 +11990,6 @@ const AddEmployeePage = () => {
                 </div>
               </div>
 
-              {/* Shift Details Display */}
               {showShiftDetails && selectedShift && (
                 <div className="border rounded-lg overflow-hidden bg-gradient-to-r from-gray-50 to-white">
                   <div className="bg-gray-100 px-3 py-2 border-b">
@@ -12004,7 +12009,6 @@ const AddEmployeePage = () => {
                       </div>
                     </div>
                     
-                    {/* Time Slots */}
                     <div className="mt-3">
                       <p className="text-xs text-gray-500 mb-1">Time Slots</p>
                       <div className="space-y-2">
@@ -12031,7 +12035,6 @@ const AddEmployeePage = () => {
                       </div>
                     </div>
                     
-                    {/* Total Hours */}
                     {shiftHours && (
                       <div className="mt-3 pt-2 border-t">
                         <div className="flex justify-between items-center">
@@ -12122,7 +12125,6 @@ const AddEmployeePage = () => {
                   </div>
                 </div>
                 
-                {/* Preview Section */}
                 {incrementType && incrementValue && incrementEffectiveDate && netSalary > 0 && (
                   <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border border-indigo-200">
                     <p className="text-sm font-semibold text-indigo-800 mb-2">📊 Increment Preview:</p>
@@ -12189,7 +12191,7 @@ const AddEmployeePage = () => {
         </form>
       </div>
 
-      {/* MODALS - Keep existing modals unchanged */}
+      {/* MODALS */}
       {showShiftModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
