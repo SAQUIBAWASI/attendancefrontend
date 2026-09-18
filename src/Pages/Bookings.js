@@ -30,7 +30,13 @@ import {
   FaVideo,
   FaWhatsapp,
   FaDownload,
-  FaSave
+  FaSave,
+  FaFilePdf,
+  FaFileImage,
+  FaCalendarPlus,
+  FaArrowRight,
+  FaHistory,
+  FaReceipt,
 } from "react-icons/fa";
 import {
   FiUsers,
@@ -52,7 +58,7 @@ import {
   FiFileText,
   FiPaperclip,
   FiVideo,
-  FiPrinter
+  FiPrinter,
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -62,7 +68,7 @@ const PAYMENT_STATUS_OPTIONS = [
   { value: "Pending", label: "Pending" },
   { value: "Paid", label: "Paid" },
   { value: "Partial", label: "Partial" },
-  { value: "Due", label: "Due" }
+  { value: "Due", label: "Due" },
 ];
 
 const BOOKING_STATUS_OPTIONS = [
@@ -70,14 +76,14 @@ const BOOKING_STATUS_OPTIONS = [
   { value: "confirmed", label: "Confirmed" },
   { value: "consulting", label: "Consulting" },
   { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" }
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 const CLINIC_INFO = {
   name: "TimelyHealth",
   address:
     "Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, H. No: 1-98/9/25/p, Opp Style on Studio, VIP Hills, near Bank of Baroda, Arunodaya Colony, Sri Sai Nagar, Madhapur, Hyderabad, Telangana 500081",
-  contact: "9505397000"
+  contact: "9505397000",
 };
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
@@ -119,7 +125,7 @@ const getStatusColors = (status) => {
     consulting: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
     cancelled: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
     pending: { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200" },
-    confirmed: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" }
+    confirmed: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
   };
   return statusMap[status?.toLowerCase()] || statusMap.booked;
 };
@@ -130,6 +136,19 @@ const isOnlineBooking = (b) => {
   if (b.isOnline === "true") return true;
   if (b.bookingType === "Online") return true;
   return false;
+};
+
+const isRescheduled = (b) => {
+  return (
+    b &&
+    ((b.rescheduleCount && b.rescheduleCount > 0) ||
+      (b.rescheduleHistory && b.rescheduleHistory.length > 0))
+  );
+};
+
+const getLatestReschedule = (b) => {
+  if (!b || !b.rescheduleHistory || b.rescheduleHistory.length === 0) return null;
+  return b.rescheduleHistory[b.rescheduleHistory.length - 1];
 };
 
 const getFileNameFromPath = (path) => {
@@ -218,6 +237,8 @@ export default function Bookings() {
 
   const [previewFile, setPreviewFile] = useState(null);
 
+  const [fileListModal, setFileListModal] = useState(null);
+
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedBookingForView, setSelectedBookingForView] = useState(null);
 
@@ -227,7 +248,6 @@ export default function Bookings() {
 
   const [togglingActiveId, setTogglingActiveId] = useState(null);
 
-  // ✅ EDIT MODAL STATE
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBookingForEdit, setSelectedBookingForEdit] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -249,7 +269,7 @@ export default function Bookings() {
     amountPaid: 0,
     balanceAmount: 0,
     discount: 0,
-    isActive: true
+    isActive: true,
   });
   const [editSaving, setEditSaving] = useState(false);
 
@@ -276,7 +296,8 @@ export default function Bookings() {
     paidAmount: 0,
     balanceAmount: 0,
     paymentStatus: "Pending",
-    amountInWords: ""
+    amountInWords: "",
+    transactionId: "",
   });
 
   const hasActiveFilters =
@@ -363,6 +384,11 @@ export default function Bookings() {
           consultationFee: b.consultationFee || 0,
           paymentType: b.paymentType || "cash",
           paymentStatus: b.paymentStatus || "Pending",
+
+          // ⭐ TRANSACTION ID (from backend)
+          paymentTransactionId: b.paymentTransactionId || "",
+          transactionId: b.transactionId || "",
+
           totalAmount: b.totalAmount || 0,
           totalFee: b.totalFee || 0,
           grandTotal: b.grandTotal || 0,
@@ -389,7 +415,12 @@ export default function Bookings() {
           updatedAt: b.updatedAt || b.createdAt || new Date().toISOString(),
           bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
           shift: b.shift || slotDetails.shift || "Morning Shift",
-          isOP: false
+          isOP: false,
+
+          // ⭐ RESCHEDULE DATA
+          rescheduleHistory: b.rescheduleHistory || [],
+          rescheduledAt: b.rescheduledAt || null,
+          rescheduleCount: b.rescheduleCount || 0,
         };
       });
 
@@ -441,7 +472,6 @@ export default function Bookings() {
     );
   };
 
-  // ✅ CENTRAL UPDATE FUNCTION — uses /updateop/:bookingId
   const sendUpdateOP = async (booking, payload) => {
     const res = await axios.put(
       `${API_BASE_URL}/appointment-slots/updateop/${booking._id}`,
@@ -464,7 +494,6 @@ export default function Bookings() {
     try {
       const res = await sendUpdateOP(booking, {
         status,
-        // required to preserve existing fields
         patientName: booking.patientName,
         patientAge: booking.patientAge,
         patientGender: booking.patientGender,
@@ -491,7 +520,7 @@ export default function Bookings() {
         discount: booking.discount,
         medicineTotal: booking.medicineTotal,
         labTotal: booking.labTotal,
-        appointmentDate: booking.appointmentDate || booking.date
+        appointmentDate: booking.appointmentDate || booking.date,
       });
       if (res && res.data && res.data.success) {
         showToast(`Status updated to ${status}!`, "success");
@@ -521,8 +550,8 @@ export default function Bookings() {
     setPaymentUpdating(true);
     try {
       const totalPayable = getTotalBookingFee(booking);
-      const newAmountPaid = paymentStatus === "Paid" ? totalPayable : (booking.amountPaid || 0);
-      const newBalance = paymentStatus === "Paid" ? 0 : (booking.balanceAmount || totalPayable);
+      const newAmountPaid = paymentStatus === "Paid" ? totalPayable : booking.amountPaid || 0;
+      const newBalance = paymentStatus === "Paid" ? 0 : booking.balanceAmount || totalPayable;
 
       const res = await sendUpdateOP(booking, {
         patientName: booking.patientName,
@@ -552,7 +581,7 @@ export default function Bookings() {
         medicineTotal: booking.medicineTotal,
         labTotal: booking.labTotal,
         status: booking.status,
-        appointmentDate: booking.appointmentDate || booking.date
+        appointmentDate: booking.appointmentDate || booking.date,
       });
       if (res && res.data && res.data.success) {
         showToast(`Payment updated to ${paymentStatus}!`, "success");
@@ -569,7 +598,6 @@ export default function Bookings() {
     }
   };
 
-  // ✅ TOGGLE ACTIVE — uses /updateop
   const handleToggleActive = async (booking) => {
     if (togglingActiveId === booking._id) return;
     setTogglingActiveId(booking._id);
@@ -604,7 +632,7 @@ export default function Bookings() {
         labTotal: booking.labTotal,
         status: booking.status,
         isActive: newValue,
-        appointmentDate: booking.appointmentDate || booking.date
+        appointmentDate: booking.appointmentDate || booking.date,
       });
       if (res && res.data && res.data.success) {
         setBookings((prev) =>
@@ -625,7 +653,6 @@ export default function Bookings() {
     }
   };
 
-  // ✅ OPEN EDIT MODAL
   const openEditModal = (booking) => {
     setSelectedBookingForEdit(booking);
     setEditForm({
@@ -647,7 +674,7 @@ export default function Bookings() {
       amountPaid: booking.amountPaid || 0,
       balanceAmount: booking.balanceAmount || 0,
       discount: booking.discount || 0,
-      isActive: booking.isActive !== false
+      isActive: booking.isActive !== false,
     });
     setShowEditModal(true);
   };
@@ -656,11 +683,10 @@ export default function Bookings() {
     const { name, value, type, checked } = e.target;
     setEditForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  // ✅ SAVE EDIT — calls /updateop
   const handleSaveEdit = async () => {
     if (!selectedBookingForEdit) return;
     setEditSaving(true);
@@ -698,7 +724,7 @@ export default function Bookings() {
         medicineTotal: selectedBookingForEdit.medicineTotal,
         labTotal: selectedBookingForEdit.labTotal,
         isActive: editForm.isActive,
-        appointmentDate: selectedBookingForEdit.appointmentDate || selectedBookingForEdit.date
+        appointmentDate: selectedBookingForEdit.appointmentDate || selectedBookingForEdit.date,
       });
 
       if (res && res.data && res.data.success) {
@@ -743,7 +769,7 @@ export default function Bookings() {
           serviceId: selectedServiceForBooking._id,
           name: selectedServiceForBooking.name,
           price: selectedServiceForBooking.price,
-          description: selectedServiceForBooking.description || ""
+          description: selectedServiceForBooking.description || "",
         }
       );
       if (res && res.data && res.data.success) {
@@ -826,6 +852,21 @@ export default function Bookings() {
     }
   };
 
+  const openFileListModal = (booking, type) => {
+    const files = type === "reports" ? booking.reports || [] : booking.prescriptions || [];
+
+    if (files.length === 1) {
+      openDirectPreview(files[0]);
+      return;
+    }
+
+    setFileListModal({
+      booking,
+      type,
+      files,
+    });
+  };
+
   const openDirectPreview = (path) => {
     if (!path) {
       showToast("File not available", "error");
@@ -834,7 +875,7 @@ export default function Bookings() {
     setPreviewFile({
       url: getFileUrl(path),
       name: getFileNameFromPath(path),
-      type: getFileType(path)
+      type: getFileType(path),
     });
   };
 
@@ -937,7 +978,7 @@ export default function Bookings() {
         labTotal: selectedBookingForPaymentSummary.labTotal,
         status: selectedBookingForPaymentSummary.status,
         appointmentDate:
-          selectedBookingForPaymentSummary.appointmentDate || selectedBookingForPaymentSummary.date
+          selectedBookingForPaymentSummary.appointmentDate || selectedBookingForPaymentSummary.date,
       });
       if (res && res.data && res.data.success) {
         showToast(
@@ -983,8 +1024,8 @@ export default function Bookings() {
 
     const totalPayable = getTotalBookingFee(booking);
     const isPaid = booking.paymentStatus === "Paid";
-    const paidAmount = isPaid ? totalPayable : (booking.amountPaid || 0);
-    const balanceAmount = isPaid ? 0 : (booking.balanceAmount || totalPayable);
+    const paidAmount = isPaid ? totalPayable : booking.amountPaid || 0;
+    const balanceAmount = isPaid ? 0 : booking.balanceAmount || totalPayable;
 
     const now = new Date();
     const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
@@ -993,14 +1034,14 @@ export default function Bookings() {
     const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
     const receiptNo = `R-${shortId.slice(-4)}-${String(now.getFullYear()).slice(-2)}-${now.getMonth() + 1}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    const items = (booking.services && booking.services.length > 0)
+    const items = booking.services && booking.services.length > 0
       ? booking.services.map((s, idx) => ({
           no: idx + 1,
           name: s.name,
           serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
           remarks: s.description || s.paymentStatus || "Service",
           amount: s.price || 0,
-          paymentStatus: s.paymentStatus || "Pending"
+          paymentStatus: s.paymentStatus || "Pending",
         }))
       : [
           {
@@ -1009,8 +1050,8 @@ export default function Bookings() {
             serviceCode: "CONS-01",
             remarks: booking.purpose || "Online Consultation",
             amount: totalPayable,
-            paymentStatus: booking.paymentStatus || "Pending"
-          }
+            paymentStatus: booking.paymentStatus || "Pending",
+          },
         ];
 
     setBillingData({
@@ -1028,7 +1069,8 @@ export default function Bookings() {
       paidAmount,
       balanceAmount,
       paymentStatus: booking.paymentStatus || "Pending",
-      amountInWords: numberToWords(totalPayable)
+      amountInWords: numberToWords(totalPayable),
+      transactionId: booking.paymentTransactionId || booking.transactionId || "",
     });
 
     setShowBillingModal(true);
@@ -1066,7 +1108,7 @@ export default function Bookings() {
         medicineTotal: selectedBookingForBilling.medicineTotal,
         labTotal: selectedBookingForBilling.labTotal,
         status: selectedBookingForBilling.status,
-        appointmentDate: selectedBookingForBilling.appointmentDate || selectedBookingForBilling.date
+        appointmentDate: selectedBookingForBilling.appointmentDate || selectedBookingForBilling.date,
       });
       if (res && res.data && res.data.success) {
         setBookings((prev) =>
@@ -1078,7 +1120,7 @@ export default function Bookings() {
           ...prev,
           paymentStatus: "Paid",
           paidAmount: prev.netAmount,
-          balanceAmount: 0
+          balanceAmount: 0,
         }));
         showToast(`Payment marked as Paid for ${selectedBookingForBilling.patientName}!`, "success");
       } else {
@@ -1105,6 +1147,14 @@ export default function Bookings() {
     `
       )
       .join("");
+
+    // ⭐ Transaction ID row (only if exists)
+    const txnRow = billingData.transactionId
+      ? `<div><span class="label">Txn ID</span>: <span style="font-family:monospace;font-size:11px;">${billingData.transactionId}</span></div>`
+      : "";
+
+    // ⭐ Payment Mode row
+    const paymentModeRow = `<div><span class="label">Payment Mode</span>: ${billingData.paymentMode}</div>`;
 
     const win = window.open("", "_blank", "width=900,height=1000");
     if (win) {
@@ -1168,6 +1218,8 @@ export default function Bookings() {
                   <div><span class="label">Contact No</span>: ${selectedBookingForBilling?.patientPhone || "N/A"}</div>
                   <div><span class="label">Doctor</span>: ${billingData.doctorName}</div>
                   <div><span class="label">Appt. Date</span>: ${formatDateToDDMMYYYY(selectedBookingForBilling?.date)}</div>
+                  ${paymentModeRow}
+                  ${txnRow}
                 </div>
                 <table class="items">
                   <thead>
@@ -1248,7 +1300,7 @@ export default function Bookings() {
       if (b.doctorName) {
         doctorMap.set(b.doctorName, {
           name: b.doctorName,
-          specialization: b.doctorSpecialization || ""
+          specialization: b.doctorSpecialization || "",
         });
       }
     });
@@ -1362,16 +1414,18 @@ export default function Bookings() {
       alert("No records available to export!");
       return;
     }
-    const headers = ["#", "Patient Name", "Phone", "Doctor", "Appointment Date", "Slot Timing", "Booking Status", "Payment Status", "Services", "Reports", "Prescriptions", "Total Fee", "Payment Mode", "Reason", "Booked On"];
+    const headers = ["#", "Patient Name", "Phone", "Doctor", "Appointment Date", "Slot Timing", "Booking Status", "Payment Status", "Transaction ID", "Services", "Reports", "Prescriptions", "Total Fee", "Payment Mode", "Reason", "Rescheduled", "Booked On"];
     const csvRows = [
       headers.join(","),
       ...filteredBookings.map((b, idx) => {
         const totalFee = getTotalBookingFee(b);
         const services = b.services || [];
-        const serviceNames = services.map(s => s.name).join("; ");
+        const serviceNames = services.map((s) => s.name).join("; ");
         const slotTiming = b.startTime && b.endTime ? `${b.startTime} - ${b.endTime}` : "-";
         const reportCount = (b.reports || []).length;
         const prescriptionCount = (b.prescriptions || []).length;
+        const rescheduled = isRescheduled(b) ? `Yes (${b.rescheduleCount || 1}x)` : "No";
+        const txnId = b.paymentTransactionId || b.transactionId || "-";
         return [
           idx + 1,
           `"${(b.patientName || "").replace(/"/g, '""')}"`,
@@ -1381,15 +1435,17 @@ export default function Bookings() {
           `"${slotTiming}"`,
           `"${b.status || "confirmed"}"`,
           `"${b.paymentStatus || "Pending"}"`,
+          `"${txnId}"`,
           `"${serviceNames}"`,
           `"${reportCount} file(s)"`,
           `"${prescriptionCount} file(s)"`,
           totalFee,
           `"${b.paymentType || "cash"}"`,
           `"${(b.purpose || "").replace(/"/g, '""')}"`,
-          `"${formatDateTimeToDDMMYYYY(b.bookedAt || b.createdAt)}"`
+          `"${rescheduled}"`,
+          `"${formatDateTimeToDDMMYYYY(b.bookedAt || b.createdAt)}"`,
         ].join(",");
-      })
+      }),
     ];
     const csvData = csvRows.join("\n");
     const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
@@ -1440,33 +1496,67 @@ export default function Bookings() {
               />
             </div>
 
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            >
               <option value="All">All Payment Status</option>
               <option value="Pending">Pending</option>
               <option value="Paid">Paid</option>
             </select>
 
-            <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[130px] truncate">
+            <select
+              value={doctorFilter}
+              onChange={(e) => setDoctorFilter(e.target.value)}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[130px] truncate"
+            >
               <option value="All">All Doctors</option>
               {getUniqueDoctors().map((doc) => (
-                <option key={doc.name} value={doc.name}>{doc.name}</option>
+                <option key={doc.name} value={doc.name}>
+                  {doc.name}
+                </option>
               ))}
             </select>
 
-            <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-            <input type="date" value={toDate} onChange={handleToDateChange} className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-            <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+            <input
+              type="date"
+              value={fromDate}
+              onChange={handleFromDateChange}
+              className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
+            <input
+              type="date"
+              value={toDate}
+              onChange={handleToDateChange}
+              className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={handleMonthChange}
+              className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
 
-            <button onClick={fetchAllData} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap">
+            <button
+              onClick={fetchAllData}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+            >
               <FiRefreshCw className="w-3 h-3" /> Refresh
             </button>
 
-            <button onClick={downloadCSV} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap">
+            <button
+              onClick={downloadCSV}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
+            >
               <FiDownload className="w-3 h-3" /> Export CSV
             </button>
 
             {hasActiveFilters && (
-              <button onClick={clearFilters} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap">
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
                 <FiTrash2 className="w-3 h-3 text-red-500" /> Clear
               </button>
             )}
@@ -1485,7 +1575,10 @@ export default function Bookings() {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+            >
               <FiFilter className="w-3 h-3" /> Filters
             </button>
           </div>
@@ -1499,13 +1592,23 @@ export default function Bookings() {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
-                  <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  >
                     <option value="All">All Payment Status</option>
                     <option value="Pending">Pending</option>
                     <option value="Paid">Paid</option>
@@ -1513,10 +1616,16 @@ export default function Bookings() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Doctor</label>
-                  <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                  <select
+                    value={doctorFilter}
+                    onChange={(e) => setDoctorFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  >
                     <option value="All">All Doctors</option>
                     {getUniqueDoctors().map((doc) => (
-                      <option key={doc.name} value={doc.name}>{doc.name}</option>
+                      <option key={doc.name} value={doc.name}>
+                        {doc.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -1524,27 +1633,52 @@ export default function Bookings() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
-                  <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={handleFromDateChange}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
-                  <input type="date" value={toDate} onChange={handleToDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={handleToDateChange}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
-                <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={handleMonthChange}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
               </div>
               <div className="pt-3 border-t border-gray-200 flex gap-2">
-                <button onClick={downloadCSV} disabled={filteredBookings.length === 0} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                <button
+                  onClick={downloadCSV}
+                  disabled={filteredBookings.length === 0}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <FiDownload className="w-4 h-4" /> Export
                 </button>
-                <button onClick={fetchAllData} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
+                <button
+                  onClick={fetchAllData}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                >
                   <FiRefreshCw className="w-4 h-4" /> Refresh
                 </button>
               </div>
               {hasActiveFilters && (
-                <button onClick={clearFilters} className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                <button
+                  onClick={clearFilters}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                >
                   <FiTrash2 className="w-4 h-4 text-red-500" /> Clear All Filters
                 </button>
               )}
@@ -1554,28 +1688,43 @@ export default function Bookings() {
 
         {/* KPI STATS */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
-          <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""}`} onClick={() => handleCardClick("all")}>
+          <div
+            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""}`}
+            onClick={() => handleCardClick("all")}
+          >
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Online</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FiUsers />
+              </div>
             </div>
             <div className="emp-dash__stat-value">{stats.total}</div>
             <div className="emp-dash__stat-meta">online appointments</div>
           </div>
 
-          <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "Paid" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("Paid")}>
+          <div
+            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "Paid" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`}
+            onClick={() => handleCardClick("Paid")}
+          >
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Paid</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FiUserCheck />
+              </div>
             </div>
             <div className="emp-dash__stat-value text-emerald-600">{stats.paid}</div>
             <div className="emp-dash__stat-meta">completed payments</div>
           </div>
 
-          <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "Pending" ? "ring-2 ring-amber-500/20 border-amber-400" : ""}`} onClick={() => handleCardClick("Pending")}>
+          <div
+            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "Pending" ? "ring-2 ring-amber-500/20 border-amber-400" : ""}`}
+            onClick={() => handleCardClick("Pending")}
+          >
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Pending</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiClock /></div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                <FiClock />
+              </div>
             </div>
             <div className="emp-dash__stat-value text-amber-600">{stats.pending}</div>
             <div className="emp-dash__stat-meta">awaiting payment</div>
@@ -1584,7 +1733,9 @@ export default function Bookings() {
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Revenue</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FaRupeeSign /></div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FaRupeeSign />
+              </div>
             </div>
             <div className="emp-dash__stat-value text-blue-700">₹{stats.totalRevenue.toLocaleString()}</div>
             <div className="emp-dash__stat-meta">collected revenue</div>
@@ -1593,9 +1744,13 @@ export default function Bookings() {
           <div className="emp-dash__stat col-span-2 lg:col-span-1">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Filtered Records</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiFilter /></div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FiFilter />
+              </div>
             </div>
-            <div className="emp-dash__stat-value text-base sm:text-lg md:text-xl font-bold truncate">{filteredBookings.length}</div>
+            <div className="emp-dash__stat-value text-base sm:text-lg md:text-xl font-bold truncate">
+              {filteredBookings.length}
+            </div>
             <div className="emp-dash__stat-meta">matching filters</div>
           </div>
         </div>
@@ -1615,7 +1770,12 @@ export default function Bookings() {
                 {stats.total === 0 ? "Online bookings yahan dikhengi." : "No records match your current search/date filters."}
               </p>
               {hasActiveFilters && (
-                <button onClick={clearFilters} className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm">Clear Filters</button>
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                >
+                  Clear Filters
+                </button>
               )}
             </div>
           ) : (
@@ -1633,11 +1793,13 @@ export default function Bookings() {
                       <th style={{ textAlign: "center" }}>Slot & Timing</th>
                       <th style={{ textAlign: "center" }}>Booking Status</th>
                       <th style={{ textAlign: "center" }}>Payment Status</th>
+                      <th style={{ textAlign: "center" }}>Transaction ID</th>
                       <th style={{ textAlign: "center" }}>Services</th>
                       <th style={{ textAlign: "center" }}>Reports</th>
                       <th style={{ textAlign: "center" }}>Prescriptions</th>
                       <th style={{ textAlign: "center" }}>Total</th>
                       <th style={{ textAlign: "center" }}>Payment Mode</th>
+                      <th style={{ textAlign: "center" }}>Reschedule</th>
                       <th style={{ textAlign: "center" }}>Booked On</th>
                       <th style={{ textAlign: "center" }}>Active</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
@@ -1657,45 +1819,87 @@ export default function Bookings() {
                       const reports = booking.reports || [];
                       const prescriptions = booking.prescriptions || [];
                       const isActive = booking.isActive !== false;
+                      const rescheduled = isRescheduled(booking);
+                      const txnId = booking.paymentTransactionId || booking.transactionId || "";
 
                       return (
                         <tr key={booking._id} className="transition-colors hover:bg-blue-50/40 group">
-                          <td className="px-2 py-3 font-semibold text-center text-slate-500 text-[11px]">{indexOfFirstItem + idx + 1}</td>
+                          <td className="px-2 py-3 font-semibold text-center text-slate-500 text-[11px]">
+                            {indexOfFirstItem + idx + 1}
+                          </td>
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-[10px] shadow-sm">
                                 {booking.patientName ? booking.patientName.charAt(0).toUpperCase() : "P"}
                               </div>
                               <div className="min-w-0">
-                                <div className="font-semibold text-slate-800 text-xs truncate max-w-[80px]">{booking.patientName || "N/A"}</div>
+                                <div className="font-semibold text-slate-800 text-xs truncate max-w-[80px]">
+                                  {booking.patientName || "N/A"}
+                                </div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-3 py-3 whitespace-nowrap"><span className="text-xs font-medium text-slate-700">{booking.patientPhone || "N/A"}</span></td>
-                          <td className="px-3 py-3"><div className="text-xs font-semibold text-purple-800 truncate max-w-[90px]">{booking.doctorName || "N/A"}</div></td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-medium text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</span></td>
+                          <td className="px-3 py-3 whitespace-nowrap">
+                            <span className="text-xs font-medium text-slate-700">{booking.patientPhone || "N/A"}</span>
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="text-xs font-semibold text-purple-800 truncate max-w-[90px]">
+                              {booking.doctorName || "N/A"}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            <span className="text-xs font-medium text-slate-700">
+                              {formatDateToDDMMYYYY(appointmentDate)}
+                            </span>
+                          </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {slotTiming !== "-" ? (
                               <div className="flex flex-col items-center">
-                                <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">{slotTiming}</span>
+                                <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                                  {slotTiming}
+                                </span>
                               </div>
-                            ) : (<span className="text-[10px] text-gray-400 italic">-</span>)}
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">-</span>
+                            )}
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap relative status-dropdown">
                             <div className="relative inline-block">
-                              <button onClick={(e) => { e.stopPropagation(); setOpenStatusDropdown(openStatusDropdown === booking._id ? null : booking._id); }} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border} hover:opacity-80 transition-all`}>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenStatusDropdown(openStatusDropdown === booking._id ? null : booking._id);
+                                }}
+                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border} hover:opacity-80 transition-all`}
+                              >
                                 <FaCheckCircle className="w-2.5 h-2.5" />
                                 {bookingStatus}
                                 <FiChevronDown className="w-3 h-3 ml-0.5" />
                               </button>
                               {openStatusDropdown === booking._id && (
-                                <div className="fixed z-[9999] bg-white rounded-lg shadow-2xl border border-gray-200 py-1 min-w-[140px] max-h-[200px] overflow-y-auto" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }} onClick={(e) => e.stopPropagation()}>
+                                <div
+                                  className="fixed z-[9999] bg-white rounded-lg shadow-2xl border border-gray-200 py-1 min-w-[140px] max-h-[200px] overflow-y-auto"
+                                  style={{
+                                    top: "50%",
+                                    left: "50%",
+                                    transform: "translate(-50%, -50%)",
+                                    boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
                                   {BOOKING_STATUS_OPTIONS.map((st) => {
                                     const isActiveSt = st.value === bookingStatus.toLowerCase();
                                     const colors = getStatusColors(st.value);
                                     return (
-                                      <button key={st.value} onClick={(e) => { e.stopPropagation(); handleStatusSelect(booking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${isActiveSt ? colors.text : "text-gray-600"}`}>
+                                      <button
+                                        key={st.value}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleStatusSelect(booking, st.value, e);
+                                        }}
+                                        className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${isActiveSt ? colors.text : "text-gray-600"}`}
+                                      >
                                         <span className={`w-2 h-2 rounded-full ${colors.bg} border ${colors.border}`}></span>
                                         {st.label}
                                         {isActiveSt && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}
@@ -1709,61 +1913,138 @@ export default function Bookings() {
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <button
-                              onClick={(e) => { e.stopPropagation(); openPaymentSummaryPopup(booking); }}
-                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${isConsultationPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"} hover:opacity-80 transition-all`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPaymentSummaryPopup(booking);
+                              }}
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
+                                isConsultationPaid
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                              } hover:opacity-80 transition-all`}
                               title="Click to view payment summary"
                             >
-                              {isConsultationPaid ? <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> : <FiClock className="w-2.5 h-2.5 text-amber-600" />}
+                              {isConsultationPaid ? (
+                                <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" />
+                              ) : (
+                                <FiClock className="w-2.5 h-2.5 text-amber-600" />
+                              )}
                               {consultationPaymentStatus}
                             </button>
+                          </td>
+
+                          {/* ⭐ TRANSACTION ID COLUMN */}
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {txnId ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(txnId);
+                                  showToast("Transaction ID copied!", "success");
+                                }}
+                                title={`Click to copy: ${txnId}`}
+                                className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded border border-slate-200 transition-colors max-w-[120px]"
+                              >
+                                <FaReceipt className="w-2.5 h-2.5 flex-shrink-0" />
+                                <span className="truncate">{txnId}</span>
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">-</span>
+                            )}
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {services.length > 0 ? (
                               <div className="flex flex-col gap-0.5 items-center">
                                 {services.slice(0, 2).map((s, i) => (
-                                  <span key={i} className="text-[9px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100" title={s.name}>{s.name} (₹{s.price})</span>
+                                  <span
+                                    key={i}
+                                    className="text-[9px] font-medium bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100"
+                                    title={s.name}
+                                  >
+                                    {s.name} (₹{s.price})
+                                  </span>
                                 ))}
-                                {services.length > 2 && (<span className="text-[9px] text-gray-400">+{services.length - 2}</span>)}
+                                {services.length > 2 && (
+                                  <span className="text-[9px] text-gray-400">+{services.length - 2}</span>
+                                )}
                               </div>
-                            ) : (<span className="text-[10px] text-gray-400 italic">-</span>)}
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">-</span>
+                            )}
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {reports.length > 0 ? (
                               <button
-                                onClick={(e) => { e.stopPropagation(); openDirectPreview(reports[0]); }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openFileListModal(booking, "reports");
+                                }}
                                 className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors"
-                                title="Click to view report"
+                                title={reports.length > 1 ? "Click to view all reports" : "Click to view report"}
                               >
                                 <FiFileText className="w-3 h-3" /> {reports.length}
                               </button>
-                            ) : (<span className="text-[10px] text-gray-400 italic">-</span>)}
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">-</span>
+                            )}
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {prescriptions.length > 0 ? (
                               <button
-                                onClick={(e) => { e.stopPropagation(); openDirectPreview(prescriptions[0]); }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openFileListModal(booking, "prescriptions");
+                                }}
                                 className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
-                                title="Click to view prescription"
+                                title={prescriptions.length > 1 ? "Click to view all prescriptions" : "Click to view prescription"}
                               >
                                 <FiPaperclip className="w-3 h-3" /> {prescriptions.length}
                               </button>
-                            ) : (<span className="text-[10px] text-gray-400 italic">-</span>)}
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">-</span>
+                            )}
                           </td>
 
-                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-slate-800">₹{totalFee}</span></td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            <span className="text-xs font-bold text-slate-800">₹{totalFee}</span>
+                          </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 capitalize">
-                              {booking.paymentType === "online" ? <FaCreditCard className="text-indigo-500 text-[11px]" /> : <FaMoneyBillWave className="text-green-600 text-[11px]" />}
+                              {booking.paymentType === "online" ? (
+                                <FaCreditCard className="text-indigo-500 text-[11px]" />
+                              ) : (
+                                <FaMoneyBillWave className="text-green-600 text-[11px]" />
+                              )}
                               {booking.paymentType || "cash"}
                             </span>
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <div className="text-[10px] font-semibold text-slate-700">{formatDateTimeToDDMMYYYY(bookingCreated)}</div>
+                            {rescheduled ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openViewModal(booking);
+                                }}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
+                                title="View reschedule details"
+                              >
+                                <FaCalendarPlus className="w-2.5 h-2.5" />
+                                {booking.rescheduleCount > 1 ? `×${booking.rescheduleCount}` : "Yes"}
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">No</span>
+                            )}
+                          </td>
+
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            <div className="text-[10px] font-semibold text-slate-700">
+                              {formatDateTimeToDDMMYYYY(bookingCreated)}
+                            </div>
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
@@ -1777,7 +2058,11 @@ export default function Bookings() {
                               } ${togglingActiveId === booking._id ? "opacity-60 cursor-wait" : ""}`}
                               title={isActive ? "Click to mark Inactive" : "Click to mark Active"}
                             >
-                              <span className={`relative inline-block w-7 h-4 rounded-full transition-colors ${isActive ? "bg-emerald-500" : "bg-gray-400"}`}>
+                              <span
+                                className={`relative inline-block w-7 h-4 rounded-full transition-colors ${
+                                  isActive ? "bg-emerald-500" : "bg-gray-400"
+                                }`}
+                              >
                                 <span
                                   className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-200 ${
                                     isActive ? "translate-x-3" : "translate-x-0"
@@ -1813,7 +2098,11 @@ export default function Bookings() {
                               >
                                 <FaVideo className="w-3.5 h-3.5" />
                               </button>
-                              <button onClick={() => openBillingModal(booking)} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100" title="Invoice / Bill">
+                              <button
+                                onClick={() => openBillingModal(booking)}
+                                className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100"
+                                title="Invoice / Bill"
+                              >
                                 <FaFileInvoiceDollar className="w-3.5 h-3.5" />
                               </button>
                             </div>
@@ -1839,6 +2128,8 @@ export default function Bookings() {
                   const reports = booking.reports || [];
                   const prescriptions = booking.prescriptions || [];
                   const isActive = booking.isActive !== false;
+                  const rescheduled = isRescheduled(booking);
+                  const txnId = booking.paymentTransactionId || booking.transactionId || "";
 
                   return (
                     <div key={booking._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -1856,12 +2147,28 @@ export default function Bookings() {
                             </div>
                           </div>
                         </div>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border} flex-shrink-0`}>
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border} flex-shrink-0`}
+                        >
                           <FaCheckCircle className="w-2.5 h-2.5" /> {bookingStatus}
                         </span>
                       </div>
 
                       <div className="p-3 space-y-2.5">
+                        {rescheduled && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 flex items-center gap-2">
+                            <FaCalendarPlus className="w-3 h-3 text-amber-600 flex-shrink-0" />
+                            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
+                              Rescheduled
+                            </span>
+                            {booking.rescheduleCount > 1 && (
+                              <span className="text-[10px] font-bold text-amber-700 ml-auto">
+                                ×{booking.rescheduleCount}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-2 text-[11px]">
                           <div>
                             <div className="text-[9px] font-bold uppercase text-gray-400">Doctor</div>
@@ -1869,7 +2176,9 @@ export default function Bookings() {
                           </div>
                           <div>
                             <div className="text-[9px] font-bold uppercase text-gray-400">Age / Gender</div>
-                            <div className="font-semibold text-slate-700">{booking.patientAge || "N/A"} yrs · {booking.patientGender || "N/A"}</div>
+                            <div className="font-semibold text-slate-700">
+                              {booking.patientAge || "N/A"} yrs · {booking.patientGender || "N/A"}
+                            </div>
                           </div>
                           <div>
                             <div className="text-[9px] font-bold uppercase text-gray-400">Appt. Date</div>
@@ -1881,11 +2190,29 @@ export default function Bookings() {
                           </div>
                         </div>
 
+                        {/* ⭐ Transaction ID */}
+                        {txnId && (
+                          <div className="pt-2 border-t border-gray-100">
+                            <div className="text-[9px] font-bold uppercase text-gray-400 mb-0.5">Transaction ID</div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(txnId);
+                                showToast("Transaction ID copied!", "success");
+                              }}
+                              className="w-full flex items-center gap-1.5 text-[10px] font-mono font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded border border-slate-200 transition-colors"
+                            >
+                              <FaReceipt className="w-3 h-3 flex-shrink-0 text-slate-500" />
+                              <span className="truncate">{txnId}</span>
+                            </button>
+                          </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-gray-100">
                           <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200">
                             <div className="text-[8px] font-bold text-purple-600 uppercase">Services</div>
                             <div className="text-xs font-extrabold text-purple-800 truncate">
-                              {services.length > 0 ? services.map(s => s.name).join(", ") : "None"}
+                              {services.length > 0 ? services.map((s) => s.name).join(", ") : "None"}
                             </div>
                           </div>
                           <div className="text-center p-1.5 rounded-lg bg-emerald-50 border border-emerald-200">
@@ -1898,18 +2225,26 @@ export default function Bookings() {
                           <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
                             {reports.length > 0 && (
                               <button
-                                onClick={(e) => { e.stopPropagation(); openDirectPreview(reports[0]); }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openFileListModal(booking, "reports");
+                                }}
                                 className="inline-flex items-center gap-1 text-[10px] font-bold bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full border border-indigo-200 hover:bg-indigo-100 transition-colors"
                               >
-                                <FiFileText className="w-3 h-3" /> {reports.length} Report{reports.length > 1 ? "s" : ""}
+                                <FiFileText className="w-3 h-3" /> {reports.length} Report
+                                {reports.length > 1 ? "s" : ""}
                               </button>
                             )}
                             {prescriptions.length > 0 && (
                               <button
-                                onClick={(e) => { e.stopPropagation(); openDirectPreview(prescriptions[0]); }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openFileListModal(booking, "prescriptions");
+                                }}
                                 className="inline-flex items-center gap-1 text-[10px] font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded-full border border-purple-200 hover:bg-purple-100 transition-colors"
                               >
-                                <FiPaperclip className="w-3 h-3" /> {prescriptions.length} Prescription{prescriptions.length > 1 ? "s" : ""}
+                                <FiPaperclip className="w-3 h-3" /> {prescriptions.length} Prescription
+                                {prescriptions.length > 1 ? "s" : ""}
                               </button>
                             )}
                           </div>
@@ -1919,22 +2254,40 @@ export default function Bookings() {
                           <div className="flex items-center gap-1.5">
                             <span className="text-[9px] font-bold uppercase text-gray-400">Payment:</span>
                             <button
-                              onClick={(e) => { e.stopPropagation(); openPaymentSummaryPopup(booking); }}
-                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${isConsultationPaid ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPaymentSummaryPopup(booking);
+                              }}
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
+                                isConsultationPaid
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                              }`}
                             >
-                              {isConsultationPaid ? <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> : <FiClock className="w-2.5 h-2.5 text-amber-600" />}
+                              {isConsultationPaid ? (
+                                <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" />
+                              ) : (
+                                <FiClock className="w-2.5 h-2.5 text-amber-600" />
+                              )}
                               {consultationPaymentStatus}
                             </button>
                           </div>
                           <div className="flex items-center gap-1 text-[10px] text-slate-600">
-                            {booking.paymentType === "online" ? <FaCreditCard className="text-indigo-500 text-[10px]" /> : <FaMoneyBillWave className="text-green-600 text-[10px]" />}
+                            {booking.paymentType === "online" ? (
+                              <FaCreditCard className="text-indigo-500 text-[10px]" />
+                            ) : (
+                              <FaMoneyBillWave className="text-green-600 text-[10px]" />
+                            )}
                             {booking.paymentType || "cash"}
                           </div>
                         </div>
 
                         <div className="flex items-center justify-center pt-2 border-t border-gray-100">
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleToggleActive(booking); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleActive(booking);
+                            }}
                             disabled={togglingActiveId === booking._id}
                             className={`relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
                               isActive
@@ -1942,7 +2295,11 @@ export default function Bookings() {
                                 : "bg-gray-100 border-gray-300 text-gray-500"
                             } ${togglingActiveId === booking._id ? "opacity-60 cursor-wait" : ""}`}
                           >
-                            <span className={`relative inline-block w-8 h-4 rounded-full transition-colors ${isActive ? "bg-emerald-500" : "bg-gray-400"}`}>
+                            <span
+                              className={`relative inline-block w-8 h-4 rounded-full transition-colors ${
+                                isActive ? "bg-emerald-500" : "bg-gray-400"
+                              }`}
+                            >
                               <span
                                 className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-200 ${
                                   isActive ? "translate-x-4" : "translate-x-0"
@@ -1956,16 +2313,44 @@ export default function Bookings() {
                         </div>
 
                         <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
-                          <button onClick={(e) => { e.stopPropagation(); openViewModal(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold" title="View Details">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openViewModal(booking);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold"
+                            title="View Details"
+                          >
                             <FiEye className="w-3.5 h-3.5" /> View
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); openEditModal(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg text-[10px] font-bold" title="Edit Booking">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditModal(booking);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg text-[10px] font-bold"
+                            title="Edit Booking"
+                          >
                             <FiEdit2 className="w-3.5 h-3.5" /> Edit
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); startWhatsAppVideoCall(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg text-[10px] font-bold" title="WhatsApp Video Call">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startWhatsAppVideoCall(booking);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg text-[10px] font-bold"
+                            title="WhatsApp Video Call"
+                          >
                             <FaVideo className="w-3.5 h-3.5" /> Video
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); openBillingModal(booking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-[10px] font-bold" title="Invoice">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openBillingModal(booking);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-[10px] font-bold"
+                            title="Invoice"
+                          >
                             <FaFileInvoiceDollar className="w-3.5 h-3.5" /> Bill
                           </button>
                         </div>
@@ -1980,7 +2365,11 @@ export default function Bookings() {
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <span>Show</span>
-                    <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none">
+                    <select
+                      value={itemsPerPage}
+                      onChange={handleItemsPerPageChange}
+                      className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none"
+                    >
                       <option value={5}>5</option>
                       <option value={10}>10</option>
                       <option value={20}>20</option>
@@ -1989,21 +2378,180 @@ export default function Bookings() {
                     <span>entries</span>
                   </div>
                   <div className="text-xs text-gray-500 font-medium">
-                    Showing <strong className="text-gray-800">{filteredBookings.length === 0 ? 0 : indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredBookings.length)}</strong> of <strong className="text-gray-800">{filteredBookings.length}</strong> records
+                    Showing{" "}
+                    <strong className="text-gray-800">
+                      {filteredBookings.length === 0 ? 0 : indexOfFirstItem + 1} -{" "}
+                      {Math.min(indexOfLastItem, filteredBookings.length)}
+                    </strong>{" "}
+                    of <strong className="text-gray-800">{filteredBookings.length}</strong> records
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${currentPage === 1 ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"}`}>Prev</button>
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
+                      currentPage === 1
+                        ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
+                        : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
+                    }`}
+                  >
+                    Prev
+                  </button>
                   {getPageNumbers().map((page, index) => (
-                    <button key={index} onClick={() => (typeof page === "number" ? handlePageClick(page) : null)} disabled={page === "..."} className={`px-3 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[32px] ${page === "..." ? "text-gray-400 bg-transparent border-transparent cursor-default" : currentPage === page ? "text-white bg-blue-600 border-blue-600 shadow-sm" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"}`}>{page}</button>
+                    <button
+                      key={index}
+                      onClick={() => (typeof page === "number" ? handlePageClick(page) : null)}
+                      disabled={page === "..."}
+                      className={`px-3 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[32px] ${
+                        page === "..."
+                          ? "text-gray-400 bg-transparent border-transparent cursor-default"
+                          : currentPage === page
+                          ? "text-white bg-blue-600 border-blue-600 shadow-sm"
+                          : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"
+                      }`}
+                    >
+                      {page}
+                    </button>
                   ))}
-                  <button onClick={handleNextPage} disabled={currentPage === totalPages || totalPages === 0} className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${currentPage === totalPages || totalPages === 0 ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"}`}>Next</button>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
+                      currentPage === totalPages || totalPages === 0
+                        ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
+                        : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
+                    }`}
+                  >
+                    Next
+                  </button>
                 </div>
               </div>
             </>
           )}
         </div>
+
+        {/* ===== FILE LIST MODAL ===== */}
+        {fileListModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[78] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-gray-200 flex flex-col max-h-[85vh]">
+              <div
+                className={`flex items-center justify-between px-5 py-4 border-b border-gray-200 rounded-t-2xl flex-shrink-0 ${
+                  fileListModal.type === "reports"
+                    ? "bg-gradient-to-r from-indigo-50 to-blue-50"
+                    : "bg-gradient-to-r from-purple-50 to-pink-50"
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold flex-shrink-0 ${
+                      fileListModal.type === "reports" ? "bg-indigo-600 text-white" : "bg-purple-600 text-white"
+                    }`}
+                  >
+                    {fileListModal.type === "reports" ? <FiFileText className="w-5 h-5" /> : <FiPaperclip className="w-5 h-5" />}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-gray-900 text-sm">
+                      {fileListModal.type === "reports" ? "Reports" : "Prescriptions"}
+                    </h3>
+                    <p className="text-[11px] text-gray-500 truncate">
+                      {fileListModal.booking.patientName} • {fileListModal.files.length} file
+                      {fileListModal.files.length > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setFileListModal(null)}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                {fileListModal.files.map((path, idx) => {
+                  const fileName = getFileNameFromPath(path);
+                  const fileType = getFileType(path);
+                  const isPdf = fileType === "pdf";
+                  const isImage = fileType === "image";
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        openDirectPreview(path);
+                        setFileListModal(null);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 transition-all text-left group ${
+                        fileListModal.type === "reports"
+                          ? "bg-indigo-50/60 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300"
+                          : "bg-purple-50/60 border-purple-200 hover:bg-purple-100 hover:border-purple-300"
+                      }`}
+                    >
+                      <div
+                        className={`w-10 h-10 rounded-lg bg-white border flex items-center justify-center flex-shrink-0 ${
+                          fileListModal.type === "reports" ? "border-indigo-200" : "border-purple-200"
+                        }`}
+                      >
+                        {isPdf ? (
+                          <FaFilePdf className="w-5 h-5 text-red-500" />
+                        ) : isImage ? (
+                          <FaFileImage
+                            className={`w-5 h-5 ${
+                              fileListModal.type === "reports" ? "text-indigo-500" : "text-purple-500"
+                            }`}
+                          />
+                        ) : (
+                          <FiFileText
+                            className={`w-5 h-5 ${
+                              fileListModal.type === "reports" ? "text-indigo-500" : "text-purple-500"
+                            }`}
+                          />
+                        )}
+                      </div>
+
+                      <div
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${
+                          fileListModal.type === "reports" ? "bg-indigo-600 text-white" : "bg-purple-600 text-white"
+                        }`}
+                      >
+                        {idx + 1}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-bold text-gray-900 truncate">{fileName}</div>
+                        <div
+                          className={`text-[10px] font-medium ${
+                            fileListModal.type === "reports" ? "text-indigo-600" : "text-purple-600"
+                          }`}
+                        >
+                          {isPdf ? "PDF Document" : isImage ? "Image File" : "File"} • Click to preview
+                        </div>
+                      </div>
+
+                      <FiEye
+                        className={`w-4 h-4 flex-shrink-0 ${
+                          fileListModal.type === "reports"
+                            ? "text-indigo-400 group-hover:text-indigo-700"
+                            : "text-purple-400 group-hover:text-purple-700"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-end px-5 py-3 border-t border-gray-200 bg-gray-50/50 rounded-b-2xl flex-shrink-0">
+                <button
+                  onClick={() => setFileListModal(null)}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ===== EDIT MODAL ===== */}
         {showEditModal && selectedBookingForEdit && (
@@ -2022,7 +2570,10 @@ export default function Bookings() {
                   </div>
                 </div>
                 <button
-                  onClick={() => { setShowEditModal(false); setSelectedBookingForEdit(null); }}
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setSelectedBookingForEdit(null);
+                  }}
                   className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0"
                 >
                   <FaTimes className="w-4 h-4" />
@@ -2030,7 +2581,6 @@ export default function Bookings() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-5">
-                {/* Patient Info */}
                 <div>
                   <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5">
                     Patient Information
@@ -2147,7 +2697,6 @@ export default function Bookings() {
                   </div>
                 </div>
 
-                {/* Appointment */}
                 <div>
                   <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5">
                     Appointment Details
@@ -2176,14 +2725,15 @@ export default function Bookings() {
                   </div>
                 </div>
 
-                {/* Status & Payment */}
                 <div>
                   <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5">
                     Status & Payment
                   </h4>
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Booking Status</label>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                        Booking Status
+                      </label>
                       <select
                         name="status"
                         value={editForm.status}
@@ -2191,12 +2741,16 @@ export default function Bookings() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs bg-white capitalize"
                       >
                         {BOOKING_STATUS_OPTIONS.map((st) => (
-                          <option key={st.value} value={st.value}>{st.label}</option>
+                          <option key={st.value} value={st.value}>
+                            {st.label}
+                          </option>
                         ))}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Payment Status</label>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                        Payment Status
+                      </label>
                       <select
                         name="paymentStatus"
                         value={editForm.paymentStatus}
@@ -2204,12 +2758,16 @@ export default function Bookings() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs bg-white"
                       >
                         {PAYMENT_STATUS_OPTIONS.map((st) => (
-                          <option key={st.value} value={st.value}>{st.label}</option>
+                          <option key={st.value} value={st.value}>
+                            {st.label}
+                          </option>
                         ))}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Payment Mode</label>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                        Payment Mode
+                      </label>
                       <select
                         name="paymentType"
                         value={editForm.paymentType}
@@ -2223,7 +2781,9 @@ export default function Bookings() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Discount (₹)</label>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                        Discount (₹)
+                      </label>
                       <input
                         type="number"
                         name="discount"
@@ -2233,7 +2793,9 @@ export default function Bookings() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Amount Paid (₹)</label>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                        Amount Paid (₹)
+                      </label>
                       <input
                         type="number"
                         name="amountPaid"
@@ -2243,7 +2805,9 @@ export default function Bookings() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Total Payable</label>
+                      <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                        Total Payable
+                      </label>
                       <input
                         type="text"
                         value={getTotalBookingFee(selectedBookingForEdit)}
@@ -2260,9 +2824,7 @@ export default function Bookings() {
                           onChange={handleEditFormChange}
                           className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
                         />
-                        <span className="text-[11px] font-bold uppercase text-gray-600">
-                          Active Booking
-                        </span>
+                        <span className="text-[11px] font-bold uppercase text-gray-600">Active Booking</span>
                       </label>
                     </div>
                   </div>
@@ -2271,7 +2833,10 @@ export default function Bookings() {
 
               <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50/50 rounded-b-2xl flex-shrink-0">
                 <button
-                  onClick={() => { setShowEditModal(false); setSelectedBookingForEdit(null); }}
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setSelectedBookingForEdit(null);
+                  }}
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
                 >
                   Cancel
@@ -2303,15 +2868,22 @@ export default function Bookings() {
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-2xl flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-sm flex-shrink-0 shadow-md">
-                    {selectedBookingForView.patientName ? selectedBookingForView.patientName.charAt(0).toUpperCase() : "P"}
+                    {selectedBookingForView.patientName
+                      ? selectedBookingForView.patientName.charAt(0).toUpperCase()
+                      : "P"}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-bold text-gray-900 text-base truncate">{selectedBookingForView.patientName || "N/A"}</h3>
+                    <h3 className="font-bold text-gray-900 text-base truncate">
+                      {selectedBookingForView.patientName || "N/A"}
+                    </h3>
                     <p className="text-xs text-gray-500">Booking Details</p>
                   </div>
                 </div>
                 <button
-                  onClick={() => { setShowViewModal(false); setSelectedBookingForView(null); }}
+                  onClick={() => {
+                    setShowViewModal(false);
+                    setSelectedBookingForView(null);
+                  }}
                   className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0"
                 >
                   <FaTimes className="w-4 h-4" />
@@ -2319,6 +2891,87 @@ export default function Bookings() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                {/* RESCHEDULE HISTORY SECTION (TOP) */}
+                {isRescheduled(selectedBookingForView) && (
+                  <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden">
+                    <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-amber-200 bg-amber-100/60">
+                      <FaCalendarPlus className="w-3.5 h-3.5 text-amber-700" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-amber-800">
+                        Reschedule History
+                      </h4>
+                      {selectedBookingForView.rescheduleCount > 1 && (
+                        <span className="ml-auto text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-600 text-white">
+                          {selectedBookingForView.rescheduleCount} times
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-4 space-y-3">
+                      {(selectedBookingForView.rescheduleHistory || []).map((entry, idx) => (
+                        <div
+                          key={idx}
+                          className={`rounded-lg p-3 border ${
+                            idx === (selectedBookingForView.rescheduleHistory || []).length - 1
+                              ? "bg-white border-amber-300 shadow-sm"
+                              : "bg-white/60 border-amber-100"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] font-bold uppercase text-amber-700">
+                              {idx === (selectedBookingForView.rescheduleHistory || []).length - 1
+                                ? "Latest Change"
+                                : `Change #${idx + 1}`}
+                            </span>
+                            {entry.rescheduledAt && (
+                              <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
+                                <FaHistory className="w-2.5 h-2.5" />
+                                {formatDateTimeToDDMMYYYY(entry.rescheduledAt)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-2">
+                            <div className="bg-red-50/60 border border-red-100 rounded-lg p-2">
+                              <div className="text-[9px] font-bold uppercase text-red-600 mb-1">
+                                Previous Slot
+                              </div>
+                              <div className="flex items-center justify-between gap-2 text-[11px]">
+                                <span className="flex items-center gap-1 text-slate-500 line-through">
+                                  <FaCalendarAlt className="w-2.5 h-2.5" />
+                                  {formatDateToDDMMYYYY(entry.previousDate)}
+                                </span>
+                                <span className="flex items-center gap-1 text-slate-500 line-through">
+                                  <FaClock className="w-2.5 h-2.5" />
+                                  {entry.previousStartTime} - {entry.previousEndTime}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-center">
+                              <FaArrowRight className="w-3.5 h-3.5 text-amber-600" />
+                            </div>
+
+                            <div className="bg-emerald-50/60 border border-emerald-100 rounded-lg p-2">
+                              <div className="text-[9px] font-bold uppercase text-emerald-700 mb-1">
+                                New Slot
+                              </div>
+                              <div className="flex items-center justify-between gap-2 text-[11px]">
+                                <span className="flex items-center gap-1 text-emerald-800 font-bold">
+                                  <FaCalendarAlt className="w-2.5 h-2.5" />
+                                  {formatDateToDDMMYYYY(entry.newDate)}
+                                </span>
+                                <span className="flex items-center gap-1 text-emerald-800 font-bold">
+                                  <FaClock className="w-2.5 h-2.5" />
+                                  {entry.newStartTime} - {entry.newEndTime}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5 flex items-center gap-1.5">
                     <FiUserCheck className="w-3.5 h-3.5 text-blue-500" /> Patient Information
@@ -2342,11 +2995,17 @@ export default function Bookings() {
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Email</div>
-                      <div className="font-semibold text-slate-800 break-all">{selectedBookingForView.patientEmail || "N/A"}</div>
+                      <div className="font-semibold text-slate-800 break-all">
+                        {selectedBookingForView.patientEmail || "N/A"}
+                      </div>
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Date of Birth</div>
-                      <div className="font-semibold text-slate-800">{selectedBookingForView.patientDob ? formatDateToDDMMYYYY(selectedBookingForView.patientDob) : "N/A"}</div>
+                      <div className="font-semibold text-slate-800">
+                        {selectedBookingForView.patientDob
+                          ? formatDateToDDMMYYYY(selectedBookingForView.patientDob)
+                          : "N/A"}
+                      </div>
                     </div>
                     <div className="col-span-2">
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Address</div>
@@ -2356,7 +3015,8 @@ export default function Bookings() {
                       <div className="col-span-2">
                         <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">City / Pincode</div>
                         <div className="font-semibold text-slate-800">
-                          {selectedBookingForView.patientCity || ""} {selectedBookingForView.patientPincode ? `- ${selectedBookingForView.patientPincode}` : ""}
+                          {selectedBookingForView.patientCity || ""}{" "}
+                          {selectedBookingForView.patientPincode ? `- ${selectedBookingForView.patientPincode}` : ""}
                         </div>
                       </div>
                     )}
@@ -2374,11 +3034,17 @@ export default function Bookings() {
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Specialization</div>
-                      <div className="font-semibold text-slate-800">{selectedBookingForView.doctorSpecialization || "N/A"}</div>
+                      <div className="font-semibold text-slate-800">
+                        {selectedBookingForView.doctorSpecialization || "N/A"}
+                      </div>
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Appointment Date</div>
-                      <div className="font-semibold text-slate-800">{formatDateToDDMMYYYY(selectedBookingForView.appointmentDate || selectedBookingForView.date)}</div>
+                      <div className="font-semibold text-slate-800">
+                        {formatDateToDDMMYYYY(
+                          selectedBookingForView.appointmentDate || selectedBookingForView.date
+                        )}
+                      </div>
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Slot Timing</div>
@@ -2394,7 +3060,9 @@ export default function Bookings() {
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Appointment Type</div>
-                      <div className="font-semibold text-slate-800">{selectedBookingForView.appointmentType || "N/A"}</div>
+                      <div className="font-semibold text-slate-800">
+                        {selectedBookingForView.appointmentType || "N/A"}
+                      </div>
                     </div>
                     <div className="col-span-2">
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Purpose / Reason</div>
@@ -2416,31 +3084,82 @@ export default function Bookings() {
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3 bg-emerald-50/40 border border-emerald-100 rounded-xl p-4 text-xs">
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Booking Status</div>
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${getStatusColors(selectedBookingForView.status).bg} ${getStatusColors(selectedBookingForView.status).text} ${getStatusColors(selectedBookingForView.status).border}`}>
+                      <span
+                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
+                          getStatusColors(selectedBookingForView.status).bg
+                        } ${getStatusColors(selectedBookingForView.status).text} ${
+                          getStatusColors(selectedBookingForView.status).border
+                        }`}
+                      >
                         {selectedBookingForView.status || "confirmed"}
                       </span>
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Payment Status</div>
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${selectedBookingForView.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                      <span
+                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
+                          selectedBookingForView.paymentStatus === "Paid"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
+                      >
                         {selectedBookingForView.paymentStatus || "Pending"}
                       </span>
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Payment Mode</div>
-                      <div className="font-semibold text-slate-800 capitalize">{selectedBookingForView.paymentType || "cash"}</div>
+                      <div className="font-semibold text-slate-800 capitalize">
+                        {selectedBookingForView.paymentType || "cash"}
+                      </div>
                     </div>
+
+                    {/* ⭐ TRANSACTION ID in View Modal */}
+                    {(selectedBookingForView.paymentTransactionId ||
+                      selectedBookingForView.transactionId) && (
+                      <div className="col-span-2">
+                        <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">
+                          Transaction ID
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-200 break-all">
+                            {selectedBookingForView.paymentTransactionId ||
+                              selectedBookingForView.transactionId}
+                          </span>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                selectedBookingForView.paymentTransactionId ||
+                                  selectedBookingForView.transactionId
+                              );
+                              showToast("Transaction ID copied!", "success");
+                            }}
+                            className="text-[10px] font-bold text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Total Amount</div>
-                      <div className="font-bold text-emerald-700 text-sm">₹{getTotalBookingFee(selectedBookingForView)}</div>
+                      <div className="font-bold text-emerald-700 text-sm">
+                        ₹{getTotalBookingFee(selectedBookingForView)}
+                      </div>
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Booked On</div>
-                      <div className="font-semibold text-slate-800">{formatDateTimeToDDMMYYYY(selectedBookingForView.bookedAt || selectedBookingForView.createdAt)}</div>
+                      <div className="font-semibold text-slate-800">
+                        {formatDateTimeToDDMMYYYY(
+                          selectedBookingForView.bookedAt || selectedBookingForView.createdAt
+                        )}
+                      </div>
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-0.5">Booking Type</div>
-                      <div className="font-semibold text-slate-800">{selectedBookingForView.bookingType || "Online"}</div>
+                      <div className="font-semibold text-slate-800">
+                        {selectedBookingForView.bookingType || "Online"}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2448,11 +3167,15 @@ export default function Bookings() {
                 {selectedBookingForView.services && selectedBookingForView.services.length > 0 && (
                   <div>
                     <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5 flex items-center gap-1.5">
-                      <FiPlusCircle className="w-3.5 h-3.5 text-indigo-500" /> Services ({selectedBookingForView.services.length})
+                      <FiPlusCircle className="w-3.5 h-3.5 text-indigo-500" /> Services (
+                      {selectedBookingForView.services.length})
                     </h4>
                     <div className="space-y-2">
                       {selectedBookingForView.services.map((svc, idx) => (
-                        <div key={idx} className="flex items-center justify-between bg-indigo-50/40 border border-indigo-100 rounded-lg px-3 py-2 text-xs">
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between bg-indigo-50/40 border border-indigo-100 rounded-lg px-3 py-2 text-xs"
+                        >
                           <div className="font-semibold text-slate-800">{svc.name}</div>
                           <div className="font-bold text-indigo-700">₹{svc.price || 0}</div>
                         </div>
@@ -2461,7 +3184,8 @@ export default function Bookings() {
                   </div>
                 )}
 
-                {((selectedBookingForView.reports || []).length > 0 || (selectedBookingForView.prescriptions || []).length > 0) && (
+                {((selectedBookingForView.reports || []).length > 0 ||
+                  (selectedBookingForView.prescriptions || []).length > 0) && (
                   <div>
                     <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-2.5 flex items-center gap-1.5">
                       <FiFileText className="w-3.5 h-3.5 text-cyan-500" /> Attachments
@@ -2471,22 +3195,26 @@ export default function Bookings() {
                         <button
                           onClick={() => {
                             setShowViewModal(false);
-                            openDirectPreview(selectedBookingForView.reports[0]);
+                            openFileListModal(selectedBookingForView, "reports");
                           }}
                           className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors"
                         >
-                          <FiFileText className="w-3.5 h-3.5" /> View {(selectedBookingForView.reports || []).length} Report{(selectedBookingForView.reports || []).length > 1 ? "s" : ""}
+                          <FiFileText className="w-3.5 h-3.5" /> View{" "}
+                          {(selectedBookingForView.reports || []).length} Report
+                          {(selectedBookingForView.reports || []).length > 1 ? "s" : ""}
                         </button>
                       )}
                       {(selectedBookingForView.prescriptions || []).length > 0 && (
                         <button
                           onClick={() => {
                             setShowViewModal(false);
-                            openDirectPreview(selectedBookingForView.prescriptions[0]);
+                            openFileListModal(selectedBookingForView, "prescriptions");
                           }}
                           className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-purple-50 text-purple-700 px-3 py-1.5 rounded-lg border border-purple-200 hover:bg-purple-100 transition-colors"
                         >
-                          <FiPaperclip className="w-3.5 h-3.5" /> View {(selectedBookingForView.prescriptions || []).length} Prescription{(selectedBookingForView.prescriptions || []).length > 1 ? "s" : ""}
+                          <FiPaperclip className="w-3.5 h-3.5" /> View{" "}
+                          {(selectedBookingForView.prescriptions || []).length} Prescription
+                          {(selectedBookingForView.prescriptions || []).length > 1 ? "s" : ""}
                         </button>
                       )}
                     </div>
@@ -2505,7 +3233,10 @@ export default function Bookings() {
                   <FaFileInvoiceDollar className="w-3.5 h-3.5" /> View Bill
                 </button>
                 <button
-                  onClick={() => { setShowViewModal(false); setSelectedBookingForView(null); }}
+                  onClick={() => {
+                    setShowViewModal(false);
+                    setSelectedBookingForView(null);
+                  }}
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
                 >
                   Close
@@ -2526,11 +3257,16 @@ export default function Bookings() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-sm">Payment Summary</h3>
-                    <p className="text-[10px] text-gray-500 truncate max-w-[180px]">{selectedBookingForPaymentSummary.patientName}</p>
+                    <p className="text-[10px] text-gray-500 truncate max-w-[180px]">
+                      {selectedBookingForPaymentSummary.patientName}
+                    </p>
                   </div>
                 </div>
                 <button
-                  onClick={() => { setShowPaymentSummaryPopup(false); setSelectedBookingForPaymentSummary(null); }}
+                  onClick={() => {
+                    setShowPaymentSummaryPopup(false);
+                    setSelectedBookingForPaymentSummary(null);
+                  }}
                   className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100"
                 >
                   <FaTimes className="w-3.5 h-3.5" />
@@ -2548,26 +3284,67 @@ export default function Bookings() {
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-600 font-medium">Paid Amount</span>
                     <span className="font-bold text-emerald-700">
-                      ₹{selectedBookingForPaymentSummary.paymentStatus === "Paid"
+                      ₹
+                      {selectedBookingForPaymentSummary.paymentStatus === "Paid"
                         ? getTotalBookingFee(selectedBookingForPaymentSummary)
-                        : (selectedBookingForPaymentSummary.amountPaid || 0)}
+                        : selectedBookingForPaymentSummary.amountPaid || 0}
                     </span>
                   </div>
                   <div className="h-px bg-gray-200" />
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-800 font-bold">Balance</span>
-                    <span className={`font-bold text-sm ${selectedBookingForPaymentSummary.paymentStatus === "Paid" ? "text-emerald-700" : "text-red-600"}`}>
-                      ₹{selectedBookingForPaymentSummary.paymentStatus === "Paid"
+                    <span
+                      className={`font-bold text-sm ${
+                        selectedBookingForPaymentSummary.paymentStatus === "Paid"
+                          ? "text-emerald-700"
+                          : "text-red-600"
+                      }`}
+                    >
+                      ₹
+                      {selectedBookingForPaymentSummary.paymentStatus === "Paid"
                         ? 0
-                        : (selectedBookingForPaymentSummary.balanceAmount || getTotalBookingFee(selectedBookingForPaymentSummary))}
+                        : selectedBookingForPaymentSummary.balanceAmount ||
+                          getTotalBookingFee(selectedBookingForPaymentSummary)}
                     </span>
                   </div>
                 </div>
 
+                {/* ⭐ Transaction ID in Payment Summary */}
+                {(selectedBookingForPaymentSummary.paymentTransactionId ||
+                  selectedBookingForPaymentSummary.transactionId) && (
+                  <div className="bg-slate-50 rounded-lg border border-slate-200 p-2">
+                    <div className="text-[9px] font-bold uppercase text-gray-400 mb-0.5">Transaction ID</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] font-semibold text-slate-700 break-all flex-1">
+                        {selectedBookingForPaymentSummary.paymentTransactionId ||
+                          selectedBookingForPaymentSummary.transactionId}
+                      </span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            selectedBookingForPaymentSummary.paymentTransactionId ||
+                              selectedBookingForPaymentSummary.transactionId
+                          );
+                          showToast("Copied!", "success");
+                        }}
+                        className="text-[9px] font-bold text-blue-600 hover:text-blue-800 px-1.5 py-0.5 rounded hover:bg-blue-50 transition-colors"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div className="rounded-lg bg-gray-50 border border-gray-200 p-2">
                     <div className="text-[9px] font-bold uppercase text-gray-400 mb-0.5">Status</div>
-                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase border ${selectedBookingForPaymentSummary.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                    <span
+                      className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase border ${
+                        selectedBookingForPaymentSummary.paymentStatus === "Paid"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}
+                    >
                       {selectedBookingForPaymentSummary.paymentStatus || "Pending"}
                     </span>
                   </div>
@@ -2615,7 +3392,10 @@ export default function Bookings() {
                   <FaFileInvoiceDollar className="w-3 h-3" /> View Bill
                 </button>
                 <button
-                  onClick={() => { setShowPaymentSummaryPopup(false); setSelectedBookingForPaymentSummary(null); }}
+                  onClick={() => {
+                    setShowPaymentSummaryPopup(false);
+                    setSelectedBookingForPaymentSummary(null);
+                  }}
                   className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
                 >
                   Close
@@ -2631,8 +3411,18 @@ export default function Bookings() {
             <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl border border-gray-200 flex flex-col max-h-[92vh]">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-2xl flex-shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-md flex-shrink-0 ${previewFile.type === "pdf" ? "bg-red-600 text-white shadow-red-500/20" : "bg-indigo-600 text-white shadow-indigo-500/20"}`}>
-                    {previewFile.type === "pdf" ? <FiFileText className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-md flex-shrink-0 ${
+                      previewFile.type === "pdf"
+                        ? "bg-red-600 text-white shadow-red-500/20"
+                        : "bg-indigo-600 text-white shadow-indigo-500/20"
+                    }`}
+                  >
+                    {previewFile.type === "pdf" ? (
+                      <FiFileText className="w-5 h-5" />
+                    ) : (
+                      <FiEye className="w-5 h-5" />
+                    )}
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-bold text-gray-900 text-base truncate">{previewFile.name}</h3>
@@ -2665,7 +3455,9 @@ export default function Bookings() {
                     <div className="text-center py-12">
                       <FiFileText className="w-16 h-16 text-gray-300 mx-auto mb-3" />
                       <p className="text-sm font-semibold text-gray-600 mb-1">Preview not available</p>
-                      <p className="text-xs text-gray-400 mb-4">This file type cannot be previewed in the browser. Use Download button below.</p>
+                      <p className="text-xs text-gray-400 mb-4">
+                        This file type cannot be previewed in the browser. Use Download button below.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -2688,7 +3480,8 @@ export default function Bookings() {
                   onClick={() => setPreviewFile(null)}
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
                 >
-                  Close                </button>
+                  Close
+                </button>
               </div>
             </div>
           </div>
@@ -2700,13 +3493,25 @@ export default function Bookings() {
             <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-500/20"><FaFileInvoiceDollar className="w-5 h-5" /></div>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-500/20">
+                    <FaFileInvoiceDollar className="w-5 h-5" />
+                  </div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base">Bill Cum Receipt</h3>
-                    <p className="text-xs text-gray-500">{selectedBookingForBilling.patientName} • {billingData.invoiceNo}</p>
+                    <p className="text-xs text-gray-500">
+                      {selectedBookingForBilling.patientName} • {billingData.invoiceNo}
+                    </p>
                   </div>
                 </div>
-                <button onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
+                <button
+                  onClick={() => {
+                    setShowBillingModal(false);
+                    setSelectedBookingForBilling(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
               </div>
 
               <div id="bill-content" className="p-6 md:p-8 relative overflow-hidden">
@@ -2726,29 +3531,91 @@ export default function Bookings() {
                   </div>
 
                   <div className="text-center bg-gray-100 border-y border-gray-300 py-1.5 mb-4">
-                    <span className="text-sm font-bold tracking-widest text-gray-800 uppercase">Bill Cum Receipt</span>
+                    <span className="text-sm font-bold tracking-widest text-gray-800 uppercase">
+                      Bill Cum Receipt
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs mb-5">
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Name</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling.patientName || "N/A"}</span></div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Invoice No / Date</span>: <span className="font-semibold text-gray-900">{billingData.invoiceNo} / {billingData.invoiceDate}</span></div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Age</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling.patientAge || "N/A"} Yrs</span></div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Gender</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling.patientGender || "N/A"}</span></div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Branch</span>: <span className="font-semibold text-gray-900">{billingData.branch}</span></div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Contact No</span>: <span className="font-semibold text-gray-900">{selectedBookingForBilling.patientPhone || "N/A"}</span></div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Doctor</span>: <span className="font-semibold text-gray-900">{billingData.doctorName}</span></div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Appt. Date</span>: <span className="font-semibold text-gray-900">{formatDateToDDMMYYYY(selectedBookingForBilling.date)}</span></div>
+                    <div>
+                      <span className="font-bold text-gray-500 inline-block w-28">Name</span>:{" "}
+                      <span className="font-semibold text-gray-900">
+                        {selectedBookingForBilling.patientName || "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-gray-500 inline-block w-28">Invoice No / Date</span>:{" "}
+                      <span className="font-semibold text-gray-900">
+                        {billingData.invoiceNo} / {billingData.invoiceDate}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-gray-500 inline-block w-28">Age</span>:{" "}
+                      <span className="font-semibold text-gray-900">
+                        {selectedBookingForBilling.patientAge || "N/A"} Yrs
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-gray-500 inline-block w-28">Gender</span>:{" "}
+                      <span className="font-semibold text-gray-900">
+                        {selectedBookingForBilling.patientGender || "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-gray-500 inline-block w-28">Branch</span>:{" "}
+                      <span className="font-semibold text-gray-900">{billingData.branch}</span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-gray-500 inline-block w-28">Contact No</span>:{" "}
+                      <span className="font-semibold text-gray-900">
+                        {selectedBookingForBilling.patientPhone || "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-gray-500 inline-block w-28">Doctor</span>:{" "}
+                      <span className="font-semibold text-gray-900">{billingData.doctorName}</span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-gray-500 inline-block w-28">Appt. Date</span>:{" "}
+                      <span className="font-semibold text-gray-900">
+                        {formatDateToDDMMYYYY(selectedBookingForBilling.date)}
+                      </span>
+                    </div>
+
+                    {/* ⭐ Payment Mode */}
+                    <div>
+                      <span className="font-bold text-gray-500 inline-block w-28">Payment Mode</span>:{" "}
+                      <span className="font-semibold text-gray-900">{billingData.paymentMode}</span>
+                    </div>
+
+                    {/* ⭐ Transaction ID (Bill Modal) */}
+                    {billingData.transactionId && (
+                      <div className="sm:col-span-2">
+                        <span className="font-bold text-gray-500 inline-block w-28">Txn ID</span>:{" "}
+                        <span className="font-mono text-[11px] font-semibold text-gray-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                          {billingData.transactionId}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <table className="w-full mb-3 border-t-2 border-b-2 border-gray-800">
                     <thead>
                       <tr className="border-b border-gray-300">
                         <th className="text-left py-1.5 text-[11px] font-bold text-gray-600 w-6">No.</th>
-                        <th className="text-left py-1.5 text-[11px] font-bold text-gray-600 w-[28%]">Service / Item</th>
-                        <th className="text-left py-1.5 text-[11px] font-bold text-gray-600 w-[16%]">Service Code</th>
+                        <th className="text-left py-1.5 text-[11px] font-bold text-gray-600 w-[28%]">
+                          Service / Item
+                        </th>
+                        <th className="text-left py-1.5 text-[11px] font-bold text-gray-600 w-[16%]">
+                          Service Code
+                        </th>
                         <th className="text-left py-1.5 text-[11px] font-bold text-gray-600 w-[20%]">Remarks</th>
-                        <th className="text-right py-1.5 text-[11px] font-bold text-gray-600 w-[14%]">Amount</th>
-                        <th className="text-center py-1.5 text-[11px] font-bold text-gray-600 w-[16%]">Payment Status</th>
+                        <th className="text-right py-1.5 text-[11px] font-bold text-gray-600 w-[14%]">
+                          Amount
+                        </th>
+                        <th className="text-center py-1.5 text-[11px] font-bold text-gray-600 w-[16%]">
+                          Payment Status
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2758,9 +3625,19 @@ export default function Bookings() {
                           <td className="py-1.5 text-xs font-medium text-gray-800">{item.name}</td>
                           <td className="py-1.5 text-xs text-gray-600">{item.serviceCode}</td>
                           <td className="py-1.5 text-xs text-gray-500">{item.remarks}</td>
-                          <td className="py-1.5 text-xs text-right font-semibold text-gray-800">₹{Number(item.amount).toFixed(2)}</td>
+                          <td className="py-1.5 text-xs text-right font-semibold text-gray-800">
+                            ₹{Number(item.amount).toFixed(2)}
+                          </td>
                           <td className="py-1.5 text-xs text-center">
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${item.paymentStatus === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{item.paymentStatus || "Pending"}</span>
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                item.paymentStatus === "Paid"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-amber-100 text-amber-700"
+                              }`}
+                            >
+                              {item.paymentStatus || "Pending"}
+                            </span>
                           </td>
                         </tr>
                       ))}
@@ -2769,30 +3646,75 @@ export default function Bookings() {
 
                   <div className="flex flex-col items-end mb-3">
                     <div className="w-full max-w-xs text-xs">
-                      <div className="flex justify-between py-1 border-b border-gray-200"><span className="text-gray-600">Gross Bill Amount</span><span className="font-bold text-gray-900">₹ {billingData.grossAmount.toFixed(2)}</span></div>
-                      <div className="flex justify-between py-1 border-b border-gray-200"><span className="text-gray-600">Net Amount</span><span className="font-bold text-gray-900">₹ {billingData.netAmount.toFixed(2)}</span></div>
-                      <div className="flex justify-between py-1 border-b border-gray-200"><span className="text-gray-600">Paid Amount</span><span className="font-bold text-emerald-700">₹ {billingData.paidAmount.toFixed(2)}</span></div>
+                      <div className="flex justify-between py-1 border-b border-gray-200">
+                        <span className="text-gray-600">Gross Bill Amount</span>
+                        <span className="font-bold text-gray-900">
+                          ₹ {billingData.grossAmount.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-gray-200">
+                        <span className="text-gray-600">Net Amount</span>
+                        <span className="font-bold text-gray-900">₹ {billingData.netAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-gray-200">
+                        <span className="text-gray-600">Paid Amount</span>
+                        <span className="font-bold text-emerald-700">₹ {billingData.paidAmount.toFixed(2)}</span>
+                      </div>
                       <div className="flex justify-between py-1.5 mt-1 border-t-2 border-gray-800">
                         <span className="font-bold text-gray-800">Balance to Pay</span>
-                        <span className={`font-bold ${billingData.balanceAmount > 0 ? "text-red-600" : "text-emerald-700"}`}>₹ {billingData.balanceAmount.toFixed(2)}</span>
+                        <span
+                          className={`font-bold ${
+                            billingData.balanceAmount > 0 ? "text-red-600" : "text-emerald-700"
+                          }`}
+                        >
+                          ₹ {billingData.balanceAmount.toFixed(2)}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between flex-wrap gap-2 pt-4 mt-2 border-t border-gray-200 text-[11px] text-gray-500">
-                    <span>Printed Date : {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+                    <span>
+                      Printed Date :{" "}
+                      {new Date().toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}{" "}
+                      {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
                     <span className="font-bold text-gray-700">Authorized Signature</span>
                   </div>
-                  <div className="mt-3 text-[10px] text-gray-400 italic">* Bills cannot be cancelled once registered.</div>
+                  <div className="mt-3 text-[10px] text-gray-400 italic">
+                    * Bills cannot be cancelled once registered.
+                  </div>
                 </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50/50">
                 {billingData.paymentStatus === "Pending" && (
-                  <button onClick={handleMarkAsPaid} className="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center gap-1.5"><FaCheckCircle className="w-3.5 h-3.5" /> Mark as Paid</button>
+                  <button
+                    onClick={handleMarkAsPaid}
+                    className="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center gap-1.5"
+                  >
+                    <FaCheckCircle className="w-3.5 h-3.5" /> Mark as Paid
+                  </button>
                 )}
-                <button onClick={printBill} className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5"><FaPrint className="w-3.5 h-3.5" /> Print Bill</button>
-                <button onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all">Close</button>
+                <button
+                  onClick={printBill}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5"
+                >
+                  <FaPrint className="w-3.5 h-3.5" /> Print Bill
+                </button>
+                <button
+                  onClick={() => {
+                    setShowBillingModal(false);
+                    setSelectedBookingForBilling(null);
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>

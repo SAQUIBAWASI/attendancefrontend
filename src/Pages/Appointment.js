@@ -42,13 +42,66 @@ import {
   SlidersHorizontal,
   Pill,
   FlaskConical,
+  Lock,
+  Stethoscope as StethoscopeIcon,
+  Thermometer,
 } from "lucide-react";
 import TimelyFooter from "./TimelyFooter";
 import TimelyNavbar from "../Components/TimelyNavbar";
 
-// ✅ Local category images
 import doctorConsultationImg from "../Images/doctorconsultation.png";
 import labTestImg from "../Images/labtest.png";
+
+// ==================== ✅ RAZORPAY CONFIG ====================
+const RAZORPAY_KEY_ID = "rzp_test_TQkLWUaBkiSKBY";
+
+// ==================== ✅ ROBUST RAZORPAY SCRIPT LOADER ====================
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      console.log("✅ Razorpay already loaded");
+      resolve(true);
+      return;
+    }
+
+    const existingScript = document.querySelector(
+      'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+    );
+    if (existingScript) {
+      existingScript.addEventListener("load", () => {
+        console.log("✅ Razorpay loaded (existing tag)");
+        resolve(true);
+      });
+      existingScript.addEventListener("error", () => {
+        console.error("❌ Razorpay script error (existing tag)");
+        resolve(false);
+      });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => {
+      console.log("✅ Razorpay script loaded successfully");
+      resolve(true);
+    };
+    script.onerror = () => {
+      console.error("❌ Razorpay script failed to load");
+      resolve(false);
+    };
+    document.body.appendChild(script);
+
+    setTimeout(() => {
+      if (window.Razorpay) {
+        resolve(true);
+      } else {
+        console.warn("⏱️ Razorpay load timeout");
+        resolve(false);
+      }
+    }, 10000);
+  });
+};
 
 // ==================== BRAND COLORS ====================
 const BLUE = "#2B5CA8";
@@ -91,7 +144,6 @@ const BANNER_SLIDES = [
   },
 ];
 
-// ---------- Time utilities ----------
 const timeToMinutes = (timeStr) => {
   if (!timeStr) return 0;
   const parts = timeStr.trim().split(":");
@@ -117,7 +169,6 @@ const minutesTo24Hour = (mins) => {
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-// ==================== TITLE OPTIONS ====================
 const TITLE_OPTIONS = [
   { value: "Mr.", label: "Mr.", gender: "Male" },
   { value: "Miss", label: "Miss", gender: "Female" },
@@ -127,7 +178,6 @@ const TITLE_OPTIONS = [
   { value: "Baby Of", label: "Baby Of", gender: "Others" },
 ];
 
-// ==================== DEFAULT CLINIC ====================
 const DEFAULT_CLINIC = {
   _id: "timelyhealth-default",
   id: "timelyhealth-default",
@@ -149,7 +199,6 @@ const calculateAgeFromDob = (dobStr) => {
   return age >= 0 ? String(age) : "";
 };
 
-// ==================== STEP ENUM ====================
 const STEPS = {
   CATEGORY: 0,
   CLINIC: 1,
@@ -175,6 +224,9 @@ const Appointment = () => {
   const [patientPhone, setPatientPhone] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [patientAddress, setPatientAddress] = useState("");
+
+  // ✅ NEW: Symptoms field (replaces purpose for online)
+  const [symptoms, setSymptoms] = useState("");
   const [purpose, setPurpose] = useState("");
 
   const [uploadedReports, setUploadedReports] = useState([]);
@@ -205,15 +257,18 @@ const Appointment = () => {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [paymentType, setPaymentType] = useState("cash");
+  // ✅ paymentType constant — always online
+  const paymentType = "online";
+
   const [bookingConfirmation, setBookingConfirmation] = useState(null);
   const [toast, setToast] = useState(null);
 
   const [nowTick, setNowTick] = useState(Date.now());
+  const [razorpayProcessing, setRazorpayProcessing] = useState(false);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
+    setTimeout(() => setToast(null), 5000);
   };
 
   useEffect(() => {
@@ -226,6 +281,13 @@ const Appointment = () => {
   useEffect(() => {
     const tick = setInterval(() => setNowTick(Date.now()), 30000);
     return () => clearInterval(tick);
+  }, []);
+
+  useEffect(() => {
+    console.log("🚀 Preloading Razorpay script...");
+    loadRazorpayScript().then((ok) => {
+      console.log("Razorpay preload result:", ok);
+    });
   }, []);
 
   const goToSlide = (idx) => setCurrentSlide(idx);
@@ -782,36 +844,25 @@ const Appointment = () => {
     setPatientEmail("");
     setPatientAddress("");
     setPurpose("");
+    setSymptoms("");
     setUploadedReports([]);
     setUploadedPrescriptions([]);
     setSelectedServices([]);
     setServiceSearch("");
-    setPaymentType("cash");
     setSelectedDate(todayStr);
     setDoctorSearch("");
     setSpecializationFilter("all");
     setExperienceFilter("all");
   };
 
-  const handleSubmitBooking = async (e) => {
-    e.preventDefault();
-
-    if (!patientName.trim()) return showToast("Please enter the patient's full name.", "error");
-    if (!patientAge || parseInt(patientAge) <= 0) return showToast("Please enter a valid age.", "error");
-    if (!patientPhone.trim() || patientPhone.length < 10)
-      return showToast("Please enter a valid 10-digit phone number.", "error");
-    if (!patientAddress.trim()) return showToast("Please enter the patient's address.", "error");
-
-    if (bookingType === "walkin" && !purpose.trim()) {
-      return showToast("Please enter the purpose of the appointment.", "error");
-    }
-
-    if (!selectedDoctorId) return showToast("Please select a doctor.", "error");
-    if (!selectedSlot) return showToast("Please select an available appointment slot.", "error");
-    if (selectedServices.length === 0) return showToast("Please select at least one service.", "error");
-
-    setIsSubmitting(true);
-    const selectedDoc = doctors.find((d) => d._id === selectedDoctorId || d.id === selectedDoctorId);
+  // ============================================================
+  // ✅ BUILD FORMDATA
+  // ✅ Purpose: If online + symptoms given, send symptoms as "purpose"
+  // ============================================================
+  const buildBookingFormData = (extraFields = {}) => {
+    const selectedDoc = doctors.find(
+      (d) => d._id === selectedDoctorId || d.id === selectedDoctorId
+    );
 
     const formData = new FormData();
 
@@ -842,15 +893,55 @@ const Appointment = () => {
     formData.append("patientPhone", patientPhone.trim());
     formData.append("patientEmail", patientEmail.trim());
     formData.append("patientAddress", patientAddress.trim());
-    formData.append("purpose", bookingType === "online" ? "Doctor Consultation" : purpose.trim());
+
+    // ✅ Purpose logic:
+    // - If online AND symptoms provided → send symptoms as purpose
+    // - If walkin → send purpose (from purpose field)
+    // - Fallback to "Doctor Consultation"
+    let finalPurpose = "Doctor Consultation";
+    if (bookingType === "online" && symptoms.trim()) {
+      finalPurpose = symptoms.trim();
+    } else if (bookingType === "walkin" && purpose.trim()) {
+      finalPurpose = purpose.trim();
+    }
+    formData.append("purpose", finalPurpose);
+
+    // ✅ Also send symptoms separately (for future backend support)
+    if (symptoms.trim()) {
+      formData.append("symptoms", symptoms.trim());
+    }
 
     formData.append("consultationFee", "0");
-    formData.append("paymentType", paymentType || "cash");
-    formData.append("paymentStatus", "Pending");
-    formData.append("partialAmount", "0");
+    formData.append("paymentType", extraFields.paymentType || "online");
+    formData.append("paymentStatus", extraFields.paymentStatus || "Pending");
+    formData.append("partialAmount", extraFields.partialAmount || "0");
     formData.append("discount", "0");
     formData.append("referralCommission", "");
     formData.append("referralCommissionType", "");
+
+    formData.append("subtotal", subtotal.toString());
+    formData.append("finalPayable", finalPayable.toString());
+    formData.append("finalPayableAmount", finalPayable.toString());
+    formData.append("grandTotal", finalPayable.toString());
+    formData.append("totalAmount", finalPayable.toString());
+    formData.append(
+      "amountPaid",
+      (extraFields.amountPaid !== undefined ? extraFields.amountPaid : 0).toString()
+    );
+    formData.append(
+      "balanceAmount",
+      (extraFields.balanceAmount !== undefined ? extraFields.balanceAmount : finalPayable).toString()
+    );
+
+    if (extraFields.transactionId) {
+      formData.append("transactionId", extraFields.transactionId);
+    }
+    if (extraFields.razorpayOrderId) {
+      formData.append("razorpayOrderId", extraFields.razorpayOrderId);
+    }
+    if (extraFields.razorpaySignature) {
+      formData.append("razorpaySignature", extraFields.razorpaySignature);
+    }
 
     const servicesJson = JSON.stringify(
       selectedServices.map((s) => ({
@@ -866,83 +957,230 @@ const Appointment = () => {
     formData.append("serviceItems", servicesJson);
     formData.append("services", servicesJson);
 
-    // ✅ Just append files — no JSON metadata
     uploadedReports.forEach((r) => {
       if (r.file) {
         formData.append("reports", r.file, r.name);
       }
     });
-
     uploadedPrescriptions.forEach((p) => {
       if (p.file) {
         formData.append("prescriptions", p.file, p.name);
       }
     });
 
-    try {
-      const bookRes = await axios.post(`${API_BASE_URL}/appointment-slots/book-online`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    return formData;
+  };
 
-      if (bookRes && bookRes.data && bookRes.data.slot) {
-        const updatedDbSlot = bookRes.data.slot;
-        setAllSlots((prev) =>
-          prev.map((s) => (s._id === selectedSlot._id || s.slotId === selectedSlot.slotId ? updatedDbSlot : s))
-        );
-      } else {
-        setAllSlots((prev) => prev.map((s) => (s._id === selectedSlot._id ? { ...s, status: "booked" } : s)));
-      }
+  const finalizeBooking = async (extraFields = {}) => {
+    const formData = buildBookingFormData(extraFields);
+    const selectedDoc = doctors.find(
+      (d) => d._id === selectedDoctorId || d.id === selectedDoctorId
+    );
 
-      setBookingConfirmation({
-        appointmentId: `APP-${Date.now().toString().slice(-6)}`,
-        patientTitle,
-        patientName: patientName.trim(),
-        patientAge,
-        patientDob,
-        patientGender,
-        patientPhone: patientPhone.trim(),
-        patientEmail: patientEmail.trim(),
-        patientAddress: patientAddress.trim(),
-        purpose: bookingType === "online" ? "Doctor Consultation" : purpose.trim(),
-        date: selectedDate,
-        dayOfWeek: dayOfWeekName,
-        startTime: selectedSlot.startTime,
-        endTime: selectedSlot.endTime,
-        shift: selectedSlot.shift,
-        duration: selectedSlot.duration,
-        doctorName: selectedDoc?.name || "",
-        doctorSpecialization: selectedDoc?.specialization || "",
-        clinicName: selectedClinic?.name || "",
-        bookingType: bookingType === "walkin" ? "Walk-In" : "Online",
-        reports: uploadedReports.map((r) => r.name),
-        prescriptions: uploadedPrescriptions.map((p) => p.name),
-        services: selectedServices.map((s) => ({
-          name: s.name,
-          price: Number(s.price) || 0,
-          quantity: Number(s.quantity) || 1,
-          total: (Number(s.price) || 0) * (Number(s.quantity) || 1),
-        })),
-        subtotal,
-        finalPayable,
-        paymentStatus: "Pending",
-        amountPaid: 0,
-        balanceAmount: finalPayable,
-        paymentType,
-      });
+    console.log("📤 Finalizing booking with:", {
+      transactionId: extraFields.transactionId,
+      paymentStatus: extraFields.paymentStatus,
+      symptoms,
+    });
 
-      showToast(`Appointment confirmed for ${patientName}.`, "success");
-      resetAll();
-    } catch (error) {
-      console.error("Booking error:", error);
-      showToast(
-        error?.response?.data?.message || "We couldn't complete the booking. Please try again.",
-        "error"
+    const bookRes = await axios.post(
+      `${API_BASE_URL}/appointment-slots/book-online`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    console.log("📥 Booking response:", bookRes.data);
+
+    if (bookRes && bookRes.data && bookRes.data.slot) {
+      const updatedDbSlot = bookRes.data.slot;
+      setAllSlots((prev) =>
+        prev.map((s) =>
+          s._id === selectedSlot._id || s.slotId === selectedSlot.slotId ? updatedDbSlot : s
+        )
       );
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setAllSlots((prev) =>
+        prev.map((s) => (s._id === selectedSlot._id ? { ...s, status: "booked" } : s))
+      );
     }
+
+    const isPaid = extraFields.paymentStatus === "Paid";
+    const paidAmt = isPaid ? finalPayable : Number(extraFields.amountPaid || 0);
+    const balAmt = isPaid ? 0 : finalPayable - paidAmt;
+
+    // ✅ Final purpose for confirmation popup
+    const displayPurpose =
+      bookingType === "online" && symptoms.trim()
+        ? symptoms.trim()
+        : bookingType === "walkin" && purpose.trim()
+        ? purpose.trim()
+        : "Doctor Consultation";
+
+    setBookingConfirmation({
+      appointmentId: `APP-${Date.now().toString().slice(-6)}`,
+      patientTitle,
+      patientName: patientName.trim(),
+      patientAge,
+      patientDob,
+      patientGender,
+      patientPhone: patientPhone.trim(),
+      patientEmail: patientEmail.trim(),
+      patientAddress: patientAddress.trim(),
+      purpose: displayPurpose,
+      symptoms: symptoms.trim(),
+      date: selectedDate,
+      dayOfWeek: dayOfWeekName,
+      startTime: selectedSlot.startTime,
+      endTime: selectedSlot.endTime,
+      shift: selectedSlot.shift,
+      duration: selectedSlot.duration,
+      doctorName: selectedDoc?.name || "",
+      doctorSpecialization: selectedDoc?.specialization || "",
+      clinicName: selectedClinic?.name || "",
+      bookingType: bookingType === "walkin" ? "Walk-In" : "Online",
+      reports: uploadedReports.map((r) => r.name),
+      prescriptions: uploadedPrescriptions.map((p) => p.name),
+      services: selectedServices.map((s) => ({
+        name: s.name,
+        price: Number(s.price) || 0,
+        quantity: Number(s.quantity) || 1,
+        total: (Number(s.price) || 0) * (Number(s.quantity) || 1),
+      })),
+      subtotal,
+      finalPayable,
+      paymentStatus: extraFields.paymentStatus || "Pending",
+      amountPaid: paidAmt,
+      balanceAmount: balAmt,
+      paymentType: extraFields.paymentType || "online",
+      transactionId: extraFields.transactionId || null,
+    });
+
+    showToast(`Appointment confirmed for ${patientName}.`, "success");
+    resetAll();
+  };
+
+  const openRazorpayCheckout = async () => {
+    console.log("🎯 Opening Razorpay checkout...");
+
+    const loaded = await loadRazorpayScript();
+    if (!loaded || !window.Razorpay) {
+      showToast("Failed to load Razorpay. Check internet connection.", "error");
+      return;
+    }
+
+    const selectedDoc = doctors.find(
+      (d) => d._id === selectedDoctorId || d.id === selectedDoctorId
+    );
+
+    const amountInPaise = Math.round(finalPayable * 100);
+
+    console.log("💰 Razorpay amount:", amountInPaise, "paise (₹" + finalPayable + ")");
+
+    const options = {
+      key: RAZORPAY_KEY_ID,
+      amount: amountInPaise,
+      currency: "INR",
+      name: "TimelyHealth",
+      description: `Consultation with ${selectedDoc?.name || "Doctor"}`,
+      prefill: {
+        name: patientName || "",
+        email: patientEmail || "",
+        contact: patientPhone || "",
+      },
+      notes: {
+        patientName: patientName || "",
+        patientPhone: patientPhone || "",
+        doctorName: selectedDoc?.name || "",
+        appointmentDate: selectedDate || "",
+        slotId: String(selectedSlot?._id || ""),
+        bookingType: bookingType || "",
+        symptoms: symptoms || "",
+      },
+      theme: {
+        color: "#1AA179",
+      },
+      handler: async function (response) {
+        console.log("🎉 Razorpay payment success:", response);
+        try {
+          setRazorpayProcessing(true);
+          await finalizeBooking({
+            transactionId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id || "",
+            razorpaySignature: response.razorpay_signature || "",
+            paymentType: "online",
+            paymentStatus: "Paid",
+            amountPaid: finalPayable,
+            balanceAmount: 0,
+          });
+        } catch (err) {
+          console.error("❌ Finalize error:", err);
+          showToast(
+            err?.response?.data?.message ||
+              "Payment done but booking failed. Please contact support.",
+            "error"
+          );
+        } finally {
+          setRazorpayProcessing(false);
+        }
+      },
+      modal: {
+        ondismiss: function () {
+          console.log("❌ Razorpay modal dismissed by user");
+          showToast("Payment cancelled. Slot not booked.", "error");
+          setRazorpayProcessing(false);
+        },
+      },
+    };
+
+    try {
+      const rzp = new window.Razorpay(options);
+
+      rzp.on("payment.failed", function (response) {
+        console.error("❌ Razorpay payment failed:", response.error);
+        showToast(
+          response.error?.description || "Payment failed. Please try again.",
+          "error"
+        );
+        setRazorpayProcessing(false);
+      });
+
+      console.log("🚀 rzp.open() called");
+      rzp.open();
+    } catch (err) {
+      console.error("❌ Error opening Razorpay:", err);
+      showToast("Could not open payment window. Please try again.", "error");
+      setRazorpayProcessing(false);
+    }
+  };
+
+  const handleSubmitBooking = async (e) => {
+    e.preventDefault();
+
+    if (!patientName.trim()) return showToast("Please enter the patient's full name.", "error");
+    if (!patientAge || parseInt(patientAge) <= 0)
+      return showToast("Please enter a valid age.", "error");
+    if (!patientPhone.trim() || patientPhone.length < 10)
+      return showToast("Please enter a valid 10-digit phone number.", "error");
+    if (!patientAddress.trim())
+      return showToast("Please enter the patient's address.", "error");
+
+    // ✅ Symptoms required for online
+    if (bookingType === "online" && !symptoms.trim()) {
+      return showToast("Please enter the symptoms / reason for consultation.", "error");
+    }
+
+    // ✅ Purpose required for walk-in
+    if (bookingType === "walkin" && !purpose.trim()) {
+      return showToast("Please enter the purpose of the appointment.", "error");
+    }
+
+    if (!selectedDoctorId) return showToast("Please select a doctor.", "error");
+    if (!selectedSlot) return showToast("Please select an available appointment slot.", "error");
+    if (selectedServices.length === 0)
+      return showToast("Please select at least one service.", "error");
+
+    console.log("💳 Opening Razorpay directly (online only mode)...");
+    await openRazorpayCheckout();
   };
 
   const stepLabels = ["Category", "Clinic", "Doctor", "Type", "Slot", "Details"];
@@ -995,7 +1233,9 @@ const Appointment = () => {
                 style={{
                   backgroundColor: isActive ? accent : isPast ? accentLight : "#F7F8F7",
                   color: isActive ? "#FFFFFF" : isPast ? accentDark : "#B7BFBB",
-                  boxShadow: isActive ? `0 4px 10px ${idx % 2 === 0 ? BLUE_SHADOW : GREEN_SHADOW}` : "none",
+                  boxShadow: isActive
+                    ? `0 4px 10px ${idx % 2 === 0 ? BLUE_SHADOW : GREEN_SHADOW}`
+                    : "none",
                 }}
               >
                 <span
@@ -1013,7 +1253,8 @@ const Appointment = () => {
                 <div
                   className="w-4 h-px flex-shrink-0"
                   style={{
-                    backgroundColor: idx < currentStep ? (idx % 2 === 0 ? BLUE_BORDER : GREEN_BORDER) : "#E4E7E4",
+                    backgroundColor:
+                      idx < currentStep ? (idx % 2 === 0 ? BLUE_BORDER : GREEN_BORDER) : "#E4E7E4",
                   }}
                 />
               )}
@@ -1045,14 +1286,15 @@ const Appointment = () => {
           </div>
         )}
 
-        {/* ==================== BANNER SLIDER ==================== */}
+        {/* BANNER — same as before */}
         <section className="relative mt-16 md:mt-20 w-full">
           <div className="hidden sm:block relative w-full h-[200px] sm:h-[230px] md:h-[260px] lg:h-[280px] overflow-hidden">
             {BANNER_SLIDES.map((s, idx) => (
               <div
                 key={s.id}
-                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
-                  }`}
+                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                  idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+                }`}
               >
                 <img src={s.image} alt={s.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 max-w-7xl mx-auto px-6 md:px-10 flex items-center">
@@ -1123,8 +1365,9 @@ const Appointment = () => {
               {BANNER_SLIDES.map((s, idx) => (
                 <div
                   key={s.id}
-                  className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
-                    }`}
+                  className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                    idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+                  }`}
                 >
                   <img src={s.image} alt={s.title} className="w-full h-full object-cover" />
                   <div
@@ -1134,7 +1377,10 @@ const Appointment = () => {
                     }}
                   />
                   <div className="absolute inset-0 px-4 py-3 flex flex-col justify-center">
-                    <p className="text-[9px] font-black tracking-widest uppercase mb-1" style={{ color: "#7FDCBB" }}>
+                    <p
+                      className="text-[9px] font-black tracking-widest uppercase mb-1"
+                      style={{ color: "#7FDCBB" }}
+                    >
                       {s.tagline}
                     </p>
                     <h2 className="text-[14px] font-bold text-white leading-snug pr-14 line-clamp-2">
@@ -1164,7 +1410,8 @@ const Appointment = () => {
                     style={{
                       width: idx === currentSlide ? "16px" : "6px",
                       height: "6px",
-                      backgroundColor: idx === currentSlide ? "#FFFFFF" : "rgba(255,255,255,0.5)",
+                      backgroundColor:
+                        idx === currentSlide ? "#FFFFFF" : "rgba(255,255,255,0.5)",
                     }}
                   />
                 ))}
@@ -1182,7 +1429,7 @@ const Appointment = () => {
           </div>
         </section>
 
-        {/* ==================== MAIN CONTENT ==================== */}
+        {/* MAIN CONTENT */}
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-14">
           {renderStepIndicator()}
 
@@ -1193,7 +1440,9 @@ const Appointment = () => {
                 <h2 className="text-xl md:text-3xl font-bold text-[#1A2421] tracking-tight">
                   What are you looking for?
                 </h2>
-                <p className="mt-2 text-xs md:text-sm text-[#5B6B65]">Select a category to get started</p>
+                <p className="mt-2 text-xs md:text-sm text-[#5B6B65]">
+                  Select a category to get started
+                </p>
               </div>
 
               <div className="flex flex-wrap items-start justify-center gap-8 md:gap-16 lg:gap-20 max-w-4xl mx-auto">
@@ -1268,7 +1517,10 @@ const Appointment = () => {
 
               <div className="mb-5 md:mb-6 max-w-md mx-auto">
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3.5 top-3.5" style={{ color: BLUE }} />
+                  <Search
+                    className="w-4 h-4 absolute left-3.5 top-3.5"
+                    style={{ color: BLUE }}
+                  />
                   <input
                     type="text"
                     placeholder="Search clinics by name or city..."
@@ -1289,7 +1541,10 @@ const Appointment = () => {
 
               {clinicsLoading ? (
                 <div className="py-16 text-center">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3" style={{ color: BLUE }} />
+                  <RefreshCw
+                    className="w-6 h-6 animate-spin mx-auto mb-3"
+                    style={{ color: BLUE }}
+                  />
                   <p className="text-sm font-medium text-[#5B6B65]">Loading clinics...</p>
                 </div>
               ) : filteredClinics.length === 0 ? (
@@ -1317,7 +1572,9 @@ const Appointment = () => {
                         }}
                         onMouseEnter={(e) => (e.currentTarget.style.borderColor = accent)}
                         onMouseLeave={(e) =>
-                          (e.currentTarget.style.borderColor = isDefault ? `${accent}55` : "#E4E7E4")
+                          (e.currentTarget.style.borderColor = isDefault
+                            ? `${accent}55`
+                            : "#E4E7E4")
                         }
                       >
                         <div className="flex items-start gap-3 mb-3">
@@ -1327,7 +1584,10 @@ const Appointment = () => {
                               background: `linear-gradient(135deg, ${accentLight}, ${accent}25)`,
                             }}
                           >
-                            <Building2 className="w-5 h-5 md:w-5 md:h-5" style={{ color: accent }} />
+                            <Building2
+                              className="w-5 h-5 md:w-5 md:h-5"
+                              style={{ color: accent }}
+                            />
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -1404,7 +1664,10 @@ const Appointment = () => {
               <div className="mb-5 md:mb-6 space-y-3">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
-                    <Search className="w-4 h-4 absolute left-3.5 top-3.5" style={{ color: BLUE }} />
+                    <Search
+                      className="w-4 h-4 absolute left-3.5 top-3.5"
+                      style={{ color: BLUE }}
+                    />
                     <input
                       type="text"
                       placeholder="Search doctors by name or specialization..."
@@ -1428,13 +1691,20 @@ const Appointment = () => {
                     style={
                       showFilters
                         ? { backgroundColor: BLUE, color: "#FFFFFF", borderColor: BLUE }
-                        : { backgroundColor: "#FFFFFF", color: BLUE_DARK, borderColor: BLUE_BORDER }
+                        : {
+                            backgroundColor: "#FFFFFF",
+                            color: BLUE_DARK,
+                            borderColor: BLUE_BORDER,
+                          }
                     }
                   >
                     <SlidersHorizontal className="w-4 h-4" />
                     Filters
                     {(specializationFilter !== "all" || experienceFilter !== "all") && (
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: GREEN }} />
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: GREEN }}
+                      />
                     )}
                   </button>
                 </div>
@@ -1516,7 +1786,9 @@ const Appointment = () => {
                     Showing <b style={{ color: BLUE }}>{filteredDoctors.length}</b> doctor
                     {filteredDoctors.length !== 1 ? "s" : ""}
                   </span>
-                  {(specializationFilter !== "all" || experienceFilter !== "all" || doctorSearch) && (
+                  {(specializationFilter !== "all" ||
+                    experienceFilter !== "all" ||
+                    doctorSearch) && (
                     <span className="text-[#8A948F] italic">Filters applied</span>
                   )}
                 </div>
@@ -1524,13 +1796,18 @@ const Appointment = () => {
 
               {doctorsLoading ? (
                 <div className="py-16 text-center">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3" style={{ color: BLUE }} />
+                  <RefreshCw
+                    className="w-6 h-6 animate-spin mx-auto mb-3"
+                    style={{ color: BLUE }}
+                  />
                   <p className="text-sm font-medium text-[#5B6B65]">Loading doctors...</p>
                 </div>
               ) : filteredDoctors.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-[#E4E7E4] py-16 text-center">
                   <Stethoscope className="w-12 h-12 text-[#B7BFBB] mx-auto mb-3" />
-                  <p className="text-sm font-medium text-[#5B6B65]">No doctors found matching your criteria.</p>
+                  <p className="text-sm font-medium text-[#5B6B65]">
+                    No doctors found matching your criteria.
+                  </p>
                   <button
                     type="button"
                     onClick={() => {
@@ -1561,7 +1838,9 @@ const Appointment = () => {
                         className="text-left bg-white rounded-2xl border-2 transition-all p-4 md:p-5 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99]"
                         style={{
                           borderColor: isSelected ? accent : "#E4E7E4",
-                          boxShadow: isSelected ? `0 4px 16px ${accent}30` : "0 2px 8px rgba(15,92,77,0.04)",
+                          boxShadow: isSelected
+                            ? `0 4px 16px ${accent}30`
+                            : "0 2px 8px rgba(15,92,77,0.04)",
                         }}
                         onMouseEnter={(e) => (e.currentTarget.style.borderColor = accent)}
                         onMouseLeave={(e) =>
@@ -1572,7 +1851,9 @@ const Appointment = () => {
                           <div className="relative flex-shrink-0">
                             <div
                               className="w-14 h-14 md:w-14 md:h-14 rounded-full flex items-center justify-center"
-                              style={{ background: `linear-gradient(135deg, ${accent}, ${accentDark})` }}
+                              style={{
+                                background: `linear-gradient(135deg, ${accent}, ${accentDark})`,
+                              }}
                             >
                               <span className="text-white text-lg md:text-lg font-bold">
                                 {(doc.name || "D").charAt(0).toUpperCase()}
@@ -1605,7 +1886,9 @@ const Appointment = () => {
                                   <Briefcase className="w-3 h-3" /> {doc.experience} yrs exp
                                 </span>
                               )}
-                              {doc.qualification && <span className="truncate">{doc.qualification}</span>}
+                              {doc.qualification && (
+                                <span className="truncate">{doc.qualification}</span>
+                              )}
                             </div>
                             {doc.consultationFee && (
                               <div
@@ -1658,7 +1941,8 @@ const Appointment = () => {
                   style={{ borderColor: bookingType === "walkin" ? GREEN : "#E4E7E4" }}
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = GREEN)}
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.borderColor = bookingType === "walkin" ? GREEN : "#E4E7E4")
+                    (e.currentTarget.style.borderColor =
+                      bookingType === "walkin" ? GREEN : "#E4E7E4")
                   }
                 >
                   <div
@@ -1667,7 +1951,9 @@ const Appointment = () => {
                   >
                     <Footprints className="w-7 h-7" style={{ color: GREEN_DARK }} />
                   </div>
-                  <h3 className="text-base md:text-lg font-bold text-[#1A2421] mb-1.5">Walk-In</h3>
+                  <h3 className="text-base md:text-lg font-bold text-[#1A2421] mb-1.5">
+                    Walk-In
+                  </h3>
                   <p className="text-sm text-[#5B6B65] leading-relaxed">
                     Visit the clinic in person for your consultation
                   </p>
@@ -1687,7 +1973,8 @@ const Appointment = () => {
                   style={{ borderColor: bookingType === "online" ? BLUE : "#E4E7E4" }}
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = BLUE)}
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.borderColor = bookingType === "online" ? BLUE : "#E4E7E4")
+                    (e.currentTarget.style.borderColor =
+                      bookingType === "online" ? BLUE : "#E4E7E4")
                   }
                 >
                   <div
@@ -1696,7 +1983,9 @@ const Appointment = () => {
                   >
                     <Video className="w-7 h-7" style={{ color: BLUE_DARK }} />
                   </div>
-                  <h3 className="text-base md:text-lg font-bold text-[#1A2421] mb-1.5">Online</h3>
+                  <h3 className="text-base md:text-lg font-bold text-[#1A2421] mb-1.5">
+                    Online
+                  </h3>
                   <p className="text-sm text-[#5B6B65] leading-relaxed">
                     Consult with the doctor via video call from home
                   </p>
@@ -1785,7 +2074,11 @@ const Appointment = () => {
                     </div>
                     <div className="text-xs text-[#5B6B65] mt-0.5">{selectedSlot.shift}</div>
                   </div>
-                  <Check className="w-6 h-6 shrink-0" style={{ color: GREEN_DARK }} strokeWidth={3} />
+                  <Check
+                    className="w-6 h-6 shrink-0"
+                    style={{ color: GREEN_DARK }}
+                    strokeWidth={3}
+                  />
                 </div>
               )}
 
@@ -1802,15 +2095,23 @@ const Appointment = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#5B6B65]">
-                    <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: BLUE }} />
+                    <span
+                      className="w-2.5 h-2.5 rounded-full inline-block"
+                      style={{ backgroundColor: BLUE }}
+                    />
                     Available
                   </div>
                 </div>
 
                 {loadingSlots ? (
                   <div className="py-16 text-center">
-                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3" style={{ color: BLUE }} />
-                    <p className="text-sm font-medium text-[#5B6B65]">Loading slots for {dayOfWeekName}…</p>
+                    <RefreshCw
+                      className="w-6 h-6 animate-spin mx-auto mb-3"
+                      style={{ color: BLUE }}
+                    />
+                    <p className="text-sm font-medium text-[#5B6B65]">
+                      Loading slots for {dayOfWeekName}…
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -1820,7 +2121,9 @@ const Appointment = () => {
                           <Sun className="w-4 h-4 text-[#E8A33D]" />
                           <span>
                             Morning shift{" "}
-                            <span className="font-normal text-[#8A948F] text-xs">(09:00 AM – 02:00 PM)</span>
+                            <span className="font-normal text-[#8A948F] text-xs">
+                              (09:00 AM – 02:00 PM)
+                            </span>
                           </span>
                         </div>
                         <span
@@ -1833,7 +2136,9 @@ const Appointment = () => {
 
                       {morningSlots.length === 0 ? (
                         <p className="text-xs text-[#8A948F] italic py-2">
-                          {isToday ? "No upcoming morning slots available." : "No morning slots available."}
+                          {isToday
+                            ? "No upcoming morning slots available."
+                            : "No morning slots available."}
                         </p>
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 md:gap-3">
@@ -1843,7 +2148,8 @@ const Appointment = () => {
                               slot={slot}
                               isSelected={
                                 selectedSlot &&
-                                (selectedSlot._id === slot._id || selectedSlot.slotId === slot.slotId)
+                                (selectedSlot._id === slot._id ||
+                                  selectedSlot.slotId === slot.slotId)
                               }
                               onSelect={() => handleSlotSelect(slot)}
                             />
@@ -1858,7 +2164,9 @@ const Appointment = () => {
                           <Coffee className="w-4 h-4 text-[#8A948F]" />
                           <span>
                             Break & sanitization{" "}
-                            <span className="font-normal text-[#8A948F]">(02:00 PM – 03:00 PM)</span>
+                            <span className="font-normal text-[#8A948F]">
+                              (02:00 PM – 03:00 PM)
+                            </span>
                           </span>
                         </div>
                         <span className="bg-[#E4E7E4] text-[#5B6B65] text-[10px] font-bold px-2.5 py-0.5 rounded uppercase">
@@ -1873,7 +2181,9 @@ const Appointment = () => {
                           <Moon className="w-4 h-4" style={{ color: BLUE }} />
                           <span>
                             Evening shift{" "}
-                            <span className="font-normal text-[#8A948F] text-xs">(03:00 PM – 09:00 PM)</span>
+                            <span className="font-normal text-[#8A948F] text-xs">
+                              (03:00 PM – 09:00 PM)
+                            </span>
                           </span>
                         </div>
                         <span
@@ -1890,7 +2200,9 @@ const Appointment = () => {
                         </div>
                       ) : eveningSlots.length === 0 ? (
                         <p className="text-xs text-[#8A948F] italic py-2">
-                          {isToday ? "No upcoming evening slots available." : "No evening slots available."}
+                          {isToday
+                            ? "No upcoming evening slots available."
+                            : "No evening slots available."}
                         </p>
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 md:gap-3">
@@ -1900,7 +2212,8 @@ const Appointment = () => {
                               slot={slot}
                               isSelected={
                                 selectedSlot &&
-                                (selectedSlot._id === slot._id || selectedSlot.slotId === slot.slotId)
+                                (selectedSlot._id === slot._id ||
+                                  selectedSlot.slotId === slot.slotId)
                               }
                               onSelect={() => handleSlotSelect(slot)}
                             />
@@ -1931,10 +2244,10 @@ const Appointment = () => {
                   style={
                     selectedSlot
                       ? {
-                        backgroundColor: GREEN,
-                        color: "#FFFFFF",
-                        boxShadow: `0 6px 16px ${GREEN_SHADOW}`,
-                      }
+                          backgroundColor: GREEN,
+                          color: "#FFFFFF",
+                          boxShadow: `0 6px 16px ${GREEN_SHADOW}`,
+                        }
                       : { backgroundColor: "#E4E7E4", color: "#8A948F", cursor: "not-allowed" }
                   }
                 >
@@ -1962,7 +2275,10 @@ const Appointment = () => {
               >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div>
-                    <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: BLUE }}>
+                    <div
+                      className="text-[10px] font-black uppercase tracking-wider"
+                      style={{ color: BLUE }}
+                    >
                       Clinic
                     </div>
                     <div className="font-bold text-[#1A2421] truncate mt-0.5">
@@ -1970,7 +2286,10 @@ const Appointment = () => {
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: GREEN }}>
+                    <div
+                      className="text-[10px] font-black uppercase tracking-wider"
+                      style={{ color: GREEN }}
+                    >
                       Doctor
                     </div>
                     <div className="font-bold text-[#1A2421] truncate mt-0.5">
@@ -1978,19 +2297,31 @@ const Appointment = () => {
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: BLUE }}>
+                    <div
+                      className="text-[10px] font-black uppercase tracking-wider"
+                      style={{ color: BLUE }}
+                    >
                       Booking Type
                     </div>
                     <div className="font-bold text-[#1A2421] mt-0.5">
-                      {bookingType === "walkin" ? "Walk-In" : bookingType === "online" ? "Online" : "—"}
+                      {bookingType === "walkin"
+                        ? "Walk-In"
+                        : bookingType === "online"
+                        ? "Online"
+                        : "—"}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: GREEN }}>
+                    <div
+                      className="text-[10px] font-black uppercase tracking-wider"
+                      style={{ color: GREEN }}
+                    >
                       Slot
                     </div>
                     <div className="font-bold text-[#1A2421] mt-0.5">
-                      {selectedSlot ? `${selectedSlot.startTime} – ${selectedSlot.endTime}` : "—"}
+                      {selectedSlot
+                        ? `${selectedSlot.startTime} – ${selectedSlot.endTime}`
+                        : "—"}
                     </div>
                   </div>
                 </div>
@@ -1998,7 +2329,6 @@ const Appointment = () => {
 
               <form onSubmit={handleSubmitBooking}>
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-6xl mx-auto pb-8 lg:pb-0">
-                  {/* LEFT */}
                   <div className="lg:col-span-7 space-y-5 md:space-y-6">
                     <div className="bg-white rounded-2xl border border-[#E4E7E4] overflow-hidden">
                       <div
@@ -2044,7 +2374,10 @@ const Appointment = () => {
                               Full name <span className="text-[#B3261E]">*</span>
                             </label>
                             <div className="relative">
-                              <User className="w-4 h-4 absolute left-3 top-2.5" style={{ color: BLUE }} />
+                              <User
+                                className="w-4 h-4 absolute left-3 top-2.5"
+                                style={{ color: BLUE }}
+                              />
                               <input
                                 type="text"
                                 required
@@ -2068,7 +2401,8 @@ const Appointment = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-xs font-medium text-[#3F4A45] mb-1.5 flex items-center gap-1.5">
-                              <Cake className="w-3.5 h-3.5" style={{ color: BLUE }} /> Date of birth
+                              <Cake className="w-3.5 h-3.5" style={{ color: BLUE }} /> Date of
+                              birth
                             </label>
                             <input
                               type="date"
@@ -2092,7 +2426,10 @@ const Appointment = () => {
                               Age <span className="text-[#B3261E]">*</span>
                             </label>
                             <div className="relative">
-                              <Calendar className="w-4 h-4 absolute left-3 top-2.5" style={{ color: BLUE }} />
+                              <Calendar
+                                className="w-4 h-4 absolute left-3 top-2.5"
+                                style={{ color: BLUE }}
+                              />
                               <input
                                 type="number"
                                 required
@@ -2120,7 +2457,10 @@ const Appointment = () => {
                             Gender <span className="text-[#B3261E]">*</span>
                           </label>
                           <div className="relative">
-                            <UserRound className="w-4 h-4 absolute left-3 top-2.5" style={{ color: BLUE }} />
+                            <UserRound
+                              className="w-4 h-4 absolute left-3 top-2.5"
+                              style={{ color: BLUE }}
+                            />
                             <select
                               value={patientGender}
                               onChange={(e) => setPatientGender(e.target.value)}
@@ -2146,7 +2486,9 @@ const Appointment = () => {
                               required
                               placeholder="9876543210"
                               value={patientPhone}
-                              onChange={(e) => setPatientPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                              onChange={(e) =>
+                                setPatientPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                              }
                               className="w-full px-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg text-sm outline-none"
                               onFocus={(e) => {
                                 e.target.style.borderColor = BLUE;
@@ -2159,7 +2501,9 @@ const Appointment = () => {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-[#3F4A45] mb-1.5">Email</label>
+                            <label className="block text-xs font-medium text-[#3F4A45] mb-1.5">
+                              Email
+                            </label>
                             <input
                               type="email"
                               placeholder="patient@email.com"
@@ -2183,7 +2527,10 @@ const Appointment = () => {
                             Address <span className="text-[#B3261E]">*</span>
                           </label>
                           <div className="relative">
-                            <MapPin className="w-4 h-4 absolute left-3 top-2.5" style={{ color: BLUE }} />
+                            <MapPin
+                              className="w-4 h-4 absolute left-3 top-2.5"
+                              style={{ color: BLUE }}
+                            />
                             <textarea
                               required
                               rows={2}
@@ -2203,6 +2550,37 @@ const Appointment = () => {
                           </div>
                         </div>
 
+                        {/* ✅ NEW: SYMPTOMS FIELD for Online */}
+                        {isOnline && (
+                          <div>
+                            <label className="block text-xs font-medium text-[#3F4A45] mb-1.5 flex items-center gap-1.5">
+                              <Thermometer className="w-3.5 h-3.5" style={{ color: BLUE }} />
+                              Symptoms / Reason for Consultation{" "}
+                              <span className="text-[#B3261E]">*</span>
+                            </label>
+                            <textarea
+                              required
+                              rows={3}
+                              placeholder="Describe your symptoms briefly (e.g., fever, headache, cough since 2 days)"
+                              value={symptoms}
+                              onChange={(e) => setSymptoms(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#D7DCD9] rounded-lg text-sm resize-none outline-none"
+                              onFocus={(e) => {
+                                e.target.style.borderColor = BLUE;
+                                e.target.style.boxShadow = `0 0 0 3px ${BLUE}22`;
+                              }}
+                              onBlur={(e) => {
+                                e.target.style.borderColor = "#D7DCD9";
+                                e.target.style.boxShadow = "none";
+                              }}
+                            />
+                            <p className="mt-1 text-[10px] text-[#8A948F]">
+                              This helps the doctor prepare for your consultation
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Purpose for Walk-in (kept as is) */}
                         {!isOnline && (
                           <div>
                             <label className="block text-xs font-medium text-[#3F4A45] mb-1.5">
@@ -2228,28 +2606,7 @@ const Appointment = () => {
                         )}
 
                         {isOnline && (
-                          <div
-                            className="p-3.5 rounded-xl border"
-                            style={{ backgroundColor: BLUE_LIGHT, borderColor: `${BLUE}33` }}
-                          >
-                            <div className="flex items-center gap-2 mb-1">
-                              <Video className="w-3.5 h-3.5" style={{ color: BLUE }} />
-                              <span
-                                className="text-xs font-black uppercase tracking-wider"
-                                style={{ color: BLUE_DARK }}
-                              >
-                                Online Consultation
-                              </span>
-                            </div>
-                            <p className="text-xs text-[#3F4A45]">
-                              Purpose: <b>Doctor Consultation</b> (auto-set for online mode)
-                            </p>
-                          </div>
-                        )}
-
-                        {isOnline && (
                           <div className="space-y-4">
-                            {/* REPORTS UPLOAD */}
                             <div
                               className="border-2 border-dashed rounded-2xl p-4"
                               style={{
@@ -2259,14 +2616,19 @@ const Appointment = () => {
                             >
                               <div className="flex items-center justify-between gap-2 mb-3">
                                 <div className="flex items-center gap-2">
-                                  <FlaskConical className="w-4 h-4" style={{ color: BLUE }} />
+                                  <FlaskConical
+                                    className="w-4 h-4"
+                                    style={{ color: BLUE }}
+                                  />
                                   <label
                                     className="text-xs font-black uppercase tracking-wider"
                                     style={{ color: BLUE_DARK }}
                                   >
                                     Upload Reports
                                   </label>
-                                  <span className="text-[10px] text-[#5B6B65] font-normal">(Optional)</span>
+                                  <span className="text-[10px] text-[#5B6B65] font-normal">
+                                    (Optional)
+                                  </span>
                                   {uploadedReports.length > 0 && (
                                     <span
                                       className="text-[10px] font-black px-2 py-0.5 rounded-full"
@@ -2288,8 +2650,8 @@ const Appointment = () => {
                               </div>
 
                               <p className="text-[11px] text-[#5B6B65] mb-3">
-                                Share lab reports, scans, or diagnostic documents to help the doctor prepare.
-                                You can upload multiple files.
+                                Share lab reports, scans, or diagnostic documents to help the
+                                doctor prepare. You can upload multiple files.
                               </p>
 
                               <input
@@ -2315,7 +2677,9 @@ const Appointment = () => {
                                 }}
                               >
                                 <Upload className="w-3.5 h-3.5" />
-                                {uploadedReports.length > 0 ? "Add More Reports" : "Choose Report Files"}
+                                {uploadedReports.length > 0
+                                  ? "Add More Reports"
+                                  : "Choose Report Files"}
                               </label>
 
                               <p className="mt-2 text-[10px] text-[#8A948F]">
@@ -2335,7 +2699,10 @@ const Appointment = () => {
                                           className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                           style={{ backgroundColor: BLUE_LIGHT }}
                                         >
-                                          <FlaskConical className="w-4 h-4" style={{ color: BLUE }} />
+                                          <FlaskConical
+                                            className="w-4 h-4"
+                                            style={{ color: BLUE }}
+                                          />
                                         </div>
                                         <div className="min-w-0 flex-1">
                                           <div className="text-xs font-bold text-[#1A2421] truncate">
@@ -2360,7 +2727,6 @@ const Appointment = () => {
                               )}
                             </div>
 
-                            {/* PRESCRIPTIONS UPLOAD */}
                             <div
                               className="border-2 border-dashed rounded-2xl p-4"
                               style={{
@@ -2377,7 +2743,9 @@ const Appointment = () => {
                                   >
                                     Upload Prescriptions
                                   </label>
-                                  <span className="text-[10px] text-[#5B6B65] font-normal">(Optional)</span>
+                                  <span className="text-[10px] text-[#5B6B65] font-normal">
+                                    (Optional)
+                                  </span>
                                   {uploadedPrescriptions.length > 0 && (
                                     <span
                                       className="text-[10px] font-black px-2 py-0.5 rounded-full"
@@ -2399,8 +2767,8 @@ const Appointment = () => {
                               </div>
 
                               <p className="text-[11px] text-[#5B6B65] mb-3">
-                                Share any existing prescriptions or doctor's notes for reference. You can
-                                upload multiple files.
+                                Share any existing prescriptions or doctor's notes for reference.
+                                You can upload multiple files.
                               </p>
 
                               <input
@@ -2505,7 +2873,10 @@ const Appointment = () => {
 
                       <div className="p-5 md:p-6 space-y-4">
                         <div className="relative">
-                          <Search className="w-4 h-4 absolute left-3.5 top-3.5" style={{ color: GREEN }} />
+                          <Search
+                            className="w-4 h-4 absolute left-3.5 top-3.5"
+                            style={{ color: GREEN }}
+                          />
                           <input
                             type="text"
                             placeholder="Search services by name..."
@@ -2526,14 +2897,17 @@ const Appointment = () => {
                         <div className="max-h-64 overflow-y-auto border border-[#E4E7E4] rounded-xl divide-y divide-[#E4E7E4]">
                           {servicesLoading ? (
                             <div className="p-6 text-center text-xs text-[#8A948F]">
-                              <RefreshCw className="w-4 h-4 animate-spin inline-block mr-2" /> Loading services...
+                              <RefreshCw className="w-4 h-4 animate-spin inline-block mr-2" />{" "}
+                              Loading services...
                             </div>
                           ) : !serviceSearch.trim() ? (
                             <div className="p-6 text-center text-xs text-[#8A948F]">
                               Type service name to search...
                             </div>
                           ) : filteredServices.length === 0 ? (
-                            <div className="p-6 text-center text-xs text-[#8A948F]">No services found.</div>
+                            <div className="p-6 text-center text-xs text-[#8A948F]">
+                              No services found.
+                            </div>
                           ) : (
                             filteredServices.map((svc) => {
                               const added = selectedServices.find((s) => s._id === svc._id);
@@ -2591,7 +2965,9 @@ const Appointment = () => {
                                   <div className="text-[11px] text-[#8A948F] mt-0.5">
                                     {s.quantity > 1 ? `${s.quantity} × ₹${s.price} = ` : ""}
                                     <span className="font-bold" style={{ color: GREEN_DARK }}>
-                                      ₹{(Number(s.price) || 0) * (Number(s.quantity) || 1)}
+                                      ₹
+                                      {(Number(s.price) || 0) *
+                                        (Number(s.quantity) || 1)}
                                     </span>
                                   </div>
                                 </div>
@@ -2611,7 +2987,6 @@ const Appointment = () => {
                     </div>
                   </div>
 
-                  {/* RIGHT — Billing & Payment */}
                   <div className="lg:col-span-5 space-y-5 md:space-y-6">
                     <div
                       className="bg-white rounded-2xl overflow-hidden lg:sticky lg:top-24 shadow-sm border-2"
@@ -2629,68 +3004,93 @@ const Appointment = () => {
                             <CreditCard className="w-4 h-4" style={{ color: BLUE }} />
                           </div>
                           <div>
-                            <h2 className="text-sm font-bold text-[#1A2421]">Billing & payment</h2>
+                            <h2 className="text-sm font-bold text-[#1A2421]">
+                              Billing & payment
+                            </h2>
                             <p className="text-xs text-[#5B6B65]">Final step</p>
                           </div>
                         </div>
                       </div>
 
                       <div className="p-5 md:p-6 space-y-4">
-                        <div>
-                          <label className="block text-xs font-medium text-[#3F4A45] mb-1.5 flex items-center gap-1.5">
-                            <Wallet className="w-3.5 h-3.5" style={{ color: BLUE }} /> Payment type
-                          </label>
-                          <div className="relative">
-                            <select
-                              value={paymentType}
-                              onChange={(e) => setPaymentType(e.target.value)}
-                              className="w-full px-3.5 pr-8 py-3 bg-white border border-[#D7DCD9] rounded-xl text-sm outline-none appearance-none"
-                              onFocus={(e) => (e.target.style.borderColor = BLUE)}
-                              onBlur={(e) => (e.target.style.borderColor = "#D7DCD9")}
-                            >
-                              <option value="cash">Cash</option>
-                              <option value="card">Card</option>
-                              <option value="upi">UPI</option>
-                              <option value="netbanking">Net Banking</option>
-                            </select>
-                            <ChevronDown className="w-4 h-4 text-[#8A948F] absolute right-3 top-3.5 pointer-events-none" />
+                        <div
+                          className="rounded-xl border-2 p-4 flex items-start gap-3"
+                          style={{
+                            backgroundColor: `${BLUE_LIGHT}66`,
+                            borderColor: BLUE_BORDER,
+                          }}
+                        >
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{ background: `linear-gradient(135deg, ${BLUE}, ${BLUE_DARK})` }}
+                          >
+                            <Lock className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span
+                                className="text-xs font-black uppercase tracking-wider"
+                                style={{ color: BLUE_DARK }}
+                              >
+                                Online Payment
+                              </span>
+                              <span
+                                className="text-[9px] font-black px-2 py-0.5 rounded-full text-white"
+                                style={{ backgroundColor: GREEN }}
+                              >
+                                Recommended
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-[#3F4A45] leading-relaxed">
+                              Pay securely via <b>Razorpay</b> — UPI, Cards, Net Banking, Wallets
+                              supported.
+                            </p>
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#FDF3DA] border border-[#F0DFA8] rounded-xl">
-                          <span className="text-xs font-medium text-[#7A5300]">Payment status</span>
+                          <span className="text-xs font-medium text-[#7A5300]">
+                            Payment status
+                          </span>
                           <span className="text-xs font-bold text-[#7A5300] uppercase tracking-wider">
                             Pending
                           </span>
                         </div>
 
-                        {isOnline && (uploadedReports.length > 0 || uploadedPrescriptions.length > 0) && (
-                          <div className="bg-[#F7F8F7] border border-[#E4E7E4] rounded-xl p-3 space-y-1.5">
-                            <div className="text-[11px] font-black uppercase tracking-wider text-[#8A948F]">
-                              Attachments
+                        {isOnline &&
+                          (uploadedReports.length > 0 || uploadedPrescriptions.length > 0) && (
+                            <div className="bg-[#F7F8F7] border border-[#E4E7E4] rounded-xl p-3 space-y-1.5">
+                              <div className="text-[11px] font-black uppercase tracking-wider text-[#8A948F]">
+                                Attachments
+                              </div>
+                              {uploadedReports.length > 0 && (
+                                <div className="flex items-center justify-between text-xs">
+                                  <span
+                                    className="flex items-center gap-1.5"
+                                    style={{ color: BLUE_DARK }}
+                                  >
+                                    <FlaskConical className="w-3 h-3" /> Reports
+                                  </span>
+                                  <span className="font-bold text-[#1A2421]">
+                                    {uploadedReports.length} file(s)
+                                  </span>
+                                </div>
+                              )}
+                              {uploadedPrescriptions.length > 0 && (
+                                <div className="flex items-center justify-between text-xs">
+                                  <span
+                                    className="flex items-center gap-1.5"
+                                    style={{ color: GREEN_DARK }}
+                                  >
+                                    <Pill className="w-3 h-3" /> Prescriptions
+                                  </span>
+                                  <span className="font-bold text-[#1A2421]">
+                                    {uploadedPrescriptions.length} file(s)
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                            {uploadedReports.length > 0 && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="flex items-center gap-1.5" style={{ color: BLUE_DARK }}>
-                                  <FlaskConical className="w-3 h-3" /> Reports
-                                </span>
-                                <span className="font-bold text-[#1A2421]">
-                                  {uploadedReports.length} file(s)
-                                </span>
-                              </div>
-                            )}
-                            {uploadedPrescriptions.length > 0 && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="flex items-center gap-1.5" style={{ color: GREEN_DARK }}>
-                                  <Pill className="w-3 h-3" /> Prescriptions
-                                </span>
-                                <span className="font-bold text-[#1A2421]">
-                                  {uploadedPrescriptions.length} file(s)
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                          )}
 
                         <div className="bg-[#F7F8F7] border border-[#E4E7E4] rounded-xl p-4 space-y-2">
                           <div className="flex items-center justify-between text-xs">
@@ -2703,39 +3103,52 @@ const Appointment = () => {
                             </span>
                           </div>
                           <div className="flex items-center justify-between pt-2 border-t border-[#E4E7E4]">
-                            <span className="text-sm font-bold text-[#1A2421]">Total payable</span>
+                            <span className="text-sm font-bold text-[#1A2421]">
+                              Total payable
+                            </span>
                             <span className="text-lg font-bold" style={{ color: GREEN_DARK }}>
                               ₹{finalPayable.toLocaleString()}
                             </span>
                           </div>
                         </div>
 
-                        {/* CONFIRM + BACK BUTTONS */}
                         <div className="space-y-2.5 pt-2 border-t border-[#E4E7E4]">
                           <button
                             type="submit"
                             disabled={
-                              isSubmitting || !selectedSlot || !selectedDoctorId || selectedServices.length === 0
+                              isSubmitting ||
+                              razorpayProcessing ||
+                              !selectedSlot ||
+                              !selectedDoctorId ||
+                              selectedServices.length === 0
                             }
                             className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-sm transition-all active:scale-[0.98]"
                             style={
-                              selectedSlot && selectedDoctorId && selectedServices.length > 0 && !isSubmitting
+                              selectedSlot &&
+                              selectedDoctorId &&
+                              selectedServices.length > 0 &&
+                              !isSubmitting &&
+                              !razorpayProcessing
                                 ? {
-                                  backgroundColor: GREEN,
-                                  color: "#FFFFFF",
-                                  boxShadow: `0 6px 16px ${GREEN_SHADOW}`,
-                                }
-                                : { backgroundColor: "#E4E7E4", color: "#8A948F", cursor: "not-allowed" }
+                                    backgroundColor: GREEN,
+                                    color: "#FFFFFF",
+                                    boxShadow: `0 6px 16px ${GREEN_SHADOW}`,
+                                  }
+                                : {
+                                    backgroundColor: "#E4E7E4",
+                                    color: "#8A948F",
+                                    cursor: "not-allowed",
+                                  }
                             }
                           >
-                            {isSubmitting ? (
+                            {isSubmitting || razorpayProcessing ? (
                               <>
                                 <RefreshCw className="w-4 h-4 animate-spin" />
-                                Processing…
+                                {razorpayProcessing ? "Verifying payment…" : "Processing…"}
                               </>
                             ) : (
                               <>
-                                Confirm booking • ₹{finalPayable.toLocaleString()}
+                                Pay ₹{finalPayable.toLocaleString()} & Book
                                 <ArrowRight className="w-4 h-4" />
                               </>
                             )}
@@ -2746,8 +3159,12 @@ const Appointment = () => {
                             onClick={handleBack}
                             className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold bg-white border-2 rounded-xl transition-colors"
                             style={{ color: BLUE_DARK, borderColor: BLUE_BORDER }}
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_LIGHT)}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor = BLUE_LIGHT)
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor = "white")
+                            }
                           >
                             <ArrowLeft className="w-4 h-4" /> Back
                           </button>
@@ -2761,12 +3178,10 @@ const Appointment = () => {
           )}
         </div>
 
-        {/* ==================== SIMPLE THANK YOU POPUP ==================== */}
         {bookingConfirmation && (
           <div className="fixed inset-0 bg-[#1A2421]/70 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl w-full max-w-[300px] shadow-2xl border border-[#E4E7E4] overflow-hidden">
               <div className="py-8 px-6 flex flex-col items-center">
-                {/* Green check circle */}
                 <div
                   className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
                   style={{
@@ -2777,12 +3192,18 @@ const Appointment = () => {
                   <Check className="w-10 h-10 text-white" strokeWidth={3} />
                 </div>
 
-                <h3 className="text-xl font-bold text-[#1A2421] text-center">
-                  Thank You!
-                </h3>
+                <h3 className="text-xl font-bold text-[#1A2421] text-center">Thank You!</h3>
                 <p className="text-sm text-[#5B6B65] mt-2 text-center leading-relaxed">
                   Your appointment has been booked successfully
                 </p>
+
+                {bookingConfirmation.transactionId && (
+                  <div className="mt-3 px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <p className="text-[10px] text-emerald-700 font-bold">
+                      Payment ID: {bookingConfirmation.transactionId.slice(-12)}
+                    </p>
+                  </div>
+                )}
 
                 <button
                   type="button"
@@ -2808,7 +3229,6 @@ const Appointment = () => {
   );
 };
 
-// ---------- Sub-component: slot tile ----------
 const AppointmentSlotTile = ({ slot, isSelected, onSelect }) => {
   return (
     <button
@@ -2818,16 +3238,16 @@ const AppointmentSlotTile = ({ slot, isSelected, onSelect }) => {
       style={
         isSelected
           ? {
-            backgroundColor: BLUE,
-            color: "#FFFFFF",
-            borderColor: BLUE,
-            boxShadow: `0 6px 16px ${BLUE_SHADOW}`,
-          }
+              backgroundColor: BLUE,
+              color: "#FFFFFF",
+              borderColor: BLUE,
+              boxShadow: `0 6px 16px ${BLUE_SHADOW}`,
+            }
           : {
-            backgroundColor: "#FFFFFF",
-            borderColor: "#D7DCD9",
-            color: "#1A2421",
-          }
+              backgroundColor: "#FFFFFF",
+              borderColor: "#D7DCD9",
+              color: "#1A2421",
+            }
       }
       onMouseEnter={(e) => {
         if (!isSelected) {
@@ -2846,7 +3266,9 @@ const AppointmentSlotTile = ({ slot, isSelected, onSelect }) => {
         {slot.startTime} – {slot.endTime}
       </div>
       <div className="flex items-center justify-between text-[10px] font-medium">
-        <span style={{ color: isSelected ? "rgba(255,255,255,0.9)" : "#5B6B65" }}>{slot.shift}</span>
+        <span style={{ color: isSelected ? "rgba(255,255,255,0.9)" : "#5B6B65" }}>
+          {slot.shift}
+        </span>
         <span
           className="px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black"
           style={

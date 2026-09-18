@@ -232,6 +232,8 @@ import DoctorReferralManagement from "./Pages/DoctorReferralManagement.js";
 import DoctorReferralOP from "./Pages/DoctorReferralOP.js";
 import CustomerReferralOP from "./Pages/CustomerReferralOP.js";
 import InactivePatients from "./Pages/InactivePatients.js";
+import PatientLogin from "./Pages/PatientLogin.jsx";
+import PatientDashboard from "./Pages/PatientDashboard.js";
 
 function App() {
   return (
@@ -241,6 +243,8 @@ function App() {
       <Route path="/productlist" element={<ProductList />} />
       <Route path="/productselection" element={<ProductSelectionPage />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/patientlogin" element={<PatientLogin />} />
+      <Route path="/patient/dashboard" element={<PatientDashboard />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/admin-login" element={<Login />} />
