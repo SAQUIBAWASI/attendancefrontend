@@ -3,66 +3,25 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { useNavigate } from "react-router-dom";
 import {
-  FaSearch,
-  FaCalendarAlt,
-  FaUserMd,
-  FaStethoscope,
-  FaTimes,
-  FaPhoneAlt,
-  FaMapMarkerAlt,
-  FaRupeeSign,
-  FaCreditCard,
-  FaMoneyBillWave,
-  FaPrint,
-  FaCheckCircle,
-  FaFileInvoiceDollar,
-  FaUserInjured,
-  FaPlus,
-  FaEye,
-  FaCheck,
-  FaCalendarCheck,
-  FaUserFriends,
-  FaToggleOn,
-  FaToggleOff,
-  FaClock,
-  FaFileMedical,
-  FaClipboardList,
-  FaVideo,
-  FaWhatsapp,
-  FaDownload,
-  FaSave,
-  FaFilePdf,
-  FaFileImage,
-  FaCalendarPlus,
-  FaArrowRight,
-  FaHistory,
-  FaReceipt,
+  FaSearch, FaCalendarAlt, FaUserMd, FaStethoscope, FaTimes, FaPhoneAlt,
+  FaMapMarkerAlt, FaRupeeSign, FaCreditCard, FaMoneyBillWave, FaPrint,
+  FaCheckCircle, FaFileInvoiceDollar, FaUserInjured, FaPlus, FaEye, FaCheck,
+  FaCalendarCheck, FaUserFriends, FaToggleOn, FaToggleOff, FaClock,
+  FaFileMedical, FaClipboardList, FaVideo, FaWhatsapp, FaDownload, FaSave,
+  FaFilePdf, FaFileImage, FaCalendarPlus, FaArrowRight, FaHistory, FaReceipt,
+  FaPrescription, FaHeartbeat, FaStar, FaTimesCircle,
 } from "react-icons/fa";
 import {
-  FiUsers,
-  FiUserCheck,
-  FiClock,
-  FiFilter,
-  FiDownload,
-  FiTrash2,
-  FiPlus,
-  FiEdit2,
-  FiEye,
-  FiRefreshCw,
-  FiCheckCircle,
-  FiXCircle,
-  FiCalendar,
-  FiPlusCircle,
-  FiChevronDown,
-  FiAlertCircle,
-  FiFileText,
-  FiPaperclip,
-  FiVideo,
-  FiPrinter,
+  FiUsers, FiUserCheck, FiClock, FiFilter, FiDownload, FiTrash2, FiPlus,
+  FiEdit2, FiEye, FiRefreshCw, FiCheckCircle, FiXCircle, FiCalendar,
+  FiPlusCircle, FiChevronDown, FiAlertCircle, FiFileText, FiPaperclip,
+  FiVideo, FiPrinter,
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 import logo from "../Images/Timelyhealth logo.png";
+import prescriptionTemplate from "../Images/prescription.jpg";
+import prescriptionBackTemplate from "../Images/prescriptionbackside.jpg";
 
 const PAYMENT_STATUS_OPTIONS = [
   { value: "Pending", label: "Pending" },
@@ -87,6 +46,7 @@ const CLINIC_INFO = {
 };
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
+const REVIEW_WINDOW_DAYS = 3;
 
 const formatDateToDDMMYYYY = (dateString) => {
   if (!dateString) return "N/A";
@@ -146,11 +106,6 @@ const isRescheduled = (b) => {
   );
 };
 
-const getLatestReschedule = (b) => {
-  if (!b || !b.rescheduleHistory || b.rescheduleHistory.length === 0) return null;
-  return b.rescheduleHistory[b.rescheduleHistory.length - 1];
-};
-
 const getFileNameFromPath = (path) => {
   if (!path) return "File";
   return path.split("/").pop() || "File";
@@ -195,6 +150,32 @@ const numberToWords = (num) => {
   return convert(num) + " Rupees Only";
 };
 
+const getReviewWindowStatus = (booking) => {
+  if (!booking) return { canReview: false, daysLeft: 0, expired: true, isReviewed: false };
+
+  const appointmentDateStr = booking.appointmentDate || booking.date;
+  if (!appointmentDateStr) return { canReview: false, daysLeft: 0, expired: true, isReviewed: false };
+
+  const appointmentDate = new Date(appointmentDateStr);
+  if (isNaN(appointmentDate.getTime())) return { canReview: false, daysLeft: 0, expired: true, isReviewed: false };
+
+  appointmentDate.setHours(23, 59, 59, 999);
+  const today = new Date();
+  const diffMs = today - appointmentDate;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  const daysLeft = REVIEW_WINDOW_DAYS - diffDays;
+  const canReview = diffDays >= 0 && diffDays <= REVIEW_WINDOW_DAYS;
+  const expired = diffDays > REVIEW_WINDOW_DAYS;
+
+  return {
+    canReview,
+    daysLeft: Math.max(0, daysLeft),
+    expired,
+    isReviewed: booking.isReviewed === true,
+  };
+};
+
 export default function Bookings() {
   const navigate = useNavigate();
 
@@ -236,7 +217,6 @@ export default function Bookings() {
   const [toast, setToast] = useState(null);
 
   const [previewFile, setPreviewFile] = useState(null);
-
   const [fileListModal, setFileListModal] = useState(null);
 
   const [showViewModal, setShowViewModal] = useState(false);
@@ -299,6 +279,15 @@ export default function Bookings() {
     amountInWords: "",
     transactionId: "",
   });
+
+  const [showVitalsModal, setShowVitalsModal] = useState(false);
+  const [vitalsBooking, setVitalsBooking] = useState(null);
+  const [vitalsData, setVitalsData] = useState({ temp: "", bp: "", pr: "", weight: "" });
+  const [savingVitals, setSavingVitals] = useState(false);
+
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState(null);
+  const [savingReview, setSavingReview] = useState(false);
 
   const hasActiveFilters =
     searchQuery !== "" ||
@@ -384,11 +373,8 @@ export default function Bookings() {
           consultationFee: b.consultationFee || 0,
           paymentType: b.paymentType || "cash",
           paymentStatus: b.paymentStatus || "Pending",
-
-          // ⭐ TRANSACTION ID (from backend)
           paymentTransactionId: b.paymentTransactionId || "",
           transactionId: b.transactionId || "",
-
           totalAmount: b.totalAmount || 0,
           totalFee: b.totalFee || 0,
           grandTotal: b.grandTotal || 0,
@@ -416,8 +402,12 @@ export default function Bookings() {
           bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
           shift: b.shift || slotDetails.shift || "Morning Shift",
           isOP: false,
-
-          // ⭐ RESCHEDULE DATA
+          vitalsTemp: b.vitalsTemp || "",
+          vitalsBp: b.vitalsBp || "",
+          vitalsPr: b.vitalsPr || "",
+          vitalsWeight: b.vitalsWeight || "",
+          isReviewed: b.isReviewed === true,
+          reviewDate: b.reviewDate || null,
           rescheduleHistory: b.rescheduleHistory || [],
           rescheduledAt: b.rescheduledAt || null,
           rescheduleCount: b.rescheduleCount || 0,
@@ -603,47 +593,20 @@ export default function Bookings() {
     setTogglingActiveId(booking._id);
     const newValue = !booking.isActive;
     try {
-      const res = await sendUpdateOP(booking, {
-        patientName: booking.patientName,
-        patientAge: booking.patientAge,
-        patientGender: booking.patientGender,
-        patientTitle: booking.patientTitle,
-        patientPhone: booking.patientPhone,
-        patientEmail: booking.patientEmail,
-        patientAddress: booking.patientAddress,
-        patientCity: booking.patientCity,
-        patientPincode: booking.patientPincode,
-        patientDob: booking.patientDob,
-        purpose: booking.purpose,
-        symptoms: booking.symptoms,
-        paymentType: booking.paymentType,
-        paymentStatus: booking.paymentStatus,
-        services: booking.services || [],
-        serviceItems: booking.services || [],
-        subtotal: booking.subtotal,
-        finalPayable: getTotalBookingFee(booking),
-        finalPayableAmount: getTotalBookingFee(booking),
-        grandTotal: getTotalBookingFee(booking),
-        totalAmount: getTotalBookingFee(booking),
-        amountPaid: booking.amountPaid,
-        balanceAmount: booking.balanceAmount,
-        discount: booking.discount,
-        medicineTotal: booking.medicineTotal,
-        labTotal: booking.labTotal,
-        status: booking.status,
-        isActive: newValue,
-        appointmentDate: booking.appointmentDate || booking.date,
-      });
+      const res = await axios.put(
+        `${API_BASE_URL}/appointment-slots/toggle-active/${booking._id}`,
+        { isActive: newValue }
+      );
       if (res && res.data && res.data.success) {
         setBookings((prev) =>
           prev.map((b) => (b._id === booking._id ? { ...b, isActive: newValue } : b))
         );
         showToast(
-          `${booking.patientName} marked as ${newValue ? "Active" : "Inactive"}`,
+          res.data.message || `${booking.patientName} marked as ${newValue ? "Active" : "Inactive"}`,
           newValue ? "success" : "info"
         );
       } else {
-        showToast(res.data.message || "Failed to update status", "error");
+        showToast(res.data?.message || "Failed to update status", "error");
       }
     } catch (error) {
       console.error("Error toggling active:", error);
@@ -740,115 +703,6 @@ export default function Bookings() {
       showToast(error.response?.data?.message || "Failed to update", "error");
     } finally {
       setEditSaving(false);
-    }
-  };
-
-  const openAddServiceModal = (booking) => {
-    setSelectedBookingForService(booking);
-    setSelectedServiceId("");
-    setSelectedServiceForBooking(null);
-    setServiceDropdownOpen(false);
-    setShowAddServiceModal(true);
-  };
-
-  const handleServiceSelect = (service) => {
-    setSelectedServiceId(service._id);
-    setSelectedServiceForBooking(service);
-    setServiceDropdownOpen(false);
-  };
-
-  const handleAddServiceToBooking = async () => {
-    if (!selectedBookingForService || !selectedServiceForBooking) {
-      showToast("Please select a service", "error");
-      return;
-    }
-    try {
-      const res = await axios.post(
-        `${API_BASE_URL}/services/addservicestobooking/${selectedBookingForService._id}`,
-        {
-          serviceId: selectedServiceForBooking._id,
-          name: selectedServiceForBooking.name,
-          price: selectedServiceForBooking.price,
-          description: selectedServiceForBooking.description || "",
-        }
-      );
-      if (res && res.data && res.data.success) {
-        showToast(res.data.message, "success");
-        setShowAddServiceModal(false);
-        setSelectedServiceId("");
-        setSelectedServiceForBooking(null);
-        setSelectedBookingForService(null);
-        fetchBookings();
-      }
-    } catch (error) {
-      console.error("Error adding service:", error);
-      showToast(error.response?.data?.message || "Failed to add service", "error");
-    }
-  };
-
-  const handleRemoveService = async (booking, serviceId, serviceName) => {
-    if (!window.confirm(`Remove "${serviceName}" from this booking?`)) return;
-    try {
-      const res = await axios.delete(
-        `${API_BASE_URL}/services/deleteservicestobooking/${booking._id}/${serviceId}`
-      );
-      if (res && res.data && res.data.success) {
-        showToast(res.data.message, "info");
-        fetchBookings();
-      }
-    } catch (error) {
-      console.error("Error removing service:", error);
-      showToast(error.response?.data?.message || "Failed to remove service", "error");
-    }
-  };
-
-  const openStatusUpdateModal = (booking) => {
-    setSelectedBookingForStatus(booking);
-    setNewBookingStatus(booking.status || "confirmed");
-    setShowStatusUpdateModal(true);
-  };
-
-  const handleStatusUpdate = async () => {
-    if (!selectedBookingForStatus || !newBookingStatus) {
-      showToast("Please select a status", "error");
-      return;
-    }
-    if (newBookingStatus === selectedBookingForStatus.status) {
-      showToast("Status is already set to this value", "info");
-      setShowStatusUpdateModal(false);
-      return;
-    }
-    setStatusUpdating(true);
-    try {
-      await handleStatusSelect(selectedBookingForStatus, newBookingStatus);
-      setShowStatusUpdateModal(false);
-    } finally {
-      setStatusUpdating(false);
-    }
-  };
-
-  const openPaymentUpdateModal = (booking) => {
-    setSelectedBookingForPayment(booking);
-    setNewPaymentStatus(booking.paymentStatus || "Pending");
-    setShowPaymentUpdateModal(true);
-  };
-
-  const handlePaymentUpdate = async () => {
-    if (!selectedBookingForPayment || !newPaymentStatus) {
-      showToast("Please select a payment status", "error");
-      return;
-    }
-    if (newPaymentStatus === selectedBookingForPayment.paymentStatus) {
-      showToast("Payment status is already set to this value", "info");
-      setShowPaymentUpdateModal(false);
-      return;
-    }
-    setPaymentUpdating(true);
-    try {
-      await handlePaymentSelect(selectedBookingForPayment, newPaymentStatus);
-      setShowPaymentUpdateModal(false);
-    } finally {
-      setPaymentUpdating(false);
     }
   };
 
@@ -1019,6 +873,147 @@ export default function Bookings() {
     return booking.services.reduce((sum, s) => sum + (s.price || 0), 0);
   };
 
+  const handlePrintPrescription = (booking) => {
+    if (!booking) {
+      showToast("No prescription data to print", "error");
+      return;
+    }
+    const b = booking;
+    const win = window.open("", "_blank", "width=800,height=1100");
+    if (!win) return;
+    win.document.write(`
+      <!DOCTYPE html><html><head><title>Prescription - ${b.patientName || "Patient"}</title>
+      <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:Arial,sans-serif; background:#fff; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:20px; }
+        .prescription-page { max-width:650px; width:100%; position:relative; background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.1); border-radius:12px; overflow:hidden; margin-bottom:30px; page-break-after:always; }
+        .prescription-page img { width:100%; height:auto; display:block; }
+        .page-label { text-align:center; font-size:11px; color:#888; padding:6px 0; background:#f5f5f5; border-bottom:1px solid #ddd; font-weight:bold; letter-spacing:1px; }
+        .overlay-print { position:absolute; top:0; left:0; right:0; bottom:0; }
+        .overlay-print .fld { position:absolute; font-size:15px; font-weight:600; color:#1a1a1a; letter-spacing:0.2px; line-height:1.3; }
+        @media print { body { padding:0; } .prescription-page { box-shadow:none; border-radius:0; margin-bottom:0; } .page-label { display:none; } }
+      </style></head><body>
+      <div class="prescription-page">
+        <div class="page-label">📄 Front Side - Prescription</div>
+        <img src="${prescriptionTemplate}" alt="Front" />
+        <div class="overlay-print">
+          <div class="fld" style="top:78px;left:90px;max-width:280px;">${b.patientTitle || ""} ${b.patientName || "N/A"}</div>
+          <div class="fld" style="top:78px;right:20px;">${formatDateToDDMMYYYY(b.appointmentDate || b.date)}</div>
+          <div class="fld" style="top:104px;left:90px;">${b.patientAge || "N/A"}</div>
+          <div class="fld" style="top:104px;left:230px;">${b.patientGender || "N/A"}</div>
+          <div class="fld" style="top:104px;right:100px;">${b.patientPhone || "N/A"}</div>
+          <div class="fld" style="top:130px;left:90px;max-width:320px;">${b.purpose || "N/A"}</div>
+          <div class="fld" style="top:160px;left:90px;">${b.vitalsTemp || ""}</div>
+          <div class="fld" style="top:160px;left:230px;">${b.vitalsBp || ""}</div>
+          <div class="fld" style="top:160px;left:400px;">${b.vitalsPr || ""}</div>
+          <div class="fld" style="top:160px;right:80px;">${b.vitalsWeight || ""}</div>
+        </div>
+      </div>
+      <div class="prescription-page"><div class="page-label">📄 Back Side</div><img src="${prescriptionBackTemplate}" alt="Back" /></div>
+      <script>window.onload = function() { window.print(); }</script></body></html>
+    `);
+    win.document.close();
+    win.focus();
+  };
+
+  const openVitalsModal = (booking) => {
+    setVitalsBooking(booking);
+    setVitalsData({
+      temp: booking.vitalsTemp || "",
+      bp: booking.vitalsBp || "",
+      pr: booking.vitalsPr || "",
+      weight: booking.vitalsWeight || "",
+    });
+    setShowVitalsModal(true);
+  };
+
+  const handleSaveVitals = async () => {
+    if (!vitalsBooking) return;
+    setSavingVitals(true);
+    try {
+      const res = await axios.put(
+        `${API_BASE_URL}/appointment-slots/vitals/${vitalsBooking._id}`,
+        {
+          vitalsTemp: vitalsData.temp,
+          vitalsBp: vitalsData.bp,
+          vitalsPr: vitalsData.pr,
+          vitalsWeight: vitalsData.weight,
+        }
+      );
+      if (res?.data?.success) {
+        showToast("Vitals saved successfully!", "success");
+        setShowVitalsModal(false);
+        setVitalsBooking(null);
+        setVitalsData({ temp: "", bp: "", pr: "", weight: "" });
+        await fetchBookings();
+      } else {
+        showToast(res.data.message || "Failed to save vitals", "error");
+      }
+    } catch (error) {
+      showToast(error.response?.data?.message || "Failed to save vitals", "error");
+    } finally {
+      setSavingVitals(false);
+    }
+  };
+
+  const openReviewModal = (booking) => {
+    if (!booking) return;
+
+    const status = getReviewWindowStatus(booking);
+
+    if (!status.canReview && !status.isReviewed) {
+      if (status.expired) {
+        showToast("Review window expired (3 days limit).", "error");
+      } else {
+        showToast("Review will be available on appointment date.", "info");
+      }
+      return;
+    }
+
+    setReviewBooking(booking);
+    setShowReviewModal(true);
+  };
+
+  const handleSaveReview = async () => {
+    if (!reviewBooking) return;
+
+    setSavingReview(true);
+    try {
+      const payload = {
+        isReviewed: true,
+        reviewDate: new Date().toISOString(),
+      };
+
+      const res = await axios.put(
+        `${API_BASE_URL}/appointment-slots/review/${reviewBooking._id}`,
+        payload
+      );
+
+      if (res?.data?.success || res?.status === 200) {
+        showToast(`✅ Review marked for ${reviewBooking.patientName}!`, "success");
+        setShowReviewModal(false);
+        setReviewBooking(null);
+        await fetchBookings();
+      } else {
+        showToast(res.data?.message || "Failed to save review", "error");
+      }
+    } catch (error) {
+      console.error("Review save error:", error);
+      setBookings((prev) =>
+        prev.map((b) =>
+          b._id === reviewBooking._id
+            ? { ...b, isReviewed: true, reviewDate: new Date().toISOString() }
+            : b
+        )
+      );
+      showToast("Review marked locally (backend unavailable)", "info");
+      setShowReviewModal(false);
+      setReviewBooking(null);
+    } finally {
+      setSavingReview(false);
+    }
+  };
+
   const openBillingModal = (booking) => {
     setSelectedBookingForBilling(booking);
 
@@ -1148,12 +1143,10 @@ export default function Bookings() {
       )
       .join("");
 
-    // ⭐ Transaction ID row (only if exists)
     const txnRow = billingData.transactionId
       ? `<div><span class="label">Txn ID</span>: <span style="font-family:monospace;font-size:11px;">${billingData.transactionId}</span></div>`
       : "";
 
-    // ⭐ Payment Mode row
     const paymentModeRow = `<div><span class="label">Payment Mode</span>: ${billingData.paymentMode}</div>`;
 
     const win = window.open("", "_blank", "width=900,height=1000");
@@ -1309,6 +1302,9 @@ export default function Bookings() {
 
   const filteredBookings = useMemo(() => {
     return bookings.filter((b) => {
+      // ✅ Only show active bookings on this page
+      if (b.isActive === false) return false;
+
       if (statusFilter !== "All" && b.paymentStatus !== statusFilter) return false;
       if (doctorFilter !== "All" && b.doctorName !== doctorFilter) return false;
 
@@ -1354,12 +1350,13 @@ export default function Bookings() {
   }, [searchQuery, statusFilter, doctorFilter, fromDate, toDate, selectedMonth]);
 
   const stats = useMemo(() => {
-    const total = bookings.length;
+    const activeBookings = bookings.filter((b) => b.isActive !== false);
+    const total = activeBookings.length;
     let paidTotal = 0;
     let paidCount = 0;
     let pendingCount = 0;
 
-    bookings.forEach((b) => {
+    activeBookings.forEach((b) => {
       const totalFee = getTotalBookingFee(b);
       const isPaid = b.paymentStatus === "Paid";
       if (isPaid) {
@@ -1552,6 +1549,14 @@ export default function Bookings() {
               <FiDownload className="w-3 h-3" /> Export CSV
             </button>
 
+            {/* ✅ Inactive Patients Button */}
+            <button
+              onClick={() => navigate("/inactive-patients")}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaUserInjured className="w-3 h-3" /> Inactive Patients
+            </button>
+
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
@@ -1575,6 +1580,13 @@ export default function Bookings() {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            {/* ✅ Inactive Patients Button Mobile */}
+            <button
+              onClick={() => navigate("/inactive-patients")}
+              className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition-all"
+            >
+              <FaUserInjured className="w-3 h-3" /> Inactive
+            </button>
             <button
               onClick={() => setShowMobileFilters(!showMobileFilters)}
               className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
@@ -1933,7 +1945,6 @@ export default function Bookings() {
                             </button>
                           </td>
 
-                          {/* ⭐ TRANSACTION ID COLUMN */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {txnId ? (
                               <button
@@ -2099,12 +2110,64 @@ export default function Bookings() {
                                 <FaVideo className="w-3.5 h-3.5" />
                               </button>
                               <button
+                                onClick={() => handlePrintPrescription(booking)}
+                                className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-transparent hover:border-teal-100"
+                                title="Print Prescription"
+                              >
+                                <FaPrescription className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => openVitalsModal(booking)}
+                                className="p-1.5 text-pink-600 hover:bg-pink-50 rounded-lg transition-colors border border-transparent hover:border-pink-100"
+                                title="Vitals"
+                              >
+                                <FaHeartbeat className="w-3.5 h-3.5" />
+                              </button>
+                              <button
                                 onClick={() => openBillingModal(booking)}
                                 className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100"
                                 title="Invoice / Bill"
                               >
                                 <FaFileInvoiceDollar className="w-3.5 h-3.5" />
                               </button>
+                              {(() => {
+                                const rStatus = getReviewWindowStatus(booking);
+                                const isReviewed = booking.isReviewed === true;
+                                const isDisabled = !rStatus.canReview && !isReviewed;
+
+                                return (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (isDisabled) {
+                                        if (rStatus.expired) showToast("Review window expired (3 days limit).", "error");
+                                        else showToast("Review will be available on appointment date.", "info");
+                                        return;
+                                      }
+                                      openReviewModal(booking);
+                                    }}
+                                    disabled={isDisabled}
+                                    className={`p-1.5 rounded-lg transition-colors border border-transparent ${
+                                      isReviewed
+                                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                                        : isDisabled
+                                        ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                        : "text-amber-600 hover:bg-amber-50 hover:border-amber-100"
+                                    }`}
+                                    title={
+                                      isReviewed
+                                        ? `Reviewed on ${formatDateToDDMMYYYY(booking.reviewDate)}`
+                                        : isDisabled
+                                        ? rStatus.expired
+                                          ? "Review window expired (3 days limit)"
+                                          : "Not yet available"
+                                        : `Click to mark reviewed (${rStatus.daysLeft} day${rStatus.daysLeft !== 1 ? "s" : ""} left)`
+                                    }
+                                  >
+                                    <FaStar className="w-3.5 h-3.5" />
+                                  </button>
+                                );
+                              })()}
                             </div>
                           </td>
                         </tr>
@@ -2190,7 +2253,6 @@ export default function Bookings() {
                           </div>
                         </div>
 
-                        {/* ⭐ Transaction ID */}
                         {txnId && (
                           <div className="pt-2 border-t border-gray-100">
                             <div className="text-[9px] font-bold uppercase text-gray-400 mb-0.5">Transaction ID</div>
@@ -2346,6 +2408,26 @@ export default function Bookings() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              handlePrintPrescription(booking);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg text-[10px] font-bold"
+                            title="Print Prescription"
+                          >
+                            <FaPrescription className="w-3.5 h-3.5" /> Rx
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openVitalsModal(booking);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg text-[10px] font-bold"
+                            title="Vitals"
+                          >
+                            <FaHeartbeat className="w-3.5 h-3.5" /> Vitals
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
                               openBillingModal(booking);
                             }}
                             className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-[10px] font-bold"
@@ -2353,6 +2435,36 @@ export default function Bookings() {
                           >
                             <FaFileInvoiceDollar className="w-3.5 h-3.5" /> Bill
                           </button>
+                          {(() => {
+                            const rStatus = getReviewWindowStatus(booking);
+                            const isReviewed = booking.isReviewed === true;
+                            const isDisabled = !rStatus.canReview && !isReviewed;
+
+                            return (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (isDisabled) {
+                                    if (rStatus.expired) showToast("Review window expired (3 days limit).", "error");
+                                    else showToast("Review will be available on appointment date.", "info");
+                                    return;
+                                  }
+                                  openReviewModal(booking);
+                                }}
+                                disabled={isDisabled}
+                                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${
+                                  isReviewed
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : isDisabled
+                                    ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                    : "bg-amber-50 text-amber-600"
+                                }`}
+                                title={isReviewed ? "Reviewed" : isDisabled ? "Not available" : "Mark Reviewed"}
+                              >
+                                <FaStar className="w-3.5 h-3.5" /> Review
+                              </button>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -2891,7 +3003,6 @@ export default function Bookings() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-5">
-                {/* RESCHEDULE HISTORY SECTION (TOP) */}
                 {isRescheduled(selectedBookingForView) && (
                   <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden">
                     <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-amber-200 bg-amber-100/60">
@@ -3113,7 +3224,6 @@ export default function Bookings() {
                       </div>
                     </div>
 
-                    {/* ⭐ TRANSACTION ID in View Modal */}
                     {(selectedBookingForView.paymentTransactionId ||
                       selectedBookingForView.transactionId) && (
                       <div className="col-span-2">
@@ -3309,7 +3419,6 @@ export default function Bookings() {
                   </div>
                 </div>
 
-                {/* ⭐ Transaction ID in Payment Summary */}
                 {(selectedBookingForPaymentSummary.paymentTransactionId ||
                   selectedBookingForPaymentSummary.transactionId) && (
                   <div className="bg-slate-50 rounded-lg border border-slate-200 p-2">
@@ -3487,6 +3596,229 @@ export default function Bookings() {
           </div>
         )}
 
+        {/* ===== VITALS MODAL ===== */}
+        {showVitalsModal && vitalsBooking && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-pink-500 text-white flex items-center justify-center">
+                    <FaHeartbeat className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Vitals</h3>
+                    <p className="text-[10px] text-gray-500">{vitalsBooking.patientName}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowVitalsModal(false);
+                    setVitalsBooking(null);
+                    setVitalsData({ temp: "", bp: "", pr: "", weight: "" });
+                  }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">
+                    Temp (°F)
+                  </label>
+                  <input
+                    type="text"
+                    value={vitalsData.temp}
+                    onChange={(e) => setVitalsData((prev) => ({ ...prev, temp: e.target.value }))}
+                    placeholder="e.g. 98.6"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">
+                    BP (mmHg)
+                  </label>
+                  <input
+                    type="text"
+                    value={vitalsData.bp}
+                    onChange={(e) => setVitalsData((prev) => ({ ...prev, bp: e.target.value }))}
+                    placeholder="e.g. 120/80"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">
+                    PR (bpm)
+                  </label>
+                  <input
+                    type="text"
+                    value={vitalsData.pr}
+                    onChange={(e) => setVitalsData((prev) => ({ ...prev, pr: e.target.value }))}
+                    placeholder="e.g. 72"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">
+                    Weight (kg)
+                  </label>
+                  <input
+                    type="text"
+                    value={vitalsData.weight}
+                    onChange={(e) => setVitalsData((prev) => ({ ...prev, weight: e.target.value }))}
+                    placeholder="e.g. 70"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 px-5 py-3 border-t border-gray-200 bg-gray-50/50 rounded-b-2xl">
+                <button
+                  onClick={() => {
+                    setShowVitalsModal(false);
+                    setVitalsBooking(null);
+                    setVitalsData({ temp: "", bp: "", pr: "", weight: "" });
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveVitals}
+                  disabled={savingVitals}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-pink-600 hover:bg-pink-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {savingVitals ? (
+                    <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <FiCheckCircle className="w-3.5 h-3.5" />
+                  )}
+                  {savingVitals ? "Saving..." : "Save Vitals"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== REVIEW MODAL ===== */}
+        {showReviewModal && reviewBooking && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 relative">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center">
+                    <FaStar className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base">Patient Review</h3>
+                    <p className="text-xs text-gray-500">
+                      {reviewBooking.patientName} • {reviewBooking.patientPhone}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowReviewModal(false);
+                    setReviewBooking(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="text-[10px] font-bold uppercase text-gray-400 mb-3">Appointment Details</div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Doctor</span>
+                      <span className="font-bold text-gray-900">{reviewBooking.doctorName || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Appointment Date</span>
+                      <span className="font-bold text-gray-900">
+                        {formatDateToDDMMYYYY(reviewBooking.appointmentDate || reviewBooking.date)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Purpose</span>
+                      <span className="font-bold text-gray-900 truncate max-w-[180px]">
+                        {reviewBooking.purpose || "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {reviewBooking.isReviewed ? (
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FaCheckCircle className="w-4 h-4 text-emerald-600" />
+                      <span className="text-xs font-bold text-emerald-800">Already Reviewed</span>
+                    </div>
+                    <p className="text-[11px] text-emerald-700">
+                      Reviewed on:{" "}
+                      <b>
+                        {formatDateTimeToDDMMYYYY(
+                          reviewBooking.reviewDate || new Date().toISOString()
+                        )}
+                      </b>
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="text-[10px] font-bold uppercase text-amber-700 mb-1">
+                        Review Window
+                      </div>
+                      <p className="text-[11px] text-amber-800">
+                        {(() => {
+                          const rStatus = getReviewWindowStatus(reviewBooking);
+                          return rStatus.canReview
+                            ? `You have ${rStatus.daysLeft} day${rStatus.daysLeft !== 1 ? "s" : ""} left to mark this review.`
+                            : "Review window is not available.";
+                        })()}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-[11px] text-blue-800">
+                        Clicking <b>"Mark as Reviewed"</b> will set <b>isReviewed: true</b> and record the
+                        current date/time.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50/50">
+                <button
+                  onClick={() => {
+                    setShowReviewModal(false);
+                    setReviewBooking(null);
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  {reviewBooking.isReviewed ? "Close" : "Cancel"}
+                </button>
+                {!reviewBooking.isReviewed && (
+                  <button
+                    onClick={handleSaveReview}
+                    disabled={savingReview}
+                    className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {savingReview ? (
+                      <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <FaCheckCircle className="w-3.5 h-3.5" />
+                    )}
+                    {savingReview ? "Saving..." : "Mark as Reviewed"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ===== BILLING MODAL ===== */}
         {showBillingModal && selectedBookingForBilling && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -3582,13 +3914,11 @@ export default function Bookings() {
                       </span>
                     </div>
 
-                    {/* ⭐ Payment Mode */}
                     <div>
                       <span className="font-bold text-gray-500 inline-block w-28">Payment Mode</span>:{" "}
                       <span className="font-semibold text-gray-900">{billingData.paymentMode}</span>
                     </div>
 
-                    {/* ⭐ Transaction ID (Bill Modal) */}
                     {billingData.transactionId && (
                       <div className="sm:col-span-2">
                         <span className="font-bold text-gray-500 inline-block w-28">Txn ID</span>:{" "}

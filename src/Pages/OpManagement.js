@@ -1,10 +1,4 @@
-// OpManagement.js — Full Refactored Version
-// (City→Pincode Auto-Fetch + Clean B/W Bill + Discount Type %/₹ + Wider Add Popup
-//  + Fixed Discount Row Overlap + Review Feature + Booking Type Filter
-//  + Auto Payment Status from Amount + Dynamic Discount Placeholder
-//  + No HTML5 Required Validation + FIXED DUE AMOUNT BUG
-//  + ACTIVE / INACTIVE COUNT CARDS + INACTIVE CARD NAVIGATION
-//  + PAST DATE APPOINTMENT ALLOWED)
+// OpManagement.js — COMPLETE FINAL VERSION (PDF Modal, no errors)
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -20,7 +14,7 @@ import {
   FaUserMd as FaUserMdIcon, FaExternalLinkAlt, FaMicroscope, FaLock,
   FaHeartbeat, FaNotesMedical, FaAllergies, FaTint, FaBirthdayCake, FaVenusMars,
   FaEnvelope, FaIdCard, FaStickyNote, FaCommentMedical, FaUserCheck, FaUserClock,
-  FaToggleOn, FaToggleOff, FaStar, FaWalking, FaGlobe
+  FaToggleOn, FaToggleOff, FaStar, FaWalking, FaGlobe, FaDownload
 } from "react-icons/fa";
 import {
   FiUsers, FiUserCheck, FiClock, FiFilter, FiDownload, FiTrash2, FiPlus,
@@ -438,10 +432,12 @@ const computeFinancials = (serviceItems, { labTotal = 0, medicineTotal = 0, refe
   };
 };
 
+
+
+
 export default function OpManagement() {
   const navigate = useNavigate();
   const location = useLocation();
-
 
   const [bookings, setBookings] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -478,9 +474,7 @@ export default function OpManagement() {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeCardFilter, setActiveCardFilter] = useState("all");
-
-  // ✅ NEW: Active / Inactive filter
-  const [activeFilter, setActiveFilter] = useState("all"); // "all" | "active" | "inactive"
+  const [activeFilter, setActiveFilter] = useState("all");
 
   const [toast, setToast] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -499,16 +493,11 @@ export default function OpManagement() {
     return saved ? parseInt(saved, 10) : 10;
   });
 
-  const [showBillingModal, setShowBillingModal] = useState(false);
-  const [selectedBookingForBilling, setSelectedBookingForBilling] = useState(null);
-  const [billingData, setBillingData] = useState({
-    invoiceNo: "", invoiceDate: "", receiptNo: "", receiptDate: "",
-    paymentMode: "Cash", receivedBy: "Front Desk", branch: "", doctorName: "",
-    items: [], grossAmount: 0, netAmount: 0, paidAmount: 0, balanceAmount: 0,
-    discount: 0,
-    paymentStatus: "Pending", amountInWords: "",
-    breakdown: { clinic: 0, lab: 0, pharmacy: 0 }
-  });
+  // ✅ PDF MODAL STATES ONLY
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [invoiceModalUrl, setInvoiceModalUrl] = useState("");
+  const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(null);
 
   const [showMedicineTotalModal, setShowMedicineTotalModal] = useState(false);
   const [medicineTotalBooking, setMedicineTotalBooking] = useState(null);
@@ -546,6 +535,9 @@ export default function OpManagement() {
   const nameInputRef = useRef(null);
   const searchTimeoutRef = useRef(null);
 
+
+  const API_BASE_INVURL = 'https://api.timelyhealth.in'
+
   const hasActiveFilters =
     searchQuery !== "" || statusFilter !== "All" || feeTypeFilter !== "All" ||
     doctorFilter !== "All" || bookingTypeFilter !== "All" ||
@@ -557,7 +549,6 @@ export default function OpManagement() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // ✅ patients memo — add isActive from the latest booking
   const patients = useMemo(() => {
     const map = new Map();
     const sortedBookings = [...bookings].sort(
@@ -611,26 +602,17 @@ export default function OpManagement() {
     setFormData((prev) => ({ ...prev, appointmentDate: today }));
   }, []);
 
-
-  // ✅ YAHAN ADD KARO — Auto-open Add Patient popup
-useEffect(() => {
-  if (location.state?.openAddPatient) {
-    setTimeout(() => {
-      const today = new Date().toISOString().split("T")[0];
-      setFormData({ ...EMPTY_FORM, appointmentDate: today });
-      setEditingId(null);
-      setShowForm(true);
-    }, 150);
-    navigate(location.pathname, { replace: true, state: {} });
-  }
-}, [location.state]);
-
-useEffect(() => {
-  if (formData.doctorId && formData.appointmentDate) {
-    filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
-  }
-}, [formData.doctorId, formData.appointmentDate]);
-
+  useEffect(() => {
+    if (location.state?.openAddPatient) {
+      setTimeout(() => {
+        const today = new Date().toISOString().split("T")[0];
+        setFormData({ ...EMPTY_FORM, appointmentDate: today });
+        setEditingId(null);
+        setShowForm(true);
+      }, 150);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (formData.doctorId && formData.appointmentDate) {
@@ -775,6 +757,8 @@ useEffect(() => {
           patientFeedback: b.patientFeedback || "",
           isReviewed: b.isReviewed === true,
           reviewDate: b.reviewDate || null,
+          invoiceUrl: b.invoiceUrl || null,
+          invoiceGeneratedAt: b.invoiceGeneratedAt || null,
         };
       });
       setBookings(transformedBookings);
@@ -819,67 +803,62 @@ useEffect(() => {
     } catch (error) { console.error("Error fetching referral contacts:", error); setReferralContacts([]); }
   };
 
- // ✅ Helper: Convert "hh:mm AM/PM" to 24-hour minutes for comparison
-const parseSlotTimeToMinutes = (timeStr) => {
-  if (!timeStr) return 0;
-  try {
-    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
-    if (!match) return 0;
-    let hours = parseInt(match[1], 10);
-    const minutes = parseInt(match[2], 10);
-    const meridiem = (match[3] || "").toUpperCase();
+  const parseSlotTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    try {
+      const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+      if (!match) return 0;
+      let hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const meridiem = (match[3] || "").toUpperCase();
+      if (meridiem === "PM" && hours !== 12) hours += 12;
+      if (meridiem === "AM" && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    } catch { return 0; }
+  };
 
-    if (meridiem === "PM" && hours !== 12) hours += 12;
-    if (meridiem === "AM" && hours === 12) hours = 0;
-
-    return hours * 60 + minutes;
-  } catch {
-    return 0;
-  }
-};
-
-// ✅ UPDATED: Past dates ke liye time filtering bypass
-const filterSlotsByDoctorAndDate = (doctorId, date) => {
-  if (!doctorId || !date) { setAvailableSlots([]); return; }
-  setSlotsLoading(true);
-  setAvailableSlots([]);
-  setFormData((prev) => ({ ...prev, slotId: "" }));
-  try {
-    const selectedDay = getDayNameFromDate(date);
-    let filtered = allSlots.filter((slot) =>
-      slot.doctorId === doctorId && slot.dayOfWeek === selectedDay && slot.type !== "break"
-    );
-
-    // ✅ Deduplicate by startTime
-    const seen = new Set();
-    filtered = filtered.filter((slot) => {
-      if (seen.has(slot.startTime)) return false;
-      seen.add(slot.startTime);
-      return true;
-    });
-
-    // ✅ UPDATED: Only hide past slots when selected date is TODAY (future dates me kuch nahi hoga, past dates me bhi sab slots dikhenge)
-    const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-
-    if (date === todayStr) {
-      const nowMinutes = today.getHours() * 60 + today.getMinutes();
-      filtered = filtered.filter((slot) => {
-        const slotStart = parseSlotTimeToMinutes(slot.startTime);
-        // Show only slots starting NOW or in the future
-        return slotStart > nowMinutes;
-      });
-    }
-    // ✅ Past dates ke liye koi filtering nahi — sab slots dikhenge
-
-    filtered.sort((a, b) => a.startTime.localeCompare(b.startTime));
-    setAvailableSlots(filtered);
-  } catch (error) {
-    console.error("Error filtering slots:", error);
+  const filterSlotsByDoctorAndDate = (doctorId, date) => {
+    if (!doctorId || !date) { setAvailableSlots([]); return; }
+    setSlotsLoading(true);
     setAvailableSlots([]);
-    showToast("Failed to filter slots", "error");
-  } finally { setSlotsLoading(false); }
-};
+    setFormData((prev) => ({ ...prev, slotId: "" }));
+    try {
+      const selectedDay = getDayNameFromDate(date);
+      let filtered = allSlots.filter((slot) =>
+        slot.doctorId === doctorId && slot.dayOfWeek === selectedDay && slot.type !== "break"
+      );
+
+      const seen = new Set();
+      filtered = filtered.filter((slot) => {
+        if (seen.has(slot.startTime)) return false;
+        seen.add(slot.startTime);
+        return true;
+      });
+
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+      if (date === todayStr) {
+        const nowMinutes = today.getHours() * 60 + today.getMinutes();
+        filtered = filtered.filter((slot) => {
+          const slotStart = parseSlotTimeToMinutes(slot.startTime);
+          return slotStart > nowMinutes;
+        });
+      }
+
+      filtered.sort((a, b) => {
+        const aMins = parseSlotTimeToMinutes(a.startTime);
+        const bMins = parseSlotTimeToMinutes(b.startTime);
+        return aMins - bMins;
+      });
+
+      setAvailableSlots(filtered);
+    } catch (error) {
+      console.error("Error filtering slots:", error);
+      setAvailableSlots([]);
+      showToast("Failed to filter slots", "error");
+    } finally { setSlotsLoading(false); }
+  };
 
   const checkExistingPatient = (value) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
@@ -924,50 +903,39 @@ const filterSlotsByDoctorAndDate = (doctorId, date) => {
     }, 500);
   };
 
- const autoFillPatientDetails = () => {
-  if (!existingPatient) return;
-  setFormData((prev) => ({
-    ...prev,
-    // ✅ Basic Patient Details — auto-fill
-    title: existingPatient.title || "Mr.",
-    name: existingPatient.name || "",
-    dob: existingPatient.dob || "",
-    age: existingPatient.age ?? "",
-    gender: existingPatient.gender || "",
-    phone: existingPatient.phone || "",
-    address: existingPatient.address || "",
-    city: existingPatient.city || "",
-    pincode: existingPatient.pincode || "",
-
-    // ✅ Referral Info — auto-fill (business ke liye useful)
-    referredByCustomer: existingPatient.referredByCustomer || "",
-    referredByDoctor: existingPatient.referredByDoctor || "",
-    referralCustomerId: existingPatient.referralCustomerId || "",
-    referralDoctorId: existingPatient.referralDoctorId || "",
-    referralCommission: existingPatient.referralCommission || "",
-    referralCommissionType: existingPatient.referralCommissionType || "",
-
-    // ✅ NEW OP ke liye ye fresh rakho — carry nahi karo
-    serviceItems: [],           // 🚫 Services reset
-    paymentStatus: "Pending",   // 🚫 Payment status reset
-    partialAmount: "",          // 🚫 Amount reset
-    discount: "",               // 🚫 Discount reset
-    discountType: "₹",          // 🚫 Default
-    paymentType: "cash",        // 🚫 Default
-
-    // 🚫 Doctor, slot, appointment date — ye bhi reset
-    doctorId: "",
-    slotId: "",
-    // appointmentDate: aaj ka rakho (form already set karta hai)
-  }));
-  setCitySuggestions([]);
-  setShowCitySuggestions(false);
-  setShowExistingPatientPopup(false);
-  showToast(
-    `Patient ${existingPatient.name} ki basic details auto-filled! Ab services add karo.`,
-    "info"
-  );
-};
+  const autoFillPatientDetails = () => {
+    if (!existingPatient) return;
+    setFormData((prev) => ({
+      ...prev,
+      title: existingPatient.title || "Mr.",
+      name: existingPatient.name || "",
+      dob: existingPatient.dob || "",
+      age: existingPatient.age ?? "",
+      gender: existingPatient.gender || "",
+      phone: existingPatient.phone || "",
+      address: existingPatient.address || "",
+      city: existingPatient.city || "",
+      pincode: existingPatient.pincode || "",
+      referredByCustomer: existingPatient.referredByCustomer || "",
+      referredByDoctor: existingPatient.referredByDoctor || "",
+      referralCustomerId: existingPatient.referralCustomerId || "",
+      referralDoctorId: existingPatient.referralDoctorId || "",
+      referralCommission: existingPatient.referralCommission || "",
+      referralCommissionType: existingPatient.referralCommissionType || "",
+      serviceItems: [],
+      paymentStatus: "Pending",
+      partialAmount: "",
+      discount: "",
+      discountType: "₹",
+      paymentType: "cash",
+      doctorId: "",
+      slotId: "",
+    }));
+    setCitySuggestions([]);
+    setShowCitySuggestions(false);
+    setShowExistingPatientPopup(false);
+    showToast(`Patient ${existingPatient.name} ki basic details auto-filled! Ab services add karo.`, "info");
+  };
 
   const handleDobChange = (dob) => {
     const newAge = calculateAgeFromDOB(dob);
@@ -1017,10 +985,7 @@ const filterSlotsByDoctorAndDate = (doctorId, date) => {
           state: o.State,
         })));
         setShowCitySuggestions(true);
-        setFormData((prev) => ({
-          ...prev,
-          city: prev.city || result.city,
-        }));
+        setFormData((prev) => ({ ...prev, city: prev.city || result.city }));
       } else {
         setCitySuggestions([]);
         setShowCitySuggestions(false);
@@ -1519,11 +1484,6 @@ const filterSlotsByDoctorAndDate = (doctorId, date) => {
 
   const handleBookNow = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone || formData.age === "" || !formData.gender) {
-    }
-    if (!formData.doctorId) { showToast("Please select a doctor", "error"); return; }
-    if (!formData.slotId) { showToast("Please select an available slot", "error"); return; }
-    if (formData.serviceItems.length === 0) { showToast("Please add at least one service", "error"); return; }
 
     setSubmitting(true);
     try {
@@ -1604,11 +1564,6 @@ const filterSlotsByDoctorAndDate = (doctorId, date) => {
 
   const handleUpdateNow = async (e) => {
     e.preventDefault();
-
-    if (!formData.bookingId) {
-      showToast("❌ No booking to update", "error");
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -1717,50 +1672,51 @@ const filterSlotsByDoctorAndDate = (doctorId, date) => {
     }
   };
 
-const openPrescriptionModal = (booking) => {
-  if (!booking) { showToast("No booking data found", "error"); return; }
-  handlePrintPrescription(booking);
-};
+  const openPrescriptionModal = (booking) => {
+    if (!booking) { showToast("No booking data found", "error"); return; }
+    handlePrintPrescription(booking);
+  };
 
- const handlePrintPrescription = (booking) => {
-  const b = booking || selectedBookingForPrescription;
-  if (!b) { showToast("No prescription data to print", "error"); return; }
-  const win = window.open("", "_blank", "width=800,height=1100");
-  if (!win) return;
-  win.document.write(`
-    <!DOCTYPE html><html><head><title>Prescription - ${b.patientName || "Patient"}</title>
-    <style>
-      * { margin:0; padding:0; box-sizing:border-box; }
-      body { font-family:Arial,sans-serif; background:#fff; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:20px; }
-      .prescription-page { max-width:650px; width:100%; position:relative; background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.1); border-radius:12px; overflow:hidden; margin-bottom:30px; page-break-after:always; }
-      .prescription-page img { width:100%; height:auto; display:block; }
-      .page-label { text-align:center; font-size:11px; color:#888; padding:6px 0; background:#f5f5f5; border-bottom:1px solid #ddd; font-weight:bold; letter-spacing:1px; }
-      .overlay-print { position:absolute; top:0; left:0; right:0; bottom:0; }
-      .overlay-print .fld { position:absolute; font-size:15px; font-weight:600; color:#1a1a1a; letter-spacing:0.2px; line-height:1.3; }
-      @media print { body { padding:0; } .prescription-page { box-shadow:none; border-radius:0; margin-bottom:0; } .page-label { display:none; } }
-    </style></head><body>
-    <div class="prescription-page">
-      <div class="page-label">📄 Front Side - Prescription</div>
-      <img src="${prescriptionTemplate}" alt="Front" />
-      <div class="overlay-print">
-        <div class="fld" style="top:78px;left:90px;max-width:280px;">${b.patientTitle || ""} ${b.patientName || "N/A"}</div>
-        <div class="fld" style="top:78px;right:20px;">${formatDateToDDMMYYYY(b.appointmentDate || b.date)}</div>
-        <div class="fld" style="top:104px;left:90px;">${b.patientAge || "N/A"}</div>
-        <div class="fld" style="top:104px;left:230px;">${b.patientGender || "N/A"}</div>
-        <div class="fld" style="top:104px;right:100px;">${b.patientPhone || "N/A"}</div>
-        <div class="fld" style="top:130px;left:90px;max-width:320px;">${b.purpose || "N/A"}</div>
-        <div class="fld" style="top:160px;left:90px;">${b.vitalsTemp || ""}</div>
-        <div class="fld" style="top:160px;left:230px;">${b.vitalsBp || ""}</div>
-        <div class="fld" style="top:160px;left:400px;">${b.vitalsPr || ""}</div>
-        <div class="fld" style="top:160px;right:80px;">${b.vitalsWeight || ""}</div>
+  const handlePrintPrescription = (booking) => {
+    const b = booking || selectedBookingForPrescription;
+    if (!b) { showToast("No prescription data to print", "error"); return; }
+    const win = window.open("", "_blank", "width=800,height=1100");
+    if (!win) return;
+    win.document.write(`
+      <!DOCTYPE html><html><head><title>Prescription - ${b.patientName || "Patient"}</title>
+      <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:Arial,sans-serif; background:#fff; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:20px; }
+        .prescription-page { max-width:650px; width:100%; position:relative; background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.1); border-radius:12px; overflow:hidden; margin-bottom:30px; page-break-after:always; }
+        .prescription-page img { width:100%; height:auto; display:block; }
+        .page-label { text-align:center; font-size:11px; color:#888; padding:6px 0; background:#f5f5f5; border-bottom:1px solid #ddd; font-weight:bold; letter-spacing:1px; }
+        .overlay-print { position:absolute; top:0; left:0; right:0; bottom:0; }
+        .overlay-print .fld { position:absolute; font-size:15px; font-weight:600; color:#1a1a1a; letter-spacing:0.2px; line-height:1.3; }
+        @media print { body { padding:0; } .prescription-page { box-shadow:none; border-radius:0; margin-bottom:0; } .page-label { display:none; } }
+      </style></head><body>
+      <div class="prescription-page">
+        <div class="page-label">📄 Front Side - Prescription</div>
+        <img src="${prescriptionTemplate}" alt="Front" />
+        <div class="overlay-print">
+          <div class="fld" style="top:78px;left:90px;max-width:280px;">${b.patientTitle || ""} ${b.patientName || "N/A"}</div>
+          <div class="fld" style="top:78px;right:20px;">${formatDateToDDMMYYYY(b.appointmentDate || b.date)}</div>
+          <div class="fld" style="top:104px;left:90px;">${b.patientAge || "N/A"}</div>
+          <div class="fld" style="top:104px;left:230px;">${b.patientGender || "N/A"}</div>
+          <div class="fld" style="top:104px;right:100px;">${b.patientPhone || "N/A"}</div>
+          <div class="fld" style="top:130px;left:90px;max-width:320px;">${b.purpose || "N/A"}</div>
+          <div class="fld" style="top:160px;left:90px;">${b.vitalsTemp || ""}</div>
+          <div class="fld" style="top:160px;left:230px;">${b.vitalsBp || ""}</div>
+          <div class="fld" style="top:160px;left:400px;">${b.vitalsPr || ""}</div>
+          <div class="fld" style="top:160px;right:80px;">${b.vitalsWeight || ""}</div>
+        </div>
       </div>
-    </div>
-    <div class="prescription-page"><div class="page-label">📄 Back Side</div><img src="${prescriptionBackTemplate}" alt="Back" /></div>
-    <script>window.onload = function() { window.print(); }</script></body></html>
-  `);
-  win.document.close();
-  win.focus();
-};
+      <div class="prescription-page"><div class="page-label">📄 Back Side</div><img src="${prescriptionBackTemplate}" alt="Back" /></div>
+      <script>window.onload = function() { window.print(); }</script></body></html>
+    `);
+    win.document.close();
+    win.focus();
+  };
+
   const getPatientTotalFee = (patient) => {
     const list = bookings.filter((b) => b.patientPhone === patient.phone ||
       (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
@@ -1810,165 +1766,18 @@ const openPrescriptionModal = (booking) => {
     return b ? (b.isActive !== undefined ? b.isActive : true) : true;
   };
 
-  const openBillingModal = (booking) => {
-    setSelectedBookingForBilling(booking);
-
-    const normalizedItems = getBookingServices(booking);
-    const breakdown = getAmountBreakdown(booking);
-
-    const items = [];
-
-    normalizedItems.forEach((s, idx) => {
-      const cat = classifyService(s);
-      items.push({
-        no: items.length + 1,
-        name: s.name,
-        serviceCode: s.serviceId
-          ? String(s.serviceId).slice(-6).toUpperCase()
-          : `SVC-${String(idx + 1).padStart(2, "0")}`,
-        remarks: cat === "lab" ? "Lab Test" : cat === "pharmacy" ? "Pharmacy" : "Consultation",
-        category: cat,
-        amount: Number(s.price) || 0,
-        paymentStatus: booking.paymentStatus || "Pending",
-      });
-    });
-
-    const hasPharmacyService = normalizedItems.some((s) => classifyService(s) === "pharmacy");
-    if (Number(booking.medicineTotal) > 0 && !hasPharmacyService) {
-      items.push({
-        no: items.length + 1,
-        name: "Medicines",
-        serviceCode: "PHARM",
-        remarks: "Pharmacy",
-        category: "pharmacy",
-        amount: Number(booking.medicineTotal),
-        paymentStatus: booking.paymentStatus || "Pending",
-      });
-    }
-
-    const hasLabService = normalizedItems.some((s) => classifyService(s) === "lab");
-    if (Number(booking.labTotal) > 0 && !hasLabService) {
-      items.push({
-        no: items.length + 1,
-        name: "Lab Tests",
-        serviceCode: "LAB",
-        remarks: "Lab Test",
-        category: "lab",
-        amount: Number(booking.labTotal),
-        paymentStatus: booking.paymentStatus || "Pending",
-      });
-    }
-
-    if (items.length === 0) {
-      const fallback =
-        Number(booking.finalPayable) ||
-        Number(booking.finalPayableAmount) ||
-        Number(booking.grandTotal) ||
-        Number(booking.totalAmount) ||
-        0;
-      if (fallback > 0) {
-        items.push({
-          no: 1,
-          name: "Consultation Fee",
-          serviceCode: "CONS",
-          remarks: "Consultation",
-          category: "clinic",
-          amount: fallback,
-          paymentStatus: booking.paymentStatus || "Pending",
-        });
-      }
-    }
-
-    const finalBreakdown = { clinic: 0, lab: 0, pharmacy: 0 };
-    items.forEach((it) => {
-      if (it.category === "lab") finalBreakdown.lab += it.amount;
-      else if (it.category === "pharmacy") finalBreakdown.pharmacy += it.amount;
-      else finalBreakdown.clinic += it.amount;
-    });
-
-    const grossAmount = items.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
-    const commissionPercent = parseFloat(booking.referralCommission) || 0;
-    const commissionAmount = Number(booking.commissionAmount) || (grossAmount * commissionPercent) / 100;
-    const discountAmount = Number(booking.discount) || 0;
-    const netAmount =
-      Number(booking.finalPayable) ||
-      Number(booking.finalPayableAmount) ||
-      Number(booking.grandTotal) ||
-      (grossAmount - commissionAmount - discountAmount);
-
-    const isPaid = booking.paymentStatus === "Paid";
-    const isPartial = booking.paymentStatus === "Partial";
-    const paidAmount = isPaid ? netAmount : isPartial ? (Number(booking.amountPaid) || 0) : 0;
-    const balanceAmount = Math.max(0, netAmount - paidAmount);
-
-    const now = new Date();
-    const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-    const shortId = String(booking._id || "").slice(-6).toUpperCase() || "000000";
-    const invoiceNo = `${dateStamp}-${shortId}`;
-    const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
-
-    setBillingData({
-      invoiceNo,
-      invoiceDate: dateTimeLabel,
-      receiptNo: `R-${shortId.slice(-4)}`,
-      receiptDate: dateTimeLabel,
-      paymentMode: booking.paymentType
-        ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1)
-        : "Cash",
-      receivedBy: "Front Desk",
-      branch: booking.doctorSpecialization || "Main Branch",
-      doctorName: booking.doctorName || "General OP Doctor",
-      items,
-      breakdown: {
-        clinic: Math.round(finalBreakdown.clinic || 0),
-        lab: Math.round(finalBreakdown.lab || 0),
-        pharmacy: Math.round(finalBreakdown.pharmacy || 0),
-      },
-      grossAmount,
-      discount: discountAmount,
-      netAmount,
-      paidAmount,
-      balanceAmount,
-      paymentStatus: booking.paymentStatus || "Pending",
-      amountInWords: numberToWords(netAmount),
-    });
-    setShowBillingModal(true);
-  };
-
-  const handleMarkAsPaid = async () => {
-    if (!selectedBookingForBilling) return;
-    try {
-      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${selectedBookingForBilling._id}`, { paymentStatus: "Paid" });
-      if (res?.data?.success) {
-        setBookings((prev) => prev.map((b) => b._id === selectedBookingForBilling._id ? { ...b, paymentStatus: "Paid" } : b));
-        setBillingData((prev) => ({
-          ...prev,
-          paymentStatus: "Paid",
-          paidAmount: prev.netAmount,
-          balanceAmount: 0,
-          items: prev.items.map((it) => ({ ...it, paymentStatus: "Paid" }))
-        }));
-        refreshPatientBookings();
-        showToast(`Payment marked as Paid for ${selectedBookingForBilling.patientName}!`, "success");
-      } else showToast(res.data.message || "Failed to update payment", "error");
-    } catch (error) {
-      showToast("Failed to update payment status", "error");
-    }
-  };
-
-  const printBill = () => {
+  // ============================================================
+  // BILL HTML BUILDER — takes explicit params (no state)
+  // ============================================================
+  const buildBillHtml = (bd, bk) => {
     const groups = { clinic: [], lab: [], pharmacy: [] };
-    billingData.items.forEach((it) => {
+    (bd.items || []).forEach((it) => {
       const cat = it.category || "clinic";
       if (groups[cat]) groups[cat].push(it);
       else groups.clinic.push(it);
     });
 
-    const categoryLabel = {
-      clinic: "CONSULTATION",
-      lab: "LAB",
-      pharmacy: "PHARMACY",
-    };
+    const categoryLabel = { clinic: "CONSULTATION", lab: "LAB", pharmacy: "PHARMACY" };
 
     let runningIdx = 0;
     let rowsHtml = "";
@@ -2018,9 +1827,7 @@ const openPrescriptionModal = (booking) => {
     });
 
     const grossTotal =
-      (billingData.breakdown?.clinic || 0) +
-      (billingData.breakdown?.lab || 0) +
-      (billingData.breakdown?.pharmacy || 0);
+      (bd.breakdown?.clinic || 0) + (bd.breakdown?.lab || 0) + (bd.breakdown?.pharmacy || 0);
 
     rowsHtml += `
       <tr style="background:#e5e7eb;border-top:2px solid #111;border-bottom:2px solid #111;">
@@ -2033,10 +1840,8 @@ const openPrescriptionModal = (booking) => {
       </tr>
     `;
 
-    const win = window.open("", "_blank", "width=900,height=1000");
-    if (!win) return;
-    win.document.write(`
-      <!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Bill - ${billingData.invoiceNo}</title>
+    return `
+      <!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Bill - ${bd.invoiceNo}</title>
       <style>
         *{margin:0;padding:0;box-sizing:border-box;}
         body{font-family:Arial,sans-serif;color:#222;padding:24px;background:#fff;}
@@ -2074,14 +1879,14 @@ const openPrescriptionModal = (booking) => {
           </div>
           <div class="bar-title">Bill Cum Receipt</div>
           <div class="info-grid">
-            <div><span class="label">Name</span>: ${selectedBookingForBilling?.patientTitle || ""} ${selectedBookingForBilling?.patientName || "N/A"}</div>
-            <div><span class="label">Invoice No / Date</span>: ${billingData.invoiceNo} / ${billingData.invoiceDate}</div>
-            <div><span class="label">Age</span>: ${selectedBookingForBilling?.patientAge || "N/A"} Yrs</div>
-            <div><span class="label">Gender</span>: ${selectedBookingForBilling?.patientGender || "N/A"}</div>
-            <div><span class="label">Branch</span>: ${billingData.branch}</div>
-            <div><span class="label">Contact No</span>: ${selectedBookingForBilling?.patientPhone || "N/A"}</div>
-            <div><span class="label">Doctor</span>: ${billingData.doctorName}</div>
-            <div><span class="label">Appt. Date</span>: ${formatDateToDDMMYYYY(selectedBookingForBilling?.date)}</div>
+            <div><span class="label">Name</span>: ${bk?.patientTitle || ""} ${bk?.patientName || "N/A"}</div>
+            <div><span class="label">Invoice No / Date</span>: ${bd.invoiceNo} / ${bd.invoiceDate}</div>
+            <div><span class="label">Age</span>: ${bk?.patientAge || "N/A"} Yrs</div>
+            <div><span class="label">Gender</span>: ${bk?.patientGender || "N/A"}</div>
+            <div><span class="label">Branch</span>: ${bd.branch}</div>
+            <div><span class="label">Contact No</span>: ${bk?.patientPhone || "N/A"}</div>
+            <div><span class="label">Doctor</span>: ${bd.doctorName}</div>
+            <div><span class="label">Appt. Date</span>: ${formatDateToDDMMYYYY(bk?.date)}</div>
           </div>
 
           <table class="items">
@@ -2094,21 +1899,166 @@ const openPrescriptionModal = (booking) => {
           </table>
 
           <div class="totals-box">
-            <div class="row"><span>Gross Amount</span><span style="font-weight:bold;">₹ ${billingData.grossAmount.toFixed(2)}</span></div>
-            ${billingData.discount > 0 ? `<div class="row"><span>Discount</span><span style="color:#dc2626;">− ₹ ${billingData.discount.toFixed(2)}</span></div>` : ""}
-            <div class="row" style="background:#eff6ff;font-weight:bold;"><span>Net Amount</span><span>₹ ${billingData.netAmount.toFixed(2)}</span></div>
-            <div class="row paid"><span>Paid Amount</span><span>₹ ${billingData.paidAmount.toFixed(2)}</span></div>
-            <div class="row final"><span>Balance to Pay</span><span>₹ ${billingData.balanceAmount.toFixed(2)}</span></div>
+            <div class="row"><span>Gross Amount</span><span style="font-weight:bold;">₹ ${bd.grossAmount.toFixed(2)}</span></div>
+            ${bd.discount > 0 ? `<div class="row"><span>Discount</span><span style="color:#dc2626;">− ₹ ${bd.discount.toFixed(2)}</span></div>` : ""}
+            <div class="row" style="background:#eff6ff;font-weight:bold;"><span>Net Amount</span><span>₹ ${bd.netAmount.toFixed(2)}</span></div>
+            <div class="row paid"><span>Paid Amount</span><span>₹ ${bd.paidAmount.toFixed(2)}</span></div>
+            <div class="row final"><span>Balance to Pay</span><span>₹ ${bd.balanceAmount.toFixed(2)}</span></div>
           </div>
-          <div class="amount-words">Amount in words: <b>${billingData.amountInWords}</b></div>
+          <div class="amount-words">Amount in words: <b>${bd.amountInWords}</b></div>
           <div class="footer-row"><span>Printed Date : ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} ${new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></div>
           <div class="signature-section"><span class="sig">Authorised Signature</span></div>
         </div>
       </div>
-    </body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => win.print(), 500);
+    </body></html>`;
+  };
+
+  // ============================================================
+  // SAVE INVOICE TO BACKEND
+  // ============================================================
+  const saveInvoiceToBackend = async (bookingId, billHtml) => {
+    if (!bookingId || !billHtml) return null;
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/appointment-slots/save-invoice`,
+        { bookingId, html: billHtml }
+      );
+      if (res?.data?.success) {
+        setBookings((prev) =>
+          prev.map((b) =>
+            b._id === bookingId
+              ? { ...b, invoiceUrl: res.data.invoiceUrl, invoiceGeneratedAt: new Date().toISOString() }
+              : b
+          )
+        );
+        return res.data.invoiceUrl;
+      }
+      showToast(res.data?.message || "Failed to save invoice", "error");
+      return null;
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to save invoice", "error");
+      return null;
+    }
+  };
+
+  // ============================================================
+  // OPEN BILLING MODAL — shows PDF in modal
+  // ============================================================
+  const openBillingModal = async (booking) => {
+    if (!booking) return;
+
+    if (booking.invoiceUrl && booking.invoiceUrl.trim() !== "") {
+      const base = API_BASE_INVURL.replace(/\/$/, "");
+      const fullUrl = booking.invoiceUrl.startsWith("http")
+        ? booking.invoiceUrl
+        : `${base}${booking.invoiceUrl.startsWith("/") ? "" : "/"}${booking.invoiceUrl}`;
+      setInvoiceModalUrl(fullUrl);
+      setInvoiceModalBooking(booking);
+      setShowInvoiceModal(true);
+      return;
+    }
+
+    setInvoiceLoading(booking._id);
+
+    const normalizedItems = getBookingServices(booking);
+    const items = [];
+
+    normalizedItems.forEach((s, idx) => {
+      const cat = classifyService(s);
+      items.push({
+        no: items.length + 1,
+        name: s.name,
+        serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
+        remarks: cat === "lab" ? "Lab Test" : cat === "pharmacy" ? "Pharmacy" : "Consultation",
+        category: cat,
+        amount: Number(s.price) || 0,
+        paymentStatus: booking.paymentStatus || "Pending",
+      });
+    });
+
+    const hasPharmacyService = normalizedItems.some((s) => classifyService(s) === "pharmacy");
+    if (Number(booking.medicineTotal) > 0 && !hasPharmacyService) {
+      items.push({ no: items.length + 1, name: "Medicines", serviceCode: "PHARM", remarks: "Pharmacy", category: "pharmacy", amount: Number(booking.medicineTotal), paymentStatus: booking.paymentStatus || "Pending" });
+    }
+
+    const hasLabService = normalizedItems.some((s) => classifyService(s) === "lab");
+    if (Number(booking.labTotal) > 0 && !hasLabService) {
+      items.push({ no: items.length + 1, name: "Lab Tests", serviceCode: "LAB", remarks: "Lab Test", category: "lab", amount: Number(booking.labTotal), paymentStatus: booking.paymentStatus || "Pending" });
+    }
+
+    if (items.length === 0) {
+      const fallback = Number(booking.finalPayable) || Number(booking.finalPayableAmount) || Number(booking.grandTotal) || Number(booking.totalAmount) || 0;
+      if (fallback > 0) {
+        items.push({ no: 1, name: "Consultation Fee", serviceCode: "CONS", remarks: "Consultation", category: "clinic", amount: fallback, paymentStatus: booking.paymentStatus || "Pending" });
+      }
+    }
+
+    const finalBreakdown = { clinic: 0, lab: 0, pharmacy: 0 };
+    items.forEach((it) => {
+      if (it.category === "lab") finalBreakdown.lab += it.amount;
+      else if (it.category === "pharmacy") finalBreakdown.pharmacy += it.amount;
+      else finalBreakdown.clinic += it.amount;
+    });
+
+    const grossAmount = items.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+    const commissionPercent = parseFloat(booking.referralCommission) || 0;
+    const commissionAmount = Number(booking.commissionAmount) || (grossAmount * commissionPercent) / 100;
+    const discountAmount = Number(booking.discount) || 0;
+    const netAmount =
+      Number(booking.finalPayable) ||
+      Number(booking.finalPayableAmount) ||
+      Number(booking.grandTotal) ||
+      (grossAmount - commissionAmount - discountAmount);
+
+    const isPaid = booking.paymentStatus === "Paid";
+    const isPartial = booking.paymentStatus === "Partial";
+    const paidAmount = isPaid ? netAmount : isPartial ? (Number(booking.amountPaid) || 0) : 0;
+    const balanceAmount = Math.max(0, netAmount - paidAmount);
+
+    const now = new Date();
+    const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    const shortId = String(booking._id || "").slice(-6).toUpperCase() || "000000";
+    const invoiceNo = `${dateStamp}-${shortId}`;
+    const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
+
+    const newBillingData = {
+      invoiceNo,
+      invoiceDate: dateTimeLabel,
+      receiptNo: `R-${shortId.slice(-4)}`,
+      receiptDate: dateTimeLabel,
+      paymentMode: booking.paymentType ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1) : "Cash",
+      receivedBy: "Front Desk",
+      branch: booking.doctorSpecialization || "Main Branch",
+      doctorName: booking.doctorName || "General OP Doctor",
+      items,
+      breakdown: {
+        clinic: Math.round(finalBreakdown.clinic || 0),
+        lab: Math.round(finalBreakdown.lab || 0),
+        pharmacy: Math.round(finalBreakdown.pharmacy || 0),
+      },
+      grossAmount,
+      discount: discountAmount,
+      netAmount,
+      paidAmount,
+      balanceAmount,
+      paymentStatus: booking.paymentStatus || "Pending",
+      amountInWords: numberToWords(netAmount),
+    };
+
+    const html = buildBillHtml(newBillingData, booking);
+    const savedUrl = await saveInvoiceToBackend(booking._id, html);
+    setInvoiceLoading(null);
+
+    if (savedUrl) {
+      const base = API_BASE_INVURL.replace(/\/$/, "");
+      const fullUrl = savedUrl.startsWith("http") ? savedUrl : `${base}${savedUrl.startsWith("/") ? "" : "/"}${savedUrl}`;
+      setInvoiceModalUrl(fullUrl);
+      setInvoiceModalBooking(booking);
+      setShowInvoiceModal(true);
+      showToast(`✅ Invoice generated!`, "success");
+    } else {
+      showToast("Invoice generation failed", "error");
+    }
   };
 
   const handleFromDateChange = (e) => { setFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); };
@@ -2129,11 +2079,9 @@ const openPrescriptionModal = (booking) => {
       setStatusFilter("All");
       setActiveFilter("all");
     } else if (type === "active") {
-      // ✅ Active card click → filter by active
       setActiveFilter("active");
       setStatusFilter("All");
     } else if (type === "inactive") {
-      // ✅ Inactive card click → navigate to inactive-patients page
       setActiveFilter("inactive");
       navigate("/inactive-patients");
     } else {
@@ -2148,14 +2096,11 @@ const openPrescriptionModal = (booking) => {
     return Array.from(map.values());
   };
 
-  // ✅ filteredPatients — Active/Inactive filter applied here (NOT excluding inactive by default)
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
-      // ✅ Active/Inactive filter
       const isActive = getPatientActiveStatus(p);
       if (activeFilter === "active" && !isActive) return false;
       if (activeFilter === "inactive" && isActive) return false;
-      // If activeFilter === "all", show all (both active + inactive)
 
       const paymentStatus = getPatientPaymentStatus(p);
       if (statusFilter !== "All" && paymentStatus !== statusFilter) return false;
@@ -2208,7 +2153,6 @@ const openPrescriptionModal = (booking) => {
 
   useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, fromDate, toDate, selectedMonth, activeFilter]);
 
-  // ✅ stats — now includes activeCount & inactiveCount
   const stats = useMemo(() => {
     const total = patients.length;
     let paidTotal = 0, paidCount = 0, pendingCount = 0, partialCount = 0, dueCount = 0;
@@ -2233,14 +2177,8 @@ const openPrescriptionModal = (booking) => {
     });
 
     return {
-      total,
-      active: activeCount,
-      inactive: inactiveCount,
-      paid: paidCount,
-      pending: pendingCount,
-      partial: partialCount,
-      due: dueCount,
-      totalRevenue: paidTotal,
+      total, active: activeCount, inactive: inactiveCount, paid: paidCount,
+      pending: pendingCount, partial: partialCount, due: dueCount, totalRevenue: paidTotal,
     };
   }, [patients, bookings]);
 
@@ -2295,14 +2233,10 @@ const openPrescriptionModal = (booking) => {
         `"${getBookingStatus(p)}"`,
         `"${isActive ? "Active" : "Inactive"}"`,
         `"${services.map((s) => s.name).join("; ")}"`,
-        breakdown.clinic,
-        breakdown.lab,
-        breakdown.pharmacy,
+        breakdown.clinic, breakdown.lab, breakdown.pharmacy,
         booking?.medicineTotal || 0,
         booking?.discount || 0,
-        totalFee,
-        paidInfo.paid,
-        paidInfo.balance,
+        totalFee, paidInfo.paid, paidInfo.balance,
         `"${getConsultationPaymentStatus(p)}"`,
         `"${p.paymentType || "cash"}"`,
         `"${(p.reason || "").replace(/"/g, '""')}"`,
@@ -2325,88 +2259,6 @@ const openPrescriptionModal = (booking) => {
   };
 
   const isEditMode = Boolean(editingId);
-
-  const buildBillingTableRows = () => {
-    const groups = { clinic: [], lab: [], pharmacy: [] };
-    billingData.items.forEach((it) => {
-      const cat = it.category || "clinic";
-      if (groups[cat]) groups[cat].push(it);
-      else groups.clinic.push(it);
-    });
-
-    const labels = {
-      clinic: "CONSULTATION",
-      lab: "LAB",
-      pharmacy: "PHARMACY",
-    };
-
-    const rows = [];
-    let runningIdx = 0;
-
-    ["clinic", "lab", "pharmacy"].forEach((catKey) => {
-      const items = groups[catKey];
-      const subtotal = items.reduce((s, x) => s + (Number(x.amount) || 0), 0);
-
-      if (items.length === 0) {
-        runningIdx++;
-        rows.push(
-          <tr key={`empty-${catKey}`} className="border-b border-gray-100">
-            <td className="py-2 px-2 text-xs text-gray-500 text-center">{runningIdx}</td>
-            <td className="py-2 px-2">
-              <span className="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-gray-100 text-gray-700 border border-gray-300">
-                {labels[catKey]}
-              </span>
-            </td>
-            <td className="py-2 px-2 text-xs text-right font-semibold text-gray-500">
-              ₹0.00
-            </td>
-          </tr>
-        );
-      } else {
-        items.forEach((item) => {
-          runningIdx++;
-          rows.push(
-            <tr key={item.no} className="border-b border-gray-100">
-              <td className="py-2 px-2 text-xs text-gray-700 text-center">{runningIdx}</td>
-              <td className="py-2 px-2 text-xs font-medium text-gray-800">{item.name}</td>
-              <td className="py-2 px-2 text-xs text-right font-semibold text-gray-800">
-                ₹{Number(item.amount).toFixed(2)}
-              </td>
-            </tr>
-          );
-        });
-      }
-
-      rows.push(
-        <tr key={`sub-${catKey}`} className="bg-gray-50 border-b-2 border-gray-300">
-          <td colSpan={2} className="py-1.5 px-2 text-[10px] font-bold uppercase tracking-wider text-right text-gray-700">
-            Subtotal — {labels[catKey]}
-          </td>
-          <td className="py-1.5 px-2 text-xs text-right font-extrabold text-gray-800">
-            ₹{subtotal.toFixed(2)}
-          </td>
-        </tr>
-      );
-    });
-
-    const gross =
-      (billingData.breakdown?.clinic || 0) +
-      (billingData.breakdown?.lab || 0) +
-      (billingData.breakdown?.pharmacy || 0);
-
-    rows.push(
-      <tr key="gross" className="bg-gray-200 border-t-2 border-b-2 border-gray-800">
-        <td colSpan={2} className="py-2 px-2 text-xs font-extrabold uppercase text-gray-900 text-right tracking-wider">
-          Gross Total
-        </td>
-        <td className="py-2 px-2 text-sm text-right font-extrabold text-gray-900">
-          ₹{gross.toFixed(2)}
-        </td>
-      </tr>
-    );
-
-    return rows;
-  };
 
   return (
     <div className="emp-dash">
@@ -2482,7 +2334,7 @@ const openPrescriptionModal = (booking) => {
           </div>
         </div>
 
-        {/* Mobile Filters Panel */}
+        {/* Mobile Filters */}
         <div className="lg:hidden">
           {showMobileFilters && (
             <div className="mb-4 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
@@ -2527,20 +2379,18 @@ const openPrescriptionModal = (booking) => {
           )}
         </div>
 
-        {/* ✅ Stats — Now 8 cards including Active & Inactive */}
+        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 md:gap-4 mb-6">
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""}`} onClick={() => handleCardClick("all")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Patients</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div></div>
             <div className="emp-dash__stat-value">{stats.total}</div><div className="emp-dash__stat-meta">all registered OPD</div>
           </div>
 
-          {/* ✅ NEW: Active card */}
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "active" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("active")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Active</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div></div>
             <div className="emp-dash__stat-value text-emerald-600">{stats.active}</div><div className="emp-dash__stat-meta">active patients</div>
           </div>
 
-          {/* ✅ NEW: Inactive card — navigates on click */}
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "inactive" ? "ring-2 ring-red-500/20 border-red-400" : ""}`} onClick={() => handleCardClick("inactive")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Inactive</span><div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiUserX /></div></div>
             <div className="emp-dash__stat-value text-red-500">{stats.inactive}</div><div className="emp-dash__stat-meta">inactive patients</div>
@@ -2630,7 +2480,6 @@ const openPrescriptionModal = (booking) => {
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">DOB</label>
-                    {/* ✅ PAST DATE ALLOWED: max attribute removed */}
                     <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
                   </div>
                   <div>
@@ -2705,7 +2554,6 @@ const openPrescriptionModal = (booking) => {
                       Appointment Date
                       {isEditMode && <FaLock className="text-amber-500 text-[10px]" />}
                     </label>
-                    {/* ✅ PAST DATE ALLOWED: min attribute removed */}
                     <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} />
                   </div>
                 </div>
@@ -3084,7 +2932,6 @@ const openPrescriptionModal = (booking) => {
                   <tbody>
                     {currentPatients.map((patient, idx) => {
                       const matchingBooking = getMatchingBooking(patient);
-                      const totalFee = getPatientTotalFee(patient);
                       const consultationPaymentStatus = getConsultationPaymentStatus(patient);
                       const bookingStatus = getBookingStatus(patient);
                       const appointmentDate = getAppointmentDate(patient);
@@ -3278,7 +3125,14 @@ const openPrescriptionModal = (booking) => {
                                 <>
                                   <button onClick={(e) => { e.stopPropagation(); openPrescriptionModal(matchingBooking); }} className="p-1.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg" title="Prescription"><FaPrescription className="w-3.5 h-3.5" /></button>
                                   <button onClick={(e) => { e.stopPropagation(); openVitalsModal(matchingBooking); }} className="p-1.5 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg" title="Vitals"><FaHeartbeat className="w-3.5 h-3.5" /></button>
-                                  <button onClick={(e) => { e.stopPropagation(); openBillingModal(matchingBooking); }} className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg" title="Billing"><FaFileInvoiceDollar className="w-3.5 h-3.5" /></button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); openBillingModal(matchingBooking); }}
+                                    disabled={invoiceLoading === matchingBooking._id}
+                                    className={`p-1.5 rounded-lg ${matchingBooking?.invoiceUrl ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"} disabled:opacity-50`}
+                                    title={matchingBooking?.invoiceUrl ? `Invoice saved` : "Generate & Save Invoice"}
+                                  >
+                                    {invoiceLoading === matchingBooking._id ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaFileInvoiceDollar className="w-3.5 h-3.5" />}
+                                  </button>
                                   {(() => {
                                     const rStatus = getReviewWindowStatus(matchingBooking);
                                     const isReviewed = matchingBooking.isReviewed === true;
@@ -3305,7 +3159,7 @@ const openPrescriptionModal = (booking) => {
                                         }`}
                                         title={
                                           isReviewed
-                                            ? `Reviewed on ${formatDateToDDMMYYYY(matchingBooking.reviewDate)}`
+                                            ? `Reviewed`
                                             : isDisabled
                                             ? rStatus.expired
                                               ? "Review window expired (3 days limit)"
@@ -3576,8 +3430,13 @@ const openPrescriptionModal = (booking) => {
                               <button onClick={(e) => { e.stopPropagation(); openVitalsModal(matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg text-[10px] font-bold" title="Vitals">
                                 <FaHeartbeat className="w-3.5 h-3.5" /> Vitals
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); openBillingModal(matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-[10px] font-bold" title="Billing">
-                                <FaFileInvoiceDollar className="w-3.5 h-3.5" /> Bill
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openBillingModal(matchingBooking); }}
+                                disabled={invoiceLoading === matchingBooking._id}
+                                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${matchingBooking?.invoiceUrl ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"} disabled:opacity-50`}
+                                title={matchingBooking?.invoiceUrl ? "Open Invoice" : "Generate & Save Invoice"}
+                              >
+                                {invoiceLoading === matchingBooking._id ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaFileInvoiceDollar className="w-3.5 h-3.5" />} {matchingBooking?.invoiceUrl ? "Invoice" : "Bill"}
                               </button>
                               {(() => {
                                 const rStatus = getReviewWindowStatus(matchingBooking);
@@ -3641,6 +3500,87 @@ const openPrescriptionModal = (booking) => {
           )}
         </div>
 
+        {/* 🆕 INVOICE PDF VIEWER MODAL */}
+        {showInvoiceModal && invoiceModalUrl && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-5xl shadow-2xl border flex flex-col max-h-[95vh]">
+              <div className="flex items-center justify-between px-6 py-4 border-b bg-white rounded-t-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                    <FaFileInvoiceDollar />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base">Invoice Preview</h3>
+                    <p className="text-xs text-gray-500">
+                      {invoiceModalBooking?.patientTitle} {invoiceModalBooking?.patientName} • {invoiceModalBooking?.patientPhone}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.open(invoiceModalUrl, "_blank")}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+                    title="Open in new tab"
+                  >
+                    <FaExternalLinkAlt className="w-3 h-3" /> Open
+                  </button>
+                  <button
+                    onClick={() => {
+                      const a = document.createElement("a");
+                      a.href = invoiceModalUrl;
+                      a.download = `invoice-${invoiceModalBooking?._id || "download"}.pdf`;
+                      a.target = "_blank";
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg"
+                    title="Download PDF"
+                  >
+                    <FaDownload className="w-3 h-3" /> Download
+                  </button>
+                  <button
+                    onClick={() => {
+                      const iframe = document.getElementById("invoice-pdf-iframe");
+                      if (iframe) iframe.contentWindow.print();
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
+                    title="Print"
+                  >
+                    <FaPrint className="w-3 h-3" /> Print
+                  </button>
+                  <button
+                    onClick={() => { setShowInvoiceModal(false); setInvoiceModalUrl(""); setInvoiceModalBooking(null); }}
+                    className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+                    title="Close"
+                  >
+                    <FaTimes className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-hidden bg-gray-100">
+                <iframe
+                  id="invoice-pdf-iframe"
+                  src={invoiceModalUrl}
+                  title="Invoice PDF"
+                  className="w-full h-full border-0"
+                  style={{ minHeight: "70vh" }}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 px-6 py-3 border-t bg-gray-50/50 rounded-b-2xl">
+                <button
+                  onClick={() => { setShowInvoiceModal(false); setInvoiceModalUrl(""); setInvoiceModalBooking(null); }}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* PATIENT MODAL */}
         {showPatientModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -3696,7 +3636,6 @@ const openPrescriptionModal = (booking) => {
                             const paidInfo = getBookingPaidInfo(booking);
                             const statusColors = getStatusColors(booking.status);
                             const slotTiming = booking.startTime && booking.endTime ? `${booking.startTime} - ${booking.endTime}` : "N/A";
-                            const breakdown = getAmountBreakdown(booking);
                             const hasVitals = booking.vitalsTemp || booking.vitalsBp || booking.vitalsPr || booking.vitalsWeight;
                             const bookingTypeInfo = getBookingType(booking);
                             const BookingTypeIcon = bookingTypeInfo.icon;
@@ -3714,7 +3653,9 @@ const openPrescriptionModal = (booking) => {
                                     {slotTiming !== "N/A" && <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">{slotTiming}</span>}
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <button onClick={() => openBillingModal(booking)} className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded-lg" title="Billing"><FaFileInvoiceDollar className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => openBillingModal(booking)} disabled={invoiceLoading === booking._id} className={`p-1.5 rounded-lg ${booking?.invoiceUrl ? "text-blue-700 bg-blue-50" : "text-emerald-700 hover:bg-emerald-50"} disabled:opacity-50`} title={booking?.invoiceUrl ? "Open Invoice" : "Billing"}>
+                                      {invoiceLoading === booking._id ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaFileInvoiceDollar className="w-3.5 h-3.5" />}
+                                    </button>
                                     <button onClick={() => openPrescriptionModal(booking)} className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg" title="Prescription"><FaPrescription className="w-3.5 h-3.5" /></button>
                                     <button onClick={() => openVitalsModal(booking)} className="p-1.5 text-pink-600 hover:bg-pink-50 rounded-lg" title="Vitals"><FaHeartbeat className="w-3.5 h-3.5" /></button>
                                     <button onClick={() => openReviewModal(booking)} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg" title="Review"><FaStar className="w-3.5 h-3.5" /></button>
@@ -3779,6 +3720,32 @@ const openPrescriptionModal = (booking) => {
                                       </span>
                                     </div>
                                   </div>
+
+                                  {booking.invoiceUrl && (
+                                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                      <div className="text-[10px] font-bold uppercase text-blue-700 mb-1">Invoice</div>
+                                      <button
+                                        onClick={() => {
+                                          const base = API_BASE_INVURL.replace(/\/$/, "");
+                                          const fullUrl = booking.invoiceUrl.startsWith("http")
+                                            ? booking.invoiceUrl
+                                            : `${base}${booking.invoiceUrl.startsWith("/") ? "" : "/"}${booking.invoiceUrl}`;
+                                          setInvoiceModalUrl(fullUrl);
+                                          setInvoiceModalBooking(booking);
+                                          setShowInvoiceModal(true);
+                                        }}
+                                        className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:underline"
+                                      >
+                                        <FaFilePdf className="w-3.5 h-3.5" />
+                                        View Invoice PDF
+                                      </button>
+                                      {booking.invoiceGeneratedAt && (
+                                        <div className="text-[10px] text-blue-600 mt-1">
+                                          Generated: {formatDateTimeToDDMMYYYY(booking.invoiceGeneratedAt)}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -3828,94 +3795,6 @@ const openPrescriptionModal = (booking) => {
                 <div className="relative w-full overflow-hidden" style={{ transform: "scale(1)", transformOrigin: "top center", width: "100%", marginLeft: "0" }}>
                   <img src={prescriptionBackTemplate} alt="Back" className="w-full h-auto object-contain" />
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* BILLING MODAL */}
-        {showBillingModal && selectedBookingForBilling && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10 rounded-t-2xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center"><FaFileInvoiceDollar /></div>
-                  <div><h3 className="font-bold text-gray-900 text-base">Bill Cum Receipt</h3><p className="text-xs text-gray-500">{selectedBookingForBilling.patientName} • {billingData.invoiceNo}</p></div>
-                </div>
-                <button onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes /></button>
-              </div>
-              <div className="p-6 md:p-8 relative overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none w-64 h-64"><img src={logo} alt={CLINIC_INFO.name} /></div>
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between border-b-2 border-gray-800 pb-4 mb-3 flex-wrap gap-2">
-                    <div className="flex items-center gap-3"><img src={logo} alt={CLINIC_INFO.name} className="w-14 h-14 object-contain" /><div><h2 className="text-xl font-bold">{CLINIC_INFO.name}</h2><p className="text-[11px] text-gray-500 max-w-sm">{CLINIC_INFO.address}</p></div></div>
-                    <div className="text-right text-[11px] text-gray-500">Contact No : {CLINIC_INFO.contact}</div>
-                  </div>
-                  <div className="text-center bg-gray-100 border-y border-gray-300 py-1.5 mb-4"><span className="text-sm font-bold tracking-widest uppercase">Bill Cum Receipt</span></div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs mb-5">
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Name</span>: {selectedBookingForBilling?.patientTitle || ""} {selectedBookingForBilling?.patientName || "N/A"}</div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Invoice No / Date</span>: {billingData.invoiceNo} / {billingData.invoiceDate}</div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Age</span>: {selectedBookingForBilling?.patientAge || "N/A"} Yrs</div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Gender</span>: {selectedBookingForBilling?.patientGender || "N/A"}</div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Contact No</span>: {selectedBookingForBilling?.patientPhone || "N/A"}</div>
-                    <div><span className="font-bold text-gray-500 inline-block w-28">Doctor</span>: {billingData.doctorName}</div>
-                  </div>
-
-                  <table className="w-full mb-4 border-t-2 border-b-2 border-gray-800">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="text-center py-2 px-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider" style={{ width: "8%" }}>No.</th>
-                        <th className="text-left py-2 px-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider" style={{ width: "62%" }}>Service / Item</th>
-                        <th className="text-right py-2 px-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider" style={{ width: "30%" }}>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {buildBillingTableRows()}
-                    </tbody>
-                  </table>
-
-                  <div className="flex flex-col items-end mb-3">
-                    <div className="w-full max-w-xs text-xs bg-gray-50 rounded-lg border border-gray-200 p-3">
-                      <div className="flex justify-between py-1.5 border-b border-gray-200">
-                        <span className="text-gray-600">Gross Amount</span>
-                        <span className="font-bold text-gray-900">₹ {billingData.grossAmount.toFixed(2)}</span>
-                      </div>
-
-                      {billingData.discount > 0 && (
-                        <div className="flex justify-between py-1.5 border-b border-gray-200">
-                          <span className="text-red-600 flex items-center gap-1">
-                            <FaPercent className="text-[9px]" /> Discount
-                          </span>
-                          <span className="font-bold text-red-600">− ₹ {billingData.discount.toFixed(2)}</span>
-                        </div>
-                      )}
-
-                      <div className="flex justify-between py-1.5 border-b border-gray-200 bg-blue-50/50 -mx-3 px-3">
-                        <span className="text-gray-900 font-bold">Net Amount</span>
-                        <span className="font-bold text-gray-900">₹ {billingData.netAmount.toFixed(2)}</span>
-                      </div>
-
-                      <div className="flex justify-between py-1.5 border-b border-gray-200">
-                        <span className="text-gray-600">Paid Amount</span>
-                        <span className="font-bold text-emerald-700">₹ {billingData.paidAmount.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between py-2 mt-1 border-t-2 border-gray-800">
-                        <span className="font-extrabold text-gray-900">Balance to Pay</span>
-                        <span className={`font-extrabold ${billingData.balanceAmount > 0 ? "text-red-600" : "text-emerald-700"}`}>
-                          ₹ {billingData.balanceAmount.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-[10px] text-gray-500 italic">
-                      Amount in words: <span className="font-semibold text-gray-700">{billingData.amountInWords}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50/50">
-                {billingData.paymentStatus === "Pending" && <button onClick={handleMarkAsPaid} className="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white flex items-center gap-1.5"><FaCheckCircle className="w-3.5 h-3.5" /> Mark as Paid</button>}
-                <button onClick={printBill} className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white flex items-center gap-1.5"><FaPrint className="w-3.5 h-3.5" /> Print Bill</button>
-                <button onClick={() => { setShowBillingModal(false); setSelectedBookingForBilling(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300">Close</button>
               </div>
             </div>
           </div>

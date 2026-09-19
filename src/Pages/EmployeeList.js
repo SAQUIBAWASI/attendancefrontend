@@ -3809,8 +3809,8 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { FaBuilding, FaUserTag, FaChevronDown, FaChevronUp, FaCamera, FaTimes } from "react-icons/fa";
-import { FiCalendar, FiUsers, FiUserCheck, FiUserMinus, FiBriefcase, FiMapPin, FiFilter, FiDownload, FiPlus, FiTrash2, FiEye, FiSearch, FiX, FiEdit } from "react-icons/fi";
+import { FaBuilding, FaUserTag, FaChevronDown, FaChevronUp, FaCamera, FaTimes, FaFilePdf, FaFileImage, FaDownload } from "react-icons/fa";
+import { FiCalendar, FiUsers, FiUserCheck, FiUserMinus, FiBriefcase, FiMapPin, FiFilter, FiDownload, FiPlus, FiTrash2, FiEye, FiSearch, FiX, FiEdit, FiUploadCloud } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import "./EmployeeList.css";
@@ -3865,6 +3865,7 @@ const EmployeeList = () => {
   const navigate = useNavigate();
 
   const API_BASE_URL = "https://api.timelyhealth.in/api";
+  const FILE_BASE_URL = "https://api.timelyhealth.in";
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -3999,6 +4000,13 @@ const EmployeeList = () => {
   const handleView = (employee) => setSelectedEmployee(employee);
   const handleCloseModal = () => setSelectedEmployee(null);
   const handleEdit = (employee) => navigate(`/addemployee`, { state: { employee } });
+
+  // ✅ NEW: Get full file URL helper
+  const getFullFileUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    return `${FILE_BASE_URL}${url}`;
+  };
 
   const handleToggleStatus = async (emp) => {
     const isCurrentlyHidden = isEmployeeHidden(emp);
@@ -4237,7 +4245,7 @@ const EmployeeList = () => {
 
   // ============================================
   // ✅ EXCEL EXPORT — Full Employee Details
-  // ❌ Employment Type & Reporting Manager REMOVED
+  // ✅ INCLUDES: PAN & Aadhaar Number + Document URLs
   // ============================================
   const exportToExcel = () => {
     try {
@@ -4248,9 +4256,6 @@ const EmployeeList = () => {
         const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
 
         return {
-          // ============================================
-          // SECTION 1: BASIC DETAILS
-          // ============================================
           'Employee ID': emp.employeeId || '',
           'First Name': firstName,
           'Last Name': lastName,
@@ -4264,7 +4269,6 @@ const EmployeeList = () => {
           'Gender': emp.gender || '',
           'Parents Name': emp.parentsName || '',
           
-          // Address Details
           'Address Line 1': emp.addressLine1 || '',
           'Address Line 2': emp.addressLine2 || '',
           'City': emp.city || '',
@@ -4273,10 +4277,6 @@ const EmployeeList = () => {
           'Country': emp.country || '',
           'Full Address': emp.address || '',
           
-          // ============================================
-          // SECTION 2: OFFICE DETAILS
-          // ❌ Employment Type & Reporting Manager REMOVED
-          // ============================================
           'Join Date': emp.joinDate ? new Date(emp.joinDate).toLocaleDateString('en-IN') : '',
           'Department': emp.department || '',
           'Designation': emp.role || emp.designation || '',
@@ -4287,20 +4287,19 @@ const EmployeeList = () => {
              emp.isAllowedImageCapturedAttendance === true) 
               ? 'ENABLED' : 'DISABLED',
           
-          // ============================================
-          // SECTION 3: BANK & DOCUMENTS
-          // ============================================
           'Bank Name': emp.bankName || '',
           'Bank Account Number': emp.bankAccountNo || emp.bankAccount || '',
           'IFSC Code': emp.ifscCode || emp.ifsc || '',
           'PAN Number': emp.panNumber || emp.panCard || '',
+          'PAN Document File': emp.panDocumentFileName || '',
+          'PAN Document URL': emp.panDocumentUrl ? getFullFileUrl(emp.panDocumentUrl) : '',
+          'Aadhaar Number': emp.aadharNumber || emp.aadharCard || emp.aadhaarNumber || '',
+          'Aadhaar Document File': emp.aadharDocumentFileName || '',
+          'Aadhaar Document URL': emp.aadharDocumentUrl ? getFullFileUrl(emp.aadharDocumentUrl) : '',
           'UAN Number': emp.uanNumber || '',
           'PF Number': emp.pfNumber || '',
           'ESIC Number': emp.esicNumber || '',
           
-          // ============================================
-          // SECTION 4: SALARY BREAKUP
-          // ============================================
           'Basic Pay': emp.basicPay || 0,
           'HRA': emp.hra || 0,
           'Conveyance Allowance': emp.conveyanceAllowance || 0,
@@ -4317,9 +4316,6 @@ const EmployeeList = () => {
             ? new Date(emp.salaryEffectiveDate).toLocaleDateString('en-IN') 
             : '',
           
-          // ============================================
-          // SECTION 5: HR & LEAVE POLICY
-          // ============================================
           'Shift Type': emp.shiftType || '',
           'Shift Hours': emp.shiftHours || '',
           'Week Off Day': emp.weekOffDay || '',
@@ -4329,9 +4325,6 @@ const EmployeeList = () => {
           'Max EL': emp.maxEL || 0,
           'Max Comp Off': emp.maxCompOff || 0,
           
-          // ============================================
-          // EXTRA / MISC
-          // ============================================
           'Created At': emp.createdAt ? new Date(emp.createdAt).toLocaleDateString('en-IN') : '',
           'Updated At': emp.updatedAt ? new Date(emp.updatedAt).toLocaleDateString('en-IN') : ''
         };
@@ -4339,61 +4332,16 @@ const EmployeeList = () => {
 
       const ws = XLSX.utils.json_to_sheet(excelData);
       
-      // Column widths
       const wscols = [
-        {wch: 12},  // Employee ID
-        {wch: 15},  // First Name
-        {wch: 15},  // Last Name
-        {wch: 22},  // Full Name
-        {wch: 25},  // Email
-        {wch: 14},  // Phone
-        {wch: 14},  // Alternate Phone
-        {wch: 13},  // DOB
-        {wch: 10},  // Gender
-        {wch: 20},  // Parents Name
-        {wch: 25},  // Address Line 1
-        {wch: 25},  // Address Line 2
-        {wch: 15},  // City
-        {wch: 15},  // State
-        {wch: 12},  // Pin Code
-        {wch: 12},  // Country
-        {wch: 35},  // Full Address
-        {wch: 13},  // Join Date
-        {wch: 18},  // Department
-        {wch: 20},  // Designation
-        {wch: 18},  // Work Location
-        {wch: 10},  // Status
-        {wch: 15},  // Image Attendance
-        {wch: 18},  // Bank Name
-        {wch: 22},  // Bank Account Number
-        {wch: 15},  // IFSC Code
-        {wch: 15},  // PAN Number
-        {wch: 15},  // UAN Number
-        {wch: 15},  // PF Number
-        {wch: 15},  // ESIC Number
-        {wch: 12},  // Basic Pay
-        {wch: 10},  // HRA
-        {wch: 18},  // Conveyance Allowance
-        {wch: 15},  // Medical Allowance
-        {wch: 18},  // Performance Allowance
-        {wch: 16},  // Special Allowance
-        {wch: 10},  // P Tax
-        {wch: 10},  // GMC Type
-        {wch: 12},  // GMC Amount
-        {wch: 15},  // Other Deductions
-        {wch: 20},  // Salary Per Month
-        {wch: 12},  // CTC
-        {wch: 20},  // Salary Effective From
-        {wch: 10},  // Shift Type
-        {wch: 12},  // Shift Hours
-        {wch: 13},  // Week Off Day
-        {wch: 15},  // Week Off Per Month
-        {wch: 10},  // Max CL
-        {wch: 10},  // Max SL
-        {wch: 10},  // Max EL
-        {wch: 12},  // Max Comp Off
-        {wch: 13},  // Created At
-        {wch: 13}   // Updated At
+        {wch: 12}, {wch: 15}, {wch: 15}, {wch: 22}, {wch: 25}, {wch: 14}, {wch: 14},
+        {wch: 13}, {wch: 10}, {wch: 20}, {wch: 25}, {wch: 25}, {wch: 15}, {wch: 15},
+        {wch: 12}, {wch: 12}, {wch: 35}, {wch: 13}, {wch: 18}, {wch: 20}, {wch: 18},
+        {wch: 10}, {wch: 15}, {wch: 18}, {wch: 22}, {wch: 15}, {wch: 15}, {wch: 25},
+        {wch: 35}, {wch: 18}, {wch: 25}, {wch: 35}, {wch: 15}, {wch: 15}, {wch: 15},
+        {wch: 12}, {wch: 10}, {wch: 18}, {wch: 15}, {wch: 18}, {wch: 16}, {wch: 10},
+        {wch: 10}, {wch: 12}, {wch: 15}, {wch: 20}, {wch: 12}, {wch: 20}, {wch: 10},
+        {wch: 12}, {wch: 13}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 10}, {wch: 12},
+        {wch: 13}, {wch: 13}
       ];
       ws['!cols'] = wscols;
       
@@ -4430,6 +4378,13 @@ const EmployeeList = () => {
       case 'locations': return 'All Locations';
       default: return 'Employees';
     }
+  };
+
+  // ✅ NEW: helper to check if file is PDF
+  const isPdfFile = (fileName, fileType) => {
+    if (fileType === "application/pdf") return true;
+    if (fileName && fileName.toLowerCase().endsWith(".pdf")) return true;
+    return false;
   };
 
   return (
@@ -4970,10 +4925,12 @@ const EmployeeList = () => {
           )}
         </div>
 
-        {/* View Details Modal */}
+        {/* ============================================ */}
+        {/* ✅ VIEW DETAILS MODAL — WITH DOCUMENT VIEW/DOWNLOAD */}
+        {/* ============================================ */}
         {selectedEmployee && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-lg bg-white shadow-2xl rounded-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-2xl bg-white shadow-2xl rounded-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
                 <div>
                   <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
@@ -4994,90 +4951,255 @@ const EmployeeList = () => {
                     <span>⚠️</span> This employee is currently inactive and hidden from reports.
                   </div>
                 )}
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Full Name</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.name}</span>
-                  </div>
 
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Email Address</span>
-                    <span className="font-semibold text-gray-800 text-sm break-all">{selectedEmployee.email || "N/A"}</span>
+                {/* ===== BASIC DETAILS ===== */}
+                <div>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Basic Details</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Full Name</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.name || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Email Address</span>
+                      <span className="font-semibold text-gray-800 text-sm break-all">{selectedEmployee.email || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Phone Number</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.phone || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Alternate Number</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.alternateNumber || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Parents Name</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.parentsName || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Gender</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.gender || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Date of Birth</span>
+                      <span className="font-semibold text-gray-800 text-sm">
+                        {selectedEmployee.dob ? new Date(selectedEmployee.dob).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A"}
+                      </span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Department</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.department || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Designation</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.role || selectedEmployee.designation || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Joining Date</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.joinDate ? new Date(selectedEmployee.joinDate).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Work Location</span>
+                      <span className="font-semibold text-blue-600 text-sm">{getLocationName(selectedEmployee.location)}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Employment Type</span>
+                      <span className="font-semibold text-gray-800 text-sm capitalize">{selectedEmployee.employmentType || "N/A"}</span>
+                    </div>
                   </div>
+                </div>
 
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Phone Number</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.phone || "N/A"}</span>
+                {/* ===== ADDRESS ===== */}
+                <div>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Address Details</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Address Line 1</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.addressLine1 || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Address Line 2</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.addressLine2 || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">City</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.city || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">State</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.state || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Pin Code</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.pinCode || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Country</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.country || "N/A"}</span>
+                    </div>
+                    {selectedEmployee.address && (
+                      <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100 col-span-1 sm:col-span-2">
+                        <span className="text-gray-400 block mb-1">Full Address</span>
+                        <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.address}</span>
+                      </div>
+                    )}
                   </div>
+                </div>
 
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Alternate Number</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.alternateNumber || "N/A"}</span>
+                {/* ===== BANK & DOCUMENTS — WITH VIEW/DOWNLOAD ===== */}
+                <div>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Bank & Documents</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Bank Name</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.bankName || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Bank Account Number</span>
+                      <span className="font-semibold text-gray-800 text-sm break-all">{selectedEmployee.bankAccountNo || selectedEmployee.bankAccount || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">IFSC Code</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.ifscCode || selectedEmployee.ifsc || "N/A"}</span>
+                    </div>
+
+                    {/* ✅ PAN CARD NUMBER + DOCUMENT */}
+                    <div className="bg-purple-50/60 p-3 rounded-lg border border-purple-100 col-span-1 sm:col-span-2">
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-purple-500 block mb-1 font-semibold text-[10px] uppercase tracking-wider">PAN Card Number</span>
+                          <span className="font-bold text-purple-700 text-sm tracking-wider uppercase block">
+                            {selectedEmployee.panNumber || selectedEmployee.panCard || "N/A"}
+                          </span>
+                        </div>
+                        {selectedEmployee.panDocumentUrl && (
+                          <div className="flex items-center gap-2">
+                            {isPdfFile(selectedEmployee.panDocumentFileName, selectedEmployee.panDocumentFileType) ? (
+                              <FaFilePdf className="text-red-500 text-xl" />
+                            ) : (
+                              <FaFileImage className="text-blue-500 text-xl" />
+                            )}
+                            <div className="flex gap-1.5">
+                              <a
+                                href={getFullFileUrl(selectedEmployee.panDocumentUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-semibold text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-all"
+                              >
+                                <FiEye className="w-3 h-3" /> View
+                              </a>
+                              <a
+                                href={getFullFileUrl(selectedEmployee.panDocumentUrl)}
+                                download={selectedEmployee.panDocumentFileName || "pan-document"}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 transition-all"
+                              >
+                                <FaDownload className="w-3 h-3" /> Download
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {selectedEmployee.panDocumentFileName && (
+                        <p className="mt-2 text-[10px] text-gray-500 truncate">
+                          📎 {selectedEmployee.panDocumentFileName}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* ✅ AADHAAR CARD NUMBER + DOCUMENT */}
+                    <div className="bg-purple-50/60 p-3 rounded-lg border border-purple-100 col-span-1 sm:col-span-2">
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-purple-500 block mb-1 font-semibold text-[10px] uppercase tracking-wider">Aadhaar Card Number</span>
+                          <span className="font-bold text-purple-700 text-sm tracking-wider block">
+                            {selectedEmployee.aadharNumber || selectedEmployee.aadharCard || selectedEmployee.aadhaarNumber || "N/A"}
+                          </span>
+                        </div>
+                        {selectedEmployee.aadharDocumentUrl && (
+                          <div className="flex items-center gap-2">
+                            {isPdfFile(selectedEmployee.aadharDocumentFileName, selectedEmployee.aadharDocumentFileType) ? (
+                              <FaFilePdf className="text-red-500 text-xl" />
+                            ) : (
+                              <FaFileImage className="text-blue-500 text-xl" />
+                            )}
+                            <div className="flex gap-1.5">
+                              <a
+                                href={getFullFileUrl(selectedEmployee.aadharDocumentUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-semibold text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-all"
+                              >
+                                <FiEye className="w-3 h-3" /> View
+                              </a>
+                              <a
+                                href={getFullFileUrl(selectedEmployee.aadharDocumentUrl)}
+                                download={selectedEmployee.aadharDocumentFileName || "aadhaar-document"}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 transition-all"
+                              >
+                                <FaDownload className="w-3 h-3" /> Download
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {selectedEmployee.aadharDocumentFileName && (
+                        <p className="mt-2 text-[10px] text-gray-500 truncate">
+                          📎 {selectedEmployee.aadharDocumentFileName}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">UAN Number</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.uanNumber || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">PF Number</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.pfNumber || "N/A"}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">ESIC Number</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.esicNumber || "N/A"}</span>
+                    </div>
                   </div>
+                </div>
 
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Parents Name</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.parentsName || "N/A"}</span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Gender</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.gender || "N/A"}</span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Date of Birth</span>
-                    <span className="font-semibold text-gray-800 text-sm">
-                      {selectedEmployee.dob ? new Date(selectedEmployee.dob).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A"}
-                    </span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Department</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.department || "N/A"}</span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Designation</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.role || selectedEmployee.designation || "N/A"}</span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Joining Date</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.joinDate ? new Date(selectedEmployee.joinDate).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Salary (Per Month)</span>
-                    <span className="font-semibold text-green-600 text-sm">₹{selectedEmployee.salaryPerMonth || '0'}</span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Shift Hours</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.shiftHours || '8'} Hours</span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Week Offs</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.weekOffPerMonth || '0'} Days/Month</span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Week Off Day</span>
-                    <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.weekOffDay || 'N/A'}</span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                    <span className="text-gray-400 block mb-1">Work Location</span>
-                    <span className="font-semibold text-blue-600 text-sm">{getLocationName(selectedEmployee.location)}</span>
-                  </div>
-
-                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100 col-span-1 sm:col-span-2">
-                    <span className="text-gray-400 block mb-1">Image Attendance</span>
-                    <span className={`font-semibold text-sm ${selectedEmployee.isAllowedImageCapturedAttendance === "true" || selectedEmployee.isAllowedImageCapturedAttendance === true ? 'text-purple-600' : 'text-gray-500'}`}>
-                      {selectedEmployee.isAllowedImageCapturedAttendance === "true" || selectedEmployee.isAllowedImageCapturedAttendance === true ? '📸 ENABLED' : 'DISABLED'}
-                    </span>
+                {/* ===== SALARY & HR ===== */}
+                <div>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Salary & HR Details</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Salary (Per Month)</span>
+                      <span className="font-semibold text-green-600 text-sm">₹{selectedEmployee.salaryPerMonth || '0'}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">CTC (Yearly)</span>
+                      <span className="font-semibold text-green-600 text-sm">₹{selectedEmployee.ctc || '0'}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Shift Hours</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.shiftHours || '8'} Hours</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Week Offs</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.weekOffPerMonth || '0'} Days/Month</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Week Off Day</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.weekOffDay || 'N/A'}</span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Max CL / SL / EL</span>
+                      <span className="font-semibold text-gray-800 text-sm">
+                        {selectedEmployee.maxCL || 0} / {selectedEmployee.maxSL || 0} / {selectedEmployee.maxEL || 0}
+                      </span>
+                    </div>
+                    <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100 col-span-1 sm:col-span-2">
+                      <span className="text-gray-400 block mb-1">Image Attendance</span>
+                      <span className={`font-semibold text-sm ${selectedEmployee.isAllowedImageCapturedAttendance === "true" || selectedEmployee.isAllowedImageCapturedAttendance === true ? 'text-purple-600' : 'text-gray-500'}`}>
+                        {selectedEmployee.isAllowedImageCapturedAttendance === "true" || selectedEmployee.isAllowedImageCapturedAttendance === true ? '📸 ENABLED' : 'DISABLED'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

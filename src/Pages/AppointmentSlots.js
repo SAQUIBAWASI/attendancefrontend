@@ -119,6 +119,13 @@ const formatDateToDDMMYYYY = (dateString) => {
   }
 };
 
+const getDayNameFromDate = (dateStr) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr + "T00:00:00");
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", { weekday: "long" });
+};
+
 const AppointmentSlots = () => {
   const [slots, setSlots] = useState([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState(null);
@@ -128,6 +135,7 @@ const AppointmentSlots = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDay, setSelectedDay] = useState("Monday");
+  const [selectedDate, setSelectedDate] = useState("");
 
   // Dropdown states
   const [showShiftDropdown, setShowShiftDropdown] = useState(false);
@@ -538,13 +546,23 @@ const AppointmentSlots = () => {
   }, [slots, selectedDoctorId]);
 
   const currentDaySlots = useMemo(() => {
-    if (selectedDay === "All") {
-      return filteredByDoctor;
+    let base = filteredByDoctor;
+
+    // agar date select ki hai to us date ke hisaab se filter
+    if (selectedDate) {
+      const dayName = getDayNameFromDate(selectedDate);
+      base = base.filter((s) => {
+        if (s.date) return s.date === selectedDate;
+        if (s.appointmentDate) return s.appointmentDate === selectedDate;
+        return s.dayOfWeek?.toLowerCase() === dayName.toLowerCase();
+      });
+    } else if (selectedDay !== "All") {
+      base = base.filter(
+        (s) => s.dayOfWeek?.toLowerCase() === selectedDay.toLowerCase()
+      );
     }
-    return filteredByDoctor.filter(
-      (s) => s.dayOfWeek?.toLowerCase() === selectedDay.toLowerCase()
-    );
-  }, [filteredByDoctor, selectedDay]);
+    return base;
+  }, [filteredByDoctor, selectedDay, selectedDate]);
 
   const filteredSlots = useMemo(() => {
     return currentDaySlots.filter((slot) => {
@@ -585,15 +603,38 @@ const AppointmentSlots = () => {
       .reduce((acc, curr) => acc + (curr.duration || 20), 0);
     const opHoursStr = (opTotalMins / 60).toFixed(1);
 
+    // DATE-WISE counts (agar selectedDate set hai)
+    let dateTotal = 0,
+      dateBooked = 0,
+      dateAvailable = 0,
+      dateBlocked = 0;
+    if (selectedDate) {
+      const dayName = getDayNameFromDate(selectedDate);
+      const dateSlots = filteredByDoctor.filter((s) => {
+        if (s.type === "break") return false;
+        if (s.date) return s.date === selectedDate;
+        if (s.appointmentDate) return s.appointmentDate === selectedDate;
+        return s.dayOfWeek?.toLowerCase() === dayName.toLowerCase();
+      });
+      dateTotal = dateSlots.length;
+      dateBooked = dateSlots.filter((s) => s.status === "booked").length;
+      dateAvailable = dateSlots.filter((s) => s.status === "available").length;
+      dateBlocked = dateSlots.filter((s) => s.status === "blocked").length;
+    }
+
     return {
       totalSlotsCount,
       dayTotalSlots,
       dayAvailableSlots,
       dayBookedSlots,
       dayBlockedSlots,
-      opHoursStr
+      opHoursStr,
+      dateTotal,
+      dateBooked,
+      dateAvailable,
+      dateBlocked
     };
-  }, [slots, currentDaySlots]);
+  }, [slots, currentDaySlots, filteredByDoctor, selectedDate]);
 
   const morningShiftSlots = filteredSlots.filter((s) =>
     s.shift?.toLowerCase().includes("morning")
@@ -660,13 +701,27 @@ const AppointmentSlots = () => {
     setSearchQuery("");
     setSelectedDoctorId(null);
     setSelectedDay("Monday");
+    setSelectedDate("");
   };
 
   const isFilterActive =
     statusFilter !== "All" ||
     shiftFilter !== "All" ||
     searchQuery !== "" ||
-    selectedDoctorId !== null;
+    selectedDoctorId !== null ||
+    selectedDate !== "";
+
+  const openAddModal = () => {
+    setNewSlotDoctor("");
+    setNewSlotDays([]);
+    setNewSlotStartTime("09:00");
+    setNewSlotEndTime("09:20");
+    setNewSlotGap(5);
+    setNewSlotShift("Morning Shift");
+    setNewSlotConsultationFee(300);
+    setNewSlotDuration(20);
+    setShowAddModal(true);
+  };
 
   return (
     <div className="emp-dash">
@@ -697,17 +752,51 @@ const AppointmentSlots = () => {
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Appointment <span>Slots</span>
             </h1>
-           
           </div>
-          
+
           {/* Right side: Filters + Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-             <div className="emp-dash__date-pill flex-shrink-0">
+            <div className="emp-dash__date-pill flex-shrink-0">
               <FaRegCalendarAlt />
               <span>
-                {stats.totalSlotsCount} Total Slots • {selectedDay === "All" ? "All Days" : selectedDay}
+                {selectedDate
+                  ? `${formatDateToDDMMYYYY(selectedDate)} • ${stats.dateTotal} Slots`
+                  : `${stats.totalSlotsCount} Total Slots • ${
+                      selectedDay === "All" ? "All Days" : selectedDay
+                    }`}
               </span>
             </div>
+
+            {/* 👇 DATE PICKER */}
+            <div className="relative">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedDate(val);
+                  if (val) {
+                    const dayName = getDayNameFromDate(val);
+                    if (dayName) setSelectedDay(dayName);
+                  }
+                }}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                title="Filter by specific date"
+              />
+              {selectedDate && (
+                <button
+                  onClick={() => {
+                    setSelectedDate("");
+                    setSelectedDay("Monday");
+                  }}
+                  className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center hover:bg-red-600"
+                  title="Clear date"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
             {/* Search */}
             <div className="relative min-w-[140px]">
               <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -742,8 +831,12 @@ const AppointmentSlots = () => {
                   className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[150px]"
                   style={{
                     zIndex: 99999,
-                    top: shiftFilterRef.current ? shiftFilterRef.current.getBoundingClientRect().bottom + 4 : "auto",
-                    left: shiftFilterRef.current ? shiftFilterRef.current.getBoundingClientRect().left : "auto"
+                    top: shiftFilterRef.current
+                      ? shiftFilterRef.current.getBoundingClientRect().bottom + 4
+                      : "auto",
+                    left: shiftFilterRef.current
+                      ? shiftFilterRef.current.getBoundingClientRect().left
+                      : "auto"
                   }}
                 >
                   <div
@@ -752,7 +845,9 @@ const AppointmentSlots = () => {
                       setShowShiftDropdown(false);
                     }}
                     className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      shiftFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      shiftFilter === "All"
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-gray-700"
                     }`}
                   >
                     <span>All Shifts</span>
@@ -764,7 +859,9 @@ const AppointmentSlots = () => {
                       setShowShiftDropdown(false);
                     }}
                     className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      shiftFilter === "Morning" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      shiftFilter === "Morning"
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-gray-700"
                     }`}
                   >
                     <span>Morning Shift</span>
@@ -776,7 +873,9 @@ const AppointmentSlots = () => {
                       setShowShiftDropdown(false);
                     }}
                     className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      shiftFilter === "Evening" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      shiftFilter === "Evening"
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-gray-700"
                     }`}
                   >
                     <span>Evening Shift</span>
@@ -788,7 +887,9 @@ const AppointmentSlots = () => {
                       setShowShiftDropdown(false);
                     }}
                     className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      shiftFilter === "Break" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      shiftFilter === "Break"
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-gray-700"
                     }`}
                   >
                     <span>Break Period</span>
@@ -820,8 +921,12 @@ const AppointmentSlots = () => {
                   className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[140px]"
                   style={{
                     zIndex: 99999,
-                    top: statusFilterRef.current ? statusFilterRef.current.getBoundingClientRect().bottom + 4 : "auto",
-                    left: statusFilterRef.current ? statusFilterRef.current.getBoundingClientRect().left : "auto"
+                    top: statusFilterRef.current
+                      ? statusFilterRef.current.getBoundingClientRect().bottom + 4
+                      : "auto",
+                    left: statusFilterRef.current
+                      ? statusFilterRef.current.getBoundingClientRect().left
+                      : "auto"
                   }}
                 >
                   <div
@@ -830,7 +935,9 @@ const AppointmentSlots = () => {
                       setShowStatusDropdown(false);
                     }}
                     className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      statusFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      statusFilter === "All"
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-gray-700"
                     }`}
                   >
                     <span>All Statuses</span>
@@ -842,7 +949,9 @@ const AppointmentSlots = () => {
                       setShowStatusDropdown(false);
                     }}
                     className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      statusFilter === "available" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      statusFilter === "available"
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-gray-700"
                     }`}
                   >
                     <span>Available</span>
@@ -854,7 +963,9 @@ const AppointmentSlots = () => {
                       setShowStatusDropdown(false);
                     }}
                     className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      statusFilter === "booked" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      statusFilter === "booked"
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-gray-700"
                     }`}
                   >
                     <span>Booked</span>
@@ -866,7 +977,9 @@ const AppointmentSlots = () => {
                       setShowStatusDropdown(false);
                     }}
                     className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      statusFilter === "blocked" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      statusFilter === "blocked"
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-gray-700"
                     }`}
                   >
                     <span>Blocked</span>
@@ -900,17 +1013,7 @@ const AppointmentSlots = () => {
               <span className="hidden sm:inline">Refresh</span>
             </button>
             <button
-              onClick={() => {
-                setNewSlotDoctor("");
-                setNewSlotDays([]);
-                setNewSlotStartTime("09:00");
-                setNewSlotEndTime("09:20");
-                setNewSlotGap(5);
-                setNewSlotShift("Morning Shift");
-                setNewSlotConsultationFee(300);
-                setNewSlotDuration(20);
-                setShowAddModal(true);
-              }}
+              onClick={openAddModal}
               className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
             >
               <FiPlus className="w-3.5 h-3.5" />
@@ -927,10 +1030,12 @@ const AppointmentSlots = () => {
             </h1>
             <div className="emp-dash__date-pill text-[10px] px-2 py-1">
               <FaRegCalendarAlt className="text-[10px]" />
-              <span>{stats.totalSlotsCount} Slots</span>
+              <span>
+                {selectedDate ? formatDateToDDMMYYYY(selectedDate) : `${stats.totalSlotsCount} Slots`}
+              </span>
             </div>
           </div>
-          
+
           {/* Mobile Search */}
           <div className="relative flex-1">
             <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -942,12 +1047,11 @@ const AppointmentSlots = () => {
               className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
             />
           </div>
-          
+
           {/* Mobile Actions Row */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => {
-                // Simple mobile filter - show dropdowns inline
                 setShowShiftDropdown(false);
                 setShowStatusDropdown(false);
               }}
@@ -956,7 +1060,7 @@ const AppointmentSlots = () => {
               <FiFilter className="text-blue-600 text-sm" />
               <span>Filters</span>
             </button>
-            
+
             {isFilterActive && (
               <button
                 onClick={handleClearFilters}
@@ -966,19 +1070,9 @@ const AppointmentSlots = () => {
                 Clear
               </button>
             )}
-            
+
             <button
-              onClick={() => {
-                setNewSlotDoctor("");
-                setNewSlotDays([]);
-                setNewSlotStartTime("09:00");
-                setNewSlotEndTime("09:20");
-                setNewSlotGap(5);
-                setNewSlotShift("Morning Shift");
-                setNewSlotConsultationFee(300);
-                setNewSlotDuration(20);
-                setShowAddModal(true);
-              }}
+              onClick={openAddModal}
               className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm ml-auto"
             >
               <FiPlus className="w-3.5 h-3.5" />
@@ -988,6 +1082,19 @@ const AppointmentSlots = () => {
 
           {/* Mobile Filters - Inline Selects */}
           <div className="grid grid-cols-2 gap-2 mt-1">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedDate(val);
+                if (val) {
+                  const dayName = getDayNameFromDate(val);
+                  if (dayName) setSelectedDay(dayName);
+                }
+              }}
+              className="col-span-2 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
             <select
               value={shiftFilter}
               onChange={(e) => setShiftFilter(e.target.value)}
@@ -1010,6 +1117,53 @@ const AppointmentSlots = () => {
             </select>
           </div>
         </div>
+
+        {/* ===================== DATE-WISE SUMMARY ===================== */}
+        {selectedDate && (
+          <div className="emp-dash__card p-4 mb-4 bg-gradient-to-r from-indigo-50/80 to-blue-50/80 border border-indigo-200/80">
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
+                  <CalendarDays className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-base">
+                    {formatDateToDDMMYYYY(selectedDate)} — {getDayNameFromDate(selectedDate)}
+                  </h3>
+                  <p className="text-xs text-gray-500">Date-wise Slot Summary</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedDate("");
+                  setSelectedDay("Monday");
+                }}
+                className="text-xs font-semibold text-gray-600 bg-white px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all shadow-xs"
+              >
+                ✕ Clear Date
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white rounded-xl p-3 border border-gray-200">
+                <div className="text-[10px] font-bold uppercase text-gray-500">Total</div>
+                <div className="text-xl font-bold text-indigo-700">{stats.dateTotal}</div>
+              </div>
+              <div className="bg-white rounded-xl p-3 border border-emerald-200">
+                <div className="text-[10px] font-bold uppercase text-emerald-600">Available</div>
+                <div className="text-xl font-bold text-emerald-700">{stats.dateAvailable}</div>
+              </div>
+              <div className="bg-white rounded-xl p-3 border border-amber-200">
+                <div className="text-[10px] font-bold uppercase text-amber-600">Booked</div>
+                <div className="text-xl font-bold text-amber-700">{stats.dateBooked}</div>
+              </div>
+              <div className="bg-white rounded-xl p-3 border border-gray-300">
+                <div className="text-[10px] font-bold uppercase text-gray-500">Blocked</div>
+                <div className="text-xl font-bold text-gray-700">{stats.dateBlocked}</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ===================== TOP KPI STATS GRID ===================== */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
@@ -1034,7 +1188,11 @@ const AppointmentSlots = () => {
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">
-                Slots ({selectedDay === "All" ? "All Days" : selectedDay})
+                Slots ({selectedDate
+                  ? getDayNameFromDate(selectedDate)
+                  : selectedDay === "All"
+                  ? "All Days"
+                  : selectedDay})
               </span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
                 <FiClock />
@@ -1095,18 +1253,22 @@ const AppointmentSlots = () => {
         <div className="emp-dash__card p-2 mb-4">
           <div className="flex items-center gap-1.5 overflow-x-auto py-1 px-1">
             {DAYS_OF_WEEK.map((day) => {
-              const isSelected = selectedDay === day;
+              const isSelected = selectedDay === day && !selectedDate;
               const daySlotCount =
                 day === "All"
                   ? filteredByDoctor.filter((s) => s.type !== "break").length
                   : filteredByDoctor.filter(
-                      (s) => s.dayOfWeek?.toLowerCase() === day.toLowerCase() && s.type !== "break"
+                      (s) =>
+                        s.dayOfWeek?.toLowerCase() === day.toLowerCase() && s.type !== "break"
                     ).length;
 
               return (
                 <button
                   key={day}
-                  onClick={() => setSelectedDay(day)}
+                  onClick={() => {
+                    setSelectedDay(day);
+                    setSelectedDate("");
+                  }}
                   className={`flex-1 min-w-[95px] py-2 px-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-0.5 whitespace-nowrap ${
                     isSelected
                       ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
@@ -1163,8 +1325,7 @@ const AppointmentSlots = () => {
             {uniqueDoctors.map((doc) => {
               const isSelected = selectedDoctorId === doc._id;
               const doctorSlots = slots.filter((s) => {
-                const slotDoctorId =
-                  typeof s.doctorId === "object" ? s.doctorId?._id : s.doctorId;
+                const slotDoctorId = typeof s.doctorId === "object" ? s.doctorId?._id : s.doctorId;
                 return slotDoctorId === doc._id && s.type !== "break";
               });
 
@@ -1255,7 +1416,9 @@ const AppointmentSlots = () => {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-[10px] font-bold uppercase text-emerald-600">Available</div>
+                    <div className="text-[10px] font-bold uppercase text-emerald-600">
+                      Available
+                    </div>
                     <div className="text-xl font-bold text-emerald-700">
                       {doctorStatusStats.available}
                     </div>
@@ -1268,7 +1431,11 @@ const AppointmentSlots = () => {
                   <div
                     className="bg-emerald-500 h-1.5 rounded-full"
                     style={{
-                      width: `${doctorStatusStats.total > 0 ? (doctorStatusStats.available / doctorStatusStats.total) * 100 : 0}%`
+                      width: `${
+                        doctorStatusStats.total > 0
+                          ? (doctorStatusStats.available / doctorStatusStats.total) * 100
+                          : 0
+                      }%`
                     }}
                   ></div>
                 </div>
@@ -1297,7 +1464,11 @@ const AppointmentSlots = () => {
                   <div
                     className="bg-amber-500 h-1.5 rounded-full"
                     style={{
-                      width: `${doctorStatusStats.total > 0 ? (doctorStatusStats.booked / doctorStatusStats.total) * 100 : 0}%`
+                      width: `${
+                        doctorStatusStats.total > 0
+                          ? (doctorStatusStats.booked / doctorStatusStats.total) * 100
+                          : 0
+                      }%`
                     }}
                   ></div>
                 </div>
@@ -1326,7 +1497,11 @@ const AppointmentSlots = () => {
                   <div
                     className="bg-gray-400 h-1.5 rounded-full"
                     style={{
-                      width: `${doctorStatusStats.total > 0 ? (doctorStatusStats.blocked / doctorStatusStats.total) * 100 : 0}%`
+                      width: `${
+                        doctorStatusStats.total > 0
+                          ? (doctorStatusStats.blocked / doctorStatusStats.total) * 100
+                          : 0
+                      }%`
                     }}
                   ></div>
                 </div>
@@ -1348,7 +1523,13 @@ const AppointmentSlots = () => {
             <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto mb-4">
               {slots.length === 0
                 ? "No appointment slots available. Click 'Add Slots' to generate new slots."
-                : `No matching slots found on ${selectedDay === "All" ? "all days" : selectedDay}.`}
+                : selectedDate
+                ? `No matching slots found on ${formatDateToDDMMYYYY(selectedDate)} (${getDayNameFromDate(
+                    selectedDate
+                  )}).`
+                : `No matching slots found on ${
+                    selectedDay === "All" ? "all days" : selectedDay
+                  }.`}
             </p>
             {isFilterActive ? (
               <button
@@ -1359,17 +1540,7 @@ const AppointmentSlots = () => {
               </button>
             ) : (
               <button
-                onClick={() => {
-                  setNewSlotDoctor("");
-                  setNewSlotDays([]);
-                  setNewSlotStartTime("09:00");
-                  setNewSlotEndTime("09:20");
-                  setNewSlotGap(5);
-                  setNewSlotShift("Morning Shift");
-                  setNewSlotConsultationFee(300);
-                  setNewSlotDuration(20);
-                  setShowAddModal(true);
-                }}
+                onClick={openAddModal}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-xs shadow-sm inline-flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Slots
@@ -1379,46 +1550,53 @@ const AppointmentSlots = () => {
         ) : (
           <div className="space-y-6 slots-section">
             {/* Morning Shift */}
-            {(shiftFilter === "All" || shiftFilter === "Morning") && morningShiftSlots.length > 0 && (
-              <div className="emp-dash__card p-4 md:p-5">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4 flex-wrap gap-2">
-                  <div className="flex items-center gap-2 text-amber-800 font-bold text-sm md:text-base">
-                    <Sun className="w-4 h-4 text-amber-500" />
-                    <span>Morning Shift</span>
-                    <span className="text-xs bg-amber-50 text-amber-800 px-2.5 py-0.5 rounded-full font-semibold border border-amber-200">
-                      09:00 AM – 02:00 PM
+            {(shiftFilter === "All" || shiftFilter === "Morning") &&
+              morningShiftSlots.length > 0 && (
+                <div className="emp-dash__card p-4 md:p-5">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4 flex-wrap gap-2">
+                    <div className="flex items-center gap-2 text-amber-800 font-bold text-sm md:text-base">
+                      <Sun className="w-4 h-4 text-amber-500" />
+                      <span>Morning Shift</span>
+                      <span className="text-xs bg-amber-50 text-amber-800 px-2.5 py-0.5 rounded-full font-semibold border border-amber-200">
+                        09:00 AM – 02:00 PM
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">
+                      <strong>{morningShiftSlots.length}</strong> Slots
+                      {statusFilter !== "All" && (
+                        <span className="ml-1.5 text-amber-600 font-bold">({statusFilter})</span>
+                      )}
+                      {selectedDate ? (
+                        <span className="ml-1.5 text-indigo-600 font-bold">
+                          ({formatDateToDDMMYYYY(selectedDate)})
+                        </span>
+                      ) : (
+                        selectedDay === "All" && (
+                          <span className="ml-1.5 text-blue-600 font-bold">(All Days)</span>
+                        )
+                      )}
                     </span>
                   </div>
-                  <span className="text-xs text-gray-500 font-medium">
-                    <strong>{morningShiftSlots.length}</strong> Slots
-                    {statusFilter !== "All" && (
-                      <span className="ml-1.5 text-amber-600 font-bold">({statusFilter})</span>
-                    )}
-                    {selectedDay === "All" && (
-                      <span className="ml-1.5 text-blue-600 font-bold">(All Days)</span>
-                    )}
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-                  {morningShiftSlots.map((slot) => (
-                    <SlotCard
-                      key={slot._id || slot.slotId}
-                      slot={slot}
-                      getDoctorName={getDoctorDisplayName}
-                      getDoctorSpecialization={getDoctorSpecialization}
-                      onToggleStatus={() => handleToggleStatus(slot)}
-                      onBook={() => {
-                        setSelectedSlotForBook(slot);
-                        setShowBookModal(true);
-                      }}
-                      onDelete={() => handleDeleteSlot(slot.slotId, slot._id)}
-                      onViewBooking={() => fetchBookingDetails(slot)}
-                    />
-                  ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                    {morningShiftSlots.map((slot) => (
+                      <SlotCard
+                        key={slot._id || slot.slotId}
+                        slot={slot}
+                        getDoctorName={getDoctorDisplayName}
+                        getDoctorSpecialization={getDoctorSpecialization}
+                        onToggleStatus={() => handleToggleStatus(slot)}
+                        onBook={() => {
+                          setSelectedSlotForBook(slot);
+                          setShowBookModal(true);
+                        }}
+                        onDelete={() => handleDeleteSlot(slot.slotId, slot._id)}
+                        onViewBooking={() => fetchBookingDetails(slot)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Break Period */}
             {(shiftFilter === "All" || shiftFilter === "Break") && (
@@ -1430,7 +1608,9 @@ const AppointmentSlots = () => {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-purple-900 text-sm">Afternoon OP Break Period</h3>
+                        <h3 className="font-bold text-purple-900 text-sm">
+                          Afternoon OP Break Period
+                        </h3>
                         <span className="bg-purple-200 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
                           NO OP SLOTS
                         </span>
@@ -1449,46 +1629,53 @@ const AppointmentSlots = () => {
             )}
 
             {/* Evening Shift */}
-            {(shiftFilter === "All" || shiftFilter === "Evening") && eveningShiftSlots.length > 0 && (
-              <div className="emp-dash__card p-4 md:p-5">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4 flex-wrap gap-2">
-                  <div className="flex items-center gap-2 text-indigo-800 font-bold text-sm md:text-base">
-                    <Moon className="w-4 h-4 text-indigo-600" />
-                    <span>Evening Shift</span>
-                    <span className="text-xs bg-indigo-50 text-indigo-800 px-2.5 py-0.5 rounded-full font-semibold border border-indigo-200">
-                      03:00 PM – 09:00 PM
+            {(shiftFilter === "All" || shiftFilter === "Evening") &&
+              eveningShiftSlots.length > 0 && (
+                <div className="emp-dash__card p-4 md:p-5">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4 flex-wrap gap-2">
+                    <div className="flex items-center gap-2 text-indigo-800 font-bold text-sm md:text-base">
+                      <Moon className="w-4 h-4 text-indigo-600" />
+                      <span>Evening Shift</span>
+                      <span className="text-xs bg-indigo-50 text-indigo-800 px-2.5 py-0.5 rounded-full font-semibold border border-indigo-200">
+                        03:00 PM – 09:00 PM
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">
+                      <strong>{eveningShiftSlots.length}</strong> Slots
+                      {statusFilter !== "All" && (
+                        <span className="ml-1.5 text-amber-600 font-bold">({statusFilter})</span>
+                      )}
+                      {selectedDate ? (
+                        <span className="ml-1.5 text-indigo-600 font-bold">
+                          ({formatDateToDDMMYYYY(selectedDate)})
+                        </span>
+                      ) : (
+                        selectedDay === "All" && (
+                          <span className="ml-1.5 text-blue-600 font-bold">(All Days)</span>
+                        )
+                      )}
                     </span>
                   </div>
-                  <span className="text-xs text-gray-500 font-medium">
-                    <strong>{eveningShiftSlots.length}</strong> Slots
-                    {statusFilter !== "All" && (
-                      <span className="ml-1.5 text-amber-600 font-bold">({statusFilter})</span>
-                    )}
-                    {selectedDay === "All" && (
-                      <span className="ml-1.5 text-blue-600 font-bold">(All Days)</span>
-                    )}
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-                  {eveningShiftSlots.map((slot) => (
-                    <SlotCard
-                      key={slot._id || slot.slotId}
-                      slot={slot}
-                      getDoctorName={getDoctorDisplayName}
-                      getDoctorSpecialization={getDoctorSpecialization}
-                      onToggleStatus={() => handleToggleStatus(slot)}
-                      onBook={() => {
-                        setSelectedSlotForBook(slot);
-                        setShowBookModal(true);
-                      }}
-                      onDelete={() => handleDeleteSlot(slot.slotId, slot._id)}
-                      onViewBooking={() => fetchBookingDetails(slot)}
-                    />
-                  ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                    {eveningShiftSlots.map((slot) => (
+                      <SlotCard
+                        key={slot._id || slot.slotId}
+                        slot={slot}
+                        getDoctorName={getDoctorDisplayName}
+                        getDoctorSpecialization={getDoctorSpecialization}
+                        onToggleStatus={() => handleToggleStatus(slot)}
+                        onBook={() => {
+                          setSelectedSlotForBook(slot);
+                          setShowBookModal(true);
+                        }}
+                        onDelete={() => handleDeleteSlot(slot.slotId, slot._id)}
+                        onViewBooking={() => fetchBookingDetails(slot)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         )}
 
@@ -1657,9 +1844,7 @@ const AppointmentSlots = () => {
                       min="0"
                       max="30"
                       value={newSlotGap}
-                      onChange={(e) =>
-                        setNewSlotGap(Math.max(0, parseInt(e.target.value) || 0))
-                      }
+                      onChange={(e) => setNewSlotGap(Math.max(0, parseInt(e.target.value) || 0))}
                       className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
                     />
                     <span className="text-xs text-gray-500">mins</span>
@@ -1728,9 +1913,7 @@ const AppointmentSlots = () => {
                     <div className="font-bold text-gray-800">
                       {doctors.find((d) => d._id === newSlotDoctor)?.name}
                     </div>
-                    <div className="text-gray-600 mt-0.5">
-                      Days: {newSlotDays.join(", ")}
-                    </div>
+                    <div className="text-gray-600 mt-0.5">Days: {newSlotDays.join(", ")}</div>
                     <div className="text-gray-600">
                       {newSlotStartTime} – {newSlotEndTime} • Duration: {newSlotDuration}m • Gap:{" "}
                       {newSlotGap}m • {newSlotShift}
@@ -1938,7 +2121,9 @@ const AppointmentSlots = () => {
                         </div>
                       </div>
                       <div>
-                        <div className="text-[10px] font-bold uppercase text-blue-600">Time Slot</div>
+                        <div className="text-[10px] font-bold uppercase text-blue-600">
+                          Time Slot
+                        </div>
                         <div className="text-sm font-bold text-gray-900">
                           {selectedBookingDetails.startTime &&
                           selectedBookingDetails.startTime !== "N/A"
@@ -2020,7 +2205,9 @@ const AppointmentSlots = () => {
                   {selectedBookingDetails.patientAddress &&
                     selectedBookingDetails.patientAddress !== "N/A" && (
                       <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
-                        <div className="text-[10px] font-bold uppercase text-gray-400">Address</div>
+                        <div className="text-[10px] font-bold uppercase text-gray-400">
+                          Address
+                        </div>
                         <div className="text-sm font-medium text-gray-700">
                           {selectedBookingDetails.patientAddress}
                         </div>

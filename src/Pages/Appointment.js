@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import {
@@ -45,6 +45,7 @@ import {
   Lock,
   Stethoscope as StethoscopeIcon,
   Thermometer,
+  Camera,
 } from "lucide-react";
 import TimelyFooter from "./TimelyFooter";
 import TimelyNavbar from "../Components/TimelyNavbar";
@@ -225,12 +226,20 @@ const Appointment = () => {
   const [patientEmail, setPatientEmail] = useState("");
   const [patientAddress, setPatientAddress] = useState("");
 
-  // ✅ NEW: Symptoms field (replaces purpose for online)
   const [symptoms, setSymptoms] = useState("");
   const [purpose, setPurpose] = useState("");
 
   const [uploadedReports, setUploadedReports] = useState([]);
   const [uploadedPrescriptions, setUploadedPrescriptions] = useState([]);
+
+  // ✅ NEW: Camera modal states
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState(null); // "reports" | "prescriptions"
+  const [cameraStream, setCameraStream] = useState(null);
+  const [cameraError, setCameraError] = useState(null);
+  const [cameraFacing, setCameraFacing] = useState("environment"); // "environment" | "user"
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   const [bookingType, setBookingType] = useState("");
   const [selectedDate, setSelectedDate] = useState(todayStr);
@@ -257,7 +266,6 @@ const Appointment = () => {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ paymentType constant — always online
   const paymentType = "online";
 
   const [bookingConfirmation, setBookingConfirmation] = useState(null);
@@ -289,6 +297,15 @@ const Appointment = () => {
       console.log("Razorpay preload result:", ok);
     });
   }, []);
+
+  // ✅ Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, [cameraStream]);
 
   const goToSlide = (idx) => setCurrentSlide(idx);
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % BANNER_SLIDES.length);
@@ -367,6 +384,148 @@ const Appointment = () => {
       );
     }
     e.target.value = "";
+  };
+
+  // ============================================================
+  // ✅ CAMERA FUNCTIONS
+  // ============================================================
+  const openCamera = async (target) => {
+    setCameraTarget(target);
+    setCameraError(null);
+    setShowCameraModal(true);
+
+    try {
+      // Stop existing stream if any
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((t) => t.stop());
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: cameraFacing,
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      setCameraStream(stream);
+
+      // Wait for video ref to be available
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch((err) => {
+            console.error("Video play error:", err);
+          });
+        }
+      }, 100);
+    } catch (err) {
+      console.error("Camera error:", err);
+      let errorMsg = "Could not access camera. ";
+      if (err.name === "NotAllowedError") {
+        errorMsg += "Please allow camera permission.";
+      } else if (err.name === "NotFoundError") {
+        errorMsg += "No camera found on this device.";
+      } else if (err.name === "NotReadableError") {
+        errorMsg += "Camera is in use by another app.";
+      } else {
+        errorMsg += err.message || "Unknown error.";
+      }
+      setCameraError(errorMsg);
+    }
+  };
+
+  const closeCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((t) => t.stop());
+      setCameraStream(null);
+    }
+    setShowCameraModal(false);
+    setCameraTarget(null);
+    setCameraError(null);
+  };
+
+  const switchCamera = async () => {
+    const newFacing = cameraFacing === "environment" ? "user" : "environment";
+    setCameraFacing(newFacing);
+
+    // Stop current stream
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((t) => t.stop());
+      setCameraStream(null);
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: newFacing,
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      setCameraStream(stream);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch((err) => console.error("Video play error:", err));
+        }
+      }, 100);
+    } catch (err) {
+      console.error("Switch camera error:", err);
+      setCameraError("Could not switch camera.");
+    }
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) {
+      showToast("Camera not ready", "error");
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          showToast("Failed to capture photo", "error");
+          return;
+        }
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
+        const prefix = cameraTarget === "reports" ? "report" : "prescription";
+        const fileName = `${prefix}-${timestamp}.jpg`;
+
+        const file = new File([blob], fileName, { type: "image/jpeg" });
+
+        const capturedFile = {
+          name: fileName,
+          size: file.size,
+          type: file.type,
+          file,
+        };
+
+        if (cameraTarget === "reports") {
+          setUploadedReports((prev) => [...prev, capturedFile]);
+        } else if (cameraTarget === "prescriptions") {
+          setUploadedPrescriptions((prev) => [...prev, capturedFile]);
+        }
+
+        showToast("📸 Photo captured successfully!", "success");
+        closeCamera();
+      },
+      "image/jpeg",
+      0.9
+    );
   };
 
   const removeReport = (idx) => {
@@ -855,10 +1014,6 @@ const Appointment = () => {
     setExperienceFilter("all");
   };
 
-  // ============================================================
-  // ✅ BUILD FORMDATA
-  // ✅ Purpose: If online + symptoms given, send symptoms as "purpose"
-  // ============================================================
   const buildBookingFormData = (extraFields = {}) => {
     const selectedDoc = doctors.find(
       (d) => d._id === selectedDoctorId || d.id === selectedDoctorId
@@ -894,10 +1049,6 @@ const Appointment = () => {
     formData.append("patientEmail", patientEmail.trim());
     formData.append("patientAddress", patientAddress.trim());
 
-    // ✅ Purpose logic:
-    // - If online AND symptoms provided → send symptoms as purpose
-    // - If walkin → send purpose (from purpose field)
-    // - Fallback to "Doctor Consultation"
     let finalPurpose = "Doctor Consultation";
     if (bookingType === "online" && symptoms.trim()) {
       finalPurpose = symptoms.trim();
@@ -906,7 +1057,6 @@ const Appointment = () => {
     }
     formData.append("purpose", finalPurpose);
 
-    // ✅ Also send symptoms separately (for future backend support)
     if (symptoms.trim()) {
       formData.append("symptoms", symptoms.trim());
     }
@@ -1008,7 +1158,6 @@ const Appointment = () => {
     const paidAmt = isPaid ? finalPayable : Number(extraFields.amountPaid || 0);
     const balAmt = isPaid ? 0 : finalPayable - paidAmt;
 
-    // ✅ Final purpose for confirmation popup
     const displayPurpose =
       bookingType === "online" && symptoms.trim()
         ? symptoms.trim()
@@ -1164,12 +1313,10 @@ const Appointment = () => {
     if (!patientAddress.trim())
       return showToast("Please enter the patient's address.", "error");
 
-    // ✅ Symptoms required for online
     if (bookingType === "online" && !symptoms.trim()) {
       return showToast("Please enter the symptoms / reason for consultation.", "error");
     }
 
-    // ✅ Purpose required for walk-in
     if (bookingType === "walkin" && !purpose.trim()) {
       return showToast("Please enter the purpose of the appointment.", "error");
     }
@@ -1286,7 +1433,7 @@ const Appointment = () => {
           </div>
         )}
 
-        {/* BANNER — same as before */}
+        {/* BANNER */}
         <section className="relative mt-16 md:mt-20 w-full">
           <div className="hidden sm:block relative w-full h-[200px] sm:h-[230px] md:h-[260px] lg:h-[280px] overflow-hidden">
             {BANNER_SLIDES.map((s, idx) => (
@@ -2550,7 +2697,6 @@ const Appointment = () => {
                           </div>
                         </div>
 
-                        {/* ✅ NEW: SYMPTOMS FIELD for Online */}
                         {isOnline && (
                           <div>
                             <label className="block text-xs font-medium text-[#3F4A45] mb-1.5 flex items-center gap-1.5">
@@ -2580,7 +2726,6 @@ const Appointment = () => {
                           </div>
                         )}
 
-                        {/* Purpose for Walk-in (kept as is) */}
                         {!isOnline && (
                           <div>
                             <label className="block text-xs font-medium text-[#3F4A45] mb-1.5">
@@ -2607,6 +2752,7 @@ const Appointment = () => {
 
                         {isOnline && (
                           <div className="space-y-4">
+                            {/* ✅ REPORTS - File Upload + Camera */}
                             <div
                               className="border-2 border-dashed rounded-2xl p-4"
                               style={{
@@ -2650,8 +2796,8 @@ const Appointment = () => {
                               </div>
 
                               <p className="text-[11px] text-[#5B6B65] mb-3">
-                                Share lab reports, scans, or diagnostic documents to help the
-                                doctor prepare. You can upload multiple files.
+                                Share lab reports, scans, or diagnostic documents. You can
+                                upload files or take a photo directly.
                               </p>
 
                               <input
@@ -2663,24 +2809,45 @@ const Appointment = () => {
                                 className="hidden"
                               />
 
-                              <label
-                                htmlFor="report-upload"
-                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 rounded-xl text-xs font-bold cursor-pointer transition-colors"
-                                style={{ borderColor: BLUE, color: BLUE_DARK }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = BLUE;
-                                  e.currentTarget.style.color = "#FFFFFF";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#FFFFFF";
-                                  e.currentTarget.style.color = BLUE_DARK;
-                                }}
-                              >
-                                <Upload className="w-3.5 h-3.5" />
-                                {uploadedReports.length > 0
-                                  ? "Add More Reports"
-                                  : "Choose Report Files"}
-                              </label>
+                              {/* ✅ Both buttons: File + Camera */}
+                              <div className="flex flex-wrap gap-2">
+                                <label
+                                  htmlFor="report-upload"
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                                  style={{ borderColor: BLUE, color: BLUE_DARK }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = BLUE;
+                                    e.currentTarget.style.color = "#FFFFFF";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#FFFFFF";
+                                    e.currentTarget.style.color = BLUE_DARK;
+                                  }}
+                                >
+                                  <Upload className="w-3.5 h-3.5" />
+                                  {uploadedReports.length > 0
+                                    ? "Add Files"
+                                    : "Choose Files"}
+                                </label>
+
+                                <button
+                                  type="button"
+                                  onClick={() => openCamera("reports")}
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 rounded-xl text-xs font-bold transition-colors"
+                                  style={{ borderColor: BLUE, color: BLUE_DARK }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = BLUE;
+                                    e.currentTarget.style.color = "#FFFFFF";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#FFFFFF";
+                                    e.currentTarget.style.color = BLUE_DARK;
+                                  }}
+                                >
+                                  <Camera className="w-3.5 h-3.5" />
+                                  Take Photo
+                                </button>
+                              </div>
 
                               <p className="mt-2 text-[10px] text-[#8A948F]">
                                 PDF, JPG, PNG, WEBP • Max 10MB per file • Multiple files allowed
@@ -2727,6 +2894,7 @@ const Appointment = () => {
                               )}
                             </div>
 
+                            {/* ✅ PRESCRIPTIONS - File Upload + Camera */}
                             <div
                               className="border-2 border-dashed rounded-2xl p-4"
                               style={{
@@ -2767,8 +2935,8 @@ const Appointment = () => {
                               </div>
 
                               <p className="text-[11px] text-[#5B6B65] mb-3">
-                                Share any existing prescriptions or doctor's notes for reference.
-                                You can upload multiple files.
+                                Share existing prescriptions or doctor's notes. You can upload
+                                files or take a photo directly.
                               </p>
 
                               <input
@@ -2780,24 +2948,45 @@ const Appointment = () => {
                                 className="hidden"
                               />
 
-                              <label
-                                htmlFor="prescription-upload"
-                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 rounded-xl text-xs font-bold cursor-pointer transition-colors"
-                                style={{ borderColor: GREEN, color: GREEN_DARK }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = GREEN;
-                                  e.currentTarget.style.color = "#FFFFFF";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#FFFFFF";
-                                  e.currentTarget.style.color = GREEN_DARK;
-                                }}
-                              >
-                                <Upload className="w-3.5 h-3.5" />
-                                {uploadedPrescriptions.length > 0
-                                  ? "Add More Prescriptions"
-                                  : "Choose Prescription Files"}
-                              </label>
+                              {/* ✅ Both buttons: File + Camera */}
+                              <div className="flex flex-wrap gap-2">
+                                <label
+                                  htmlFor="prescription-upload"
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                                  style={{ borderColor: GREEN, color: GREEN_DARK }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = GREEN;
+                                    e.currentTarget.style.color = "#FFFFFF";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#FFFFFF";
+                                    e.currentTarget.style.color = GREEN_DARK;
+                                  }}
+                                >
+                                  <Upload className="w-3.5 h-3.5" />
+                                  {uploadedPrescriptions.length > 0
+                                    ? "Add Files"
+                                    : "Choose Files"}
+                                </label>
+
+                                <button
+                                  type="button"
+                                  onClick={() => openCamera("prescriptions")}
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 rounded-xl text-xs font-bold transition-colors"
+                                  style={{ borderColor: GREEN, color: GREEN_DARK }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = GREEN;
+                                    e.currentTarget.style.color = "#FFFFFF";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#FFFFFF";
+                                    e.currentTarget.style.color = GREEN_DARK;
+                                  }}
+                                >
+                                  <Camera className="w-3.5 h-3.5" />
+                                  Take Photo
+                                </button>
+                              </div>
 
                               <p className="mt-2 text-[10px] text-[#8A948F]">
                                 PDF, JPG, PNG, WEBP • Max 10MB per file • Multiple files allowed
@@ -3177,6 +3366,118 @@ const Appointment = () => {
             </div>
           )}
         </div>
+
+        {/* ✅ CAMERA MODAL */}
+        {showCameraModal && (
+          <div className="fixed inset-0 bg-[#1A2421]/85 z-[100] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div
+                className="px-5 py-4 flex items-center justify-between"
+                style={{
+                  background: `linear-gradient(to right, ${
+                    cameraTarget === "reports" ? BLUE_LIGHT : GREEN_LIGHT
+                  }, transparent)`,
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <Camera
+                    className="w-5 h-5"
+                    style={{ color: cameraTarget === "reports" ? BLUE : GREEN }}
+                  />
+                  <h3 className="text-sm font-bold text-[#1A2421]">
+                    {cameraTarget === "reports" ? "Capture Report" : "Capture Prescription"}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeCamera}
+                  className="w-8 h-8 rounded-lg hover:bg-white/50 flex items-center justify-center"
+                >
+                  <XCircle className="w-5 h-5 text-[#5B6B65]" />
+                </button>
+              </div>
+
+              {/* Camera Preview */}
+              <div className="relative bg-black aspect-video">
+                {cameraError ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center">
+                    <AlertCircle className="w-10 h-10 text-red-400 mb-3" />
+                    <p className="text-sm">{cameraError}</p>
+                    <button
+                      type="button"
+                      onClick={() => openCamera(cameraTarget)}
+                      className="mt-4 px-4 py-2 bg-white text-[#1A2421] rounded-lg text-xs font-bold"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+                    {!cameraStream && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <RefreshCw className="w-8 h-8 text-white animate-spin" />
+                      </div>
+                    )}
+                  </>
+                )}
+                <canvas ref={canvasRef} className="hidden" />
+              </div>
+
+              {/* Controls */}
+              <div className="p-5 flex items-center justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={closeCamera}
+                  className="px-5 py-3 rounded-xl text-sm font-semibold bg-[#F7F8F7] border border-[#E4E7E4] text-[#5B6B65]"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={capturePhoto}
+                  disabled={!cameraStream || cameraError}
+                  className="w-16 h-16 rounded-full flex items-center justify-center transition-all active:scale-95 disabled:opacity-50"
+                  style={{
+                    background: `linear-gradient(135deg, ${
+                      cameraTarget === "reports" ? BLUE : GREEN
+                    }, ${
+                      cameraTarget === "reports" ? BLUE_DARK : GREEN_DARK
+                    })`,
+                    boxShadow: `0 6px 16px ${
+                      cameraTarget === "reports" ? BLUE_SHADOW : GREEN_SHADOW
+                    }`,
+                  }}
+                  title="Capture photo"
+                >
+                  <Camera className="w-7 h-7 text-white" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={switchCamera}
+                  disabled={!cameraStream || cameraError}
+                  className="px-5 py-3 rounded-xl text-sm font-semibold bg-[#F7F8F7] border border-[#E4E7E4] text-[#5B6B65] flex items-center gap-2 disabled:opacity-50"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Flip
+                </button>
+              </div>
+
+              <p className="text-center text-[10px] text-[#8A948F] pb-4">
+                Make sure the document is well-lit and clearly visible
+              </p>
+            </div>
+          </div>
+        )}
 
         {bookingConfirmation && (
           <div className="fixed inset-0 bg-[#1A2421]/70 z-50 flex items-center justify-center p-4">
