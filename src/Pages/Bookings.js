@@ -302,6 +302,18 @@ export default function Bookings() {
     setTimeout(() => setToast(null), 4000);
   };
 
+
+    // 🔥 Navigate based on user role (admin → /path, employee → /employee/path)
+  const handleRoleBasedNavigate = (path) => {
+    const userRole = localStorage.getItem("userRole");
+    if (userRole === "employee") {
+      const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+      navigate(`/employee/${cleanPath}`);
+    } else {
+      navigate(path);
+    }
+  };
+
   useEffect(() => {
     fetchAllData();
   }, []);
@@ -1549,9 +1561,9 @@ export default function Bookings() {
               <FiDownload className="w-3 h-3" /> Export CSV
             </button>
 
-            {/* ✅ Inactive Patients Button */}
+                       {/* ✅ Inactive Patients Button */}
             <button
-              onClick={() => navigate("/inactive-patients")}
+              onClick={() => handleRoleBasedNavigate("/inactive-patients")}
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition-all shadow-sm whitespace-nowrap"
             >
               <FaUserInjured className="w-3 h-3" /> Inactive Patients
@@ -1580,9 +1592,9 @@ export default function Bookings() {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            {/* ✅ Inactive Patients Button Mobile */}
+                      {/* ✅ Inactive Patients Button Mobile */}
             <button
-              onClick={() => navigate("/inactive-patients")}
+              onClick={() => handleRoleBasedNavigate("/inactive-patients")}
               className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition-all"
             >
               <FaUserInjured className="w-3 h-3" /> Inactive
@@ -4052,4 +4064,4 @@ export default function Bookings() {
       </main>
     </div>
   );
-}
+ }

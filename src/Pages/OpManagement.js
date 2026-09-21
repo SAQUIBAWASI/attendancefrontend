@@ -14,7 +14,7 @@ import {
   FaUserMd as FaUserMdIcon, FaExternalLinkAlt, FaMicroscope, FaLock,
   FaHeartbeat, FaNotesMedical, FaAllergies, FaTint, FaBirthdayCake, FaVenusMars,
   FaEnvelope, FaIdCard, FaStickyNote, FaCommentMedical, FaUserCheck, FaUserClock,
-  FaToggleOn, FaToggleOff, FaStar, FaWalking, FaGlobe, FaDownload
+  FaToggleOn, FaToggleOff, FaStar, FaWalking, FaGlobe, FaDownload, FaWhatsapp
 } from "react-icons/fa";
 import {
   FiUsers, FiUserCheck, FiClock, FiFilter, FiDownload, FiTrash2, FiPlus,
@@ -331,30 +331,30 @@ const getBookingPaidInfo = (booking) => {
 };
 
 const getReviewWindowStatus = (booking) => {
-  if (!booking) return { canReview: false, daysLeft: 0, expired: true, isReviewed: false };
+  if (!booking) return { canReview: false, daysLeft: 0, expired: false, isReviewed: false };
 
   const appointmentDateStr = booking.appointmentDate || booking.date;
-  if (!appointmentDateStr) return { canReview: false, daysLeft: 0, expired: true, isReviewed: false };
+  if (!appointmentDateStr) return { canReview: false, daysLeft: 0, expired: false, isReviewed: false };
 
   const appointmentDate = new Date(appointmentDateStr);
-  if (isNaN(appointmentDate.getTime())) return { canReview: false, daysLeft: 0, expired: true, isReviewed: false };
+  if (isNaN(appointmentDate.getTime())) return { canReview: false, daysLeft: 0, expired: false, isReviewed: false };
 
   appointmentDate.setHours(23, 59, 59, 999);
   const today = new Date();
   const diffMs = today - appointmentDate;
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  const daysLeft = REVIEW_WINDOW_DAYS - diffDays;
-  const canReview = diffDays >= 0 && diffDays <= REVIEW_WINDOW_DAYS;
-  const expired = diffDays > REVIEW_WINDOW_DAYS;
+  const daysLeft = Math.max(0, REVIEW_WINDOW_DAYS - diffDays);
 
+  // ✅ Review restriction HATA DI — kabhi bhi review kar sakte hain
   return {
-    canReview,
-    daysLeft: Math.max(0, daysLeft),
-    expired,
+    canReview: true,
+    daysLeft: daysLeft,
+    expired: false,
     isReviewed: booking.isReviewed === true,
   };
 };
+
 
 const fetchCityFromPincode = async (pincode) => {
   if (!pincode || pincode.trim().length < 6) return null;
@@ -498,6 +498,7 @@ export default function OpManagement() {
   const [invoiceModalUrl, setInvoiceModalUrl] = useState("");
   const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
   const [invoiceLoading, setInvoiceLoading] = useState(null);
+  const [invoiceSending, setInvoiceSending] = useState(null);
 
   const [showMedicineTotalModal, setShowMedicineTotalModal] = useState(false);
   const [medicineTotalBooking, setMedicineTotalBooking] = useState(null);
@@ -547,6 +548,18 @@ export default function OpManagement() {
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
+  };
+
+
+  // 🔥 Navigate based on user role (admin → /path, employee → /employee/path)
+  const handleRoleBasedNavigate = (path) => {
+    const userRole = localStorage.getItem("userRole");
+    if (userRole === "employee") {
+      const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+      navigate(`/employee/${cleanPath}`);
+    } else {
+      navigate(path);
+    }
   };
 
   const patients = useMemo(() => {
@@ -1766,7 +1779,7 @@ export default function OpManagement() {
     return b ? (b.isActive !== undefined ? b.isActive : true) : true;
   };
 
-  // ============================================================
+   // ============================================================
   // BILL HTML BUILDER — takes explicit params (no state)
   // ============================================================
   const buildBillHtml = (bd, bk) => {
@@ -1782,48 +1795,42 @@ export default function OpManagement() {
     let runningIdx = 0;
     let rowsHtml = "";
 
+    // ✅ SIRF wahi categories process karo jisme at least 1 item ho
     ["clinic", "lab", "pharmacy"].forEach((catKey) => {
       const items = groups[catKey];
+
+      // ❌ Agar category khali hai toh skip karo (LAB/PHARMACY empty row nahi aayegi)
+      if (items.length === 0) return;
+
       const subtotal = items.reduce((s, x) => s + (Number(x.amount) || 0), 0);
 
-      if (items.length === 0) {
+      items.forEach((item) => {
         runningIdx++;
         rowsHtml += `
           <tr>
-            <td style="padding:7px 6px;font-size:11px;color:#555;border-bottom:1px solid #eee;text-align:center;">${runningIdx}</td>
-            <td style="padding:7px 6px;border-bottom:1px solid #eee;">
-              <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:.3px;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">
-                ${categoryLabel[catKey]}
-              </span>
+            <td style="padding:6px 6px;font-size:11px;color:#333;border-bottom:1px solid #eee;text-align:center;">${runningIdx}</td>
+            <td style="padding:6px 6px;font-size:12px;color:#111;border-bottom:1px solid #eee;">${item.name}</td>
+            <td style="padding:6px 6px;font-size:12px;font-weight:600;color:#111;text-align:right;border-bottom:1px solid #eee;">
+              ₹ ${Number(item.amount).toFixed(2)}
             </td>
-            <td style="padding:7px 6px;font-size:12px;color:#555;text-align:right;border-bottom:1px solid #eee;font-weight:600;">₹ 0.00</td>
           </tr>
         `;
-      } else {
-        items.forEach((item) => {
-          runningIdx++;
-          rowsHtml += `
-            <tr>
-              <td style="padding:6px 6px;font-size:11px;color:#333;border-bottom:1px solid #eee;text-align:center;">${runningIdx}</td>
-              <td style="padding:6px 6px;font-size:12px;color:#111;border-bottom:1px solid #eee;">${item.name}</td>
-              <td style="padding:6px 6px;font-size:12px;font-weight:600;color:#111;text-align:right;border-bottom:1px solid #eee;">
-                ₹ ${Number(item.amount).toFixed(2)}
-              </td>
-            </tr>
-          `;
-        });
-      }
+      });
 
-      rowsHtml += `
-        <tr style="background:#f9fafb;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;">
-          <td colspan="2" style="text-align:right;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#374151;padding:7px 8px;">
-            Subtotal — ${categoryLabel[catKey]}
-          </td>
-          <td style="text-align:right;font-size:12px;font-weight:bold;color:#111;padding:7px 8px;">
-            ₹ ${subtotal.toFixed(2)}
-          </td>
-        </tr>
-      `;
+      // Subtotal row bhi sirf tab add karo jab usme 1 se zyada items ho
+      // (single item ke liye subtotal ki zaroorat nahi)
+      if (items.length > 1) {
+        rowsHtml += `
+          <tr style="background:#f9fafb;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;">
+            <td colspan="2" style="text-align:right;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#374151;padding:7px 8px;">
+              Subtotal — ${categoryLabel[catKey]}
+            </td>
+            <td style="text-align:right;font-size:12px;font-weight:bold;color:#111;padding:7px 8px;">
+              ₹ ${subtotal.toFixed(2)}
+            </td>
+          </tr>
+        `;
+      }
     });
 
     const grossTotal =
@@ -1941,7 +1948,40 @@ export default function OpManagement() {
     }
   };
 
+
+
   // ============================================================
+  // SEND INVOICE VIA WHATSAPP
+  // ============================================================
+  const handleSendInvoice = async (booking) => {
+    if (!booking || !booking._id) {
+      showToast("Booking data missing", "error");
+      return;
+    }
+    if (!booking.invoiceUrl || booking.invoiceUrl.trim() === "") {
+      showToast("Invoice not generated yet. Please generate invoice first.", "error");
+      return;
+    }
+    setInvoiceSending(booking._id);
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/appointment-slots/send-invoice`,
+        { bookingId: booking._id }
+      );
+      if (res?.data?.success) {
+        showToast(`✅ Invoice sent to ${booking.patientName || "patient"} on WhatsApp!`, "success");
+      } else {
+        showToast(res.data?.message || "Failed to send invoice", "error");
+      }
+    } catch (err) {
+      console.error("Send invoice error:", err);
+      showToast(err.response?.data?.message || err.message || "Failed to send invoice", "error");
+    } finally {
+      setInvoiceSending(null);
+    }
+  };
+
+   // ============================================================
   // OPEN BILLING MODAL — shows PDF in modal
   // ============================================================
   const openBillingModal = async (booking) => {
@@ -1963,6 +2003,7 @@ export default function OpManagement() {
     const normalizedItems = getBookingServices(booking);
     const items = [];
 
+    // ✅ Sirf wahi services add karo jo booking ke waqt add ki gayi thi
     normalizedItems.forEach((s, idx) => {
       const cat = classifyService(s);
       items.push({
@@ -1976,23 +2017,28 @@ export default function OpManagement() {
       });
     });
 
-    const hasPharmacyService = normalizedItems.some((s) => classifyService(s) === "pharmacy");
-    if (Number(booking.medicineTotal) > 0 && !hasPharmacyService) {
-      items.push({ no: items.length + 1, name: "Medicines", serviceCode: "PHARM", remarks: "Pharmacy", category: "pharmacy", amount: Number(booking.medicineTotal), paymentStatus: booking.paymentStatus || "Pending" });
-    }
-
-    const hasLabService = normalizedItems.some((s) => classifyService(s) === "lab");
-    if (Number(booking.labTotal) > 0 && !hasLabService) {
-      items.push({ no: items.length + 1, name: "Lab Tests", serviceCode: "LAB", remarks: "Lab Test", category: "lab", amount: Number(booking.labTotal), paymentStatus: booking.paymentStatus || "Pending" });
-    }
-
+    // ✅ Fallback: Agar koi service nahi hai toh Consultation Fee add karo
     if (items.length === 0) {
-      const fallback = Number(booking.finalPayable) || Number(booking.finalPayableAmount) || Number(booking.grandTotal) || Number(booking.totalAmount) || 0;
+      const fallback =
+        Number(booking.finalPayable) ||
+        Number(booking.finalPayableAmount) ||
+        Number(booking.grandTotal) ||
+        Number(booking.totalAmount) ||
+        0;
       if (fallback > 0) {
-        items.push({ no: 1, name: "Consultation Fee", serviceCode: "CONS", remarks: "Consultation", category: "clinic", amount: fallback, paymentStatus: booking.paymentStatus || "Pending" });
+        items.push({
+          no: 1,
+          name: "Consultation Fee",
+          serviceCode: "CONS",
+          remarks: "Consultation",
+          category: "clinic",
+          amount: fallback,
+          paymentStatus: booking.paymentStatus || "Pending",
+        });
       }
     }
 
+    // ✅ Category-wise breakdown
     const finalBreakdown = { clinic: 0, lab: 0, pharmacy: 0 };
     items.forEach((it) => {
       if (it.category === "lab") finalBreakdown.lab += it.amount;
@@ -2000,10 +2046,15 @@ export default function OpManagement() {
       else finalBreakdown.clinic += it.amount;
     });
 
+    // ✅ Gross Amount = SUM of all items (jo bhi add kiye gaye hain)
     const grossAmount = items.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+
     const commissionPercent = parseFloat(booking.referralCommission) || 0;
-    const commissionAmount = Number(booking.commissionAmount) || (grossAmount * commissionPercent) / 100;
+    const commissionAmount =
+      Number(booking.commissionAmount) || (grossAmount * commissionPercent) / 100;
     const discountAmount = Number(booking.discount) || 0;
+
+    // ✅ Net Amount = Gross - Commission - Discount
     const netAmount =
       Number(booking.finalPayable) ||
       Number(booking.finalPayableAmount) ||
@@ -2026,7 +2077,9 @@ export default function OpManagement() {
       invoiceDate: dateTimeLabel,
       receiptNo: `R-${shortId.slice(-4)}`,
       receiptDate: dateTimeLabel,
-      paymentMode: booking.paymentType ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1) : "Cash",
+      paymentMode: booking.paymentType
+        ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1)
+        : "Cash",
       receivedBy: "Front Desk",
       branch: booking.doctorSpecialization || "Main Branch",
       doctorName: booking.doctorName || "General OP Doctor",
@@ -2051,7 +2104,9 @@ export default function OpManagement() {
 
     if (savedUrl) {
       const base = API_BASE_INVURL.replace(/\/$/, "");
-      const fullUrl = savedUrl.startsWith("http") ? savedUrl : `${base}${savedUrl.startsWith("/") ? "" : "/"}${savedUrl}`;
+      const fullUrl = savedUrl.startsWith("http")
+        ? savedUrl
+        : `${base}${savedUrl.startsWith("/") ? "" : "/"}${savedUrl}`;
       setInvoiceModalUrl(fullUrl);
       setInvoiceModalBooking(booking);
       setShowInvoiceModal(true);
@@ -2083,7 +2138,7 @@ export default function OpManagement() {
       setStatusFilter("All");
     } else if (type === "inactive") {
       setActiveFilter("inactive");
-      navigate("/inactive-patients");
+      handleRoleBasedNavigate("/inactive-patients");
     } else {
       setStatusFilter(type);
       setActiveFilter("all");
@@ -2304,7 +2359,7 @@ export default function OpManagement() {
             <button onClick={handleAddNewPatient} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">
               <FiPlus className="w-3 h-3" /> Add Patient
             </button>
-            <button onClick={() => navigate("/inactive-patients")} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
+            <button onClick={() => handleRoleBasedNavigate("/inactive-patients")} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
               <FiClock className="w-3 h-3 text-amber-600" /> Inactive Patients
             </button>
             {hasActiveFilters && (
@@ -2325,7 +2380,7 @@ export default function OpManagement() {
             <button onClick={handleAddNewPatient} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg">
               <FiPlus className="w-3 h-3" /> Add
             </button>
-            <button onClick={() => navigate("/inactive-patients")} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
+            <button onClick={() => handleRoleBasedNavigate("/inactive-patients")} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
               <FiClock className="w-3 h-3 text-amber-600" /> Inactive
             </button>
             <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
@@ -2549,13 +2604,12 @@ export default function OpManagement() {
                       {doctors.map((d) => <option key={d._id || d.id} value={d._id || d.id}>{d.name || "Doctor"}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
-                      Appointment Date
-                      {isEditMode && <FaLock className="text-amber-500 text-[10px]" />}
-                    </label>
-                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} />
-                  </div>
+          <div>
+  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+    Appointment Date
+  </label>
+  <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} className="w-full border rounded-lg px-3 py-2.5 text-sm bg-white border-gray-300" />
+</div>
                 </div>
 
                 {formData.doctorId && formData.appointmentDate && !isEditMode && (
@@ -2703,10 +2757,10 @@ export default function OpManagement() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Reason / Symptoms</label>
-                  <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows={2} className={`w-full border rounded-lg px-3 py-2 text-sm resize-none ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} placeholder="Enter reason or symptoms" />
-                </div>
+             <div>
+  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Reason / Symptoms</label>
+  <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none bg-white border-gray-300" placeholder="Enter reason or symptoms" />
+</div>
 
                 {/* Payment Details */}
                 <div className={`border rounded-xl p-4 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-purple-50/30 border-gray-200"}`}>
@@ -2859,13 +2913,12 @@ export default function OpManagement() {
                               <span>{fin.balanceAmount > 0 ? "Balance Remaining:" : "Status:"}</span>
                               <span className="font-bold">{fin.balanceAmount > 0 ? `₹${Math.round(fin.balanceAmount)}` : "✓ Fully Paid"}</span>
                             </div>
-                            <div className={`flex items-center justify-between border rounded-md px-2 py-1 mt-1 ${
-                              fin.paymentStatus === "Paid"
+                            <div className={`flex items-center justify-between border rounded-md px-2 py-1 mt-1 ${fin.paymentStatus === "Paid"
                                 ? "text-emerald-700 bg-emerald-50 border-emerald-200"
                                 : fin.paymentStatus === "Partial"
-                                ? "text-amber-700 bg-amber-50 border-amber-200"
-                                : "text-gray-600 bg-gray-50 border-gray-200"
-                            }`}>
+                                  ? "text-amber-700 bg-amber-50 border-amber-200"
+                                  : "text-gray-600 bg-gray-50 border-gray-200"
+                              }`}>
                               <span className="font-semibold">Payment Status:</span>
                               <span className="font-extrabold uppercase tracking-wide">{fin.paymentStatus}</span>
                             </div>
@@ -3150,21 +3203,20 @@ export default function OpManagement() {
                                           openReviewModal(matchingBooking);
                                         }}
                                         disabled={isDisabled}
-                                        className={`p-1.5 rounded-lg transition-colors ${
-                                          isReviewed
+                                        className={`p-1.5 rounded-lg transition-colors ${isReviewed
                                             ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
                                             : isDisabled
-                                            ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-                                            : "bg-amber-50 text-amber-600 hover:bg-amber-100"
-                                        }`}
+                                              ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                              : "bg-amber-50 text-amber-600 hover:bg-amber-100"
+                                          }`}
                                         title={
                                           isReviewed
                                             ? `Reviewed`
                                             : isDisabled
-                                            ? rStatus.expired
-                                              ? "Review window expired (3 days limit)"
-                                              : "Not yet available"
-                                            : `Click to mark reviewed (${rStatus.daysLeft} day${rStatus.daysLeft !== 1 ? "s" : ""} left)`
+                                              ? rStatus.expired
+                                                ? "Review window expired (3 days limit)"
+                                                : "Not yet available"
+                                              : `Click to mark reviewed (${rStatus.daysLeft} day${rStatus.daysLeft !== 1 ? "s" : ""} left)`
                                         }
                                       >
                                         <FaStar className="w-3.5 h-3.5" />
@@ -3455,13 +3507,12 @@ export default function OpManagement() {
                                       openReviewModal(matchingBooking);
                                     }}
                                     disabled={isDisabled}
-                                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${
-                                      isReviewed
+                                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${isReviewed
                                         ? "bg-emerald-100 text-emerald-700"
                                         : isDisabled
-                                        ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-                                        : "bg-amber-50 text-amber-600"
-                                    }`}
+                                          ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                          : "bg-amber-50 text-amber-600"
+                                      }`}
                                     title={isReviewed ? "Reviewed" : isDisabled ? "Not available" : "Mark Reviewed"}
                                   >
                                     <FaStar className="w-3.5 h-3.5" /> Review
@@ -3538,6 +3589,21 @@ export default function OpManagement() {
                     title="Download PDF"
                   >
                     <FaDownload className="w-3 h-3" /> Download
+                  </button>
+
+
+                  <button
+                    onClick={() => handleSendInvoice(invoiceModalBooking)}
+                    disabled={invoiceSending === invoiceModalBooking?._id}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50"
+                    title="Send Invoice on WhatsApp"
+                  >
+                    {invoiceSending === invoiceModalBooking?._id ? (
+                      <FiRefreshCw className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <FaWhatsapp className="w-3 h-3" />
+                    )}
+                    {invoiceSending === invoiceModalBooking?._id ? "Sending..." : "Send Invoice"}
                   </button>
                   <button
                     onClick={() => {
@@ -4070,7 +4136,7 @@ export default function OpManagement() {
                   }}
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
                 >
-                  {reviewBooking.isReviewed ? "Close" : "Cancel"}          
+                  {reviewBooking.isReviewed ? "Close" : "Cancel"}
                 </button>
                 {!reviewBooking.isReviewed && (
                   <button

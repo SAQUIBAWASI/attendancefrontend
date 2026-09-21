@@ -279,6 +279,9 @@ function App() {
       <Route path="/employee/services" element={<EmployeeLayout><Services /></EmployeeLayout>} />
       <Route path="/employee/bookings" element={<EmployeeLayout><Bookings /></EmployeeLayout>} />
       <Route path="/employee/letterhead" element={<EmployeeLayout><LetterHeadDesigner /></EmployeeLayout>} />
+      <Route path="/employee/inactive-patients" element={<EmployeeLayout><InactivePatients /></EmployeeLayout>} />
+      <Route path="/employee/referral-management" element={<EmployeeLayout><DoctorReferralManagement /></EmployeeLayout>} />
+      <Route path="/employee/referral-bookings" element={<EmployeeLayout><DoctorReferralOP /></EmployeeLayout>} />
 
       {/* 🔥 OP MANAGEMENT - ADMIN LAYOUT (WITHOUT /employee/ PREFIX) */}
       <Route path="/op-dashboard" element={<AdminLayout><OpDashboard /></AdminLayout>} />

@@ -60,7 +60,6 @@ const COLORS = {
 const OpDashboard = () => {
   const navigate = useNavigate();
   
-  // ===== ALL DATA STATES =====
   const [patients, setPatients] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -70,7 +69,6 @@ const OpDashboard = () => {
   const [error, setError] = useState(null);
   const [timeFilter, setTimeFilter] = useState("all");
   
-  // ===== DATE RANGE FILTERS =====
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
@@ -80,7 +78,6 @@ const OpDashboard = () => {
 
   const [trendChartType, setTrendChartType] = useState("composed");
 
-  // ===== FETCH ALL DATA =====
   useEffect(() => {
     fetchAllData();
   }, []);
@@ -104,7 +101,6 @@ const OpDashboard = () => {
     }
   };
 
-  // ===== INDIVIDUAL API CALLS =====
   const fetchPatientsData = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/patients`);
@@ -121,7 +117,6 @@ const OpDashboard = () => {
     }
   };
 
-  // ===== ✅ BOOKINGS MAPPING =====
   const fetchBookingsData = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings`);
@@ -256,7 +251,6 @@ const OpDashboard = () => {
     }
   };
 
-  // ===== ✅ HELPER: Only "Paid" bookings count for revenue =====
   const isPaidBooking = (booking) => {
     if (!booking) return false;
     return (
@@ -265,7 +259,6 @@ const OpDashboard = () => {
     );
   };
 
-  // ===== HELPER: Total payable for a booking =====
   const getTotalBookingFee = (booking) => {
     if (!booking) return 0;
     return (
@@ -279,14 +272,12 @@ const OpDashboard = () => {
     );
   };
 
-  // ✅ Revenue = ONLY "Paid" bookings (full finalPayable)
   const getRevenueForBooking = (booking) => {
     if (!booking) return 0;
     if (isPaidBooking(booking)) return getTotalBookingFee(booking);
     return 0;
   };
 
-  // ✅ Category amounts ONLY for "Paid" bookings
   const getCategoryAmounts = (booking) => {
     if (!booking) return { clinic: 0, pharmacy: 0, lab: 0 };
     if (!isPaidBooking(booking)) return { clinic: 0, pharmacy: 0, lab: 0 };
@@ -297,7 +288,6 @@ const OpDashboard = () => {
     };
   };
 
-  // ===== CHECK IF DATE IS IN RANGE =====
   const isDateInRange = (dateStr) => {
     if (!dateStr) return false;
     const date = new Date(dateStr);
@@ -323,7 +313,6 @@ const OpDashboard = () => {
     return true;
   };
 
-  // ===== FILTERED PATIENTS =====
   const filteredPatients = useMemo(() => {
     const patientsWithBookings = patients.map((p) => {
       const patientBookings = bookings.filter(
@@ -340,7 +329,6 @@ const OpDashboard = () => {
         0
       );
 
-      // ✅ Only "Paid" bookings count
       const totalPaid = patientBookings.reduce(
         (sum, b) => sum + getRevenueForBooking(b),
         0
@@ -398,28 +386,23 @@ const OpDashboard = () => {
     });
   }, [patients, bookings, timeFilter, fromDate, toDate]);
 
-  // ===== FILTERED BOOKINGS =====
   const filteredBookings = useMemo(() => {
     return bookings.filter((b) => isDateInRange(b.createdAt));
   }, [bookings, fromDate, toDate]);
 
-  // ===== ✅ METRICS — Revenue = Only "Paid" bookings =====
   const metrics = useMemo(() => {
     const total = filteredPatients.length;
 
-    // ✅ Revenue = SUM of finalPayable ONLY for "Paid" bookings
     const totalRevenue = filteredBookings.reduce(
       (sum, b) => sum + getRevenueForBooking(b),
       0
     );
 
-    // ✅ Expected = SUM of finalPayable for ALL bookings
     const totalExpectedRevenue = filteredBookings.reduce(
       (sum, b) => sum + getTotalBookingFee(b),
       0
     );
 
-    // ✅ Pending = Expected - Collected (only Paid counted)
     const pendingRevenue = Math.max(0, totalExpectedRevenue - totalRevenue);
 
     const avgFee =
@@ -468,7 +451,6 @@ const OpDashboard = () => {
       (b) => b.paymentType === "online"
     ).length;
 
-    // ✅ Category totals ONLY for "Paid" bookings
     let totalClinic = 0;
     let totalPharmacy = 0;
     let totalLab = 0;
@@ -508,7 +490,30 @@ const OpDashboard = () => {
     };
   }, [filteredPatients, filteredBookings, doctors, services]);
 
-  // ===== TREND DATA — Only "Paid" revenue =====
+  // ===== 🔥 UPCOMING & TODAY'S APPOINTMENTS =====
+  const upcomingAppointments = useMemo(() => {
+    if (!filteredBookings.length) return [];
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Filter bookings where appointment date is today or future
+    const upcoming = filteredBookings
+      .filter((b) => {
+        const apptDate = new Date(b.date);
+        if (isNaN(apptDate.getTime())) return false;
+        apptDate.setHours(0, 0, 0, 0);
+        return apptDate >= today;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateA - dateB;
+      });
+
+    return upcoming;
+  }, [filteredBookings]);
+
   const trendData = useMemo(() => {
     if (!filteredBookings.length) return [];
     
@@ -532,14 +537,12 @@ const OpDashboard = () => {
       }
       map[dateKey].patients += 1;
       map[dateKey].bookings += 1;
-      // ✅ Only count revenue for "Paid" bookings
       map[dateKey].revenue += getRevenueForBooking(b);
     });
 
     return Object.values(map).sort((a, b) => a.rawDate - b.rawDate);
   }, [filteredBookings]);
 
-  // ===== MONTHLY DAILY TREND — Only "Paid" revenue =====
   const monthlyDailyTrend = useMemo(() => {
     if (!selectedTrendMonth)
       return {
@@ -585,7 +588,6 @@ const OpDashboard = () => {
         if (dayMap[day]) {
           dayMap[day].patients += 1;
           dayMap[day].bookings += 1;
-          // ✅ Revenue only for Paid bookings
           if (isPaidBooking(b)) {
             dayMap[day].revenue += getTotalBookingFee(b);
             dayMap[day].paidPatients += 1;
@@ -618,7 +620,6 @@ const OpDashboard = () => {
     };
   }, [filteredBookings, selectedTrendMonth]);
 
-  // ===== CHART DATA =====
   const paymentStatusData = useMemo(() => {
     const paid = filteredBookings.filter(isPaidBooking).length;
     const partial = filteredBookings.filter(
@@ -638,7 +639,6 @@ const OpDashboard = () => {
   }, [filteredBookings]);
 
   const paymentMethodData = useMemo(() => {
-    // ✅ Only "Paid" bookings
     const paidBookings = filteredBookings.filter(isPaidBooking);
     const cash = paidBookings.filter(
       (b) => b.paymentType === "cash" || !b.paymentType
@@ -690,7 +690,6 @@ const OpDashboard = () => {
     setToDate("");
   };
 
-  // ===== TOOLTIP =====
   const DailyTrendTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -721,7 +720,6 @@ const OpDashboard = () => {
     return null;
   };
 
-  // ===== RENDER TREND GRAPH =====
   const renderTrendGraph = () => {
     const data = monthlyDailyTrend.daysData;
 
@@ -809,16 +807,16 @@ const OpDashboard = () => {
     );
   };
 
- const handleQuickAction = (path, state = {}) => {
-  const userRole = localStorage.getItem("userRole");
-  if (userRole === "admin") { navigate(path, { state }); return; }
-  if (userRole === "employee") {
-    const cleanPath = path.startsWith("/") ? path.substring(1) : path;
-    navigate(`/employee/${cleanPath}`, { state }); return;
-  }
-  navigate(path, { state });
-};
-  // ===== LOADING =====
+  const handleQuickAction = (path, state = {}) => {
+    const userRole = localStorage.getItem("userRole");
+    if (userRole === "admin") { navigate(path, { state }); return; }
+    if (userRole === "employee") {
+      const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+      navigate(`/employee/${cleanPath}`, { state }); return;
+    }
+    navigate(path, { state });
+  };
+
   if (loading) {
     return (
       <div className="emp-dash">
@@ -830,7 +828,6 @@ const OpDashboard = () => {
     );
   }
 
-  // ===== RENDER =====
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
@@ -845,7 +842,6 @@ const OpDashboard = () => {
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Time Filter Buttons */}
             <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg p-1 shadow-sm">
               <button
                 onClick={() => { setTimeFilter("all"); clearDateRange(); }}
@@ -889,7 +885,6 @@ const OpDashboard = () => {
               </button>
             </div>
 
-            {/* Date Range Picker */}
             <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2 py-1 shadow-sm">
               <CalendarRange className="w-3.5 h-3.5 text-gray-400" />
               <input
@@ -918,7 +913,6 @@ const OpDashboard = () => {
               )}
             </div>
 
-            {/* Register New OP */}
             <button
               onClick={() => handleQuickAction("/op-management", { openAddPatient: true })}
               className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all shadow-sm"
@@ -1054,7 +1048,7 @@ const OpDashboard = () => {
           </div>
         </div>
 
-        {/* Category Breakdown Row — Only "Paid" bookings */}
+        {/* Category Breakdown Row */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="emp-dash__stat border-blue-200 bg-blue-50/40">
             <div className="emp-dash__stat-top">
@@ -1113,7 +1107,7 @@ const OpDashboard = () => {
           </div>
         )}
 
-        {/* Charts Row 1: Booking & Revenue Trend */}
+        {/* Charts Row 1: Booking & Revenue Trend + Upcoming/Today Appointments */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2 emp-dash__card p-4 md:p-5">
             <div className="flex items-center justify-between mb-4">
@@ -1155,53 +1149,102 @@ const OpDashboard = () => {
             )}
           </div>
 
-          {/* Booking Status Distribution */}
-          <div className="emp-dash__card p-4 md:p-5 flex flex-col justify-between">
-            <div>
-              <h3 className="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2 mb-1">
-                <PieIcon className="w-4 h-4 text-purple-600" /> Booking Status
-              </h3>
-              <p className="text-xs text-gray-500 mb-4">Appointment status distribution</p>
-
-              <div style={{ width: "100%", height: 200, minHeight: 200, position: "relative" }}>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: "Confirmed", value: metrics.confirmedCount || 0, color: "#3b82f6" },
-                        { name: "Completed", value: metrics.completedCount || 0, color: "#10b981" },
-                        { name: "Consulting", value: metrics.consultingCount || 0, color: "#8b5cf6" },
-                        { name: "Cancelled", value: metrics.cancelledCount || 0, color: "#ef4444" },
-                        { name: "Pending", value: metrics.pendingBookingCount || 0, color: "#f59e0b" }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={70}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {[
-                        { name: "Confirmed", color: "#3b82f6" },
-                        { name: "Completed", color: "#10b981" },
-                        { name: "Consulting", color: "#8b5cf6" },
-                        { name: "Cancelled", color: "#ef4444" },
-                        { name: "Pending", color: "#f59e0b" }
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+          {/* 🔥 UPCOMING & TODAY'S APPOINTMENTS (Replaces Booking Status Chart) */}
+          <div className="emp-dash__card p-4 md:p-5 flex flex-col">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-emerald-600" /> Upcoming / Today
+                </h3>
+                <p className="text-xs text-gray-500">Today and future appointments</p>
               </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {upcomingAppointments.length} bookings
+              </span>
             </div>
+
+            {upcomingAppointments.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center py-8 text-gray-400">
+                <CalendarDays className="w-10 h-10 mb-2 text-gray-300" />
+                <p className="text-xs font-medium">No upcoming appointments</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                {upcomingAppointments.slice(0, 8).map((b, idx) => {
+                  const apptDate = new Date(b.date);
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  apptDate.setHours(0, 0, 0, 0);
+                  const isToday = apptDate.getTime() === today.getTime();
+
+                  const isPaid = isPaidBooking(b);
+
+                  return (
+                    <div
+                      key={b._id || idx}
+                      className={`p-2.5 rounded-lg border transition-all hover:shadow-sm ${
+                        isToday
+                          ? "bg-emerald-50/60 border-emerald-200"
+                          : "bg-gray-50/60 border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="font-bold text-slate-800 text-xs truncate">
+                              {b.patientName || "N/A"}
+                            </span>
+                            {isToday && (
+                              <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full bg-emerald-600 text-white uppercase tracking-wider flex-shrink-0">
+                                Today
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-gray-600 flex items-center gap-1 truncate">
+                            <Stethoscope className="w-2.5 h-2.5 flex-shrink-0" />
+                            <span className="truncate">{b.doctorName || "N/A"}</span>
+                          </div>
+                        </div>
+                        <span
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase border flex-shrink-0 ${
+                            isPaid
+                              ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                              : "bg-amber-100 text-amber-700 border-amber-200"
+                          }`}
+                        >
+                          {b.paymentStatus || "Pending"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px]">
+                        <div className="flex items-center gap-1 text-slate-700">
+                          <Calendar className="w-2.5 h-2.5 text-blue-600" />
+                          <span className="font-semibold">{formatDate(b.date)}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-blue-700">
+                          <Clock className="w-2.5 h-2.5" />
+                          <span className="font-semibold">
+                            {b.startTime || "-"} - {b.endTime || "-"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {upcomingAppointments.length > 8 && (
+                  <button
+                    onClick={() => handleQuickAction("/bookings")}
+                    className="w-full text-center text-[10px] font-bold text-blue-600 hover:text-blue-800 py-1.5 transition-colors"
+                  >
+                    + {upcomingAppointments.length - 8} more appointments →
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Charts Row 2: Payment Status, Mode & Gender */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {/* Payment Status Chart */}
           <div className="emp-dash__card p-4 md:p-5">
             <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-1">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Payment Status
@@ -1239,7 +1282,6 @@ const OpDashboard = () => {
             </div>
           </div>
 
-          {/* Payment Mode Chart — Paid only */}
           <div className="emp-dash__card p-4 md:p-5">
             <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-1">
               <CreditCard className="w-4 h-4 text-indigo-600" /> Payment Mode (Paid)
@@ -1277,7 +1319,6 @@ const OpDashboard = () => {
             </div>
           </div>
 
-          {/* Gender Ratio Chart */}
           <div className="emp-dash__card p-4 md:p-5">
             <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 mb-1">
               <Users className="w-4 h-4 text-pink-600" /> Gender Demographics
@@ -1438,7 +1479,6 @@ const OpDashboard = () => {
             </div>
           ) : (
             <>
-              {/* ===== DESKTOP TABLE VIEW ===== */}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="emp-dash__table">
                   <thead>
@@ -1508,7 +1548,6 @@ const OpDashboard = () => {
                 </table>
               </div>
 
-              {/* ===== MOBILE CARD VIEW ===== */}
               <div className="lg:hidden space-y-3">
                 {filteredBookings.slice(0, 10).map((b, idx) => {
                   const totalFee = getTotalBookingFee(b);
@@ -1532,7 +1571,6 @@ const OpDashboard = () => {
                       className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
                       onClick={() => handleQuickAction("/bookings")}
                     >
-                      {/* Card Header */}
                       <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
@@ -1550,7 +1588,6 @@ const OpDashboard = () => {
                         </span>
                       </div>
 
-                      {/* Card Body */}
                       <div className="p-3 space-y-2.5">
                         <div className="grid grid-cols-2 gap-2 text-[11px]">
                           <div>

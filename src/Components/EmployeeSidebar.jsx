@@ -69,16 +69,16 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     "Healthcare Administrator"
   ];
 
-  // ✅ OP Management related permissions
+  // ✅ OP Management related permissions — UPDATED with new IDs
   const OP_MANAGEMENT_PERMISSIONS = [
     "op_dashboard_view",
     "op_patient_records_view",
-    "op_patient_add_edit",
-    "op_patient_delete",
-    "op_appointment_slots_manage",
     "op_bookings_view",
-    "op_payment_status_update",
-    "op_export_csv"
+    "op_referral_management_view",
+    "op_referral_bookings_view",
+    "op_doctors_view",
+    "op_services_view",
+    "op_letterhead_view"
   ];
 
   const ADMIN_PERMISSIONS = [
@@ -144,12 +144,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/relieving-letters": "Relieving Letters",
       // 🔥 OP Management paths - Employee ke liye /employee/ prefix
       "/employee/op-dashboard": "OP Dashboard",
+      "/employee/op-management": "WalkIn OP",
+      "/employee/bookings": "Online Bookings",
+      "/employee/referral-management": "Referral Management",
+      "/employee/referral-bookings": "Referral Bookings",
       "/employee/doctor-management": "Doctors",
-      "/employee/op-management": "OP Records",
-      "/employee/appointment-slots": "Appointments Slots",
       "/employee/services": "Services",
-      "/employee/bookings": "Bookings",
       "/employee/letterhead": "Letter Head",
+      "/employee/appointment-slots": "Appointments Slots",
       // ✅ My Referrals
       "/myreferral": "My Referrals"
     };
@@ -171,69 +173,52 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return perms.some(p => OP_MANAGEMENT_PERMISSIONS.includes(p));
   };
 
-  // ✅ Combined check: role OR permission
+  // ✅ Show OP Management section ONLY if user has at least one OP permission
   const shouldShowOPManagement = () => {
-    return hasOPManagementAccess(employeeRole) || hasOPManagementPermission(permissions);
+    return OP_MANAGEMENT_PERMISSIONS.some(p => permissions.includes(p));
   };
 
-  // ✅ NEW — Build OP Management dropdown based on user's actual permissions
+  // ✅ NEW — Build OP Management dropdown based on NEW permission IDs
   const buildOPManagementDropdown = () => {
     const items = [];
 
-    // OP Dashboard — requires op_dashboard_view OR role-based access
-    if (permissions.includes("op_dashboard_view") || hasOPManagementAccess(employeeRole)) {
+    // 1. OP Dashboard
+    if (permissions.includes("op_dashboard_view")) {
       items.push({ name: "OP Dashboard", path: "/employee/op-dashboard" });
     }
 
-    // Doctors — requires op_patient_records_view OR op_patient_add_edit OR role-based
-    if (
-      permissions.includes("op_patient_records_view") ||
-      permissions.includes("op_patient_add_edit") ||
-      hasOPManagementAccess(employeeRole)
-    ) {
+    // 2. WalkIn OP
+    if (permissions.includes("op_patient_records_view")) {
+      items.push({ name: "WalkIn OP", path: "/employee/op-management" });
+    }
+
+    // 3. Online Bookings
+    if (permissions.includes("op_bookings_view")) {
+      items.push({ name: "Online Bookings", path: "/employee/bookings" });
+    }
+
+    // 4. Referral Management
+    if (permissions.includes("op_referral_management_view")) {
+      items.push({ name: "Referral Management", path: "/employee/referral-management" });
+    }
+
+    // 5. Referral Bookings
+    if (permissions.includes("op_referral_bookings_view")) {
+      items.push({ name: "Referral Bookings", path: "/employee/referral-bookings" });
+    }
+
+    // 6. Doctors
+    if (permissions.includes("op_doctors_view")) {
       items.push({ name: "Doctors", path: "/employee/doctor-management" });
     }
 
-    // OP Records — requires op_patient_records_view OR op_patient_add_edit OR role-based
-    if (
-      permissions.includes("op_patient_records_view") ||
-      permissions.includes("op_patient_add_edit") ||
-      hasOPManagementAccess(employeeRole)
-    ) {
-      items.push({ name: "OP Records", path: "/employee/op-management" });
-    }
-
-    // Appointments Slots — requires op_appointment_slots_manage OR role-based
-    if (
-      permissions.includes("op_appointment_slots_manage") ||
-      hasOPManagementAccess(employeeRole)
-    ) {
-      items.push({ name: "Appointments Slots", path: "/employee/appointment-slots" });
-    }
-
-    // Services — requires op_appointment_slots_manage OR op_patient_add_edit OR role-based
-    if (
-      permissions.includes("op_appointment_slots_manage") ||
-      permissions.includes("op_patient_add_edit") ||
-      hasOPManagementAccess(employeeRole)
-    ) {
+    // 7. Services
+    if (permissions.includes("op_services_view")) {
       items.push({ name: "Services", path: "/employee/services" });
     }
 
-    // Bookings — requires op_bookings_view OR role-based
-    if (
-      permissions.includes("op_bookings_view") ||
-      hasOPManagementAccess(employeeRole)
-    ) {
-      items.push({ name: "Bookings", path: "/employee/bookings" });
-    }
-
-    // Letter Head — requires op_bookings_view OR op_patient_add_edit OR role-based
-    if (
-      permissions.includes("op_bookings_view") ||
-      permissions.includes("op_patient_add_edit") ||
-      hasOPManagementAccess(employeeRole)
-    ) {
+    // 8. Letter Head
+    if (permissions.includes("op_letterhead_view")) {
       items.push({ name: "Letter Head", path: "/employee/letterhead" });
     }
 
@@ -455,53 +440,24 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
   // ─── Navigate to Ingrain Hire ───
   const navigateToIngrainHire = () => {
-    console.log('========================================');
-    console.log('🔍 NAVIGATING TO INGRAIN HIRE');
-    console.log('========================================');
-
     const employeeDataRaw = localStorage.getItem("employeeData");
-    console.log('📄 Raw employeeData from localStorage:', employeeDataRaw);
-
     let employeeData = {};
     try {
       employeeData = JSON.parse(employeeDataRaw || "{}");
-      console.log('✅ Parsed employeeData:', employeeData);
-    } catch (e) {
-      console.error('❌ Failed to parse employeeData:', e);
-    }
+    } catch (e) {}
 
     const email = employeeData.email || employeeData.employeeEmail || '';
-    console.log('📧 Email found:', email);
-
     const password = employeeData.password || employeeData.employeePassword || '';
-    console.log('🔐 Password found in employeeData:', password);
-
     const storedPassword = localStorage.getItem("employeePassword") || '';
-    console.log('🔐 employeePassword from localStorage:', storedPassword);
-
-    let finalPassword = password || storedPassword || '';
-    console.log('🔐 Final password before fallback:', finalPassword);
-
-    if (!finalPassword) {
-      console.log('⚠️ No password found, using fallback: 456789');
-      finalPassword = '456789';
-    }
+    let finalPassword = password || storedPassword || '456789';
 
     const baseUrl = 'https://ingrainhire.ingrainsystems.com/candidate-login';
     const params = new URLSearchParams();
-
     if (email) params.append('email', email);
     if (finalPassword) params.append('password', finalPassword);
     params.append('autoLogin', 'true');
 
     const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
-
-    console.log('========================================');
-    console.log('🚀 FINAL URL:', url);
-    console.log('📧 Email being sent:', email);
-    console.log('🔐 Password being sent:', finalPassword);
-    console.log('========================================');
-
     window.location.href = url;
   };
 
@@ -534,7 +490,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         path: "/employee-visits-data",
         badge: "NEW"
       },
-      // ✅ MY REFERRALS - Added here
       { 
         icon: <i className="ri-share-forward-fill"></i>, 
         name: "My Referrals", 
@@ -564,13 +519,10 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
     ];
 
-    // 🔥 Insert OP Management section if user has access based on role OR permission
-    const hasOPAccess = shouldShowOPManagement();
-    
-    if (hasOPAccess) {
+    // 🔥 Insert OP Management section if user has at least one OP permission
+    if (shouldShowOPManagement()) {
       const opDropdownItems = buildOPManagementDropdown();
 
-      // ✅ Only add the OP Management section if there is at least 1 accessible item
       if (opDropdownItems.length > 0) {
         const dashboardIndex = menu.findIndex(item => item.path === "/employeedashboard");
         
@@ -716,10 +668,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
     }
 
-    // 🔥 OP Management in Admin Menu - based on role OR permission (WITH /employee/ prefix for employee admin view)
-    const hasOPAccess = shouldShowOPManagement();
-    
-    if (hasOPAccess) {
+    // 🔥 OP Management in Admin Menu - based on permissions only
+    if (shouldShowOPManagement()) {
       const opDropdownItems = buildOPManagementDropdown();
 
       if (opDropdownItems.length > 0) {
@@ -907,7 +857,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                               <i className="ri-external-link-line ml-1 text-xs" />
                             </a>
                           ) : (
-                            <Link                              to={sub.path}
+                            <Link
+                              to={sub.path}
                               onClick={() => handleDropdownItemClick(sub.path)}
                               className={`emp-sidebar__subitem ${
                                 isActive(sub.path) ? "emp-sidebar__subitem--active" : ""

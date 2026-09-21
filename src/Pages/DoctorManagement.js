@@ -101,7 +101,7 @@ const EMPTY_FORM = {
 };
 
 export default function DoctorManagement() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -156,6 +156,18 @@ export default function DoctorManagement() {
     setTimeout(() => setToast(null), 4000);
   };
 
+
+  // 🔥 Navigate based on user role (admin → /path, employee → /employee/path)
+  const handleRoleBasedNavigate = (path) => {
+    const userRole = localStorage.getItem("userRole");
+    if (userRole === "employee") {
+      const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+      navigate(`/employee/${cleanPath}`);
+    } else {
+      navigate(path);
+    }
+  };
+
   useEffect(() => {
     fetchDoctors();
   }, []);
@@ -168,9 +180,9 @@ export default function DoctorManagement() {
       const res = await axios.get(`${API_BASE_URL}/doctors/getalldoctors`);
       console.log("=== FULL API RESPONSE ===", res);
       console.log("=== RESPONSE DATA ===", res.data);
-      
+
       let doctorsData = [];
-      
+
       if (res.data && res.data.success) {
         if (res.data.data && Array.isArray(res.data.data)) {
           doctorsData = res.data.data;
@@ -182,17 +194,17 @@ export default function DoctorManagement() {
       } else if (Array.isArray(res.data)) {
         doctorsData = res.data;
       }
-      
+
       console.log("=== EXTRACTED DOCTORS ===", doctorsData);
       console.log("=== DOCTORS COUNT ===", doctorsData.length);
-      
+
       setDoctors(doctorsData);
-      
+
       // If doctors exist, show success toast
       if (doctorsData.length > 0) {
         showToast(`Loaded ${doctorsData.length} doctors successfully!`);
       }
-      
+
     } catch (err) {
       console.error("=== ERROR FETCHING DOCTORS ===", err);
       setDoctors([]);
@@ -414,7 +426,7 @@ export default function DoctorManagement() {
     console.log("Specialization Filter:", specializationFilter);
     console.log("Status Filter:", statusFilter);
     console.log("Search Query:", searchQuery);
-    
+
     const filtered = doctors.filter((d) => {
       // Apply month filter ONLY if selectedMonth is not empty
       if (selectedMonth && selectedMonth !== "") {
@@ -440,7 +452,7 @@ export default function DoctorManagement() {
       }
       return true;
     });
-    
+
     console.log("=== FILTERED DOCTORS COUNT ===", filtered.length);
     console.log("=== FILTERED DOCTORS ===", filtered);
     return filtered;
@@ -613,13 +625,12 @@ export default function DoctorManagement() {
 
         {toast && (
           <div
-            className={`fixed top-5 right-5 z-[99999] flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${
-              toast.type === "error"
+            className={`fixed top-5 right-5 z-[99999] flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white transition-all transform animate-bounce ${toast.type === "error"
                 ? "bg-red-600"
                 : toast.type === "info"
-                ? "bg-cyan-600"
-                : "bg-emerald-600"
-            }`}
+                  ? "bg-cyan-600"
+                  : "bg-emerald-600"
+              }`}
           >
             {toast.type === "error" ? (
               <FiXCircle className="w-5 h-5" />
@@ -636,13 +647,13 @@ export default function DoctorManagement() {
               Doctor <span>Management</span>
             </h1>
           </div>
-          
+
           <div className="flex items-center gap-2 flex-wrap">
             <div className="emp-dash__date-pill flex-shrink-0">
               <FaUserMd />
               <span>{doctors.length} Registered Doctors</span>
             </div>
-            
+
             <div className="relative min-w-[150px]">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
               <input
@@ -670,11 +681,10 @@ export default function DoctorManagement() {
                   setShowSpecDropdown(!showSpecDropdown);
                   setShowStatusDropdown(false);
                 }}
-                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                  specializationFilter !== "All"
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${specializationFilter !== "All"
                     ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
                     : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <FaAward className="text-gray-400 text-[10px]" />
                 <span className="truncate max-w-[80px]">{getSpecLabel()}</span>
@@ -694,9 +704,8 @@ export default function DoctorManagement() {
                       setSpecializationFilter("All");
                       setShowSpecDropdown(false);
                     }}
-                    className={`px-3 py-2 text-xs font-medium border-b border-gray-100 cursor-pointer hover:bg-blue-50 ${
-                      specializationFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-500"
-                    }`}
+                    className={`px-3 py-2 text-xs font-medium border-b border-gray-100 cursor-pointer hover:bg-blue-50 ${specializationFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-500"
+                      }`}
                   >
                     All Specializations
                   </div>
@@ -707,9 +716,8 @@ export default function DoctorManagement() {
                         setSpecializationFilter(spec);
                         setShowSpecDropdown(false);
                       }}
-                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                        specializationFilter === spec ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                      }`}
+                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${specializationFilter === spec ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                        }`}
                     >
                       <span>{spec}</span>
                       {specializationFilter === spec && <FiCheck className="w-3 h-3 text-blue-600" />}
@@ -725,11 +733,10 @@ export default function DoctorManagement() {
                   setShowStatusDropdown(!showStatusDropdown);
                   setShowSpecDropdown(false);
                 }}
-                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                  statusFilter !== "All"
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${statusFilter !== "All"
                     ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
                     : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <FiUserCheck className="text-gray-400 text-[10px]" />
                 <span className="truncate max-w-[60px]">{getStatusLabel()}</span>
@@ -749,9 +756,8 @@ export default function DoctorManagement() {
                       setStatusFilter("All");
                       setShowStatusDropdown(false);
                     }}
-                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      statusFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                    }`}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${statusFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
                   >
                     <span>All Status</span>
                     {statusFilter === "All" && <FiCheck className="w-3 h-3 text-blue-600" />}
@@ -761,9 +767,8 @@ export default function DoctorManagement() {
                       setStatusFilter("active");
                       setShowStatusDropdown(false);
                     }}
-                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      statusFilter === "active" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                    }`}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${statusFilter === "active" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
                   >
                     <span>Active</span>
                     {statusFilter === "active" && <FiCheck className="w-3 h-3 text-blue-600" />}
@@ -773,9 +778,8 @@ export default function DoctorManagement() {
                       setStatusFilter("inactive");
                       setShowStatusDropdown(false);
                     }}
-                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      statusFilter === "inactive" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                    }`}
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${statusFilter === "inactive" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                      }`}
                   >
                     <span>Inactive</span>
                     {statusFilter === "inactive" && <FiCheck className="w-3 h-3 text-blue-600" />}
@@ -802,36 +806,38 @@ export default function DoctorManagement() {
               <FiRefreshCw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Refresh</span>
             </button>
-           <button
-  onClick={downloadCSV}
-  className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
-  title="Export CSV"
->
-  <FiDownload className="w-3.5 h-3.5" />
-  <span className="hidden sm:inline">Export CSV</span>
-</button>
+            <button
+              onClick={downloadCSV}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+              title="Export CSV"
+            >
+              <FiDownload className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Export CSV</span>
+            </button>
 
-{/* ✅ NEW — Appointment Slots Redirect */}
-<button
-  onClick={() => navigate("/appointment-slots")}
-  className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all shadow-sm"
-  title="Manage Appointment Slots"
->
-  <FaCalendarAlt className="w-3.5 h-3.5" />
-  <span>Appointment Slots</span>
-</button>
+            {/* ✅ NEW — Appointment Slots Redirect */}
+            <button
+              onClick={() => handleRoleBasedNavigate("/appointment-slots")}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all shadow-sm"
+              title="Manage Appointment Slots"
+            >
+              <FaCalendarAlt className="w-3.5 h-3.5" />
+              <span>Appointment Slots</span>
+            </button>
 
-<button
-  onClick={() => {
-    setFormData({ ...EMPTY_FORM });
-    setEditingId(null);
-    setShowForm(true);
-  }}
-  className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
->
-  <FiPlus className="w-3.5 h-3.5" />
-  <span>Add Doctor</span>
-</button>
+
+
+            <button
+              onClick={() => {
+                setFormData({ ...EMPTY_FORM });
+                setEditingId(null);
+                setShowForm(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+            >
+              <FiPlus className="w-3.5 h-3.5" />
+              <span>Add Doctor</span>
+            </button>
           </div>
         </div>
 
@@ -845,7 +851,7 @@ export default function DoctorManagement() {
               <span>{doctors.length} Doctors</span>
             </div>
           </div>
-          
+
           <div className="relative flex-1">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
             <input
@@ -856,7 +862,7 @@ export default function DoctorManagement() {
               className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
             />
           </div>
-          
+
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setShowMobileFilters(!showMobileFilters)}
@@ -870,7 +876,7 @@ export default function DoctorManagement() {
                 <FiChevronDown className="text-gray-400 text-xs" />
               )}
             </button>
-            
+
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
@@ -882,14 +888,14 @@ export default function DoctorManagement() {
             )}
 
             <button
-              onClick={() => navigate("/appointment-slots")}
+              onClick={() => handleRoleBasedNavigate("/appointment-slots")}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all shadow-sm"
               title="Manage Appointment Slots"
             >
               <FaCalendarAlt className="w-3.5 h-3.5" />
               <span>Slots</span>
             </button>
-            
+
             <button
               onClick={() => {
                 setFormData({ ...EMPTY_FORM });
@@ -965,9 +971,8 @@ export default function DoctorManagement() {
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
           <div
-            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
-              activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""
-            }`}
+            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""
+              }`}
             onClick={() => handleCardClick("all")}
           >
             <div className="emp-dash__stat-top">
@@ -981,9 +986,8 @@ export default function DoctorManagement() {
           </div>
 
           <div
-            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
-              activeCardFilter === "active" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""
-            }`}
+            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "active" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""
+              }`}
             onClick={() => handleCardClick("active")}
           >
             <div className="emp-dash__stat-top">
@@ -997,9 +1001,8 @@ export default function DoctorManagement() {
           </div>
 
           <div
-            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
-              activeCardFilter === "inactive" ? "ring-2 ring-red-500/20 border-red-400" : ""
-            }`}
+            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "inactive" ? "ring-2 ring-red-500/20 border-red-400" : ""
+              }`}
             onClick={() => handleCardClick("inactive")}
           >
             <div className="emp-dash__stat-top">
@@ -1174,11 +1177,10 @@ export default function DoctorManagement() {
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <div className="flex flex-col items-center gap-1">
                               <span
-                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                                  isActive
+                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${isActive
                                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                     : "bg-red-50 text-red-700 border border-red-200"
-                                }`}
+                                  }`}
                               >
                                 {isActive ? (
                                   <span className="relative flex w-1.5 h-1.5">
@@ -1192,9 +1194,8 @@ export default function DoctorManagement() {
                               </span>
                               <button
                                 onClick={() => handleStatusToggle(doctor)}
-                                className={`text-[9px] font-medium underline transition-colors ${
-                                  isActive ? "text-red-500 hover:text-red-700" : "text-emerald-600 hover:text-emerald-700"
-                                }`}
+                                className={`text-[9px] font-medium underline transition-colors ${isActive ? "text-red-500 hover:text-red-700" : "text-emerald-600 hover:text-emerald-700"
+                                  }`}
                               >
                                 {isActive ? "Set Inactive" : "Set Active"}
                               </button>
@@ -1266,11 +1267,10 @@ export default function DoctorManagement() {
                           </div>
                         </div>
                         <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border flex-shrink-0 ${
-                            isActive
+                          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border flex-shrink-0 ${isActive
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                               : "bg-red-50 text-red-700 border-red-200"
-                          }`}
+                            }`}
                         >
                           {isActive ? (
                             <span className="relative flex w-1.5 h-1.5">
@@ -1334,11 +1334,10 @@ export default function DoctorManagement() {
                         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                           <button
                             onClick={() => handleStatusToggle(doctor)}
-                            className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${
-                              isActive
+                            className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${isActive
                                 ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
                                 : "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
-                            }`}
+                              }`}
                           >
                             {isActive ? "Set Inactive" : "Set Active"}
                           </button>
@@ -1411,11 +1410,10 @@ export default function DoctorManagement() {
                   <button
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
-                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                      currentPage === 1
+                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${currentPage === 1
                         ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
                         : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
-                    }`}
+                      }`}
                   >
                     Prev
                   </button>
@@ -1425,13 +1423,12 @@ export default function DoctorManagement() {
                       key={index}
                       onClick={() => (typeof page === "number" ? handlePageClick(page) : null)}
                       disabled={page === "..."}
-                      className={`px-3 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[32px] ${
-                        page === "..."
+                      className={`px-3 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[32px] ${page === "..."
                           ? "text-gray-400 bg-transparent border-transparent cursor-default"
                           : currentPage === page
-                          ? "text-white bg-blue-600 border-blue-600 shadow-sm"
-                          : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"
-                      }`}
+                            ? "text-white bg-blue-600 border-blue-600 shadow-sm"
+                            : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"
+                        }`}
                     >
                       {page}
                     </button>
@@ -1440,11 +1437,10 @@ export default function DoctorManagement() {
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages || totalPages === 0}
-                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                      currentPage === totalPages || totalPages === 0
+                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${currentPage === totalPages || totalPages === 0
                         ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
                         : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
-                    }`}
+                      }`}
                   >
                     Next
                   </button>
@@ -1657,13 +1653,12 @@ export default function DoctorManagement() {
                           key={st}
                           type="button"
                           onClick={() => setFormData((prev) => ({ ...prev, status: st }))}
-                          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold transition-all capitalize ${
-                            formData.status === st
+                          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold transition-all capitalize ${formData.status === st
                               ? st === "active"
                                 ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-xs"
                                 : "border-red-500 bg-red-50 text-red-700 shadow-xs"
                               : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                          }`}
+                            }`}
                         >
                           {st === "active" ? (
                             <FaCheckCircle className="w-3 h-3 text-emerald-600" />
@@ -1706,11 +1701,10 @@ export default function DoctorManagement() {
                           key={day}
                           type="button"
                           onClick={() => handleDayToggle(day)}
-                          className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                            isSelected
+                          className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${isSelected
                               ? "border-blue-500 bg-blue-50 text-blue-700 shadow-xs"
                               : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                          }`}
+                            }`}
                         >
                           {day.slice(0, 3)}
                         </button>
@@ -1842,11 +1836,10 @@ export default function DoctorManagement() {
                     </div>
                   </div>
                   <span
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${
-                      selectedDoctor.status === "active"
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${selectedDoctor.status === "active"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : "bg-red-50 text-red-700 border-red-200"
-                    }`}
+                      }`}
                   >
                     {selectedDoctor.status}
                   </span>

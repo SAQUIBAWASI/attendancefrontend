@@ -4692,19 +4692,19 @@ const UserAccessManagement = () => {
         { id: "admin_issue_status", name: "Update Issue Status" },
       ]
     },
-    // 🔥 OP MANAGEMENT SECTION - NEWLY ADDED
+    // 🔥 OP MANAGEMENT SECTION - SAME AS ADMIN SIDEBAR
     {
       title: "Admin: OP Management",
       type: "toggleable",
       items: [
-        { id: "op_dashboard_view", name: "OP Dashboard View" },
-        { id: "op_patient_records_view", name: "View OP Patient Records" },
-        { id: "op_patient_add_edit", name: "Add/Edit OP Patients" },
-        { id: "op_patient_delete", name: "Delete OP Patients" },
-        { id: "op_appointment_slots_manage", name: "Manage Appointment Slots" },
-        { id: "op_bookings_view", name: "View OP Bookings" },
-        { id: "op_payment_status_update", name: "Update Payment Status" },
-        { id: "op_export_csv", name: "Export OP Data (CSV)" },
+        { id: "op_dashboard_view", name: "OP Dashboard" },
+        { id: "op_patient_records_view", name: "WalkIn OP" },
+        { id: "op_bookings_view", name: "Online Bookings" },
+        { id: "op_referral_management_view", name: "Referral Management" },
+        { id: "op_referral_bookings_view", name: "Referral Bookings" },
+        { id: "op_doctors_view", name: "Doctors" },
+        { id: "op_services_view", name: "Services" },
+        { id: "op_letterhead_view", name: "Letter Head" },
       ]
     },
     {
@@ -4987,47 +4987,17 @@ const UserAccessManagement = () => {
         return newPermissions;
       });
     }
-    // 🔥 OP MANAGEMENT TOGGLE LOGIC
-    else if (permId === "op_dashboard_view") {
-      // Dashboard view is independent - normal toggle
-      setPermissions(prev =>
-        prev.includes(permId) ? prev.filter(p => p !== permId) : [...prev, permId]
-      );
-    }
-    else if (permId === "op_patient_records_view") {
-      setPermissions(prev => {
-        const newPermissions = prev.includes(permId) 
-          ? prev.filter(p => p !== permId)
-          : [...prev, permId];
-        
-        // If view is checked and add/edit is also checked, enable manage
-        if (newPermissions.includes("op_patient_records_view") && newPermissions.includes("op_patient_add_edit")) {
-          if (!newPermissions.includes("op_patient_add_edit")) {
-            // already there
-          }
-        }
-        return newPermissions;
-      });
-    }
-    else if (permId === "op_patient_add_edit") {
-      setPermissions(prev => {
-        const newPermissions = prev.includes(permId) 
-          ? prev.filter(p => p !== permId)
-          : [...prev, permId];
-        
-        // If add/edit is unchecked, also remove delete if it exists
-        if (!newPermissions.includes("op_patient_add_edit")) {
-          return newPermissions.filter(p => p !== "op_patient_delete");
-        }
-        return newPermissions;
-      });
-    }
-    else if (permId === "op_patient_delete") {
-      // Can only delete if add/edit is enabled
-      if (!permissions.includes("op_patient_add_edit") && !permissions.includes(permId)) {
-        toast.warning("Please enable 'Add/Edit OP Patients' first to enable delete");
-        return;
-      }
+    // 🔥 OP MANAGEMENT - All permissions are independent toggles
+    else if ([
+      "op_dashboard_view",
+      "op_patient_records_view",
+      "op_bookings_view",
+      "op_referral_management_view",
+      "op_referral_bookings_view",
+      "op_doctors_view",
+      "op_services_view",
+      "op_letterhead_view"
+    ].includes(permId)) {
       setPermissions(prev =>
         prev.includes(permId) ? prev.filter(p => p !== permId) : [...prev, permId]
       );

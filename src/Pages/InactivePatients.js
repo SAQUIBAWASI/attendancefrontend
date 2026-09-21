@@ -96,6 +96,18 @@ export default function InactivePatients() {
     setTimeout(() => setToast(null), 4000);
   };
 
+
+  // 🔥 Navigate based on user role (admin → /path, employee → /employee/path)
+  const handleRoleBasedNavigate = (path) => {
+    const userRole = localStorage.getItem("userRole");
+    if (userRole === "employee") {
+      const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+      navigate(`/employee/${cleanPath}`);
+    } else {
+      navigate(path);
+    }
+  };
+
   const fetchBookings = async () => {
     setLoading(true);
     try {
@@ -402,7 +414,7 @@ export default function InactivePatients() {
         setSelectedPatient(null);
 
         setTimeout(() => {
-          navigate("/op-management");
+          handleRoleBasedNavigate("/op-management");
         }, 800);
       } else {
         showToast(res.data.message || "Failed to update status", "error");
@@ -505,8 +517,8 @@ export default function InactivePatients() {
             >
               <FiDownload className="w-3 h-3" /> Export CSV
             </button>
-            <button
-              onClick={() => navigate("/op-management")}
+                               <button
+              onClick={() => handleRoleBasedNavigate("/op-management")}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm"
             >
               <FiUsers className="w-3 h-3" /> Active Patients
@@ -565,8 +577,8 @@ export default function InactivePatients() {
             >
               <FiFilter className="w-3.5 h-3.5" /> Filters
             </button>
-            <button
-              onClick={() => navigate("/op-management")}
+                                <button
+              onClick={() => handleRoleBasedNavigate("/op-management")}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm ml-auto"
             >
               <FiUsers className="w-3.5 h-3.5" /> Active
