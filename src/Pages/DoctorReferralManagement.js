@@ -1,8 +1,6 @@
 // ReferralManagement.js — Combined Doctor + Customer Referrals Management
 // ✅ Tabs: Doctor Referrals | Customer Referrals
-// ✅ Removed: No. of OPs & Revenue columns
-// ✅ Removed: Total Revenue stat card (ab 4 cards hain)
-// ✅ Mobile Card View Added
+// ✅ Multiple Offers Array (Add / Edit / Delete) support
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -103,7 +101,6 @@ const getCommissionPercent = (referrer, category) => {
   return clinicP;
 };
 
-// ✅ Unified payable calculator (works for both doctor & customer)
 const getServiceReferrerPayable = (referrer, booking) => {
   if (!referrer || !booking) return 0;
 
@@ -143,7 +140,7 @@ export default function ReferralManagement() {
   const navigate = useNavigate();
 
   // ==================== ACTIVE TAB ====================
-  const [activeTab, setActiveTab] = useState("doctor"); // "doctor" | "customer"
+  const [activeTab, setActiveTab] = useState("doctor");
   const isDoctorTab = activeTab === "doctor";
 
   // ==================== DATA ====================
@@ -174,6 +171,16 @@ export default function ReferralManagement() {
   const [toast, setToast] = useState(null);
   const [selectedReferral, setSelectedReferral] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // ==================== ✅ OFFER MODAL STATE ====================
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [selectedOfferReferral, setSelectedOfferReferral] = useState(null);
+  const [offerSubmitting, setOfferSubmitting] = useState(false);
+  const [editingOfferId, setEditingOfferId] = useState(null);
+  const [offerForm, setOfferForm] = useState({
+    offerName: "",
+    amount: ""
+  });
 
   // ==================== PAGINATION ====================
   const [currentPage, setCurrentPage] = useState(1);
@@ -268,6 +275,12 @@ export default function ReferralManagement() {
         referralsData = res.data;
       }
 
+      // ✅ Ensure har referral mein offers array ho
+      referralsData = referralsData.map((r) => ({
+        ...r,
+        offers: Array.isArray(r.offers) ? r.offers : []
+      }));
+
       const doctors = referralsData.filter((r) => r.referralType === "doctor");
       const customers = referralsData.filter((r) => r.referralType === "customer");
 
@@ -299,8 +312,6 @@ export default function ReferralManagement() {
   // ==================== ACTIVE DATA ====================
   const activeReferrals = isDoctorTab ? doctorReferrals : customerReferrals;
   const setActiveReferrals = isDoctorTab ? setDoctorReferrals : setCustomerReferrals;
-  const setInactiveReferrals = isDoctorTab ? setCustomerReferrals : setDoctorReferrals;
-  const inactiveReferrals = isDoctorTab ? customerReferrals : doctorReferrals;
 
   const referrerLabel = isDoctorTab ? "Doctor" : "Customer";
   const referrerLabelPlural = isDoctorTab ? "Doctors" : "Customers";
@@ -419,7 +430,7 @@ export default function ReferralManagement() {
         if (res.data.success) {
           const updatedData = res.data.data || { _id: editingId, ...payload };
           setActiveReferrals((prev) =>
-            prev.map((r) => (r._id === editingId ? { ...r, ...updatedData } : r))
+            prev.map((r) => (r._id === editingId ? { ...r, ...updatedData, offers: r.offers || [] } : r))
           );
           showToast(`${referrerLabel} referral updated successfully!`);
         }
@@ -429,6 +440,7 @@ export default function ReferralManagement() {
           const newData = res.data.data || {
             _id: Date.now().toString(),
             ...payload,
+            offers: [],
             createdAt: new Date().toISOString()
           };
           setActiveReferrals((prev) => [newData, ...prev]);
@@ -511,6 +523,129 @@ export default function ReferralManagement() {
     } catch (err) {
       console.error("Error updating status:", err);
       showToast(err.response?.data?.message || "Failed to update status", "error");
+    }
+  };
+
+  // ==================== ✅ OFFER HANDLERS (ARRAY) ====================
+
+  // Naya offer add karne ke liye modal
+  const openOfferModal = (referral) => {
+    setSelectedOfferReferral(referral);
+    setEditingOfferId(null);
+    setOfferForm({ offerName: "", amount: "" });
+    setShowOfferModal(true);
+  };
+
+  // Existing offer edit karne ke liye modal
+  const openEditOfferModal = (referral, offer) => {
+    setSelectedOfferReferral(referral);
+    setEditingOfferId(offer._id);
+    setOfferForm({
+      offerName: offer.offerName || "",
+      amount: offer.offerAmount || ""
+    });
+    setShowOfferModal(true);
+  };
+
+  const closeOfferModal = () => {
+    setShowOfferModal(false);
+    setSelectedOfferReferral(null);
+    setEditingOfferId(null);
+    setOfferForm({ offerName: "", amount: "" });
+  };
+
+  const handleOfferInputChange = (e) => {
+    const { name, value } = e.target;
+    setOfferForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Add ya Update offer
+  const handleOfferSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!offerForm.offerName || !offerForm.amount) {
+      showToast("Please fill Offer Name and Amount", "error");
+      return;
+    }
+    if (!selectedOfferReferral) return;
+
+    setOfferSubmitting(true);
+    try {
+      const payload = {
+        offerName: offerForm.offerName,
+        offerAmount: Number(offerForm.amount)
+      };
+
+      let res;
+      if (editingOfferId) {
+        // ✅ UPDATE existing offer
+        res = await axios.put(
+          `${API_BASE_URL}/updateoffer/${selectedOfferReferral._id}/${editingOfferId}`,
+          payload
+        );
+      } else {
+        // ✅ ADD new offer
+        res = await axios.post(
+          `${API_BASE_URL}/addoffer/${selectedOfferReferral._id}`,
+          payload
+        );
+      }
+
+      if (res.data.success) {
+        const updatedReferral = {
+          ...res.data.data,
+          offers: Array.isArray(res.data.data?.offers) ? res.data.data.offers : []
+        };
+
+        // Local state update
+        setActiveReferrals((prev) =>
+          prev.map((r) => (r._id === updatedReferral._id ? updatedReferral : r))
+        );
+
+        // Detail modal bhi update karo agar open hai
+        if (selectedReferral && selectedReferral._id === updatedReferral._id) {
+          setSelectedReferral(updatedReferral);
+        }
+
+        showToast(editingOfferId ? "Offer updated successfully!" : "Offer added successfully!");
+        closeOfferModal();
+      }
+    } catch (err) {
+      console.error("Error saving offer:", err);
+      showToast(err.response?.data?.message || "Failed to save offer", "error");
+    } finally {
+      setOfferSubmitting(false);
+    }
+  };
+
+  // ✅ Delete offer
+  const handleDeleteOffer = async (referral, offerId) => {
+    if (!window.confirm("Are you sure you want to delete this offer?")) return;
+
+    try {
+      const res = await axios.delete(
+        `${API_BASE_URL}/deleteoffer/${referral._id}/${offerId}`
+      );
+
+      if (res.data.success) {
+        const updatedReferral = {
+          ...res.data.data,
+          offers: Array.isArray(res.data.data?.offers) ? res.data.data.offers : []
+        };
+
+        setActiveReferrals((prev) =>
+          prev.map((r) => (r._id === updatedReferral._id ? updatedReferral : r))
+        );
+
+        if (selectedReferral && selectedReferral._id === updatedReferral._id) {
+          setSelectedReferral(updatedReferral);
+        }
+
+        showToast("Offer deleted successfully!");
+      }
+    } catch (err) {
+      console.error("Error deleting offer:", err);
+      showToast(err.response?.data?.message || "Failed to delete offer", "error");
     }
   };
 
@@ -635,17 +770,21 @@ export default function ReferralManagement() {
       ? [
           "Sl No", "Referral ID", "Name", "Organization", "Phone", "Specialization",
           "Clinic Commission (%)", "Pharmacy Commission (%)", "Lab Commission (%)",
-          "Total Commission (%)", "Status", "Date"
+          "Total Commission (%)", "Offers", "Status", "Date"
         ]
       : [
           "Sl No", "Referral ID", "Name", "Phone", "Address",
           "Clinic Commission (%)", "Pharmacy Commission (%)", "Lab Commission (%)",
-          "Total Commission (%)", "Status", "Date"
+          "Total Commission (%)", "Offers", "Status", "Date"
         ];
 
     const csvRows = [
       headers.join(","),
       ...filteredReferrals.map((r, idx) => {
+        const offersStr = (r.offers || [])
+          .map((o) => `${o.offerName}:₹${o.offerAmount}`)
+          .join(" | ");
+
         if (isDoctorTab) {
           return [
             idx + 1,
@@ -658,6 +797,7 @@ export default function ReferralManagement() {
             r.pharmacyCommission || 0,
             r.labCommission || 0,
             r.totalCommission || 0,
+            `"${offersStr.replace(/"/g, '""')}"`,
             `"${r.status || "active"}"`,
             `"${formatDate(r.createdAt)}"`
           ].join(",");
@@ -672,6 +812,7 @@ export default function ReferralManagement() {
             r.pharmacyCommission || 0,
             r.labCommission || 0,
             r.totalCommission || 0,
+            `"${offersStr.replace(/"/g, '""')}"`,
             `"${r.status || "active"}"`,
             `"${formatDate(r.createdAt)}"`
           ].join(",");
@@ -792,7 +933,7 @@ export default function ReferralManagement() {
         <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
-              {referrerLabel} <span>{isDoctorTab ? "Referrals" : "Referrals"}</span>
+              {referrerLabel} <span>Referrals</span>
             </h1>
           </div>
 
@@ -1142,6 +1283,7 @@ export default function ReferralManagement() {
                       <th style={{ textAlign: "center" }}>Pharmacy %</th>
                       <th style={{ textAlign: "center" }}>Lab %</th>
                       <th style={{ textAlign: "center" }}>Total %</th>
+                      <th style={{ textAlign: "center" }}>Offers</th>
                       <th style={{ textAlign: "center" }}>Status</th>
                       <th style={{ textAlign: "center" }}>Date</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
@@ -1154,6 +1296,7 @@ export default function ReferralManagement() {
                       const lab = parseFloat(referral.labCommission) || 0;
                       const total = parseFloat(referral.totalCommission) || 0;
                       const name = isDoctorTab ? (referral.doctorName || "N/A") : (referral.customerName || "N/A");
+                      const offers = referral.offers || [];
 
                       return (
                         <tr key={referral._id} className="transition-colors hover:bg-slate-50/50">
@@ -1217,6 +1360,28 @@ export default function ReferralManagement() {
                             <span className="text-xs font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">{total}%</span>
                           </td>
 
+                          {/* ✅ OFFERS COLUMN */}
+                          <td className="px-3 py-3 text-center">
+                            {offers.length > 0 ? (
+                              <div className="flex flex-col items-center gap-1 max-w-[160px]">
+                                {offers.map((offer) => (
+                                  <div
+                                    key={offer._id}
+                                    className="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 w-full justify-between"
+                                  >
+                                    <span className="flex items-center gap-1 truncate">
+                                      <FiGift className="w-2.5 h-2.5 flex-shrink-0" />
+                                      <span className="truncate">{offer.offerName}</span>
+                                    </span>
+                                    <span className="text-amber-900 flex-shrink-0">₹{offer.offerAmount}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">No offer</span>
+                            )}
+                          </td>
+
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <div className="flex flex-col items-center gap-1">
                               <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${getStatusBadgeColor(referral.status)}`}>
@@ -1242,6 +1407,14 @@ export default function ReferralManagement() {
 
                           <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => openOfferModal(referral)}
+                                className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-100"
+                                title="Add Offer"
+                              >
+                                <FiGift className="w-4 h-4" />
+                              </button>
+
                               <button
                                 onClick={() => { setSelectedReferral(referral); setShowDetailModal(true); }}
                                 className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
@@ -1280,10 +1453,10 @@ export default function ReferralManagement() {
                   const lab = parseFloat(referral.labCommission) || 0;
                   const total = parseFloat(referral.totalCommission) || 0;
                   const name = isDoctorTab ? (referral.doctorName || "N/A") : (referral.customerName || "N/A");
+                  const offers = referral.offers || [];
 
                   return (
                     <div key={referral._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                      {/* Card Header */}
                       <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <div className={`w-9 h-9 rounded-full ${avatarBg} text-white font-bold flex items-center justify-center text-xs flex-shrink-0`}>
@@ -1303,7 +1476,6 @@ export default function ReferralManagement() {
                         </span>
                       </div>
 
-                      {/* Card Body */}
                       <div className="p-3 space-y-2.5">
                         <div className="grid grid-cols-2 gap-2 text-[11px]">
                           {isDoctorTab ? (
@@ -1325,7 +1497,6 @@ export default function ReferralManagement() {
                           )}
                         </div>
 
-                        {/* Commission Breakdown */}
                         <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-gray-100">
                           <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200">
                             <div className="text-[8px] font-bold text-blue-600 uppercase">Clinic</div>
@@ -1345,7 +1516,45 @@ export default function ReferralManagement() {
                           </div>
                         </div>
 
-                        {/* Status Change + Date */}
+                        {/* ✅ OFFERS LIST (Mobile) */}
+                        {offers.length > 0 && (
+                          <div className="space-y-1.5 pt-2 border-t border-gray-100">
+                            <div className="text-[9px] font-bold uppercase text-gray-400">
+                              Offers ({offers.length})
+                            </div>
+                            {offers.map((offer) => (
+                              <div
+                                key={offer._id}
+                                className="p-2 bg-amber-50 rounded-lg border border-amber-200 flex items-center justify-between"
+                              >
+                                <span className="text-[10px] font-bold text-amber-700 flex items-center gap-1 truncate flex-1">
+                                  <FiGift className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">{offer.offerName}</span>
+                                </span>
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  <span className="text-xs font-extrabold text-amber-900">
+                                    ₹{offer.offerAmount}
+                                  </span>
+                                  <button
+                                    onClick={() => openEditOfferModal(referral, offer)}
+                                    className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                                    title="Edit Offer"
+                                  >
+                                    <FiEdit2 className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteOffer(referral, offer._id)}
+                                    className="p-1 text-red-500 hover:bg-red-100 rounded"
+                                    title="Delete Offer"
+                                  >
+                                    <FiTrash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
                         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                           <div className="flex items-center gap-1.5">
                             <span className="text-[9px] font-bold uppercase text-gray-400">Status:</span>
@@ -1364,8 +1573,15 @@ export default function ReferralManagement() {
                           </div>
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
+                          <button
+                            onClick={() => openOfferModal(referral)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg text-[10px] font-bold"
+                            title="Add Offer"
+                          >
+                            <FiGift className="w-3.5 h-3.5" /> Add Offer
+                          </button>
+
                           <button
                             onClick={() => { setSelectedReferral(referral); setShowDetailModal(true); }}
                             className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold"
@@ -1613,7 +1829,6 @@ export default function ReferralManagement() {
                   </>
                 )}
 
-                {/* Commission Fields */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Commission Distribution (%)
@@ -1842,6 +2057,61 @@ export default function ReferralManagement() {
                   </div>
                 </div>
 
+                {/* ✅ OFFERS LIST (Detail Modal) */}
+                {selectedReferral.offers && selectedReferral.offers.length > 0 && (
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-bold uppercase text-gray-400">
+                        Offers ({selectedReferral.offers.length})
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowDetailModal(false);
+                          openOfferModal(selectedReferral);
+                        }}
+                        className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                      >
+                        <FiPlus className="w-3 h-3" /> Add
+                      </button>
+                    </div>
+                    <div className="mt-1 space-y-1.5">
+                      {selectedReferral.offers.map((offer) => (
+                        <div
+                          key={offer._id}
+                          className="p-2 bg-amber-50 rounded-lg border border-amber-100 flex items-center justify-between"
+                        >
+                          <span className="text-xs font-semibold text-amber-700 flex items-center gap-1 truncate flex-1">
+                            <FiGift className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span className="truncate">{offer.offerName}</span>
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <span className="text-sm font-extrabold text-amber-900">
+                              ₹{offer.offerAmount}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setShowDetailModal(false);
+                                openEditOfferModal(selectedReferral, offer);
+                              }}
+                              className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                              title="Edit Offer"
+                            >
+                              <FiEdit2 className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteOffer(selectedReferral, offer._id)}
+                              className="p-1 text-red-500 hover:bg-red-100 rounded"
+                              title="Delete Offer"
+                            >
+                              <FiTrash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="pt-2 border-t border-gray-200">
                   <div className="text-[10px] font-bold uppercase text-gray-400">OP Metrics</div>
                   <div className="grid grid-cols-2 gap-2 mt-1">
@@ -1897,6 +2167,114 @@ export default function ReferralManagement() {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================== ✅ OFFER MODAL (Add / Edit) ==================== */}
+        {showOfferModal && selectedOfferReferral && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 relative">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
+                    <FiGift className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base">
+                      {editingOfferId ? "Edit Offer" : "Add Offer"}
+                    </h3>
+                    <p className="text-xs text-gray-500 truncate max-w-[200px]">
+                      {isDoctorTab
+                        ? selectedOfferReferral.doctorName
+                        : selectedOfferReferral.customerName}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeOfferModal}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleOfferSubmit} className="mt-5 space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                    Offer Name <span className="text-amber-600">*</span>
+                  </label>
+                  <div className="relative">
+                    <FiGift className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      name="offerName"
+                      value={offerForm.offerName}
+                      onChange={handleOfferInputChange}
+                      placeholder="e.g. Doctor Consultation, Pharmacy Discount..."
+                      className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                    Amount (₹) <span className="text-amber-600">*</span>
+                  </label>
+                  <div className="relative">
+                    <FaRupeeSign className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
+                    <input
+                      type="number"
+                      name="amount"
+                      value={offerForm.amount}
+                      onChange={handleOfferInputChange}
+                      placeholder="150"
+                      min="0"
+                      className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {offerForm.offerName && offerForm.amount && (
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-amber-700 flex items-center gap-1">
+                        <FiGift className="w-3.5 h-3.5" />
+                        {offerForm.offerName}
+                      </span>
+                      <span className="text-base font-extrabold text-amber-900">
+                        ₹{offerForm.amount}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={closeOfferModal}
+                    className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={offerSubmitting}
+                    className="px-5 py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {offerSubmitting ? (
+                      <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : editingOfferId ? (
+                      <FiCheckCircle className="w-3.5 h-3.5" />
+                    ) : (
+                      <FiPlus className="w-3.5 h-3.5" />
+                    )}
+                    {editingOfferId ? "Update Offer" : "Add Offer"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

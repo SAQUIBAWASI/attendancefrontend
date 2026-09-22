@@ -1,4 +1,4 @@
-// OpManagement.js — COMPLETE FINAL VERSION (PDF Modal, no errors)
+// OpManagement.js — COMPLETE FINAL VERSION (Offer Applied + PDF Modal)
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -82,7 +82,7 @@ const EMPTY_FORM = {
   name: "",
   dob: "",
   age: "",
-  gender: "",
+  gender: "Male",
   phone: "",
   address: "",
   city: "",
@@ -105,7 +105,8 @@ const EMPTY_FORM = {
   discount: "",
   discountType: "₹",
   bookingId: "",
-  status: "confirmed"
+  status: "confirmed",
+  offerApplied: null, // ✅ NEW
 };
 
 const CLINIC_INFO = {
@@ -234,10 +235,18 @@ const numberToWords = (num) => {
 
 const getBookingServices = (booking) => {
   if (!booking) return [];
-  const fromServiceItems = Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0 ? booking.serviceItems : null;
-  const fromServices = Array.isArray(booking.services) && booking.services.length > 0 ? booking.services : null;
+
+  const fromServiceItems =
+    Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0
+      ? booking.serviceItems
+      : null;
+  const fromServices =
+    Array.isArray(booking.services) && booking.services.length > 0
+      ? booking.services
+      : null;
   const arr = fromServiceItems || fromServices || [];
-  return arr.map((s) => ({
+
+  const baseServices = arr.map((s) => ({
     serviceId: s.serviceId || s._id || "",
     _id: s.serviceId || s._id || "",
     name: s.name || "Service",
@@ -245,7 +254,24 @@ const getBookingServices = (booking) => {
     description: s.description || "",
     category: s.category || s.serviceCategory || s.type || "",
     paymentStatus: s.paymentStatus || booking.paymentStatus || "Pending",
+    isReviewService: false,
   }));
+
+  const reviewServices = Array.isArray(booking?.reviews)
+    ? booking.reviews.map((r) => ({
+        serviceId: r.serviceId || r._id || "",
+        _id: r.serviceId || r._id || "",
+        name: r.name || "Review Service",
+        price: Number(r.price) || 0,
+        description: r.description || "",
+        category: "clinic",
+        paymentStatus: booking.paymentStatus || "Pending",
+        isReviewService: true,
+        addedAt: r.addedAt || null,
+      }))
+    : [];
+
+  return [...baseServices, ...reviewServices];
 };
 
 const classifyService = (svc) => {
@@ -258,7 +284,16 @@ const classifyService = (svc) => {
 };
 
 const getAmountBreakdown = (booking) => {
-  if (!booking) return { clinic: 0, lab: 0, pharmacy: 0, total: 0, manualMedicineTotal: 0, manualLabTotal: 0 };
+  if (!booking)
+    return {
+      clinic: 0,
+      lab: 0,
+      pharmacy: 0,
+      total: 0,
+      manualMedicineTotal: 0,
+      manualLabTotal: 0,
+      reviewTotal: 0,
+    };
 
   const services = getBookingServices(booking);
   let clinic = 0, lab = 0, pharmacy = 0;
@@ -266,7 +301,9 @@ const getAmountBreakdown = (booking) => {
   services.forEach((s) => {
     const cat = classifyService(s);
     const price = Number(s.price) || 0;
-    if (cat === "lab") lab += price;
+    if (s.isReviewService) {
+      clinic += price;
+    } else if (cat === "lab") lab += price;
     else if (cat === "pharmacy") pharmacy += price;
     else clinic += price;
   });
@@ -276,6 +313,9 @@ const getAmountBreakdown = (booking) => {
 
   pharmacy += manualMedicineTotal;
   lab += manualLabTotal;
+
+  const reviewServices = Array.isArray(booking?.reviews) ? booking.reviews : [];
+  const reviewTotal = reviewServices.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
 
   const computed = clinic + lab + pharmacy;
   if (computed === 0) {
@@ -289,12 +329,9 @@ const getAmountBreakdown = (booking) => {
   }
 
   return {
-    clinic,
-    lab,
-    pharmacy,
+    clinic, lab, pharmacy,
     total: clinic + lab + pharmacy,
-    manualMedicineTotal,
-    manualLabTotal,
+    manualMedicineTotal, manualLabTotal, reviewTotal,
   };
 };
 
@@ -346,7 +383,6 @@ const getReviewWindowStatus = (booking) => {
 
   const daysLeft = Math.max(0, REVIEW_WINDOW_DAYS - diffDays);
 
-  // ✅ Review restriction HATA DI — kabhi bhi review kar sakte hain
   return {
     canReview: true,
     daysLeft: daysLeft,
@@ -354,7 +390,6 @@ const getReviewWindowStatus = (booking) => {
     isReviewed: booking.isReviewed === true,
   };
 };
-
 
 const fetchCityFromPincode = async (pincode) => {
   if (!pincode || pincode.trim().length < 6) return null;
@@ -403,13 +438,29 @@ const computeDiscountAmount = (subtotal, discountValue, discountType) => {
   return val;
 };
 
-const computeFinancials = (serviceItems, { labTotal = 0, medicineTotal = 0, referralCommission = 0, discount = 0, discountType = "₹", partialAmount = 0 } = {}) => {
+// ✅ UPDATED: offerAmount deduct karo
+const computeFinancials = (
+  serviceItems,
+  {
+    labTotal = 0,
+    medicineTotal = 0,
+    referralCommission = 0,
+    discount = 0,
+    discountType = "₹",
+    partialAmount = 0,
+    offerAmount = 0, // ✅ NEW
+  } = {}
+) => {
   const servicesSubtotal = (serviceItems || []).reduce((sum, s) => sum + (Number(s.price) || 0), 0);
   const subtotal = servicesSubtotal + (Number(labTotal) || 0) + (Number(medicineTotal) || 0);
   const commissionPercent = parseFloat(referralCommission) || 0;
   const commissionAmount = (subtotal * commissionPercent) / 100;
   const discountAmount = computeDiscountAmount(subtotal, discount, discountType);
-  const finalPayable = Math.max(0, subtotal - commissionAmount - discountAmount);
+
+  // ✅ Offer deduction
+  const offerDeduction = Number(offerAmount) || 0;
+
+  const finalPayable = Math.max(0, subtotal - commissionAmount - discountAmount - offerDeduction);
 
   const parsedPartial = parseFloat(partialAmount) || 0;
   const paymentStatus = computePaymentStatusFromAmount(parsedPartial, finalPayable);
@@ -424,6 +475,7 @@ const computeFinancials = (serviceItems, { labTotal = 0, medicineTotal = 0, refe
     commissionPercent,
     commissionAmount,
     discountAmount,
+    offerDeduction, // ✅
     finalPayable,
     parsedPartial,
     paymentStatus,
@@ -431,9 +483,6 @@ const computeFinancials = (serviceItems, { labTotal = 0, medicineTotal = 0, refe
     balanceAmount,
   };
 };
-
-
-
 
 export default function OpManagement() {
   const navigate = useNavigate();
@@ -493,7 +542,7 @@ export default function OpManagement() {
     return saved ? parseInt(saved, 10) : 10;
   });
 
-  // ✅ PDF MODAL STATES ONLY
+  // ✅ PDF MODAL STATES
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [invoiceModalUrl, setInvoiceModalUrl] = useState("");
   const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
@@ -532,10 +581,20 @@ export default function OpManagement() {
   const [reviewData, setReviewData] = useState({ isReviewed: false, reviewDate: "" });
   const [savingReview, setSavingReview] = useState(false);
 
+  // ✅ REVIEW SERVICES
+  const [reviewServices, setReviewServices] = useState([]);
+  const [reviewServiceInput, setReviewServiceInput] = useState("");
+  const [showReviewServiceSuggestions, setShowReviewServiceSuggestions] = useState(false);
+  const [filteredReviewServices, setFilteredReviewServices] = useState([]);
+
+  // ✅ OFFER STATE
+  const [selectedCustomerOffers, setSelectedCustomerOffers] = useState([]);
+  const [selectedOfferId, setSelectedOfferId] = useState("");
+  const [appliedOffer, setAppliedOffer] = useState(null);
+
   const phoneInputRef = useRef(null);
   const nameInputRef = useRef(null);
   const searchTimeoutRef = useRef(null);
-
 
   const API_BASE_INVURL = 'https://api.timelyhealth.in'
 
@@ -550,8 +609,6 @@ export default function OpManagement() {
     setTimeout(() => setToast(null), 4000);
   };
 
-
-  // 🔥 Navigate based on user role (admin → /path, employee → /employee/path)
   const handleRoleBasedNavigate = (path) => {
     const userRole = localStorage.getItem("userRole");
     if (userRole === "employee") {
@@ -770,8 +827,11 @@ export default function OpManagement() {
           patientFeedback: b.patientFeedback || "",
           isReviewed: b.isReviewed === true,
           reviewDate: b.reviewDate || null,
+          reviews: Array.isArray(b.reviews) ? b.reviews : [],
+          reviewServicesTotal: Number(b.reviewServicesTotal) || 0,
           invoiceUrl: b.invoiceUrl || null,
-          invoiceGeneratedAt: b.invoiceGeneratedAt || null,
+          // ✅ OFFER APPLIED
+          offerApplied: b.offerApplied || null,
         };
       });
       setBookings(transformedBookings);
@@ -814,6 +874,15 @@ export default function OpManagement() {
       else if (Array.isArray(res.data)) contacts = res.data;
       setReferralContacts(contacts);
     } catch (error) { console.error("Error fetching referral contacts:", error); setReferralContacts([]); }
+  };
+
+  // ✅ OFFER HELPERS
+  const getCustomerOffers = (customerId) => {
+    if (!customerId) return [];
+    const contact = referralContacts.find(
+      (c) => c._id === customerId && c.referralType === "customer"
+    );
+    return Array.isArray(contact?.offers) ? contact.offers : [];
   };
 
   const parseSlotTimeToMinutes = (timeStr) => {
@@ -943,7 +1012,17 @@ export default function OpManagement() {
       paymentType: "cash",
       doctorId: "",
       slotId: "",
+      offerApplied: null,
     }));
+    // ✅ Restore offers if customer exists
+    if (existingPatient.referralCustomerId) {
+      const offers = getCustomerOffers(existingPatient.referralCustomerId);
+      setSelectedCustomerOffers(offers);
+    } else {
+      setSelectedCustomerOffers([]);
+    }
+    setSelectedOfferId("");
+    setAppliedOffer(null);
     setCitySuggestions([]);
     setShowCitySuggestions(false);
     setShowExistingPatientPopup(false);
@@ -954,7 +1033,15 @@ export default function OpManagement() {
     const newAge = calculateAgeFromDOB(dob);
     setFormData((prev) => {
       const autoTitle = autoSelectTitleFromDob(dob, prev.gender);
-      return { ...prev, dob, age: newAge, title: autoTitle || prev.title };
+      const finalTitle = autoTitle || prev.title;
+      const autoGender = genderFromTitle(finalTitle);
+      return {
+        ...prev,
+        dob,
+        age: newAge,
+        title: finalTitle,
+        gender: autoGender || prev.gender,
+      };
     });
   };
 
@@ -1015,12 +1102,18 @@ export default function OpManagement() {
     setShowCitySuggestions(false);
   };
 
+  // ✅ UPDATED: Customer select + offers load
   const handleReferralCustomerSelect = (contact) => {
     if (!contact) return;
+    const offers = Array.isArray(contact.offers) ? contact.offers : [];
+    setSelectedCustomerOffers(offers);
+    setSelectedOfferId("");
+    setAppliedOffer(null);
     setFormData((prev) => ({
       ...prev,
       referredByCustomer: contact.customerName || "",
       referralCustomerId: contact._id,
+      offerApplied: null,
     }));
   };
 
@@ -1142,8 +1235,29 @@ export default function OpManagement() {
       discount: existingBooking?.discount || "",
       discountType: "₹",
       serviceName: "", servicePrice: "",
-      status: existingBooking?.status || "confirmed"
+      status: existingBooking?.status || "confirmed",
+      offerApplied: existingBooking?.offerApplied || null,
     });
+
+    // ✅ Restore offers
+    const customerId =
+      existingBooking?.referralCustomerId || patient.referralCustomerId || "";
+    if (customerId) {
+      const offers = getCustomerOffers(customerId);
+      setSelectedCustomerOffers(offers);
+      const appliedOfferId = existingBooking?.offerApplied?.offerId || "";
+      setSelectedOfferId(appliedOfferId);
+      if (appliedOfferId) {
+        const offer = offers.find((o) => o._id === appliedOfferId);
+        setAppliedOffer(offer || null);
+      } else {
+        setAppliedOffer(null);
+      }
+    } else {
+      setSelectedCustomerOffers([]);
+      setSelectedOfferId("");
+      setAppliedOffer(null);
+    }
 
     setEditingId(bookingId);
     setShowForm(true);
@@ -1172,6 +1286,10 @@ export default function OpManagement() {
     setShowServiceSuggestions(false);
     setCitySuggestions([]);
     setShowCitySuggestions(false);
+    // ✅ Reset offers
+    setSelectedCustomerOffers([]);
+    setSelectedOfferId("");
+    setAppliedOffer(null);
   };
 
   const cancelForm = () => {
@@ -1186,6 +1304,10 @@ export default function OpManagement() {
     setShowServiceSuggestions(false);
     setCitySuggestions([]);
     setShowCitySuggestions(false);
+    // ✅ Reset offers
+    setSelectedCustomerOffers([]);
+    setSelectedOfferId("");
+    setAppliedOffer(null);
   };
 
   const handleToggleActiveStatus = async (patient) => {
@@ -1434,33 +1556,144 @@ export default function OpManagement() {
   const openReviewModal = (booking) => {
     if (!booking) return;
 
-    const status = getReviewWindowStatus(booking);
-
-    if (!status.canReview && !status.isReviewed) {
-      if (status.expired) {
-        showToast("Review window expired (3 days limit).", "error");
-      } else {
-        showToast("Review will be available on appointment date.", "info");
-      }
-      return;
-    }
-
     setReviewBooking(booking);
     setReviewData({
       isReviewed: booking.isReviewed === true,
       reviewDate: booking.reviewDate || new Date().toISOString(),
     });
+
+    setReviewServices([]);
+    setReviewServiceInput("");
+    setFilteredReviewServices([]);
+    setShowReviewServiceSuggestions(false);
+
     setShowReviewModal(true);
+  };
+
+  const handleReviewServiceInputChange = (value) => {
+    setReviewServiceInput(value);
+    if (value.trim()) {
+      const filtered = services.filter((s) =>
+        s.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredReviewServices(filtered);
+      setShowReviewServiceSuggestions(true);
+    } else {
+      setFilteredReviewServices([]);
+      setShowReviewServiceSuggestions(false);
+    }
+  };
+
+  const handleAddReviewService = (service) => {
+    if (!service) return;
+
+    const newReviewService = {
+      serviceId: service._id || service.serviceId || "",
+      name: service.name || "",
+      price: Number(service.price) || 0,
+      category: service.category || service.serviceCategory || service.type || "",
+      description: service.description || "",
+      addedAt: new Date().toISOString(),
+    };
+
+    setReviewServices((prev) => [...prev, newReviewService]);
+    setReviewServiceInput("");
+    setFilteredReviewServices([]);
+    setShowReviewServiceSuggestions(false);
+  };
+
+  const handleAddCustomReviewService = () => {
+    const name = reviewServiceInput.trim();
+    if (!name) {
+      showToast("Please enter a service name", "error");
+      return;
+    }
+
+    const matched = services.find(
+      (s) => s.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if (matched) {
+      handleAddReviewService(matched);
+      return;
+    }
+
+    setReviewServices((prev) => [
+      ...prev,
+      {
+        serviceId: "",
+        name,
+        price: 0,
+        category: "",
+        description: "",
+        custom: true,
+        addedAt: new Date().toISOString(),
+      },
+    ]);
+    setReviewServiceInput("");
+    setFilteredReviewServices([]);
+    setShowReviewServiceSuggestions(false);
+  };
+
+  const handleUpdateReviewServicePrice = (index, newPrice) => {
+    setReviewServices((prev) =>
+      prev.map((r, i) =>
+        i === index ? { ...r, price: Number(newPrice) || 0 } : r
+      )
+    );
+  };
+
+  const handleRemoveReviewService = (index) => {
+    setReviewServices((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const getReviewServicesTotal = () => {
+    return reviewServices.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
   };
 
   const handleSaveReview = async () => {
     if (!reviewBooking) return;
 
+    if (reviewServices.length === 0) {
+      showToast("Please add at least one service before marking review.", "error");
+      return;
+    }
+
     setSavingReview(true);
     try {
+      const existingReviews = Array.isArray(reviewBooking.reviews)
+        ? reviewBooking.reviews
+        : [];
+
+      const mergedReviews = [
+        ...existingReviews.map((r) => ({
+          serviceId: r.serviceId || "",
+          name: r.name || "",
+          price: Number(r.price) || 0,
+          category: r.category || "",
+          description: r.description || "",
+          addedAt: r.addedAt || new Date().toISOString(),
+        })),
+        ...reviewServices.map((r) => ({
+          serviceId: r.serviceId || "",
+          name: r.name || "",
+          price: Number(r.price) || 0,
+          category: r.category || "",
+          description: r.description || "",
+          addedAt: r.addedAt || new Date().toISOString(),
+        })),
+      ];
+
+      const mergedTotal = mergedReviews.reduce(
+        (sum, r) => sum + (Number(r.price) || 0),
+        0
+      );
+
       const payload = {
         isReviewed: true,
         reviewDate: new Date().toISOString(),
+        reviews: mergedReviews,
+        reviewServicesTotal: mergedTotal,
       };
 
       const res = await axios.put(
@@ -1469,10 +1702,17 @@ export default function OpManagement() {
       );
 
       if (res?.data?.success || res?.status === 200) {
-        showToast(`✅ Review marked for ${reviewBooking.patientName}!`, "success");
+        showToast(
+          `✅ Review updated! ${reviewServices.length} new service${reviewServices.length > 1 ? "s" : ""} added.`,
+          "success"
+        );
         setShowReviewModal(false);
         setReviewBooking(null);
         setReviewData({ isReviewed: false, reviewDate: "" });
+        setReviewServices([]);
+        setReviewServiceInput("");
+        setFilteredReviewServices([]);
+        setShowReviewServiceSuggestions(false);
         await fetchBookings();
         refreshPatientBookings();
       } else {
@@ -1480,21 +1720,37 @@ export default function OpManagement() {
       }
     } catch (error) {
       console.error("Review save error:", error);
+      const existingReviews = Array.isArray(reviewBooking.reviews)
+        ? reviewBooking.reviews
+        : [];
+      const merged = [...existingReviews, ...reviewServices];
+
       setBookings((prev) =>
         prev.map((b) =>
           b._id === reviewBooking._id
-            ? { ...b, isReviewed: true, reviewDate: new Date().toISOString() }
+            ? {
+                ...b,
+                isReviewed: true,
+                reviewDate: new Date().toISOString(),
+                reviews: merged,
+                reviewServicesTotal: merged.reduce(
+                  (s, r) => s + (Number(r.price) || 0),
+                  0
+                ),
+              }
             : b
         )
       );
       showToast("Review marked locally (backend unavailable)", "info");
       setShowReviewModal(false);
       setReviewBooking(null);
+      setReviewServices([]);
     } finally {
       setSavingReview(false);
     }
   };
 
+  // ✅ UPDATED: offer amount pass karo
   const handleBookNow = async (e) => {
     e.preventDefault();
 
@@ -1507,6 +1763,7 @@ export default function OpManagement() {
         discount: formData.discount,
         discountType: formData.discountType,
         partialAmount: formData.partialAmount,
+        offerAmount: appliedOffer?.offerAmount || 0,
       });
 
       const bookingPayload = {
@@ -1530,6 +1787,7 @@ export default function OpManagement() {
         commissionAmount: fin.commissionAmount,
         discount: fin.discountAmount,
         discountType: formData.discountType,
+        offerDeduction: fin.offerDeduction,
         finalPayable: fin.finalPayable,
         finalPayableAmount: fin.finalPayable,
         grandTotal: fin.finalPayable,
@@ -1552,6 +1810,8 @@ export default function OpManagement() {
         referralCommission: formData.referralCommission,
         referralCommissionType: formData.referralCommissionType,
         slotId: formData.slotId,
+        // ✅ OFFER APPLIED OBJECT
+        offerApplied: formData.offerApplied || null,
       };
 
       const slotRes = await axios.post(`${API_BASE_URL}/appointment-slots/book`, bookingPayload);
@@ -1567,6 +1827,10 @@ export default function OpManagement() {
         setExistingPatient(null); setShowExistingPatientPopup(false);
         setFilteredServices([]); setShowServiceSuggestions(false);
         setCitySuggestions([]); setShowCitySuggestions(false);
+        // ✅ Reset offers
+        setSelectedCustomerOffers([]);
+        setSelectedOfferId("");
+        setAppliedOffer(null);
       } else {
         showToast(slotRes.data.message || "Failed to book appointment", "error");
       }
@@ -1575,6 +1839,7 @@ export default function OpManagement() {
     } finally { setSubmitting(false); }
   };
 
+  // ✅ UPDATED: offer amount pass karo
   const handleUpdateNow = async (e) => {
     e.preventDefault();
 
@@ -1595,6 +1860,7 @@ export default function OpManagement() {
         discount: formData.discount,
         discountType: formData.discountType,
         partialAmount: formData.partialAmount,
+        offerAmount: appliedOffer?.offerAmount || 0,
       });
 
       const bookingPayload = {
@@ -1618,6 +1884,7 @@ export default function OpManagement() {
         commissionAmount: fin.commissionAmount,
         discount: fin.discountAmount,
         discountType: formData.discountType,
+        offerDeduction: fin.offerDeduction,
         finalPayable: fin.finalPayable,
         finalPayableAmount: fin.finalPayable,
         grandTotal: fin.finalPayable,
@@ -1645,6 +1912,8 @@ export default function OpManagement() {
         referralDoctorId: formData.referralDoctorId,
         referralCommission: formData.referralCommission,
         referralCommissionType: formData.referralCommissionType,
+        // ✅ OFFER APPLIED OBJECT
+        offerApplied: formData.offerApplied || null,
       };
 
       if (formData.slotId) {
@@ -1674,6 +1943,10 @@ export default function OpManagement() {
         setShowServiceSuggestions(false);
         setCitySuggestions([]);
         setShowCitySuggestions(false);
+        // ✅ Reset offers
+        setSelectedCustomerOffers([]);
+        setSelectedOfferId("");
+        setAppliedOffer(null);
       } else {
         showToast(slotRes.data.message || "Failed to update appointment", "error");
       }
@@ -1779,9 +2052,6 @@ export default function OpManagement() {
     return b ? (b.isActive !== undefined ? b.isActive : true) : true;
   };
 
-   // ============================================================
-  // BILL HTML BUILDER — takes explicit params (no state)
-  // ============================================================
   const buildBillHtml = (bd, bk) => {
     const groups = { clinic: [], lab: [], pharmacy: [] };
     (bd.items || []).forEach((it) => {
@@ -1795,11 +2065,9 @@ export default function OpManagement() {
     let runningIdx = 0;
     let rowsHtml = "";
 
-    // ✅ SIRF wahi categories process karo jisme at least 1 item ho
     ["clinic", "lab", "pharmacy"].forEach((catKey) => {
       const items = groups[catKey];
 
-      // ❌ Agar category khali hai toh skip karo (LAB/PHARMACY empty row nahi aayegi)
       if (items.length === 0) return;
 
       const subtotal = items.reduce((s, x) => s + (Number(x.amount) || 0), 0);
@@ -1817,8 +2085,6 @@ export default function OpManagement() {
         `;
       });
 
-      // Subtotal row bhi sirf tab add karo jab usme 1 se zyada items ho
-      // (single item ke liye subtotal ki zaroorat nahi)
       if (items.length > 1) {
         rowsHtml += `
           <tr style="background:#f9fafb;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;">
@@ -1920,9 +2186,6 @@ export default function OpManagement() {
     </body></html>`;
   };
 
-  // ============================================================
-  // SAVE INVOICE TO BACKEND
-  // ============================================================
   const saveInvoiceToBackend = async (bookingId, billHtml) => {
     if (!bookingId || !billHtml) return null;
     try {
@@ -1948,11 +2211,6 @@ export default function OpManagement() {
     }
   };
 
-
-
-  // ============================================================
-  // SEND INVOICE VIA WHATSAPP
-  // ============================================================
   const handleSendInvoice = async (booking) => {
     if (!booking || !booking._id) {
       showToast("Booking data missing", "error");
@@ -1981,9 +2239,6 @@ export default function OpManagement() {
     }
   };
 
-   // ============================================================
-  // OPEN BILLING MODAL — shows PDF in modal
-  // ============================================================
   const openBillingModal = async (booking) => {
     if (!booking) return;
 
@@ -2003,21 +2258,30 @@ export default function OpManagement() {
     const normalizedItems = getBookingServices(booking);
     const items = [];
 
-    // ✅ Sirf wahi services add karo jo booking ke waqt add ki gayi thi
     normalizedItems.forEach((s, idx) => {
       const cat = classifyService(s);
+      const finalCat = s.isReviewService ? "clinic" : cat;
+
       items.push({
         no: items.length + 1,
         name: s.name,
-        serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
-        remarks: cat === "lab" ? "Lab Test" : cat === "pharmacy" ? "Pharmacy" : "Consultation",
-        category: cat,
+        serviceCode: s.serviceId
+          ? String(s.serviceId).slice(-6).toUpperCase()
+          : `SVC-${String(idx + 1).padStart(2, "0")}`,
+        remarks: s.isReviewService
+          ? "Review Service"
+          : finalCat === "lab"
+          ? "Lab Test"
+          : finalCat === "pharmacy"
+          ? "Pharmacy"
+          : "Consultation",
+        category: finalCat,
         amount: Number(s.price) || 0,
         paymentStatus: booking.paymentStatus || "Pending",
+        isReviewService: s.isReviewService || false,
       });
     });
 
-    // ✅ Fallback: Agar koi service nahi hai toh Consultation Fee add karo
     if (items.length === 0) {
       const fallback =
         Number(booking.finalPayable) ||
@@ -2034,11 +2298,11 @@ export default function OpManagement() {
           category: "clinic",
           amount: fallback,
           paymentStatus: booking.paymentStatus || "Pending",
+          isReviewService: false,
         });
       }
     }
 
-    // ✅ Category-wise breakdown
     const finalBreakdown = { clinic: 0, lab: 0, pharmacy: 0 };
     items.forEach((it) => {
       if (it.category === "lab") finalBreakdown.lab += it.amount;
@@ -2046,31 +2310,47 @@ export default function OpManagement() {
       else finalBreakdown.clinic += it.amount;
     });
 
-    // ✅ Gross Amount = SUM of all items (jo bhi add kiye gaye hain)
-    const grossAmount = items.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+    const grossAmount = items.reduce(
+      (sum, s) => sum + (Number(s.amount) || 0),
+      0
+    );
 
     const commissionPercent = parseFloat(booking.referralCommission) || 0;
     const commissionAmount =
-      Number(booking.commissionAmount) || (grossAmount * commissionPercent) / 100;
+      Number(booking.commissionAmount) ||
+      (grossAmount * commissionPercent) / 100;
     const discountAmount = Number(booking.discount) || 0;
 
-    // ✅ Net Amount = Gross - Commission - Discount
     const netAmount =
       Number(booking.finalPayable) ||
       Number(booking.finalPayableAmount) ||
       Number(booking.grandTotal) ||
-      (grossAmount - commissionAmount - discountAmount);
+      grossAmount - commissionAmount - discountAmount;
 
     const isPaid = booking.paymentStatus === "Paid";
     const isPartial = booking.paymentStatus === "Partial";
-    const paidAmount = isPaid ? netAmount : isPartial ? (Number(booking.amountPaid) || 0) : 0;
+    const paidAmount = isPaid
+      ? netAmount
+      : isPartial
+      ? Number(booking.amountPaid) || 0
+      : 0;
     const balanceAmount = Math.max(0, netAmount - paidAmount);
 
     const now = new Date();
-    const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-    const shortId = String(booking._id || "").slice(-6).toUpperCase() || "000000";
+    const dateStamp = `${now.getFullYear()}${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    const shortId =
+      String(booking._id || "").slice(-6).toUpperCase() || "000000";
     const invoiceNo = `${dateStamp}-${shortId}`;
-    const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
+    const dateTimeLabel = `${now.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })} ${now.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
 
     const newBillingData = {
       invoiceNo,
@@ -2078,7 +2358,8 @@ export default function OpManagement() {
       receiptNo: `R-${shortId.slice(-4)}`,
       receiptDate: dateTimeLabel,
       paymentMode: booking.paymentType
-        ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1)
+        ? booking.paymentType.charAt(0).toUpperCase() +
+          booking.paymentType.slice(1)
         : "Cash",
       receivedBy: "Front Desk",
       branch: booking.doctorSpecialization || "Main Branch",
@@ -2261,7 +2542,7 @@ export default function OpManagement() {
   const downloadCSV = () => {
     if (!filteredPatients.length) { alert("No patient records available to export!"); return; }
     const headers = ["#", "Patient Name", "Phone", "Address", "City", "Pincode", "Doctor", "Booking Type", "Appointment Date & Time", "Booking Status", "Active Status",
-      "Services", "Clinic Amount", "Lab Amount", "Pharmacy Amount", "Medicine Total", "Discount", "Total Fee", "Paid Amount", "Balance Amount", "Payment Status", "Payment Mode", "Reason", "Referred By Customer", "Referred By Doctor", "Created At", "Registered", "Review Status", "Reviewed On"];
+      "Services", "Clinic Amount", "Lab Amount", "Pharmacy Amount", "Medicine Total", "Discount", "Offer Applied", "Offer Amount", "Total Fee", "Paid Amount", "Balance Amount", "Payment Status", "Payment Mode", "Reason", "Referred By Customer", "Referred By Doctor", "Created At", "Registered", "Review Status", "Reviewed On"];
     const csvRows = [headers.join(","), ...filteredPatients.map((p, idx) => {
       const totalFee = getPatientTotalFee(p);
       const services = getPatientServices(p);
@@ -2275,6 +2556,8 @@ export default function OpManagement() {
       const reviewStatus = booking?.isReviewed ? "Reviewed" : (getReviewWindowStatus(booking).expired ? "Expired" : "Pending");
       const reviewedOn = booking?.reviewDate ? formatDateTimeToDDMMYYYY(booking.reviewDate) : "-";
       const bookingType = getBookingType(booking).label;
+      const offerName = booking?.offerApplied?.offerName || "";
+      const offerAmount = booking?.offerApplied?.offerAmount || 0;
       return [
         idx + 1,
         `"${(p.title || "")} ${(p.name || "").replace(/"/g, '""')}"`,
@@ -2291,6 +2574,8 @@ export default function OpManagement() {
         breakdown.clinic, breakdown.lab, breakdown.pharmacy,
         booking?.medicineTotal || 0,
         booking?.discount || 0,
+        `"${offerName}"`,
+        offerAmount,
         totalFee, paidInfo.paid, paidInfo.balance,
         `"${getConsultationPaymentStatus(p)}"`,
         `"${p.paymentType || "cash"}"`,
@@ -2604,12 +2889,12 @@ export default function OpManagement() {
                       {doctors.map((d) => <option key={d._id || d.id} value={d._id || d.id}>{d.name || "Doctor"}</option>)}
                     </select>
                   </div>
-          <div>
-  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
-    Appointment Date
-  </label>
-  <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} className="w-full border rounded-lg px-3 py-2.5 text-sm bg-white border-gray-300" />
-</div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+                      Appointment Date
+                    </label>
+                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} className="w-full border rounded-lg px-3 py-2.5 text-sm bg-white border-gray-300" />
+                  </div>
                 </div>
 
                 {formData.doctorId && formData.appointmentDate && !isEditMode && (
@@ -2662,7 +2947,7 @@ export default function OpManagement() {
                     </div>
                   )}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex-1 min-w-[150px] relative">
+                    <div className="flex-1 min-w-[150px] relative service-dropdown-add-patient">
                       <input type="text" value={formData.serviceName || ""} onChange={(e) => {
                         const v = e.target.value;
                         setFormData((p) => ({ ...p, serviceName: v }));
@@ -2711,7 +2996,12 @@ export default function OpManagement() {
                       <select value={formData.referralCustomerId} onChange={(e) => {
                         const id = e.target.value;
                         if (id) { const c = referralContacts.find((x) => x._id === id && x.referralType === "customer"); if (c) handleReferralCustomerSelect(c); }
-                        else { setFormData((p) => ({ ...p, referredByCustomer: "", referralCustomerId: "" })); }
+                        else {
+                          setFormData((p) => ({ ...p, referredByCustomer: "", referralCustomerId: "", offerApplied: null }));
+                          setSelectedCustomerOffers([]);
+                          setSelectedOfferId("");
+                          setAppliedOffer(null);
+                        }
                       }} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
                         <option value="">-- Select Customer --</option>
                         {referralContacts.filter((c) => c.referralType === "customer").map((c) => (
@@ -2722,6 +3012,63 @@ export default function OpManagement() {
                         <div className="mt-2 text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 flex items-center gap-1.5">
                           <FaUserFriends className="text-blue-500 text-[10px]" />
                           <span className="font-medium truncate">{formData.referredByCustomer}</span>
+                        </div>
+                      )}
+
+                      {/* ✅ OFFER SELECTION DROPDOWN */}
+                      {formData.referralCustomerId && selectedCustomerOffers.length > 0 && (
+                        <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                          <label className="block text-[10px] font-bold text-amber-700 uppercase mb-1.5 flex items-center gap-1.5">
+                            <FaGift className="text-amber-600" />
+                            Apply Offer (Optional)
+                          </label>
+                          <select
+                            value={selectedOfferId}
+                            onChange={(e) => {
+                              const offerId = e.target.value;
+                              setSelectedOfferId(offerId);
+                              if (offerId) {
+                                const offer = selectedCustomerOffers.find((o) => o._id === offerId);
+                                if (offer) {
+                                  setAppliedOffer(offer);
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    offerApplied: {
+                                      referralContactId: prev.referralCustomerId,
+                                      offerId: offer._id,
+                                      offerName: offer.offerName,
+                                      offerAmount: Number(offer.offerAmount) || 0,
+                                    },
+                                  }));
+                                  showToast(`Offer applied: ${offer.offerName} (₹${offer.offerAmount})`, "success");
+                                }
+                              } else {
+                                setAppliedOffer(null);
+                                setFormData((prev) => ({ ...prev, offerApplied: null }));
+                              }
+                            }}
+                            disabled={isEditMode}
+                            className="w-full bg-white border border-amber-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                          >
+                            <option value="">-- No Offer --</option>
+                            {selectedCustomerOffers.map((o) => (
+                              <option key={o._id} value={o._id}>
+                                {o.offerName} — ₹{o.offerAmount}
+                              </option>
+                            ))}
+                          </select>
+
+                          {appliedOffer && (
+                            <div className="mt-2 flex items-center justify-between bg-white px-3 py-2 rounded border border-amber-300">
+                              <span className="text-xs font-semibold text-amber-800 flex items-center gap-1">
+                                <FaGift className="text-amber-600" />
+                                {appliedOffer.offerName}
+                              </span>
+                              <span className="text-sm font-extrabold text-amber-900">
+                                − ₹{appliedOffer.offerAmount}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -2757,10 +3104,10 @@ export default function OpManagement() {
                   </div>
                 </div>
 
-             <div>
-  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Reason / Symptoms</label>
-  <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none bg-white border-gray-300" placeholder="Enter reason or symptoms" />
-</div>
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Reason / Symptoms</label>
+                  <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none bg-white border-gray-300" placeholder="Enter reason or symptoms" />
+                </div>
 
                 {/* Payment Details */}
                 <div className={`border rounded-xl p-4 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-purple-50/30 border-gray-200"}`}>
@@ -2785,6 +3132,7 @@ export default function OpManagement() {
                       discount: formData.discount,
                       discountType: formData.discountType,
                       partialAmount: formData.partialAmount,
+                      offerAmount: appliedOffer?.offerAmount || 0,
                     });
 
                     return (
@@ -2835,6 +3183,16 @@ export default function OpManagement() {
                                   <FaPercent className="text-[9px]" /> Discount {formData.discountType === "%" ? `(${formData.discount}%)` : ""}
                                 </span>
                                 <span className="font-bold text-red-600">− ₹{Math.round(fin.discountAmount)}</span>
+                              </div>
+                            )}
+
+                            {/* ✅ OFFER DEDUCTION ROW */}
+                            {fin.offerDeduction > 0 && (
+                              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                                <span className="text-amber-700 text-[11px] font-semibold flex items-center gap-1">
+                                  <FaGift className="text-[9px]" /> Offer ({appliedOffer?.offerName})
+                                </span>
+                                <span className="font-bold text-amber-700">− ₹{Math.round(fin.offerDeduction)}</span>
                               </div>
                             )}
 
@@ -2970,6 +3328,7 @@ export default function OpManagement() {
                       <th style={{ textAlign: "center" }}>Booking Status</th>
                       <th style={{ textAlign: "center", minWidth: "150px" }}>Amount</th>
                       <th style={{ textAlign: "center" }}>Discount</th>
+                      <th style={{ textAlign: "center" }}>Offer</th>
                       <th style={{ textAlign: "center" }}>Total</th>
                       <th style={{ textAlign: "center" }}>Paid</th>
                       <th style={{ textAlign: "center" }}>DUE</th>
@@ -3003,6 +3362,7 @@ export default function OpManagement() {
                       const discountAmount = Number(matchingBooking?.discount) || 0;
                       const bookingTypeInfo = getBookingType(matchingBooking);
                       const BookingTypeIcon = bookingTypeInfo.icon;
+                      const offerApplied = matchingBooking?.offerApplied;
 
                       return (
                         <tr key={patient._id} className="hover:bg-blue-50/40">
@@ -3078,6 +3438,18 @@ export default function OpManagement() {
                             {discountAmount > 0 ? (
                               <span className="text-xs font-bold text-red-600">− ₹{Math.round(discountAmount)}</span>
                             ) : <span className="text-xs text-gray-400">—</span>}
+                          </td>
+                          {/* ✅ OFFER COLUMN */}
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {offerApplied && offerApplied.offerAmount > 0 ? (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                                  <FaGift className="w-2.5 h-2.5" />
+                                  {offerApplied.offerName}
+                                </span>
+                                <span className="text-[10px] font-extrabold text-amber-900">− ₹{offerApplied.offerAmount}</span>
+                              </div>
+                            ) : <span className="text-[10px] text-gray-400 italic">—</span>}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className="text-xs font-bold text-slate-800">₹{Math.round(paidInfo.final)}</span>
@@ -3256,6 +3628,7 @@ export default function OpManagement() {
                   const createdAt = matchingBooking?.createdAt || matchingBooking?.bookedAt || patient.createdAt;
                   const bookingTypeInfo = getBookingType(matchingBooking);
                   const BookingTypeIcon = bookingTypeInfo.icon;
+                  const offerApplied = matchingBooking?.offerApplied;
 
                   return (
                     <div key={patient._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -3322,6 +3695,17 @@ export default function OpManagement() {
                                 <FaUserMdIcon className="text-[8px]" /> {referredByDoctor}
                               </span>
                             )}
+                          </div>
+                        )}
+
+                        {/* ✅ OFFER DISPLAY (Mobile) */}
+                        {offerApplied && offerApplied.offerAmount > 0 && (
+                          <div className="p-2 bg-amber-50 rounded-lg border border-amber-200 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-amber-700 flex items-center gap-1">
+                              <FaGift className="w-3 h-3" />
+                              {offerApplied.offerName}
+                            </span>
+                            <span className="text-xs font-extrabold text-amber-900">− ₹{offerApplied.offerAmount}</span>
                           </div>
                         )}
 
@@ -3551,7 +3935,7 @@ export default function OpManagement() {
           )}
         </div>
 
-        {/* 🆕 INVOICE PDF VIEWER MODAL */}
+        {/* INVOICE PDF VIEWER MODAL */}
         {showInvoiceModal && invoiceModalUrl && (
           <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl w-full max-w-5xl shadow-2xl border flex flex-col max-h-[95vh]">
@@ -3590,7 +3974,6 @@ export default function OpManagement() {
                   >
                     <FaDownload className="w-3 h-3" /> Download
                   </button>
-
 
                   <button
                     onClick={() => handleSendInvoice(invoiceModalBooking)}
@@ -3647,7 +4030,7 @@ export default function OpManagement() {
           </div>
         )}
 
-        {/* PATIENT MODAL */}
+        {/* PATIENT MODAL (VIEW POPUP) */}
         {showPatientModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border">
@@ -3705,6 +4088,14 @@ export default function OpManagement() {
                             const hasVitals = booking.vitalsTemp || booking.vitalsBp || booking.vitalsPr || booking.vitalsWeight;
                             const bookingTypeInfo = getBookingType(booking);
                             const BookingTypeIcon = bookingTypeInfo.icon;
+                            const reviewServicesList = Array.isArray(booking.reviews) ? booking.reviews : [];
+                            const hasReviews = reviewServicesList.length > 0;
+                            const reviewTotal = reviewServicesList.reduce(
+                              (s, r) => s + (Number(r.price) || 0),
+                              0
+                            );
+                            const offerApplied = booking.offerApplied;
+
                             return (
                               <div key={booking._id} className="bg-white border rounded-xl overflow-hidden shadow-sm">
                                 <div className={`px-4 py-2.5 ${statusColors.bg} border-b ${statusColors.border} flex items-center justify-between flex-wrap gap-2`}>
@@ -3727,6 +4118,7 @@ export default function OpManagement() {
                                     <button onClick={() => openReviewModal(booking)} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg" title="Review"><FaStar className="w-3.5 h-3.5" /></button>
                                   </div>
                                 </div>
+
                                 <div className="p-4 space-y-4">
                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                                     <div><div className="text-[10px] font-bold uppercase text-gray-400">Doctor</div><div className="font-bold">{booking.doctorName || "N/A"}</div><div className="text-[10px] text-gray-500">{booking.doctorSpecialization || ""}</div></div>
@@ -3762,6 +4154,19 @@ export default function OpManagement() {
                                     </div>
                                   )}
 
+                                  {/* ✅ OFFER APPLIED (Detail) */}
+                                  {offerApplied && offerApplied.offerAmount > 0 && (
+                                    <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                                      <div className="text-[10px] font-bold uppercase text-amber-700 mb-1 flex items-center gap-1">
+                                        <FaGift /> Offer Applied
+                                      </div>
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="font-semibold text-amber-800">{offerApplied.offerName}</span>
+                                        <span className="font-extrabold text-amber-900">− ₹{offerApplied.offerAmount}</span>
+                                      </div>
+                                    </div>
+                                  )}
+
                                   {hasServices && (
                                     <div>
                                       <div className="text-[10px] font-bold uppercase text-gray-400">Services</div>
@@ -3771,6 +4176,54 @@ export default function OpManagement() {
                                             {svc.name} ₹{svc.price}
                                           </span>
                                         ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {hasReviews && (
+                                    <div className="border rounded-xl overflow-hidden border-emerald-200">
+                                      <div className="px-3 py-2 bg-emerald-50 border-b border-emerald-200 flex items-center justify-between">
+                                        <div className="text-[10px] font-bold uppercase text-emerald-800 flex items-center gap-1.5">
+                                          <FaClipboardList className="text-emerald-600 text-[11px]" />
+                                          Review Services ({reviewServicesList.length})
+                                        </div>
+                                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                                          ₹{reviewTotal}
+                                        </span>
+                                      </div>
+                                      <div className="overflow-x-auto">
+                                        <table className="w-full text-xs">
+                                          <thead>
+                                            <tr className="bg-emerald-50/60 border-b border-emerald-200">
+                                              <th className="px-3 py-2 text-left text-[10px] font-bold text-emerald-800 uppercase tracking-wider" style={{ width: "40px" }}>#</th>
+                                              <th className="px-3 py-2 text-left text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Service Name</th>
+                                              <th className="px-3 py-2 text-left text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Category</th>
+                                              <th className="px-3 py-2 text-left text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Added On</th>
+                                              <th className="px-3 py-2 text-right text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Price</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {reviewServicesList.map((r, rIdx) => (
+                                              <tr key={r._id || rIdx} className="border-b border-emerald-100 last:border-0 hover:bg-emerald-50/30">
+                                                <td className="px-3 py-2 text-[10px] font-bold text-emerald-700">{rIdx + 1}</td>
+                                                <td className="px-3 py-2 font-semibold text-gray-800">{r.name || "N/A"}</td>
+                                                <td className="px-3 py-2 text-[10px] text-gray-500">{r.category || "—"}</td>
+                                                <td className="px-3 py-2 text-[10px] text-gray-500">
+                                                  {r.addedAt ? formatDateToDDMMYYYY(r.addedAt) : "—"}
+                                                </td>
+                                                <td className="px-3 py-2 text-right font-bold text-emerald-700">₹{r.price || 0}</td>
+                                              </tr>
+                                            ))}
+                                            <tr className="bg-emerald-100/60 border-t-2 border-emerald-300">
+                                              <td colSpan="4" className="px-3 py-2 text-right text-[10px] font-extrabold uppercase text-emerald-900 tracking-wider">
+                                                Review Total:
+                                              </td>
+                                              <td className="px-3 py-2 text-right text-sm font-extrabold text-emerald-900">
+                                                ₹{reviewTotal}
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
                                       </div>
                                     </div>
                                   )}
@@ -4030,8 +4483,8 @@ export default function OpManagement() {
         {/* REVIEW MODAL */}
         {showReviewModal && reviewBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border relative">
-              <div className="flex items-center justify-between px-6 py-4 border-b">
+            <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border relative max-h-[92vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white z-20 flex items-center justify-between px-6 py-4 border-b">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center">
                     <FaStar className="w-5 h-5" />
@@ -4048,6 +4501,10 @@ export default function OpManagement() {
                     setShowReviewModal(false);
                     setReviewBooking(null);
                     setReviewData({ isReviewed: false, reviewDate: "" });
+                    setReviewServices([]);
+                    setReviewServiceInput("");
+                    setFilteredReviewServices([]);
+                    setShowReviewServiceSuggestions(false);
                   }}
                   className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
                 >
@@ -4077,86 +4534,262 @@ export default function OpManagement() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Purpose</span>
-                      <span className="font-bold text-gray-900 truncate max-w-[180px]">
+                      <span className="font-bold text-gray-900 truncate max-w-[280px]">
                         {reviewBooking.purpose || "N/A"}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {reviewBooking.isReviewed ? (
-                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FaCheckCircle className="w-4 h-4 text-emerald-600" />
-                      <span className="text-xs font-bold text-emerald-800">
-                        Already Reviewed
+                {Array.isArray(reviewBooking.reviews) && reviewBooking.reviews.length > 0 && (
+                  <div className="border rounded-xl p-4 bg-emerald-50/40 border-emerald-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-xs font-bold text-emerald-800 uppercase flex items-center gap-2">
+                        <FaClipboardList className="text-emerald-600" />
+                        Previously Reviewed Services
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        {reviewBooking.reviews.length} old
                       </span>
                     </div>
-                    <p className="text-[11px] text-emerald-700">
-                      Reviewed on:{" "}
-                      <b>
-                        {formatDateTimeToDDMMYYYY(
-                          reviewBooking.reviewDate || new Date().toISOString()
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                      {reviewBooking.reviews.map((r, i) => (
+                        <div
+                          key={`old-${i}`}
+                          className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-emerald-200 text-xs"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                              {i + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-gray-800 truncate">
+                                {r.name}
+                              </div>
+                              {r.addedAt && (
+                                <div className="text-[9px] text-gray-500">
+                                  {formatDateToDDMMYYYY(r.addedAt)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <span className="font-bold text-emerald-700 flex-shrink-0">
+                            ₹{r.price}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-between items-center px-3 py-2 bg-emerald-100 rounded-lg border border-emerald-300 mt-2">
+                      <span className="text-xs font-bold text-emerald-900">
+                        Previous Total:
+                      </span>
+                      <span className="text-sm font-extrabold text-emerald-900">
+                        ₹
+                        {reviewBooking.reviews.reduce(
+                          (s, r) => s + (Number(r.price) || 0),
+                          0
                         )}
-                      </b>
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="border rounded-xl p-4 bg-blue-50/30 border-blue-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+                      <FaPlus className="text-blue-600" />
+                      {Array.isArray(reviewBooking.reviews) && reviewBooking.reviews.length > 0
+                        ? "Add New Services (Today's Visit)"
+                        : "Add Review Services"}
+                    </label>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-300">
+                      {reviewServices.length} new
+                    </span>
+                  </div>
+
+                  {reviewServices.length > 0 && (
+                    <div className="space-y-2 mb-3 max-h-64 overflow-y-auto pr-1">
+                      {reviewServices.map((svc, i) => (
+                        <div
+                          key={`new-${i}-${svc.serviceId || svc.name}-${svc.addedAt}`}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-white border border-blue-200"
+                        >
+                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                            {i + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-gray-800 truncate">
+                              {svc.name}
+                            </div>
+                            {svc.category && (
+                              <div className="text-[10px] text-gray-500">
+                                {svc.category}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] font-bold text-gray-600">₹</span>
+                            <input
+                              type="number"
+                              value={svc.price}
+                              onChange={(e) =>
+                                handleUpdateReviewServicePrice(i, e.target.value)
+                              }
+                              className="w-20 px-2 py-1 text-xs font-bold text-emerald-700 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                              min="0"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveReviewService(i)}
+                            className="text-red-400 hover:text-red-600 p-1"
+                            title="Remove"
+                          >
+                            <FaMinusCircle className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+
+                      <div className="flex justify-between items-center px-3 py-2 bg-blue-100 rounded-lg border border-blue-300 sticky bottom-0">
+                        <span className="text-xs font-bold text-blue-800">
+                          New Services Total:
+                        </span>
+                        <span className="text-sm font-extrabold text-blue-900">
+                          ₹{getReviewServicesTotal()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex-1 min-w-[180px] relative">
+                      <input
+                        type="text"
+                        value={reviewServiceInput}
+                        onChange={(e) =>
+                          handleReviewServiceInputChange(e.target.value)
+                        }
+                        onFocus={() => {
+                          if (
+                            reviewServiceInput.trim() &&
+                            filteredReviewServices.length > 0
+                          ) {
+                            setShowReviewServiceSuggestions(true);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddCustomReviewService();
+                          }
+                        }}
+                        placeholder="🔍 Search or type service name..."
+                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        autoComplete="off"
+                      />
+                      {showReviewServiceSuggestions &&
+                        filteredReviewServices.length > 0 && (
+                          <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
+                            <div className="px-3 py-1.5 bg-blue-50 border-b border-blue-100 sticky top-0">
+                              <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
+                                {filteredReviewServices.length} service
+                                {filteredReviewServices.length > 1 ? "s" : ""} found
+                              </p>
+                            </div>
+                            {filteredReviewServices.map((svc) => (
+                              <button
+                                key={svc._id}
+                                type="button"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleAddReviewService(svc);
+                                }}
+                                className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0"
+                              >
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-gray-800">
+                                    {svc.name}
+                                  </span>
+                                  {svc.category && (
+                                    <span className="text-[10px] text-gray-500">
+                                      {svc.category}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                  ₹{svc.price}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddCustomReviewService}
+                      disabled={!reviewServiceInput.trim()}
+                      className="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-lg flex items-center gap-1 disabled:opacity-50 hover:bg-emerald-700"
+                    >
+                      <FaPlus className="w-3 h-3" /> Add
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-gray-500 mt-2">
+                    💡 Dropdown se select karo ya type karke <b>Add</b> / <b>Enter</b> dabao. Jitni services chahiye add karo, phir ek baar Save karo.
+                  </p>
+                </div>
+
+                {reviewServices.length > 0 && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-[11px] text-blue-800">
+                      Clicking <b>"Save Review"</b> will add{" "}
+                      <b>{reviewServices.length}</b> new service
+                      {reviewServices.length !== 1 ? "s" : ""} (₹{getReviewServicesTotal()})
+                      {Array.isArray(reviewBooking.reviews) && reviewBooking.reviews.length > 0 && (
+                        <> to the existing <b>{reviewBooking.reviews.length}</b> reviewed service{reviewBooking.reviews.length !== 1 ? "s" : ""}</>
+                      )}.
                     </p>
                   </div>
-                ) : (
-                  <>
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                      <div className="text-[10px] font-bold uppercase text-amber-700 mb-1">
-                        Review Window
-                      </div>
-                      <p className="text-[11px] text-amber-800">
-                        {(() => {
-                          const rStatus = getReviewWindowStatus(reviewBooking);
-                          return rStatus.canReview
-                            ? `You have ${rStatus.daysLeft} day${rStatus.daysLeft !== 1 ? "s" : ""} left to mark this review.`
-                            : "Review window is not available.";
-                        })()}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-[11px] text-blue-800">
-                        Clicking <b>"Mark as Reviewed"</b> will set{" "}
-                        <b>isReviewed: true</b> and record the current date/time.
-                      </p>
-                    </div>
-                  </>
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50/50">
+              <div className="sticky bottom-0 flex justify-end gap-3 px-6 py-4 border-t bg-gray-50/80 backdrop-blur">
                 <button
                   onClick={() => {
                     setShowReviewModal(false);
                     setReviewBooking(null);
                     setReviewData({ isReviewed: false, reviewDate: "" });
+                    setReviewServices([]);
+                    setReviewServiceInput("");
+                    setFilteredReviewServices([]);
+                    setShowReviewServiceSuggestions(false);
                   }}
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
                 >
-                  {reviewBooking.isReviewed ? "Close" : "Cancel"}
+                  Cancel
                 </button>
-                {!reviewBooking.isReviewed && (
-                  <button
-                    onClick={handleSaveReview}
-                    disabled={savingReview}
-                    className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {savingReview ? (
-                      <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <FaCheckCircle className="w-3.5 h-3.5" />
-                    )}
-                    {savingReview ? "Saving..." : "Mark as Reviewed"}
-                  </button>
-                )}
+                <button
+                  onClick={handleSaveReview}
+                  disabled={savingReview || reviewServices.length === 0}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={
+                    reviewServices.length === 0
+                      ? "Add at least one service"
+                      : `Save ${reviewServices.length} new review${reviewServices.length > 1 ? "s" : ""}`
+                  }
+                >
+                  {savingReview ? (
+                    <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <FaCheckCircle className="w-3.5 h-3.5" />
+                  )}
+                  {savingReview
+                    ? "Saving..."
+                    : `Save Review (${reviewServices.length})`}
+                </button>
               </div>
             </div>
           </div>
         )}
-
       </main>
     </div>
   );

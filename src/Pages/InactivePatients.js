@@ -1,5 +1,6 @@
 // InactivePatients.js — Inactive OPD Patients History
 // ✅ Stats Cards + Filters + Export CSV + Mobile Card View
+// ✅ Uses /getallinactivebookings API + Review Services Support
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -11,7 +12,7 @@ import {
   FaAllergies, FaPills, FaFileInvoiceDollar, FaPrescription, FaHeartbeat,
   FaUserFriends, FaUserMd as FaUserMdIcon, FaStickyNote, FaCommentMedical,
   FaUserCheck, FaUserClock, FaClinicMedical, FaFlask, FaDownload,
-  FaFilter, FaTrashAlt, FaRupeeSign, FaCalendarRange
+  FaFilter, FaTrashAlt, FaRupeeSign, FaCalendarRange, FaClipboardList
 } from "react-icons/fa";
 import {
   FiRefreshCw, FiUsers, FiClock, FiEye, FiXCircle, FiCheckCircle,
@@ -51,20 +52,45 @@ const formatTime = (dateStr) =>
 
 const getBookingServices = (booking) => {
   if (!booking) return [];
-  const arr = (Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0 && booking.serviceItems) ||
-    (Array.isArray(booking.services) && booking.services.length > 0 && booking.services) || [];
-  return arr.map((s) => ({
+
+  const baseArr =
+    (Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0 && booking.serviceItems) ||
+    (Array.isArray(booking.services) && booking.services.length > 0 && booking.services) ||
+    [];
+
+  const baseServices = baseArr.map((s) => ({
     name: s.name || "Service",
     price: Number(s.price) || 0,
+    isReviewService: false,
   }));
+
+  // ✅ Reviews bhi include karo
+  const reviewServices = Array.isArray(booking.reviews)
+    ? booking.reviews.map((r) => ({
+        name: r.name || "Review Service",
+        price: Number(r.price) || 0,
+        isReviewService: true,
+      }))
+    : [];
+
+  return [...baseServices, ...reviewServices];
 };
 
 const getBookingFinalPayable = (booking) => {
   if (!booking) return 0;
-  return Number(booking.finalPayable) ||
+
+  const final =
+    Number(booking.finalPayable) ||
     Number(booking.finalPayableAmount) ||
     Number(booking.grandTotal) ||
-    Number(booking.totalAmount) || 0;
+    Number(booking.totalAmount) ||
+    0;
+
+  if (final > 0) return final;
+
+  // Fallback
+  const services = getBookingServices(booking);
+  return services.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
 };
 
 export default function InactivePatients() {
@@ -96,8 +122,7 @@ export default function InactivePatients() {
     setTimeout(() => setToast(null), 4000);
   };
 
-
-  // 🔥 Navigate based on user role (admin → /path, employee → /employee/path)
+  // 🔥 Navigate based on user role
   const handleRoleBasedNavigate = (path) => {
     const userRole = localStorage.getItem("userRole");
     if (userRole === "employee") {
@@ -108,26 +133,50 @@ export default function InactivePatients() {
     }
   };
 
+  // ✅ FETCH INACTIVE BOOKINGS ONLY
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings`);
+      const res = await axios.get(
+        `${API_BASE_URL}/appointment-slots/getallinactivebookings`
+      );
       let data = [];
       if (res.data?.success) data = res.data.bookings || res.data.data || [];
       else if (Array.isArray(res.data)) data = res.data;
 
       const transformed = data.map((b) => {
         const slotDetails = b.slotDetails || {};
-        const rawServices = (Array.isArray(b.services) && b.services.length > 0 && b.services) ||
-          (Array.isArray(b.serviceItems) && b.serviceItems.length > 0 && b.serviceItems) || [];
+        const rawServices =
+          (Array.isArray(b.services) && b.services.length > 0 && b.services) ||
+          (Array.isArray(b.serviceItems) && b.serviceItems.length > 0 && b.serviceItems) ||
+          [];
+
         const normalizedServices = rawServices.map((s) => ({
           name: s.name || "Service",
           price: Number(s.price) || 0,
           serviceId: s.serviceId || s._id || "",
+          isReviewService: false,
         }));
 
-        const finalPayable = Number(b.finalPayable) || Number(b.finalPayableAmount) ||
-          Number(b.grandTotal) || Number(b.totalAmount) || 0;
+        // ✅ Reviews bhi services mein include karo
+        const reviewServices = Array.isArray(b.reviews)
+          ? b.reviews.map((r) => ({
+              name: r.name || "Review Service",
+              price: Number(r.price) || 0,
+              serviceId: r.serviceId || r._id || "",
+              isReviewService: true,
+            }))
+          : [];
+
+        const allServices = [...normalizedServices, ...reviewServices];
+
+        // ✅ Backend already merged review total into finalPayable
+        const finalPayable =
+          Number(b.finalPayable) ||
+          Number(b.finalPayableAmount) ||
+          Number(b.grandTotal) ||
+          Number(b.totalAmount) ||
+          0;
 
         return {
           _id: b._id || b.id,
@@ -149,7 +198,8 @@ export default function InactivePatients() {
           purpose: b.purpose || "",
           symptoms: b.symptoms || "",
           doctorName: slotDetails.doctorName || b.doctorName || "",
-          doctorSpecialization: slotDetails.doctorSpecialization || b.doctorSpecialization || "",
+          doctorSpecialization:
+            slotDetails.doctorSpecialization || b.doctorSpecialization || "",
           startTime: slotDetails.startTime || b.startTime || "",
           endTime: slotDetails.endTime || b.endTime || "",
           appointmentDate: b.appointmentDate || slotDetails.date || "",
@@ -159,12 +209,16 @@ export default function InactivePatients() {
           finalPayable,
           totalAmount: finalPayable,
           amountPaid: Number(b.amountPaid) || 0,
-          balanceAmount: Number(b.balanceAmount) || Math.max(0, finalPayable - (Number(b.amountPaid) || 0)),
-          serviceItems: normalizedServices,
-          services: normalizedServices,
+          balanceAmount:
+            Number(b.balanceAmount) ||
+            Math.max(0, finalPayable - (Number(b.amountPaid) || 0)),
+          serviceItems: allServices,
+          services: allServices,
+          reviews: Array.isArray(b.reviews) ? b.reviews : [],
+          reviewServicesTotal: Number(b.reviewServicesTotal) || 0,
           createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
           bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
-          isActive: b.isActive !== undefined ? b.isActive : true,
+          isActive: b.isActive !== undefined ? b.isActive : false,
           referredByCustomer: b.referredByCustomer || "",
           referredByDoctor: b.referredByDoctor || "",
           clinicalNotes: b.clinicalNotes || "",
@@ -185,11 +239,12 @@ export default function InactivePatients() {
           status: b.status || "confirmed",
           medicineTotal: Number(b.medicineTotal) || 0,
           labTotal: Number(b.labTotal) || 0,
+          invoiceUrl: b.invoiceUrl || null,
         };
       });
       setBookings(transformed);
     } catch (error) {
-      console.error("Error fetching bookings:", error);
+      console.error("Error fetching inactive bookings:", error);
       setBookings([]);
     } finally {
       setLoading(false);
@@ -225,7 +280,7 @@ export default function InactivePatients() {
           medicalHistory: b.patientMedicalHistory || "",
           allergies: b.patientAllergies || "",
           medications: b.patientMedications || "",
-          isActive: b.isActive !== undefined ? b.isActive : true,
+          isActive: b.isActive !== undefined ? b.isActive : false,
           latestBookingId: b._id,
           createdAt: b.createdAt || b.bookedAt,
           paymentStatus: b.paymentStatus || "Pending",
@@ -247,22 +302,15 @@ export default function InactivePatients() {
   // ✅ Filter inactive patients
   const inactivePatients = useMemo(() => {
     return patients.filter((p) => !p.isActive).filter((p) => {
-      // Card filter
       if (activeCardFilter === "Paid" && p.paymentStatus !== "Paid") return false;
       if (activeCardFilter === "Pending" && p.paymentStatus !== "Pending") return false;
       if (activeCardFilter === "Partial" && p.paymentStatus !== "Partial") return false;
       if (activeCardFilter === "Due" && p.paymentStatus !== "Due") return false;
 
-      // Payment filter
       if (paymentFilter !== "All" && p.paymentStatus !== paymentFilter) return false;
-
-      // Doctor filter
       if (doctorFilter !== "All" && p.doctorName !== doctorFilter) return false;
-
-      // Gender filter
       if (genderFilter !== "All" && p.gender !== genderFilter) return false;
 
-      // Date range
       if (p.createdAt) {
         const d = new Date(p.createdAt);
         if (fromDate && toDate) {
@@ -278,7 +326,6 @@ export default function InactivePatients() {
         }
       }
 
-      // Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (p.name || "").toLowerCase().includes(q) ||
@@ -517,7 +564,7 @@ export default function InactivePatients() {
             >
               <FiDownload className="w-3 h-3" /> Export CSV
             </button>
-                               <button
+            <button
               onClick={() => handleRoleBasedNavigate("/op-management")}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm"
             >
@@ -577,7 +624,7 @@ export default function InactivePatients() {
             >
               <FiFilter className="w-3.5 h-3.5" /> Filters
             </button>
-                                <button
+            <button
               onClick={() => handleRoleBasedNavigate("/op-management")}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm ml-auto"
             >
@@ -745,8 +792,6 @@ export default function InactivePatients() {
             <div className="emp-dash__stat-meta">total inactive value</div>
           </div>
         </div>
-
-       
 
         <div className="emp-dash__card">
           {loading ? (
@@ -1094,6 +1139,14 @@ export default function InactivePatients() {
                     <div className="space-y-3">
                       {patientBookings.map((booking, bIdx) => {
                         const items = getBookingServices(booking);
+                        const reviewList = Array.isArray(booking.reviews) ? booking.reviews : [];
+                        const hasReviews = reviewList.length > 0;
+                        const reviewTotal = reviewList.reduce(
+                          (s, r) => s + (Number(r.price) || 0),
+                          0
+                        );
+                        const totalFee = getBookingFinalPayable(booking);
+
                         return (
                           <div key={booking._id} className="bg-white border rounded-xl overflow-hidden shadow-sm">
                             <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
@@ -1142,13 +1195,79 @@ export default function InactivePatients() {
                                   <div className="text-[10px] font-bold uppercase text-gray-400">Services</div>
                                   <div className="flex flex-wrap gap-1.5 mt-1">
                                     {items.map((svc, sIdx) => (
-                                      <span key={sIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                      <span key={sIdx} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${svc.isReviewService ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"}`}>
                                         {svc.name} ₹{svc.price}
                                       </span>
                                     ))}
                                   </div>
                                 </div>
                               )}
+
+                              {/* ✅ REVIEWS TABLE */}
+                              {hasReviews && (
+                                <div className="border rounded-xl overflow-hidden border-emerald-200">
+                                  <div className="px-3 py-2 bg-emerald-50 border-b border-emerald-200 flex items-center justify-between">
+                                    <div className="text-[10px] font-bold uppercase text-emerald-800 flex items-center gap-1.5">
+                                      <FaClipboardList className="text-emerald-600 text-[11px]" />
+                                      Review Services ({reviewList.length})
+                                    </div>
+                                    <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                                      ₹{reviewTotal}
+                                    </span>
+                                  </div>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="bg-emerald-50/60 border-b border-emerald-200">
+                                          <th className="px-3 py-2 text-left text-[10px] font-bold text-emerald-800 uppercase" style={{ width: "40px" }}>#</th>
+                                          <th className="px-3 py-2 text-left text-[10px] font-bold text-emerald-800 uppercase">Service</th>
+                                          <th className="px-3 py-2 text-left text-[10px] font-bold text-emerald-800 uppercase">Added On</th>
+                                          <th className="px-3 py-2 text-right text-[10px] font-bold text-emerald-800 uppercase">Price</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {reviewList.map((r, rIdx) => (
+                                          <tr key={r._id || rIdx} className="border-b border-emerald-100 last:border-0">
+                                            <td className="px-3 py-2 text-[10px] font-bold text-emerald-700">{rIdx + 1}</td>
+                                            <td className="px-3 py-2 font-semibold text-gray-800">{r.name || "N/A"}</td>
+                                            <td className="px-3 py-2 text-[10px] text-gray-500">
+                                              {r.addedAt ? formatDateToDDMMYYYY(r.addedAt) : "—"}
+                                            </td>
+                                            <td className="px-3 py-2 text-right font-bold text-emerald-700">₹{r.price || 0}</td>
+                                          </tr>
+                                        ))}
+                                        <tr className="bg-emerald-100/60 border-t-2 border-emerald-300">
+                                          <td colSpan="3" className="px-3 py-2 text-right text-[10px] font-extrabold uppercase text-emerald-900">Total:</td>
+                                          <td className="px-3 py-2 text-right text-sm font-extrabold text-emerald-900">
+                                            ₹{reviewTotal}
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs p-3 bg-gray-50 rounded-lg border">
+                                <div>
+                                  <div className="text-[10px] font-bold uppercase text-gray-400">Total Fee</div>
+                                  <div className="text-sm font-extrabold text-slate-800">₹{Math.round(totalFee)}</div>
+                                </div>
+                                <div>
+                                  <div className="text-[10px] font-bold uppercase text-gray-400">Paid</div>
+                                  <div className="text-sm font-extrabold text-emerald-700">₹{Math.round(Number(booking.amountPaid) || 0)}</div>
+                                </div>
+                                <div>
+                                  <div className="text-[10px] font-bold uppercase text-gray-400">Balance</div>
+                                  <div className={`text-sm font-extrabold ${(totalFee - (Number(booking.amountPaid) || 0)) > 0 ? "text-red-600" : "text-gray-400"}`}>
+                                    ₹{Math.round(Math.max(0, totalFee - (Number(booking.amountPaid) || 0)))}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-[10px] font-bold uppercase text-gray-400">Payment Mode</div>
+                                  <div className="font-bold capitalize">{booking.paymentType || "cash"}</div>
+                                </div>
+                              </div>
 
                               {(booking.referredByCustomer || booking.referredByDoctor) && (
                                 <div className="flex flex-wrap gap-2">
