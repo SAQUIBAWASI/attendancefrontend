@@ -1,6 +1,7 @@
 // ReferralManagement.js — Combined Doctor + Customer Referrals Management
 // ✅ Tabs: Doctor Referrals | Customer Referrals
 // ✅ Multiple Offers Array (Add / Edit / Delete) support
+// ✅ Special Offer field in Add/Edit form
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -157,6 +158,9 @@ export default function ReferralManagement() {
   const [editingType, setEditingType] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // ✅ SPECIAL OFFER IN FORM
+  const [formOffer, setFormOffer] = useState({ offerName: "", amount: "" });
 
   // ==================== FILTERS ====================
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -403,6 +407,7 @@ export default function ReferralManagement() {
     }
   };
 
+  // ✅ UPDATED: Offer bhi save hoga
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -418,6 +423,14 @@ export default function ReferralManagement() {
       }
     }
 
+    // ✅ Offer validation — agar ek field bhara hai to dono chahiye
+    const hasOfferName = formOffer.offerName.trim();
+    const hasOfferAmt = formOffer.amount.toString().trim();
+    if ((hasOfferName && !hasOfferAmt) || (!hasOfferName && hasOfferAmt)) {
+      showToast("Please fill both Offer Name and Amount (or leave both empty)", "error");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const payload = {
@@ -425,10 +438,13 @@ export default function ReferralManagement() {
         referralType: isDoctorTab ? "doctor" : "customer"
       };
 
+      let savedReferral = null;
+
       if (editingId) {
         const res = await updateReferral(editingId, payload);
         if (res.data.success) {
           const updatedData = res.data.data || { _id: editingId, ...payload };
+          savedReferral = { ...updatedData, offers: updatedData.offers || [] };
           setActiveReferrals((prev) =>
             prev.map((r) => (r._id === editingId ? { ...r, ...updatedData, offers: r.offers || [] } : r))
           );
@@ -443,14 +459,46 @@ export default function ReferralManagement() {
             offers: [],
             createdAt: new Date().toISOString()
           };
-          setActiveReferrals((prev) => [newData, ...prev]);
+          savedReferral = { ...newData, offers: newData.offers || [] };
+          setActiveReferrals((prev) => [savedReferral, ...prev]);
           showToast(`${referrerLabel} referral added successfully!`);
         }
       }
+
+      // ✅ Offer bhi add karo (agar bhara hai)
+      if (savedReferral && hasOfferName && hasOfferAmt) {
+        try {
+          const offerRes = await axios.post(
+            `${API_BASE_URL}/addoffer/${savedReferral._id}`,
+            {
+              offerName: formOffer.offerName.trim(),
+              offerAmount: Number(formOffer.amount),
+            }
+          );
+
+          if (offerRes.data.success) {
+            const withOffer = {
+              ...offerRes.data.data,
+              offers: Array.isArray(offerRes.data.data?.offers)
+                ? offerRes.data.data.offers
+                : [],
+            };
+            setActiveReferrals((prev) =>
+              prev.map((r) => (r._id === withOffer._id ? withOffer : r))
+            );
+            showToast("Offer added successfully!");
+          }
+        } catch (offerErr) {
+          console.error("Offer add error:", offerErr);
+          showToast("Referral saved but offer failed. Add offer from Actions.", "info");
+        }
+      }
+
       setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM });
       setEditingId(null);
       setEditingType(null);
       setShowForm(false);
+      setFormOffer({ offerName: "", amount: "" }); // ✅ reset
     } catch (err) {
       console.error(`Error saving ${referrerLabel.toLowerCase()} referral:`, err);
       showToast(err.response?.data?.message || `Failed to save ${referrerLabel.toLowerCase()} referral`, "error");
@@ -493,6 +541,7 @@ export default function ReferralManagement() {
       setEditingType("customer");
     }
     setEditingId(referral._id);
+    setFormOffer({ offerName: "", amount: "" }); // ✅ reset offer
     setShowForm(true);
   };
 
@@ -528,7 +577,6 @@ export default function ReferralManagement() {
 
   // ==================== ✅ OFFER HANDLERS (ARRAY) ====================
 
-  // Naya offer add karne ke liye modal
   const openOfferModal = (referral) => {
     setSelectedOfferReferral(referral);
     setEditingOfferId(null);
@@ -536,7 +584,6 @@ export default function ReferralManagement() {
     setShowOfferModal(true);
   };
 
-  // Existing offer edit karne ke liye modal
   const openEditOfferModal = (referral, offer) => {
     setSelectedOfferReferral(referral);
     setEditingOfferId(offer._id);
@@ -559,7 +606,6 @@ export default function ReferralManagement() {
     setOfferForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Add ya Update offer
   const handleOfferSubmit = async (e) => {
     e.preventDefault();
 
@@ -578,13 +624,11 @@ export default function ReferralManagement() {
 
       let res;
       if (editingOfferId) {
-        // ✅ UPDATE existing offer
         res = await axios.put(
           `${API_BASE_URL}/updateoffer/${selectedOfferReferral._id}/${editingOfferId}`,
           payload
         );
       } else {
-        // ✅ ADD new offer
         res = await axios.post(
           `${API_BASE_URL}/addoffer/${selectedOfferReferral._id}`,
           payload
@@ -597,12 +641,10 @@ export default function ReferralManagement() {
           offers: Array.isArray(res.data.data?.offers) ? res.data.data.offers : []
         };
 
-        // Local state update
         setActiveReferrals((prev) =>
           prev.map((r) => (r._id === updatedReferral._id ? updatedReferral : r))
         );
 
-        // Detail modal bhi update karo agar open hai
         if (selectedReferral && selectedReferral._id === updatedReferral._id) {
           setSelectedReferral(updatedReferral);
         }
@@ -618,7 +660,6 @@ export default function ReferralManagement() {
     }
   };
 
-  // ✅ Delete offer
   const handleDeleteOffer = async (referral, offerId) => {
     if (!window.confirm("Are you sure you want to delete this offer?")) return;
 
@@ -654,6 +695,7 @@ export default function ReferralManagement() {
     setEditingId(null);
     setEditingType(null);
     setShowForm(false);
+    setFormOffer({ offerName: "", amount: "" }); // ✅ reset offer
   };
 
   const clearFilters = () => {
@@ -868,6 +910,7 @@ export default function ReferralManagement() {
     setEditingId(null);
     setEditingType(null);
     setFormData(tab === "doctor" ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM });
+    setFormOffer({ offerName: "", amount: "" });
   };
 
   // ==================== LOADING ====================
@@ -1050,6 +1093,7 @@ export default function ReferralManagement() {
                 setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM });
                 setEditingId(null);
                 setEditingType(null);
+                setFormOffer({ offerName: "", amount: "" });
                 setShowForm(true);
               }}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white ${addButtonBg} rounded-lg transition-all shadow-sm`}
@@ -1116,6 +1160,7 @@ export default function ReferralManagement() {
                 setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM });
                 setEditingId(null);
                 setEditingType(null);
+                setFormOffer({ offerName: "", amount: "" });
                 setShowForm(true);
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white ${addButtonBg} rounded-lg transition-all shadow-sm`}
@@ -1243,6 +1288,7 @@ export default function ReferralManagement() {
                   setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM });
                   setEditingId(null);
                   setEditingType(null);
+                  setFormOffer({ offerName: "", amount: "" });
                   setShowForm(true);
                 }}
                 className={`px-4 py-2 text-xs font-semibold text-white ${addButtonBg} rounded-lg transition-all shadow-sm inline-flex items-center gap-1.5`}
@@ -1360,7 +1406,6 @@ export default function ReferralManagement() {
                             <span className="text-xs font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">{total}%</span>
                           </td>
 
-                          {/* ✅ OFFERS COLUMN */}
                           <td className="px-3 py-3 text-center">
                             {offers.length > 0 ? (
                               <div className="flex flex-col items-center gap-1 max-w-[160px]">
@@ -1516,7 +1561,6 @@ export default function ReferralManagement() {
                           </div>
                         </div>
 
-                        {/* ✅ OFFERS LIST (Mobile) */}
                         {offers.length > 0 && (
                           <div className="space-y-1.5 pt-2 border-t border-gray-100">
                             <div className="text-[9px] font-bold uppercase text-gray-400">
@@ -1926,6 +1970,61 @@ export default function ReferralManagement() {
                   />
                 </div>
 
+                {/* ✅ SPECIAL OFFER SECTION */}
+                <div className="border rounded-xl p-4 bg-amber-50/40 border-amber-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-[11px] font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <FiGift className="text-amber-600" />
+                      Special Offer (Optional)
+                    </label>
+                    <span className="text-[10px] text-amber-600 italic">
+                      {editingId ? "Adds as new offer" : "Initial offer"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-500 uppercase mb-1">
+                        Offer Name
+                      </label>
+                      <div className="relative">
+                        <FiGift className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
+                        <input
+                          type="text"
+                          value={formOffer.offerName}
+                          onChange={(e) => setFormOffer((p) => ({ ...p, offerName: e.target.value }))}
+                          placeholder="e.g. Consultation Discount"
+                          className="w-full bg-white border border-amber-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-500 uppercase mb-1">
+                        Amount (₹)
+                      </label>
+                      <div className="relative">
+                        <FaRupeeSign className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
+                        <input
+                          type="number"
+                          value={formOffer.amount}
+                          onChange={(e) => setFormOffer((p) => ({ ...p, amount: e.target.value }))}
+                          placeholder="150"
+                          min="0"
+                          className="w-full bg-white border border-amber-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {formOffer.offerName && formOffer.amount && (
+                    <div className="mt-2 p-2 bg-white rounded-lg border border-amber-200 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-amber-800 flex items-center gap-1">
+                        <FiGift className="w-3.5 h-3.5" />
+                        {formOffer.offerName}
+                      </span>
+                      <span className="text-sm font-extrabold text-amber-900">₹{formOffer.amount}</span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
                   <button
                     type="button"
@@ -2057,7 +2156,6 @@ export default function ReferralManagement() {
                   </div>
                 </div>
 
-                {/* ✅ OFFERS LIST (Detail Modal) */}
                 {selectedReferral.offers && selectedReferral.offers.length > 0 && (
                   <div className="pt-2 border-t border-gray-200">
                     <div className="flex items-center justify-between">
