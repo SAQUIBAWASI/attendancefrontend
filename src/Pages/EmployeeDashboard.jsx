@@ -4975,7 +4975,6 @@ import {
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
-import { subscribeToPushNotifications } from "../utils/pushNotification";
 import CelebrationCard from "../Components/CelebrationCard";
 import {
   Area,
@@ -4993,31 +4992,24 @@ const EmployeeDashboard = () => {
   const location = useLocation();
 
   const email = location.state?.email || localStorage.getItem("employeeEmail");
+  const employeeId = location.state?.employeeId || localStorage.getItem("employeeId") || "TH029";
+
   const [profile, setProfile] = useState(null);
   const [assignedLocation, setAssignedLocation] = useState("Not Assigned");
   const [shiftTiming, setShiftTiming] = useState("Not Assigned");
-
-  const getCurrentMonth = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  };
-
   const [trendYear, setTrendYear] = useState(new Date().getFullYear());
   const [employeeLeaves, setEmployeeLeaves] = useState([]);
-
   const [employeeStats, setEmployeeStats] = useState({
     presentThisMonth: 0,
     absentThisMonth: 0,
     lateThisMonth: 0,
     totalWorkingDays: 0
   });
-  const [allAttendance, setAllAttendance] = useState([]);
   const [userAttendance, setUserAttendance] = useState([]);
   const [birthdaysToday, setBirthdaysToday] = useState([]);
   const [anniversariesToday, setAnniversariesToday] = useState([]);
   const [leavesToday, setLeavesToday] = useState([]);
   const [upcomingShift, setUpcomingShift] = useState(null);
-  const [currentShift, setCurrentShift] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("");
@@ -5026,7 +5018,7 @@ const EmployeeDashboard = () => {
   const [showCelebrationPopup, setShowCelebrationPopup] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
   const [isSinging, setIsSinging] = useState(false);
-  
+
   // ── state for colleague birthday popup ──
   const [showColleagueBirthdayPopup, setShowColleagueBirthdayPopup] = useState(false);
   const [colleaguePopupVisible, setColleaguePopupVisible] = useState(false);
@@ -5039,166 +5031,83 @@ const EmployeeDashboard = () => {
   const [showPerformancePopup, setShowPerformancePopup] = useState(false);
   const [perfPopupVisible, setPerfPopupVisible] = useState(false);
 
+  // ─────────────────────────────────────────────────────────────
+  // SINGLE API CALL — everything comes from one endpoint
+  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!email) return;
+    if (!employeeId) return;
 
-    const fetchData = async () => {
+    const fetchDashboard = async () => {
       try {
         setLoading(true);
-        const BASE_URL = API_BASE_URL.replace(/\/api$/, "/");
-        const API_5000 = API_BASE_URL.replace(/\/api$/, "/");
 
-        const profileRes = await axios.get(`${BASE_URL}api/employees/get-employee?email=${email}`);
-        const profileData = profileRes.data.data || profileRes.data;
+        const res = await axios.get(
+          `${API_BASE_URL}/employees/empdashboard/${employeeId}`
+        );
+
+        const payload = res.data?.data || res.data;
+
+        if (!payload) {
+          setLoading(false);
+          return;
+        }
+
+        // ── Profile ──
+        const profileData = payload.profile || null;
         setProfile(profileData);
 
-        if (profileData) {
-          if (profileData._id) {
-            subscribeToPushNotifications(profileData._id);
-          }
+        // ── Location ──
+        setAssignedLocation(payload.location || profileData?.location || "Not Assigned");
 
-          const empId = profileData.employeeId;
-          const localStorageId = JSON.parse(localStorage.getItem("employeeData"))?.employeeId;
-          const targetId = empId || localStorageId;
-
-          const allAttRes = await axios.get(`${BASE_URL}api/attendance/allattendance`);
-          const allAttendanceData = Array.isArray(allAttRes.data) ? allAttRes.data :
-            allAttRes.data.records || allAttRes.data.allAttendance || [];
-          setAllAttendance(allAttendanceData);
-
-          const filteredAttendance = allAttendanceData.filter(record => {
-            const recordId = typeof record.employeeId === 'object' ?
-              record.employeeId?.employeeId : record.employeeId;
-            return recordId === targetId;
-          });
-          setUserAttendance(filteredAttendance);
-
-          calculateEmployeeStats(filteredAttendance, profileData);
-
-          const leaveRes = await axios.get(`${BASE_URL}api/leaves/employeeleaves/${targetId}`);
-          const leaveRecords = leaveRes.data?.records || leaveRes.data?.data || (Array.isArray(leaveRes.data) ? leaveRes.data : []);
-          setEmployeeLeaves(leaveRecords);
-          const pendingLeavesCount = leaveRecords.filter(l => l.status === "pending").length || 0;
-          setEmployeeStats(prev => ({ ...prev, pendingLeaves: pendingLeavesCount }));
-
-          try {
-            const permRes = await axios.get(`${API_5000}api/permissions/my-permissions/${targetId}`);
-            const activePermsCount = permRes.data?.filter(p => p.status === "APPROVED").length || 0;
-            setEmployeeStats(prev => ({ ...prev, permissions: activePermsCount }));
-          } catch (e) {
-            console.warn("Permissions fetch failed", e);
-          }
-
-          const fetchLocation = async (url) => {
-            const res = await axios.get(`${url}api/employees/mylocation/${targetId}`);
-            const data = res.data?.data || res.data;
-            if (data?.location?.name) return data.location.name;
-            return null;
-          };
-
-          try {
-            let locName = await fetchLocation(API_5000);
-            if (!locName && profileData.location?.name) locName = profileData.location.name;
-            setAssignedLocation(locName || "Not Assigned");
-          } catch (e) {
-            setAssignedLocation("Not Assigned");
-          }
-
-          try {
-            const shiftRes = await axios.get(`${API_5000}api/shifts/employee/${targetId}`);
-            const shiftData = shiftRes.data?.data || shiftRes.data;
-
-            if (shiftData?.startTime) {
-              setShiftTiming(`${shiftData.startTime} - ${shiftData.endTime}`);
-            } else if (shiftData?.employeeAssignment?.startTime) {
-              setShiftTiming(`${shiftData.employeeAssignment.startTime} - ${shiftData.employeeAssignment.endTime}`);
-            } else {
-              setShiftTiming("No Shift Assigned");
-            }
-
-            setCurrentShift(shiftData || null);
-
-            const scheduled = shiftData?.scheduledChange;
-            if (scheduled?.shiftType) {
-              setUpcomingShift({
-                shiftType: scheduled.shiftType,
-                shiftName: scheduled.shiftName || `Shift ${scheduled.shiftType}`,
-                timeRange: scheduled.selectedTimeRange || "Not specified",
-                description: scheduled.selectedDescription || "Shift timing",
-                effectiveFrom: scheduled.effectiveFrom,
-                shiftCategory: scheduled.shiftCategory || shiftData?.shiftCategory || "Regular",
-              });
-            } else {
-              setUpcomingShift(null);
-            }
-          } catch (e) {
-            setShiftTiming("Not Assigned");
-            setUpcomingShift(null);
-            setCurrentShift(null);
-          }
-
-          try {
-            const bdayRes = await axios.get(`${BASE_URL}api/employees/birthdays-today?department=${encodeURIComponent(profileData.department || "")}`);
-            setBirthdaysToday(bdayRes.data.data || []);
-          } catch (e) {
-            console.warn("Birthdays fetch failed", e);
-          }
-
-          try {
-            const annivRes = await axios.get(`${BASE_URL}api/employees/anniversaries-today?department=${encodeURIComponent(profileData.department || "")}`);
-            setAnniversariesToday(annivRes.data.data || []);
-          } catch (e) {
-            console.warn("Anniversaries fetch failed", e);
-          }
-
-          try {
-            const leaveTodayRes = await axios.get(`${BASE_URL}api/leaves/on-leave-today?department=${encodeURIComponent(profileData.department || "")}`);
-            setLeavesToday(leaveTodayRes.data.data || []);
-          } catch (e) {
-            console.warn("Leaves today fetch failed", e);
-          }
-
-          // ── Fetch Employee Performance ──
-          try {
-            const currentMonth = new Date().getMonth() + 1;
-            const currentYear = new Date().getFullYear();
-            const perfRes = await axios.get(`${BASE_URL}api/dashboard/employee-performance/${targetId}?month=${currentMonth}&year=${currentYear}`);
-            if (perfRes.data && perfRes.data.success) {
-              setPerformanceData(perfRes.data);
-            }
-          } catch (e) {
-            console.warn("Employee performance fetch failed", e);
-          }
-
-          // ── Fetch Top Performer ──
-          try {
-            const currentMonth = new Date().getMonth() + 1;
-            const currentYear = new Date().getFullYear();
-            const topPerfRes = await axios.get(`${BASE_URL}api/dashboard/top-performers?month=${currentMonth}&year=${currentYear}`);
-            if (topPerfRes.data && topPerfRes.data.success && topPerfRes.data.performers) {
-              setTopPerformer(topPerfRes.data.performers[0] || null);
-            }
-          } catch (e) {
-            console.warn("Top performers fetch failed", e);
-          }
-
-          setLoading(false);
+        // ── Shift ──
+        if (payload.shift) {
+          setShiftTiming(payload.shift.shiftTiming || "Not Assigned");
+          setUpcomingShift(payload.shift.upcomingShift || null);
+        } else {
+          setShiftTiming("Not Assigned");
+          setUpcomingShift(null);
         }
+
+        // ── Attendance ──
+        const attendance = Array.isArray(payload.attendance) ? payload.attendance : [];
+        setUserAttendance(attendance);
+
+        // ── Leaves ──
+        const leaves = Array.isArray(payload.leaves) ? payload.leaves : [];
+        setEmployeeLeaves(leaves);
+
+        // ── Stats ──
+        if (profileData) {
+          calculateEmployeeStats(attendance, profileData);
+        }
+
+        // ── Birthdays / Anniversaries / Leaves today ──
+        setBirthdaysToday(Array.isArray(payload.birthdaysToday) ? payload.birthdaysToday : []);
+        setAnniversariesToday(Array.isArray(payload.anniversariesToday) ? payload.anniversariesToday : []);
+        setLeavesToday(Array.isArray(payload.leavesToday) ? payload.leavesToday : []);
+
+        // ── Performance ──
+        setPerformanceData(payload.performanceData || null);
+        setTopPerformer(payload.topPerformer || null);
+
+        setLoading(false);
       } catch (err) {
-        console.error("Dashboard data fetch error:", err);
+        console.error("Dashboard fetch error:", err);
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [email]);
+    fetchDashboard();
+  }, [employeeId]);
 
-  // ── FEMALE SINGING: "Happy Birthday to You" with musical notes ──
+  // ─────────────────────────────────────────────────────────────
+  // Birthday singing (unchanged)
+  // ─────────────────────────────────────────────────────────────
   const playSingingBirthday = () => {
     try {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       const ctx = new AudioContextClass();
-      
+
       const createFemaleVoice = (freq, startTime, duration, volume = 0.3) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -5211,7 +5120,7 @@ const EmployeeDashboard = () => {
         vibratoGain.gain.value = 5;
         vibrato.connect(vibratoGain);
         vibratoGain.connect(osc.frequency);
-        
+
         const filter = ctx.createBiquadFilter();
         filter.type = "bandpass";
         filter.frequency.value = freq * 1.8;
@@ -5245,38 +5154,19 @@ const EmployeeDashboard = () => {
         osc2.stop(ctx.currentTime + startTime + duration + 0.05);
         vibrato.start(ctx.currentTime + startTime);
         vibrato.stop(ctx.currentTime + startTime + duration + 0.05);
-
-        return { osc, gain, osc2, gain2, vibrato, vibratoGain };
       };
 
       const G4 = 392.0, A4 = 440.0, B4 = 493.88, C5 = 523.25, D5 = 587.33, E5 = 659.25, F5 = 698.46, G5 = 783.99;
 
       const singingNotes = [
-        [G4, 0.0, 0.3, 0.35],
-        [G4, 0.3, 0.25, 0.35],
-        [A4, 0.6, 0.4, 0.4],
-        [G4, 1.0, 0.4, 0.4],
-        [C5, 1.5, 0.35, 0.35],
-        [B4, 1.9, 0.9, 0.4],
-        [G4, 3.0, 0.3, 0.35],
-        [G4, 3.3, 0.25, 0.35],
-        [A4, 3.6, 0.4, 0.4],
-        [G4, 4.0, 0.4, 0.4],
-        [D5, 4.5, 0.35, 0.35],
-        [C5, 4.9, 0.9, 0.4],
-        [G4, 6.0, 0.3, 0.35],
-        [G4, 6.3, 0.25, 0.35],
-        [G5, 6.6, 0.4, 0.4],
-        [E5, 7.0, 0.4, 0.4],
-        [C5, 7.5, 0.35, 0.35],
-        [B4, 7.9, 0.5, 0.35],
-        [A4, 8.4, 0.7, 0.35],
-        [F5, 9.3, 0.3, 0.4],
-        [F5, 9.6, 0.25, 0.4],
-        [E5, 9.9, 0.4, 0.4],
-        [C5, 10.3, 0.4, 0.4],
-        [D5, 10.8, 0.35, 0.4],
-        [C5, 11.2, 1.4, 0.45],
+        [G4, 0.0, 0.3, 0.35], [G4, 0.3, 0.25, 0.35], [A4, 0.6, 0.4, 0.4], [G4, 1.0, 0.4, 0.4],
+        [C5, 1.5, 0.35, 0.35], [B4, 1.9, 0.9, 0.4],
+        [G4, 3.0, 0.3, 0.35], [G4, 3.3, 0.25, 0.35], [A4, 3.6, 0.4, 0.4], [G4, 4.0, 0.4, 0.4],
+        [D5, 4.5, 0.35, 0.35], [C5, 4.9, 0.9, 0.4],
+        [G4, 6.0, 0.3, 0.35], [G4, 6.3, 0.25, 0.35], [G5, 6.6, 0.4, 0.4], [E5, 7.0, 0.4, 0.4],
+        [C5, 7.5, 0.35, 0.35], [B4, 7.9, 0.5, 0.35], [A4, 8.4, 0.7, 0.35],
+        [F5, 9.3, 0.3, 0.4], [F5, 9.6, 0.25, 0.4], [E5, 9.9, 0.4, 0.4], [C5, 10.3, 0.4, 0.4],
+        [D5, 10.8, 0.35, 0.4], [C5, 11.2, 1.4, 0.45],
       ];
 
       singingNotes.forEach(([freq, start, dur, vol]) => {
@@ -5299,11 +5189,10 @@ const EmployeeDashboard = () => {
   // ── trigger popups once birthdays are known ──
   useEffect(() => {
     if (!email) return;
-    
+
     const isMyBirthday = birthdaysToday.some(b => b.email === email);
     const myAnniversary = anniversariesToday.find(a => a.email === email);
-    
-    // ── MY BIRTHDAY / ANNIVERSARY ──
+
     if (isMyBirthday || myAnniversary) {
       setShowCelebrationPopup(true);
       if (isMyBirthday) {
@@ -5312,20 +5201,18 @@ const EmployeeDashboard = () => {
         }, 500);
       }
     }
-    
-    // ── COLLEAGUE BIRTHDAY (EXCLUDING SELF) ──
+
     const colleagueBirthdays = birthdaysToday.filter(b => b.email !== email);
     if (colleagueBirthdays.length > 0) {
       setColleagueBirthdayCount(colleagueBirthdays.length);
       setColleagueNames(colleagueBirthdays.map(b => b.name || b.employeeName || 'Colleague'));
-      // Show colleague birthday popup after a delay (but not if personal birthday is showing)
       setTimeout(() => {
         if (!isMyBirthday && !myAnniversary) {
           setShowColleagueBirthdayPopup(true);
         }
       }, 1500);
     }
-    
+
   }, [birthdaysToday, anniversariesToday, email]);
 
   // ── handle popup entrance + auto-hide after singing finishes ──
@@ -5364,7 +5251,6 @@ const EmployeeDashboard = () => {
 
     const alreadyNotified = sessionStorage.getItem("performance_notified");
     if (!alreadyNotified) {
-      // Delay showing it slightly to not clash with birthday popup
       const delay = birthdaysToday.length > 0 ? 5000 : 1500;
       const t = setTimeout(() => {
         setShowPerformancePopup(true);
@@ -5373,7 +5259,6 @@ const EmployeeDashboard = () => {
     }
   }, [performanceData, birthdaysToday]);
 
-  // Handle performance popup transition
   useEffect(() => {
     if (showPerformancePopup) {
       const t = setTimeout(() => setPerfPopupVisible(true), 100);
@@ -5394,140 +5279,53 @@ const EmployeeDashboard = () => {
   // ── Close popup when singing finishes ──
   useEffect(() => {
     if (!popupVisible) return;
-    
+
     if (!isSinging && showCelebrationPopup) {
       const t = setTimeout(() => {
         closeCelebrationPopup();
       }, 800);
       return () => clearTimeout(t);
     }
-    
+
     const safetyTimer = setTimeout(() => {
       if (showCelebrationPopup) {
         closeCelebrationPopup();
       }
     }, 14500);
-    
+
     return () => clearTimeout(safetyTimer);
   }, [isSinging, popupVisible, showCelebrationPopup]);
 
   // ── Auto close colleague popup after 6 seconds ──
   useEffect(() => {
     if (!colleaguePopupVisible) return;
-    
+
     const t = setTimeout(() => {
       closeColleaguePopup();
     }, 6000);
-    
+
     return () => clearTimeout(t);
   }, [colleaguePopupVisible]);
 
   const handleSendWish = async () => {
     try {
       const names = colleagueNames.join(', ');
-      const message = `🎉 Happy Birthday dear ${names}! Wishing you a wonderful day filled with joy and happiness! 🎂🎈`;
-      
-      // Send wish via email or notification
-      // For now, show a success message
       alert(`🎉 Birthday wishes sent to ${colleagueNames.length} colleague${colleagueNames.length > 1 ? 's' : ''}!`);
-      
-      // You can integrate with an API to send email notifications here
-      // await axios.post(`${API_BASE_URL}/api/notifications/send-wish`, { 
-      //   to: colleagueEmails, 
-      //   message: message 
-      // });
-      
     } catch (error) {
       console.error("Error sending wish:", error);
       alert("Failed to send wish. Please try again.");
     }
   };
 
-  const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !profile?._id) return;
-
-    const formData = new FormData();
-    formData.append("profileImage", file);
-    formData.append("profile_image", file);
-    formData.append("image", file);
-
-    try {
-      setLoading(true);
-      const response = await axios.put(`${API_BASE_URL}/employees/update/${profile._id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      const updatedData = response.data?.data || response.data?.employee || response.data;
-      
-      if (updatedData) {
-        const refreshed = await axios.get(`${API_BASE_URL}/employees/get-employee?email=${profile.email}`);
-        const finalProfile = refreshed.data.data || refreshed.data;
-        setProfile(finalProfile);
-        
-        const stored = localStorage.getItem("employeeData");
-        if (stored) {
-          const data = JSON.parse(stored);
-          const newImg = finalProfile.profileImage || finalProfile.profile_image || finalProfile.image;
-          if (newImg) data.profileImage = newImg;
-          localStorage.setItem("employeeData", JSON.stringify(data));
-        }
-        
-        alert("✅ Profile image updated successfully!");
-      }
-    } catch (error) {
-      console.error("Error updating profile image:", error);
-      alert("❌ Failed to update profile image. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleImageDelete = async (e) => {
-    e?.stopPropagation();
-    if (!profile?._id || !window.confirm("Are you sure you want to remove your profile image?")) return;
-
-    try {
-      setLoading(true);
-      await axios.put(`${API_BASE_URL}/employees/update/${profile._id}`, {
-        profileImage: ""
-      });
-
-      setProfile(prev => ({ ...prev, profileImage: "" }));
-      
-      const stored = localStorage.getItem("employeeData");
-      if (stored) {
-        const data = JSON.parse(stored);
-        data.profileImage = "";
-        localStorage.setItem("employeeData", JSON.stringify(data));
-      }
-      
-      alert("✅ Profile image removed successfully!");
-    } catch (error) {
-      console.error("Error deleting profile image:", error);
-      alert("❌ Failed to remove profile image.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const calculateEmployeeStats = (attendance, profileData) => {
-    const statsMonth = getCurrentMonth();
-    if (!statsMonth) return;
-    const parts = statsMonth.split('-');
-    if (parts.length < 2) return;
-    const [year, month] = parts.map(Number);
-    if (isNaN(year) || isNaN(month)) return;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
 
     const daysInMonth = new Date(year, month, 0).getDate();
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1;
-    
     let maxDayToCheck = daysInMonth;
-    if (year > currentYear || (year === currentYear && month > currentMonth)) {
-      maxDayToCheck = 0;
-    } else if (year === currentYear && month === currentMonth) {
+    if (year === today.getFullYear() && month === today.getMonth() + 1) {
       maxDayToCheck = today.getDate();
     }
 
@@ -5554,12 +5352,12 @@ const EmployeeDashboard = () => {
 
       const day = recordDate.getDate();
 
-      if (record.status === "present" || record.status === "checked-in") {
+      if (record.status === "present" || record.status === "checked-in" || record.status === "checked-out") {
         if (workingDayMap[day]) {
           presentDays.add(day);
         }
 
-        const shiftStart = getShiftStartTime(profileData?.shift || "D");
+        const shiftStart = getShiftStartTime(profileData?.shiftType || "D");
         const [hours, minutes] = shiftStart.split(':').map(Number);
         const shiftStartTime = new Date(recordDate);
         shiftStartTime.setHours(hours, minutes, 0, 0);
@@ -5587,19 +5385,6 @@ const EmployeeDashboard = () => {
       totalWorkingDays: workingDays.length
     });
   };
-
-  useEffect(() => {
-    if (!profile || !allAttendance.length) return;
-
-    const targetId = profile.employeeId;
-    const filteredAttendance = allAttendance.filter(record => {
-      const recordId = typeof record.employeeId === 'object' ?
-        record.employeeId?.employeeId : record.employeeId;
-      return recordId === targetId;
-    });
-
-    calculateEmployeeStats(filteredAttendance, profile);
-  }, [profile, allAttendance]);
 
   const getMonthlyTrend = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -5634,7 +5419,7 @@ const EmployeeDashboard = () => {
         if (!record.checkInTime) return;
         const recordDate = new Date(record.checkInTime);
         if (recordDate.getFullYear() !== trendYear || recordDate.getMonth() !== idx) return;
-        if (record.status === "present" || record.status === "checked-in") {
+        if (record.status === "present" || record.status === "checked-in" || record.status === "checked-out") {
           const day = recordDate.getDate();
           if (workingDayMap[day]) presentDays.add(day);
         }
@@ -5757,7 +5542,7 @@ const EmployeeDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/20">
       <div className="p-3 sm:p-4 lg:p-6">
-        
+
         {/* ─── HEADER ─── */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
@@ -5843,10 +5628,10 @@ const EmployeeDashboard = () => {
         {/* ─── PERFORMANCE ADVISORY BANNER ─── */}
         {performanceData && (
           <div className={`rounded-xl p-4 mb-4 border flex items-start gap-3 shadow-sm ${
-            (performanceData.performancePercentage || 0) >= 80 
-              ? "bg-emerald-50 border-emerald-100 text-emerald-800" 
-              : (performanceData.performancePercentage || 0) >= 60 
-                ? "bg-indigo-50 border-indigo-100 text-indigo-800" 
+            (performanceData.performancePercentage || 0) >= 80
+              ? "bg-emerald-50 border-emerald-100 text-emerald-800"
+              : (performanceData.performancePercentage || 0) >= 60
+                ? "bg-indigo-50 border-indigo-100 text-indigo-800"
                 : "bg-red-50 border-red-100 text-red-800"
           }`}>
             <div className="text-xl">
@@ -5859,8 +5644,7 @@ const EmployeeDashboard = () => {
                 {(performanceData.performancePercentage || 0) >= 60 && (performanceData.performancePercentage || 0) < 80 && `Your performance is good, ${profile?.name?.split(" ")[0]}! You are doing well, but there is still room for improvement. Let's aim higher! 💪`}
                 {(performanceData.performancePercentage || 0) < 60 && `Your performance is low this month. Need to improve your performance, ${profile?.name?.split(" ")[0]}. Please focus on improvement. ⚠️`}
               </p>
-              
-              {/* Warnings for late check-in or absents */}
+
               {((performanceData.lateComingDays || 0) > 3 || (performanceData.absentDays || 0) > 2) && (
                 <div className="mt-2 text-xs border-t pt-2 border-current/10 space-y-1">
                   <span className="font-bold block uppercase tracking-wider text-[10px] opacity-90">Attention Needed:</span>
@@ -6062,8 +5846,12 @@ const EmployeeDashboard = () => {
                     <td className="px-2 py-1.5 text-[11px] text-gray-500">{record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                     <td className="px-2 py-1.5 text-[11px] text-gray-500">{record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                     <td className="px-2 py-1.5 text-right">
-                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold ${record.status === 'present' || record.status === 'checked-in' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                        {record.status === 'checked-in' ? '✅ In' : (record.status === 'present' ? '✅ Present' : '❌ ' + record.status)}
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold ${
+                        record.status === 'present' || record.status === 'checked-in' || record.status === 'checked-out'
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : 'bg-red-50 text-red-600'
+                      }`}>
+                        {record.status === 'checked-in' ? '✅ In' : (record.status === 'present' ? '✅ Present' : record.status === 'checked-out' ? '✅ Out' : '❌ ' + record.status)}
                       </span>
                     </td>
                   </tr>
@@ -6231,7 +6019,6 @@ const EmployeeDashboard = () => {
               colleaguePopupVisible ? "opacity-100 scale-100" : "opacity-0 scale-90"
             }`}
           >
-            {/* floating confetti */}
             {colleaguePopupVisible && (
               <div className="pointer-events-none absolute inset-0 overflow-hidden z-10">
                 {["🎉", "🎊", "🎈", "🎁", "✨", "🎉", "🎊", "🎈"].map((emoji, i) => (
@@ -6274,13 +6061,13 @@ const EmployeeDashboard = () => {
               <div className="flex items-center justify-center gap-2 mb-3">
                 <FiHeart className="text-pink-500 text-xl" />
                 <span className="text-sm text-gray-600">
-                  {colleagueNames.length === 1 
-                    ? `${colleagueNames[0]} is celebrating today!` 
+                  {colleagueNames.length === 1
+                    ? `${colleagueNames[0]} is celebrating today!`
                     : `${colleagueNames.join(', ')} are celebrating today!`}
                 </span>
                 <FiHeart className="text-pink-500 text-xl" />
               </div>
-              
+
               <p className="text-xs text-gray-500 mb-4">
                 Send your warm wishes to your colleague{colleagueBirthdayCount > 1 ? 's' : ''}! 🎂
               </p>
@@ -6292,7 +6079,7 @@ const EmployeeDashboard = () => {
                 <FiSend className="text-base" />
                 SEND WISH
               </button>
-              
+
               <button
                 onClick={closeColleaguePopup}
                 className="mt-3 text-xs text-gray-400 hover:text-gray-600 transition-colors"
@@ -6319,10 +6106,10 @@ const EmployeeDashboard = () => {
             }`}
           >
             <div className={`relative h-32 flex flex-col items-center justify-center text-white p-4 text-center ${
-              (performanceData.performancePercentage || 0) >= 80 
-                ? "bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500" 
-                : (performanceData.performancePercentage || 0) >= 60 
-                  ? "bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" 
+              (performanceData.performancePercentage || 0) >= 80
+                ? "bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500"
+                : (performanceData.performancePercentage || 0) >= 60
+                  ? "bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500"
                   : "bg-gradient-to-br from-amber-500 via-orange-500 to-red-500"
             }`}>
               <button
@@ -6331,7 +6118,7 @@ const EmployeeDashboard = () => {
               >
                 <FiX size={16} />
               </button>
-              
+
               <div className="text-4xl mb-1">
                 {(performanceData.performancePercentage || 0) >= 80 ? "🏆" : (performanceData.performancePercentage || 0) >= 60 ? "✨" : "⚠️"}
               </div>
@@ -6347,12 +6134,12 @@ const EmployeeDashboard = () => {
                 }`}>
                   {performanceData.performancePercentage || 0}%
                 </h4>
-                
+
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mt-2 uppercase tracking-wide ${
-                  (performanceData.performancePercentage || 0) >= 80 
-                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200" 
-                    : (performanceData.performancePercentage || 0) >= 60 
-                      ? "bg-indigo-50 text-indigo-600 border border-indigo-200" 
+                  (performanceData.performancePercentage || 0) >= 80
+                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                    : (performanceData.performancePercentage || 0) >= 60
+                      ? "bg-indigo-50 text-indigo-600 border border-indigo-200"
                       : "bg-red-50 text-red-600 border border-red-200"
                 }`}>
                   {(performanceData.performancePercentage || 0) >= 80 ? "Excellent" : (performanceData.performancePercentage || 0) >= 60 ? "Good" : "Needs Improvement"}
@@ -6388,10 +6175,10 @@ const EmployeeDashboard = () => {
               <button
                 onClick={closePerfPopup}
                 className={`w-full py-3 rounded-xl text-sm font-semibold text-white mt-6 shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 ${
-                  (performanceData.performancePercentage || 0) >= 80 
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-500/20 hover:from-emerald-600 hover:to-teal-600" 
-                    : (performanceData.performancePercentage || 0) >= 60 
-                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 shadow-indigo-500/20 hover:from-indigo-600 hover:to-purple-600" 
+                  (performanceData.performancePercentage || 0) >= 80
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-500/20 hover:from-emerald-600 hover:to-teal-600"
+                    : (performanceData.performancePercentage || 0) >= 60
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 shadow-indigo-500/20 hover:from-indigo-600 hover:to-purple-600"
                       : "bg-gradient-to-r from-amber-500 to-red-500 shadow-red-500/20 hover:from-amber-600 hover:to-red-600"
                 }`}
               >

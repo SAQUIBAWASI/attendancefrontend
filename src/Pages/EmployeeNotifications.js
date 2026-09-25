@@ -534,28 +534,31 @@
 
 import axios from "axios";
 import { useEffect, useState, useMemo } from "react";
-import { 
-  FiCalendar, 
-  FiClock, 
-  FiSun, 
-  FiSearch, 
-  FiX, 
-  FiAlertCircle, 
-  FiRefreshCw, 
+import {
+  FiCalendar,
+  FiClock,
+  FiSun,
+  FiSearch,
+  FiX,
+  FiAlertCircle,
+  FiRefreshCw,
   FiInbox,
   FiChevronRight,
   FiAlertTriangle,
   FiUser,
-  FiLogIn
+  FiLogIn,
+  FiTrash2
 } from "react-icons/fi";
-import { 
-  MdCheckCircle, 
-  MdError, 
+import {
+  MdCheckCircle,
+  MdError,
   MdNotificationsActive,
   MdOutlineMarkEmailRead,
   MdWarning,
   MdAccessTime,
-  MdCheck
+  MdCheck,
+  MdDelete,
+  MdDeleteSweep
 } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
@@ -568,15 +571,20 @@ const EmployeeNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // ⭐ State for late login warning
   const [showLateWarning, setShowLateWarning] = useState(false);
   const [lateDetails, setLateDetails] = useState(null);
-  
+
   // Search and Filter States
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("all");
   const [selectedNotification, setSelectedNotification] = useState(null);
+
+  // ⭐ NEW: Selection & Delete States
+  const [selectedIds, setSelectedIds] = useState([]);           // checkbox selected ids
+  const [deleting, setDeleting] = useState(false);              // delete in progress
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // confirm modal
 
   // Get employee data from localStorage
   const employeeData = JSON.parse(localStorage.getItem("employeeData") || "{}");
@@ -687,21 +695,21 @@ const EmployeeNotifications = () => {
       setLoading(false);
       return;
     }
-    
+
     try {
       setLoading(true);
       console.log("📥 Fetching notifications for:", employeeId);
-      
+
       const res = await axios.get(`${API_BASE_URL}/notifications/${employeeId}`);
       const data = res.data || [];
       setNotifications(data);
-      
+
       const hasUnread = data.some(n => !n.isRead);
       if (hasUnread) {
         await axios.put(`${API_BASE_URL}/notifications/read-all/${employeeId}`);
         window.dispatchEvent(new Event('notification-updated'));
       }
-      
+
       setError(null);
     } catch (err) {
       console.error("❌ Fetch error:", err);
@@ -720,21 +728,17 @@ const EmployeeNotifications = () => {
     }
 
     console.log("🚀 Initializing EmployeeNotifications for:", employeeId);
-    
-    // Initial fetch
+
     fetchNotificationsAndMarkRead();
-    
-    // Check late login with delay
+
     setTimeout(() => {
       checkLateLogin();
     }, 1500);
-    
-    // Check every minute so alert fires 1 min after shift start
+
     const intervalId = setInterval(() => {
       checkLateLogin();
     }, 60000);
-    
-    // Check when tab becomes visible
+
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         console.log("👁️ Tab became visible, checking late login...");
@@ -742,7 +746,7 @@ const EmployeeNotifications = () => {
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -766,6 +770,35 @@ const EmployeeNotifications = () => {
       window.dispatchEvent(new Event('notification-updated'));
     } catch (err) {
       console.error("Error marking all as read:", err);
+    }
+  };
+
+  // ============================================
+  // ⭐ DELETE — Single + Bulk
+  // ============================================
+  const deleteNotifications = async (ids) => {
+    if (!ids || ids.length === 0) return;
+
+    try {
+      setDeleting(true);
+
+      // ✅ DELETE with body — axios config me { data: {...} } chahiye
+      const response = await axios.delete(`${API_BASE_URL}/notifications/delete`, {
+        data: { notificationIds: ids }
+      });
+
+      if (response.data.success) {
+        // UI se hata do
+        setNotifications(prev => prev.filter(n => !ids.includes(n._id)));
+        setSelectedIds(prev => prev.filter(id => !ids.includes(id)));
+        window.dispatchEvent(new Event('notification-updated'));
+      }
+    } catch (err) {
+      console.error("❌ Delete error:", err);
+      alert(err.response?.data?.message || "Failed to delete notification(s). Please try again.");
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -800,6 +833,32 @@ const EmployeeNotifications = () => {
       return true;
     });
   }, [notifications, selectedTab, searchTerm]);
+
+  // ⭐ Checkbox handlers
+  const handleToggleSelect = (id, e) => {
+    e.stopPropagation();
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const allVisibleSelected =
+    filteredNotifications.length > 0 &&
+    filteredNotifications.every(n => selectedIds.includes(n._id));
+
+  const someVisibleSelected = filteredNotifications.some(n => selectedIds.includes(n._id));
+
+  const handleSelectAll = () => {
+    if (allVisibleSelected) {
+      // Unselect only visible ones
+      const visibleIds = filteredNotifications.map(n => n._id);
+      setSelectedIds(prev => prev.filter(id => !visibleIds.includes(id)));
+    } else {
+      // Select all visible
+      const visibleIds = filteredNotifications.map(n => n._id);
+      setSelectedIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+    }
+  };
 
   const handleNotificationClick = (notif) => {
     setSelectedNotification(notif);
@@ -838,7 +897,7 @@ const EmployeeNotifications = () => {
       <FiAlertCircle className="mx-auto text-4xl text-red-500 mb-3" />
       <h3 className="text-gray-900 font-semibold mb-1">Failed to load</h3>
       <p className="text-red-600 text-sm mb-4">{error}</p>
-      <button 
+      <button
         onClick={fetchNotificationsAndMarkRead}
         className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 px-4 py-2 rounded-xl transition shadow-sm font-medium"
       >
@@ -870,16 +929,14 @@ const EmployeeNotifications = () => {
 
       {/* Main Container */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-fadeIn">
-        
-        {/* ⭐⭐⭐ LATE LOGIN WARNING - INSIDE THE CARD ⭐⭐⭐ */}
+
+        {/* ⭐ LATE LOGIN WARNING */}
         {showLateWarning && lateDetails && (
           <div className="relative overflow-hidden bg-gradient-to-r from-amber-50 to-orange-50 border-b-2 border-amber-400 p-4 md:p-5 animate-slideDown">
-            {/* Background decoration */}
             <div className="absolute -right-10 -top-10 w-32 h-32 bg-amber-100 rounded-full blur-2xl opacity-50"></div>
             <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-orange-100 rounded-full blur-2xl opacity-50"></div>
-            
+
             <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-3">
-              {/* Icon */}
               <div className="flex-shrink-0">
                 <div className="p-2.5 bg-amber-100 rounded-xl border border-amber-200 animate-pulse-warning">
                   {lateDetails.hasLoggedIn ? (
@@ -889,8 +946,7 @@ const EmployeeNotifications = () => {
                   )}
                 </div>
               </div>
-              
-              {/* Message - FIXED */}
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="text-sm font-bold text-amber-700">
@@ -900,7 +956,7 @@ const EmployeeNotifications = () => {
                     {lateDetails.hasLoggedIn ? "Logged In Late" : "Not Logged In"}
                   </span>
                 </div>
-                
+
                 {lateDetails.hasLoggedIn ? (
                   <p className="text-sm text-amber-700 leading-relaxed mt-0.5">
                     <span className="font-semibold">{lateDetails.employeeName}</span>
@@ -917,8 +973,7 @@ const EmployeeNotifications = () => {
                   </p>
                 )}
               </div>
-              
-              {/* Actions */}
+
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div className="hidden sm:flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-amber-200">
                   <MdAccessTime className="text-amber-500 text-sm" />
@@ -926,7 +981,7 @@ const EmployeeNotifications = () => {
                     {lateDetails.delayMinutes}m delay
                   </span>
                 </div>
-                
+
                 {!lateDetails.hasLoggedIn && (
                   <button
                     onClick={goToAttendance}
@@ -937,7 +992,7 @@ const EmployeeNotifications = () => {
                     <FiChevronRight className="text-sm" />
                   </button>
                 )}
-                
+
                 <button
                   onClick={dismissLateWarning}
                   className="inline-flex items-center gap-1 px-3 py-2 bg-white/70 hover:bg-white text-amber-600 text-xs font-medium rounded-lg transition border border-amber-200"
@@ -947,12 +1002,11 @@ const EmployeeNotifications = () => {
                 </button>
               </div>
             </div>
-            
-            {/* Progress bar showing delay severity */}
+
             <div className="relative z-10 mt-3 w-full h-1 bg-amber-200 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full transition-all duration-1000"
-                style={{ 
+                style={{
                   width: `${Math.min(100, (lateDetails.delayMinutes / 30) * 100)}%`
                 }}
               ></div>
@@ -981,16 +1035,44 @@ const EmployeeNotifications = () => {
             )}
           </div>
 
-          {counts.unread > 0 && (
-            <button
-              onClick={handleMarkAllRead}
-              className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100/70 border border-blue-100 px-4 py-2 rounded-xl transition font-semibold text-xs shadow-sm"
-            >
-              <MdOutlineMarkEmailRead className="text-base" />
-              Mark all as read
-            </button>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {counts.unread > 0 && (
+              <button
+                onClick={handleMarkAllRead}
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100/70 border border-blue-100 px-4 py-2 rounded-xl transition font-semibold text-xs shadow-sm"
+              >
+                <MdOutlineMarkEmailRead className="text-base" />
+                Mark all as read
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* ⭐ Selection Action Bar (only when something selected) */}
+        {selectedIds.length > 0 && (
+          <div className="px-4 md:px-6 py-3 bg-red-50/70 border-b border-red-100 flex items-center justify-between gap-3 animate-slideDown">
+            <div className="flex items-center gap-2 text-xs font-semibold text-red-700">
+              <MdDelete className="text-base" />
+              <span>{selectedIds.length} notification{selectedIds.length > 1 ? 's' : ''} selected</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedIds([])}
+                className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition"
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleting}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 rounded-lg transition shadow-sm"
+              >
+                <FiTrash2 className="text-sm" />
+                {deleting ? 'Deleting...' : `Delete (${selectedIds.length})`}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="border-b border-gray-100 px-4 md:px-6 bg-white overflow-x-auto scrollbar-none">
@@ -1033,37 +1115,82 @@ const EmployeeNotifications = () => {
           </div>
         </div>
 
+        {/* ⭐ Select All Bar */}
+        {filteredNotifications.length > 0 && (
+          <div className="flex items-center justify-between px-4 md:px-6 py-2.5 bg-gray-50/60 border-b border-gray-100">
+            <label className="inline-flex items-center gap-2.5 cursor-pointer select-none group">
+              <input
+                type="checkbox"
+                checked={allVisibleSelected}
+                ref={(el) => {
+                  if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
+                }}
+                onChange={handleSelectAll}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500/30 cursor-pointer"
+              />
+              <span className="text-xs font-semibold text-gray-600 group-hover:text-gray-800 transition">
+                {allVisibleSelected ? 'Unselect all' : 'Select all'}
+                <span className="text-gray-400 font-normal ml-1">
+                  ({filteredNotifications.length} visible)
+                </span>
+              </span>
+            </label>
+
+            {selectedIds.length > 0 && (
+              <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-full">
+                {selectedIds.length} selected
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Notifications List */}
         <div className="divide-y divide-gray-100">
           {filteredNotifications.length > 0 ? (
             filteredNotifications.map((notif) => {
               const config = typeConfig[notif.type] || typeConfig.default;
+              const isSelected = selectedIds.includes(notif._id);
               return (
                 <div
                   key={notif._id}
                   onClick={() => handleNotificationClick(notif)}
-                  className={`relative flex items-start gap-4 p-4 md:p-5 transition-all duration-200 cursor-pointer group hover:bg-gray-50/50
+                  className={`relative flex items-start gap-3 p-4 md:p-5 transition-all duration-200 cursor-pointer group
                     ${config.accent}
-                    ${notif.isRead
-                      ? "bg-white"
-                      : "bg-blue-50/20 hover:bg-blue-50/40"
+                    ${isSelected
+                      ? "bg-blue-100/50 hover:bg-blue-100/70"
+                      : notif.isRead
+                        ? "bg-white hover:bg-gray-50/50"
+                        : "bg-blue-50/20 hover:bg-blue-50/40"
                     }`}
                 >
+                  {/* ⭐ Checkbox */}
+                  <div
+                    className="flex-shrink-0 pt-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={(e) => handleToggleSelect(notif._id, e)}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500/30 cursor-pointer"
+                    />
+                  </div>
+
                   <div className={`flex-shrink-0 p-2.5 rounded-xl border ${config.bg} transition-transform duration-200 group-hover:scale-105 shadow-sm`}>
                     {config.icon}
                   </div>
 
-                  <div className="flex-1 space-y-1">
+                  <div className="flex-1 space-y-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className={`text-sm font-semibold transition leading-tight
-                        ${notif.isRead 
-                          ? 'text-gray-700 font-medium' 
+                        ${notif.isRead
+                          ? 'text-gray-700 font-medium'
                           : 'text-gray-900 font-bold group-hover:text-blue-700'
                         }`}
                       >
                         {notif.title}
                       </h3>
-                      
+
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-md">
                           {formatRelativeTime(notif.createdAt)}
@@ -1084,10 +1211,24 @@ const EmployeeNotifications = () => {
                       <span className={`text-[10px] font-semibold tracking-wide uppercase ${config.text}`}>
                         {config.label}
                       </span>
-                      <span className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition duration-200 flex items-center gap-0.5 text-[11px] font-semibold">
-                        View details
-                        <FiChevronRight className="text-xs" />
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {/* ⭐ Quick single delete */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedIds([notif._id]);
+                            setShowDeleteConfirm(true);
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition"
+                          title="Delete"
+                        >
+                          <FiTrash2 className="text-sm" />
+                        </button>
+                        <span className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition duration-200 flex items-center gap-0.5 text-[11px] font-semibold">
+                          View details
+                          <FiChevronRight className="text-xs" />
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1105,7 +1246,7 @@ const EmployeeNotifications = () => {
                   : "You don't have any notifications right now."
                 }
               </p>
-              
+
               {(searchTerm || selectedTab !== "all") && (
                 <button
                   onClick={() => {
@@ -1122,13 +1263,62 @@ const EmployeeNotifications = () => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* ⭐ DELETE CONFIRMATION MODAL */}
+      {showDeleteConfirm && selectedIds.length > 0 && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div
+            className="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 text-center">
+              <div className="w-14 h-14 mx-auto rounded-full bg-red-50 border border-red-100 flex items-center justify-center mb-3">
+                <MdDeleteSweep className="text-red-600 text-3xl" />
+              </div>
+              <h3 className="text-base font-bold text-gray-900 mb-1">
+                Delete {selectedIds.length} notification{selectedIds.length > 1 ? 's' : ''}?
+              </h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                This action cannot be undone. The selected notification{selectedIds.length > 1 ? 's' : ''} will be permanently removed.
+              </p>
+            </div>
+
+            <div className="p-4 bg-gray-50/70 border-t border-gray-100 flex items-center justify-end gap-2.5">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="px-4 py-2 border border-gray-200 hover:bg-gray-100/50 text-gray-700 text-xs font-semibold rounded-xl transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteNotifications(selectedIds)}
+                disabled={deleting}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition shadow-sm disabled:opacity-60"
+              >
+                {deleting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <FiTrash2 className="text-sm" />
+                    Delete Now
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Details Modal */}
       {selectedNotification && (() => {
         const notif = selectedNotification;
         const config = typeConfig[notif.type] || typeConfig.default;
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn">
-            <div 
+            <div
               className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all scale-100"
               onClick={(e) => e.stopPropagation()}
             >
@@ -1175,7 +1365,7 @@ const EmployeeNotifications = () => {
                 {config.link && (
                   <button
                     onClick={() => handleCtaClick(config.link)}
-                    className="inline-flex items-center gap-1.5 px-4.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition shadow-sm"
                   >
                     {config.cta}
                     <FiChevronRight className="text-sm" />
