@@ -6,9 +6,9 @@ import {
   FaPhone, FaLink, FaSearch, FaTimes, FaSync,
   FaEdit, FaTrash, FaPlus, FaMapMarkerAlt,
   FaCalendarAlt, FaCheckCircle, FaExclamationCircle,
-  FaBullseye, FaTimesCircle,
+  FaBullseye, FaTimesCircle, FaChevronDown, FaChevronUp,
 } from 'react-icons/fa';
-import { FiFilter, FiCalendar, FiActivity, FiTrendingUp } from 'react-icons/fi';
+import { FiFilter, FiCalendar, FiActivity, FiTrendingUp, FiDownload, FiTrash2 } from 'react-icons/fi';
 import { MdCancel } from 'react-icons/md';
 import './EmployeeDashboard.css';
 
@@ -287,6 +287,12 @@ const EmployeeVisitsData = () => {
   const [showDelete, setShowDelete]     = useState(false);
   const [deleteId, setDeleteId]         = useState(null);
   const [deleting, setDeleting]         = useState(false);
+  
+  // Additional search and date filter states
+  const [searchDate, setSearchDate] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // ── View Targets modal ────────────────────────────────────────────────────────
   const [showTargetModal, setShowTargetModal] = useState(false);
@@ -331,7 +337,24 @@ const EmployeeVisitsData = () => {
       (v.centerName||'').toLowerCase().includes(q) ||
       (v.clientName||'').toLowerCase().includes(q) ||
       (v.contact||'').includes(q);
-    return matchesSearch && (statusFilter === 'All' || v.status === statusFilter);
+    
+    // Date range filtering
+    const visitDate = new Date(v.createdAt).toISOString().split('T')[0];
+    let matchesDateRange = true;
+    
+    if (searchDate) {
+      matchesDateRange = visitDate === searchDate;
+    }
+    
+    if (dateFrom && dateTo) {
+      matchesDateRange = visitDate >= dateFrom && visitDate <= dateTo;
+    } else if (dateFrom) {
+      matchesDateRange = visitDate >= dateFrom;
+    } else if (dateTo) {
+      matchesDateRange = visitDate <= dateTo;
+    }
+    
+    return matchesSearch && matchesDateRange && (statusFilter === 'All' || v.status === statusFilter);
   });
 
   const totalVisits  = visitsForMonth.length;
@@ -391,20 +414,127 @@ const EmployeeVisitsData = () => {
     finally { setDeleting(false); }
   };
 
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSearchDate('');
+    setDateFrom('');
+    setDateTo('');
+    setStatusFilter('All');
+  };
+
+  const handleSearchDateChange = (e) => {
+    setSearchDate(e.target.value);
+    setDateFrom('');
+    setDateTo('');
+  };
+
+  const handleDateFromChange = (e) => {
+    setDateFrom(e.target.value);
+    setSearchDate('');
+  };
+
+  const handleDateToChange = (e) => {
+    setDateTo(e.target.value);
+    setSearchDate('');
+  };
+
   return (
     <div className="emp-dash">
       <main className="p-4 sm:p-6 lg:p-8">
 
-        {/* Header */}
-        <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">My Visits &amp; <span>Call Records</span></h1>
-            <p className="emp-dash__subtitle">
-              {employeeName ? `${employeeName}'s visit records for the selected month.` : 'Your personal visit records and call logs.'}
-            </p>
+        {/* Header with Compact Filters - Desktop Only */}
+        <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap mb-4">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
+              My Visits &amp; <span>Call Records</span>
+            </h1>
           </div>
-          <div className="flex items-center gap-3" style={{ flexWrap: 'wrap' }}>
-            <div className="emp-dash__date-pill"><FiCalendar /><span>{getPeriodLabel()}</span></div>
+          
+          {/* Right side: Compact Filters (Desktop only) */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Quick Search - Compact */}
+            <div className="relative">
+              <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="text"
+                placeholder="Search center or client..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[140px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Month Picker - Compact */}
+            <div className="relative">
+              <FaCalendarAlt className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-[130px] pl-7 pr-2 h-8 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+              />
+            </div>
+
+            {/* Single Date Filter - Compact */}
+            <div className="relative">
+              <FaCalendarAlt className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="date"
+                value={searchDate}
+                onChange={handleSearchDateChange}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Date From - Compact */}
+            <div className="relative">
+              <FaCalendarAlt className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={handleDateFromChange}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Date To - Compact */}
+            <div className="relative">
+              <FaCalendarAlt className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="date"
+                value={dateTo}
+                onChange={handleDateToChange}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Status Filter - Compact */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            >
+              <option value="All">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Lead">Lead</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+
+            {/* Clear Filters Button */}
+            {(searchQuery || searchDate || dateFrom || dateTo || statusFilter !== 'All') && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+
             {/* View Targets */}
             <button
               onClick={openTargetModal}
@@ -422,16 +552,185 @@ const EmployeeVisitsData = () => {
               <FaBullseye style={{ fontSize: '0.82rem' }} />
               View Targets
             </button>
+
+            {/* Refresh Button */}
+            <button
+              onClick={() => { fetchVisits(); }}
+              disabled={loading}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaSync className={loading ? "animate-spin" : ""} size={10} />
+              {loading ? "Loading..." : "Refresh"}
+            </button>
+
+            {/* Add Visit Button */}
             <button onClick={() => { setEditRecord(null); setShowForm(true); }}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm">
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-md whitespace-nowrap">
               <FaPlus size={11} />Add Visit
             </button>
           </div>
         </div>
 
+        {/* Mobile Header - Title + Filters Toggle */}
+        <div className="sm:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            My <span className="text-indigo-600">Visits</span>
+          </h1>
+          
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs text-gray-500">
+              <strong>{filtered.length}</strong> records
+            </span>
+          </div>
+        </div>
+
+        {/* Mobile Filters Toggle - Only visible on mobile */}
+        <div className="sm:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? (
+                <FaChevronUp className="text-gray-400" />
+              ) : (
+                <FaChevronDown className="text-gray-400" />
+              )}
+            </button>
+          </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              {/* Search */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search center or client..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Month Picker */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Select Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+                />
+              </div>
+
+              {/* Single Date Filter */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="date"
+                    value={searchDate}
+                    onChange={handleSearchDateChange}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Date From */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={handleDateFromChange}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Date To */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={handleDateToChange}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                >
+                  <option value="All">All Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Lead">Lead</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+
+              {/* Mobile Action Buttons */}
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={clearFilters}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    Clear
+                  </button>
+                  <button
+                    onClick={() => { setEditRecord(null); setShowForm(true); }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-md"
+                  >
+                    <FaPlus size={11} />Add Visit
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={openTargetModal}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all shadow-md"
+                  >
+                    <FaBullseye size={11} />View Targets
+                  </button>
+                  <button
+                    onClick={() => { fetchVisits(); }}
+                    disabled={loading}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all shadow-sm"
+                  >
+                    <FaSync className={loading ? "animate-spin" : ""} size={14} />
+                    {loading ? "Loading..." : "Refresh"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* KPI Stats */}
         {!loading && (
-          <div className="emp-dash__stats">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
             {[
               { label:'Total Visits', value:totalVisits,   meta:'this month',        iconClass:'emp-dash__stat-icon--rate',    icon:<FaPhone className="text-blue-500" />       },
               { label:'Pending',      value:pendingCount,  meta:'needs follow-up',   iconClass:'emp-dash__stat-icon--late',    icon:<FiActivity className="text-yellow-500" />  },
@@ -450,67 +749,15 @@ const EmployeeVisitsData = () => {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="emp-dash__card mb-6">
-          <div className="emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2"><FiFilter className="text-blue-600" /> Filters &amp; Actions</h3>
-              <p className="emp-dash__card-desc">Filter by month, status, or search by center / client name.</p>
-            </div>
-          </div>
-          <div className="emp-dash__card-body bg-gray-50/50">
-            <div className="flex flex-wrap items-end gap-4">
-              {/* Search */}
-              <div className="flex flex-col gap-1.5 flex-1 min-w-[180px]">
-                <label className="text-xs font-medium text-gray-600">Search</label>
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input type="text" placeholder="Center, client or contact…" value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                  {searchQuery && (
-                    <button onClick={() => setSearchQuery('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
-                      <FaTimes className="text-[10px]" />
-                    </button>
-                  )}
-                </div>
-              </div>
-              {/* Month */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Month</label>
-                <input type="month" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}
-                  onClick={e => e.target.showPicker && e.target.showPicker()}
-                  className="h-9 px-3 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
-              </div>
-              {/* Status */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Status</label>
-                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                  className="h-9 px-3 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold">
-                  <option value="All">All Statuses</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Lead">Lead</option>
-                  <option value="Rejected">Rejected</option>
-                </select>
-              </div>
-              {/* Refresh */}
-              <button onClick={() => { setSearchQuery(''); setStatusFilter('All'); setSelectedMonth(new Date().toISOString().slice(0,7)); fetchVisits(); }}
-                className="h-9 px-3 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5">
-                <FaSync className={`text-[10px] ${loading ? 'animate-spin' : ''}`} />Refresh
-              </button>
-              {/* Add shortcut */}
-              <button onClick={() => { setEditRecord(null); setShowForm(true); }}
-                className="h-9 px-3 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
-                <FaPlus size={10} />Add Visit
-              </button>
-            </div>
-            <div className="mt-3 pt-3 border-t border-gray-200/50 text-xs text-gray-500 font-medium">
-              Showing <strong className="text-gray-800">{filtered.length}</strong> of{' '}
-              <strong className="text-gray-800">{visitsForMonth.length}</strong> records for{' '}
-              <span className="text-blue-600 font-bold">{getPeriodLabel()}</span>
-            </div>
-          </div>
+
+
+        {/* Visits Information Banner */}
+        <div className="p-3 mb-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-700">
+            📞 <strong>Visit Records:</strong> Track your business visits, client interactions, and call records with location tracking.
+            <br />
+            <span className="text-xs text-blue-600">💡 Add new visits to track your sales activities and follow-ups with targets.</span>
+          </p>
         </div>
 
         {error && (
@@ -555,11 +802,22 @@ const EmployeeVisitsData = () => {
                     <div className="flex flex-col items-center justify-center gap-3">
                       <FaPhone className="text-5xl text-gray-200" />
                       <p className="text-gray-500 font-semibold text-sm">No records found</p>
-                      <p className="text-gray-400 text-xs">Try adjusting filters or add a new visit record.</p>
-                      <button onClick={() => { setEditRecord(null); setShowForm(true); }}
-                        className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm">
-                        <FaPlus size={10} />Add Visit
-                      </button>
+                      <p className="text-gray-400 text-xs">
+                        {(searchQuery || searchDate || dateFrom || dateTo || statusFilter !== 'All')
+                          ? 'Try adjusting your search or date filters.'
+                          : 'Try adjusting filters or add a new visit record.'}
+                      </p>
+                      {(searchQuery || searchDate || dateFrom || dateTo || statusFilter !== 'All') ? (
+                        <button onClick={clearFilters}
+                          className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
+                          <FiTrash2 size={10} />Clear Filters
+                        </button>
+                      ) : (
+                        <button onClick={() => { setEditRecord(null); setShowForm(true); }}
+                          className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm">
+                          <FaPlus size={10} />Add Visit
+                        </button>
+                      )}
                     </div>
                   </td></tr>
                 ) : (
@@ -649,11 +907,22 @@ const EmployeeVisitsData = () => {
               <div className="flex flex-col items-center justify-center gap-3 py-12 px-4 text-center">
                 <FaPhone className="text-5xl text-gray-200" />
                 <p className="text-gray-500 font-semibold text-sm">No records found</p>
-                <p className="text-gray-400 text-xs">Try adjusting filters or add a new visit record.</p>
-                <button onClick={() => { setEditRecord(null); setShowForm(true); }}
-                  className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm">
-                  <FaPlus size={10} />Add Visit
-                </button>
+                <p className="text-gray-400 text-xs">
+                  {(searchQuery || searchDate || dateFrom || dateTo || statusFilter !== 'All')
+                    ? 'Try adjusting your search or date filters.'
+                    : 'Try adjusting filters or add a new visit record.'}
+                </p>
+                {(searchQuery || searchDate || dateFrom || dateTo || statusFilter !== 'All') ? (
+                  <button onClick={clearFilters}
+                    className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
+                    <FiTrash2 size={10} />Clear Filters
+                  </button>
+                ) : (
+                  <button onClick={() => { setEditRecord(null); setShowForm(true); }}
+                    className="mt-1 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm">
+                    <FaPlus size={10} />Add Visit
+                  </button>
+                )}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column' }}>

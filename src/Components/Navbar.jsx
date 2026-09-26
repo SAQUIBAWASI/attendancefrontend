@@ -168,6 +168,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     { path: "/useractivity", label: "User Activity" },
     { path: "/useraccess", label: "User Access" },
     { path: "/shift", label: "Shifts" },
+    { name:"Rosters", path:"/week-off", label: "Rosters" },
   ];
 
   const isAdminModule = adminTabs.some(

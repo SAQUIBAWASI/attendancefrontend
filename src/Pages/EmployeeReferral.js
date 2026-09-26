@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { FaCalendarAlt } from "react-icons/fa";
+import { FaCalendarAlt, FaSearch, FaSync, FaChevronDown, FaChevronUp, FaUser, FaSpinner } from "react-icons/fa";
 import {
   FiBriefcase,
   FiCheckCircle,
@@ -18,10 +18,16 @@ import {
   FiSearch,
   FiUserPlus,
   FiSend,
+  FiFilter,
+  FiTrash2,
+  FiInbox,
   FiUser
 } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "./EmployeeDashboard.css";
+import "./EmployeeLeaves.css";
+import "../index.css";
 
 const API_BASE = "https://ingrainhirebackend.ingrainsystems.com/api";
 
@@ -34,6 +40,7 @@ function EmployeeReferral() {
   const [viewingReferral, setViewingReferral] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // State for Refer to Someone modal
   const [isReferModalOpen, setIsReferModalOpen] = useState(false);
@@ -310,267 +317,366 @@ function EmployeeReferral() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p className="text-sm text-gray-500 font-medium">Loading your referrals...</p>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="w-10 h-10 mx-auto mb-3 border-3 border-gray-200 border-t-indigo-600 rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-gray-600">Loading your referrals...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-6">
+    <div className="emp-dash">
       <ToastContainer />
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            My <span className="text-indigo-600">Referrals</span>
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            View jobs assigned to you for referral
-          </p>
-        </div>
-        <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
-          <FaCalendarAlt className="text-gray-400" />
-          <span className="text-xs font-medium text-gray-600">
-            {new Date().toLocaleDateString("en-US", {
-              weekday: "short",
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })}
-          </span>
-        </div>
-      </div>
+      <main className="p-2 sm:p-4 lg:p-6">
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-blue-100 rounded-lg">
-              <FiBriefcase className="text-blue-600 text-sm" />
-            </div>
-            <div>
-              <p className="text-[10px] text-gray-500">Total</p>
-              <p className="text-lg font-bold text-gray-800">{stats.total}</p>
-            </div>
+        {/* ── Desktop Header ── */}
+        <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap mb-4">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
+              My <span>Referrals</span>
+            </h1>
           </div>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-3 border border-emerald-100">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-emerald-100 rounded-lg">
-              <FiCheckCircle className="text-emerald-600 text-sm" />
-            </div>
-            <div>
-              <p className="text-[10px] text-gray-500">Active</p>
-              <p className="text-lg font-bold text-gray-800">{stats.active}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-3 border border-yellow-100">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-yellow-100 rounded-lg">
-              <FiClock className="text-yellow-600 text-sm" />
-            </div>
-            <div>
-              <p className="text-[10px] text-gray-500">Pending</p>
-              <p className="text-lg font-bold text-gray-800">{stats.pending}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-3 border border-blue-100">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-blue-100 rounded-lg">
-              <FiStar className="text-blue-600 text-sm" />
-            </div>
-            <div>
-              <p className="text-[10px] text-gray-500">Completed</p>
-              <p className="text-lg font-bold text-gray-800">{stats.completed}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-3 border border-red-100">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-red-100 rounded-lg">
-              <FiFlag className="text-red-600 text-sm" />
-            </div>
-            <div>
-              <p className="text-[10px] text-gray-500">Expired</p>
-              <p className="text-lg font-bold text-gray-800">{stats.expired}</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Search and Filter */}
-      <div className="bg-white border border-gray-200 rounded-xl p-3 mb-4">
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="relative flex-1 min-w-[160px]">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
-            <input
-              type="text"
-              placeholder="Search by job title..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-xs"
-            />
-          </div>
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-2.5 py-1.5 border border-gray-200 rounded-xl text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="active">Active</option>
-            <option value="expired">Expired</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <button
-            onClick={() => {
-              setRefreshing(true);
-              fetchReferrals().finally(() => setRefreshing(false));
-              toast.info("Refreshing referrals...");
-            }}
-            disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-indigo-50 text-gray-600 hover:text-indigo-600 text-[10px] font-bold transition-colors"
-          >
-            <FiRefreshCw className={refreshing ? "animate-spin" : ""} size={12} />
-            Refresh
-          </button>
-          {(searchQuery || selectedStatus) && (
+          {/* Right side: Compact Filters (Desktop only) */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Quick Search - Compact */}
+            <div className="relative">
+              <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="text"
+                placeholder="Search job title..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[150px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Status Filter Dropdown */}
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="h-8 px-2.5 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-medium text-gray-700"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            {/* Clear Filters Button */}
+            {(searchQuery || selectedStatus) && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedStatus("");
+                }}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+
+            {/* Refresh Button */}
             <button
               onClick={() => {
-                setSearchQuery("");
-                setSelectedStatus("");
+                setRefreshing(true);
+                fetchReferrals().finally(() => setRefreshing(false));
               }}
-              className="px-2.5 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+              disabled={refreshing}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all shadow-sm whitespace-nowrap"
             >
-              Clear
+              <FaSync className={refreshing ? "animate-spin" : ""} size={10} />
+              {refreshing ? "Loading..." : "Refresh"}
             </button>
-          )}
-        </div>
-      </div>
 
-      {/* Referrals List */}
-      {error && !loading ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
-          <div className="flex flex-col items-center justify-center">
-            <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mb-2">
-              <FiAlertCircle className="text-amber-500 text-xl" />
-            </div>
-            <p className="text-sm font-medium text-gray-700">{error}</p>
-            {error.includes("No referrals") && (
-              <p className="text-xs text-gray-400 mt-1">
-                Check back later when new opportunities are assigned.
-              </p>
+            {/* Employee info pill */}
+            {employeeName && employeeName !== "N/A" && (
+              <div className="emp-dash__date-pill">
+                <FaUser className="text-blue-600 text-[10px]" />
+                <span>{employeeName}</span>
+                {employeeId && <span className="text-gray-400 text-[10px] font-medium">· {employeeId}</span>}
+              </div>
             )}
           </div>
         </div>
-      ) : filteredReferrals.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
-          <div className="flex flex-col items-center justify-center">
-            <div className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center mb-2">
-              <FiSearch className="text-gray-300 text-xl" />
-            </div>
-            <p className="text-sm font-medium text-gray-700">No matching referrals</p>
-            <p className="text-xs text-gray-400 mt-1">
-              {searchQuery || selectedStatus ? "Try adjusting your filters" : "No referrals assigned yet"}
-            </p>
+
+        {/* ── Mobile Header - Title + Filters Toggle ── */}
+        <div className="sm:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            My <span className="text-indigo-600">Referrals</span>
+          </h1>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs text-gray-500">
+              <strong>{filteredReferrals.length}</strong> referrals
+            </span>
           </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filteredReferrals.map((referral) => (
-            <div
-              key={referral._id}
-              className="bg-white border border-gray-200 rounded-xl p-3 hover:shadow-md transition-shadow duration-300"
+
+        {/* Mobile Filters Toggle */}
+        <div className="sm:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
             >
-              {/* Status Badge */}
-              <div className="flex items-start justify-between mb-2">
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-medium border ${getStatusBadgeColor(referral.status)}`}>
-                  {getStatusIcon(referral.status)} {getStatusLabel(referral.status)}
-                </span>
-                {referral.bonusAmount > 0 && (
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
-                    ₹{referral.bonusAmount}
-                  </span>
-                )}
-              </div>
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? (
+                <FaChevronUp className="text-gray-400" />
+              ) : (
+                <FaChevronDown className="text-gray-400" />
+              )}
+            </button>
+          </div>
 
-              {/* Job Title */}
-              <h3 className="text-sm font-semibold text-gray-800 mb-1 truncate">
-                {referral.jobTitle}
-              </h3>
-
-              {/* ✅ Job Link - Clickable */}
-              <div 
-                className="flex items-center gap-1 text-[10px] text-blue-600 truncate mb-2 cursor-pointer hover:underline group"
-                onClick={(e) => handleLinkClick(referral.jobLink, e)}
-              >
-                <FiLink className="text-[10px] flex-shrink-0 group-hover:text-blue-800" />
-                <span className="truncate group-hover:text-blue-800">
-                  {referral.jobLink || 'No link'}
-                </span>
-              </div>
-
-              {/* Details Grid */}
-              <div className="grid grid-cols-2 gap-1.5 mb-2">
-                <div className="bg-gray-50 rounded-lg p-1.5">
-                  <p className="text-[8px] text-gray-400 uppercase tracking-wider">Expires</p>
-                  <p className="text-[10px] font-medium text-gray-700">
-                    {formatDate(referral.expiryDate)}
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-1.5">
-                  <p className="text-[8px] text-gray-400 uppercase tracking-wider">Max</p>
-                  <p className="text-[10px] font-medium text-gray-700">
-                    {referral.maxReferralsPerEmployee || 5}
-                  </p>
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search Job Title</label>
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search by job title..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
                 </div>
               </div>
 
-              {/* Stats */}
-              <div className="flex items-center gap-3 text-[10px] text-gray-500 border-t border-gray-100 pt-2">
-                <div className="flex items-center gap-0.5">
-                  <FiUsers className="text-gray-400" size={11} />
-                  <span>{referral.totalReferralsMade || 0}</span>
-                </div>
-                <div className="flex items-center gap-0.5">
-                  <FiCheckCircle className="text-emerald-500" size={11} />
-                  <span>{referral.successfulReferrals || 0}</span>
-                </div>
-                <div className="flex items-center gap-0.5">
-                  <FiClock className="text-yellow-500" size={11} />
-                  <span>{(referral.totalReferralsMade || 0) - (referral.successfulReferrals || 0)}</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-1.5 mt-2">
-                <button
-                  onClick={() => openViewModal(referral)}
-                  className="flex-1 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1"
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                 >
-                  <FiEye size={12} />
-                  View
+                  <option value="">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="active">Active</option>
+                  <option value="expired">Expired</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedStatus("");
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                  Clear Filters
                 </button>
                 <button
-                  onClick={() => openReferModal(referral)}
-                  className="flex-1 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1"
+                  onClick={() => {
+                    setRefreshing(true);
+                    fetchReferrals().finally(() => setRefreshing(false));
+                  }}
+                  disabled={refreshing}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all shadow-sm"
                 >
-                  <FiUserPlus size={12} />
-                  Refer
+                  <FaSync className={refreshing ? "animate-spin" : ""} size={14} />
+                  {refreshing ? "Loading..." : "Refresh Data"}
                 </button>
               </div>
             </div>
-          ))}
+          )}
         </div>
-      )}
+
+        {/* ── KPI Stat Cards ── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Total Referrals</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FiBriefcase className="text-blue-500" />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{stats.total}</div>
+            <div className="emp-dash__stat-meta">assigned jobs 💼</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Active Jobs</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FiCheckCircle className="text-green-500" />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{stats.active}</div>
+            <div className="emp-dash__stat-meta">open for referral ✅</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Pending</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                <FiClock className="text-amber-500" />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{stats.pending}</div>
+            <div className="emp-dash__stat-meta">awaiting response ⏳</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Completed</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FiStar className="text-blue-500" />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{stats.completed}</div>
+            <div className="emp-dash__stat-meta">successful hires 🌟</div>
+          </div>
+        </div>
+
+        {/* ── Card Container ── */}
+        <div className="emp-dash__card mb-6">
+          <div className="emp-dash__card-header flex items-center justify-between">
+            <div>
+              <h3 className="emp-dash__card-title flex items-center gap-2">
+                <FiBriefcase className="text-blue-600" />
+                My Referral Jobs
+              </h3>
+              <p className="emp-dash__card-desc">
+                View and refer candidates for jobs assigned to you
+              </p>
+            </div>
+
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+              {filteredReferrals.length} Jobs
+            </span>
+          </div>
+
+          <div className="emp-dash__card-body">
+            {error && !loading ? (
+              <div className="py-12 text-center">
+                <div className="flex flex-col items-center gap-2">
+                  <FiAlertCircle className="text-4xl text-amber-500 mb-1" />
+                  <p className="text-base font-semibold text-gray-700">{error}</p>
+                  {error.includes("No referrals") && (
+                    <p className="text-xs text-gray-400 max-w-sm">
+                      Check back later when new referral opportunities are assigned to your account.
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : filteredReferrals.length === 0 ? (
+              <div className="py-12 text-center">
+                <div className="flex flex-col items-center gap-2">
+                  <FiInbox className="text-5xl text-gray-300 mb-1" />
+                  <p className="text-base font-semibold text-gray-600">No Matching Referrals Found</p>
+                  <p className="text-xs text-gray-400 max-w-sm">
+                    {searchQuery || selectedStatus ? "Try adjusting your search terms or filters." : "No referral jobs assigned to your account yet."}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredReferrals.map((referral) => (
+                  <div
+                    key={referral._id}
+                    className="bg-white border border-gray-100 rounded-xl p-4 shadow-2xs hover:shadow-md transition-all hover:border-indigo-200 group flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Status Badge & Bonus */}
+                      <div className="flex items-center justify-between gap-2 mb-2.5">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusBadgeColor(referral.status)}`}>
+                          {getStatusIcon(referral.status)} <span className="ml-1">{getStatusLabel(referral.status)}</span>
+                        </span>
+                        {referral.bonusAmount > 0 && (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                            ₹{referral.bonusAmount} Bonus
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Job Title */}
+                      <h3 className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2 mb-1.5" title={referral.jobTitle}>
+                        {referral.jobTitle}
+                      </h3>
+
+                      {/* Job Link */}
+                      <div
+                        className="flex items-center gap-1.5 text-xs text-blue-600 truncate mb-3 cursor-pointer hover:underline group/link"
+                        onClick={(e) => handleLinkClick(referral.jobLink, e)}
+                        title={referral.jobLink}
+                      >
+                        <FiLink className="text-xs flex-shrink-0 text-blue-500 group-hover/link:text-blue-700" />
+                        <span className="truncate text-[11px] font-medium">{referral.jobLink || 'No link provided'}</span>
+                      </div>
+
+                      {/* Details Grid */}
+                      <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                        <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Expires</p>
+                          <p className="text-xs font-semibold text-slate-700 truncate mt-0.5">
+                            {formatDate(referral.expiryDate)}
+                          </p>
+                        </div>
+                        <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Max Allowed</p>
+                          <p className="text-xs font-semibold text-slate-700 truncate mt-0.5">
+                            {referral.maxReferralsPerEmployee || 5} candidates
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      {/* Metrics bar */}
+                      <div className="flex items-center justify-between text-[11px] text-gray-500 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100 mb-3">
+                        <div className="flex items-center gap-1" title="Total Referrals Made">
+                          <FiUsers className="text-slate-400" size={12} />
+                          <span className="font-semibold text-slate-700">{referral.totalReferralsMade || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1" title="Successful Hires">
+                          <FiCheckCircle className="text-emerald-500" size={12} />
+                          <span className="font-semibold text-emerald-700">{referral.successfulReferrals || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1" title="Pending Candidates">
+                          <FiClock className="text-amber-500" size={12} />
+                          <span className="font-semibold text-amber-700">{(referral.totalReferralsMade || 0) - (referral.successfulReferrals || 0)}</span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openViewModal(referral)}
+                          className="flex-1 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1 shadow-2xs"
+                        >
+                          <FiEye size={12} />
+                          View
+                        </button>
+                        <button
+                          onClick={() => openReferModal(referral)}
+                          className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1 shadow-sm"
+                        >
+                          <FiUserPlus size={12} />
+                          Refer
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+      </main>
 
       {/* View Referral Modal - Transparent Background */}
       {isViewModalOpen && viewingReferral && (

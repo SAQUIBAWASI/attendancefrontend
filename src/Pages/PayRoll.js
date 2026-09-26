@@ -9,12 +9,12 @@ import {
   FaChevronUp,
   FaChevronDown
 } from "react-icons/fa";
-import { 
-  FiFilter, 
-  FiMapPin, 
-  FiUserCheck, 
-  FiUsers, 
-  FiCoffee, 
+import {
+  FiFilter,
+  FiMapPin,
+  FiUserCheck,
+  FiUsers,
+  FiCoffee,
   FiTrendingUp,
   FiChevronUp,
   FiChevronDown,
@@ -32,7 +32,7 @@ import "./EmployeeDashboard.css";
 import "./AttendanceSummary.css";
 
 // ============================================
-// 📅 HELPER: Calculate earned weekoffs
+// 📅 HELPER: Format date to YYYY-MM-DD (LOCAL)
 // ============================================
 const formatDateLocal = (date) => {
   const d = new Date(date);
@@ -49,15 +49,9 @@ const formatMonthLocal = (date) => {
   return `${yyyy}-${mm}`;
 };
 
-// ============================================
-// 📅 HELPER: Carry-Forward localStorage key
-// ============================================
 const getCarryForwardKey = (employeeId, month) =>
   `payroll_carryForward_${employeeId}_${month}`;
 
-// ============================================
-// 📅 HELPER: Get previous month string (YYYY-MM)
-// ============================================
 const getPreviousMonth = (monthStr) => {
   if (!monthStr) return '';
   const [year, month] = monthStr.split('-').map(Number);
@@ -65,11 +59,112 @@ const getPreviousMonth = (monthStr) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };
 
-const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, employeeLeavesData, weekOffDay, shiftHours = 8, holidayDaysInMonth = 0) => {
-  const weekOffDayNum = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(weekOffDay);
+const getManualDeduction = (employeeId, month) => {
+  try {
+    const saved = localStorage.getItem(`manualDeduction_${month}`);
+    if (!saved) return { amount: 0, reason: '' };
+    const map = JSON.parse(saved);
+    return map[employeeId] || { amount: 0, reason: '' };
+  } catch {
+    return { amount: 0, reason: '' };
+  }
+};
+
+// ============================================
+// ✅ WEEK-OFF HELPERS
+// ============================================
+const getWeekOffDatesForEmployee = (weekOffDatesMap, employeeId) => {
+  if (!weekOffDatesMap || !employeeId) return [];
+  return weekOffDatesMap[employeeId] || [];
+};
+
+// ============================================
+// ✅ COMP-OFF HELPERS
+// ============================================
+const getCompOffDatesForEmployee = (compOffDatesMap, employeeId) => {
+  if (!compOffDatesMap || !employeeId) return [];
+  return compOffDatesMap[employeeId] || [];
+};
+
+// ============================================
+// ✅ HOLIDAY DEPARTMENT HELPERS
+// ============================================
+const holidayAppliesToDepartment = (holiday, employeeDepartment) => {
+  if (!holiday) return false;
+
+  let depts = [];
+
+  // Priority 1: departments array
+  if (Array.isArray(holiday.departments) && holiday.departments.length > 0) {
+    depts = holiday.departments.filter(d => d && typeof d === 'string');
+  }
+
+  // Priority 2: department string (agar array empty hai)
+  if (depts.length === 0 && holiday.department && typeof holiday.department === 'string') {
+    const depStr = holiday.department.trim();
+    if (depStr.toLowerCase() !== "all" && depStr.toLowerCase() !== "all departments") {
+      depts = depStr.split(",").map(d => d.trim()).filter(Boolean);
+    }
+  }
+
+  // ✅ Agar koi specific dept nahi → sab employees ko milega
+  if (depts.length === 0) return true;
+
+  // ✅ Agar "All" hai → sab ko milega
+  if (depts.some(d => d.toLowerCase() === "all" || d.toLowerCase() === "all departments")) {
+    return true;
+  }
+
+  // ✅ Agar employee ka dept nahi hai → sab ko milega (safe fallback)
+  if (!employeeDepartment) return true;
+
+  // ✅ Strict match
+  const empDept = employeeDepartment.toLowerCase().trim();
+  return depts.some(d => d.toLowerCase().trim() === empDept);
+};
+
+const calculateHolidayCountForDepartment = (holidaysData, targetMonth, employeeDepartment) => {
+  if (!Array.isArray(holidaysData)) return 0;
+
+  let count = 0;
+  const [sYear, sMonth] = targetMonth.split('-').map(Number);
+  const monthPrefix = `${sYear}-${String(sMonth).padStart(2, '0')}`;
+  const startOfMonth = new Date(sYear, sMonth - 1, 1);
+  const endOfMonth = new Date(sYear, sMonth, 0, 23, 59, 59);
+
+  holidaysData.forEach(h => {
+    if (h.isActive === false) return;
+    if (!holidayAppliesToDepartment(h, employeeDepartment)) return;
+
+    const hStartStr = h.fromDate;
+    const hEndStr = h.toDate;
+
+    if (hStartStr && hStartStr.startsWith(monthPrefix) &&
+        hEndStr && hEndStr.startsWith(monthPrefix)) {
+      count += h.totalDays || 1;
+    } else if (hStartStr && hEndStr) {
+      const hStart = new Date(hStartStr);
+      const hEnd = new Date(hEndStr);
+      const overlapStart = new Date(Math.max(hStart.getTime(), startOfMonth.getTime()));
+      const overlapEnd = new Date(Math.min(hEnd.getTime(), endOfMonth.getTime()));
+      if (overlapStart <= overlapEnd) {
+        const days = Math.round((overlapEnd - overlapStart) / (1000 * 60 * 60 * 24));
+        count += Math.max(1, days);
+      }
+    }
+  });
+
+  return count;
+};
+
+// Calculate earned week-offs based on admin-assigned dates only
+const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, employeeLeavesData, weekOffDates, shiftHours = 8, holidayDaysInMonth = 0) => {
   const firstDay = new Date(year, monthNum - 1, 1);
   const lastDay = new Date(year, monthNum, 0);
-  
+
+  const weekOffDateSet = new Set(weekOffDates || []);
+  const totalWeekOffDays = weekOffDateSet.size;
+
   const attendanceMap = new Map();
   dailyAttendance.forEach(record => {
     if (record.date || record.checkInTime) {
@@ -115,7 +210,7 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
   while (currentWeekStart <= lastDay) {
     const weekEnd = new Date(currentWeekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
-    
+
     let presentDays = 0;
     let halfDays = 0;
     let leavesCount = 0;
@@ -125,18 +220,17 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
 
     for (let d = new Date(currentWeekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
       if (d < firstDay || d > lastDay) continue;
-      
+
       const dateKey = formatDateLocal(d);
-      const dayOfWeek = d.getDay();
-      const isWeekOff = (dayOfWeek === weekOffDayNum);
-      
+      const isWeekOff = weekOffDateSet.has(dateKey);
+
       totalDays++;
 
       if (isWeekOff) {
         weekOffDays++;
         continue;
       }
-      
+
       actualWorkingDaysInWeek++;
 
       if (isLeaveDay(d)) {
@@ -158,7 +252,7 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
     }
 
     const effectiveWorkingDays = presentDays + halfDays + leavesCount;
-    
+
     let isEligibleForWeekoff = false;
     if (totalDays === 7) {
       isEligibleForWeekoff = effectiveWorkingDays >= 5;
@@ -178,19 +272,10 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
       isEligibleForWeekoff: isEligibleForWeekoff
     });
 
-    if (isEligibleForWeekoff) {
-      eligibleWeeks++;
-    }
+    if (isEligibleForWeekoff) eligibleWeeks++;
 
     currentWeekStart.setDate(currentWeekStart.getDate() + 7);
     weekNumber++;
-  }
-
-  let totalWeekOffDays = 0;
-  for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
-    if (d.getDay() === weekOffDayNum) {
-      totalWeekOffDays++;
-    }
   }
 
   const totalActiveDays = totalWorkingDays + totalLeaves + holidayDaysInMonth;
@@ -200,7 +285,8 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
   return {
     weeklyBreakdown: weeklyBreakdown,
     earnedWeekOffs: earnedWeekOffs,
-    totalWeekOffDays: totalWeekOffDays
+    totalWeekOffDays: totalWeekOffDays,
+    weekOffDates: Array.from(weekOffDateSet).sort()
   };
 };
 
@@ -217,6 +303,9 @@ const PayRoll = () => {
   const [employeeLeaves, setEmployeeLeaves] = useState({});
   const [employeesMasterData, setEmployeesMasterData] = useState({});
   const navigate = useNavigate();
+
+  const [weekOffDatesMap, setWeekOffDatesMap] = useState({});
+  const [compOffDatesMap, setCompOffDatesMap] = useState({});
 
   const [showAttendancePopup, setShowAttendancePopup] = useState(false);
   const [selectedEmployeeAttendance, setSelectedEmployeeAttendance] = useState([]);
@@ -268,6 +357,8 @@ const PayRoll = () => {
     manualDays: ""
   });
 
+  const [manualDeductionMap, setManualDeductionMap] = useState({});
+
   const getSavedItemsPerPage = () => {
     try {
       const saved = localStorage.getItem('payroll_itemsPerPage');
@@ -279,7 +370,6 @@ const PayRoll = () => {
       }
       return 10;
     } catch (e) {
-      console.error('Error reading localStorage:', e);
       return 10;
     }
   };
@@ -303,14 +393,14 @@ const PayRoll = () => {
 
   const medicalRoles = [
     "Phlebotomist", "Staff Nurse", "Consultant", "Pharmacist",
-    "Nurse", "Doctor", "Lab Technician", "Medical Officer", 
+    "Nurse", "Doctor", "Lab Technician", "Medical Officer",
     "Physician", "Surgeon", "Radiologist", "Pathologist",
     "Therapist", "Healthcare", "Medical", "Clinical"
   ];
 
   const isMedicalRole = (role) => {
     if (!role) return false;
-    return medicalRoles.some(medRole => 
+    return medicalRoles.some(medRole =>
       role.toLowerCase().includes(medRole.toLowerCase())
     );
   };
@@ -333,30 +423,106 @@ const PayRoll = () => {
   const calculateOTForEmployee = (employeeId, hoursWorked) => {
     const h = Number(hoursWorked) || 0;
     const shiftHours = getEmployeeShiftHours(employeeId);
-    
+
     if (h > shiftHours) {
       return Number((h - shiftHours).toFixed(2));
     }
     return 0;
   };
 
+  // ============================================
+  // ✅ Fetch week-off dates from backend
+  // ============================================
+  const fetchWeekOffDatesForEmployees = useCallback(async (employeeIds, month) => {
+    if (!employeeIds || employeeIds.length === 0 || !month) return {};
+
+    const result = {};
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < employeeIds.length; i += BATCH_SIZE) {
+      const batch = employeeIds.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (empId) => {
+          try {
+            const url = `${API_BASE_URL}/shifts/employee-weekoff-dates?employeeId=${encodeURIComponent(empId)}&month=${month}`;
+            const res = await fetch(url);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.success && Array.isArray(data.weekOffDates)) {
+                result[empId] = data.weekOffDates;
+              } else {
+                result[empId] = [];
+              }
+            } else {
+              result[empId] = [];
+            }
+          } catch (err) {
+            console.warn(`WeekOff fetch failed for ${empId}:`, err.message);
+            result[empId] = [];
+          }
+        })
+      );
+    }
+
+    return result;
+  }, []);
+
+  // ============================================
+  // ✅ Fetch comp-off dates from backend
+  // ============================================
+  const fetchCompOffDatesForEmployees = useCallback(async (employeeIds, month) => {
+    if (!employeeIds || employeeIds.length === 0 || !month) return {};
+
+    const result = {};
+    try {
+      const [year, monthNum] = month.split('-').map(Number);
+      const startDate = new Date(year, monthNum - 1, 1);
+      const endDate = new Date(year, monthNum, 0, 23, 59, 59);
+
+      const response = await fetch(`${API_BASE_URL}/leaves/comp-offs?status=approved`);
+      const compOffs = await response.json();
+
+      if (Array.isArray(compOffs)) {
+        compOffs.forEach(co => {
+          const workDate = new Date(co.workDate);
+          if (workDate >= startDate && workDate <= endDate) {
+            const empId = co.employeeId;
+            if (!result[empId]) {
+              result[empId] = [];
+            }
+            result[empId].push({
+              date: formatDateLocal(co.workDate),
+              count: co.count || 1,
+              reason: co.reason || '',
+              workDate: co.workDate,
+              _id: co._id
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn("CompOff fetch failed:", err.message);
+    }
+
+    return result;
+  }, []);
+
   const fetchApprovedOTClaims = useCallback(async (month) => {
     try {
       const [year, monthNum] = month.split('-').map(Number);
       const startDate = new Date(year, monthNum - 1, 1);
       const endDate = new Date(year, monthNum, 0);
-      
+
       const response = await fetch(`${API_BASE_URL}/employees/allotclaimed?status=approved`);
       const data = await response.json();
-      
+
       if (data.success) {
         const monthClaims = data.claims.filter(claim => {
           const claimDate = new Date(claim.date);
           return claimDate >= startDate && claimDate <= endDate;
         });
-        
+
         setApprovedOTClaims(monthClaims);
-        
+
         const otMap = {};
         monthClaims.forEach(claim => {
           const empId = claim.employeeId;
@@ -373,7 +539,7 @@ const PayRoll = () => {
           otMap[empId].count += 1;
           otMap[empId].claims.push(claim);
         });
-        
+
         setApprovedOTMap(otMap);
       }
     } catch (error) {
@@ -388,6 +554,15 @@ const PayRoll = () => {
   }, [selectedMonth, fetchApprovedOTClaims]);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`manualDeduction_${selectedMonth}`);
+      setManualDeductionMap(saved ? JSON.parse(saved) : {});
+    } catch {
+      setManualDeductionMap({});
+    }
+  }, [selectedMonth]);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
         setShowDepartmentFilter(false);
@@ -399,6 +574,42 @@ const PayRoll = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key && (e.key.startsWith('otApplied_') || e.key.startsWith('manualDeduction_'))) {
+        fetchData(selectedMonth);
+      }
+    };
+
+    const handleOTUpdate = () => {
+      fetchData(selectedMonth);
+    };
+
+    const handleDeductionUpdate = () => {
+      try {
+        const saved = localStorage.getItem(`manualDeduction_${selectedMonth}`);
+        setManualDeductionMap(saved ? JSON.parse(saved) : {});
+      } catch { setManualDeductionMap({}); }
+      fetchData(selectedMonth);
+    };
+
+    const handlePayrollOTUpdate = () => {
+      fetchData(selectedMonth);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('otUpdated', handleOTUpdate);
+    window.addEventListener('deductionUpdated', handleDeductionUpdate);
+    window.addEventListener('payrollOTUpdated', handlePayrollOTUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('otUpdated', handleOTUpdate);
+      window.removeEventListener('deductionUpdated', handleDeductionUpdate);
+      window.removeEventListener('payrollOTUpdated', handlePayrollOTUpdate);
+    };
+  }, [selectedMonth]);
 
   useEffect(() => {
     const savedTemplate = localStorage.getItem("payrollTemplateConfig");
@@ -436,6 +647,7 @@ const PayRoll = () => {
   };
 
   const ATTENDANCE_SUMMARY_API_URL = `${API_BASE_URL}/attendancesummary/get`;
+  const ATTENDANCE_CALCULATE_API_URL = `${API_BASE_URL}/attendancesummary/calculate`;
   const ATTENDANCE_DETAILS_API_URL = `${API_BASE_URL}/attendance/allattendance`;
   const LEAVES_API_URL = `${API_BASE_URL}/leaves/leaves?status=approved`;
   const COMPOFF_API_URL = `${API_BASE_URL}/leaves/comp-offs`;
@@ -529,12 +741,7 @@ const PayRoll = () => {
 
       if (!leavesMap[employeeId]) {
         leavesMap[employeeId] = {
-          CL: 0,
-          SL: 0,
-          EL: 0,
-          COFF: 0,
-          LOP: 0,
-          Other: 0,
+          CL: 0, SL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0,
           leaveDetails: []
         };
       }
@@ -545,11 +752,11 @@ const PayRoll = () => {
         if (leavesMap[employeeId][leaveType] !== undefined) {
           leavesMap[employeeId][leaveType] += currentMonthDays;
         } else if (["Casual Leave", "Casual", "casual", "Earned Leave", "Earned", "earned", "Sick Leave", "Sick", "sick", "Comp Off", "comp off"].includes(leaveType)) {
-          const typeMap = { 
-            "Casual Leave": "CL", "Casual": "CL", "casual": "CL", 
-            "Earned Leave": "EL", "Earned": "EL", "earned": "EL", 
-            "Sick Leave": "SL", "Sick": "SL", "sick": "SL", 
-            "Comp Off": "COFF", "comp off": "COFF" 
+          const typeMap = {
+            "Casual Leave": "CL", "Casual": "CL", "casual": "CL",
+            "Earned Leave": "EL", "Earned": "EL", "earned": "EL",
+            "Sick Leave": "SL", "Sick": "SL", "sick": "SL",
+            "Comp Off": "COFF", "comp off": "COFF"
           };
           leavesMap[employeeId][typeMap[leaveType]] += currentMonthDays;
         } else {
@@ -615,15 +822,6 @@ const PayRoll = () => {
     }
   }, [COMPOFF_API_URL]);
 
-  const filterInactiveEmployees = useCallback((payrollData, employeesMap) => {
-    if (!Array.isArray(payrollData)) return [];
-    return payrollData.filter(item => {
-      const employeeData = employeesMap[item.employeeId];
-      if (!employeeData) return false;
-      return !isEmployeeHidden(employeeData);
-    });
-  }, []);
-
   const filterEmployeesByJoiningDate = useCallback((employees, monthStr) => {
     if (!monthStr || !employees.length) return employees;
     return employees.filter(emp => wasEmployeeEmployedInMonth(emp, monthStr));
@@ -645,10 +843,10 @@ const PayRoll = () => {
     try {
       let url = `${ATTENDANCE_DETAILS_API_URL}?employeeId=${employeeId}`;
       if (month) url += `&month=${month}`;
-      
+
       const response = await fetch(url);
       const data = await response.json();
-      
+
       if (data.records && data.records.length > 0) {
         let filteredByMonth = data.records;
         if (month) {
@@ -686,49 +884,49 @@ const PayRoll = () => {
     setShowAttendancePopup(true);
   };
 
-  // ============================================
-  // ✅ FIXED: Date-wise group karta hai (AttendanceSummary jaisa)
-  // Har din ke liye sirf LAST record count karta hai
-  // ============================================
-  const getLiveAttendanceCounts = (employeeId, allAttendanceRecords) => {
+  const getLiveAttendanceCounts = (employeeId, allAttendanceRecords, employeesMap) => {
     let presentDays = 0;
     let halfDays = 0;
-    
-    // Group by date
+    let totalOtHours = 0;
+
     const dailyRecords = {};
     allAttendanceRecords.forEach((rec) => {
       if (rec.employeeId !== employeeId) return;
       if (!rec.checkInTime) return;
-      
+
       if (selectedMonth) {
         const recMonth = formatMonthLocal(rec.checkInTime);
         if (recMonth !== selectedMonth) return;
       }
-      
+
       const dateKey = formatDateLocal(rec.checkInTime);
       if (!dailyRecords[dateKey]) dailyRecords[dateKey] = [];
       dailyRecords[dateKey].push(rec);
     });
 
-    // Har din ke liye sirf LAST record count karo (regular shift)
+    const shiftHours = employeesMap[employeeId]?.shiftHours || 9;
+
     Object.values(dailyRecords).forEach((recsForDay) => {
       const lastRec = recsForDay[recsForDay.length - 1];
       const hours = lastRec.totalHours || lastRec.hours || 0;
-      const shiftHours = getEmployeeShiftHours(employeeId) || 9;
       const fullDayThreshold = shiftHours * 0.90;
       const halfDayThreshold = shiftHours * 0.50;
-      
+
       if (hours >= fullDayThreshold) {
         presentDays++;
+        if (hours > shiftHours) {
+          totalOtHours += (hours - shiftHours);
+        }
       } else if (hours >= halfDayThreshold) {
         halfDays++;
       }
     });
-    
+
     return {
       presentDays: presentDays,
       halfDayWorking: halfDays,
-      totalWorkingDays: presentDays + (halfDays * 0.5)
+      totalWorkingDays: presentDays + (halfDays * 0.5),
+      totalOtHours: Number(totalOtHours.toFixed(2))
     };
   };
 
@@ -744,13 +942,11 @@ const PayRoll = () => {
       const isCurrent = isCurrentMonth(month);
       const targetMonth = month || selectedMonth;
 
-      console.log(`📅 Fetching data for month: ${targetMonth}`);
-
       const [employeesRes, leavesRes, holidaysRes, summaryRes] = await Promise.all([
         fetch(EMPLOYEES_API_URL),
         fetch(LEAVES_API_URL),
         fetch(`${API_BASE_URL}/holidays/all`),
-        fetch(`${ATTENDANCE_SUMMARY_API_URL}${targetMonth ? `?month=${targetMonth}` : ''}`)
+        fetch(`${ATTENDANCE_CALCULATE_API_URL}${targetMonth ? `?month=${targetMonth}` : ''}`)
       ]);
 
       let employeesData = [];
@@ -760,13 +956,12 @@ const PayRoll = () => {
       }
 
       let leavesData = leavesRes.ok ? await leavesRes.json() : [];
-      
       let holidaysData = holidaysRes.ok ? await holidaysRes.json() : [];
-      
+
       let summaryData = [];
       if (summaryRes.ok) {
         const json = await summaryRes.json();
-        summaryData = json.summary || [];
+        summaryData = json.summary || (Array.isArray(json) ? json : []);
       }
 
       let allAttendanceRecords = [];
@@ -780,8 +975,26 @@ const PayRoll = () => {
         console.warn("Failed to fetch attendance records:", err);
       }
 
+      const savedOTMap = (() => {
+        try {
+          const saved = localStorage.getItem(`otApplied_${targetMonth}`);
+          return saved ? JSON.parse(saved) : {};
+        } catch { return {}; }
+      })();
+
+      const savedManualDeductionMap = (() => {
+        try {
+          const saved = localStorage.getItem(`manualDeduction_${targetMonth}`);
+          return saved ? JSON.parse(saved) : {};
+        } catch { return {}; }
+      })();
+
       const employeesForMonth = filterEmployeesByJoiningDate(employeesData, targetMonth);
-      
+
+      const employeeIds = employeesForMonth.map(e => e.employeeId);
+      const weekOffMap = await fetchWeekOffDatesForEmployees(employeeIds, targetMonth);
+      const compOffMap = await fetchCompOffDatesForEmployees(employeeIds, targetMonth);
+
       const employeesMap = {};
       employeesForMonth.forEach(emp => {
         employeesMap[emp.employeeId] = {
@@ -817,39 +1030,17 @@ const PayRoll = () => {
           isActive: emp.isActive !== false
         };
       });
-      
+
       if (isMounted) {
         setEmployeesMasterData(employeesMap);
         setAllEmployees(employeesData);
+        setWeekOffDatesMap(weekOffMap);
+        setCompOffDatesMap(compOffMap);
       }
 
       extractUniqueValues(employeesForMonth);
 
-      let holidayCount = 0;
-      if (Array.isArray(holidaysData)) {
-        const [sYear, sMonth] = targetMonth.split('-').map(Number);
-        holidaysData.forEach(h => {
-          if (h.isActive !== false) {
-            const hStartStr = h.fromDate;
-            const hEndStr = h.toDate;
-            if (hStartStr && hStartStr.startsWith(`${sYear}-${String(sMonth).padStart(2, '0')}`) &&
-                hEndStr && hEndStr.startsWith(`${sYear}-${String(sMonth).padStart(2, '0')}`)) {
-              holidayCount += h.totalDays || 1;
-            } else if (hStartStr && hEndStr) {
-              const hStart = new Date(hStartStr);
-              const hEnd = new Date(hEndStr);
-              const startOfMonth = new Date(sYear, sMonth - 1, 1);
-              const endOfMonth = new Date(sYear, sMonth, 0, 23, 59, 59);
-              const overlapStart = new Date(Math.max(hStart.getTime(), startOfMonth.getTime()));
-              const overlapEnd = new Date(Math.min(hEnd.getTime(), endOfMonth.getTime()));
-              if (overlapStart <= overlapEnd) {
-                const days = Math.round((overlapEnd - overlapStart) / (1000 * 60 * 60 * 24));
-                holidayCount += Math.max(1, days);
-              }
-            }
-          }
-        });
-      }
+      // ✅ Global holidayCount REMOVED — ab per-employee calculate hoga
 
       const currentLeavesMap = processLeavesData(leavesData, targetMonth);
       const currentCompOffsMap = await processCompOffData(targetMonth, leavesData);
@@ -857,51 +1048,52 @@ const PayRoll = () => {
       const [year, monthNum] = targetMonth.split('-').map(Number);
       const daysInMonthValue = getDaysInMonth(targetMonth);
       const processedSalaries = [];
-      
+
       for (const emp of employeesForMonth) {
         const summary = summaryData.find(x => x.employeeId === emp.employeeId) || {};
-        
-        const deptLower = (emp.department || '').toLowerCase().trim();
-        const isDevOrMarketing = deptLower.includes("developer") || deptLower.includes("digital marketing") || deptLower.includes("development");
-        const isConsultant = deptLower.includes("consultant");
-        const isSpecialDept = ["laboratory medicine", "nursing", "medical"].includes(deptLower) || deptLower.includes("laboratory") || deptLower.includes("nursing") || deptLower.includes("medical") || isConsultant;
 
-        let targetWeekOffCount = isConsultant ? 2 : (emp.weekOffPerMonth || 4);
-        
+        const deptLower = (emp.department || '').toLowerCase().trim();
+        const isConsultant = deptLower.includes("consultant");
+
         const employeeRole = summary.role || emp.role || emp.designation || '';
         const isMedicalStaff = isMedicalRole(employeeRole);
-        
+
         let attendanceForEmployee = allAttendanceRecords.filter(r => r.employeeId === emp.employeeId);
-        
-        const weekOffDay = emp.weekOffDay || 'Sunday';
+
+        // ============================================
+        // ✅ NEW: Per-employee holiday count based on department
+        // ============================================
+        const employeeHolidayCount = calculateHolidayCountForDepartment(
+          holidaysData,
+          targetMonth,
+          emp.department || ''
+        );
+
+        const weekOffDates = weekOffMap[emp.employeeId] || [];
         const weekOffData = calculateEarnedWeekOffs(
           emp.employeeId,
           year,
           monthNum,
           attendanceForEmployee,
           currentLeavesMap,
-          weekOffDay,
+          weekOffDates,
           emp.shiftHours || 8,
-          holidayCount
+          employeeHolidayCount // ✅ Per-employee
         );
 
         let earnedWeekOffs = weekOffData.earnedWeekOffs;
-        let defaultWeekOffs = isConsultant ? 2 : (emp.weekOffPerMonth || 4);
-        if (isDevOrMarketing) {
-          defaultWeekOffs = weekOffData.totalWeekOffDays || 5;
-          earnedWeekOffs = defaultWeekOffs;
-        }
+        let defaultWeekOffs = weekOffDates.length || (isConsultant ? 2 : (emp.weekOffPerMonth || 4));
         const finalWeekOffs = Math.min(earnedWeekOffs, defaultWeekOffs);
 
         let salaryForMonth = emp.salaryPerMonth || 0;
         let historicalEffectiveFrom = emp.joinDate;
         let originalSalary = emp.originalSalary || emp.salaryPerMonth;
         let incrementDetails = null;
-        
+
         try {
           const targetDate = new Date(year, monthNum - 1, 15);
           const formattedDate = targetDate.toISOString().split('T')[0];
-          
+
           const salaryRes = await fetch(`${API_BASE_URL}/employees/${emp._id}/salary-for-date?date=${formattedDate}`);
           if (salaryRes.ok) {
             const salaryData = await salaryRes.json();
@@ -915,28 +1107,36 @@ const PayRoll = () => {
         } catch (err) {
           console.warn(`Failed to fetch salary for ${emp.name}:`, err.message);
         }
-        
+
         const dailyRate = salaryForMonth > 0 ? salaryForMonth / daysInMonthValue : 0;
-        
-        // ✅ Live attendance counts (date-wise, last record only)
-        const liveCounts = getLiveAttendanceCounts(emp.employeeId, allAttendanceRecords);
-        
-        let presentDaysCount = liveCounts.presentDays;
-        let halfDaysCount = liveCounts.halfDayWorking;
-        let totalWorkingDays = liveCounts.totalWorkingDays;
-        
+
+        let presentDaysCount = summary.presentDays ?? 0;
+        let halfDaysCount = summary.halfDayWorking ?? 0;
+        let totalWorkingDays = summary.totalWorkingDays ?? 0;
+
         if (presentDaysCount === 0 && halfDaysCount === 0) {
-          presentDaysCount = summary.presentDays ?? 0;
-          halfDaysCount = summary.halfDayWorking ?? 0;
-          totalWorkingDays = summary.totalWorkingDays ?? 0;
+          const liveCounts = getLiveAttendanceCounts(emp.employeeId, allAttendanceRecords, employeesMap);
+          presentDaysCount = liveCounts.presentDays;
+          halfDaysCount = liveCounts.halfDayWorking;
+          totalWorkingDays = liveCounts.totalWorkingDays;
         }
-        
+
         const fullDayNotWorking = summary.fullDayNotWorking ?? 0;
         const overTimeHours = summary.overTimeHours ?? 0;
-        
+
         const compOffData = currentCompOffsMap[emp.employeeId] || { balance: 0 };
 
-        const expectedWorkingDays = daysInMonthValue - finalWeekOffs;
+        // ============================================
+        // ✅ COMP-OFF CALCULATION (Single source)
+        // ============================================
+        const employeeCompOffDates = compOffMap[emp.employeeId] || [];
+        const totalCompOffDays = employeeCompOffDates.reduce((sum, co) => sum + (co.count || 1), 0);
+        const compOffAmount = totalCompOffDays * dailyRate;
+
+        // ============================================
+        // ✅ CARRY FORWARD LOGIC
+        // ============================================
+        const expectedWorkingDays = Math.max(0, daysInMonthValue - finalWeekOffs);
         const actualDaysWorked = presentDaysCount + (halfDaysCount * 0.5);
 
         const prevMonth = getPreviousMonth(targetMonth);
@@ -946,7 +1146,9 @@ const PayRoll = () => {
 
         const adjustedActualDays = actualDaysWorked + prevCarryForward;
 
-        let payablePresentDays, carryForwardDays;
+        let payablePresentDays;
+        let carryForwardDays;
+
         if (adjustedActualDays > expectedWorkingDays) {
           payablePresentDays = expectedWorkingDays;
           carryForwardDays = Math.round((adjustedActualDays - expectedWorkingDays) * 100) / 100;
@@ -955,25 +1157,28 @@ const PayRoll = () => {
           carryForwardDays = 0;
         }
 
-        if (isSpecialDept) {
-          carryForwardDays = Math.round((carryForwardDays + holidayCount) * 100) / 100;
-        }
-
         localStorage.setItem(getCarryForwardKey(emp.employeeId, targetMonth), String(carryForwardDays));
 
+        // ============================================
+        // ✅ SALARY CALCULATION — Per-employee holiday
+        // ============================================
         let calculatedSalary = 0;
         if (salaryForMonth > 0 && daysInMonthValue > 0) {
           if (presentDaysCount === 0 && halfDaysCount === 0) {
             calculatedSalary = 0;
           } else {
-            const holidayAddition = isSpecialDept ? 0 : holidayCount;
-            const effectivePaidDays = payablePresentDays + (includeWeekOffInSalary ? finalWeekOffs : 0) + holidayAddition + compOffData.balance;
+            const holidayAddition = employeeHolidayCount; // ✅ Per-employee
+            const effectivePaidDays =
+              payablePresentDays +
+              (includeWeekOffInSalary ? finalWeekOffs : 0) +
+              holidayAddition +
+              totalCompOffDays;
             calculatedSalary = effectivePaidDays * dailyRate;
           }
         }
 
         let totalOTHours = overTimeHours || 0;
-        
+
         let calculatedOTHours = 0;
         allAttendanceRecords.forEach(record => {
           if (record.employeeId !== emp.employeeId) return;
@@ -996,39 +1201,55 @@ const PayRoll = () => {
             calculatedOTHours += (hoursWorked - shiftHrs);
           }
         });
-        
+
         if (totalOTHours === 0 && calculatedOTHours > 0) {
           totalOTHours = calculatedOTHours;
         }
-        
+
         totalOTHours = Number(totalOTHours.toFixed(2));
         const formattedOTHours = formatDecimalHours(totalOTHours);
-        
+
         const approvedOTData = approvedOTMap[emp.employeeId] || { totalOTAmount: 0, totalOTHours: 0 };
         const approvedOTAmount = approvedOTData.totalOTAmount || 0;
         const approvedOTHours = approvedOTData.totalOTHours || 0;
-        
+
         const baseCalculatedSalary = Math.round(calculatedSalary);
-        
+
+        const dashboardOTHours = savedOTMap[emp.employeeId] !== undefined ? savedOTMap[emp.employeeId] : null;
+
         let finalOTAmount = 0;
-        let finalPay = baseCalculatedSalary;
-        
+        let otSource = 'none';
+
         if (approvedOTAmount > 0) {
           finalOTAmount = approvedOTAmount;
-          finalPay = Math.round(baseCalculatedSalary + approvedOTAmount);
-        } else {
+          otSource = 'approved';
+        }
+        else if (dashboardOTHours !== null && dashboardOTHours > 0) {
+          const multiplier = 2;
+          const shiftHours = emp.shiftHours || 8;
+          const otRatePerHour = shiftHours > 0 ? dailyRate / shiftHours : 0;
+          finalOTAmount = dashboardOTHours * otRatePerHour * multiplier;
+          otSource = 'dashboard';
+        }
+        else {
           const savedOTEmpsString = localStorage.getItem("payrollSelectedOTEmployees");
           const savedOTEmps = savedOTEmpsString ? new Set(JSON.parse(savedOTEmpsString)) : new Set();
           const isApprovedInOTPage = localStorage.getItem(`otStatus_${emp.employeeId}_${targetMonth}`) === "approved";
-          
+
           if (totalOTHours > 0 && (savedOTEmps.has(emp.employeeId) || isApprovedInOTPage)) {
             const multiplier = Number(localStorage.getItem(`otMultiplier_${emp.employeeId}_${targetMonth}`)) || 2;
-            const otRatePerHour = dailyRate / (emp.shiftHours || 8);
-            const otAmount = totalOTHours * otRatePerHour * multiplier;
-            finalOTAmount = otAmount;
-            finalPay = Math.round(baseCalculatedSalary + otAmount);
+            const shiftHours = emp.shiftHours || 8;
+            const otRatePerHour = shiftHours > 0 ? dailyRate / shiftHours : 0;
+            finalOTAmount = totalOTHours * otRatePerHour * multiplier;
+            otSource = 'manual';
           }
         }
+
+        const manualEntry = savedManualDeductionMap[emp.employeeId] || { amount: 0, reason: '' };
+        const manualDeductionAmount = manualEntry.amount || 0;
+        const manualDeductionReason = manualEntry.reason || '';
+
+        const finalPay = Math.max(0, Math.round(baseCalculatedSalary + finalOTAmount - manualDeductionAmount));
 
         const isInactive = isEmployeeHidden(emp);
 
@@ -1037,27 +1258,32 @@ const PayRoll = () => {
           name: emp.name,
           department: emp.department || 'N/A',
           month: targetMonth,
-          
+
           presentDays: presentDaysCount,
           halfDayWorking: halfDaysCount,
           totalWorkingDays: totalWorkingDays,
           fullDayNotWorking: fullDayNotWorking,
           overTimeHours: totalOTHours,
           overTimeHoursFormatted: formattedOTHours,
-          
+
           weekOffs: finalWeekOffs,
           earnedWeekOffs: earnedWeekOffs,
           defaultWeekOffs: defaultWeekOffs,
-          weekOffDay: weekOffDay,
+          weekOffDay: emp.weekOffDay,
+          weekOffDates: weekOffDates,
           weeklyBreakdown: weekOffData.weeklyBreakdown,
-          
+
+          compOffDates: employeeCompOffDates,
+          compOffDays: totalCompOffDays,
+          compOffAmount: Math.round(compOffAmount),
+
           salaryPerMonth: salaryForMonth,
           currentSalary: emp.salaryPerMonth,
           originalSalary: originalSalary,
           salaryPerDay: dailyRate,
           calculatedSalary: baseCalculatedSalary,
           baseCalculatedSalary: baseCalculatedSalary,
-          
+
           shiftHours: emp.shiftHours || 8,
           finalOTAmount: Math.round(finalOTAmount),
           finalPay: finalPay,
@@ -1065,8 +1291,14 @@ const PayRoll = () => {
           hasApprovedOT: approvedOTAmount > 0,
           approvedOTAmount: approvedOTAmount,
           approvedOTHours: approvedOTHours,
-          
-          holidayCount: isConsultant ? 0 : holidayCount,
+
+          dashboardOTHours: dashboardOTHours,
+          otSource: otSource,
+
+          manualDeduction: manualDeductionAmount,
+          manualDeductionReason: manualDeductionReason,
+
+          holidayCount: employeeHolidayCount, // ✅ Per-employee
           monthDays: daysInMonthValue,
           includeWeekOffInSalary: includeWeekOffInSalary,
           isHistoricalMonth: isHistorical,
@@ -1089,7 +1321,7 @@ const PayRoll = () => {
           payablePresentDays: payablePresentDays,
           carryForwardDays: carryForwardDays,
           carryForwardFromPrev: prevCarryForward,
-          
+
           isInactive: isInactive
         };
 
@@ -1110,42 +1342,70 @@ const PayRoll = () => {
         setIsLoadingMonth(false);
       }
     }
-  }, [EMPLOYEES_API_URL, LEAVES_API_URL, API_BASE_URL, ATTENDANCE_SUMMARY_API_URL, ATTENDANCE_DETAILS_API_URL, processLeavesData, filterEmployeesByJoiningDate, processCompOffData, selectedMonth, approvedOTMap]);
+  }, [EMPLOYEES_API_URL, LEAVES_API_URL, API_BASE_URL, ATTENDANCE_CALCULATE_API_URL, ATTENDANCE_DETAILS_API_URL, processLeavesData, filterEmployeesByJoiningDate, processCompOffData, selectedMonth, approvedOTMap, fetchWeekOffDatesForEmployees, fetchCompOffDatesForEmployees]);
 
   useEffect(() => {
     if (records.length === 0) return;
 
-    const processRecordsWithAdditions = (prevRecords) => 
+    const savedOTMapNow = (() => {
+      try {
+        const saved = localStorage.getItem(`otApplied_${selectedMonth}`);
+        return saved ? JSON.parse(saved) : {};
+      } catch { return {}; }
+    })();
+
+    const savedDeductionMapNow = (() => {
+      try {
+        const saved = localStorage.getItem(`manualDeduction_${selectedMonth}`);
+        return saved ? JSON.parse(saved) : {};
+      } catch { return {}; }
+    })();
+
+    const processRecordsWithAdditions = (prevRecords) =>
       prevRecords.map(record => {
         let baseSalary = record.baseCalculatedSalary || record.calculatedSalary || 0;
         let otAmount = 0;
-        
+
+        const dashboardOTHours = savedOTMapNow[record.employeeId] !== undefined ? savedOTMapNow[record.employeeId] : null;
+
         if (record.hasApprovedOT) {
           otAmount = record.approvedOTAmount || 0;
+        } else if (dashboardOTHours !== null && dashboardOTHours > 0) {
+          const dailyRate = record.salaryPerDay || 0;
+          const shiftHours = record.shiftHours || 8;
+          const otRatePerHour = shiftHours > 0 ? dailyRate / shiftHours : 0;
+          otAmount = dashboardOTHours * otRatePerHour * 2;
         } else {
           const isApprovedInOTPage = localStorage.getItem(`otStatus_${record.employeeId}_${selectedMonth}`) === "approved";
           if (record.overTimeHours > 0 && (selectedOTEmployees.has(record.employeeId) || isApprovedInOTPage)) {
             const dailyRate = record.salaryPerDay || 0;
             const shiftHours = record.shiftHours || 8;
             const multiplier = Number(localStorage.getItem(`otMultiplier_${record.employeeId}_${selectedMonth}`)) || 2;
-            const otRatePerHour = dailyRate / shiftHours;
+            const otRatePerHour = shiftHours > 0 ? dailyRate / shiftHours : 0;
             otAmount = record.overTimeHours * otRatePerHour * multiplier;
           }
         }
-        
+
+        const manualEntry = savedDeductionMapNow[record.employeeId] || { amount: 0, reason: '' };
+        const manualDeductionAmount = manualEntry.amount || 0;
+        const manualDeductionReason = manualEntry.reason || '';
+
         return {
           ...record,
+          dashboardOTHours: dashboardOTHours,
           calculatedSalary: Math.round(baseSalary),
           otAmount: Math.round(otAmount),
           finalOTAmount: Math.round(otAmount),
-          finalPay: Math.round(baseSalary + otAmount)
+          manualDeduction: manualDeductionAmount,
+          manualDeductionReason: manualDeductionReason,
+          finalPay: Math.max(0, Math.round(baseSalary + otAmount - manualDeductionAmount))
         };
       });
 
     const updatedRecords = processRecordsWithAdditions(records);
     setRecords(updatedRecords);
     setFilteredRecords(updatedRecords);
-  }, [employeeCompOffs, employeeLeaves, employeesMasterData, monthDays, selectedMonth, selectedOTEmployees, approvedOTMap]);
+  }, [employeeCompOffs, employeeLeaves, employeesMasterData, monthDays, selectedMonth, selectedOTEmployees, approvedOTMap, manualDeductionMap]);
 
   useEffect(() => {
     fetchData(selectedMonth);
@@ -1214,41 +1474,26 @@ const PayRoll = () => {
 
   const handleItemsPerPageChange = (e) => {
     const newValue = Number(e.target.value);
-    
     try {
       localStorage.setItem('payroll_itemsPerPage', String(newValue));
     } catch (error) {
       console.error('❌ Save error:', error);
     }
-    
     setItemsPerPage(newValue);
     setCurrentPage(1);
   };
 
-  const getActiveCount = () => {
-    return records.filter(record => !record.isInactive).length;
-  };
-
-  const getInactiveCount = () => {
-    return records.filter(record => record.isInactive).length;
-  };
+  const getActiveCount = () => records.filter(record => !record.isInactive).length;
+  const getInactiveCount = () => records.filter(record => record.isInactive).length;
 
   const indexOfLastRecord = currentPage * itemsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - itemsPerPage;
   const currentRecords = filteredRecords.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
 
-  const handlePrevious = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const handleNext = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
-  const handlePageClick = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+  const handlePrevious = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
+  const handleNext = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
+  const handlePageClick = (pageNumber) => { setCurrentPage(pageNumber); };
 
   const getPageNumbers = () => {
     const pageNumbers = [];
@@ -1274,7 +1519,7 @@ const PayRoll = () => {
   const getEmployeeData = (employee) => {
     const masterData = employeesMasterData[employee.employeeId] || {};
     const employeeFromList = allEmployees.find(emp => emp.employeeId === employee.employeeId);
-    
+
     return {
       ...masterData,
       salaryPerMonth: employee.salaryPerMonth || masterData.salaryPerMonth || 0,
@@ -1285,7 +1530,7 @@ const PayRoll = () => {
       designation: employee.designation || masterData.designation || '',
       department: employee.department || masterData.department || '',
       joiningDate: masterData.joiningDate || employee.joinDate || '',
-      bankName: employeeFromList?.bankName || employeeFromList?.bankName || masterData.bankName || employee.bankName || '',
+      bankName: employeeFromList?.bankName || masterData.bankName || employee.bankName || '',
       bankAccount: masterData.bankAccount || employeeFromList?.bankAccount || employee.bankAccount || '',
       panNo: masterData.panCard || employeeFromList?.panNumber || employee.panCard || '',
       pfNo: masterData.pfNo || employeeFromList?.pfNumber || '',
@@ -1309,9 +1554,6 @@ const PayRoll = () => {
   };
 
   const getWeekOffDaysForDisplay = (employee) => {
-    if (employee.isSpecialMay2026) {
-      return `${employee.originalWeekOffPerMonth} + 1 (Special)`;
-    }
     return employee.weekOffs || 0;
   };
 
@@ -1357,16 +1599,22 @@ const PayRoll = () => {
     const daysInMonth = selectedEmployee.monthDays || monthDays || getDaysInMonth(selectedEmployee.month || selectedMonth);
     const dailyRate = employeeData.salaryPerMonth / daysInMonth;
 
-    const workingDays = editFormData.presentDays || 0; 
+    const workingDays = editFormData.presentDays || 0;
     const halfDays = editFormData.halfDayWorking || 0;
     const holidays = editFormData.holidays || selectedEmployee.holidayCount || 0;
     const effectiveWorkingDays = workingDays + (0.5 * halfDays);
     const compOffData = employeeCompOffs[selectedEmployee.employeeId];
     const compOffBalance = compOffData?.balance || 0;
-    
+
+    const employeeCompOffDates = compOffDatesMap[selectedEmployee.employeeId] || [];
+    const totalCompOffDays = employeeCompOffDates.reduce((sum, co) => sum + (co.count || 1), 0);
+
+    const expectedWorkingDays = selectedEmployee.expectedWorkingDays || (daysInMonth - weekOffDays);
+
     let paidDays = 0;
     if (workingDays > 0 || halfDays > 0) {
-      paidDays = Math.max(0, effectiveWorkingDays + weekOffDays + holidays + compOffBalance);
+      const rawPaidDays = effectiveWorkingDays + weekOffDays + holidays + compOffBalance + totalCompOffDays;
+      paidDays = Math.min(rawPaidDays, expectedWorkingDays + weekOffDays + holidays + compOffBalance + totalCompOffDays);
     }
     let baseSalary = paidDays * dailyRate;
 
@@ -1374,11 +1622,17 @@ const PayRoll = () => {
     const bonus = extraWorkData.bonus || 0;
     const deductions = extraWorkData.deductions || 0;
     const totalExtraAmount = extraDaysAmount + bonus - deductions;
-    const finalSalary = baseSalary + totalExtraAmount;
+
+    const manualEntry = getManualDeduction(selectedEmployee.employeeId, selectedEmployee.month || selectedMonth);
+    const manualDeductionAmount = manualEntry.amount || 0;
+
+    const finalSalary = baseSalary + totalExtraAmount - manualDeductionAmount;
 
     const updatedData = {
       ...editFormData,
       calculatedSalary: Math.round(finalSalary),
+      manualDeduction: manualDeductionAmount,
+      manualDeductionReason: manualEntry.reason || '',
       extraWork: {
         extraDays: extraWorkData.extraDays || 0,
         extraHours: extraWorkData.extraHours || 0,
@@ -1405,12 +1659,13 @@ const PayRoll = () => {
           halfDayWorking: editFormData.halfDayWorking,
           fullDayNotWorking: editFormData.fullDayNotWorking,
           weekOffDays: weekOffDays,
-          holidays: editFormData.holidays || selectedEmployee.holidayCount || 0
+          holidays: editFormData.holidays || selectedEmployee.holidayCount || 0,
+          compOffDays: totalCompOffDays
         })
       });
 
       const result = await response.json();
-      
+
       if (!response.ok || !result.success) {
         throw new Error(result.message || "Failed to save changes");
       }
@@ -1460,23 +1715,28 @@ const PayRoll = () => {
     if (!selectedEmployee) return;
 
     const employeeData = getEmployeeData(selectedEmployee);
-    const leaves = employeeLeaves[selectedEmployee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
     const weekOffDays = selectedEmployee.weekOffs || 0;
-
     const daysInMonth = selectedEmployee.monthDays || monthDays || getDaysInMonth(selectedEmployee.month || selectedMonth);
     const dailyRate = employeeData.salaryPerMonth / daysInMonth;
 
-    const workingDays = selectedEmployee.presentDays || 0; 
+    const workingDays = selectedEmployee.presentDays || 0;
     const holidays = selectedEmployee.holidayCount || 0;
     const compOffData = employeeCompOffs[selectedEmployee.employeeId];
     const compOffBalance = compOffData?.balance || 0;
-    
+
+    const employeeCompOffDates = compOffDatesMap[selectedEmployee.employeeId] || [];
+    const totalCompOffDays = employeeCompOffDates.reduce((sum, co) => sum + (co.count || 1), 0);
+
+    const expectedWorkingDays = selectedEmployee.expectedWorkingDays || (daysInMonth - weekOffDays);
+
     let paidDays = 0;
     if (workingDays > 0 || (selectedEmployee.halfDayWorking || 0) > 0) {
-      paidDays = Math.max(0, workingDays + (selectedEmployee.halfDayWorking || 0) * 0.5 + weekOffDays + holidays + compOffBalance);
+      const rawPaidDays = workingDays + (selectedEmployee.halfDayWorking || 0) * 0.5 + weekOffDays + holidays + compOffBalance + totalCompOffDays;
+      paidDays = Math.min(rawPaidDays, expectedWorkingDays + weekOffDays + holidays + compOffBalance + totalCompOffDays);
     }
 
-    const systemCalculatedSalary = Math.round(paidDays * dailyRate);
+    const manualEntry = getManualDeduction(selectedEmployee.employeeId, selectedEmployee.month || selectedMonth);
+    const systemCalculatedSalary = Math.round(paidDays * dailyRate - (manualEntry.amount || 0));
 
     setEditFormData({
       ...editFormData,
@@ -1550,19 +1810,10 @@ const PayRoll = () => {
       return `
         <!DOCTYPE html>
         <html>
-        <head>
-          <title>Payslip</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; text-align: center; }
-            .error { color: red; font-size: 18px; margin-top: 100px; border: 1px solid red; padding: 20px; display: inline-block; }
-          </style>
-        </head>
-        <body>
-          <div class="error">
-            <h2>Salary Data Not Available</h2>
-            <p>Salary information is not available for ${employee?.name || 'this employee'}.</p>
-            <p>Please contact HR department.</p>
-          </div>
+        <head><title>Payslip</title></head>
+        <body style="font-family: Arial; text-align:center; padding:40px;">
+          <h2 style="color:red;">Salary Data Not Available</h2>
+          <p>Salary information is not available for ${employee?.name || 'this employee'}.</p>
         </body>
         </html>
       `;
@@ -1570,80 +1821,95 @@ const PayRoll = () => {
 
     const daysInMonth = employee.monthDays || monthDays || getDaysInMonth(employee.month || selectedMonth);
     const dailyRate = parseFloat(calculateDailyRate(employee)) || 0;
-    const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
     const compOffData = employeeCompOffs[employee.employeeId] || { earned: 0, used: 0, balance: 0 };
 
-    let actualWeekOffDaysNumeric = employee.weekOffs || 0;
-    let weekOffDisplayValue = actualWeekOffDaysNumeric;
-    
-    if (employee.isSpecialMay2026) {
-      weekOffDisplayValue = `${employee.originalWeekOffPerMonth || 4} + 1 (Special)`;
-    }
-    
+    const actualWeekOffDaysNumeric = employee.weekOffs || 0;
+
     const presentDays = employee.presentDays ?? 0;
     const halfDays = employee.halfDayWorking || 0;
     const holidays = employee.holidayCount || 0;
 
     const finalNetPay = employee.finalPay || employee.calculatedSalary || 0;
 
+    const manualDeductionAmount = employee.manualDeduction || 0;
+    const manualDeductionReason = employee.manualDeductionReason || '';
+
+    const compOffDays = employee.compOffDays || 0;
+    const compOffAmount = employee.compOffAmount || 0;
+
     const earningsItems = [];
-    
+
     const basicAmt = employeeData.basicPay || employeeData.salaryPerMonth || 0;
     if (basicAmt > 0) earningsItems.push({ label: 'Basic DA', amount: basicAmt });
-    
+
     const hraAmt = employeeData.hra || 0;
     if (hraAmt > 0) earningsItems.push({ label: 'HRA', amount: hraAmt });
-    
+
     const convAmt = employeeData.conveyanceAllowance || 0;
     if (convAmt > 0) earningsItems.push({ label: 'Conveyance', amount: convAmt });
-    
+
     const specialAmt = employeeData.specialAllowance || 0;
     if (specialAmt > 0) earningsItems.push({ label: 'Special Allowance', amount: specialAmt });
-    
+
     const otAmount = employee.otAmount || employee.finalOTAmount || 0;
     if (otAmount > 0) {
       earningsItems.push({ label: 'Overtime', amount: otAmount });
     }
-    
+
+    if (compOffAmount > 0) {
+      earningsItems.push({ label: `Comp-off (${compOffDays} day${compOffDays > 1 ? 's' : ''})`, amount: compOffAmount });
+    }
+
     const compOffPay = compOffData.balance * dailyRate;
-    if (compOffPay > 0) {
+    if (compOffPay > 0 && !compOffAmount) {
       earningsItems.push({ label: 'Comp-off / Holiday Pay', amount: compOffPay });
     }
-    
+
     earningsItems.push({ label: `Working Days (Full: ${presentDays})`, amount: 0, isInfo: true });
-    earningsItems.push({ label: `Week Off Days (${weekOffDisplayValue})`, amount: 0, isInfo: true });
-    
+    earningsItems.push({ label: `Week Off Days (${actualWeekOffDaysNumeric})`, amount: 0, isInfo: true });
+
+    if (compOffDays > 0) {
+      earningsItems.push({ label: `Comp-off Days (${compOffDays})`, amount: 0, isInfo: true });
+    }
+
     if (holidays > 0) {
       earningsItems.push({ label: `Public Holidays (${holidays})`, amount: 0, isInfo: true });
     }
 
     const deductionsItems = [];
-    
-    let totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + holidays + compOffData.balance;
+
+    let totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + holidays + compOffData.balance + compOffDays;
     let lopDays = Math.max(0, daysInMonth - totalPaidDays);
     let lopAmount = lopDays * dailyRate;
     lopDays = Math.round(lopDays * 10) / 10;
     lopAmount = Math.round(lopAmount * 100) / 100;
-    
+
     if (lopDays > 0) {
       deductionsItems.push({ label: `LOP / Absent (${lopDays} days)`, amount: lopAmount });
     } else {
       deductionsItems.push({ label: `LOP / Absent (0 days)`, amount: 0 });
     }
-    
+
     const halfDayDeductionAmount = (halfDays * 0.5) * dailyRate;
     if (halfDays > 0) {
       deductionsItems.push({ label: `Half Day Deductions (${halfDays} HD)`, amount: halfDayDeductionAmount });
     } else {
       deductionsItems.push({ label: `Half Day Deductions (0 HD)`, amount: 0 });
     }
-    
+
     const gmcAmt = employee.gmcAmount || employeeData.gmc || 0;
     const ptaxAmt = employee.ptax || employeeData.profTax || 0;
     const extraDeductions = (employee.otherDeductions || 0) + (employee.extraWork?.deductions || 0);
-    let totalOtherDeductions = gmcAmt + ptaxAmt + extraDeductions;
-    
+    const totalOtherDeductions = gmcAmt + ptaxAmt + extraDeductions;
+
     deductionsItems.push({ label: `Other Deductions`, amount: totalOtherDeductions });
+
+    if (manualDeductionAmount > 0) {
+      deductionsItems.push({
+        label: `Manual Deduction${manualDeductionReason ? ` (${manualDeductionReason})` : ''}`,
+        amount: manualDeductionAmount
+      });
+    }
 
     const totalEarningsAmt = earningsItems.filter(item => !item.isInfo).reduce((sum, item) => sum + item.amount, 0);
     const totalDeductionsAmt = deductionsItems.reduce((sum, item) => sum + item.amount, 0);
@@ -1653,25 +1919,21 @@ const PayRoll = () => {
     for (let i = 0; i < maxRows; i++) {
       const earn = earningsItems[i];
       const ded = deductionsItems[i];
-      
+
       let earnAmountStr = '';
       let earnLabel = '';
       if (earn) {
         earnLabel = earn.label;
-        if (earn.isInfo) {
-          earnAmountStr = '-';
-        } else {
-          earnAmountStr = `₹${earn.amount.toFixed(2)}`;
-        }
+        earnAmountStr = earn.isInfo ? '-' : `₹${earn.amount.toFixed(2)}`;
       }
-      
+
       let dedAmountStr = '';
       let dedLabel = '';
       if (ded) {
         dedLabel = ded.label;
         dedAmountStr = `₹${ded.amount.toFixed(2)}`;
       }
-      
+
       tableRowsHTML += `
         <tr>
           <td style="border: 1px solid #000; padding: 8px 10px; font-size: 12px;">${earnLabel}</td>
@@ -1714,104 +1976,25 @@ const PayRoll = () => {
           <meta charset="utf-8">
           <title>Payslip - ${employee.name}</title>
           <style>
-            @page { 
-              size: A4; 
-              margin: 0;
-            }
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body { 
-              font-family: Arial, sans-serif; 
-              margin: 0; 
-              padding: 20px; 
-              background: white; 
-            }
-            .invoice-container { 
-              max-width: 210mm; 
-              margin: 0 auto; 
-              border: 1px solid #000; 
-              border-radius: 4px;
-              padding: 0;
-            }
-            table { 
-              width: 100%; 
-              border-collapse: collapse; 
-            }
-            th, td { 
-              padding: 6px 8px; 
-              border: 1px solid #000; 
-              font-size: 12px; 
-              vertical-align: top; 
-              color: #000;
-            }
-            .header-cell { 
-              border: none; 
-              padding: 12px; 
-              border-bottom: 1px solid #000; 
-            }
-            .section-header { 
-              text-align: center; 
-              padding: 8px; 
-              font-weight: bold; 
-              background: #f5f5f5; 
-              color: #000;
-            }
-            .total-row { 
-              font-weight: bold; 
-              background: #f9f9f9; 
-            }
-            .gross-row { 
-              font-weight: bold; 
-              background: #f0f0f0; 
-            }
-            .logo-image {
-              height: 80px;
-              width: auto;
-              max-width: 200px;
-              object-fit: contain;
-              display: block;
-            }
-            .stamp-image {
-              width: 90px;
-              height: auto;
-              opacity: 0.8;
-              display: block;
-            }
-            .stamp-container {
-              display: flex;
-              flex-direction: column;
-              align-items: flex-end;
-              gap: 4px;
-            }
-            .company-address {
-              font-size: 7px;
-              color: #555;
-              line-height: 1.4;
-              margin-top: 2px;
-            }
-            .amount-word {
-              font-weight: bold;
-              font-size: 12px;
-              padding: 8px;
-              text-align: center;
-              color: #000;
-            }
-            .net-pay-amount {
-              font-weight: bold;
-              font-size: 14px;
-              color: #000;
-            }
+            @page { size: A4; margin: 0; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: white; }
+            .invoice-container { max-width: 210mm; margin: 0 auto; border: 1px solid #000; border-radius: 4px; padding: 0; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 6px 8px; border: 1px solid #000; font-size: 12px; vertical-align: top; color: #000; }
+            .header-cell { border: none; padding: 12px; border-bottom: 1px solid #000; }
+            .section-header { text-align: center; padding: 8px; font-weight: bold; background: #f5f5f5; color: #000; }
+            .total-row { font-weight: bold; background: #f9f9f9; }
+            .gross-row { font-weight: bold; background: #f0f0f0; }
+            .logo-image { height: 80px; width: auto; max-width: 200px; object-fit: contain; display: block; }
+            .stamp-image { width: 90px; height: auto; opacity: 0.8; display: block; }
+            .stamp-container { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+            .amount-word { font-weight: bold; font-size: 12px; padding: 8px; text-align: center; color: #000; }
+            .net-pay-amount { font-weight: bold; font-size: 14px; color: #000; }
             @media print {
               body { padding: 10px; }
               .invoice-container { border: 1px solid #000; }
-              .logo-image, .stamp-image { 
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-              }
+              .logo-image, .stamp-image { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             }
           </style>
         </head>
@@ -1822,7 +2005,7 @@ const PayRoll = () => {
                 <td colspan="6" class="header-cell">
                   <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                     <div style="width: 200px; flex-shrink: 0;">
-                      ${logoData ? `<img src="${logoData}" alt="Logo" class="logo-image" style="height: 80px; width: auto; max-width: 200px; object-fit: contain;">` : ''}
+                      ${logoData ? `<img src="${logoData}" alt="Logo" class="logo-image">` : ''}
                     </div>
                     <div style="flex: 1; text-align: center; padding: 0 10px;">
                       <h2 style="margin: 0; font-size: 16px; font-weight: bold; color: #000;">Timely Healthtech Private Limited</h2>
@@ -1878,7 +2061,7 @@ const PayRoll = () => {
                 <td></td>
               </tr>
             </table>
-            
+
             <table>
               <tr style="background:#f0f0f0;">
                 <td style="width:30%;"><strong>Earnings</strong></td>
@@ -1902,10 +2085,10 @@ const PayRoll = () => {
                 <td colspan="4" class="amount-word">(${numberToWords(finalNetPay)})</td>
               </tr>
             </table>
-            
+
             <div style="display: flex; justify-content: flex-end; align-items: center; padding: 10px 20px; border-top: 1px solid #000; margin-top: 5px;">
               <div class="stamp-container">
-                ${stampData ? `<img src="${stampData}" alt="Company Stamp" class="stamp-image" style="width: 90px; height: auto; opacity: 0.8;">` : ''}
+                ${stampData ? `<img src="${stampData}" alt="Company Stamp" class="stamp-image">` : ''}
                 <div style="text-align: right; line-height: 1.2;">
                   <strong style="font-size: 7px; color: #333; display: block;">Authorized Signatory</strong>
                   <span style="font-size: 6px; color: #555; display: block;">Timely Healthtech Private Limited</span>
@@ -1919,24 +2102,14 @@ const PayRoll = () => {
   };
 
   const getLeaveTypes = (employee) => {
-    if (employee.leaveTypes && Object.keys(employee.leaveTypes).length > 0) {
-      const leaveStrings = [];
-      Object.entries(employee.leaveTypes).forEach(([type, count]) => {
-        if (count > 0) leaveStrings.push(`${type.toUpperCase()}: ${count} `);
-      });
-      if (leaveStrings.length > 0) return leaveStrings.join(', ');
-    }
-
     const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
     const leaveStrings = [];
-
     if (leaves.CL > 0) leaveStrings.push(`CL: ${leaves.CL} `);
     if (leaves.SL > 0) leaveStrings.push(`SL: ${leaves.SL} `);
     if (leaves.EL > 0) leaveStrings.push(`EL: ${leaves.EL} `);
     if (leaves.COFF > 0) leaveStrings.push(`COFF: ${leaves.COFF} `);
     if (leaves.LOP > 0) leaveStrings.push(`LOP: ${leaves.LOP} `);
     if (leaves.Other > 0) leaveStrings.push(`Other: ${leaves.Other} `);
-
     return leaveStrings.length > 0 ? leaveStrings.join(', ') : 'No Leaves';
   };
 
@@ -1947,17 +2120,19 @@ const PayRoll = () => {
     return `${monthNames[parseInt(monthNum) - 1]} ${year}`;
   };
 
+  // ============================================
+  // ✅ ATTENDANCE POPUP MODAL
+  // ============================================
   const AttendancePopupModal = () => {
     const [holidays, setHolidays] = useState([]);
 
     useEffect(() => {
       const fetchHolidays = async () => {
         try {
-          const res = await fetch('https://api.timelyhealth.in/api/holidays/all');
+          const res = await fetch(`${API_BASE_URL}/holidays/all`);
           const data = await res.json();
           setHolidays(Array.isArray(data) ? data : []);
         } catch (err) {
-          console.error("Failed to fetch holidays:", err);
           setHolidays([]);
         }
       };
@@ -1981,6 +2156,16 @@ const PayRoll = () => {
     };
 
     const monthDates = getAllDatesOfMonth(selectedMonth);
+
+    const todayObj = new Date();
+    todayObj.setHours(0, 0, 0, 0);
+
+    const isFutureDate = (date) => {
+      if (!date) return false;
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d > todayObj;
+    };
 
     const getDateKey = (record) => {
       if (!record) return null;
@@ -2038,142 +2223,42 @@ const PayRoll = () => {
       return holidayDatesSet.has(date.toLocaleDateString('en-CA'));
     };
 
-    const targetWeekOffCount = selectedEmployee?.targetWeekOffCount || selectedEmployee?.weekOffs || 4;
+    const employeeId = selectedEmployee?.employeeId;
+    const weekOffDatesList = getWeekOffDatesForEmployee(weekOffDatesMap, employeeId);
+    const weekOffDatesSet = new Set(weekOffDatesList);
+    const targetWeekOffCount = weekOffDatesList.length || (selectedEmployee?.weekOffs || 0);
 
-    const getWeekOffDatesForMonth = () => {
-      const weekOffDatesSet = new Set();
-      if (!selectedEmployee || monthDates.length === 0) return weekOffDatesSet;
-
-      const employeeId = selectedEmployee.employeeId;
-      
-      const joiningDateStr = selectedEmployee.joiningDate || employeesMasterData[employeeId]?.joiningDate;
-      const joiningDate = joiningDateStr ? new Date(joiningDateStr) : null;
-      if (joiningDate) joiningDate.setHours(0, 0, 0, 0);
-
-      const deptRaw =
-        selectedEmployee.department ||
-        employeesMasterData[employeeId]?.department ||
-        '';
-      const deptLower = deptRaw.toLowerCase().trim();
-
-      const isFlexibleWeekOff = 
-        deptLower.includes("laboratory") || 
-        deptLower.includes("nursing") || 
-        deptLower.includes("medical") ||
-        deptLower.includes("lab") ||
-        deptLower.includes("consultant") ||
-        deptLower.includes("doctor");
-
-      const isDevOrMarketing = 
-        deptLower.includes("developer") || 
-        deptLower.includes("development") ||
-        deptLower.includes("digital marketing") ||
-        deptLower.includes("marketing");
-
-      let weekOffPerMonth = 4;
-      const candidates = [
-        selectedEmployee.weekOffPerMonth,
-        employeesMasterData[employeeId]?.weekOffPerMonth,
-        selectedEmployee.defaultWeekOffs,
-        selectedEmployee.targetWeekOffCount
-      ];
-      for (const c of candidates) {
-        if (typeof c === 'number' && c > 0) {
-          weekOffPerMonth = c;
-          break;
-        }
-      }
-
-      if (isDevOrMarketing) {
-        monthDates.forEach(date => {
-          if (date.toLocaleDateString('en-US', { weekday: 'long' }) === 'Sunday') {
-            if (!joiningDate || date >= joiningDate) { 
-              weekOffDatesSet.add(date.toLocaleDateString('en-CA'));
-            }
-          }
-        });
-        return weekOffDatesSet;
-      }
-
-      if (isFlexibleWeekOff) {
-        const absentDays = [];
-        monthDates.forEach(date => {
-          if (joiningDate && date < joiningDate) return;
-
-          const dateKey = date.toLocaleDateString('en-CA');
-          const hasAttendance = attendanceMap.has(dateKey);
-          const isLeave = isLeaveDay(date, employeeId, employeeLeaves);
-          const isHol = isHoliday(date);
-
-          if (!hasAttendance && !isLeave && !isHol) {
-            absentDays.push(date);
-          }
-        });
-        absentDays.sort((a, b) => a - b);
-        const weekOffDaysCount = Math.min(weekOffPerMonth, absentDays.length);
-        for (let i = 0; i < weekOffDaysCount; i++) {
-          weekOffDatesSet.add(absentDays[i].toLocaleDateString('en-CA'));
-        }
-        return weekOffDatesSet;
-      }
-
-      const weekOffDay = 
-        selectedEmployee.weekOffDay ||
-        employeesMasterData[employeeId]?.weekOffDay ||
-        'Sunday';
-
-      const weekOffDayNum = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(weekOffDay);
-
-      monthDates.forEach(date => {
-        if (date.getDay() === weekOffDayNum) {
-          if (!joiningDate || date >= joiningDate) {
-            weekOffDatesSet.add(date.toLocaleDateString('en-CA'));
-          }
-        }
-      });
-
-      return weekOffDatesSet;
-    };
-
-    const weekOffDatesSet = getWeekOffDatesForMonth();
+    const compOffDatesList = getCompOffDatesForEmployee(compOffDatesMap, employeeId);
+    const compOffDatesSet = new Set(compOffDatesList.map(co => co.date));
 
     const isWeekOffDay = (date) => {
-      if (!date || !selectedEmployee) return false;
+      if (!date) return false;
       return weekOffDatesSet.has(date.toLocaleDateString('en-CA'));
     };
 
-    const deptRaw = selectedEmployee?.department || employeesMasterData[selectedEmployee?.employeeId]?.department || '';
-    const deptLower = deptRaw.toLowerCase().trim();
-    const isFlexibleDept = 
-      deptLower.includes("laboratory") || 
-      deptLower.includes("nursing") || 
-      deptLower.includes("medical") ||
-      deptLower.includes("lab") ||
-      deptLower.includes("consultant") ||
-      deptLower.includes("doctor");
+    const isCompOffDay = (date) => {
+      if (!date) return false;
+      return compOffDatesSet.has(date.toLocaleDateString('en-CA'));
+    };
 
-    let weekOffCount = 0, leaveCount = 0, absentCount = 0, presentCount = 0, holidayCount = 0, singlePunchCount = 0;
-
-    const joiningDateStr = selectedEmployee?.joiningDate || employeesMasterData[selectedEmployee?.employeeId]?.joiningDate;
-    const joiningDate = joiningDateStr ? new Date(joiningDateStr) : null;
-    if (joiningDate) joiningDate.setHours(0, 0, 0, 0);
+    let weekOffCount = 0, leaveCount = 0, absentCount = 0, presentCount = 0, holidayCount = 0, singlePunchCount = 0, compOffCount = 0, futureCount = 0;
 
     monthDates.forEach(date => {
       const dateKey = date.toLocaleDateString('en-CA');
-      
-      if (joiningDate && date < joiningDate) return;
-
       const record = attendanceMap.get(dateKey);
       const isWO = isWeekOffDay(date);
       const isHol = isHoliday(date);
-      
       const hasAttendance = !!record;
-      const isLV = !isWO && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
+      const isLV = !isWO && isLeaveDay(date, employeeId, employeeLeaves);
+      const isCO = isCompOffDay(date);
+      const futureDate = isFutureDate(date);
 
-      if (isHol && !hasAttendance) {
-        if (!isFlexibleDept) {
-          holidayCount++;
-        }
+      if (futureDate && !hasAttendance) {
+        futureCount++;
+      } else if (isCO) {
+        compOffCount++;
+      } else if (isHol && !hasAttendance) {
+        holidayCount++;
       } else if (isWO && !hasAttendance) {
         weekOffCount++;
       } else if (isLV && !hasAttendance) {
@@ -2193,9 +2278,7 @@ const PayRoll = () => {
       return new Date(dateString).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
     };
 
-    const getRecordForDate = (dateKey) => {
-      return attendanceMap.get(dateKey) || null;
-    };
+    const getRecordForDate = (dateKey) => attendanceMap.get(dateKey) || null;
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -2203,7 +2286,7 @@ const PayRoll = () => {
           <div className="sticky top-0 flex items-center justify-between p-3 bg-white border-b rounded-t-lg">
             <div>
               <h2 className="text-lg font-bold text-gray-700">Attendance Records - {selectedEmployee?.name}</h2>
-              <p className="text-xs text-gray-500">ID: {selectedEmployee?.employeeId} | Shift: {shiftHours} hrs/day | Week-offs: {targetWeekOffCount} days</p>
+              <p className="text-xs text-gray-500">ID: {selectedEmployee?.employeeId} | Shift: {shiftHours} hrs/day | Week-offs: {targetWeekOffCount} days | Comp-offs: {compOffDatesList.length}</p>
             </div>
             <button onClick={() => setShowAttendancePopup(false)} className="text-gray-500 hover:text-gray-700">
               <FaTimes className="w-5 h-5" />
@@ -2215,16 +2298,22 @@ const PayRoll = () => {
               <span className="font-medium">Total Days: <strong>{monthDates.length}</strong></span>
               <span className="text-purple-600">PH: <strong>{holidayCount}</strong></span>
               <span className="text-orange-600">Week Off: <strong>{weekOffCount}</strong></span>
+              <span className="text-teal-600">Comp-off: <strong>{compOffCount}</strong></span>
               <span className="text-red-600">Leaves: <strong>{leaveCount}</strong></span>
               <span className="text-gray-500">Absent: <strong>{absentCount}</strong></span>
+              {/* {futureCount > 0 && (
+                <span className="text-gray-400">NA: <strong>{futureCount}</strong></span>
+              )} */}
               <span className="text-blue-600">Single Punch: <strong>{singlePunchCount}</strong></span>
               <span className="text-green-600">Present: <strong>{presentCount}</strong></span>
             </div>
             <div className="flex gap-3 text-xs flex-wrap">
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-purple-100 border border-purple-300 rounded"></div><span>PH</span></div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded"></div><span>Week Off</span></div>
+              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-teal-100 border border-teal-300 rounded"></div><span>Comp-off</span></div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div><span>Leave</span></div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div><span>Absent</span></div>
+              {/* <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-50 border border-dashed border-gray-300 rounded"></div><span>NA</span></div> */}
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div><span>Single Punch</span></div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div><span>Present</span></div>
             </div>
@@ -2255,17 +2344,15 @@ const PayRoll = () => {
                   <tbody className="divide-y divide-gray-200">
                     {monthDates.map((date) => {
                       const dateKey = date.toLocaleDateString('en-CA');
-                      
-                      const isBeforeJoining = joiningDate && date < joiningDate;
-
                       const record = getRecordForDate(dateKey);
                       const hasAttendance = !!record;
-
                       const workHours = record ? calculateWorkHours(record.checkInTime, record.checkOutTime) : null;
 
                       const isWeekOff = isWeekOffDay(date);
-                      const isLeave = !isWeekOff && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
+                      const isLeave = !isWeekOff && isLeaveDay(date, employeeId, employeeLeaves);
                       const holidayCheck = isHoliday(date);
+                      const compOffCheck = isCompOffDay(date);
+                      const futureDate = isFutureDate(date);
 
                       const effectiveWeekOff = isWeekOff && !hasAttendance;
                       const singlePunch = record && record.checkInTime && !record.checkOutTime;
@@ -2273,9 +2360,12 @@ const PayRoll = () => {
                       let bgColor = '';
                       let dayType = '';
 
-                      if (isBeforeJoining) {
-                        bgColor = 'bg-slate-50 opacity-60';
-                        dayType = 'Not Joined';
+                      if (futureDate && !hasAttendance) {
+                        bgColor = 'bg-gray-50';
+                        dayType = 'NA';
+                      } else if (compOffCheck) {
+                        bgColor = 'bg-teal-50';
+                        dayType = 'Comp-off';
                       } else if (holidayCheck && !hasAttendance) {
                         bgColor = 'bg-purple-50';
                         dayType = 'Public Holiday';
@@ -2296,20 +2386,23 @@ const PayRoll = () => {
                         const hoursNum = parseFloat(workHours);
                         if (workHours && hoursNum >= shiftHours * 0.9) dayType = 'Full Day';
                         else if (workHours && hoursNum >= shiftHours * 0.5) dayType = 'Half Day';
-                        else if (workHours) dayType = 'Absent'; 
+                        else if (workHours) dayType = 'Absent';
                         else dayType = 'Full Day';
                       }
 
                       return (
                         <tr key={dateKey} className={`${bgColor} hover:bg-gray-50 transition-colors`}>
-                          <td className="px-2 py-1 text-xs text-center">{date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
-                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance ? formatTime(record?.checkInTime) : '-'}</td>
-                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance ? formatTime(record?.checkOutTime) : '-'}</td>
-                          <td className="px-2 py-1 text-xs text-center">{record?.reason || '-'}</td>
-                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance && workHours ? `${workHours}h` : '-'}</td>
+                          <td className={`px-2 py-1 text-xs text-center ${futureDate ? 'text-gray-400' : ''}`}>
+                            {date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                          </td>
+                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && !compOffCheck && !futureDate && hasAttendance ? formatTime(record?.checkInTime) : '-'}</td>
+                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && !compOffCheck && !futureDate && hasAttendance ? formatTime(record?.checkOutTime) : '-'}</td>
+                          <td className="px-2 py-1 text-xs text-center">{record?.reason || (compOffCheck ? 'Comp-off approved' : '-')}</td>
+                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && !compOffCheck && hasAttendance && workHours ? `${workHours}h` : '-'}</td>
                           <td className="px-2 py-1 text-center">
                             <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${
-                              isBeforeJoining ? 'bg-slate-200 text-slate-500'
+                              dayType === 'NA' ? 'bg-gray-100 text-gray-400 border border-dashed border-gray-300'
+                              : compOffCheck ? 'bg-teal-100 text-teal-700'
                               : holidayCheck && !hasAttendance ? 'bg-purple-100 text-purple-700'
                               : effectiveWeekOff ? 'bg-orange-100 text-orange-700'
                               : isLeave ? 'bg-red-100 text-red-700'
@@ -2320,7 +2413,7 @@ const PayRoll = () => {
                               : 'bg-gray-100 text-gray-500'
                             }`}>{dayType}</span>
                           </td>
-                          <td className="px-2 py-1 text-xs text-center">{record?.comment || '-'}</td>
+                          <td className="px-2 py-1 text-xs text-center">{record?.comment || (compOffCheck ? `Comp-off (${compOffDatesList.find(co => co.date === dateKey)?.count || 1} day)` : '-')}</td>
                         </tr>
                       );
                     })}
@@ -2331,7 +2424,7 @@ const PayRoll = () => {
           </div>
 
           <div className="flex justify-between items-center p-3 bg-white border-t rounded-b-lg">
-            <button 
+            <button
               onClick={async () => {
                 if (selectedEmployee) {
                   await fetchEmployeeAttendance(selectedEmployee.employeeId, selectedMonth);
@@ -2339,9 +2432,6 @@ const PayRoll = () => {
               }}
               className="px-3 py-1.5 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-200 flex items-center gap-2"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
               Refresh
             </button>
             <button onClick={() => setShowAttendancePopup(false)} className="px-4 py-1.5 text-sm text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700">
@@ -2378,7 +2468,6 @@ const PayRoll = () => {
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
-        {/* Header - Desktop View */}
         <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap mb-4">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
@@ -2388,574 +2477,125 @@ const PayRoll = () => {
 
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 mr-2">
-              <button
-                onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                  filterStatus === 'all'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
+              <button onClick={() => { setFilterStatus('all'); setCurrentPage(1); }} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${filterStatus === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 All ({records.length})
               </button>
-              <button
-                onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                  filterStatus === 'active'
-                    ? 'bg-green-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
+              <button onClick={() => { setFilterStatus('active'); setCurrentPage(1); }} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${filterStatus === 'active' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 Active ({activeCount})
               </button>
-              <button
-                onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                  filterStatus === 'inactive'
-                    ? 'bg-red-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
+              <button onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${filterStatus === 'inactive' ? 'bg-red-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 Inactive ({inactiveCount})
               </button>
             </div>
 
             <div className="relative min-w-[120px] flex-1 max-w-[160px]">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-              <input
-                type="text"
-                placeholder="Search ID or Name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              />
+              <input type="text" placeholder="Search ID or Name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" />
             </div>
 
             <div className="relative" ref={departmentFilterRef}>
-              <button
-                onClick={() => {
-                  setShowDepartmentFilter(!showDepartmentFilter);
-                  setShowDesignationFilter(false);
-                }}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                  filterDepartment
-                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
+              <button onClick={() => { setShowDepartmentFilter(!showDepartmentFilter); setShowDesignationFilter(false); }} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${filterDepartment ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
                 <FaBuilding className="text-gray-400 text-[10px]" />
                 <span className="truncate max-w-[80px]">{filterDepartment || "Dept"}</span>
                 <span className="text-gray-400 text-[10px]">▾</span>
               </button>
               {showDepartmentFilter && (
-                <div 
-                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-                  style={{
-                    zIndex: 99999,
-                    top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                    left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
-                  }}
-                >
-                  <div
-                    onClick={() => {
-                      setFilterDepartment("");
-                      setShowDepartmentFilter(false);
-                    }}
-                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                  >
-                    All Departments
-                  </div>
+                <div className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto" style={{ zIndex: 99999, top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto', left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto' }}>
+                  <div onClick={() => { setFilterDepartment(""); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Departments</div>
                   {uniqueDepartments.map((dept) => (
-                    <div
-                      key={dept}
-                      onClick={() => {
-                        setFilterDepartment(dept);
-                        setShowDepartmentFilter(false);
-                      }}
-                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                        filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                      }`}
-                    >
-                      {dept}
-                    </div>
+                    <div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"}`}>{dept}</div>
                   ))}
                 </div>
               )}
             </div>
 
             <div className="relative" ref={designationFilterRef}>
-              <button
-                onClick={() => {
-                  setShowDesignationFilter(!showDesignationFilter);
-                  setShowDepartmentFilter(false);
-                }}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                  filterDesignation
-                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
+              <button onClick={() => { setShowDesignationFilter(!showDesignationFilter); setShowDepartmentFilter(false); }} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${filterDesignation ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
                 <FaUserTag className="text-gray-400 text-[10px]" />
                 <span className="truncate max-w-[80px]">{filterDesignation || "Desig"}</span>
                 <span className="text-gray-400 text-[10px]">▾</span>
               </button>
               {showDesignationFilter && (
-                <div 
-                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-                  style={{
-                    zIndex: 99999,
-                    top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                    left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
-                  }}
-                >
-                  <div
-                    onClick={() => {
-                      setFilterDesignation("");
-                      setShowDesignationFilter(false);
-                    }}
-                    className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                  >
-                    All Designations
-                  </div>
+                <div className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto" style={{ zIndex: 99999, top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto', left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto' }}>
+                  <div onClick={() => { setFilterDesignation(""); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Designations</div>
                   {uniqueDesignations.map((des) => (
-                    <div
-                      key={des}
-                      onClick={() => {
-                        setFilterDesignation(des);
-                        setShowDesignationFilter(false);
-                      }}
-                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                        filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                      }`}
-                    >
-                      {des}
-                    </div>
+                    <div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"}`}>{des}</div>
                   ))}
                 </div>
               )}
             </div>
 
             <div className="relative">
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                placeholder="From"
-                className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              />
+              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} onClick={(e) => e.target.showPicker && e.target.showPicker()} placeholder="From" className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white" />
             </div>
 
             <div className="relative">
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                placeholder="To"
-                className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              />
+              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} onClick={(e) => e.target.showPicker && e.target.showPicker()} placeholder="To" className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white" />
             </div>
 
             <div className="relative">
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={handleMonthChange}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
-              />
+              <input type="month" value={selectedMonth} onChange={handleMonthChange} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white font-semibold" />
             </div>
 
-            <button
-              onClick={handleDateRangeFilter}
-              disabled={!fromDate || !toDate}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap disabled:opacity-50"
-            >
-              <FaSearch className="w-3 h-3" />
-              Apply
+            <button onClick={handleDateRangeFilter} disabled={!fromDate || !toDate} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap disabled:opacity-50">
+              <FaSearch className="w-3 h-3" /> Apply
             </button>
 
-            <button
-              onClick={() => setShowTemplateModal(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
-            >
-              ⚙️
-            </button>
+            <button onClick={() => setShowTemplateModal(true)} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap">⚙️</button>
 
-            <button
-              onClick={() => {
-                const currentMonth = new Date().toISOString().slice(0, 7);
-                setSelectedMonth(currentMonth);
-                fetchData(currentMonth);
-              }}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
-            >
-              Current
-            </button>
+            <button onClick={() => { const currentMonth = new Date().toISOString().slice(0, 7); setSelectedMonth(currentMonth); fetchData(currentMonth); }} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap">Current</button>
 
-            <button
-              onClick={() => fetchData(selectedMonth)}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
-            >
-              ⟳
-            </button>
+            <button onClick={() => fetchData(selectedMonth)} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap">⟳</button>
 
-            <button
-              onClick={() => navigate("/bank-reports")}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
-            >
-              Bank Reports
-            </button>
+            <button onClick={() => navigate("/bank-reports")} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap">Bank Reports</button>
 
-            <button
-              onClick={() => setShowOTModal(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all shadow-sm whitespace-nowrap"
-            >
-              OT ({selectedOTEmployees.size})
-            </button>
+            <button onClick={() => setShowOTModal(true)} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all shadow-sm whitespace-nowrap">OT ({selectedOTEmployees.size})</button>
 
             {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7) || filterStatus !== 'all') && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-              >
-                ✕ Clear
-              </button>
+              <button onClick={clearFilters} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap">✕ Clear</button>
             )}
           </div>
         </div>
 
-        {/* Header - Mobile View */}
         <div className="sm:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
-          <h1 className="text-base font-bold whitespace-nowrap">
-            Employee <span className="text-indigo-600">Payroll</span>
-          </h1>
+          <h1 className="text-base font-bold whitespace-nowrap">Employee <span className="text-indigo-600">Payroll</span></h1>
           <div className="emp-dash__date-pill">
             <FaCalendarAlt />
             <span>{formatMonthDisplay(selectedMonth)}</span>
           </div>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
-          <div 
-            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'all' ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
-            onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
-          >
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">All Employees</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FiUsers />
-              </div>
-            </div>
+          <div className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'all' ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`} onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">All Employees</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div></div>
             <div className="emp-dash__stat-value">{records.length}</div>
             <div className="emp-dash__stat-meta">total in payroll</div>
           </div>
 
-          <div 
-            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'active' ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
-            onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}
-          >
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Active Employees</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FiUserCheck />
-              </div>
-            </div>
+          <div className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'active' ? 'ring-2 ring-green-500 ring-offset-2' : ''}`} onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Active Employees</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div></div>
             <div className="emp-dash__stat-value text-green-600">{activeCount}</div>
             <div className="emp-dash__stat-meta">active in payroll</div>
           </div>
 
-          <div 
-            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'inactive' ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
-            onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }}
-          >
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Inactive Employees</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
-                <FiUserMinus />
-              </div>
-            </div>
+          <div className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'inactive' ? 'ring-2 ring-red-500 ring-offset-2' : ''}`} onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Inactive Employees</span><div className="emp-dash__stat-icon emp-dash__stat-icon--absent"><FiUserMinus /></div></div>
             <div className="emp-dash__stat-value text-red-600">{inactiveCount}</div>
             <div className="emp-dash__stat-meta">hidden from reports</div>
           </div>
 
           <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Assigned Salary</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--salary">
-                <FiTrendingUp />
-              </div>
-            </div>
-            <div className="emp-dash__stat-value">
-              ₹
-              {Math.round(
-                filteredRecords
-                  .reduce((sum, emp) => sum + (emp.salaryPerMonth || 0), 0)
-              ).toLocaleString()}
-            </div>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Assigned Salary</span><div className="emp-dash__stat-icon emp-dash__stat-icon--salary"><FiTrendingUp /></div></div>
+            <div className="emp-dash__stat-value">₹{Math.round(filteredRecords.reduce((sum, emp) => sum + (emp.salaryPerMonth || 0), 0)).toLocaleString()}</div>
             <div className="emp-dash__stat-meta">total assigned per month</div>
           </div>
 
           <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Net Pay</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--salary">
-                <FiTrendingUp />
-              </div>
-            </div>
-            <div className="emp-dash__stat-value">
-              ₹
-              {Math.round(
-                filteredRecords
-                  .reduce((sum, emp) => sum + (emp.finalPay || 0), 0)
-              ).toLocaleString()}
-            </div>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Net Pay</span><div className="emp-dash__stat-icon emp-dash__stat-icon--salary"><FiTrendingUp /></div></div>
+            <div className="emp-dash__stat-value">₹{Math.round(filteredRecords.reduce((sum, emp) => sum + (emp.finalPay || 0), 0)).toLocaleString()}</div>
             <div className="emp-dash__stat-meta">total net pay this month</div>
           </div>
         </div>
-
-        <div className="flex items-center gap-3 mb-4 flex-wrap sm:hidden">
-          <button
-            onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
-              filterStatus === 'all'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            All ({records.length})
-          </button>
-          <button
-            onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
-              filterStatus === 'active'
-                ? 'bg-green-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Active ({activeCount})
-          </button>
-          <button
-            onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }}
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
-              filterStatus === 'inactive'
-                ? 'bg-red-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Inactive ({inactiveCount})
-          </button>
-        </div>
-
-        {selectedMonth === "2026-05" && (
-          <div className="px-3 py-2 mb-3 border-l-4 border-blue-500 rounded-md shadow-sm bg-blue-50">
-            <p className="text-xs font-medium text-blue-700">
-              🎉 May 2026 Special: Non-medical employees with 4 week-offs will get +1 extra week off (total 5 week offs)!
-            </p>
-          </div>
-        )}
-
-        {filterStatus !== 'all' && (
-          <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-            <span className="text-xs font-medium text-blue-700">
-              🔍 Showing: <strong>{filterStatus === 'active' ? 'Active' : 'Inactive'} Employees</strong> ({filteredRecords.length} employees)
-            </span>
-            <button
-              onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
-              className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
-            >
-              <FiX className="w-3 h-3" /> Clear Filter
-            </button>
-          </div>
-        )}
-
-        <div className="emp-dash__card mb-6 sm:hidden">
-          <div className="sm:hidden">
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
-              <button
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-              >
-                <FiFilter className="text-blue-600 text-base" />
-                <span>Filters</span>
-                {showMobileFilters ? <FiChevronUp className="text-gray-400" /> : <FiChevronDown className="text-gray-400" />}
-              </button>
-              <span className="text-xs text-gray-500">
-                <strong>{filteredRecords.length}</strong> employees
-              </span>
-            </div>
-
-            {showMobileFilters && (
-              <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
-                  <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                    <input
-                      type="text"
-                      placeholder="Search ID or Name..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="relative" ref={departmentFilterRef}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
-                  <button
-                    onClick={() => {
-                      setShowDepartmentFilter(!showDepartmentFilter);
-                      setShowDesignationFilter(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                      filterDepartment ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50" : "border-gray-300 text-gray-700"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2"><FaBuilding className="text-gray-400" />{filterDepartment || "All Departments"}</span>
-                    <span className="text-gray-400">▾</span>
-                  </button>
-                  {showDepartmentFilter && (
-                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      <div onClick={() => { setFilterDepartment(""); setShowDepartmentFilter(false); }} className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Departments</div>
-                      {uniqueDepartments.map((dept) => (
-                        <div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"}`}>{dept}</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative" ref={designationFilterRef}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
-                  <button
-                    onClick={() => {
-                      setShowDesignationFilter(!showDesignationFilter);
-                      setShowDepartmentFilter(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                      filterDesignation ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50" : "border-gray-300 text-gray-700"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2"><FaUserTag className="text-gray-400" />{filterDesignation || "All Designations"}</span>
-                    <span className="text-gray-400">▾</span>
-                  </button>
-                  {showDesignationFilter && (
-                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      <div onClick={() => { setFilterDesignation(""); setShowDesignationFilter(false); }} className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Designations</div>
-                      {uniqueDesignations.map((des) => (
-                        <div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"}`}>{des}</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
-                    <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
-                    <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
-                  <input type="month" value={selectedMonth} onChange={handleMonthChange} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold" />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-                  <div className="flex bg-gray-100 p-1 rounded-lg">
-                    <button
-                      onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
-                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${filterStatus === 'all' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
-                    >
-                      All ({records.length})
-                    </button>
-                    <button
-                      onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}
-                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${filterStatus === 'active' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-600'}`}
-                    >
-                      Active ({activeCount})
-                    </button>
-                    <button
-                      onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }}
-                      className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${filterStatus === 'inactive' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-600'}`}
-                    >
-                      Inactive ({inactiveCount})
-                    </button>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-gray-200 space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={handleDateRangeFilter} disabled={!fromDate || !toDate} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50">
-                      <FaSearch className="w-4 h-4" /> Apply
-                    </button>
-                    <button onClick={() => setShowTemplateModal(true)} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm">
-                      ⚙️ Template
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button onClick={() => { const currentMonth = new Date().toISOString().slice(0, 7); setSelectedMonth(currentMonth); fetchData(currentMonth); }} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm">
-                      Current
-                    </button>
-                    <button onClick={() => fetchData(selectedMonth)} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm">
-                      ⟳ Refresh
-                    </button>
-                    <button onClick={() => setShowOTModal(true)} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all shadow-sm">
-                      OT ({selectedOTEmployees.size})
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => navigate("/bank-reports")} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm">
-                      Bank Reports
-                    </button>
-                    {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7) || filterStatus !== 'all') && (
-                      <button onClick={clearFilters} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
-                        ✕ Clear
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {selectedMonth && isCurrentMonth(selectedMonth) && new Date().getDate() < 26 && (
-          <div className="px-3 py-2 mb-3 border-l-4 border-yellow-500 rounded-md shadow-sm bg-yellow-50">
-            <p className="text-xs font-medium text-yellow-700">
-              ⚠️ Current Month (Before 26th) - Week-off will be added after 26th for salary calculation
-            </p>
-          </div>
-        )}
-        {selectedMonth && isCurrentMonth(selectedMonth) && new Date().getDate() >= 26 && (
-          <div className="px-3 py-2 mb-3 border-l-4 border-green-500 rounded-md shadow-sm bg-green-50">
-            <p className="text-xs font-medium text-green-700">
-              ✓ Current Month (After 26th) - Week-off included in salary calculation
-            </p>
-          </div>
-        )}
-        {selectedMonth && isHistoricalMonth(selectedMonth) && (
-          <div className="px-3 py-2 mb-3 border-l-4 border-green-500 rounded-md shadow-sm bg-green-50">
-            <p className="text-xs font-medium text-green-700">
-              ✓ Historical Month - Full salary with week-off included
-            </p>
-          </div>
-        )}
-
-        {selectedMonth === "2026-05" && (
-          <div className="px-3 py-2 mb-3 border-l-4 border-blue-500 rounded-md shadow-sm bg-blue-50">
-            <p className="text-xs font-medium text-blue-700">
-              🎉 May 2026 Special: Non-medical employees with 4 week-offs will get +1 extra week off (total 5 week offs)!
-            </p>
-          </div>
-        )}
 
         <div className="emp-dash__card mb-6">
           <div className="overflow-x-auto">
@@ -2969,33 +2609,16 @@ const PayRoll = () => {
                   <th style={{ textAlign: "center" }}>Working</th>
                   <th style={{ textAlign: "center" }}>Present</th>
                   <th style={{ textAlign: "center" }}>Half</th>
-                  <th style={{ textAlign: "center" }}>
-                    <span className="flex items-center justify-center gap-1">
-                      Carry Fwd
-                      <span className="text-[8px] text-gray-400 cursor-help" title="Extra days worked beyond expected working days — carried to next month">
-                        ⓘ
-                      </span>
-                    </span>
-                  </th>
-                  <th style={{ textAlign: "center" }}>
-                    <span className="flex items-center justify-center gap-1">
-                      Earned WO
-                      <span className="text-[8px] text-gray-400 cursor-help" title="Weekoffs earned based on weekly attendance (5+ days/week)">
-                        ⓘ
-                      </span>
-                    </span>
-                  </th>
-                  <th style={{ textAlign: "center" }}>
-                    <span className="flex items-center justify-center gap-1">
-                      Default WO
-                      <span className="text-[8px] text-gray-400 cursor-help" title="Configured weekoffs per month">
-                        ⓘ
-                      </span>
-                    </span>
-                  </th>
+                  <th style={{ textAlign: "center" }}>Carry Fwd</th>
+                  <th style={{ textAlign: "center" }}>Earned WO</th>
+                  <th style={{ textAlign: "center" }}>Week Off Dates</th>
+                  <th style={{ textAlign: "center" }}>Comp-off Dates</th>
+                  <th style={{ textAlign: "center" }}>Comp-off Amt</th>
+                  <th style={{ textAlign: "center" }}>Default WO</th>
                   <th style={{ textAlign: "center" }}>Monthly Salary</th>
                   <th style={{ textAlign: "center" }}>OT Amount</th>
                   <th style={{ textAlign: "center" }}>Calculated</th>
+                  <th style={{ textAlign: "center" }}>Manual Ded.</th>
                   <th style={{ textAlign: "center" }}>Final Pay</th>
                   <th style={{ textAlign: "center" }}>Status</th>
                   <th style={{ textAlign: "right" }}>Actions</th>
@@ -3003,144 +2626,80 @@ const PayRoll = () => {
               </thead>
               <tbody>
                 {currentRecords.map((item, index) => (
-                  <tr
-                    key={item.employeeId}
-                    onClick={() => handleRowClick(item)}
-                    className={`transition-colors hover:bg-slate-50/50 cursor-pointer ${item.isInactive ? 'bg-red-50/30' : ''}`}
-                  >
-                    <td className="font-semibold text-slate-800 text-[11px]">
-                      {item.employeeId}
-                    </td>
+                  <tr key={item.employeeId} onClick={() => handleRowClick(item)} className={`transition-colors hover:bg-slate-50/50 cursor-pointer ${item.isInactive ? 'bg-red-50/30' : ''}`}>
+                    <td className="font-semibold text-slate-800 text-[11px]">{item.employeeId}</td>
                     <td>
                       <div className="flex items-center justify-start gap-2">
-                        <div className="flex items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full shadow-inner">
-                          {item.name ? item.name.charAt(0).toUpperCase() : "?"}
-                        </div>
-                        <span className={`font-semibold text-xs whitespace-nowrap ${item.isInactive ? 'text-gray-500' : 'text-slate-800'}`}>
-                          {item.name}
-                        </span>
+                        <div className="flex items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full shadow-inner">{item.name ? item.name.charAt(0).toUpperCase() : "?"}</div>
+                        <span className={`font-semibold text-xs whitespace-nowrap ${item.isInactive ? 'text-gray-500' : 'text-slate-800'}`}>{item.name}</span>
                       </div>
                     </td>
-                    <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
-                      {item.designation || item.role || '-'}
-                    </td>
-                    <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
-                      {item.department}
-                    </td>
-                    <td className="text-center whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-blue-50 text-blue-700 border border-blue-100'}`}>
-                        {item.totalWorkingDays || 0}
-                      </span>
-                    </td>
-                    <td className="text-center whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
-                        {item.presentDays || 0}
-                      </span>
-                    </td>
-                    <td className="text-center whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
-                        {item.halfDayWorking || 0}
-                      </span>
-                    </td>
+                    <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">{item.designation || item.role || '-'}</td>
+                    <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">{item.department}</td>
+                    <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-blue-50 text-blue-700 border border-blue-100'}`}>{item.totalWorkingDays || 0}</span></td>
+                    <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>{item.presentDays || 0}</span></td>
+                    <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>{item.halfDayWorking || 0}</span></td>
                     <td className="text-center whitespace-nowrap">
                       {(item.carryForwardDays > 0 || item.carryForwardFromPrev > 0) ? (
                         <div className="flex flex-col items-center gap-0.5">
-                          {item.carryForwardDays > 0 && (
-                            <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-orange-100 text-orange-700 border border-orange-300'}`}
-                              title={`${item.carryForwardDays} extra day(s) carried forward to next month`}
-                            >
-                              +{item.carryForwardDays}→
-                            </span>
-                          )}
-                          {item.carryForwardFromPrev > 0 && (
-                            <span
-                              className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-blue-50 text-blue-600 border border-blue-200'}`}
-                              title={`${item.carryForwardFromPrev} day(s) carried in from previous month`}
-                            >
-                              ←{item.carryForwardFromPrev}
-                            </span>
-                          )}
+                          {item.carryForwardDays > 0 && (<span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-orange-100 text-orange-700 border border-orange-300'}`} title={`${item.carryForwardDays} extra day(s) carried forward to next month (NOT added to salary)`}>+{item.carryForwardDays}→</span>)}
+                          {item.carryForwardFromPrev > 0 && (<span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-blue-50 text-blue-600 border border-blue-200'}`} title={`${item.carryForwardFromPrev} day(s) carried in from previous month (already counted in payable days)`}>←{item.carryForwardFromPrev}</span>)}
                         </div>
-                      ) : (
-                        <span className="text-gray-300 text-[10px]">—</span>
-                      )}
+                      ) : (<span className="text-gray-300 text-[10px]">—</span>)}
+                    </td>
+                    <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>{item.earnedWeekOffs || 0}</span></td>
+                    <td className="text-center whitespace-nowrap">
+                      {item.weekOffDates && item.weekOffDates.length > 0 ? (
+                        <div className="flex flex-wrap gap-0.5 justify-center max-w-[160px]">
+                          {item.weekOffDates.map((d) => (
+                            <span key={d} className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}`} title={d}>
+                              {new Date(d + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (<span className="text-gray-300 text-[10px]">—</span>)}
                     </td>
                     <td className="text-center whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
-                        {item.earnedWeekOffs || 0}
-                      </span>
+                      {item.compOffDates && item.compOffDates.length > 0 ? (
+                        <div className="flex flex-wrap gap-0.5 justify-center max-w-[160px]">
+                          {item.compOffDates.map((co) => (
+                            <span key={co._id || co.date} className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-teal-50 text-teal-700 border border-teal-200'}`} title={`${co.date} (${co.count || 1} day)`}>
+                              {new Date(co.date + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (<span className="text-gray-300 text-[10px]">—</span>)}
                     </td>
                     <td className="text-center whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}>
-                        {item.defaultWeekOffs || 0}
-                      </span>
+                      {item.compOffAmount > 0 ? (
+                        <span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-teal-600'}`} title={`${item.compOffDays} comp-off day(s) × ₹${item.salaryPerDay?.toFixed(2) || 0}/day`}>
+                          ₹{item.compOffAmount.toFixed(0)}
+                        </span>
+                      ) : (<span className="text-gray-400">-</span>)}
                     </td>
+                    <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}>{item.defaultWeekOffs || 0}</span></td>
                     <td className="text-center whitespace-nowrap">
                       <div className={`font-semibold ${item.isInactive ? 'text-gray-400' : 'text-slate-700'}`}>₹{(item.salaryPerMonth || 0).toLocaleString()}</div>
-                      {item.currentSalary && item.currentSalary !== item.salaryPerMonth && (
-                        <div className="text-[9px] text-gray-400 line-through">₹{item.currentSalary.toLocaleString()}</div>
-                      )}
-                      {item.historicalEffectiveFrom && item.historicalEffectiveFrom !== item.joinDate && (
-                        <div className="text-[8px] text-blue-600 font-medium">w.e.f {new Date(item.historicalEffectiveFrom).toLocaleDateString()}</div>
-                      )}
                     </td>
                     <td className="text-center whitespace-nowrap">
-                      {item.finalOTAmount > 0 ? (
-                        <span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-green-600'}`}>₹{item.finalOTAmount.toFixed(0)}</span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
+                      {item.finalOTAmount > 0 ? (<span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-green-600'}`} title={item.otSource === 'dashboard' ? `Dashboard OT: ${item.dashboardOTHours}h` : ''}>₹{item.finalOTAmount.toFixed(0)}</span>) : (<span className="text-gray-400">-</span>)}
                     </td>
+                    <td className="text-center whitespace-nowrap"><span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-blue-700'}`}>₹{calculateSalary(item).toLocaleString()}</span></td>
                     <td className="text-center whitespace-nowrap">
-                      <span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-blue-700'}`}>₹{calculateSalary(item).toLocaleString()}</span>
+                      {item.manualDeduction > 0 ? (<span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-rose-600'}`} title={item.manualDeductionReason ? `Reason: ${item.manualDeductionReason}` : ''}>- ₹{item.manualDeduction.toLocaleString()}</span>) : (<span className="text-gray-400">-</span>)}
                     </td>
-                    <td className="text-center whitespace-nowrap">
-                      <span className={`font-extrabold ${item.isInactive ? 'text-gray-400' : 'text-green-700'}`}>₹{(item.finalPay || item.calculatedSalary || 0).toLocaleString()}</span>
-                    </td>
-                    <td className="text-center whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold ${
-                        item.isInactive 
-                          ? 'bg-red-50 text-red-700 border border-red-200' 
-                          : 'bg-green-50 text-green-700 border border-green-200'
-                      }`}>
-                        {item.isInactive ? 'INACTIVE' : 'ACTIVE'}
-                      </span>
-                    </td>
+                    <td className="text-center whitespace-nowrap"><span className={`font-extrabold ${item.isInactive ? 'text-gray-400' : 'text-green-700'}`}>₹{(item.finalPay || item.calculatedSalary || 0).toLocaleString()}</span></td>
+                    <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold ${item.isInactive ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>{item.isInactive ? 'INACTIVE' : 'ACTIVE'}</span></td>
                     <td className="text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-1.5">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleView(item); }}
-                          className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg transition-all shadow-sm"
-                          title="View Details"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
+                        <button onClick={(e) => { e.stopPropagation(); handleView(item); }} className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg transition-all shadow-sm" title="View Details">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                         </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleEdit(item); }}
-                          className="p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-100 rounded-lg transition-all shadow-sm"
-                          title="Edit Adjustment"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
+                        <button onClick={(e) => { e.stopPropagation(); handleEdit(item); }} className="p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-100 rounded-lg transition-all shadow-sm" title="Edit Adjustment">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                         </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); downloadInvoice(item); }}
-                          disabled={!isPayslipDownloadAllowed(item.month || selectedMonth) || item.isInactive}
-                          className={`p-1.5 border rounded-lg transition-all shadow-sm ${
-                            isPayslipDownloadAllowed(item.month || selectedMonth) && !item.isInactive
-                              ? 'text-purple-600 bg-purple-50 hover:bg-purple-100 border-purple-100'
-                              : 'text-gray-300 bg-gray-50 border-gray-100 cursor-not-allowed'
-                          }`}
-                          title={item.isInactive ? "Payslip not available for inactive employees" : "Download Payslip"}
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
+                        <button onClick={(e) => { e.stopPropagation(); downloadInvoice(item); }} disabled={!isPayslipDownloadAllowed(item.month || selectedMonth) || item.isInactive} className={`p-1.5 border rounded-lg transition-all shadow-sm ${isPayslipDownloadAllowed(item.month || selectedMonth) && !item.isInactive ? 'text-purple-600 bg-purple-50 hover:bg-purple-100 border-purple-100' : 'text-gray-300 bg-gray-50 border-gray-100 cursor-not-allowed'}`} title={item.isInactive ? "Payslip not available" : "Download Payslip"}>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         </button>
                       </div>
                     </td>
@@ -3155,65 +2714,22 @@ const PayRoll = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>Show</span>
-                  <select
-                    value={itemsPerPage}
-                    onChange={handleItemsPerPageChange}
-                    className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
+                  <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option>
                   </select>
                   <span>entries</span>
                 </div>
                 <div className="text-xs text-gray-500">
-                  Showing <strong>{indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, filteredRecords.length)}</strong> of{" "}
-                  <strong>{filteredRecords.length}</strong>
+                  Showing <strong>{indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, filteredRecords.length)}</strong> of <strong>{filteredRecords.length}</strong>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                    currentPage === 1
-                      ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
-                      : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"
-                  }`}
-                >
-                  Previous
-                </button>
-
+                <button onClick={handlePrevious} disabled={currentPage === 1} className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${currentPage === 1 ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"}`}>Previous</button>
                 {getPageNumbers().map((page, index) => (
-                  <button
-                    key={index}
-                    onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
-                    disabled={page === "..."}
-                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                      page === "..."
-                        ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
-                        : currentPage === page
-                        ? "text-white bg-blue-600 border-blue-600"
-                        : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"
-                    }`}
-                  >
-                    {page}
-                  </button>
+                  <button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${page === "..." ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : currentPage === page ? "text-white bg-blue-600 border-blue-600" : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"}`}>{page}</button>
                 ))}
-
-                <button
-                  onClick={handleNext}
-                  disabled={currentPage === totalPages}
-                  className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                    currentPage === totalPages
-                      ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
-                      : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"
-                  }`}
-                >
-                  Next
-                </button>
+                <button onClick={handleNext} disabled={currentPage === totalPages} className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${currentPage === totalPages ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"}`}>Next</button>
               </div>
             </div>
           )}
@@ -3226,15 +2742,11 @@ const PayRoll = () => {
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto border border-gray-100">
             <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-white pb-3 border-b border-gray-100">
               <h2 className="text-lg font-bold text-gray-800">Employee Payroll Details</h2>
-              <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-gray-600 transition">
-                <FaTimes size={18} />
-              </button>
+              <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-gray-600 transition"><FaTimes size={18} /></button>
             </div>
-            
+
             <div className="flex items-center space-x-4 mb-6 bg-slate-50 p-4 rounded-xl">
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white text-lg font-bold rounded-full shadow-md shrink-0">
-                {selectedEmployee.name?.charAt(0) || 'E'}
-              </div>
+              <div className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white text-lg font-bold rounded-full shadow-md shrink-0">{selectedEmployee.name?.charAt(0) || 'E'}</div>
               <div className="flex-1">
                 <h3 className="text-base font-bold text-gray-800">{selectedEmployee.name}</h3>
                 <div className="grid grid-cols-2 text-xs text-gray-500 gap-x-4 mt-0.5">
@@ -3256,76 +2768,63 @@ const PayRoll = () => {
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Month Days</span><span className="font-bold text-slate-700">{selectedEmployee.monthDays || monthDays}</span></div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Expected Working Days</span><span className="font-bold text-slate-600">{selectedEmployee.expectedWorkingDays ?? ((selectedEmployee.monthDays || monthDays) - (selectedEmployee.weekOffs || 0))}</span></div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Payable Present Days</span><span className="font-bold text-blue-700">{typeof selectedEmployee.payablePresentDays === 'number' ? selectedEmployee.payablePresentDays : (selectedEmployee.presentDays || 0)}</span></div>
-              {(selectedEmployee.carryForwardFromPrev > 0) && (
-                <div className="flex justify-between py-1.5 border-b border-blue-100 bg-blue-50 rounded px-1">
-                  <span className="text-blue-600 font-semibold">← Carry-in from Prev Month</span>
-                  <span className="font-bold text-blue-700">+{selectedEmployee.carryForwardFromPrev} day(s)</span>
+
+              {selectedEmployee.compOffDays > 0 && (
+                <div className="flex justify-between py-1.5 border-b border-teal-100 bg-teal-50 rounded px-1 sm:col-span-2">
+                  <span className="text-teal-600 font-semibold">Comp-off Days ({selectedEmployee.compOffDays})</span>
+                  <span className="font-bold text-teal-700">₹{selectedEmployee.compOffAmount?.toLocaleString() || 0}</span>
                 </div>
               )}
-              {(selectedEmployee.carryForwardDays > 0) && (
-                <div className="flex justify-between py-1.5 border-b border-orange-100 bg-orange-50 rounded px-1 sm:col-span-2">
-                  <span className="text-orange-600 font-semibold">→ Carry-forward to Next Month</span>
-                  <span className="font-bold text-orange-700">{selectedEmployee.carryForwardDays} day(s)</span>
+
+              {selectedEmployee.weekOffDates && selectedEmployee.weekOffDates.length > 0 && (
+                <div className="flex flex-col py-1.5 border-b border-orange-100 bg-orange-50 rounded px-1 sm:col-span-2">
+                  <span className="text-orange-600 font-semibold mb-1">Week Off Dates ({selectedEmployee.weekOffDates.length})</span>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedEmployee.weekOffDates.map((d) => (
+                      <span key={d} className="px-2 py-0.5 bg-white text-orange-700 border border-orange-200 rounded text-[10px] font-semibold">
+                        {new Date(d + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short', weekday: 'short' })}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
+
+              {selectedEmployee.compOffDates && selectedEmployee.compOffDates.length > 0 && (
+                <div className="flex flex-col py-1.5 border-b border-teal-100 bg-teal-50 rounded px-1 sm:col-span-2">
+                  <span className="text-teal-600 font-semibold mb-1">Comp-off Dates ({selectedEmployee.compOffDates.length})</span>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedEmployee.compOffDates.map((co) => (
+                      <span key={co._id || co.date} className="px-2 py-0.5 bg-white text-teal-700 border border-teal-200 rounded text-[10px] font-semibold">
+                        {new Date(co.date + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short', weekday: 'short' })} ({co.count || 1}d)
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between py-1.5 border-b border-gray-100">
                 <span className="text-gray-500 font-medium">Monthly Salary</span>
                 <div className="text-right">
                   <span className="font-bold text-slate-800">₹{selectedEmployee.salaryPerMonth || 0}</span>
-                  {selectedEmployee.currentSalary && selectedEmployee.currentSalary !== selectedEmployee.salaryPerMonth && (
-                    <div className="text-[9px] text-gray-400 line-through">₹{selectedEmployee.currentSalary.toLocaleString()}</div>
-                  )}
                 </div>
               </div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Daily Rate</span><span className="font-bold text-slate-700">₹{calculateDailyRate(selectedEmployee)}/day</span></div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">OT Amount</span><span className="font-bold text-emerald-600">₹{(selectedEmployee.finalOTAmount || 0).toFixed(0)}</span></div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium text-blue-600">Calculated Base Salary</span><span className="font-bold text-blue-600">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
+
+              {selectedEmployee.manualDeduction > 0 && (
+                <div className="flex justify-between py-1.5 border-b border-rose-100 bg-rose-50 rounded px-1 sm:col-span-2">
+                  <span className="text-rose-600 font-semibold">Manual Deduction{selectedEmployee.manualDeductionReason ? ` (${selectedEmployee.manualDeductionReason})` : ''}</span>
+                  <span className="font-bold text-rose-700">- ₹{selectedEmployee.manualDeduction.toLocaleString()}</span>
+                </div>
+              )}
+
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-700 font-bold">Final Pay</span><span className="font-bold text-emerald-700">₹{Math.round(selectedEmployee.finalPay || selectedEmployee.calculatedSalary || 0)}</span></div>
-              
-              <div className="flex flex-col py-1.5 border-b border-gray-100 sm:col-span-2">
-                <div className="flex justify-between"><span className="text-gray-500 font-medium">Approved Leaves</span><span className="font-bold text-rose-600">{getLeaveTypes(selectedEmployee) || "0"}</span></div>
-              </div>
             </div>
 
-            {selectedEmployee.weeklyBreakdown && selectedEmployee.weeklyBreakdown.length > 0 && (
-              <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <h4 className="text-xs font-bold text-gray-600 mb-2">📊 Weekly Attendance Breakdown</h4>
-                <div className="grid grid-cols-1 gap-1.5 max-h-[150px] overflow-y-auto">
-                  {selectedEmployee.weeklyBreakdown.map((week, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-[10px] bg-white p-1.5 rounded border border-gray-100">
-                      <span className="font-medium text-gray-500">Week {week.weekNumber}{!week.isCompleteWeek && ' (Partial)'}</span>
-                      <span className="text-gray-600">P:{week.presentDays || 0} H:{week.halfDays || 0} L:{week.leaves || 0}</span>
-                      <span className="text-gray-600">Total: {week.effectiveWorkingDays || 0} days</span>
-                      <span className={`font-bold ${week.isEligibleForWeekoff ? 'text-green-600' : 'text-red-500'}`}>
-                        {week.isEligibleForWeekoff ? '✅ Weekoff Earned' : '❌ No Weekoff'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-2 text-[9px] text-gray-400 font-medium">
-                  * Weekoff earned when employee works 5+ days in a week
-                </div>
-              </div>
-            )}
-
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
-              <button
-                onClick={() => downloadInvoice(selectedEmployee)}
-                disabled={!isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)}
-                className={`px-4 py-2 text-xs font-semibold rounded-lg transition duration-200 ${
-                  isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)
-                    ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md shadow-purple-200'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                Download Payslip
-              </button>
-              <button
-                onClick={() => setShowViewModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-white bg-slate-700 rounded-lg hover:bg-slate-800 transition"
-              >
-                Close
-              </button>
+              <button onClick={() => downloadInvoice(selectedEmployee)} disabled={!isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)} className={`px-4 py-2 text-xs font-semibold rounded-lg transition duration-200 ${isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth) ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md shadow-purple-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}>Download Payslip</button>
+              <button onClick={() => setShowViewModal(false)} className="px-4 py-2 text-xs font-semibold text-white bg-slate-700 rounded-lg hover:bg-slate-800 transition">Close</button>
             </div>
           </div>
         </div>
@@ -3337,9 +2836,7 @@ const PayRoll = () => {
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto border border-gray-100">
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
               <h2 className="text-base font-bold text-gray-800">Edit Salary - {selectedEmployee.name}</h2>
-              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600 transition">
-                <FaTimes size={18} />
-              </button>
+              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600 transition"><FaTimes size={18} /></button>
             </div>
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -3370,17 +2867,25 @@ const PayRoll = () => {
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Adjustment Reason</label>
                 <input type="text" name="reason" value={extraWorkData.reason || ""} onChange={handleExtraWorkChange} placeholder="e.g. Performance bonus or Loss of Pay" className="w-full p-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
               </div>
-              
+
+              {selectedEmployee.compOffDays > 0 && (
+                <div className="p-3 bg-teal-50 border border-teal-200 rounded-lg">
+                  <p className="text-xs font-semibold text-teal-700 mb-1">Comp-off Days (Auto-included in salary)</p>
+                  <p className="text-sm font-bold text-teal-800">{selectedEmployee.compOffDays} day(s) — ₹{selectedEmployee.compOffAmount?.toLocaleString() || 0}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedEmployee.compOffDates?.map((co) => (
+                      <span key={co._id || co.date} className="px-1.5 py-0.5 bg-white text-teal-700 border border-teal-200 rounded text-[9px] font-semibold">
+                        {new Date(co.date + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-4 border-t border-gray-100 justify-end">
-                <button type="button" onClick={handleReset} className="px-3 py-1.5 text-xs font-semibold text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition shadow-sm">
-                  Reset System
-                </button>
-                <button type="button" onClick={() => setShowEditModal(false)} className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
-                  Cancel
-                </button>
-                <button type="submit" className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200">
-                  Save Changes
-                </button>
+                <button type="button" onClick={handleReset} className="px-3 py-1.5 text-xs font-semibold text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition shadow-sm">Reset System</button>
+                <button type="button" onClick={() => setShowEditModal(false)} className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">Cancel</button>
+                <button type="submit" className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200">Save Changes</button>
               </div>
             </form>
           </div>
@@ -3393,9 +2898,7 @@ const PayRoll = () => {
           <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-2xl border border-gray-100">
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
               <h2 className="text-base font-bold text-gray-800">Edit Payslip Template</h2>
-              <button onClick={() => setShowTemplateModal(false)} className="text-gray-400 hover:text-gray-600 transition">
-                <FaTimes size={18} />
-              </button>
+              <button onClick={() => setShowTemplateModal(false)} className="text-gray-400 hover:text-gray-600 transition"><FaTimes size={18} /></button>
             </div>
             <div className="space-y-4">
               <div>
@@ -3411,58 +2914,35 @@ const PayRoll = () => {
                 <input type="file" accept="image/*" onChange={handleLogoChange} className="w-full text-xs text-slate-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
               </div>
               <div className="flex gap-2 pt-4 border-t border-gray-100 justify-end">
-                <button onClick={() => setShowTemplateModal(false)} className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
-                  Cancel
-                </button>
-                <button onClick={handleTemplateSave} className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200">
-                  Save Template
-                </button>
+                <button onClick={() => setShowTemplateModal(false)} className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">Cancel</button>
+                <button onClick={handleTemplateSave} className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200">Save Template</button>
               </div>
             </div>
           </div>
         </div>
       )}
-      
+
       {/* OT Selection Modal */}
       {showOTModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] flex flex-col border border-gray-100">
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
               <h2 className="text-base font-bold text-gray-800">Select Employees for OT Payment</h2>
-              <button onClick={() => setShowOTModal(false)} className="text-gray-400 hover:text-gray-600 transition">
-                <FaTimes size={18} />
-              </button>
+              <button onClick={() => setShowOTModal(false)} className="text-gray-400 hover:text-gray-600 transition"><FaTimes size={18} /></button>
             </div>
             <div className="flex-1 pr-1 overflow-y-auto custom-scrollbar">
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-50 text-gray-600 font-bold uppercase text-[9px] tracking-wider sticky top-0 z-10">
-                  <tr>
-                    <th className="p-3">Select</th>
-                    <th className="p-3">ID</th>
-                    <th className="p-3">Employee Name</th>
-                    <th className="p-3 text-right">OT Hours</th>
-                  </tr>
+                  <tr><th className="p-3">Select</th><th className="p-3">ID</th><th className="p-3">Employee Name</th><th className="p-3 text-right">OT Hours</th></tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {records.length === 0 ? (
-                    <tr><td colSpan="4" className="p-4 text-center text-gray-400 font-semibold">No employees found.</td></tr>
-                  ) : (
+                  {records.length === 0 ? (<tr><td colSpan="4" className="p-4 text-center text-gray-400 font-semibold">No employees found.</td></tr>) : (
                     records.map(r => (
                       <tr key={r.employeeId} className={`hover:bg-slate-50/50 ${r.isInactive ? 'opacity-50 bg-red-50/30' : ''}`}>
-                        <td className="p-3">
-                          <input 
-                            type="checkbox" 
-                            checked={selectedOTEmployees.has(r.employeeId)}
-                            onChange={() => handleOTEmployeeSelection(r.employeeId)}
-                            disabled={r.isInactive}
-                            className={`w-4 h-4 border-gray-300 rounded focus:ring-blue-500 ${r.isInactive ? 'cursor-not-allowed' : 'text-blue-600'}`}
-                          />
-                        </td>
+                        <td className="p-3"><input type="checkbox" checked={selectedOTEmployees.has(r.employeeId)} onChange={() => handleOTEmployeeSelection(r.employeeId)} disabled={r.isInactive} className={`w-4 h-4 border-gray-300 rounded focus:ring-blue-500 ${r.isInactive ? 'cursor-not-allowed' : 'text-blue-600'}`} /></td>
                         <td className="p-3 text-gray-500 font-semibold">{r.employeeId}</td>
                         <td className="p-3 font-semibold text-slate-800">{r.name}</td>
-                        <td className="p-3 font-bold text-right text-blue-600">
-                          {r.overTimeHoursFormatted || formatDecimalHours(r.overTimeHours)}
-                        </td>
+                        <td className="p-3 font-bold text-right text-blue-600">{r.overTimeHoursFormatted || formatDecimalHours(r.overTimeHours)}</td>
                       </tr>
                     ))
                   )}

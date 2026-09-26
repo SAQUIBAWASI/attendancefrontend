@@ -8,11 +8,13 @@ import {
   FaClock, FaGlobe, FaUserCheck, FaLocationArrow,
   FaCalendarCheck, FaHistory, FaSignInAlt, FaSignOutAlt,
   FaUserPlus, FaArrowRight, FaDirections, FaEye as FaEyeIcon,
-  FaFilter, FaTimes
+  FaFilter, FaTimes, FaChevronUp, FaChevronDown
 } from 'react-icons/fa';
-import { FiCalendar, FiRefreshCw, FiInfo, FiAlertCircle, FiSearch } from 'react-icons/fi';
+import { FiCalendar, FiRefreshCw, FiInfo, FiAlertCircle, FiSearch, FiTrash2, FiX, FiMapPin, FiUsers } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import "./EmployeeList.css";
+import "./EmployeeDashboard.css";
 
 const API_BASE_URL = 'https://api.timelyhealth.in';
 
@@ -28,6 +30,7 @@ export default function EmployeeLocations() {
   const [stats, setStats] = useState({ total: 0, withAddress: 0, withoutAddress: 0 });
   const [saveStatus, setSaveStatus] = useState('');
   const [addressPopup, setAddressPopup] = useState({ show: false, address: '', label: '' });
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // ─── Simple Filters ───
   const [filterDate, setFilterDate] = useState('');
@@ -207,22 +210,22 @@ export default function EmployeeLocations() {
 
       if (isRecent) {
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <span className="w-2 h-2 mr-1 bg-green-500 rounded-full animate-pulse"></span>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-50 text-green-700 border border-green-200">
+            <span className="w-1.5 h-1.5 mr-1 bg-green-500 rounded-full animate-pulse"></span>
             Online
           </span>
         );
       }
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          <span className="w-2 h-2 mr-1 bg-yellow-500 rounded-full"></span>
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="w-1.5 h-1.5 mr-1 bg-amber-500 rounded-full"></span>
           Away
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-        <span className="w-2 h-2 mr-1 bg-gray-400 rounded-full"></span>
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-50 text-gray-500 border border-gray-200">
+        <span className="w-1.5 h-1.5 mr-1 bg-gray-400 rounded-full"></span>
         No Location
       </span>
     );
@@ -262,18 +265,18 @@ export default function EmployeeLocations() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-700">Loading Employee Locations...</p>
+          <div className="w-10 h-10 mx-auto mb-3 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-gray-600">Loading employee locations...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-4 sm:p-6 lg:p-8">
+    <div className="emp-dash">
+      <main className="p-1 sm:p-2 lg:p-6">
         {saveStatus && (
           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${
             saveStatus.includes('✅') || saveStatus.includes('📍') 
@@ -299,10 +302,7 @@ export default function EmployeeLocations() {
                   <FaMapMarkerAlt className="text-blue-500 text-lg" />
                   <h3 className="text-lg font-bold text-gray-900">{addressPopup.label}</h3>
                 </div>
-                <button
-                  onClick={closeAddressPopup}
-                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
-                >
+                <button onClick={closeAddressPopup} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
                   <FaTimes className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
@@ -310,16 +310,10 @@ export default function EmployeeLocations() {
                 <p className="text-sm text-gray-700 leading-relaxed">{addressPopup.address}</p>
               </div>
               <div className="flex gap-2 mt-4">
-                <button
-                  onClick={() => copyToClipboard(addressPopup.address)}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition flex items-center justify-center gap-2"
-                >
+                <button onClick={() => copyToClipboard(addressPopup.address)} className="flex-1 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition flex items-center justify-center gap-2">
                   <FaCopy className="text-xs" /> Copy Address
                 </button>
-                <button
-                  onClick={closeAddressPopup}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-                >
+                <button onClick={closeAddressPopup} className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
                   Close
                 </button>
               </div>
@@ -327,195 +321,216 @@ export default function EmployeeLocations() {
           </div>
         )}
 
-        {/* Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
-              Employee <span className="text-blue-600">Locations</span>
+        {/* ✅ Desktop Header with Inline Filters */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div className="flex items-center gap-3">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap leading-none">
+              Employee <span>Locations</span>
             </h1>
-            {/* <p className="mt-1 text-sm text-gray-600">
-              Track real-time location of all employees
-            </p> */}
-          </div>
-          <div className="flex gap-2">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
-              <FiCalendar className="text-blue-600" />
-              <span className="text-sm font-medium text-gray-600">
-                {new Date().toLocaleString("en-US", {
-                  weekday: "short",
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: true
-                })}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Employees</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <FaUsers className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={stats.total || employees.length} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">registered employees</div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">With Location</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
-                <FaMapPin className="text-base" />
-              </div>
+          {/* Right side: Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative">
+              <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="text"
+                placeholder="Search name or ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-[140px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
             </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={employees.filter(emp => emp.latitude && emp.longitude).length} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">live tracking</div>
-          </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">With Address</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-purple-50 text-purple-600">
-                <FaCheckCircle className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={stats.withAddress || 0} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">address resolved</div>
-          </div>
+            {/* Employee Dropdown */}
+            <select
+              value={filterEmployee}
+              onChange={(e) => setFilterEmployee(e.target.value)}
+              className={`px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white ${filterEmployee ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+            >
+              <option value="">All Employees</option>
+              {employees.map(emp => (
+                <option key={emp._id} value={emp._id}>{emp.name} ({emp.employeeId})</option>
+              ))}
+            </select>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Filtered</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-orange-50 text-orange-600">
-                <FaFilter className="text-base" />
-              </div>
+            {/* Date Filter */}
+            <div className="flex items-center gap-1.5">
+              <FiCalendar className="text-gray-400 text-xs" />
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className={`px-2.5 py-1.5 text-xs rounded-lg border transition-all bg-white ${filterDate ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' : 'border-gray-300 text-gray-700'}`}
+              />
             </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={filteredEmployees.length} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">
-              {getActiveFilterCount() > 0 ? `${getActiveFilterCount()} filters` : 'no filters'}
-            </div>
+
+            {/* Refresh */}
+            <button
+              onClick={fetchEmployeeLocations}
+              disabled={loading}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FiRefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+
+            {/* Clear Filters */}
+            {getActiveFilterCount() > 0 && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
           </div>
         </div>
 
-        {/* ─── Simple Filters ─── */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto">
-                {/* ─── Employee Filter ─── */}
-                <div className="flex items-center gap-2">
-                  <FaUser className="text-gray-400" />
-                  <select
-                    value={filterEmployee}
-                    onChange={(e) => setFilterEmployee(e.target.value)}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white min-w-[150px]"
-                  >
-                    <option value="">All Employees</option>
-                    {employees.map(emp => (
-                      <option key={emp._id} value={emp._id}>
-                        {emp.name} ({emp.employeeId})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+        {/* ✅ Mobile Header */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            Employee <span className="text-blue-600">Locations</span>
+          </h1>
+        </div>
 
-                {/* ─── Date Filter ─── */}
-                <div className="flex items-center gap-2">
-                  <FiCalendar className="text-gray-400" />
-                  <input
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                </div>
+        {/* Mobile Filters Toggle */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FaFilter className="text-blue-600 text-base" />
+              <span>Filters</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
+            </button>
+            <span className="text-xs text-gray-500"><strong>{filteredEmployees.length}</strong> employees</span>
+          </div>
 
-                {/* ─── Search ─── */}
-                <div className="flex items-center gap-2">
-                  <FiSearch className="text-gray-400" />
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                   <input
                     type="text"
                     placeholder="Search name or ID..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-40"
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                   />
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Employee</label>
+                <select
+                  value={filterEmployee}
+                  onChange={(e) => setFilterEmployee(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                >
+                  <option value="">All Employees</option>
+                  {employees.map(emp => (
+                    <option key={emp._id} value={emp._id}>{emp.name} ({emp.employeeId})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                />
+              </div>
+              <div className="pt-3 border-t border-gray-200 grid grid-cols-2 gap-2">
                 <button
                   onClick={fetchEmployeeLocations}
                   disabled={loading}
-                  className="px-3 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
-                  <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-                  Refresh
+                  <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
                 </button>
                 {getActiveFilterCount() > 0 && (
-                  <button
-                    onClick={clearFilters}
-                    className="px-3 py-2 text-sm font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-all flex items-center gap-2"
-                  >
-                    <FaTimes className="text-xs" /> Clear
+                  <button onClick={clearFilters} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <FiTrash2 className="w-4 h-4" /> Clear
                   </button>
                 )}
               </div>
             </div>
-          </div>
-
-          {/* ─── Active Filters Display ─── */}
-          {getActiveFilterCount() > 0 && (
-            <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-gray-500 font-medium">Active Filters:</span>
-              {filterEmployee && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
-                  Employee: {employees.find(e => e._id === filterEmployee)?.name}
-                  <FaTimes 
-                    className="text-xs cursor-pointer hover:text-red-500"
-                    onClick={() => setFilterEmployee('')}
-                  />
-                </span>
-              )}
-              {filterDate && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">
-                  Date: {formatDateTime(filterDate)}
-                  <FaTimes 
-                    className="text-xs cursor-pointer hover:text-red-500"
-                    onClick={() => setFilterDate('')}
-                  />
-                </span>
-              )}
-              {searchTerm && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
-                  Search: {searchTerm}
-                  <FaTimes 
-                    className="text-xs cursor-pointer hover:text-red-500"
-                    onClick={() => setSearchTerm('')}
-                  />
-                </span>
-              )}
-            </div>
           )}
         </div>
 
+        {/* ✅ KPI Stat Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+          <div className="emp-dash__stat transition-all hover:shadow-md">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Total Employees</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FaUsers className="text-sm sm:text-base" /></div>
+            </div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl">
+              <CountUp end={stats.total || employees.length} duration={1} />
+            </div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">registered employees</div>
+          </div>
+
+          <div className="emp-dash__stat transition-all hover:shadow-md">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">With Location</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FaMapPin className="text-sm sm:text-base" /></div>
+            </div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl text-green-600">
+              <CountUp end={employees.filter(emp => emp.latitude && emp.longitude).length} duration={1} />
+            </div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">live tracking</div>
+          </div>
+
+          <div className="emp-dash__stat transition-all hover:shadow-md">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">With Address</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FaCheckCircle className="text-sm sm:text-base" /></div>
+            </div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl">
+              <CountUp end={stats.withAddress || 0} duration={1} />
+            </div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">address resolved</div>
+          </div>
+
+          <div className="emp-dash__stat col-span-2 lg:col-span-1 transition-all hover:shadow-md">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Showing</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent"><FaFilter className="text-sm sm:text-base" /></div>
+            </div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl">
+              <CountUp end={filteredEmployees.length} duration={1} />
+            </div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">
+              {getActiveFilterCount() > 0 ? `${getActiveFilterCount()} filter${getActiveFilterCount() > 1 ? 's' : ''} active` : 'no filters'}
+            </div>
+          </div>
+        </div>
+
+        {/* Active Filter Badge */}
+        {getActiveFilterCount() > 0 && (
+          <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-medium text-blue-700 flex flex-wrap items-center gap-2">
+              🔍 Filters active:
+              {filterEmployee && <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">Employee: {employees.find(e => e._id === filterEmployee)?.name}<FaTimes className="text-[10px] cursor-pointer hover:text-red-500 ml-0.5" onClick={() => setFilterEmployee('')} /></span>}
+              {filterDate && <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">Date: {filterDate}<FaTimes className="text-[10px] cursor-pointer hover:text-red-500 ml-0.5" onClick={() => setFilterDate('')} /></span>}
+              {searchTerm && <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">Search: {searchTerm}<FaTimes className="text-[10px] cursor-pointer hover:text-red-500 ml-0.5" onClick={() => setSearchTerm('')} /></span>}
+            </span>
+            <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
+              <FiX className="w-3 h-3" /> Clear All
+            </button>
+          </div>
+        )}
+
         {/* Main Table */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="emp-dash__card overflow-hidden">
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <div>
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -540,20 +555,20 @@ export default function EmployeeLocations() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 bg-white">
-                <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <table className="emp-dash__table min-w-full">
+                <thead>
                   <tr>
-                    <th className="px-3 py-3 text-left text-black">#</th>
-                    <th className="px-3 py-3 text-left text-black">Employee</th>
-                    <th className="px-3 py-3 text-left text-black">Dept/Role</th>
-                    <th className="px-3 py-3 text-left text-black">Login</th>
-                    <th className="px-3 py-3 text-left text-black">Check-In</th>
-                    <th className="px-3 py-3 text-left text-black">Check-Out</th>
-                    <th className="px-3 py-3 text-left text-black">Status</th>
-                    <th className="px-3 py-3 text-center text-black">Actions</th>
+                    <th className="text-left">#</th>
+                    <th className="text-left">Employee</th>
+                    <th className="text-left">Dept/Role</th>
+                    <th className="text-left">Login</th>
+                    <th className="text-left">Check-In</th>
+                    <th className="text-left">Check-Out</th>
+                    <th className="text-left">Status</th>
+                    <th className="text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 text-sm">
+                <tbody>
                   {filteredEmployees.map((employee, index) => {
                     const loginTime = employee.lastLoginLocation?.timestamp;
                     const checkinTime = employee.lastCheckInLocation?.timestamp;
@@ -692,21 +707,23 @@ export default function EmployeeLocations() {
 
                         <td className="px-3 py-3">{getStatusBadge(employee)}</td>
                         <td className="px-3 py-3 text-center">
-                          <div className="flex flex-col items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-1.5 flex-wrap">
                             <button
                               onClick={() => openDetails(employee)}
-                              className="px-2.5 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                              className="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
+                              title="View Details"
                             >
-                              <FaEye className="text-xs" /> View
+                              <FaEye className="w-3.5 h-3.5" />
                             </button>
 
                             {employee.latitude && employee.longitude && (
                               <button
                                 onClick={() => redirectToLocation(employee.latitude, employee.longitude, employee.name)}
                                 disabled={redirecting}
-                                className="px-2.5 py-1 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
+                                className="inline-flex items-center justify-center p-1.5 text-green-600 bg-green-50 hover:bg-green-100 rounded-md transition-all shadow-sm"
+                                title="Open in Map"
                               >
-                                <FaLocationArrow className="text-xs" /> Map
+                                <FaLocationArrow className="w-3.5 h-3.5" />
                               </button>
                             )}
                           </div>
@@ -964,7 +981,7 @@ export default function EmployeeLocations() {
           .animate-fade-in { animation: fade-in 0.3s ease-out; }
           .animate-scaleUp { animation: scaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
         `}</style>
-      </div>
+      </main>
     </div>
   );
 }

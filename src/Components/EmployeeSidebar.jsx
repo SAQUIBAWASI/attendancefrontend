@@ -153,7 +153,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/employee/letterhead": "Letter Head",
       "/employee/appointment-slots": "Appointments Slots",
       // ✅ My Referrals
-      "/myreferral": "My Referrals"
+      "/myreferral": "My Referrals",
+      "/Rosters": "Rosters",
     };
     return pathMap[path] || "Dashboard";
   };
@@ -474,6 +475,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         dropdown: [
           { name: "Attendance Capture", path: "/attendance-capture" },
           { name: "My Attendance", path: "/myattendance" },
+          { name: "Rosters", path: "/Rosters" },
           { name: "My Shift", path: "/my-shift" },
           { name: "My Location", path: "/mylocation" },
         ]

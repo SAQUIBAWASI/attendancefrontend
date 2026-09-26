@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import CountUp from 'react-countup';
-import { FaEye, FaCheck, FaTimes, FaTrash, FaSearch, FaDownload, FaBuilding, FaUserTag, FaChevronUp, FaChevronDown } from 'react-icons/fa';
+import { FaEye, FaCheck, FaTimes, FaTrash, FaSearch, FaDownload, FaBuilding, FaUserTag, FaChevronUp, FaChevronDown, FaUndo } from 'react-icons/fa';
 import { FiCalendar, FiCheckCircle, FiClock, FiDownload, FiFilter, FiList, FiTrash2, FiXCircle, FiRefreshCw } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { isEmployeeHidden } from '../utils/employeeStatus';
@@ -23,7 +23,6 @@ export default function ClaimedOTManagement() {
   });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Filter states
   const [filters, setFilters] = useState({
     status: 'all',
     employeeId: '',
@@ -32,47 +31,39 @@ export default function ClaimedOTManagement() {
     search: ''
   });
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
     const saved = localStorage.getItem('claimedOT_itemsPerPage');
     return saved ? parseInt(saved, 10) : 10;
   });
 
-  // Modal states
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRevertModal, setShowRevertModal] = useState(false);
   const [showBulkActionModal, setShowBulkActionModal] = useState(false);
   const [selectedClaims, setSelectedClaims] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  // Status update states
   const [statusUpdate, setStatusUpdate] = useState({
     status: 'approved',
     rejectedReason: '',
     notes: ''
   });
 
-  // Multiplier states per claim
   const [multipliers, setMultipliers] = useState({});
-
-  // Toast notification state
   const [saveStatus, setSaveStatus] = useState('');
   const saveStatusTimeoutRef = React.useRef(null);
 
-  // Department and Designation filter states
   const [filterDepartment, setFilterDepartment] = useState('');
   const [filterDesignation, setFilterDesignation] = useState('');
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
 
-  // Unique departments and designations
   const [uniqueDepartments, setUniqueDepartments] = useState([]);
   const [uniqueDesignations, setUniqueDesignations] = useState([]);
 
-  // Refs for click outside
   const departmentFilterRef = useRef(null);
   const designationFilterRef = useRef(null);
 
@@ -82,7 +73,6 @@ export default function ClaimedOTManagement() {
     saveStatusTimeoutRef.current = setTimeout(() => setSaveStatus(''), 3500);
   };
 
-  // Click outside handlers for filter dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
@@ -96,7 +86,6 @@ export default function ClaimedOTManagement() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch claims
   useEffect(() => {
     fetchClaims();
   }, [currentPage, filters, itemsPerPage]);
@@ -105,7 +94,7 @@ export default function ClaimedOTManagement() {
     try {
       setLoading(true);
       let url = `${API_BASE_URL}/api/employees/allotclaimed?page=${currentPage}&limit=${itemsPerPage}`;
-      
+
       if (filters.status !== 'all') url += `&status=${filters.status}`;
       if (filters.employeeId) url += `&employeeId=${filters.employeeId}`;
       if (filters.fromDate) url += `&fromDate=${filters.fromDate}`;
@@ -115,7 +104,6 @@ export default function ClaimedOTManagement() {
       const data = await response.json();
 
       if (data.success) {
-        // ✅ Filter claims from inactive employees
         const filteredClaims = (data.claims || []).filter(claim => {
           const emp = claim.employeeDetails;
           if (emp) {
@@ -123,7 +111,7 @@ export default function ClaimedOTManagement() {
           }
           return true;
         });
-        
+
         setClaims(filteredClaims);
         setSummary({
           ...data.summary,
@@ -135,8 +123,7 @@ export default function ClaimedOTManagement() {
           currentPage: currentPage,
           perPage: itemsPerPage
         });
-        
-        // Extract unique departments and designations
+
         const depts = new Set();
         const designations = new Set();
         filteredClaims.forEach(claim => {
@@ -147,13 +134,12 @@ export default function ClaimedOTManagement() {
         });
         setUniqueDepartments(Array.from(depts).sort());
         setUniqueDesignations(Array.from(designations).sort());
-        
-        // Initialize multipliers from localStorage
+
         const initialMultipliers = {};
         filteredClaims.forEach(claim => {
           const key = `otMultiplier_${claim._id}`;
           const saved = localStorage.getItem(key);
-          initialMultipliers[claim._id] = saved ? parseFloat(saved) : 2;
+          initialMultipliers[claim._id] = saved ? parseFloat(saved) : (claim.multiplier || 2);
         });
         setMultipliers(initialMultipliers);
       } else {
@@ -190,40 +176,35 @@ export default function ClaimedOTManagement() {
     }
   };
 
-  // Calculate OT Amount (returns number - rounded to 2 decimal places)
-  const calculateOTAmountNumber = (claim) => {
+  const calculateOTAmountNumber = (claim, multiplierOverride) => {
     const salaryPerMonth = claim.employeeDetails?.salaryPerMonth || 0;
     const otHours = claim.otHours || 0;
-    const multiplier = multipliers[claim._id] || 2;
-    
+    const multiplier = multiplierOverride !== undefined ? multiplierOverride : (multipliers[claim._id] || 2);
+
     if (!salaryPerMonth || !otHours) return 0;
-    
+
     const dailySalary = salaryPerMonth / 26;
     const hourlyRate = dailySalary / 8;
     const otAmount = hourlyRate * multiplier * otHours;
-    
+
     return Math.round(otAmount * 100) / 100;
   };
 
-  // Calculate OT Amount (returns formatted string)
   const calculateOTAmount = (claim) => {
     const amount = calculateOTAmountNumber(claim);
     return `₹${amount.toFixed(2)}`;
   };
 
-  // Get multiplier value
   const getMultiplier = (claimId) => {
     return multipliers[claimId] || 2;
   };
 
-  // Handle multiplier change
   const handleMultiplierChange = (claimId, value) => {
     const multiplier = parseFloat(value);
     setMultipliers(prev => ({ ...prev, [claimId]: multiplier }));
     localStorage.setItem(`otMultiplier_${claimId}`, multiplier);
   };
 
-  // Export CSV
   const exportCSV = () => {
     if (claims.length === 0) {
       toast.warning('No data to export');
@@ -231,17 +212,9 @@ export default function ClaimedOTManagement() {
     }
 
     const headers = [
-      'Employee ID',
-      'Employee Name',
-      'Department',
-      'Date',
-      'OT Hours',
-      'Multiplier',
-      'OT Amount',
-      'Reason',
-      'Status',
-      'Approved By',
-      'Approved At'
+      'Employee ID', 'Employee Name', 'Department', 'Date',
+      'OT Hours', 'Multiplier', 'OT Amount', 'Reason',
+      'Status', 'Approved By', 'Approved At'
     ];
 
     const rows = claims.map(claim => [
@@ -271,7 +244,9 @@ export default function ClaimedOTManagement() {
     showSaveStatus('✅ CSV exported successfully!');
   };
 
-  // Handle status update with OT amount and multiplier
+  // ============================================
+  // ✅ STATUS UPDATE (works for pending, approved, rejected)
+  // ============================================
   const handleStatusUpdate = async () => {
     try {
       const otAmount = calculateOTAmountNumber(selectedClaim);
@@ -293,7 +268,8 @@ export default function ClaimedOTManagement() {
 
       const data = await response.json();
       if (data.success) {
-        showSaveStatus(`✅ Claim ${statusUpdate.status} successfully! OT Amount: ₹${otAmount.toFixed(2)} at ${multiplier}x`);
+        const actionWord = selectedClaim.status === 'approved' && statusUpdate.status === 'rejected' ? 'reverted' : statusUpdate.status;
+        showSaveStatus(`✅ Claim ${actionWord} successfully! OT Amount: ₹${otAmount.toFixed(2)} at ${multiplier}x`);
         setShowStatusModal(false);
         setSelectedClaim(null);
         fetchClaims();
@@ -303,6 +279,38 @@ export default function ClaimedOTManagement() {
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Error updating status');
+    }
+  };
+
+  // ============================================
+  // ✅ REVERT HANDLER — Quick revert approved claim
+  // ============================================
+  const handleRevertApproved = async () => {
+    if (!selectedClaim) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/employees/update-otclaimedstatus/${selectedClaim._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'pending',
+          otAmount: 0,
+          multiplier: getMultiplier(selectedClaim._id),
+          notes: 'Reverted to pending by admin'
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showSaveStatus(`✅ Approved OT reverted to pending for ${selectedClaim.employeeName}`);
+        setShowRevertModal(false);
+        setSelectedClaim(null);
+        fetchClaims();
+      } else {
+        toast.error(data.message || 'Failed to revert');
+      }
+    } catch (error) {
+      console.error('Error reverting:', error);
+      toast.error('Error reverting approved OT');
     }
   };
 
@@ -420,18 +428,14 @@ export default function ClaimedOTManagement() {
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+      day: '2-digit', month: 'short', year: 'numeric'
     });
   };
 
   const formatTime = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
+      hour: '2-digit', minute: '2-digit', hour12: true
     });
   };
 
@@ -475,7 +479,6 @@ export default function ClaimedOTManagement() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="p-4 sm:p-6 lg:p-8">
-        {/* Toast notification */}
         {saveStatus && (
           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${
             saveStatus.includes('✅') ? 'bg-green-600 border-l-4 border-green-700' : 'bg-red-500 border-l-4 border-red-600'
@@ -484,32 +487,15 @@ export default function ClaimedOTManagement() {
           </div>
         )}
 
-        {/* Dashboard Header - Title on Left, Date and Filters on Right */}
+        {/* Desktop Header */}
         <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-6">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
               OT <span className="text-blue-600">Claims</span>
             </h1>
-            {/* <p className="mt-1 text-sm text-gray-600">
-              Manage and approve employee overtime claims
-            </p> */}
           </div>
 
-          {/* Right side: Date + All Filters */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
-              <FiCalendar className="text-blue-600" />
-              <span className="text-sm font-medium text-gray-600">
-                {new Date().toLocaleDateString("en-US", {
-                  weekday: "short",
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </span>
-            </div> */}
-
-            {/* Search */}
             <div className="relative min-w-[140px]">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                 <FaSearch className="text-sm" />
@@ -524,7 +510,6 @@ export default function ClaimedOTManagement() {
               />
             </div>
 
-            {/* Status Filter */}
             <select
               name="status"
               value={filters.status}
@@ -537,7 +522,6 @@ export default function ClaimedOTManagement() {
               <option value="rejected">Rejected</option>
             </select>
 
-            {/* Department */}
             <div className="relative" ref={departmentFilterRef}>
               <button
                 onClick={() => {
@@ -555,7 +539,7 @@ export default function ClaimedOTManagement() {
                 <span className="text-gray-400 text-[10px]">▾</span>
               </button>
               {showDepartmentFilter && (
-                <div 
+                <div
                   className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
                   style={{
                     zIndex: 99999,
@@ -564,10 +548,7 @@ export default function ClaimedOTManagement() {
                   }}
                 >
                   <div
-                    onClick={() => {
-                      setFilterDepartment("");
-                      setShowDepartmentFilter(false);
-                    }}
+                    onClick={() => { setFilterDepartment(""); setShowDepartmentFilter(false); }}
                     className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                   >
                     All Departments
@@ -575,10 +556,7 @@ export default function ClaimedOTManagement() {
                   {uniqueDepartments.map((dept) => (
                     <div
                       key={dept}
-                      onClick={() => {
-                        setFilterDepartment(dept);
-                        setShowDepartmentFilter(false);
-                      }}
+                      onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }}
                       className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
                         filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
                       }`}
@@ -590,7 +568,6 @@ export default function ClaimedOTManagement() {
               )}
             </div>
 
-            {/* Designation */}
             <div className="relative" ref={designationFilterRef}>
               <button
                 onClick={() => {
@@ -608,7 +585,7 @@ export default function ClaimedOTManagement() {
                 <span className="text-gray-400 text-[10px]">▾</span>
               </button>
               {showDesignationFilter && (
-                <div 
+                <div
                   className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto"
                   style={{
                     zIndex: 99999,
@@ -617,10 +594,7 @@ export default function ClaimedOTManagement() {
                   }}
                 >
                   <div
-                    onClick={() => {
-                      setFilterDesignation("");
-                      setShowDesignationFilter(false);
-                    }}
+                    onClick={() => { setFilterDesignation(""); setShowDesignationFilter(false); }}
                     className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                   >
                     All Designations
@@ -628,10 +602,7 @@ export default function ClaimedOTManagement() {
                   {uniqueDesignations.map((des) => (
                     <div
                       key={des}
-                      onClick={() => {
-                        setFilterDesignation(des);
-                        setShowDesignationFilter(false);
-                      }}
+                      onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }}
                       className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
                         filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
                       }`}
@@ -643,7 +614,6 @@ export default function ClaimedOTManagement() {
               )}
             </div>
 
-            {/* Date From */}
             <input
               type="date"
               name="fromDate"
@@ -653,7 +623,6 @@ export default function ClaimedOTManagement() {
               className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
 
-            {/* Date To */}
             <input
               type="date"
               name="toDate"
@@ -663,7 +632,6 @@ export default function ClaimedOTManagement() {
               className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
 
-            {/* Refresh Button */}
             <button
               onClick={fetchClaims}
               disabled={loading}
@@ -673,7 +641,6 @@ export default function ClaimedOTManagement() {
               Refresh
             </button>
 
-            {/* Export Button */}
             <button
               onClick={exportCSV}
               disabled={claims.length === 0}
@@ -683,7 +650,6 @@ export default function ClaimedOTManagement() {
               Export
             </button>
 
-            {/* Clear Filters Button */}
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
@@ -696,24 +662,13 @@ export default function ClaimedOTManagement() {
           </div>
         </div>
 
-        {/* Mobile Header - Only Title and Date */}
+        {/* Mobile Header */}
         <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
           <div>
             <h1 className="text-lg font-bold text-gray-900">
               OT <span className="text-blue-600">Claims</span>
             </h1>
           </div>
-          {/* <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-full shadow-sm text-[10px]">
-            <FiCalendar className="text-blue-600 text-[10px]" />
-            <span className="font-medium text-gray-600">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            </span>
-          </div> */}
         </div>
 
         {/* Mobile Filters Toggle */}
@@ -766,102 +721,6 @@ export default function ClaimedOTManagement() {
                 </select>
               </div>
 
-              <div className="relative" ref={departmentFilterRef}>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
-                <button
-                  onClick={() => {
-                    setShowDepartmentFilter(!showDepartmentFilter);
-                    setShowDesignationFilter(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                    filterDepartment
-                      ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                      : "border-gray-300 text-gray-700"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDepartment || "All Departments"}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                {showDepartmentFilter && (
-                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div
-                      onClick={() => {
-                        setFilterDepartment("");
-                        setShowDepartmentFilter(false);
-                      }}
-                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Departments
-                    </div>
-                    {uniqueDepartments.map((dept) => (
-                      <div
-                        key={dept}
-                        onClick={() => {
-                          setFilterDepartment(dept);
-                          setShowDepartmentFilter(false);
-                        }}
-                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                          filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                        }`}
-                      >
-                        {dept}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="relative" ref={designationFilterRef}>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
-                <button
-                  onClick={() => {
-                    setShowDesignationFilter(!showDesignationFilter);
-                    setShowDepartmentFilter(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-                    filterDesignation
-                      ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                      : "border-gray-300 text-gray-700"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <FaUserTag className="text-gray-400" />
-                    {filterDesignation || "All Designations"}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                {showDesignationFilter && (
-                  <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div
-                      onClick={() => {
-                        setFilterDesignation("");
-                        setShowDesignationFilter(false);
-                      }}
-                      className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Designations
-                    </div>
-                    {uniqueDesignations.map((des) => (
-                      <div
-                        key={des}
-                        onClick={() => {
-                          setFilterDesignation(des);
-                          setShowDesignationFilter(false);
-                        }}
-                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                          filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                        }`}
-                      >
-                        {des}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
@@ -870,8 +729,7 @@ export default function ClaimedOTManagement() {
                     name="fromDate"
                     value={filters.fromDate}
                     onChange={handleFilterChange}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg"
                   />
                 </div>
                 <div>
@@ -881,8 +739,7 @@ export default function ClaimedOTManagement() {
                     name="toDate"
                     value={filters.toDate}
                     onChange={handleFilterChange}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg"
                   />
                 </div>
               </div>
@@ -900,7 +757,7 @@ export default function ClaimedOTManagement() {
                   <button
                     onClick={exportCSV}
                     disabled={claims.length === 0}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm disabled:opacity-50"
                   >
                     <FiDownload className="w-4 h-4" />
                     Export
@@ -920,7 +777,7 @@ export default function ClaimedOTManagement() {
           )}
         </div>
 
-        {/* Top KPI Stats Grid */}
+        {/* KPI Stats Grid */}
         <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
             <div className="flex items-center justify-between mb-3">
@@ -1006,7 +863,6 @@ export default function ClaimedOTManagement() {
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 <FiList className="text-blue-600" /> OT Claims List
               </h3>
-              {/* <p className="text-xs text-gray-500 mt-0.5">Manage and approve employee overtime claims</p> */}
             </div>
           </div>
 
@@ -1016,7 +872,7 @@ export default function ClaimedOTManagement() {
             </div>
           ) : (
             <>
-              {/* Desktop Table View */}
+              {/* Desktop Table */}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 bg-white">
                   <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -1048,7 +904,6 @@ export default function ClaimedOTManagement() {
                             checked={selectedClaims.includes(claim._id)}
                             onChange={() => handleSelectClaim(claim._id)}
                             className="w-4 h-4 rounded border-gray-300"
-                            disabled={claim.status !== 'pending'}
                           />
                         </td>
                         <td className="px-4 py-3">
@@ -1095,43 +950,67 @@ export default function ClaimedOTManagement() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-1">
+                            {/* View Details */}
                             <button
-                              onClick={() => {
-                                setSelectedClaim(claim);
-                                setShowDetailsModal(true);
-                              }}
+                              onClick={() => { setSelectedClaim(claim); setShowDetailsModal(true); }}
                               className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
                               title="View Details"
                             >
                               <FaEye size={14} />
                             </button>
 
+                            {/* ✅ Update Status — for pending, and revert for approved */}
                             {claim.status === 'pending' && (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    setSelectedClaim(claim);
-                                    setStatusUpdate({ status: 'approved', rejectedReason: '', notes: '' });
-                                    setShowStatusModal(true);
-                                  }}
-                                  className="p-1.5 text-green-600 bg-green-50 hover:bg-green-100 rounded-md transition-all shadow-sm"
-                                  title="Update Status"
-                                >
-                                  <FaCheck size={14} />
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    setSelectedClaim(claim);
-                                    setShowDeleteModal(true);
-                                  }}
-                                  className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-all shadow-sm"
-                                  title="Delete"
-                                >
-                                  <FaTrash size={14} />
-                                </button>
-                              </>
+                              <button
+                                onClick={() => {
+                                  setSelectedClaim(claim);
+                                  setStatusUpdate({ status: 'approved', rejectedReason: '', notes: '' });
+                                  setShowStatusModal(true);
+                                }}
+                                className="p-1.5 text-green-600 bg-green-50 hover:bg-green-100 rounded-md transition-all shadow-sm"
+                                title="Approve / Reject"
+                              >
+                                <FaCheck size={14} />
+                              </button>
                             )}
+
+                            {/* ✅ REVERT button for approved claims */}
+                            {claim.status === 'approved' && (
+                              <button
+                                onClick={() => {
+                                  setSelectedClaim(claim);
+                                  setShowRevertModal(true);
+                                }}
+                                className="p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-md transition-all shadow-sm"
+                                title="Revert Approval (undo)"
+                              >
+                                <FaUndo size={14} />
+                              </button>
+                            )}
+
+                            {/* ✅ Change status for rejected (allow re-approve) */}
+                            {claim.status === 'rejected' && (
+                              <button
+                                onClick={() => {
+                                  setSelectedClaim(claim);
+                                  setStatusUpdate({ status: 'approved', rejectedReason: '', notes: '' });
+                                  setShowStatusModal(true);
+                                }}
+                                className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
+                                title="Re-Approve"
+                              >
+                                <FaCheck size={14} />
+                              </button>
+                            )}
+
+                            {/* ✅ Delete — available for ALL statuses */}
+                            <button
+                              onClick={() => { setSelectedClaim(claim); setShowDeleteModal(true); }}
+                              className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-all shadow-sm"
+                              title="Delete"
+                            >
+                              <FaTrash size={14} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -1140,7 +1019,7 @@ export default function ClaimedOTManagement() {
                 </table>
               </div>
 
-              {/* Mobile View Card List */}
+              {/* Mobile View */}
               <div className="block lg:hidden divide-y divide-gray-100">
                 {claims.map((claim) => (
                   <div key={claim._id} className="p-4 bg-white">
@@ -1151,7 +1030,6 @@ export default function ClaimedOTManagement() {
                           checked={selectedClaims.includes(claim._id)}
                           onChange={() => handleSelectClaim(claim._id)}
                           className="w-4 h-4 rounded border-gray-300"
-                          disabled={claim.status !== 'pending'}
                         />
                         <div>
                           <h4 className="font-semibold text-gray-900">{claim.employeeName}</h4>
@@ -1164,7 +1042,7 @@ export default function ClaimedOTManagement() {
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mb-3 text-gray-600">
                       <div><span className="text-gray-400">Date:</span> {formatDate(claim.date)}</div>
                       <div><span className="text-gray-400">OT Hours:</span> <span className="font-semibold text-orange-600">{claim.otHours}h</span></div>
-                      <div><span className="text-gray-400">Multiplier:</span> 
+                      <div><span className="text-gray-400">Multiplier:</span>
                         <select
                           value={getMultiplier(claim._id)}
                           onChange={(e) => handleMultiplierChange(claim._id, e.target.value)}
@@ -1181,39 +1059,55 @@ export default function ClaimedOTManagement() {
                       <div className="col-span-2"><span className="text-gray-400">Reason:</span> {claim.reason || '-'}</div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-1.5 pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-end gap-1.5 pt-3 border-t border-gray-100 flex-wrap">
                       <button
-                        onClick={() => {
-                          setSelectedClaim(claim);
-                          setShowDetailsModal(true);
-                        }}
+                        onClick={() => { setSelectedClaim(claim); setShowDetailsModal(true); }}
                         className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-all"
                       >
-                        View Details
+                        View
                       </button>
+
                       {claim.status === 'pending' && (
-                        <>
-                          <button
-                            onClick={() => {
-                              setSelectedClaim(claim);
-                              setStatusUpdate({ status: 'approved', rejectedReason: '', notes: '' });
-                              setShowStatusModal(true);
-                            }}
-                            className="px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-all"
-                          >
-                            Update Status
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedClaim(claim);
-                              setShowDeleteModal(true);
-                            }}
-                            className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-all"
-                          >
-                            Delete
-                          </button>
-                        </>
+                        <button
+                          onClick={() => {
+                            setSelectedClaim(claim);
+                            setStatusUpdate({ status: 'approved', rejectedReason: '', notes: '' });
+                            setShowStatusModal(true);
+                          }}
+                          className="px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-all"
+                        >
+                          Approve/Reject
+                        </button>
                       )}
+
+                      {claim.status === 'approved' && (
+                        <button
+                          onClick={() => { setSelectedClaim(claim); setShowRevertModal(true); }}
+                          className="px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-all"
+                        >
+                          Revert
+                        </button>
+                      )}
+
+                      {claim.status === 'rejected' && (
+                        <button
+                          onClick={() => {
+                            setSelectedClaim(claim);
+                            setStatusUpdate({ status: 'approved', rejectedReason: '', notes: '' });
+                            setShowStatusModal(true);
+                          }}
+                          className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-all"
+                        >
+                          Re-Approve
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => { setSelectedClaim(claim); setShowDeleteModal(true); }}
+                        className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-all"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -1229,9 +1123,7 @@ export default function ClaimedOTManagement() {
               <span>Show</span>
               <select
                 value={itemsPerPage}
-                onChange={(e) => {
-                  handleItemsPerPageChange(Number(e.target.value));
-                }}
+                onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
                 className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none"
               >
                 <option value={5}>5</option>
@@ -1288,296 +1180,347 @@ export default function ClaimedOTManagement() {
           </div>
         )}
 
-      {/* ==================== MODALS ==================== */}
+        {/* ==================== MODALS ==================== */}
 
-      {/* Details Modal */}
-      {showDetailsModal && selectedClaim && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
-          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-150 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
-            <div className="sticky top-0 z-10 p-4 bg-white border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                  <FiList className="text-blue-600" /> Claim Details
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowDetailsModal(false);
-                    setSelectedClaim(null);
-                  }}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {/* Employee Info */}
-              <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-                <h3 className="mb-3 font-semibold text-gray-700 flex items-center gap-2">
-                  <FiList className="text-blue-600" /> Employee Information
-                </h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex justify-between"><span className="text-gray-500">Name:</span> <span className="font-medium text-gray-900">{selectedClaim.employeeName}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">ID:</span> <span className="font-medium text-gray-900">{selectedClaim.employeeId}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Department:</span> <span className="font-medium text-gray-900">{selectedClaim.employeeDetails?.department || 'N/A'}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Email:</span> <span className="font-medium text-gray-900">{selectedClaim.employeeDetails?.email || 'N/A'}</span></div>
-                  <div className="flex justify-between col-span-2"><span className="text-gray-500">Salary/Month:</span> <span className="font-medium text-gray-900">₹{selectedClaim.employeeDetails?.salaryPerMonth?.toLocaleString() || '0'}</span></div>
+        {/* Details Modal */}
+        {showDetailsModal && selectedClaim && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
+            <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-150 max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 z-10 p-4 bg-white border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <FiList className="text-blue-600" /> Claim Details
+                  </h2>
+                  <button
+                    onClick={() => { setShowDetailsModal(false); setSelectedClaim(null); }}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
-              {/* Claim Info */}
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                <h3 className="mb-3 font-semibold text-gray-700 flex items-center gap-2">
-                  <FiClock className="text-orange-600" /> Claim Information
-                </h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex justify-between"><span className="text-gray-500">Date:</span> <span className="font-medium text-gray-900">{formatDate(selectedClaim.date)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">OT Hours:</span> <span className="font-bold text-orange-600">{selectedClaim.otHours}h</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Multiplier:</span> <span className="font-medium text-gray-900">{getMultiplier(selectedClaim._id)}x</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">OT Amount:</span> <span className="font-bold text-green-600">{calculateOTAmount(selectedClaim)}</span></div>
-                  <div className="flex justify-between col-span-2"><span className="text-gray-500">Reason:</span> <span className="font-medium text-gray-900">{selectedClaim.reason}</span></div>
-                  <div className="flex justify-between col-span-2"><span className="text-gray-500">Status:</span> {getStatusBadge(selectedClaim.status)}</div>
-                  {selectedClaim.status === 'approved' && (
-                    <>
-                      <div className="flex justify-between"><span className="text-gray-500">Approved By:</span> <span className="font-medium text-gray-900">{selectedClaim.approvedBy || 'Admin'}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-500">Approved At:</span> <span className="font-medium text-gray-900">{formatDate(selectedClaim.approvedAt)}</span></div>
-                    </>
-                  )}
-                  {selectedClaim.status === 'rejected' && (
-                    <div className="flex justify-between col-span-2"><span className="text-gray-500">Rejected Reason:</span> <span className="font-medium text-gray-900">{selectedClaim.rejectedReason || 'N/A'}</span></div>
-                  )}
-                </div>
-              </div>
-
-              {/* Attendance Info */}
-              {selectedClaim.attendanceDetails && (
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="p-6 space-y-4">
+                <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                   <h3 className="mb-3 font-semibold text-gray-700 flex items-center gap-2">
-                    <FiCalendar className="text-purple-600" /> Attendance Details
+                    <FiList className="text-blue-600" /> Employee Information
                   </h3>
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-500">Check In:</span> <span className="font-medium text-gray-900">{formatTime(selectedClaim.attendanceDetails.checkInTime)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Check Out:</span> <span className="font-medium text-gray-900">{formatTime(selectedClaim.attendanceDetails.checkOutTime)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Total Hours:</span> <span className="font-medium text-gray-900">{selectedClaim.attendanceDetails.totalHours}h</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Assigned Shift:</span> <span className="font-medium text-gray-900">{selectedClaim.attendanceDetails.assignedShiftHours}h</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Location:</span> <span className="font-medium text-gray-900">{selectedClaim.attendanceDetails.onsite ? '🏢 Onsite' : '🏠 Remote'}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Distance:</span> <span className="font-medium text-gray-900">{(selectedClaim.attendanceDetails.distance / 1000).toFixed(1)} km</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Name:</span> <span className="font-medium text-gray-900">{selectedClaim.employeeName}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">ID:</span> <span className="font-medium text-gray-900">{selectedClaim.employeeId}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Department:</span> <span className="font-medium text-gray-900">{selectedClaim.employeeDetails?.department || 'N/A'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Email:</span> <span className="font-medium text-gray-900">{selectedClaim.employeeDetails?.email || 'N/A'}</span></div>
+                    <div className="flex justify-between col-span-2"><span className="text-gray-500">Salary/Month:</span> <span className="font-medium text-gray-900">₹{selectedClaim.employeeDetails?.salaryPerMonth?.toLocaleString() || '0'}</span></div>
                   </div>
                 </div>
-              )}
 
-              {/* Action Buttons */}
-              {selectedClaim.status === 'pending' && (
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <h3 className="mb-3 font-semibold text-gray-700 flex items-center gap-2">
+                    <FiClock className="text-orange-600" /> Claim Information
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-500">Date:</span> <span className="font-medium text-gray-900">{formatDate(selectedClaim.date)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">OT Hours:</span> <span className="font-bold text-orange-600">{selectedClaim.otHours}h</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Multiplier:</span> <span className="font-medium text-gray-900">{getMultiplier(selectedClaim._id)}x</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">OT Amount:</span> <span className="font-bold text-green-600">{calculateOTAmount(selectedClaim)}</span></div>
+                    <div className="flex justify-between col-span-2"><span className="text-gray-500">Reason:</span> <span className="font-medium text-gray-900">{selectedClaim.reason}</span></div>
+                    <div className="flex justify-between col-span-2"><span className="text-gray-500">Status:</span> {getStatusBadge(selectedClaim.status)}</div>
+                    {selectedClaim.status === 'approved' && (
+                      <>
+                        <div className="flex justify-between"><span className="text-gray-500">Approved By:</span> <span className="font-medium text-gray-900">{selectedClaim.approvedBy || 'Admin'}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Approved At:</span> <span className="font-medium text-gray-900">{formatDate(selectedClaim.approvedAt)}</span></div>
+                      </>
+                    )}
+                    {selectedClaim.status === 'rejected' && (
+                      <div className="flex justify-between col-span-2"><span className="text-gray-500">Rejected Reason:</span> <span className="font-medium text-gray-900">{selectedClaim.rejectedReason || 'N/A'}</span></div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  {selectedClaim.status === 'pending' && (
+                    <button
+                      onClick={() => { setShowDetailsModal(false); setShowStatusModal(true); }}
+                      className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                    >
+                      Approve/Reject
+                    </button>
+                  )}
+                  {selectedClaim.status === 'approved' && (
+                    <button
+                      onClick={() => { setShowDetailsModal(false); setShowRevertModal(true); }}
+                      className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-all shadow-sm"
+                    >
+                      Revert Approval
+                    </button>
+                  )}
+                  {selectedClaim.status === 'rejected' && (
+                    <button
+                      onClick={() => {
+                        setShowDetailsModal(false);
+                        setStatusUpdate({ status: 'approved', rejectedReason: '', notes: '' });
+                        setShowStatusModal(true);
+                      }}
+                      className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                    >
+                      Re-Approve
+                    </button>
+                  )}
                   <button
-                    onClick={() => {
-                      setShowDetailsModal(false);
-                      setShowStatusModal(true);
-                    }}
-                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-                  >
-                    Approve/Reject
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowDetailsModal(false);
-                      setShowDeleteModal(true);
-                    }}
+                    onClick={() => { setShowDetailsModal(false); setShowDeleteModal(true); }}
                     className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all shadow-sm"
                   >
                     Delete
                   </button>
                 </div>
-              )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Status Update Modal */}
-      {showStatusModal && selectedClaim && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150 animate-in fade-in zoom-in duration-200">
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <FiCheckCircle className="text-blue-600" /> Update Claim Status
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                {selectedClaim.employeeName} - {formatDate(selectedClaim.date)}
-              </p>
-              <p className="text-sm text-green-600 font-medium mt-2">
-                OT Amount: {calculateOTAmount(selectedClaim)} at {getMultiplier(selectedClaim._id)}x
-              </p>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  value={statusUpdate.status}
-                  onChange={(e) => setStatusUpdate(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                >
-                  <option value="approved">✅ Approved</option>
-                  <option value="rejected">❌ Rejected</option>
-                </select>
+        {/* ✅ Revert Modal */}
+        {showRevertModal && selectedClaim && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150">
+              <div className="p-4 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-amber-600 flex items-center gap-2">
+                  <FaUndo className="text-amber-600" /> Revert Approved OT
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {selectedClaim.employeeName} - {formatDate(selectedClaim.date)}
+                </p>
               </div>
 
-              {statusUpdate.status === 'rejected' && (
+              <div className="p-6">
+                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                  <p className="text-sm text-amber-800 font-semibold mb-2">
+                    ⚠️ Reverting will:
+                  </p>
+                  <ul className="text-sm text-amber-700 ml-4 list-disc space-y-1">
+                    <li>Remove <strong>₹{calculateOTAmount(selectedClaim)}</strong> from payroll</li>
+                    <li>Change status from <strong>Approved</strong> back to <strong>Pending</strong></li>
+                    <li>Payroll will no longer include this OT</li>
+                  </ul>
+                </div>
+
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex justify-between"><span className="text-gray-500">Employee:</span> <span className="font-medium">{selectedClaim.employeeName}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">OT Hours:</span> <span className="font-medium">{selectedClaim.otHours}h</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Multiplier:</span> <span className="font-medium">{getMultiplier(selectedClaim._id)}x</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Amount:</span> <span className="font-medium text-green-600">{calculateOTAmount(selectedClaim)}</span></div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => { setShowRevertModal(false); setSelectedClaim(null); }}
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRevertApproved}
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-all shadow-sm"
+                  >
+                    Yes, Revert
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Status Update Modal */}
+        {showStatusModal && selectedClaim && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150">
+              <div className="p-4 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <FiCheckCircle className="text-blue-600" /> Update Claim Status
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {selectedClaim.employeeName} - {formatDate(selectedClaim.date)}
+                </p>
+                <p className="text-sm text-green-600 font-medium mt-2">
+                  OT Amount: {calculateOTAmount(selectedClaim)} at {getMultiplier(selectedClaim._id)}x
+                </p>
+                {selectedClaim.status !== 'pending' && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Current Status: {selectedClaim.status}
+                  </p>
+                )}
+              </div>
+
+              <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Rejection Reason</label>
-                  <textarea
-                    value={statusUpdate.rejectedReason}
-                    onChange={(e) => setStatusUpdate(prev => ({ ...prev, rejectedReason: e.target.value }))}
-                    placeholder="Why is this claim being rejected?"
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <select
+                    value={statusUpdate.status}
+                    onChange={(e) => setStatusUpdate(prev => ({ ...prev, status: e.target.value }))}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    rows="3"
-                    required
+                  >
+                    <option value="approved">✅ Approved</option>
+                    <option value="rejected">❌ Rejected</option>
+                    <option value="pending">⏳ Pending</option>
+                  </select>
+                </div>
+
+                {statusUpdate.status === 'rejected' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Rejection Reason</label>
+                    <textarea
+                      value={statusUpdate.rejectedReason}
+                      onChange={(e) => setStatusUpdate(prev => ({ ...prev, rejectedReason: e.target.value }))}
+                      placeholder="Why is this claim being rejected?"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      rows="3"
+                      required
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+                  <textarea
+                    value={statusUpdate.notes}
+                    onChange={(e) => setStatusUpdate(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Add any notes..."
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    rows="2"
                   />
                 </div>
-              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
-                <textarea
-                  value={statusUpdate.notes}
-                  onChange={(e) => setStatusUpdate(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Add any notes..."
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  rows="2"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => {
-                    setShowStatusModal(false);
-                    setSelectedClaim(null);
-                  }}
-                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleStatusUpdate}
-                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-                >
-                  Update Status
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Modal */}
-      {showDeleteModal && selectedClaim && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150 animate-in fade-in zoom-in duration-200">
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-red-600 flex items-center gap-2">
-                <FiTrash2 className="text-red-600" /> Delete Claim
-              </h2>
-            </div>
-
-            <div className="p-6">
-              <p className="text-gray-700 mb-4">
-                Are you sure you want to delete this OT claim?
-              </p>
-              <div className="p-4 bg-red-50 rounded-xl border border-red-100">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex justify-between"><span className="text-gray-500">Employee:</span> <span className="font-medium text-gray-900">{selectedClaim.employeeName}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Date:</span> <span className="font-medium text-gray-900">{formatDate(selectedClaim.date)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">OT Hours:</span> <span className="font-medium text-gray-900">{selectedClaim.otHours}h</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Multiplier:</span> <span className="font-medium text-gray-900">{getMultiplier(selectedClaim._id)}x</span></div>
-                  <div className="flex justify-between col-span-2"><span className="text-gray-500">OT Amount:</span> <span className="font-medium text-gray-900">{calculateOTAmount(selectedClaim)}</span></div>
-                  <div className="flex justify-between col-span-2"><span className="text-gray-500">Reason:</span> <span className="font-medium text-gray-900">{selectedClaim.reason}</span></div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => { setShowStatusModal(false); setSelectedClaim(null); }}
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleStatusUpdate}
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    Update Status
+                  </button>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-red-600 font-medium flex items-center gap-2">
-                <span>⚠️</span> This action cannot be undone. Only pending claims can be deleted.
-              </p>
+            </div>
+          </div>
+        )}
 
-              <div className="flex gap-3 pt-4">
+        {/* Delete Modal */}
+        {showDeleteModal && selectedClaim && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150">
+              <div className="p-4 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-red-600 flex items-center gap-2">
+                  <FiTrash2 className="text-red-600" /> Delete Claim
+                </h2>
+              </div>
+
+              <div className="p-6">
+                <p className="text-gray-700 mb-4">
+                  Are you sure you want to delete this OT claim?
+                </p>
+                <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-500">Employee:</span> <span className="font-medium text-gray-900">{selectedClaim.employeeName}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Date:</span> <span className="font-medium text-gray-900">{formatDate(selectedClaim.date)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">OT Hours:</span> <span className="font-medium text-gray-900">{selectedClaim.otHours}h</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Multiplier:</span> <span className="font-medium text-gray-900">{getMultiplier(selectedClaim._id)}x</span></div>
+                    <div className="flex justify-between col-span-2"><span className="text-gray-500">OT Amount:</span> <span className="font-medium text-gray-900">{calculateOTAmount(selectedClaim)}</span></div>
+                    <div className="flex justify-between col-span-2"><span className="text-gray-500">Status:</span> {getStatusBadge(selectedClaim.status)}</div>
+                  </div>
+                </div>
+
+                {selectedClaim.status === 'approved' && (
+                  <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-700 font-semibold">
+                      ⚠️ This claim is currently APPROVED. Deleting it will remove <strong>₹{calculateOTAmount(selectedClaim)}</strong> from payroll.
+                    </p>
+                  </div>
+                )}
+
+                <p className="mt-4 text-sm text-red-600 font-medium flex items-center gap-2">
+                  <span>⚠️</span> This action cannot be undone.
+                </p>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => { setShowDeleteModal(false); setSelectedClaim(null); }}
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all shadow-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Action Modal */}
+        {showBulkActionModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150">
+              <div className="p-4 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <FiList className="text-blue-600" /> Bulk Actions
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">{selectedClaims.length} claims selected</p>
+              </div>
+
+              <div className="p-6 space-y-3">
                 <button
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setSelectedClaim(null);
-                  }}
-                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                  onClick={() => handleBulkAction('status', 'approved')}
+                  className="w-full p-3 text-left text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-all flex items-center gap-3 border border-green-200"
                 >
-                  Cancel
+                  <FiCheckCircle className="text-green-600" /> Approve All
                 </button>
                 <button
-                  onClick={handleDelete}
-                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all shadow-sm"
+                  onClick={() => handleBulkAction('status', 'rejected')}
+                  className="w-full p-3 text-left text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-all flex items-center gap-3 border border-red-200"
                 >
-                  Delete
+                  <FiXCircle className="text-red-600" /> Reject All
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Delete ${selectedClaims.length} claims?`)) {
+                      handleBulkAction('delete', null);
+                    }
+                  }}
+                  className="w-full p-3 text-left text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-all flex items-center gap-3 border border-red-200"
+                >
+                  <FiTrash2 className="text-red-600" /> Delete All
+                </button>
+
+                <button
+                  onClick={() => setShowBulkActionModal(false)}
+                  className="w-full p-2.5 mt-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                >
+                  Cancel
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Bulk Action Modal */}
-      {showBulkActionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150 animate-in fade-in zoom-in duration-200">
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <FiList className="text-blue-600" /> Bulk Actions
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">{selectedClaims.length} claims selected</p>
-            </div>
-
-            <div className="p-6 space-y-3">
-              <button
-                onClick={() => handleBulkAction('status', 'approved')}
-                className="w-full p-3 text-left text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-all flex items-center gap-3 border border-green-200"
-              >
-                <FiCheckCircle className="text-green-600" /> Approve All
-              </button>
-              <button
-                onClick={() => handleBulkAction('status', 'rejected')}
-                className="w-full p-3 text-left text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-all flex items-center gap-3 border border-red-200"
-              >
-                <FiXCircle className="text-red-600" /> Reject All
-              </button>
-              <button
-                onClick={() => {
-                  if (window.confirm(`Delete ${selectedClaims.length} claims?`)) {
-                    handleBulkAction('delete', null);
-                  }
-                }}
-                className="w-full p-3 text-left text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-all flex items-center gap-3 border border-red-200"
-              >
-                <FiTrash2 className="text-red-600" /> Delete All
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowBulkActionModal(false);
-                }}
-                className="w-full p-2.5 mt-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(-10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in { animation: fade-in 0.3s ease-out; }
-      `}</style>
+        <style>{`
+          @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fade-in { animation: fade-in 0.3s ease-out; }
+        `}</style>
       </div>
     </div>
   );

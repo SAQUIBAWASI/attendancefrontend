@@ -2433,11 +2433,13 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import CountUp from "react-countup";
-import { FaBuilding, FaExchangeAlt, FaSearch, FaUserTag, FaChevronUp, FaChevronDown } from "react-icons/fa";
-import { FiCalendar, FiCheckCircle, FiClock, FiDownload, FiFilter, FiList, FiTrash2, FiXCircle } from "react-icons/fi";
+import { FaBuilding, FaExchangeAlt, FaSearch, FaUserTag, FaChevronUp, FaChevronDown, FaEye } from "react-icons/fa";
+import { FiCalendar, FiCheckCircle, FiClock, FiDownload, FiFilter, FiList, FiSearch, FiTrash2, FiX, FiXCircle } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import "./EmployeeList.css";
+import "./EmployeeDashboard.css";
 
 const LeavesList = () => {
   const [leaves, setLeaves] = useState([]);
@@ -2445,20 +2447,19 @@ const LeavesList = () => {
   const [loading, setLoading] = useState(true);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Employees data for department/designation
   const [employees, setEmployees] = useState([]);
 
   // Comp-off requests state
   const [compOffRequests, setCompOffRequests] = useState([]);
   const [showCompOffRequests, setShowCompOffRequests] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(false);
+  const [compOffTab, setCompOffTab] = useState("pending");
 
-  // Approved comp-offs state for editing
+  // Approved comp-offs state
   const [approvedCompOffs, setApprovedCompOffs] = useState([]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  // ─── PERSISTED ITEMS PER PAGE ───
   const [itemsPerPage, setItemsPerPage] = useState(() => {
     const saved = localStorage.getItem('leavesList_itemsPerPage');
     return saved ? parseInt(saved, 10) : 10;
@@ -2472,33 +2473,32 @@ const LeavesList = () => {
   const [endDateFilter, setEndDateFilter] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
 
-  // Department and Designation filter states
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDesignation, setFilterDesignation] = useState("");
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
 
-  // Comp-off states (for conversion)
+  // Comp-off review popups
   const [showCompOffPopup, setShowCompOffPopup] = useState(false);
   const [selectedCompOffRequest, setSelectedCompOffRequest] = useState(null);
 
-  // Edit Comp-off Popup
   const [showEditCompOffPopup, setShowEditCompOffPopup] = useState(false);
   const [selectedCompOffForEdit, setSelectedCompOffForEdit] = useState(null);
   const [editCompOffData, setEditCompOffData] = useState({ count: 1, reason: "" });
 
-  // Unique departments and designations
+  // View comp-off modal (read-only)
+  const [showViewCompOffModal, setShowViewCompOffModal] = useState(false);
+  const [viewCompOffData, setViewCompOffData] = useState(null);
+
   const [uniqueDepartments, setUniqueDepartments] = useState([]);
   const [uniqueDesignations, setUniqueDesignations] = useState([]);
 
-  // Refs for click outside
   const departmentFilterRef = useRef(null);
   const designationFilterRef = useRef(null);
   const compOffPopupRef = useRef(null);
   const editCompOffPopupRef = useRef(null);
   const balancePopupRef = useRef(null);
 
-  // Click outside handlers
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) setShowDepartmentFilter(false);
@@ -2511,7 +2511,6 @@ const LeavesList = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch all leaves and employees
   const fetchLeaves = async () => {
     try {
       setLoading(true);
@@ -2535,7 +2534,7 @@ const LeavesList = () => {
 
       const leavesData = leavesRes.data.records || leavesRes.data || [];
 
-      // Fetch comp-offs
+      // Fetch approved comp-offs
       let compOffMap = new Map();
       try {
         const compOffsRes = await axios.get(`${API_BASE_URL}/leaves/comp-offs`);
@@ -2548,7 +2547,8 @@ const LeavesList = () => {
               status: co.status,
               count: co.count || 1,
               reason: co.reason,
-              workDate: co.workDate
+              workDate: co.workDate,
+              full: co
             });
           }
         });
@@ -2556,6 +2556,7 @@ const LeavesList = () => {
         console.log("Comp-offs not available yet");
       }
 
+      // Fetch rejected comp-offs
       try {
         const rejectedCompOffsRes = await axios.get(`${API_BASE_URL}/leaves/comp-offs?status=rejected`);
         const rejectedCompOffs = rejectedCompOffsRes.data || [];
@@ -2566,7 +2567,8 @@ const LeavesList = () => {
               status: co.status,
               count: co.count || 1,
               reason: co.reason,
-              workDate: co.workDate
+              workDate: co.workDate,
+              full: co
             });
           }
         });
@@ -2588,9 +2590,8 @@ const LeavesList = () => {
         const empData = JSON.parse(localStorage.getItem("employeeData") || "{}");
         const empRole = (empData.role || empData.designation || "").toLowerCase();
         const empDept = (empData.department || empData.departmentName || "").toLowerCase();
-        
         const isHRManagement = empRole.includes("hr") || empDept.includes("hr") || empRole.includes("management") || empDept.includes("management") || empDept.includes("human resources");
-        
+
         if (!isHRManagement) {
           filteredLeavesData = filteredLeavesData.filter(leave => {
             const leaveEmp = activeEmployees.find(e => e.employeeId === leave.employeeId || e._id === leave.employeeId);
@@ -2610,12 +2611,12 @@ const LeavesList = () => {
     }
   };
 
-  // Fetch comp-off requests
   const fetchCompOffRequests = async () => {
     setLoadingRequests(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/leaves/comp-off-requests?status=pending`);
-      setCompOffRequests(response.data || []);
+      const response = await axios.get(`${API_BASE_URL}/leaves/comp-off-requests?status=all`);
+      const data = response.data || [];
+      setCompOffRequests(Array.isArray(data) ? data : (data.requests || []));
     } catch (error) {
       console.error("Error fetching comp-off requests:", error);
     } finally {
@@ -2654,11 +2655,11 @@ const LeavesList = () => {
         approverEmail = localStorage.getItem("adminEmail") || "";
       }
 
-      const res = await axios.put(`${API_BASE_URL}/leaves/updateleaves/${id}`, { 
-        status, 
-        adminName: approverName, 
-        adminEmail: approverEmail, 
-        adminRole: approverRole 
+      const res = await axios.put(`${API_BASE_URL}/leaves/updateleaves/${id}`, {
+        status,
+        adminName: approverName,
+        adminEmail: approverEmail,
+        adminRole: approverRole
       });
       if (res.status === 200) {
         alert(`Leave ${status} successfully`);
@@ -2784,6 +2785,12 @@ const LeavesList = () => {
     }
   };
 
+  // ✅ Read-only view
+  const openViewCompOffModal = (data) => {
+    setViewCompOffData(data);
+    setShowViewCompOffModal(true);
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   };
@@ -2812,7 +2819,6 @@ const LeavesList = () => {
       const empRole = (empData.role || empData.designation || "").toLowerCase();
       const perms = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
       const hasLeaveApprove = perms.includes("leave_approve");
-      
       const isHR = empRole.includes("hr");
       const isDepartmentHead = (!isHR) && (empRole.includes("manager") || empRole.includes("lead") || empRole.includes("head") || hasLeaveApprove);
 
@@ -2833,7 +2839,7 @@ const LeavesList = () => {
     if (endDateFilter) filtered = filtered.filter(l => new Date(l.endDate) <= new Date(endDateFilter));
     if (filterDepartment) filtered = filtered.filter(l => getEmployeeDetails(l.employeeId).department === filterDepartment);
     if (filterDesignation) filtered = filtered.filter(l => getEmployeeDetails(l.employeeId).designation === filterDesignation);
-    
+
     if (selectedMonth) {
       const [year, monthNum] = selectedMonth.split("-").map(Number);
       filtered = filtered.filter(l => {
@@ -2860,13 +2866,11 @@ const LeavesList = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
 
-  // ─── HANDLE ITEMS PER PAGE CHANGE WITH LOCALSTORAGE ───
   const handleItemsPerPageChange = (e) => {
     const newValue = Number(e.target.value);
     setItemsPerPage(newValue);
@@ -2897,98 +2901,363 @@ const LeavesList = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-2 sm:p-4 lg:p-6">
-        {/* Dashboard Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-           <div className="flex items-baseline gap-3 flex-wrap">
-            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
-              Leave <span className="text-blue-600">Requests</span>
+    <div className="emp-dash">
+      <main className="p-1 sm:p-2 lg:p-6">
+
+        {/* Desktop Header */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap leading-none">
+              Leave <span>Requests</span>
             </h1>
           </div>
-          {/* <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
-            <FiCalendar className="text-blue-600" />
-            <span className="text-sm font-medium text-gray-600">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
-          </div> */}
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative min-w-[130px]">
+              <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" />
+            </div>
+
+            {/* Department Filter */}
+            <div className="relative" ref={departmentFilterRef}>
+              <button onClick={() => { setShowDepartmentFilter(!showDepartmentFilter); setShowDesignationFilter(false); }} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${filterDepartment ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
+                <FaBuilding className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDepartment || 'Dept'}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDepartmentFilter && (
+                <div className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto" style={{ zIndex: 99999, top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto', left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto' }}>
+                  <div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); setCurrentPage(1); }} className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Departments</div>
+                  {uniqueDepartments.map(dept => (<div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); setCurrentPage(1); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}>{dept}</div>))}
+                </div>
+              )}
+            </div>
+
+            {/* Designation Filter */}
+            <div className="relative" ref={designationFilterRef}>
+              <button onClick={() => { setShowDesignationFilter(!showDesignationFilter); setShowDepartmentFilter(false); }} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${filterDesignation ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
+                <FaUserTag className="text-gray-400 text-[10px]" />
+                <span className="truncate max-w-[80px]">{filterDesignation || 'Design'}</span>
+                <span className="text-gray-400 text-[10px]">▾</span>
+              </button>
+              {showDesignationFilter && (
+                <div className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[180px] max-h-60 overflow-y-auto" style={{ zIndex: 99999, top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto', left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto' }}>
+                  <div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); setCurrentPage(1); }} className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Designations</div>
+                  {uniqueDesignations.map(des => (<div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); setCurrentPage(1); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}>{des}</div>))}
+                </div>
+              )}
+            </div>
+
+            {/* Status Filter Tabs */}
+            <div className="flex items-center bg-gray-100 p-0.5 rounded-lg h-8">
+              <button onClick={() => { setStatusFilter('all'); setCurrentPage(1); }} className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${statusFilter === 'all' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>All</button>
+              <button onClick={() => { setStatusFilter('pending'); setCurrentPage(1); }} className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${statusFilter === 'pending' ? 'bg-white text-amber-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>Pending ({leaves.filter(l => l.status === 'pending').length})</button>
+              <button onClick={() => { setStatusFilter('approved'); setCurrentPage(1); }} className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${statusFilter === 'approved' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>Approved</button>
+              <button onClick={() => { setStatusFilter('rejected'); setCurrentPage(1); }} className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${statusFilter === 'rejected' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>Rejected</button>
+            </div>
+
+            {/* Comp-off Button */}
+            <button onClick={() => setShowCompOffRequests(!showCompOffRequests)} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg hover:opacity-90 transition-all shadow-sm whitespace-nowrap ${showCompOffRequests ? 'text-white bg-purple-600' : 'text-purple-700 bg-purple-50 border border-purple-200'}`}>
+              <FaExchangeAlt className="w-3 h-3" />
+              Comp-off {compOffRequests.filter(r => r.status === 'pending').length > 0 && <span className="ml-0.5 bg-red-500 text-white rounded-full min-w-[16px] h-4 px-1 text-[9px] font-bold flex items-center justify-center">{compOffRequests.filter(r => r.status === 'pending').length}</span>}
+            </button>
+
+            {/* Export */}
+            <button onClick={() => { if (filteredLeaves.length === 0) { alert("No data to download!"); return; } const headers = ["Emp ID","Name","Department","Designation","Leave Type","Start Date","End Date","Days","Reason","Status","Approved By","Comp-off"]; const csvRows = [headers.join(","), ...filteredLeaves.map(l => { const ed = getEmployeeDetails(l.employeeId); const co = l.compOffStatus?.status || '-'; return [`"${l.employeeId||''}"`,"\""+l.employeeName+"\"","\""+ed.department+"\"","\""+ed.designation+"\"","\""+l.leaveType+"\"",new Date(l.startDate).toLocaleDateString(),new Date(l.endDate).toLocaleDateString(),l.days||1,"\""+( l.reason||'').replace(/"/g,"'")+"\"",l.status,"\""+( l.approvedBy||'-')+"\"","\""+co+"\""].join(","); })]; const blob = new Blob([csvRows.join("\n")], { type: "text/csv" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `leave_requests_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(url); }} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap">
+              <FiDownload className="w-3 h-3" /> Export
+            </button>
+
+            {(filterDepartment || filterDesignation || searchTerm || statusFilter !== 'all' || leaveTypeFilter !== 'all' || selectedMonth || startDateFilter || endDateFilter) && (
+              <button onClick={clearFilters} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap">
+                <FiTrash2 className="w-3 h-3" /> Clear
+              </button>
+            )}
+          </div>
         </div>
 
-       {/* Top KPI Stats Grid */}
-<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
-  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate("/leavelist")}>
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Requests</span>
-      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-        <FiList className="text-sm" />
-      </div>
-    </div>
-    <div className="text-2xl font-bold text-gray-900">{leaves.length}</div>
-    <div className="mt-1 text-xs text-gray-500">all requests</div>
-  </div>
+        {/* Mobile Header */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">Leave <span className="text-blue-600">Requests</span></h1>
+        </div>
 
-  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-pending-leaves" : "/pending-leaves")}>
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Pending</span>
-      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-        <FiClock className="text-sm" />
-      </div>
-    </div>
-    <div className="text-2xl font-bold text-gray-900">{leaves.filter((l) => l.status === "pending").length}</div>
-    <div className="mt-1 text-xs text-gray-500">awaiting</div>
-  </div>
+        {/* Mobile Filters */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
+            </button>
+            <span className="text-xs text-gray-500"><strong>{filteredLeaves.length}</strong> requests</span>
+          </div>
 
-  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-approved-leaves" : "/approved-leaves")}>
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved</span>
-      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
-        <FiCheckCircle className="text-sm" />
-      </div>
-    </div>
-    <div className="text-2xl font-bold text-gray-900">{leaves.filter((l) => l.status === "approved").length}</div>
-    <div className="mt-1 text-xs text-gray-500">approved</div>
-  </div>
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg bg-white" />
+                </div>
+              </div>
 
-  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-rejected-leaves" : "/rejected-leaves")}>
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Rejected</span>
-      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600">
-        <FiXCircle className="text-sm" />
-      </div>
-    </div>
-    <div className="text-2xl font-bold text-gray-900">{leaves.filter((l) => l.status === "rejected").length}</div>
-    <div className="mt-1 text-xs text-gray-500">rejected</div>
-  </div>
-</div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <div className="flex bg-gray-100 p-1 rounded-lg">
+                  {['all','pending','approved','rejected'].map(s => (
+                    <button key={s} onClick={() => { setStatusFilter(s); setCurrentPage(1); }} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all capitalize ${statusFilter === s ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}>{s}</button>
+                  ))}
+                </div>
+              </div>
 
-        {/* Filters Card - Same as before, no changes needed */}
+              <div className="pt-3 border-t border-gray-200 grid grid-cols-2 gap-2">
+                <button onClick={() => setShowCompOffRequests(!showCompOffRequests)} className={`flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold rounded-lg ${showCompOffRequests ? 'text-white bg-purple-600' : 'text-purple-700 bg-purple-50 border border-purple-200'}`}>
+                  <FaExchangeAlt className="w-4 h-4" /> Comp-off
+                  {compOffRequests.filter(r => r.status === 'pending').length > 0 && <span className="ml-1 bg-red-500 text-white rounded-full min-w-[18px] h-4 px-1 text-[10px] font-bold flex items-center justify-center">{compOffRequests.filter(r => r.status === 'pending').length}</span>}
+                </button>
+                <button onClick={() => { if (filteredLeaves.length === 0) { alert("No data to download!"); return; } const headers = ["Emp ID","Name","Department","Designation","Leave Type","Start Date","End Date","Days","Reason","Status","Approved By","Comp-off"]; const csvRows = [headers.join(","), ...filteredLeaves.map(l => { const ed = getEmployeeDetails(l.employeeId); const co = l.compOffStatus?.status || '-'; return [`"${l.employeeId||''}"`,"\""+l.employeeName+"\"","\""+ed.department+"\"","\""+ed.designation+"\"","\""+l.leaveType+"\"",new Date(l.startDate).toLocaleDateString(),new Date(l.endDate).toLocaleDateString(),l.days||1,"\""+( l.reason||'').replace(/"/g,"'")+"\"",l.status,"\""+( l.approvedBy||'-')+"\"","\""+co+"\""].join(","); })]; const blob = new Blob([csvRows.join("\n")], { type: "text/csv" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `leave_requests_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(url); }} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg">
+                  <FiDownload className="w-4 h-4" /> Export
+                </button>
+                {(filterDepartment || filterDesignation || searchTerm || statusFilter !== 'all' || selectedMonth) && (
+                  <button onClick={clearFilters} className="col-span-2 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
+                    <FiTrash2 className="w-4 h-4" /> Clear All
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* KPI Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+          <div className="emp-dash__stat cursor-pointer transition-all hover:shadow-md" onClick={() => navigate("/leavelist")}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label text-[10px] sm:text-xs">Total Requests</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiList className="text-sm sm:text-base" /></div></div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl">{leaves.length}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">all requests</div>
+          </div>
+
+          <div className="emp-dash__stat cursor-pointer transition-all hover:shadow-md" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-pending-leaves" : "/pending-leaves")}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label text-[10px] sm:text-xs">Pending</span><div className="emp-dash__stat-icon emp-dash__stat-icon--absent"><FiClock className="text-sm sm:text-base" /></div></div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl text-amber-600">{leaves.filter((l) => l.status === "pending").length}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">awaiting approval</div>
+          </div>
+
+          <div className="emp-dash__stat cursor-pointer transition-all hover:shadow-md" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-approved-leaves" : "/approved-leaves")}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label text-[10px] sm:text-xs">Approved</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiCheckCircle className="text-sm sm:text-base" /></div></div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl text-green-600">{leaves.filter((l) => l.status === "approved").length}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">approved</div>
+          </div>
+
+          <div className="emp-dash__stat col-span-2 lg:col-span-1 cursor-pointer transition-all hover:shadow-md" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-rejected-leaves" : "/rejected-leaves")}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label text-[10px] sm:text-xs">Rejected</span><div className="emp-dash__stat-icon emp-dash__stat-icon--absent"><FiXCircle className="text-sm sm:text-base" /></div></div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl text-red-600">{leaves.filter((l) => l.status === "rejected").length}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">rejected</div>
+          </div>
+        </div>
+
+        {/* Active Filter Info */}
+        {(filterDepartment || filterDesignation || searchTerm || statusFilter !== 'all' || selectedMonth || startDateFilter || endDateFilter) && (
+          <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+            <span className="text-xs font-medium text-blue-700">🔍 Filters active — showing <strong>{filteredLeaves.length}</strong> of <strong>{leaves.length}</strong> requests</span>
+            <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"><FiX className="w-3 h-3" /> Clear</button>
+          </div>
+        )}
 
         {/* Comp-off Requests Section */}
         {showCompOffRequests && (
           <div className="mb-6 overflow-hidden bg-white border-2 border-purple-200 rounded-lg shadow-lg">
             <div className="flex items-center justify-between px-4 py-2 text-white bg-gradient-to-r from-purple-500 to-purple-700">
               <h3 className="flex items-center gap-2 font-semibold"><FaExchangeAlt /> Comp-off Requests ({compOffRequests.length})</h3>
-              <button onClick={fetchCompOffRequests} className="px-2 py-1 text-xs text-purple-700 bg-white rounded hover:bg-purple-100">🔄 Refresh</button>
+              <button onClick={fetchCompOffRequests} className="px-2 py-1 text-xs text-purple-700 bg-white rounded hover:bg-purple-100 font-semibold">🔄 Refresh</button>
             </div>
-            {loadingRequests ? (<div className="p-8 text-center"><div className="w-8 h-8 mx-auto border-b-2 border-purple-600 rounded-full animate-spin"></div><p className="mt-2 text-sm text-gray-500">Loading requests...</p></div>) : compOffRequests.length === 0 ? (<div className="p-8 text-center text-gray-500"><p>No pending comp-off requests</p></div>) : (
-              <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-xs text-purple-800 bg-purple-100"><tr><th className="px-3 py-2 text-center">Employee</th><th className="px-3 py-2 text-center">Work Date</th><th className="px-3 py-2 text-center">Days</th><th className="px-3 py-2 text-center">Reason</th><th className="px-3 py-2 text-center">Actions</th></tr></thead><tbody>{compOffRequests.map(req => (<tr key={req._id} className="border-b hover:bg-purple-50"><td className="px-3 py-2 text-center"><div className="font-medium">{req.employeeName}</div><div className="text-xs text-gray-500">{req.employeeId}</div></td><td className="px-3 py-2 text-center">{formatDate(req.workDate)}</td><td className="px-3 py-2 text-center"><span className="px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full">{req.count || 1} day(s)</span></td><td className="max-w-xs px-3 py-2 text-center"><span className="block text-xs text-gray-700 truncate">{req.reason || 'No reason provided'}</span></td><td className="px-3 py-2 text-center"><button onClick={() => { setSelectedCompOffRequest(req); setShowCompOffPopup(true); }} className="px-3 py-1 text-xs text-white bg-purple-600 rounded-md hover:bg-purple-700">Review</button></td></tr>))}</tbody></table></div>
+
+            {/* Status Tabs */}
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-purple-50 border-b border-purple-100">
+              <button
+                onClick={() => setCompOffTab("pending")}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                  compOffTab === "pending" ? "bg-amber-500 text-white shadow-sm" : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                }`}
+              >
+                Pending ({compOffRequests.filter(r => r.status === "pending").length})
+              </button>
+              <button
+                onClick={() => setCompOffTab("approved")}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                  compOffTab === "approved" ? "bg-green-600 text-white shadow-sm" : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                }`}
+              >
+                Approved ({compOffRequests.filter(r => r.status === "approved").length})
+              </button>
+              <button
+                onClick={() => setCompOffTab("rejected")}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                  compOffTab === "rejected" ? "bg-red-600 text-white shadow-sm" : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                }`}
+              >
+                Rejected ({compOffRequests.filter(r => r.status === "rejected").length})
+              </button>
+              <button
+                onClick={() => setCompOffTab("all")}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+                  compOffTab === "all" ? "bg-purple-700 text-white shadow-sm" : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                }`}
+              >
+                All ({compOffRequests.length})
+              </button>
+            </div>
+
+            {loadingRequests ? (
+              <div className="p-8 text-center"><div className="w-8 h-8 mx-auto border-b-2 border-purple-600 rounded-full animate-spin"></div><p className="mt-2 text-sm text-gray-500">Loading requests...</p></div>
+            ) : compOffRequests.filter(r => compOffTab === "all" ? true : r.status === compOffTab).length === 0 ? (
+              <div className="p-8 text-center text-gray-500 font-medium">No {compOffTab === "all" ? "" : compOffTab} comp-off requests found</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="text-xs text-purple-800 bg-purple-100">
+                    <tr>
+                      <th className="px-3 py-2 text-center">Employee</th>
+                      <th className="px-3 py-2 text-center">Work Date (Extra Day)</th>
+                      <th className="px-3 py-2 text-center">Days</th>
+                      <th className="px-3 py-2 text-center">Reason</th>
+                      <th className="px-3 py-2 text-center">Status</th>
+                      <th className="px-3 py-2 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {compOffRequests.filter(r => compOffTab === "all" ? true : r.status === compOffTab).map(req => (
+                      <tr key={req._id} className="border-b hover:bg-purple-50">
+                        <td className="px-3 py-2 text-center"><div className="font-semibold text-gray-900">{req.employeeName}</div><div className="text-xs text-gray-500">{req.employeeId}</div></td>
+                        <td className="px-3 py-2 text-center">
+                          <div className="font-medium text-gray-800">{formatDate(req.workDate)}</div>
+                          {req.extraDayDetails?.workType && <span className="inline-block text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">{req.extraDayDetails.workType}</span>}
+                        </td>
+                        <td className="px-3 py-2 text-center"><span className="px-2 py-1 text-xs font-semibold text-purple-700 bg-purple-100 rounded-full">{req.count || 1} day(s)</span></td>
+                        <td className="max-w-xs px-3 py-2 text-center"><span className="block text-xs text-gray-700 truncate" title={req.reason}>{req.reason || 'No reason provided'}</span></td>
+                        <td className="px-3 py-2 text-center">
+                          {req.status === "approved" && <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700 border border-green-200">✅ Approved</span>}
+                          {req.status === "rejected" && <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700 border border-red-200">❌ Rejected</span>}
+                          {req.status === "pending" && <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700 border border-amber-200">⏳ Pending</span>}
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          {req.status === "pending" ? (
+                            <button onClick={() => { setSelectedCompOffRequest(req); setShowCompOffPopup(true); }} className="px-3 py-1 text-xs font-semibold text-white bg-purple-600 rounded-md hover:bg-purple-700 shadow-sm">Review</button>
+                          ) : req.status === "approved" ? (
+                            <span className="text-xs text-gray-500">Approved by {req.approvedBy || "Admin"}</span>
+                          ) : (
+                            <span className="text-xs text-red-500 truncate max-w-[120px] block" title={req.rejectionReason}>{req.rejectionReason ? `Reason: ${req.rejectionReason}` : "Rejected"}</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}
 
-        {/* Comp-off Review Popup */}
+        {/* Comp-off Review Popup (approve/reject) */}
         {showCompOffPopup && selectedCompOffRequest && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"><div ref={compOffPopupRef} className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl"><h2 className="mb-4 text-xl font-bold text-purple-800">Review Comp-off Request</h2><div className="space-y-4"><div className="p-3 rounded-lg bg-purple-50"><p className="text-sm text-gray-500">Employee</p><p className="font-medium">{selectedCompOffRequest.employeeName}</p><p className="text-xs text-gray-500">{selectedCompOffRequest.employeeId}</p></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Work Date</label><div className="p-2 rounded-lg bg-white">{formatDate(selectedCompOffRequest.workDate)}</div></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Days Requested</label><div className="p-2 rounded-lg bg-white">{selectedCompOffRequest.count || 1} day(s)</div></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Reason</label><div className="p-2 rounded-lg bg-white">{selectedCompOffRequest.reason || 'No reason provided'}</div></div><div className="flex gap-2 pt-4"><button onClick={() => { setShowCompOffPopup(false); setSelectedCompOffRequest(null); }} className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button><button onClick={rejectCompOffRequest} className="flex-1 px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600">Reject</button><button onClick={approveCompOffRequest} className="flex-1 px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700">Approve</button></div></div></div></div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div ref={compOffPopupRef} className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
+              <h2 className="mb-4 text-xl font-bold text-purple-800">Review Comp-off Request</h2>
+              <div className="space-y-4">
+                <div className="p-3 rounded-lg bg-purple-50">
+                  <p className="text-xs text-gray-500 font-medium">Employee</p>
+                  <p className="font-semibold text-gray-900 text-base">{selectedCompOffRequest.employeeName}</p>
+                  <p className="text-xs text-gray-500">{selectedCompOffRequest.employeeId}</p>
+                </div>
+                <div>
+                  <label className="block mb-1 text-xs font-semibold text-gray-700">Extra Work Date</label>
+                  <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 text-sm">
+                    <span className="font-medium text-gray-800">{formatDate(selectedCompOffRequest.workDate)}</span>
+                    {selectedCompOffRequest.extraDayDetails?.workType && (
+                      <span className="ml-2 text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                        {selectedCompOffRequest.extraDayDetails.workType}
+                      </span>
+                    )}
+                    {selectedCompOffRequest.extraDayDetails?.totalHours && (
+                      <span className="ml-2 text-xs text-gray-500">({selectedCompOffRequest.extraDayDetails.totalHours} hrs)</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block mb-1 text-xs font-semibold text-gray-700">Days Requested</label>
+                  <div className="p-2 rounded-lg bg-gray-50 border border-gray-200 text-sm">{selectedCompOffRequest.count || 1} day(s)</div>
+                </div>
+                <div>
+                  <label className="block mb-1 text-xs font-semibold text-gray-700">Reason</label>
+                  <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-700 whitespace-pre-wrap">{selectedCompOffRequest.reason || 'No reason provided'}</div>
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <button onClick={() => { setShowCompOffPopup(false); setSelectedCompOffRequest(null); }} className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 font-semibold text-xs transition-colors">Cancel</button>
+                  <button onClick={rejectCompOffRequest} className="flex-1 px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600 font-semibold text-xs transition-colors shadow-sm">Reject</button>
+                  <button onClick={approveCompOffRequest} className="flex-1 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 font-semibold text-xs transition-colors shadow-sm">Approve</button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* Edit Comp-off Popup */}
+        {/* Edit Comp-off Popup (only for approved comp-offs) */}
         {showEditCompOffPopup && selectedCompOffForEdit && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"><div ref={editCompOffPopupRef} className="w-full max-w-sm p-4 bg-white rounded-md shadow-lg"><h2 className="mb-3 text-lg font-semibold text-green-700">Edit Comp-off</h2><div className="space-y-3 text-sm"><div className="p-2 rounded bg-green-50"><p className="text-xs text-gray-500">Employee</p><p className="font-medium">{selectedCompOffForEdit.employeeName}</p><p className="text-[11px] text-gray-500">{selectedCompOffForEdit.employeeId}</p></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Work Date</label><div className="p-1.5 rounded bg-white text-xs">{formatDate(selectedCompOffForEdit.workDate)}</div></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Comp-off Days</label><input type="number" min="0.5" step="0.5" value={editCompOffData.count} onChange={(e) => setEditCompOffData({ ...editCompOffData, count: parseFloat(e.target.value) })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500" /></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Reason</label><textarea rows="2" value={editCompOffData.reason} onChange={(e) => setEditCompOffData({ ...editCompOffData, reason: e.target.value })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500" /></div><div className="flex gap-2 pt-2"><button onClick={() => { setShowEditCompOffPopup(false); setSelectedCompOffForEdit(null); }} className="flex-1 px-2 py-1.5 text-xs text-gray-600 bg-gray-100 rounded hover:bg-gray-200">Cancel</button><button onClick={rejectApprovedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-red-500 rounded hover:bg-red-600">Reject</button><button onClick={saveEditedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-green-600 rounded hover:bg-green-700">Save</button></div></div></div></div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div ref={editCompOffPopupRef} className="w-full max-w-sm p-4 bg-white rounded-md shadow-lg">
+              <h2 className="mb-3 text-lg font-semibold text-green-700">Edit Comp-off</h2>
+              <div className="space-y-3 text-sm">
+                <div className="p-2 rounded bg-green-50"><p className="text-xs text-gray-500">Employee</p><p className="font-medium">{selectedCompOffForEdit.employeeName}</p><p className="text-[11px] text-gray-500">{selectedCompOffForEdit.employeeId}</p></div>
+                <div><label className="block mb-0.5 text-xs font-medium text-gray-500">Work Date</label><div className="p-1.5 rounded bg-white text-xs">{formatDate(selectedCompOffForEdit.workDate)}</div></div>
+                <div><label className="block mb-0.5 text-xs font-medium text-gray-500">Comp-off Days</label><input type="number" min="0.5" step="0.5" value={editCompOffData.count} onChange={(e) => setEditCompOffData({ ...editCompOffData, count: parseFloat(e.target.value) })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded" /></div>
+                <div><label className="block mb-0.5 text-xs font-medium text-gray-500">Reason</label><textarea rows="2" value={editCompOffData.reason} onChange={(e) => setEditCompOffData({ ...editCompOffData, reason: e.target.value })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded" /></div>
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => { setShowEditCompOffPopup(false); setSelectedCompOffForEdit(null); }} className="flex-1 px-2 py-1.5 text-xs text-gray-600 bg-gray-100 rounded hover:bg-gray-200">Cancel</button>
+                  <button onClick={rejectApprovedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-red-500 rounded hover:bg-red-600">Reject</button>
+                  <button onClick={saveEditedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-green-600 rounded hover:bg-green-700">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ Read-only View Comp-off Modal (for admin) */}
+        {showViewCompOffModal && viewCompOffData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
+              <h2 className="mb-4 text-xl font-bold text-purple-800 flex items-center gap-2"><FaEye /> Comp-off Details</h2>
+              <div className="space-y-4">
+                <div className="flex justify-center">
+                  <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                    viewCompOffData.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                    viewCompOffData.status === "approved" ? "bg-green-100 text-green-700" :
+                    "bg-red-100 text-red-700"
+                  }`}>Status: {viewCompOffData.status}</span>
+                </div>
+                <div className="p-4 rounded-xl bg-purple-50 border border-purple-200">
+                  <p className="text-sm font-semibold text-purple-800 mb-1">Work Date:</p>
+                  <p className="text-sm font-medium">{formatDate(viewCompOffData.workDate)}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Reason:</p>
+                  <p className="text-sm text-gray-600">{viewCompOffData.reason}</p>
+                </div>
+                {viewCompOffData.count && (
+                  <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
+                    <p className="text-sm font-semibold text-blue-800 mb-1">Days:</p>
+                    <p className="text-sm font-medium">{viewCompOffData.count} day(s)</p>
+                  </div>
+                )}
+                {viewCompOffData.status === "rejected" && viewCompOffData.rejectedReason && (
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-200">
+                    <p className="text-xs text-red-600">Rejected: {viewCompOffData.rejectedReason}</p>
+                  </div>
+                )}
+              </div>
+              <div className="mt-4 text-right">
+                <button onClick={() => setShowViewCompOffModal(false)} className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl">Close</button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* View Balances Popup */}
@@ -3001,61 +3270,48 @@ const LeavesList = () => {
                 <p className="text-xs text-blue-600">{selectedEmpBalance.employeeId}</p>
               </div>
               <div className="space-y-2">
-                <div className="flex justify-between p-2 rounded bg-white">
-                  <span className="font-medium">Casual Leave (CL)</span>
-                  <span>{selectedEmpBalance.balances.CL.available} Left / {selectedEmpBalance.balances.CL.used} Used</span>
-                </div>
-                <div className="flex justify-between p-2 rounded bg-white">
-                  <span className="font-medium">Sick Leave (SL)</span>
-                  <span>{selectedEmpBalance.balances.SL.available} Left / {selectedEmpBalance.balances.SL.used} Used</span>
-                </div>
-                <div className="flex justify-between p-2 rounded bg-white">
-                  <span className="font-medium">Earned Leave (EL)</span>
-                  <span>{selectedEmpBalance.balances.EL.available} Left / {selectedEmpBalance.balances.EL.used} Used</span>
-                </div>
+                <div className="flex justify-between p-2 rounded bg-white"><span className="font-medium">Casual Leave (CL)</span><span>{selectedEmpBalance.balances.CL.available} Left / {selectedEmpBalance.balances.CL.used} Used</span></div>
+                <div className="flex justify-between p-2 rounded bg-white"><span className="font-medium">Sick Leave (SL)</span><span>{selectedEmpBalance.balances.SL.available} Left / {selectedEmpBalance.balances.SL.used} Used</span></div>
+                <div className="flex justify-between p-2 rounded bg-white"><span className="font-medium">Earned Leave (EL)</span><span>{selectedEmpBalance.balances.EL.available} Left / {selectedEmpBalance.balances.EL.used} Used</span></div>
               </div>
-              <div className="mt-4 text-right">
-                <button onClick={() => setShowBalancePopup(false)} className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Close</button>
-              </div>
+              <div className="mt-4 text-right"><button onClick={() => setShowBalancePopup(false)} className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Close</button></div>
             </div>
           </div>
         )}
 
         {/* Main Table */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
+        <div className="emp-dash__card overflow-hidden mb-6">
           {filteredLeaves.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">
-              No leave requests found matching current filter values.
-            </div>
+            <div className="py-12 text-center text-gray-500 font-medium">No leave requests found matching current filter values.</div>
           ) : (
             <>
-              {/* Desktop Table View */}
               <div className="hidden lg:block overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 bg-white">
-                  <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <table className="emp-dash__table min-w-full">
+                  <thead>
                     <tr>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Emp ID</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Name</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Department</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Designation</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Dates</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Days</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Reason</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Status</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Approved By</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Actions</th>
+                      <th className="text-left">Emp ID</th>
+                      <th className="text-left">Name</th>
+                      <th className="text-left">Department</th>
+                      <th className="text-left">Designation</th>
+                      <th className="text-center">Dates</th>
+                      <th className="text-center">Days</th>
+                      <th className="text-left">Reason</th>
+                      <th className="text-center">Status</th>
+                      <th className="text-center">Comp-off</th>
+                      <th className="text-center">Approved By</th>
+                      <th className="text-center">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 text-xs">
+                  <tbody>
                     {currentItems.map((l) => {
                       const empDetails = getEmployeeDetails(l.employeeId);
                       const compOffInfo = l.compOffStatus;
                       const userRole = localStorage.getItem("userRole");
                       const isManager = userRole === "employee" && JSON.parse(localStorage.getItem("employeePermissions") || "[]").includes("leave_approve");
                       const canApprove = (userRole === "admin" && (l.status === "pending" || l.status === "manager_approved")) || (isManager && l.status === "pending");
-                      
+
                       return (
-                        <tr key={l._id} className={`hover:bg-gray-50 transition-all ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-50' : ''}`}>
+                        <tr key={l._id} className={`hover:bg-gray-50 transition-all ${compOffInfo?.status === "approved" ? 'bg-purple-50' : ''}`}>
                           <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{l.employeeId || "N/A"}</td>
                           <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{l.employeeName}</td>
                           <td className="px-4 py-3 text-gray-600 truncate max-w-[150px]" title={empDetails.department}>{empDetails.department}</td>
@@ -3066,65 +3322,53 @@ const LeavesList = () => {
                             <div className="text-gray-700 font-medium">{new Date(l.endDate).toLocaleDateString()}</div>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-gray-100 text-gray-700 border border-gray-200'}`}>
-                              {l.days || 1}
-                            </span>
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${compOffInfo?.status === "approved" ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-gray-100 text-gray-700 border border-gray-200'}`}>{l.days || 1}</span>
                           </td>
                           <td className="px-4 py-3 text-gray-600 truncate max-w-[200px]" title={l.reason}>{l.reason || "No reason provided"}</td>
+
                           <td className="px-4 py-3 text-center">
-                            {l.status === "approved" && (
-                              <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-200">
-                                <span className="w-1.5 h-1.5 mr-1.5 bg-green-500 rounded-full"></span>
-                                Approved
-                              </span>
-                            )}
-                            {l.status === "rejected" && (
-                              <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-red-700 bg-red-50 rounded-full border border-red-200">
-                                <span className="w-1.5 h-1.5 mr-1.5 bg-red-500 rounded-full"></span>
-                                Rejected
-                              </span>
-                            )}
-                            {l.status === "pending" && (
-                              <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-50 rounded-full border border-amber-200">
-                                <span className="w-1.5 h-1.5 mr-1.5 bg-amber-500 rounded-full"></span>
-                                Pending
-                              </span>
-                            )}
-                            {l.status === "manager_approved" && (
-                              <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 rounded-full border border-blue-200">
-                                <span className="w-1.5 h-1.5 mr-1.5 bg-blue-500 rounded-full"></span>
-                                Manager Approved
-                              </span>
+                            {l.status === "approved" && (<span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-200"><span className="w-1.5 h-1.5 mr-1.5 bg-green-500 rounded-full"></span>Approved</span>)}
+                            {l.status === "rejected" && (<span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-red-700 bg-red-50 rounded-full border border-red-200"><span className="w-1.5 h-1.5 mr-1.5 bg-red-500 rounded-full"></span>Rejected</span>)}
+                            {l.status === "pending" && (<span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-50 rounded-full border border-amber-200"><span className="w-1.5 h-1.5 mr-1.5 bg-amber-500 rounded-full"></span>Pending</span>)}
+                            {l.status === "manager_approved" && (<span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 rounded-full border border-blue-200"><span className="w-1.5 h-1.5 mr-1.5 bg-blue-500 rounded-full"></span>Manager Approved</span>)}
+                          </td>
+
+                          {/* ✅ Comp-off Column — READ-ONLY (no apply button) */}
+                          <td className="px-4 py-3 text-center">
+                            {compOffInfo ? (
+                              <div className="flex flex-col items-center gap-1">
+                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                  compOffInfo.status === "pending" ? "bg-yellow-100 text-yellow-700 border border-yellow-200" :
+                                  compOffInfo.status === "approved" ? "bg-green-100 text-green-700 border border-green-200" :
+                                  "bg-red-100 text-red-700 border border-red-200"
+                                }`}>
+                                  {compOffInfo.status.charAt(0).toUpperCase() + compOffInfo.status.slice(1)}
+                                </span>
+                                {compOffInfo.workDate && (
+                                  <span className="text-[10px] text-gray-500">{new Date(compOffInfo.workDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                                )}
+                                <button
+                                  onClick={() => openViewCompOffModal(compOffInfo.full || compOffInfo)}
+                                  className="text-[10px] text-blue-600 hover:underline"
+                                >
+                                  View
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
                             )}
                           </td>
+
                           <td className="px-4 py-3 text-center text-gray-500">{l.approvedBy || "-"}</td>
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               {canApprove && (
                                 <>
-                                  <button
-                                    onClick={() => updateLeaveStatus(l._id, "approved")}
-                                    className="p-1.5 text-green-600 bg-green-50 hover:bg-green-100 rounded-md transition-all shadow-sm"
-                                    title="Approve"
-                                  >
-                                    <FiCheckCircle className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => updateLeaveStatus(l._id, "rejected")}
-                                    className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-all shadow-sm"
-                                    title="Reject"
-                                  >
-                                    <FiXCircle className="w-4 h-4" />
-                                  </button>
+                                  <button onClick={() => updateLeaveStatus(l._id, "approved")} className="p-1.5 text-green-600 bg-green-50 hover:bg-green-100 rounded-md transition-all shadow-sm" title="Approve"><FiCheckCircle className="w-4 h-4" /></button>
+                                  <button onClick={() => updateLeaveStatus(l._id, "rejected")} className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-all shadow-sm" title="Reject"><FiXCircle className="w-4 h-4" /></button>
                                 </>
                               )}
-                              <button
-                                onClick={() => viewEmployeeBalances(l.employeeId, l.employeeName)}
-                                className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
-                                title="View Balances"
-                              >
-                                <FiClock className="w-4 h-4" />
-                              </button>
+                              <button onClick={() => viewEmployeeBalances(l.employeeId, l.employeeName)} className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm" title="View Balances"><FiClock className="w-4 h-4" /></button>
                             </div>
                           </td>
                         </tr>
@@ -3142,34 +3386,18 @@ const LeavesList = () => {
                   const userRole = localStorage.getItem("userRole");
                   const isManager = userRole === "employee" && JSON.parse(localStorage.getItem("employeePermissions") || "[]").includes("leave_approve");
                   const canApprove = (userRole === "admin" && (l.status === "pending" || l.status === "manager_approved")) || (isManager && l.status === "pending");
-                  
+
                   return (
-                    <div key={l._id} className={`p-4 ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-50' : ''}`}>
+                    <div key={l._id} className={`p-4 ${compOffInfo?.status === "approved" ? 'bg-purple-50' : ''}`}>
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <h4 className="font-semibold text-gray-900">{l.employeeName}</h4>
                           <span className="text-xs text-gray-500">{l.employeeId || "N/A"} • {empDetails.department}</span>
                         </div>
-                        {l.status === "approved" && (
-                          <span className="px-2 py-1 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-200">
-                            Approved
-                          </span>
-                        )}
-                        {l.status === "rejected" && (
-                          <span className="px-2 py-1 text-xs font-semibold text-red-700 bg-red-50 rounded-full border border-red-200">
-                            Rejected
-                          </span>
-                        )}
-                        {l.status === "pending" && (
-                          <span className="px-2 py-1 text-xs font-semibold text-amber-700 bg-amber-50 rounded-full border border-amber-200">
-                            Pending
-                          </span>
-                        )}
-                        {l.status === "manager_approved" && (
-                          <span className="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-50 rounded-full border border-blue-200">
-                            Manager Approved
-                          </span>
-                        )}
+                        {l.status === "approved" && (<span className="px-2 py-1 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-200">Approved</span>)}
+                        {l.status === "rejected" && (<span className="px-2 py-1 text-xs font-semibold text-red-700 bg-red-50 rounded-full border border-red-200">Rejected</span>)}
+                        {l.status === "pending" && (<span className="px-2 py-1 text-xs font-semibold text-amber-700 bg-amber-50 rounded-full border border-amber-200">Pending</span>)}
+                        {l.status === "manager_approved" && (<span className="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-50 rounded-full border border-blue-200">Manager Approved</span>)}
                       </div>
 
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mb-3 text-gray-600">
@@ -3177,33 +3405,31 @@ const LeavesList = () => {
                         <div><span className="text-gray-400">Days:</span> {l.days || 1}</div>
                         <div className="col-span-2"><span className="text-gray-400">Dates:</span> {new Date(l.startDate).toLocaleDateString()} to {new Date(l.endDate).toLocaleDateString()}</div>
                         <div className="col-span-2"><span className="text-gray-400">Reason:</span> {l.reason || "No reason provided"}</div>
+                        {compOffInfo && (
+                          <div className="col-span-2">
+                            <span className="text-gray-400">Comp-off:</span>{' '}
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              compOffInfo.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                              compOffInfo.status === "approved" ? "bg-green-100 text-green-700" :
+                              "bg-red-100 text-red-700"
+                            }`}>{compOffInfo.status}</span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                         <span className="text-xs text-gray-500">Approved by: {l.approvedBy || "-"}</span>
-                        <div className="flex gap-1.5">
+                        <div className="flex gap-1.5 flex-wrap">
                           {canApprove && (
                             <>
-                              <button
-                                onClick={() => updateLeaveStatus(l._id, "approved")}
-                                className="px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-all"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => updateLeaveStatus(l._id, "rejected")}
-                                className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-all"
-                              >
-                                Reject
-                              </button>
+                              <button onClick={() => updateLeaveStatus(l._id, "approved")} className="px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-all">Approve</button>
+                              <button onClick={() => updateLeaveStatus(l._id, "rejected")} className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-all">Reject</button>
                             </>
                           )}
-                          <button
-                            onClick={() => viewEmployeeBalances(l.employeeId, l.employeeName)}
-                            className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-all"
-                          >
-                            Balances
-                          </button>
+                          {compOffInfo && (
+                            <button onClick={() => openViewCompOffModal(compOffInfo.full || compOffInfo)} className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md">View Comp-off</button>
+                          )}
+                          <button onClick={() => viewEmployeeBalances(l.employeeId, l.employeeName)} className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-all">Balances</button>
                         </div>
                       </div>
                     </div>
@@ -3214,31 +3440,28 @@ const LeavesList = () => {
           )}
         </div>
 
-        {/* ─── PAGINATION SECTION ─── */}
+        {/* Pagination */}
         {filteredLeaves.length > 0 && (
-          <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <label className="font-medium text-gray-700">Show:</label>
-                <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-2 border rounded-lg">
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-                <span className="text-sm text-gray-500">entries</span>
-              </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+              <span>Show</span>
+              <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none">
+                <option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option>
+              </select>
+              <span className="hidden sm:inline">entries per page</span>
+              <span className="hidden sm:inline text-gray-300">|</span>
+              <span className="text-[10px] sm:text-xs">Showing <strong>{indexOfFirstItem + 1}</strong> to <strong>{Math.min(indexOfLastItem, filteredLeaves.length)}</strong> of <strong>{filteredLeaves.length}</strong></span>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1 ? "text-gray-500 bg-gray-100 cursor-not-allowed" : "text-blue-600 bg-white hover:bg-blue-50"}`}>Previous</button>
+            <div className="flex items-center gap-1.5">
+              <button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-2 py-1 text-xs font-semibold border rounded-lg transition-all ${currentPage === 1 ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"}`}>Prev</button>
               {getPageNumbers().map((page, index) => (
-                <button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-4 py-1 text-sm border rounded-lg ${page === "..." ? "text-gray-500 bg-white cursor-default" : currentPage === page ? "text-white bg-blue-600" : "text-blue-600 bg-white hover:bg-blue-50"}`}>{page}</button>
+                <button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[28px] sm:min-w-[32px] ${page === "..." ? "text-gray-400 bg-transparent border-transparent cursor-default" : currentPage === page ? "text-white bg-blue-600 border-blue-600 shadow-sm" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"}`}>{page}</button>
               ))}
-              <button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages ? "text-gray-500 bg-gray-100 cursor-not-allowed" : "text-blue-600 bg-white hover:bg-blue-50"}`}>Next</button>
+              <button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-2 py-1 text-xs font-semibold border rounded-lg transition-all ${currentPage === totalPages ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"}`}>Next</button>
             </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

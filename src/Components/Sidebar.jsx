@@ -1890,6 +1890,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "User Activity", path: "/useractivity" },
         { name: "User Access", path: "/useraccess" },
         { name: "Shifts", path: "/shift" },
+        { name:"Rosters", path:"/week-off" },
       ],
     },
 

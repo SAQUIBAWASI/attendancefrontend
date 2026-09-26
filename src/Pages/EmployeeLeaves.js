@@ -1219,9 +1219,10 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { FaExchangeAlt, FaPlus, FaSearch, FaShieldAlt, FaEye, FaInfoCircle, FaList } from "react-icons/fa";
-import { FiCheckCircle, FiClock, FiFileText, FiXCircle } from "react-icons/fi";
+import { FaExchangeAlt, FaPlus, FaSearch, FaShieldAlt, FaEye, FaInfoCircle, FaList, FaCalendarAlt, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FiCheckCircle, FiClock, FiFileText, FiXCircle, FiFilter, FiTrash2 } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
+import "./EmployeeDashboard.css";
 
 const EmployeeLeaves = () => {
   const [leaves, setLeaves] = useState([]);
@@ -1234,6 +1235,7 @@ const EmployeeLeaves = () => {
   const [leaveBalances, setLeaveBalances] = useState(null);
   const [publicHolidays, setPublicHolidays] = useState([]);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -1241,7 +1243,6 @@ const EmployeeLeaves = () => {
   const getSavedItemsPerPage = () => {
     try {
       const saved = localStorage.getItem('employeeLeaves_itemsPerPage');
-      console.log('🔍 EmployeeLeaves - Loading from localStorage:', saved);
       if (saved) {
         const parsed = parseInt(saved, 10);
         if (!isNaN(parsed) && [5, 10, 20, 50].includes(parsed)) {
@@ -1250,17 +1251,14 @@ const EmployeeLeaves = () => {
       }
       return 10;
     } catch (e) {
-      console.error('Error reading localStorage:', e);
       return 10;
     }
   };
 
   const [itemsPerPage, setItemsPerPage] = useState(getSavedItemsPerPage);
 
-  // ─── FORCE RELOAD ON MOUNT ───
   useEffect(() => {
     const saved = getSavedItemsPerPage();
-    console.log('🔄 EmployeeLeaves - Mount - Setting itemsPerPage to:', saved);
     setItemsPerPage(saved);
   }, []);
 
@@ -1283,9 +1281,7 @@ const EmployeeLeaves = () => {
   const [isExtraDayCompOffModalOpen, setIsExtraDayCompOffModalOpen] = useState(false);
   const [submittingExtraDayCompOff, setSubmittingExtraDayCompOff] = useState(false);
   const [selectedExtraDay, setSelectedExtraDay] = useState(null);
-  const [extraDayCompOffData, setExtraDayCompOffData] = useState({
-    reason: ""
-  });
+  const [extraDayCompOffData, setExtraDayCompOffData] = useState({ reason: "" });
 
   const [isViewCompOffModalOpen, setIsViewCompOffModalOpen] = useState(false);
   const [viewCompOffData, setViewCompOffData] = useState(null);
@@ -1296,10 +1292,7 @@ const EmployeeLeaves = () => {
     month: "",
     assignedWorkingDays: 0,
     presentDays: 0,
-    extraDays: {
-      count: 0,
-      list: []
-    }
+    extraDays: { count: 0, list: [] }
   });
   
   const [isCompOffRequestsModalOpen, setIsCompOffRequestsModalOpen] = useState(false);
@@ -1307,6 +1300,13 @@ const EmployeeLeaves = () => {
   const [selectedLeaveForCompOff, setSelectedLeaveForCompOff] = useState(null);
   const [selectedExtraDayForCompOff, setSelectedExtraDayForCompOff] = useState("");
   const [compOffRequestsFromAPI, setCompOffRequestsFromAPI] = useState([]);
+  
+  const [extraWorkedDays, setExtraWorkedDays] = useState([]);
+  const [loadingExtraWorkedDays, setLoadingExtraWorkedDays] = useState(false);
+  const [selectedExtraWorkDay, setSelectedExtraWorkDay] = useState(null);
+  const [manualCompOffWorkDate, setManualCompOffWorkDate] = useState("");
+  const [myCompOffRequests, setMyCompOffRequests] = useState([]);
+  const [loadingMyCompOffRequests, setLoadingMyCompOffRequests] = useState(false);
 
   const getCurrentMonth = () => {
     const now = new Date();
@@ -1349,8 +1349,8 @@ const EmployeeLeaves = () => {
     fetchLeaveBalances(employeeId);
     fetchExtraDaysData(employeeId, getCurrentMonth());
     fetchPublicHolidays();
-    // ─── 🔥 FIX: Pass employeeId to fetchCompOffRequests ───
     fetchCompOffRequests(employeeId);
+    fetchExtraWorkedDays(employeeId);
   }, []);
 
   const fetchPublicHolidays = async () => {
@@ -1400,29 +1400,17 @@ const EmployeeLeaves = () => {
         }
       } else {
         setExtraDaysData({
-          employeeId: employeeId,
-          employeeName: "",
-          month: month,
-          assignedWorkingDays: 0,
-          presentDays: 0,
-          extraDays: {
-            count: 0,
-            list: []
-          }
+          employeeId, employeeName: "", month,
+          assignedWorkingDays: 0, presentDays: 0,
+          extraDays: { count: 0, list: [] }
         });
       }
     } catch (error) {
       console.error("Error fetching extra days data:", error);
       setExtraDaysData({
-        employeeId: employeeId,
-        employeeName: "",
-        month: month,
-        assignedWorkingDays: 0,
-        presentDays: 0,
-        extraDays: {
-          count: 0,
-          list: []
-        }
+        employeeId, employeeName: "", month,
+        assignedWorkingDays: 0, presentDays: 0,
+        extraDays: { count: 0, list: [] }
       });
     }
   };
@@ -1438,127 +1426,121 @@ const EmployeeLeaves = () => {
     }
   };
 
-  // ─── 🔥 FIX: fetchCompOffRequests with proper employeeId ───
-  const fetchCompOffRequests = async (employeeId) => {
+  const fetchExtraWorkedDays = async (empId) => {
     try {
-      if (!employeeId) {
-        console.warn('No employeeId provided to fetchCompOffRequests');
-        return;
+      if (!empId) return;
+      setLoadingExtraWorkedDays(true);
+      const res = await axios.get(`${API_BASE_URL}/leaves/extra-worked-days/${empId}`);
+      if (res.data && res.data.success) {
+        const days = res.data.extraDays || [];
+        setExtraWorkedDays(days);
+
+        setSelectedExtraWorkDay(prev => {
+          if (prev) {
+            const found = days.find(d => d.date === prev.date);
+            return found || prev;
+          }
+          const firstEligible = days.find(d => (d.status === "available" || d.requestStatus === "available") && !d.isExpired);
+          if (firstEligible) {
+            setLeaveFormData(f => ({
+              ...f,
+              startDate: f.startDate || firstEligible.date,
+              endDate: f.endDate || firstEligible.date,
+              days: 1
+            }));
+          }
+          return firstEligible || null;
+        });
       }
-      const response = await axios.get(`${API_BASE_URL}/leaves/getcompoffrequestforuser/${employeeId}`);
-      if (response.data && response.data.success) {
-        setCompOffRequestsFromAPI(response.data.requests || []);
-        console.log('✅ Comp-off requests loaded:', response.data.requests?.length || 0);
-      }
+    } catch (err) {
+      console.error("Error fetching extra worked days:", err);
+    } finally {
+      setLoadingExtraWorkedDays(false);
+    }
+  };
+
+  const fetchCompOffRequests = async (empId) => {
+    try {
+      if (!empId) return;
+      setLoadingMyCompOffRequests(true);
+      const response = await axios.get(`${API_BASE_URL}/leaves/comp-off-requests/employee/${empId}`);
+      const data = response.data;
+      const records = data.records || data.requests || (Array.isArray(data) ? data : []);
+      setMyCompOffRequests(records);
+      setCompOffRequestsFromAPI(records);
     } catch (error) {
       console.error("Error fetching comp-off requests:", error);
+    } finally {
+      setLoadingMyCompOffRequests(false);
     }
   };
 
   const handleMonthChange = (e) => {
     const month = e.target.value;
     setSelectedMonth(month);
-    
     const employeeDataRaw = localStorage.getItem("employeeData");
     if (employeeDataRaw) {
       try {
         const employeeData = JSON.parse(employeeDataRaw);
         const employeeId = employeeData.employeeId;
-        if (employeeId) {
-          fetchExtraDaysData(employeeId, month);
-        }
-      } catch (err) {
-        console.error("Error parsing employee data:", err);
-      }
+        if (employeeId) fetchExtraDaysData(employeeId, month);
+      } catch (err) {}
     }
   };
 
   const formatDateDisplay = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+      day: '2-digit', month: 'short', year: 'numeric'
     });
   };
 
-  const getApplyBeforeDate = (extraDayDate, daysBefore = 15) => {
-    const date = new Date(extraDayDate);
-    date.setDate(date.getDate() - daysBefore);
-    return formatDateDisplay(date.toISOString());
+  const getApplyBeforeDate = (extraDayDate) => {
+    if (!extraDayDate) return "N/A";
+    const d = new Date(extraDayDate);
+    const expiry = new Date(d.getFullYear(), d.getMonth() + 1, 15);
+    return formatDateDisplay(expiry.toISOString());
   };
 
-  const isApplyWindowOpen = (extraDayDate, daysBefore = 15) => {
+  const isApplyWindowOpen = (extraDayDate) => {
+    if (!extraDayDate) return false;
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const applyDeadline = new Date(extraDayDate);
-    applyDeadline.setDate(applyDeadline.getDate() - daysBefore);
-    applyDeadline.setHours(0, 0, 0, 0);
-    return today <= applyDeadline;
+    const d = new Date(extraDayDate);
+    const expiry = new Date(d.getFullYear(), d.getMonth() + 1, 15, 23, 59, 59, 999);
+    return today <= expiry;
   };
 
-  // ─── 🔥 FIX: getCompOffStatusForLeave - Better matching ───
   const getCompOffStatusForLeave = (leaveId) => {
     if (!leaveId) return { exists: false, status: null, data: null };
-    
-    // Convert to string for comparison
     const leaveIdStr = String(leaveId);
-    
     const request = compOffRequestsFromAPI.find(req => {
       const reqLeaveId = req.leaveId ? String(req.leaveId) : '';
       return reqLeaveId === leaveIdStr;
     });
-    
-    if (request) {
-      return {
-        exists: true,
-        status: request.status,
-        data: request
-      };
-    }
+    if (request) return { exists: true, status: request.status, data: request };
     return { exists: false, status: null, data: null };
   };
 
-  // ─── 🔥 FIX: openLeaveCompOffModal ───
   const openLeaveCompOffModal = (leave, extraDayDate) => {
-    if (!leave || !extraDayDate) {
-      alert("Invalid leave or extra day data");
-      return;
-    }
-
+    if (!leave || !extraDayDate) { alert("Invalid leave or extra day data"); return; }
     const existingCompOff = getCompOffStatusForLeave(leave._id);
     if (existingCompOff.exists) {
-      if (existingCompOff.status === 'pending') {
-        alert('Comp-off request is already pending for this leave!');
-        return;
-      } else if (existingCompOff.status === 'approved') {
-        alert('Comp-off has already been approved for this leave!');
-        return;
-      }
+      if (existingCompOff.status === 'pending') { alert('Comp-off request is already pending for this leave!'); return; }
+      else if (existingCompOff.status === 'approved') { alert('Comp-off has already been approved for this leave!'); return; }
     }
-
-    // Find the extra day from the list
     const extraDay = extraDaysData.extraDays?.list?.find(d => d.date === extraDayDate);
-    if (!extraDay) {
-      alert("Selected extra day not found!");
-      return;
-    }
-    
-    // Check if apply window is open (15 days before)
+    if (!extraDay) { alert("Selected extra day not found!"); return; }
     if (!isApplyWindowOpen(extraDay.date, 15)) {
       alert(`You can only apply for comp-off at least 15 days before the extra day (${formatDateDisplay(extraDay.date)}). The deadline was ${getApplyBeforeDate(extraDay.date, 15)}.`);
       return;
     }
-    
-    // ─── 🔥 FIX: Set selectedExtraDay with all required fields ───
     setSelectedExtraDay({
       ...extraDay,
       date: extraDay.date,
       day: extraDay.day || formatDateDisplay(extraDay.date),
       totalHours: extraDay.totalHours || 8,
       extraHours: extraDay.extraHours || 0,
-      leave: leave,
-      leaveId: leave._id,
+      leave, leaveId: leave._id,
       leaveType: leave.leaveType,
       leaveStartDate: leave.startDate,
       leaveEndDate: leave.endDate,
@@ -1567,7 +1549,6 @@ const EmployeeLeaves = () => {
       leaveStatus: leave.status,
       source: 'leavesTable'
     });
-    
     setExtraDayCompOffData({
       reason: `Requesting comp-off for extra day on ${extraDay.day || formatDateDisplay(extraDay.date)} (${extraDay.totalHours || 8} hours) against ${leave.leaveType} leave (${formatDateDisplay(leave.startDate)} - ${formatDateDisplay(leave.endDate)})`
     });
@@ -1581,53 +1562,26 @@ const EmployeeLeaves = () => {
     setIsViewCompOffModalOpen(true);
   };
 
-  // ─── 🔥 FIX: handleExtraDayCompOffSubmit ───
   const handleExtraDayCompOffSubmit = async (e) => {
     e.preventDefault();
     setSubmittingExtraDayCompOff(true);
-
-    if (!extraDayCompOffData.reason) {
-      alert("Please provide a reason for comp-off request");
-      setSubmittingExtraDayCompOff(false);
-      return;
-    }
-
-    if (isDemoMode) {
-      alert("Demo Mode: Comp-off request submitted successfully!");
-      setIsExtraDayCompOffModalOpen(false);
-      setSubmittingExtraDayCompOff(false);
-      return;
-    }
+    if (!extraDayCompOffData.reason) { alert("Please provide a reason for comp-off request"); setSubmittingExtraDayCompOff(false); return; }
+    if (isDemoMode) { alert("Demo Mode: Comp-off request submitted successfully!"); setIsExtraDayCompOffModalOpen(false); setSubmittingExtraDayCompOff(false); return; }
 
     const employeeDataRaw = localStorage.getItem("employeeData");
-    let employeeId = "";
-    let employeeName = "";
+    let employeeId = ""; let employeeName = "";
     try {
       const employeeData = JSON.parse(employeeDataRaw);
       employeeId = employeeData.employeeId;
       employeeName = employeeData.employeeName || employeeData.name;
-    } catch (err) {
-      alert("Employee data error");
-      setSubmittingExtraDayCompOff(false);
-      return;
-    }
+    } catch (err) { alert("Employee data error"); setSubmittingExtraDayCompOff(false); return; }
 
-    if (!employeeId) {
-      alert("Employee ID not found");
-      setSubmittingExtraDayCompOff(false);
-      return;
-    }
-
-    if (!selectedExtraDay || !selectedExtraDay.date) {
-      alert("Extra day data is missing");
-      setSubmittingExtraDayCompOff(false);
-      return;
-    }
+    if (!employeeId) { alert("Employee ID not found"); setSubmittingExtraDayCompOff(false); return; }
+    if (!selectedExtraDay || !selectedExtraDay.date) { alert("Extra day data is missing"); setSubmittingExtraDayCompOff(false); return; }
 
     try {
       const payload = {
-        employeeId: employeeId,
-        employeeName: employeeName,
+        employeeId, employeeName,
         extraDayDate: selectedExtraDay.date,
         extraDayDetails: {
           date: selectedExtraDay.date,
@@ -1646,23 +1600,16 @@ const EmployeeLeaves = () => {
           status: selectedExtraDay.leaveStatus
         }
       };
-
-      console.log('📤 Submitting comp-off payload:', payload);
-
       const response = await axios.post(`${API_BASE_URL}/leaves/requestforcompoffs`, payload);
-
       if (response.status === 201 || response.data.success) {
         alert("✅ Comp-off request submitted successfully!");
         setIsExtraDayCompOffModalOpen(false);
         setSelectedExtraDay(null);
         setExtraDayCompOffData({ reason: "" });
-        // Refresh data
         await fetchExtraDaysData(employeeId, getCurrentMonth());
         await fetchCompOffRequests(employeeId);
         await fetchLeaves(employeeId);
-      } else {
-        throw new Error(response.data?.message || "Failed to submit comp-off");
-      }
+      } else throw new Error(response.data?.message || "Failed to submit comp-off");
     } catch (error) {
       console.error("Error submitting comp-off:", error);
       alert(error.response?.data?.error || error.response?.data?.message || error.message || "Failed to submit comp-off request");
@@ -1674,92 +1621,112 @@ const EmployeeLeaves = () => {
   const handlePermissionSubmit = async (e) => {
     e.preventDefault();
     setPermissionLoading(true);
-
-    if (isDemoMode) {
-      alert("Demo Mode: Permission Requested Successfully!");
-      setIsPermissionModalOpen(false);
-      setPermissionLoading(false);
-      return;
-    }
-
+    if (isDemoMode) { alert("Demo Mode: Permission Requested Successfully!"); setIsPermissionModalOpen(false); setPermissionLoading(false); return; }
     const rawData = localStorage.getItem("employeeData");
     let employeeData = null;
-    try {
-      if (rawData) employeeData = JSON.parse(rawData);
-    } catch (e) { }
-
+    try { if (rawData) employeeData = JSON.parse(rawData); } catch (e) {}
     const id = employeeData?.employeeId || localStorage.getItem("employeeId");
     const name = employeeData?.name || localStorage.getItem("employeeName") || "Employee";
     const durationNum = parseInt(permissionForm.duration);
-
-    if (!id) {
-      alert("Employee ID not found.");
-      setPermissionLoading(false);
-      return;
-    }
-    if (!permissionForm.reason || isNaN(durationNum)) {
-      alert("Please provide a valid reason and duration.");
-      setPermissionLoading(false);
-      return;
-    }
-
+    if (!id) { alert("Employee ID not found."); setPermissionLoading(false); return; }
+    if (!permissionForm.reason || isNaN(durationNum)) { alert("Please provide a valid reason and duration."); setPermissionLoading(false); return; }
     try {
       const res = await axios.post(`${API_BASE_URL}/permissions/request`, {
-        employeeId: id,
-        employeeName: name,
-        reason: permissionForm.reason,
-        duration: durationNum,
+        employeeId: id, employeeName: name,
+        reason: permissionForm.reason, duration: durationNum,
       });
       if (res.status === 201) {
         alert("Permission Requested Successfully!");
         setIsPermissionModalOpen(false);
         setPermissionForm({ reason: "", duration: "" });
       }
-    } catch (err) {
-      alert(err.response?.data?.message || err.message);
-    } finally {
-      setPermissionLoading(false);
+    } catch (err) { alert(err.response?.data?.message || err.message); }
+    finally { setPermissionLoading(false); }
+  };
+
+  const handleOpenLeaveModal = () => {
+    setIsLeaveModalOpen(true);
+    const rawData = localStorage.getItem("employeeData");
+    if (rawData) {
+      try {
+        const emp = JSON.parse(rawData);
+        if (emp?.employeeId) fetchExtraWorkedDays(emp.employeeId);
+      } catch (e) {}
     }
   };
 
   const handleLeaveSubmit = async (e) => {
     e.preventDefault();
     setSubmittingLeave(true);
-
-    if (isDemoMode) {
-      alert("Demo Mode: Leave application submitted successfully!");
-      setIsLeaveModalOpen(false);
-      setSubmittingLeave(false);
-      return;
-    }
-
+    if (isDemoMode) { alert("Demo Mode: Leave application submitted successfully!"); setIsLeaveModalOpen(false); setSubmittingLeave(false); return; }
     const rawData = localStorage.getItem("employeeData");
     let employeeData = null;
-    try { if (rawData) employeeData = JSON.parse(rawData); } catch (e) { }
-
+    try { if (rawData) employeeData = JSON.parse(rawData); } catch (e) {}
     const id = leaveFormData.employeeId || employeeData?.employeeId || localStorage.getItem("employeeId");
     const name = leaveFormData.employeeName || employeeData?.name || localStorage.getItem("employeeName") || employeeData?.employeeName;
+    if (!id) { alert("Employee details missing."); setSubmittingLeave(false); return; }
 
-    if (!id) {
-      alert("Employee details missing.");
-      setSubmittingLeave(false);
+    if (leaveFormData.leaveType === "compoff") {
+      const workDateToUse = selectedExtraWorkDay?.date || manualCompOffWorkDate;
+      if (!workDateToUse) { alert("Please select the extra day worked (on week-off or holiday) for comp-off."); setSubmittingLeave(false); return; }
+
+      const workD = new Date(workDateToUse);
+      const expiryDate = new Date(workD.getFullYear(), workD.getMonth() + 1, 15, 23, 59, 59, 999);
+      if (new Date() > expiryDate) {
+        const expFormatted = expiryDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        alert(`❌ Cannot submit comp-off request: Extra work on ${workDateToUse} expired on ${expFormatted}. Comp-off must be requested by the 15th of the following month.`);
+        setSubmittingLeave(false);
+        return;
+      }
+
+      if (!leaveFormData.reason) { alert("Please provide a reason for the comp-off request."); setSubmittingLeave(false); return; }
+
+      try {
+        const compOffPayload = {
+          employeeId: id, employeeName: name,
+          workDate: workDateToUse,
+          leaveDate: leaveFormData.startDate || workDateToUse,
+          reason: leaveFormData.reason,
+          count: leaveFormData.days || 1,
+          extraDayDetails: selectedExtraWorkDay || {
+            date: workDateToUse,
+            day: new Date(workDateToUse).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }),
+            totalHours: 8,
+            workType: "Week-off Work"
+          }
+        };
+        const res = await axios.post(`${API_BASE_URL}/leaves/comp-off-requests`, compOffPayload);
+        if (res.status === 201 || res.data.success) {
+          alert("✅ Comp-off request submitted successfully! Admin has been notified.");
+          setIsLeaveModalOpen(false);
+          setLeaveFormData({
+            employeeId: id, employeeName: name,
+            leaveType: "casual", startDate: "", endDate: "", days: 0, reason: "",
+          });
+          setSelectedExtraWorkDay(null);
+          setManualCompOffWorkDate("");
+          fetchLeaves(id);
+          fetchCompOffRequests(id);
+          fetchExtraWorkedDays(id);
+          fetchLeaveBalances(id);
+        }
+      } catch (err) {
+        console.error("Error submitting comp-off request:", err);
+        alert(err.response?.data?.error || err.response?.data?.message || err.message || "Failed to submit comp-off request");
+      } finally {
+        setSubmittingLeave(false);
+      }
       return;
     }
 
     const payload = { ...leaveFormData, employeeId: id, employeeName: name };
-
     try {
       const response = await axios.post(`${API_BASE_URL}/leaves/add-leave`, payload);
       if (response.status === 201) {
         alert("Leave application submitted successfully!");
         setLeaveFormData({
-          employeeId: id,
-          employeeName: name,
-          leaveType: "casual",
-          startDate: "",
-          endDate: "",
-          days: 0,
-          reason: "",
+          employeeId: id, employeeName: name,
+          leaveType: "casual", startDate: "", endDate: "", days: 0, reason: "",
         });
         setIsLeaveModalOpen(false);
         fetchLeaves(id);
@@ -1773,23 +1740,20 @@ const EmployeeLeaves = () => {
 
   useEffect(() => {
     let filtered = leaves;
-
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(leave => 
+      filtered = filtered.filter(leave =>
         leave.leaveType?.toLowerCase().includes(term) ||
         leave.reason?.toLowerCase().includes(term) ||
         leave.status?.toLowerCase().includes(term)
       );
     }
-
     if (selectedDate) {
       filtered = filtered.filter(leave => {
         const leaveDate = new Date(leave.startDate).toISOString().split("T")[0];
         return leaveDate === selectedDate;
       });
     }
-
     if (selectedMonth) {
       const [year, monthNum] = selectedMonth.split("-").map(Number);
       filtered = filtered.filter(leave => {
@@ -1797,31 +1761,26 @@ const EmployeeLeaves = () => {
         return d.getFullYear() === year && d.getMonth() + 1 === monthNum;
       });
     }
-
     setFilteredLeaves(filtered);
     setCurrentPage(1);
   }, [searchTerm, selectedDate, selectedMonth, leaves]);
 
-  const handleDateChange = (e) => {
-    setSelectedDate(e.target.value);
-    setSelectedMonth("");
-  };
-
-  const handleMonthFilterChange = (e) => {
-    setSelectedMonth(e.target.value);
-    setSelectedDate("");
-  };
-
-  const clearFilters = () => {
-    setSearchTerm("");
-    setSelectedDate("");
-    setSelectedMonth("");
-  };
+  const handleDateChange = (e) => { setSelectedDate(e.target.value); setSelectedMonth(""); };
+  const handleMonthFilterChange = (e) => { setSelectedMonth(e.target.value); setSelectedDate(""); };
+  const clearFilters = () => { setSearchTerm(""); setSelectedDate(""); setSelectedMonth(""); };
 
   const handleLeaveChange = (e) => {
     const { name, value } = e.target;
     setLeaveFormData((prev) => {
       const updated = { ...prev, [name]: value };
+      if (name === "leaveType" && value === "compoff") {
+        updated.days = 1;
+        const rawData = localStorage.getItem("employeeData");
+        try {
+          const emp = rawData ? JSON.parse(rawData) : null;
+          if (emp?.employeeId) fetchExtraWorkedDays(emp.employeeId);
+        } catch (err) {}
+      }
       if (name === "startDate" || name === "endDate") {
         if (updated.startDate && updated.endDate) {
           const start = new Date(updated.startDate);
@@ -1840,29 +1799,13 @@ const EmployeeLeaves = () => {
   const currentRecords = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
-  const handlePageClick = (page) => {
-    setCurrentPage(page);
-  };
+  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
+  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
+  const handlePageClick = (page) => { setCurrentPage(page); };
 
   const handleItemsPerPageChange = (e) => {
     const newValue = Number(e.target.value);
-    console.log('💾 EmployeeLeaves - Saving itemsPerPage:', newValue);
-    
-    try {
-      localStorage.setItem('employeeLeaves_itemsPerPage', String(newValue));
-      console.log('✅ EmployeeLeaves - Verified saved:', localStorage.getItem('employeeLeaves_itemsPerPage'));
-    } catch (error) {
-      console.error('❌ Save error:', error);
-    }
-    
+    try { localStorage.setItem('employeeLeaves_itemsPerPage', String(newValue)); } catch (error) {}
     setItemsPerPage(newValue);
     setCurrentPage(1);
   };
@@ -1870,20 +1813,15 @@ const EmployeeLeaves = () => {
   const getPageNumbers = () => {
     const pageNumbers = [];
     for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-        pageNumbers.push(i);
-      } else if (i === currentPage - 3 || i === currentPage + 3) {
-        pageNumbers.push("...");
-      }
+      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) pageNumbers.push(i);
+      else if (i === currentPage - 3 || i === currentPage + 3) pageNumbers.push("...");
     }
     return pageNumbers;
   };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+      day: '2-digit', month: 'short', year: 'numeric'
     });
   };
 
@@ -1893,27 +1831,19 @@ const EmployeeLeaves = () => {
 
   const isCompOffExpired = (workDate) => {
     if (!workDate) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const workDateObj = new Date(workDate);
-    workDateObj.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const workDateObj = new Date(workDate); workDateObj.setHours(0, 0, 0, 0);
     return workDateObj < today;
   };
 
   const getRequestStatusDisplay = (request) => {
     if (!request) return null;
     if (request.status === "approved") {
-      if (isCompOffExpired(request.workDate)) {
-        return { text: "Expired", className: "bg-gray-400 text-white" };
-      }
+      if (isCompOffExpired(request.workDate)) return { text: "Expired", className: "bg-gray-400 text-white" };
       return { text: "Active", className: "bg-green-500 text-white" };
     }
-    if (request.status === "pending") {
-      return { text: "Pending", className: "bg-yellow-500 text-white" };
-    }
-    if (request.status === "rejected") {
-      return { text: "Rejected", className: "bg-red-500 text-white" };
-    }
+    if (request.status === "pending") return { text: "Pending", className: "bg-yellow-500 text-white" };
+    if (request.status === "rejected") return { text: "Rejected", className: "bg-red-500 text-white" };
     return null;
   };
 
@@ -1924,9 +1854,7 @@ const EmployeeLeaves = () => {
       rejected: 'bg-red-100 text-red-800 border-red-200'
     };
     const dots = {
-      approved: 'bg-green-500',
-      pending: 'bg-yellow-500',
-      rejected: 'bg-red-500'
+      approved: 'bg-green-500', pending: 'bg-yellow-500', rejected: 'bg-red-500'
     };
     return (
       <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${styles[status] || 'bg-gray-100'}`}>
@@ -1964,833 +1892,1126 @@ const EmployeeLeaves = () => {
   const approvedLeaves = leaves.filter(l => l.status === "approved").length;
   const pendingLeaves = leaves.filter(l => l.status === "pending").length;
   const rejectedLeaves = leaves.filter(l => l.status === "rejected").length;
+  const compOffApprovedCount = myCompOffRequests.filter(r => r.status === 'approved').length;
+  const compOffPendingCount = myCompOffRequests.filter(r => r.status === 'pending').length;
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8 bg-gray-50">
-      {isDemoMode && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-center">
-          <p className="text-sm font-semibold text-yellow-800">Demo Mode - Showing Sample Data</p>
-          <p className="text-xs text-yellow-600">Login to see your actual data</p>
-        </div>
-      )}
+    <div className="emp-dash">
+      <main className="p-4 sm:p-6 lg:p-8">
+        {isDemoMode && (
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-center">
+            <p className="text-sm font-semibold text-yellow-800">Demo Mode - Showing Sample Data</p>
+            <p className="text-xs text-yellow-600">Login to see your actual data</p>
+          </div>
+        )}
 
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <FaList className="text-blue-600" />
-          My Leaves
-        </h1>
-        <p className="text-sm text-gray-500">Manage your leave applications and requests</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-5">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total</span>
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50">
-              <FiFileText className="text-indigo-600 text-sm" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-800">{totalLeaves}</div>
-          <div className="text-xs text-gray-400">all leaves</div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Approved</span>
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50">
-              <FiCheckCircle className="text-green-600 text-sm" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-green-600">{approvedLeaves}</div>
-          <div className="text-xs text-gray-400">approved leaves</div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</span>
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-yellow-50">
-              <FiClock className="text-yellow-600 text-sm" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-yellow-600">{pendingLeaves}</div>
-          <div className="text-xs text-gray-400">awaiting approval</div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Rejected</span>
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50">
-              <FiXCircle className="text-red-600 text-sm" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-red-600">{rejectedLeaves}</div>
-          <div className="text-xs text-gray-400">rejected leaves</div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Comp-off</span>
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-purple-50">
-              <FaExchangeAlt className="text-purple-600 text-sm" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-purple-600">{extraDayCompOffRequests.length}</div>
-          <div className="text-xs text-gray-400">comp-off requests</div>
-        </div>
-      </div>
-
-      {/* Leave Balances */}
-      <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <p className="text-xs font-medium text-gray-500">Casual Leave</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xl font-bold text-gray-800">{leaveBalances?.casual?.used || 0}</span>
-            <span className="text-sm text-gray-400">/ {leaveBalances?.casual?.total || 12}</span>
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
-            <div className="bg-blue-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((leaveBalances?.casual?.used / leaveBalances?.casual?.total) * 100 || 0, 100)}%` }}></div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <p className="text-xs font-medium text-gray-500">Sick Leave</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xl font-bold text-gray-800">{leaveBalances?.sick?.used || 0}</span>
-            <span className="text-sm text-gray-400">/ {leaveBalances?.sick?.total || 10}</span>
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
-            <div className="bg-red-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((leaveBalances?.sick?.used / leaveBalances?.sick?.total) * 100 || 0, 100)}%` }}></div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <p className="text-xs font-medium text-gray-500">Earned Leave</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xl font-bold text-gray-800">{leaveBalances?.earned?.used || 0}</span>
-            <span className="text-sm text-gray-400">/ {leaveBalances?.earned?.total || 15}</span>
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
-            <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((leaveBalances?.earned?.used / leaveBalances?.earned?.total) * 100 || 0, 100)}%` }}></div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <p className="text-xs font-medium text-gray-500">Public Holidays</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xl font-bold text-gray-800">{publicHolidays.length}</span>
-          </div>
-          <p className="text-xs text-gray-400 mt-1">{publicHolidays.filter(h => h.type === "national").length} National</p>
-        </div>
-      </div>
-
-      {/* Extra Days Details */}
-      <div className="bg-white rounded-2xl shadow-sm border border-purple-200 overflow-hidden mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-purple-100">
-          <div className="flex items-center gap-2">
-            <FaExchangeAlt className="text-purple-600 text-sm" />
-            <span className="text-sm font-semibold text-gray-700">Extra Days Details</span>
-          </div>
-          <input 
-            type="month" 
-            value={extraDaysData.month || getCurrentMonth()} 
-            onChange={handleMonthChange} 
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 bg-white"
-          />
-        </div>
-        
-        <div className="p-4">
-          <p className="text-center text-sm font-semibold text-gray-700 mb-3">
-            {extraDaysData.month ? new Date(extraDaysData.month + "-01").toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : getCurrentMonth()}
-          </p>
-          
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="text-center bg-purple-50 rounded-xl py-3 px-1 border border-purple-100">
-              <div className="text-2xl font-bold text-purple-700">{extraDaysData.assignedWorkingDays || 0}</div>
-              <div className="text-xs text-gray-500">Assigned Days</div>
-            </div>
-            <div className="text-center bg-orange-50 rounded-xl py-3 px-1 border border-orange-100">
-              <div className="text-2xl font-bold text-orange-600">{extraDaysData.presentDays || 0}</div>
-              <div className="text-xs text-gray-500">Present Days</div>
-            </div>
+        {/* Header with Compact Filters - Desktop Only */}
+        <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap mb-4">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
+              My <span>Leaves</span>
+            </h1>
           </div>
           
-          <div className="text-center mb-4">
-            <div className={`text-sm font-bold rounded-xl py-2 px-4 inline-block ${hasExtraDays ? "bg-green-100 text-green-700 border border-green-200" : "bg-gray-100 text-gray-500 border border-gray-200"}`}>
-              {hasExtraDays ? `Extra Days Worked: ${extraDaysData.extraDays.count} day(s)` : `No Extra Days`}
+          {/* Right side: Compact Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative">
+              <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="text"
+                placeholder="Search leaves..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-[140px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            <div className="relative">
+              <FaCalendarAlt className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-[130px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            <div className="relative">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={handleMonthFilterChange}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+              />
+            </div>
+
+            <button
+              onClick={handleOpenLeaveModal}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaPlus size={10} /> Apply Leave
+            </button>
+
+            <button
+              onClick={() => setIsPermissionModalOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaShieldAlt size={10} /> Permission
+            </button>
+
+            {(searchTerm || selectedDate || selectedMonth) && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Header */}
+        <div className="sm:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            My <span className="text-indigo-600">Leaves</span>
+          </h1>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs text-gray-500">
+              <strong>{filteredLeaves.length}</strong> leaves
+            </span>
+          </div>
+        </div>
+
+        {/* Mobile Filters Toggle */}
+        <div className="sm:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
+            </button>
+          </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search leaves..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={handleDateChange}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={handleMonthFilterChange}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleOpenLeaveModal}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    <FaPlus size={12} /> Apply Leave
+                  </button>
+                  <button
+                    onClick={() => setIsPermissionModalOpen(true)}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                  >
+                    <FaShieldAlt size={12} /> Permission
+                  </button>
+                </div>
+                {(searchTerm || selectedDate || selectedMonth) && (
+                  <button
+                    onClick={clearFilters}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Total Leaves</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiFileText /></div>
+            </div>
+            <div className="emp-dash__stat-value">{totalLeaves}</div>
+            <div className="emp-dash__stat-meta">all leaves</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Approved</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiCheckCircle /></div>
+            </div>
+            <div className="emp-dash__stat-value text-green-600">{approvedLeaves}</div>
+            <div className="emp-dash__stat-meta">approved leaves</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Pending</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiClock /></div>
+            </div>
+            <div className="emp-dash__stat-value text-yellow-600">{pendingLeaves}</div>
+            <div className="emp-dash__stat-meta">awaiting approval</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Rejected</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent"><FiXCircle /></div>
+            </div>
+            <div className="emp-dash__stat-value text-red-600">{rejectedLeaves}</div>
+            <div className="emp-dash__stat-meta">rejected leaves</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Comp-off</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FaExchangeAlt /></div>
+            </div>
+            <div className="emp-dash__stat-value text-purple-600">{compOffApprovedCount}</div>
+            <div className="emp-dash__stat-meta">Pending: {compOffPendingCount}</div>
+          </div>
+        </div>
+
+        {/* Leave Balances */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+          <div className="emp-dash__card">
+            <div className="emp-dash__card-body">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-500">Casual Leave</span>
+                <div className="w-6 h-6 flex items-center justify-center rounded-lg bg-blue-50">
+                  <FiFileText className="text-blue-600 text-xs" />
+                </div>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl font-bold text-gray-800">{leaveBalances?.casual?.used || 0}</span>
+                <span className="text-sm text-gray-400">/ {leaveBalances?.casual?.total || 12}</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
+                <div className="bg-blue-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((leaveBalances?.casual?.used / leaveBalances?.casual?.total) * 100 || 0, 100)}%` }}></div>
+              </div>
             </div>
           </div>
-          
-          {hasExtraDays && (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-purple-50">
+
+          <div className="emp-dash__card">
+            <div className="emp-dash__card-body">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-500">Sick Leave</span>
+                <div className="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50">
+                  <FiXCircle className="text-red-600 text-xs" />
+                </div>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl font-bold text-gray-800">{leaveBalances?.sick?.used || 0}</span>
+                <span className="text-sm text-gray-400">/ {leaveBalances?.sick?.total || 10}</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
+                <div className="bg-red-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((leaveBalances?.sick?.used / leaveBalances?.sick?.total) * 100 || 0, 100)}%` }}></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="emp-dash__card">
+            <div className="emp-dash__card-body">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-500">Earned Leave</span>
+                <div className="w-6 h-6 flex items-center justify-center rounded-lg bg-green-50">
+                  <FiCheckCircle className="text-green-600 text-xs" />
+                </div>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl font-bold text-gray-800">{leaveBalances?.earned?.used || 0}</span>
+                <span className="text-sm text-gray-400">/ {leaveBalances?.earned?.total || 15}</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
+                <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((leaveBalances?.earned?.used / leaveBalances?.earned?.total) * 100 || 0, 100)}%` }}></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="emp-dash__card">
+            <div className="emp-dash__card-body">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-500">Public Holidays</span>
+                <div className="w-6 h-6 flex items-center justify-center rounded-lg bg-purple-50">
+                  <FaExchangeAlt className="text-purple-600 text-xs" />
+                </div>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl font-bold text-gray-800">{publicHolidays.length}</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">{publicHolidays.filter(h => h.type === "national").length} National</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Extra Days Details */}
+        <div className="emp-dash__card mb-6">
+          <div className="emp-dash__card-header flex-col sm:flex-row gap-3">
+            <div>
+              <h3 className="emp-dash__card-title flex items-center gap-2">
+                <FaExchangeAlt className="text-purple-600" /> Extra Days Details
+              </h3>
+              <p className="emp-dash__card-desc">View your extra working days and comp-off eligibility</p>
+            </div>
+            <input
+              type="month"
+              value={extraDaysData.month || getCurrentMonth()}
+              onChange={handleMonthChange}
+              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 bg-white"
+            />
+          </div>
+
+          <div className="emp-dash__card-body">
+            <p className="text-center text-sm font-semibold text-gray-700 mb-3">
+              {extraDaysData.month ? new Date(extraDaysData.month + "-01").toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : getCurrentMonth()}
+            </p>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="text-center bg-purple-50 rounded-xl py-3 px-1 border border-purple-100">
+                <div className="text-2xl font-bold text-purple-700">{extraDaysData.assignedWorkingDays || 0}</div>
+                <div className="text-xs text-gray-500">Assigned Days</div>
+              </div>
+              <div className="text-center bg-orange-50 rounded-xl py-3 px-1 border border-orange-100">
+                <div className="text-2xl font-bold text-orange-600">{extraDaysData.presentDays || 0}</div>
+                <div className="text-xs text-gray-500">Present Days</div>
+              </div>
+            </div>
+
+            <div className="text-center mb-4">
+              <div className={`text-sm font-bold rounded-xl py-2 px-4 inline-block ${hasExtraDays ? "bg-green-100 text-green-700 border border-green-200" : "bg-gray-100 text-gray-500 border border-gray-200"}`}>
+                {hasExtraDays ? `Extra Days Worked: ${extraDaysData.extraDays.count} day(s)` : `No Extra Days`}
+              </div>
+            </div>
+
+            {hasExtraDays && (
+              <div className="overflow-x-auto">
+                <table className="emp-dash__table">
+                  <thead className="bg-purple-50">
+                    <tr>
+                      <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">#</th>
+                      <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Date</th>
+                      <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Day</th>
+                      <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Total Hours</th>
+                      <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Extra Hours</th>
+                      <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Apply Before</th>
+                      <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-purple-100">
+                    {extraDaysData.extraDays.list.map((day, idx) => {
+                      const compOffRequest = getCompOffRequestForExtraDay(day.date);
+                      const requestStatus = getRequestStatusDisplay(compOffRequest);
+                      const applyBeforeDate = getApplyBeforeDate(day.date, 15);
+                      const canApply = isApplyWindowOpen(day.date, 15);
+                      const dayStatus = day.status || 'active';
+                      const statusColors = {
+                        active: "bg-green-100 text-green-700 border-green-200",
+                        expired: "bg-red-100 text-red-700 border-red-200",
+                        used: "bg-blue-100 text-blue-700 border-blue-200"
+                      };
+                      return (
+                        <tr key={idx} className="hover:bg-purple-50/50 transition-colors">
+                          <td className="px-3 py-2.5 text-center text-sm text-gray-500">{day.sr || idx + 1}</td>
+                          <td className="px-3 py-2.5 text-center text-sm text-gray-700">{formatDateDisplay(day.date)}</td>
+                          <td className="px-3 py-2.5 text-center text-sm text-gray-700">{day.day || formatDateDisplay(day.date)}</td>
+                          <td className="px-3 py-2.5 text-center text-sm text-gray-700">{day.totalHours || 8} hrs</td>
+                          <td className="px-3 py-2.5 text-center text-sm text-green-600 font-semibold">+{day.extraHours || 0} hrs</td>
+                          <td className="px-3 py-2.5 text-center">
+                            <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${canApply ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-red-50 text-red-700 border-red-200"}`}>
+                              {applyBeforeDate}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            {requestStatus ? (
+                              <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${requestStatus.className}`}>
+                                <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${
+                                  requestStatus.text === "Active" ? "bg-green-500" :
+                                  requestStatus.text === "Pending" ? "bg-yellow-500" :
+                                  requestStatus.text === "Rejected" ? "bg-red-500" : "bg-gray-500"
+                                }`}></span>
+                                {requestStatus.text}
+                              </span>
+                            ) : (
+                              <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${statusColors[dayStatus] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                                {dayStatus.charAt(0).toUpperCase() + dayStatus.slice(1)}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* My Comp-Off Requests */}
+        <div className="emp-dash__card mb-6" style={{ borderColor: "#e9d5ff" }}>
+          <div className="emp-dash__card-header flex-col sm:flex-row gap-3" style={{ background: "#faf5ff" }}>
+            <div className="flex items-center gap-2">
+              <FaExchangeAlt className="text-purple-600" />
+              <h3 className="emp-dash__card-title">My Comp-Off Requests</h3>
+              <span className="ml-1 px-2.5 py-0.5 text-xs font-bold rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                {myCompOffRequests.length}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap text-xs">
+              <span className="text-gray-600">Approved: <strong className="text-green-600">{compOffApprovedCount}</strong></span>
+              <span className="text-gray-300">|</span>
+              <span className="text-gray-600">Pending: <strong className="text-yellow-600">{compOffPendingCount}</strong></span>
+              <span className="text-gray-300">|</span>
+              <span className="text-gray-600">Rejected: <strong className="text-red-600">{myCompOffRequests.filter(r => r.status === 'rejected').length}</strong></span>
+              <button
+                onClick={() => {
+                  const raw = localStorage.getItem("employeeData");
+                  try {
+                    const emp = raw ? JSON.parse(raw) : null;
+                    if (emp?.employeeId) {
+                      fetchCompOffRequests(emp.employeeId);
+                      fetchExtraWorkedDays(emp.employeeId);
+                    }
+                  } catch (e) {}
+                }}
+                className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors"
+              >
+                ↻ Refresh
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            {loadingMyCompOffRequests ? (
+              <div className="p-8 text-center text-sm text-gray-500 animate-pulse">Loading comp-off requests...</div>
+            ) : myCompOffRequests.length === 0 ? (
+              <div className="p-8 text-center text-gray-500 text-sm">
+                <FaExchangeAlt className="mx-auto text-purple-300 text-3xl mb-2" />
+                <p className="font-semibold text-gray-700">No comp-off requests submitted yet</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Worked on a Sunday or holiday? Click <strong>"Apply Leave"</strong> above and choose <strong>"Comp Off"</strong> to submit a request.
+                </p>
+              </div>
+            ) : (
+              <table className="emp-dash__table">
+                <thead className="bg-purple-50/50">
                   <tr>
-                    <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">#</th>
-                    <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Date</th>
-                    <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Day</th>
-                    <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Total Hours</th>
-                    <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Extra Hours</th>
-                    <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Apply Before</th>
-                    <th className="px-3 py-2 text-center text-xs font-semibold text-purple-800 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-purple-900 uppercase tracking-wider">Extra Work Date</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-purple-900 uppercase tracking-wider">Work Type</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-purple-900 uppercase tracking-wider">Comp-Off Date</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-purple-900 uppercase tracking-wider">Days</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-purple-900 uppercase tracking-wider">Reason</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-purple-900 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-purple-900 uppercase tracking-wider">Admin Review</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-purple-900 uppercase tracking-wider">Requested On</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-purple-100">
-                  {extraDaysData.extraDays.list.map((day, idx) => {
-                    const compOffRequest = getCompOffRequestForExtraDay(day.date);
-                    const requestStatus = getRequestStatusDisplay(compOffRequest);
-                    const applyBeforeDate = getApplyBeforeDate(day.date, 15);
-                    const canApply = isApplyWindowOpen(day.date, 15);
-                    const dayStatus = day.status || 'active';
+                  {myCompOffRequests.map((req, idx) => {
                     const statusColors = {
-                      active: "bg-green-100 text-green-700 border-green-200",
-                      expired: "bg-red-100 text-red-700 border-red-200",
-                      used: "bg-blue-100 text-blue-700 border-blue-200"
+                      pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+                      approved: "bg-green-100 text-green-800 border-green-200",
+                      rejected: "bg-red-100 text-red-800 border-red-200"
                     };
-                    
+                    const statusDotColors = {
+                      pending: "bg-yellow-500", approved: "bg-green-500", rejected: "bg-red-500"
+                    };
                     return (
-                      <tr key={idx} className="hover:bg-purple-50/50 transition-colors">
-                        <td className="px-3 py-2.5 text-center text-sm text-gray-500">{day.sr || idx + 1}</td>
-                        <td className="px-3 py-2.5 text-center text-sm text-gray-700">{formatDateDisplay(day.date)}</td>
-                        <td className="px-3 py-2.5 text-center text-sm text-gray-700">{day.day || formatDateDisplay(day.date)}</td>
-                        <td className="px-3 py-2.5 text-center text-sm text-gray-700">{day.totalHours || 8} hrs</td>
-                        <td className="px-3 py-2.5 text-center text-sm text-green-600 font-semibold">+{day.extraHours || 0} hrs</td>
-                        <td className="px-3 py-2.5 text-center">
-                          <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${canApply ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-red-50 text-red-700 border-red-200"}`}>
-                            {applyBeforeDate}
+                      <tr key={req._id || idx} className="hover:bg-purple-50/30 transition-colors">
+                        <td className="px-4 py-3 text-center text-sm font-semibold text-gray-800">
+                          {req.workDate ? formatDateDisplay(req.workDate) : "-"}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="inline-block px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-full border border-gray-200">
+                            {req.extraDayDetails?.workType || "Week-off Work"}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 text-center">
-                          {requestStatus ? (
-                            <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${requestStatus.className}`}>
-                              <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${
-                                requestStatus.text === "Active" ? "bg-green-500" :
-                                requestStatus.text === "Pending" ? "bg-yellow-500" :
-                                requestStatus.text === "Rejected" ? "bg-red-500" : "bg-gray-500"
-                              }`}></span>
-                              {requestStatus.text}
-                            </span>
+                        <td className="px-4 py-3 text-center text-sm text-gray-700">
+                          {req.leaveDate ? formatDateDisplay(req.leaveDate) : (req.workDate ? formatDateDisplay(req.workDate) : "-")}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                            {req.count || 1}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="block text-xs text-gray-600 truncate max-w-[160px] mx-auto" title={req.reason}>
+                            {req.reason || "-"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${statusColors[req.status] || "bg-gray-100 text-gray-700"}`}>
+                            <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${statusDotColors[req.status] || "bg-gray-400"}`}></span>
+                            {req.status === "pending" ? "Pending" : req.status ? (req.status.charAt(0).toUpperCase() + req.status.slice(1)) : "Pending"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center text-xs">
+                          {req.status === "approved" ? (
+                            <div className="text-green-700 font-medium">Approved {req.approvedBy ? `by ${req.approvedBy}` : "by Admin"}</div>
+                          ) : req.status === "rejected" ? (
+                            <div className="text-red-700">
+                              <span className="font-medium">Rejected {req.approvedBy ? `by ${req.approvedBy}` : "by Admin"}</span>
+                              {req.rejectionReason && (
+                                <p className="text-[11px] text-red-500 mt-0.5 italic max-w-[160px] truncate mx-auto" title={req.rejectionReason}>{req.rejectionReason}</p>
+                              )}
+                            </div>
                           ) : (
-                            <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${statusColors[dayStatus] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
-                              {dayStatus.charAt(0).toUpperCase() + dayStatus.slice(1)}
-                            </span>
+                            <span className="text-yellow-700 italic font-medium">Pending Admin Review</span>
                           )}
+                        </td>
+                        <td className="px-4 py-3 text-center text-xs text-gray-500">
+                          {req.createdAt ? formatDateDisplay(req.createdAt) : "-"}
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+            )}
+          </div>
+        </div>
+
+        {/* Leave History Table */}
+        <div className="emp-dash__card">
+          <div className="emp-dash__card-header">
+            <h3 className="emp-dash__card-title flex items-center gap-2">
+              <FaList className="text-blue-600" /> Leave History
+            </h3>
+            <div className="text-xs text-gray-500">
+              Showing <strong className="text-gray-700">{filteredLeaves.length}</strong> of <strong className="text-gray-700">{leaves.length}</strong> records
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="emp-dash__table">
+              <thead>
+                <tr>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Leave Type</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Start Date</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">End Date</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Days</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Reason</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved By</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Comp-off</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {currentRecords.length > 0 ? (
+                  currentRecords.map((leave) => {
+                    const canApplyCompOff = leave.status === "approved";
+                    const compOffInfo = getCompOffStatusForLeave(leave._id);
+                    const availableExtraDays = extraDaysData.extraDays && extraDaysData.extraDays.list
+                      ? extraDaysData.extraDays.list.filter(day => {
+                          const compOffRequest = getCompOffRequestForExtraDay(day.date);
+                          return !compOffRequest || compOffRequest.status !== "approved";
+                        })
+                      : [];
+
+                    return (
+                      <tr key={leave._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 text-center">
+                          <span className="px-2.5 py-1 text-xs font-medium capitalize bg-gray-100 text-gray-700 rounded-full border border-gray-200">
+                            {leave.leaveType}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center text-sm text-gray-700">{formatDate(leave.startDate)}</td>
+                        <td className="px-4 py-3 text-center text-sm text-gray-700">{formatDate(leave.endDate)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                            {leave.days}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="block text-sm text-gray-500 truncate max-w-[150px]" title={leave.reason}>{leave.reason}</span>
+                        </td>
+                        <td className="px-4 py-3 text-center">{getStatusBadge(leave.status)}</td>
+                        <td className="px-4 py-3 text-center text-sm text-gray-500">{leave.approvedBy || "-"}</td>
+                        <td className="px-4 py-3 text-center">
+                          {compOffInfo.exists ? (
+                            <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${
+                              compOffInfo.status === "pending" ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
+                              compOffInfo.status === "approved" ? "bg-green-100 text-green-700 border-green-200" :
+                              "bg-red-100 text-red-700 border-red-200"
+                            }`}>
+                              <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${
+                                compOffInfo.status === "pending" ? "bg-yellow-500" :
+                                compOffInfo.status === "approved" ? "bg-green-500" : "bg-red-500"
+                              }`}></span>
+                              {compOffInfo.status.charAt(0).toUpperCase() + compOffInfo.status.slice(1)}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400">Not Applied</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {compOffInfo.exists ? (
+                            <button
+                              onClick={() => openViewCompOffModal(compOffInfo.data)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+                            >
+                              <FaEye size={12} /> View
+                            </button>
+                          ) : canApplyCompOff && availableExtraDays.length > 0 ? (
+                            <div className="flex items-center gap-1.5 justify-center">
+                              <select
+                                className="px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 bg-white"
+                                value={selectedExtraDayForCompOff}
+                                onChange={(e) => setSelectedExtraDayForCompOff(e.target.value)}
+                              >
+                                <option value="">Select Extra Day</option>
+                                {availableExtraDays.map((day, idx) => {
+                                  const compOffRequest = getCompOffRequestForExtraDay(day.date);
+                                  const isPending = compOffRequest && compOffRequest.status === "pending";
+                                  const isRejected = compOffRequest && compOffRequest.status === "rejected";
+                                  return (
+                                    <option key={idx} value={day.date} disabled={isPending}>
+                                      {formatDateDisplay(day.date)} - {day.totalHours}hrs
+                                      {isPending ? ' (Pending)' : ''}
+                                      {isRejected ? ' (Rejected)' : ''}
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                              <button
+                                onClick={() => {
+                                  if (!selectedExtraDayForCompOff) { alert("Please select an extra day first!"); return; }
+                                  openLeaveCompOffModal(leave, selectedExtraDayForCompOff);
+                                  setSelectedExtraDayForCompOff("");
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors shadow-sm"
+                              >
+                                <FaExchangeAlt size={12} /> Apply
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="9" className="px-4 py-12 text-center text-gray-400 text-sm">
+                      No leave records found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {filteredLeaves.length > 0 && (
+            <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 sm:flex-row">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span>Show:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={handleItemsPerPageChange}
+                  className="px-2 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>{(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredLeaves.length)} of {filteredLeaves.length}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${currentPage === 1 ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
+                  Previous
+                </button>
+                {getPageNumbers().map((page, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => typeof page === "number" && handlePageClick(page)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      page === "..." ? 'text-gray-400 cursor-default'
+                        : currentPage === page ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${currentPage === totalPages ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Filters Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <FaSearch className="text-blue-600 text-sm" />
-            <span className="text-sm font-semibold text-gray-700">Filters</span>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setIsLeaveModalOpen(true)}
-              className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5 shadow-sm"
-            >
-              <FaPlus size={12} /> Apply Leave
-            </button>
-            <button
-              onClick={() => setIsPermissionModalOpen(true)}
-              className="px-4 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all flex items-center gap-1.5 shadow-sm"
-            >
-              <FaShieldAlt size={12} /> Permission
-            </button>
-          </div>
-        </div>
-        
-        <div className="p-4 bg-gray-50/50">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-            {/* Search */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Search</label>
-              <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                <input
-                  type="text"
-                  placeholder="Search leaves..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                />
+        {/* ==================== MODALS ==================== */}
+
+        {/* Apply Leave Modal */}
+        {isLeaveModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className={`w-full ${leaveFormData.leaveType === "compoff" ? "max-w-lg" : "max-w-md"} bg-white rounded-2xl shadow-2xl p-6 transition-all duration-200 max-h-[90vh] overflow-y-auto`}>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {leaveFormData.leaveType === "compoff" ? "Apply for Comp-Off" : "Apply Leave"}
+                  </h3>
+                  {leaveFormData.leaveType === "compoff" && (
+                    <p className="text-xs text-purple-600 font-medium mt-0.5">
+                      Claim compensatory leave for working on a week-off or holiday
+                    </p>
+                  )}
+                </div>
+                <button onClick={() => setIsLeaveModalOpen(false)} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
               </div>
-            </div>
+              <form onSubmit={handleLeaveSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Leave Type</label>
+                  <select
+                    name="leaveType"
+                    value={leaveFormData.leaveType}
+                    onChange={handleLeaveChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-medium"
+                    required
+                  >
+                    <option value="casual">Casual Leave</option>
+                    <option value="sick">Sick Leave</option>
+                    <option value="earned">Earned Leave</option>
+                    <option value="compoff">Comp Off (Compensatory Off)</option>
+                  </select>
+                </div>
 
-            {/* Date Filter */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Date</label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={handleDateChange}
-                className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              />
-            </div>
+                {leaveFormData.leaveType === "compoff" ? (
+                  <>
+                    <div className="p-2.5 bg-blue-50/80 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start gap-2">
+                      <span className="text-base leading-none">ℹ️</span>
+                      <div className="leading-snug">
+                        <strong>Comp-Off Validity Rule:</strong> Extra work performed in any month is valid until the <strong>15th of the following month</strong> (e.g. September work is valid till <strong>15th October</strong>). Expired days cannot be claimed.
+                      </div>
+                    </div>
 
-            {/* Month Filter */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Month</label>
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={handleMonthFilterChange}
-                className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              />
-            </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <label className="block text-xs font-semibold text-purple-700 uppercase tracking-wider">Select Extra Worked Day</label>
+                          {extraWorkedDays.length > 0 && (
+                            <span className="text-[11px] text-gray-500">
+                              (Eligible: <strong className="text-green-600">{extraWorkedDays.filter(d => !d.isExpired && d.status !== 'pending' && d.status !== 'approved' && d.requestStatus !== 'expired').length}</strong>, Expired: <strong className="text-red-500">{extraWorkedDays.filter(d => d.isExpired || d.status === 'expired' || d.requestStatus === 'expired').length}</strong>)
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const raw = localStorage.getItem("employeeData");
+                            try {
+                              const emp = raw ? JSON.parse(raw) : null;
+                              if (emp?.employeeId) fetchExtraWorkedDays(emp.employeeId);
+                            } catch (e) {}
+                          }}
+                          className="text-xs text-purple-600 hover:text-purple-800 font-medium hover:underline flex items-center gap-0.5"
+                        >
+                          ↻ Refresh
+                        </button>
+                      </div>
 
-            {/* Filter Actions */}
-            <div className="flex flex-col gap-1.5 justify-end">
-              {(searchTerm || selectedDate || selectedMonth) && (
-                <button
-                  onClick={clearFilters}
-                  className="h-9 px-4 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all flex items-center justify-center gap-1.5"
-                >
-                  ✕ Clear
-                </button>
-              )}
-            </div>
-          </div>
+                      {loadingExtraWorkedDays ? (
+                        <div className="p-4 text-center text-xs text-gray-500 bg-purple-50 rounded-xl border border-purple-100 animate-pulse">
+                          Scanning attendance records for week-off work...
+                        </div>
+                      ) : extraWorkedDays.length > 0 ? (
+                        <div className="max-h-52 overflow-y-auto space-y-2 pr-1 border border-purple-100 rounded-xl p-2 bg-purple-50/20">
+                          {extraWorkedDays.map((item, idx) => {
+                            const workDateObj = new Date(item.date);
+                            const expiryDateObj = new Date(workDateObj.getFullYear(), workDateObj.getMonth() + 1, 15, 23, 59, 59, 999);
+                            const isExpired = item.isExpired || item.requestStatus === "expired" || item.status === "expired" || (new Date() > expiryDateObj);
+                            const isPending = item.requestStatus === "pending" || item.status === "pending";
+                            const isApproved = item.requestStatus === "approved" || item.status === "approved";
+                            const isAvailable = !isExpired && !isPending && !isApproved;
+                            const isSelected = selectedExtraWorkDay?.date === item.date;
+                            const validTillFormatted = item.validTillFormatted || expiryDateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-          {/* Filter Actions */}
-          <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-            <div className="text-xs text-gray-500">
-              Showing <strong className="text-gray-700">{filteredLeaves.length}</strong> of <strong className="text-gray-700">{leaves.length}</strong> leave records
-            </div>
-          </div>
-        </div>
-      </div>
+                            return (
+                              <div
+                                key={idx}
+                                onClick={() => {
+                                  if (isAvailable) {
+                                    setSelectedExtraWorkDay(item);
+                                    setManualCompOffWorkDate("");
+                                    setLeaveFormData(prev => ({ ...prev, startDate: prev.startDate || item.date, endDate: prev.endDate || item.date, days: 1 }));
+                                  }
+                                }}
+                                className={`p-3 rounded-xl border text-xs transition-all ${
+                                  isSelected ? "border-purple-600 bg-purple-50 ring-2 ring-purple-500/40 shadow-xs"
+                                    : isAvailable ? "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/40 cursor-pointer shadow-2xs"
+                                    : isExpired ? "border-gray-200 bg-gray-50/70 opacity-60 cursor-not-allowed"
+                                    : "border-gray-200 bg-gray-50 opacity-70 cursor-not-allowed"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name="selectedExtraDayRadio"
+                                      checked={isSelected}
+                                      disabled={!isAvailable}
+                                      onChange={() => {
+                                        if (isAvailable) {
+                                          setSelectedExtraWorkDay(item);
+                                          setManualCompOffWorkDate("");
+                                          setLeaveFormData(prev => ({ ...prev, startDate: prev.startDate || item.date, endDate: prev.endDate || item.date, days: 1 }));
+                                        }
+                                      }}
+                                      className="text-purple-600 focus:ring-purple-500 h-4 w-4"
+                                    />
+                                    <span className={`font-semibold ${isExpired ? "text-gray-500 line-through" : "text-gray-800"}`}>
+                                      {formatDateDisplay(item.date)}
+                                    </span>
+                                    <span className="text-gray-500">({new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' })})</span>
+                                  </div>
+                                  {isPending ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-yellow-100 text-yellow-800 border-yellow-200">⏳ Pending</span>
+                                  ) : isApproved ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-green-100 text-green-800 border-green-200">✅ Approved</span>
+                                  ) : isExpired ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-gray-200 text-gray-700 border-gray-300">⚠️ Expired</span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-emerald-100 text-emerald-800 border-emerald-200">✨ Eligible</span>
+                                  )}
+                                </div>
+                                <div className="flex justify-between items-center mt-2 text-[11px]">
+                                  <div className="flex items-center gap-2">
+                                    <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-700 font-medium">{item.workType || "Week-off Work"}</span>
+                                    <span className="text-gray-500">Total: <strong className="text-gray-700">{item.totalHours || 8} hrs</strong></span>
+                                  </div>
+                                  <div>
+                                    {isExpired ? (
+                                      <span className="text-red-500 font-medium">Expired on {validTillFormatted}</span>
+                                    ) : (
+                                      <span className="text-emerald-700 font-medium">Valid till {validTillFormatted}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800">
+                          No automated week-off or holiday work detected in recent attendance. You can manually enter the extra day worked below:
+                        </div>
+                      )}
 
-      {/* Leaves Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-            <FaList className="text-blue-600" /> Leave History
-          </h3>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Leave Type</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Start Date</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">End Date</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Days</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Reason</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved By</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Comp-off</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {currentRecords.length > 0 ? (
-                currentRecords.map((leave) => {
-                  const canApplyCompOff = leave.status === "approved";
-                  const compOffInfo = getCompOffStatusForLeave(leave._id);
-                  
-                  const availableExtraDays = extraDaysData.extraDays && extraDaysData.extraDays.list 
-                    ? extraDaysData.extraDays.list.filter(day => {
-                        const compOffRequest = getCompOffRequestForExtraDay(day.date);
-                        return !compOffRequest || compOffRequest.status !== "approved";
-                      })
-                    : [];
-                  
-                  return (
-                    <tr key={leave._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-center">
-                        <span className="px-2.5 py-1 text-xs font-medium capitalize bg-gray-100 text-gray-700 rounded-full border border-gray-200">
-                          {leave.leaveType}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center text-sm text-gray-700">
-                        {formatDate(leave.startDate)}
-                      </td>
-                      <td className="px-4 py-3 text-center text-sm text-gray-700">
-                        {formatDate(leave.endDate)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 border border-blue-200">
-                          {leave.days}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="block text-sm text-gray-500 truncate max-w-[150px]" title={leave.reason}>
-                          {leave.reason}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {getStatusBadge(leave.status)}
-                      </td>
-                      <td className="px-4 py-3 text-center text-sm text-gray-500">
-                        {leave.approvedBy || "-"}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {compOffInfo.exists ? (
-                          <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                            compOffInfo.status === "pending" ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
-                            compOffInfo.status === "approved" ? "bg-green-100 text-green-700 border-green-200" :
-                            "bg-red-100 text-red-700 border-red-200"
-                          }`}>
-                            <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${
-                              compOffInfo.status === "pending" ? "bg-yellow-500" :
-                              compOffInfo.status === "approved" ? "bg-green-500" : "bg-red-500"
-                            }`}></span>
-                            {compOffInfo.status.charAt(0).toUpperCase() + compOffInfo.status.slice(1)}
+                      {selectedExtraWorkDay && (
+                        <div className="p-2.5 bg-purple-50/90 border border-purple-200 rounded-xl text-xs text-purple-900 flex items-center justify-between shadow-2xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
+                            <span><strong>Selected Day:</strong> {formatDateDisplay(selectedExtraWorkDay.date)} ({selectedExtraWorkDay.workType})</span>
+                          </div>
+                          <span className="text-[11px] font-semibold text-purple-800 bg-white px-2 py-0.5 rounded-md border border-purple-200">
+                            Valid till: {selectedExtraWorkDay.validTillFormatted || '15th next month'}
                           </span>
-                        ) : (
-                          <span className="text-xs text-gray-400">Not Applied</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {compOffInfo.exists ? (
-                          <button 
-                            onClick={() => openViewCompOffModal(compOffInfo.data)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
-                          >
-                            <FaEye size={12} /> View
-                          </button>
-                        ) : canApplyCompOff && availableExtraDays.length > 0 ? (
-                          <div className="flex items-center gap-1.5 justify-center">
-                            <select 
-                              className="px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 bg-white"
-                              value={selectedExtraDayForCompOff}
-                              onChange={(e) => setSelectedExtraDayForCompOff(e.target.value)}
-                            >
-                              <option value="">Select Extra Day</option>
-                              {availableExtraDays.map((day, idx) => {
-                                const compOffRequest = getCompOffRequestForExtraDay(day.date);
-                                const isPending = compOffRequest && compOffRequest.status === "pending";
-                                const isRejected = compOffRequest && compOffRequest.status === "rejected";
-                                return (
-                                  <option 
-                                    key={idx} 
-                                    value={day.date}
-                                    disabled={isPending}
-                                  >
-                                    {formatDateDisplay(day.date)} - {day.totalHours}hrs 
-                                    {isPending ? ' (Pending)' : ''}
-                                    {isRejected ? ' (Rejected)' : ''}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                            <button 
-                              onClick={() => {
-                                if (!selectedExtraDayForCompOff) {
-                                  alert("Please select an extra day first!");
-                                  return;
+                        </div>
+                      )}
+
+                      <div className="pt-1">
+                        <label className="block text-[11px] font-medium text-gray-600 mb-1">
+                          {extraWorkedDays.length > 0 ? "Or enter work date manually (if not listed above):" : "Extra Work Date:"}
+                        </label>
+                        <input
+                          type="date"
+                          value={manualCompOffWorkDate}
+                          onChange={(e) => {
+                            const dVal = e.target.value;
+                            setManualCompOffWorkDate(dVal);
+                            if (dVal) {
+                              const workD = new Date(dVal);
+                              const expiryDate = new Date(workD.getFullYear(), workD.getMonth() + 1, 15, 23, 59, 59, 999);
+                              if (new Date() > expiryDate) {
+                                const expFormatted = expiryDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                                alert(`⚠️ Notice: Extra work on ${dVal} expired on ${expFormatted} (15th of next month). Comp-off cannot be requested for this date.`);
+                              } else {
+                                setSelectedExtraWorkDay(null);
+                                if (!leaveFormData.startDate) {
+                                  setLeaveFormData(prev => ({ ...prev, startDate: dVal, endDate: dVal, days: 1 }));
                                 }
-                                openLeaveCompOffModal(leave, selectedExtraDayForCompOff);
-                                setSelectedExtraDayForCompOff("");
-                              }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors shadow-sm"
-                            >
-                              <FaExchangeAlt size={12} /> Apply
-                            </button>
-                          </div>
-                        ) : canApplyCompOff && compOffInfo.exists && compOffInfo.status === "rejected" && availableExtraDays.length > 0 ? (
-                          <div className="flex items-center gap-1.5 justify-center">
-                            <select 
-                              className="px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 bg-white"
-                              value={selectedExtraDayForCompOff}
-                              onChange={(e) => setSelectedExtraDayForCompOff(e.target.value)}
-                            >
-                              <option value="">Select Extra Day</option>
-                              {availableExtraDays.map((day, idx) => {
-                                const compOffRequest = getCompOffRequestForExtraDay(day.date);
-                                const isPending = compOffRequest && compOffRequest.status === "pending";
-                                return (
-                                  <option 
-                                    key={idx} 
-                                    value={day.date}
-                                    disabled={isPending}
-                                  >
-                                    {formatDateDisplay(day.date)} - {day.totalHours}hrs 
-                                    {isPending ? ' (Pending)' : ''}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                            <button 
-                              onClick={() => {
-                                if (!selectedExtraDayForCompOff) {
-                                  alert("Please select an extra day first!");
-                                  return;
-                                }
-                                openLeaveCompOffModal(leave, selectedExtraDayForCompOff);
-                                setSelectedExtraDayForCompOff("");
-                              }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors shadow-sm"
-                            >
-                              <FaExchangeAlt size={12} /> Re-apply
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-400">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="9" className="px-4 py-12 text-center text-gray-400 text-sm">
-                    No leave records found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                              }
+                            }
+                          }}
+                          className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 bg-white"
+                        />
+                      </div>
+                    </div>
 
-        {/* Pagination Section */}
-        {filteredLeaves.length > 0 && (
-          <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 sm:flex-row">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>Show:</span>
-              <select
-                value={itemsPerPage}
-                onChange={handleItemsPerPageChange}
-                className="px-2 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span>
-                {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredLeaves.length)} of {filteredLeaves.length}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                  currentPage === 1
-                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                Previous
-              </button>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Date to take Leave</label>
+                        <input
+                          name="startDate"
+                          type="date"
+                          value={leaveFormData.startDate}
+                          onChange={(e) => {
+                            setLeaveFormData(prev => ({ ...prev, startDate: e.target.value, endDate: e.target.value, days: 1 }));
+                          }}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Total Days</label>
+                        <input
+                          name="days"
+                          type="number"
+                          value={1}
+                          readOnly
+                          className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-semibold"
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+                        <input name="startDate" type="date" value={leaveFormData.startDate} onChange={handleLeaveChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" required />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">End Date</label>
+                        <input name="endDate" type="date" value={leaveFormData.endDate} onChange={handleLeaveChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" required />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Total Days</label>
+                      <input name="days" type="number" value={leaveFormData.days} readOnly className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-700" />
+                    </div>
+                  </>
+                )}
 
-              {getPageNumbers().map((page, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => typeof page === "number" && handlePageClick(page)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                    page === "..."
-                      ? 'text-gray-400 cursor-default'
-                      : currentPage === page
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <button
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                  currentPage === totalPages
-                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                Next
-              </button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Reason</label>
+                  <textarea
+                    name="reason"
+                    value={leaveFormData.reason}
+                    onChange={handleLeaveChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                    rows="3"
+                    placeholder={leaveFormData.leaveType === "compoff" ? "Reason for comp-off (e.g. Worked extra on Sunday)..." : "Reason for leave..."}
+                    required
+                  ></textarea>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
+                  <button
+                    type="submit"
+                    disabled={submittingLeave}
+                    className={`flex-1 px-4 py-2 text-sm font-medium text-white rounded-xl transition-colors disabled:opacity-50 ${
+                      leaveFormData.leaveType === "compoff" ? "bg-purple-600 hover:bg-purple-700" : "bg-blue-600 hover:bg-blue-700"
+                    }`}
+                  >
+                    {submittingLeave ? "Submitting..." : leaveFormData.leaveType === "compoff" ? "Submit Comp-Off" : "Apply"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
-      </div>
 
-      {/* ==================== MODALS ==================== */}
-
-      {/* Apply Leave Modal */}
-      {isLeaveModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Apply Leave</h3>
-              <button onClick={() => setIsLeaveModalOpen(false)} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
-            </div>
-            <form onSubmit={handleLeaveSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Leave Type</label>
-                <select name="leaveType" value={leaveFormData.leaveType} onChange={handleLeaveChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" required>
-                  <option value="casual">Casual Leave</option>
-                  <option value="sick">Sick Leave</option>
-                  <option value="earned">Earned Leave</option>
-                </select>
+        {/* Permission Modal */}
+        {isPermissionModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-800">Request Permission</h3>
+                <button onClick={() => setIsPermissionModalOpen(false)} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <form onSubmit={handlePermissionSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
-                  <input name="startDate" type="date" value={leaveFormData.startDate} onChange={handleLeaveChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" required />
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Reason</label>
+                  <textarea required className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white" rows="3" value={permissionForm.reason} onChange={(e) => setPermissionForm({ ...permissionForm, reason: e.target.value })} placeholder="Why do you need permission?"></textarea>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">End Date</label>
-                  <input name="endDate" type="date" value={leaveFormData.endDate} onChange={handleLeaveChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" required />
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Duration (minutes)</label>
+                  <input type="number" required min="1" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white" value={permissionForm.duration} onChange={(e) => setPermissionForm({ ...permissionForm, duration: e.target.value })} placeholder="e.g. 30" />
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Total Days</label>
-                <input name="days" type="number" value={leaveFormData.days} readOnly className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-700" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Reason</label>
-                <textarea name="reason" value={leaveFormData.reason} onChange={handleLeaveChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" rows="3" required></textarea>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
-                <button type="submit" disabled={submittingLeave} className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50">{submittingLeave ? "Applying..." : "Apply"}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Apply Permission Modal */}
-      {isPermissionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Request Permission</h3>
-              <button onClick={() => setIsPermissionModalOpen(false)} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setIsPermissionModalOpen(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
+                  <button type="submit" disabled={permissionLoading} className="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50">{permissionLoading ? "Submitting..." : "Request"}</button>
+                </div>
+              </form>
             </div>
-            <form onSubmit={handlePermissionSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Reason</label>
-                <textarea required className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white" rows="3" value={permissionForm.reason} onChange={(e) => setPermissionForm({ ...permissionForm, reason: e.target.value })} placeholder="Why do you need permission?"></textarea>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Duration (minutes)</label>
-                <input type="number" required min="1" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white" value={permissionForm.duration} onChange={(e) => setPermissionForm({ ...permissionForm, duration: e.target.value })} placeholder="e.g. 30" />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setIsPermissionModalOpen(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
-                <button type="submit" disabled={permissionLoading} className="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50">{permissionLoading ? "Submitting..." : "Request"}</button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Extra Day Comp-off Request Modal */}
-      {isExtraDayCompOffModalOpen && selectedExtraDay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md max-h-[90vh] overflow-auto bg-white rounded-2xl shadow-2xl">
-            <div className="sticky top-0 flex justify-between items-center p-4 bg-white border-b">
-              <h3 className="text-lg font-bold text-purple-700 flex items-center gap-2">
-                <FaExchangeAlt className="text-purple-600" /> Request Comp-off
-              </h3>
-              <button onClick={() => setIsExtraDayCompOffModalOpen(false)} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
-            </div>
-            <div className="p-6 space-y-4">
-              {selectedExtraDay.leave && (
-                <div className="p-4 rounded-xl bg-green-50 border border-green-200">
-                  <p className="text-sm font-semibold text-green-800 mb-2">Leave Details:</p>
-                  <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-600">Type:</span><span className="font-medium text-gray-800 capitalize">{selectedExtraDay.leave.leaveType}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Start:</span><span className="font-medium text-gray-800">{formatDate(selectedExtraDay.leave.startDate)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">End:</span><span className="font-medium text-gray-800">{formatDate(selectedExtraDay.leave.endDate)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Days:</span><span className="font-medium text-gray-800">{selectedExtraDay.leave.days}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Status:</span>{getStatusBadge(selectedExtraDay.leave.status)}</div>
+        {/* Extra Day Comp-off Request Modal */}
+        {isExtraDayCompOffModalOpen && selectedExtraDay && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-md max-h-[90vh] overflow-auto bg-white rounded-2xl shadow-2xl">
+              <div className="sticky top-0 flex justify-between items-center p-4 bg-white border-b">
+                <h3 className="text-lg font-bold text-purple-700 flex items-center gap-2">
+                  <FaExchangeAlt className="text-purple-600" /> Request Comp-off
+                </h3>
+                <button onClick={() => setIsExtraDayCompOffModalOpen(false)} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
+              </div>
+              <div className="p-6 space-y-4">
+                {selectedExtraDay.leave && (
+                  <div className="p-4 rounded-xl bg-green-50 border border-green-200">
+                    <p className="text-sm font-semibold text-green-800 mb-2">Leave Details:</p>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between"><span className="text-gray-600">Type:</span><span className="font-medium text-gray-800 capitalize">{selectedExtraDay.leave.leaveType}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Start:</span><span className="font-medium text-gray-800">{formatDate(selectedExtraDay.leave.startDate)}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">End:</span><span className="font-medium text-gray-800">{formatDate(selectedExtraDay.leave.endDate)}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Days:</span><span className="font-medium text-gray-800">{selectedExtraDay.leave.days}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Status:</span>{getStatusBadge(selectedExtraDay.leave.status)}</div>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="p-4 rounded-xl bg-purple-50 border border-purple-200">
-                <p className="text-sm font-semibold text-purple-800 mb-2 flex items-center gap-2">
-                  <FaExchangeAlt className="text-purple-600" /> Extra Day Details:
-                </p>
-                <div className="space-y-1.5 text-sm">
-                  <div className="flex justify-between"><span className="text-gray-600">Date:</span><span className="font-medium text-gray-800">{selectedExtraDay.day || formatDateDisplay(selectedExtraDay.date)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-600">Total Hours:</span><span className="font-medium text-gray-800">{selectedExtraDay.totalHours || 8} hrs</span></div>
-                  <div className="flex justify-between"><span className="text-gray-600">Extra Hours:</span><span className="font-medium text-green-600">+{selectedExtraDay.extraHours || 0} hrs</span></div>
-                  <div className="flex justify-between"><span className="text-gray-600">Apply Before:</span><span className="font-medium text-blue-600">{getApplyBeforeDate(selectedExtraDay.date, 15)}</span></div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Reason <span className="text-red-500">*</span></label>
-                <textarea value={extraDayCompOffData.reason} onChange={(e) => setExtraDayCompOffData({ ...extraDayCompOffData, reason: e.target.value })} rows="4" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white resize-none" placeholder="Please provide reason for comp-off request..." required />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setIsExtraDayCompOffModalOpen(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
-                <button type="submit" onClick={handleExtraDayCompOffSubmit} disabled={submittingExtraDayCompOff} className="flex-1 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50">
-                  {submittingExtraDayCompOff ? "Submitting..." : "Submit"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* View Comp-off Request Modal */}
-      {isViewCompOffModalOpen && viewCompOffData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md max-h-[90vh] overflow-auto bg-white rounded-2xl shadow-2xl">
-            <div className="sticky top-0 flex justify-between items-center p-4 bg-white border-b">
-              <h3 className="text-lg font-bold text-purple-700 flex items-center gap-2">
-                <FaInfoCircle className="text-purple-600" /> Comp-off Details
-              </h3>
-              <button onClick={() => setIsViewCompOffModalOpen(false)} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="flex justify-center">
-                <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border ${
-                  viewCompOffData.status === "pending" ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
-                  viewCompOffData.status === "approved" ? "bg-green-100 text-green-700 border-green-200" :
-                  "bg-red-100 text-red-700 border-red-200"
-                }`}>
-                  <span className={`w-1.5 h-1.5 mr-2 rounded-full ${
-                    viewCompOffData.status === "pending" ? "bg-yellow-500" :
-                    viewCompOffData.status === "approved" ? "bg-green-500" : "bg-red-500"
-                  }`}></span>
-                  Status: {viewCompOffData.status.charAt(0).toUpperCase() + viewCompOffData.status.slice(1)}
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-gray-50 border border-gray-200">
-                <p className="text-xs text-gray-500">Request ID</p>
-                <p className="text-sm font-medium text-gray-800 break-all">{viewCompOffData._id}</p>
-              </div>
-
-              {viewCompOffData.leaveDetails && (
-                <div className="p-4 rounded-xl bg-green-50 border border-green-200">
-                  <p className="text-sm font-semibold text-green-800 mb-2">Leave Details:</p>
-                  <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-600">Type:</span><span className="font-medium text-gray-800 capitalize">{viewCompOffData.leaveDetails.leaveType}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Start:</span><span className="font-medium text-gray-800">{formatDate(viewCompOffData.leaveDetails.startDate)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">End:</span><span className="font-medium text-gray-800">{formatDate(viewCompOffData.leaveDetails.endDate)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Days:</span><span className="font-medium text-gray-800">{viewCompOffData.leaveDetails.days}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Leave Status:</span>{getStatusBadge(viewCompOffData.leaveDetails.status)}</div>
-                  </div>
-                </div>
-              )}
-
-              {viewCompOffData.extraDayDetails && (
                 <div className="p-4 rounded-xl bg-purple-50 border border-purple-200">
                   <p className="text-sm font-semibold text-purple-800 mb-2 flex items-center gap-2">
                     <FaExchangeAlt className="text-purple-600" /> Extra Day Details:
                   </p>
                   <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-600">Date:</span><span className="font-medium text-gray-800">{viewCompOffData.extraDayDetails.day || formatDateDisplay(viewCompOffData.extraDayDetails.date)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Total Hours:</span><span className="font-medium text-gray-800">{viewCompOffData.extraDayDetails.totalHours || 8} hrs</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Extra Hours:</span><span className="font-medium text-green-600">+{viewCompOffData.extraDayDetails.extraHours || 0} hrs</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Date:</span><span className="font-medium text-gray-800">{selectedExtraDay.day || formatDateDisplay(selectedExtraDay.date)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Total Hours:</span><span className="font-medium text-gray-800">{selectedExtraDay.totalHours || 8} hrs</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Extra Hours:</span><span className="font-medium text-green-600">+{selectedExtraDay.extraHours || 0} hrs</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Apply Before:</span><span className="font-medium text-blue-600">{getApplyBeforeDate(selectedExtraDay.date, 15)}</span></div>
                   </div>
                 </div>
-              )}
 
-              <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                <p className="text-sm font-semibold text-gray-700 mb-2">Reason:</p>
-                <p className="text-sm text-gray-600">{viewCompOffData.reason}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-2 rounded-lg bg-gray-50 border border-gray-200">
-                  <p className="text-gray-500">Created</p>
-                  <p className="font-medium text-gray-700">{formatDate(viewCompOffData.createdAt)}</p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Reason <span className="text-red-500">*</span></label>
+                  <textarea value={extraDayCompOffData.reason} onChange={(e) => setExtraDayCompOffData({ ...extraDayCompOffData, reason: e.target.value })} rows="4" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white resize-none" placeholder="Please provide reason for comp-off request..." required />
                 </div>
-                <div className="p-2 rounded-lg bg-gray-50 border border-gray-200">
-                  <p className="text-gray-500">Updated</p>
-                  <p className="font-medium text-gray-700">{formatDate(viewCompOffData.updatedAt)}</p>
+
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setIsExtraDayCompOffModalOpen(false)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
+                  <button type="submit" onClick={handleExtraDayCompOffSubmit} disabled={submittingExtraDayCompOff} className="flex-1 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50">
+                    {submittingExtraDayCompOff ? "Submitting..." : "Submit"}
+                  </button>
                 </div>
               </div>
-
-              {viewCompOffData.status === "approved" && viewCompOffData.approvedBy && (
-                <div className="p-3 rounded-xl bg-green-50 border border-green-200">
-                  <p className="text-xs text-green-600">Approved by: {viewCompOffData.approvedBy}</p>
-                  <p className="text-xs text-green-600">Approved at: {formatDate(viewCompOffData.approvedAt)}</p>
-                </div>
-              )}
-
-              {viewCompOffData.status === "rejected" && viewCompOffData.rejectedReason && (
-                <div className="p-3 rounded-xl bg-red-50 border border-red-200">
-                  <p className="text-xs text-red-600">Rejected Reason: {viewCompOffData.rejectedReason}</p>
-                </div>
-              )}
-            </div>
-            <div className="sticky bottom-0 p-4 bg-white border-t">
-              <button onClick={() => setIsViewCompOffModalOpen(false)} className="w-full px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors">Close</button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Comp-off Requests List Modal */}
-      {isCompOffRequestsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-2xl max-h-[80vh] overflow-auto bg-white rounded-2xl shadow-2xl">
-            <div className="sticky top-0 flex justify-between items-center p-4 bg-white border-b">
-              <div>
-                <h3 className="text-lg font-bold text-purple-700">Comp-off Requests</h3>
-                <p className="text-xs text-gray-500">Total Requests: {extraDayCompOffRequests.length}</p>
+        {/* View Comp-off Modal */}
+        {isViewCompOffModalOpen && viewCompOffData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-md max-h-[90vh] overflow-auto bg-white rounded-2xl shadow-2xl">
+              <div className="sticky top-0 flex justify-between items-center p-4 bg-white border-b">
+                <h3 className="text-lg font-bold text-purple-700 flex items-center gap-2">
+                  <FaInfoCircle className="text-purple-600" /> Comp-off Details
+                </h3>
+                <button onClick={() => setIsViewCompOffModalOpen(false)} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
               </div>
-              <button onClick={() => setIsCompOffRequestsModalOpen(false)} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
-            </div>
-            <div className="p-4 space-y-3">
-              {extraDayCompOffRequests.length > 0 ? (
-                extraDayCompOffRequests.map((request, idx) => {
-                  const isExpired = request.status === "approved" && isCompOffExpired(request.workDate);
-                  return (
-                    <div key={request._id || idx} className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-all">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                          request.status === "pending" ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
-                          request.status === "approved" ? (isExpired ? "bg-gray-200 text-gray-600 border-gray-300" : "bg-green-100 text-green-700 border-green-200") :
-                          "bg-red-100 text-red-700 border-red-200"
-                        }`}>
-                          <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${
-                            request.status === "pending" ? "bg-yellow-500" :
-                            request.status === "approved" ? (isExpired ? "bg-gray-500" : "bg-green-500") :
-                            "bg-red-500"
-                          }`}></span>
-                          {request.status === "approved" && isExpired ? "Expired" : request.status}
-                        </span>
-                        <span className="text-xs text-gray-400">{request.createdAt ? formatDate(request.createdAt) : '-'}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div><span className="text-gray-500">Date:</span> <span className="font-medium text-gray-700">{request.extraDayDate ? formatDateDisplay(request.extraDayDate) : '-'}</span></div>
-                        <div><span className="text-gray-500">Total Hours:</span> <span className="font-medium text-gray-700">{request.extraDayDetails?.totalHours || '-'} hrs</span></div>
-                        <div className="col-span-2"><span className="text-gray-500">Extra Hours:</span> <span className="font-medium text-green-600">+{request.extraDayDetails?.extraHours || '-'} hrs</span></div>
-                      </div>
-                      {request.reason && (
-                        <div className="mt-2">
-                          <span className="text-xs text-gray-500">Reason:</span>
-                          <p className="text-sm text-gray-700 mt-0.5">{request.reason}</p>
-                        </div>
-                      )}
+              <div className="p-6 space-y-4">
+                <div className="flex justify-center">
+                  <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border ${
+                    viewCompOffData.status === "pending" ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
+                    viewCompOffData.status === "approved" ? "bg-green-100 text-green-700 border-green-200" :
+                    "bg-red-100 text-red-700 border-red-200"
+                  }`}>
+                    <span className={`w-1.5 h-1.5 mr-2 rounded-full ${
+                      viewCompOffData.status === "pending" ? "bg-yellow-500" :
+                      viewCompOffData.status === "approved" ? "bg-green-500" : "bg-red-500"
+                    }`}></span>
+                    Status: {viewCompOffData.status.charAt(0).toUpperCase() + viewCompOffData.status.slice(1)}
+                  </span>
+                </div>
+
+                {viewCompOffData.leaveDetails && (
+                  <div className="p-4 rounded-xl bg-green-50 border border-green-200">
+                    <p className="text-sm font-semibold text-green-800 mb-2">Leave Details:</p>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between"><span className="text-gray-600">Type:</span><span className="font-medium text-gray-800 capitalize">{viewCompOffData.leaveDetails.leaveType}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Start:</span><span className="font-medium text-gray-800">{formatDate(viewCompOffData.leaveDetails.startDate)}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">End:</span><span className="font-medium text-gray-800">{formatDate(viewCompOffData.leaveDetails.endDate)}</span></div>
                     </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-8 text-gray-400 text-sm">No comp-off requests found</div>
-              )}
-            </div>
-            <div className="sticky bottom-0 p-4 bg-white border-t">
-              <button onClick={() => setIsCompOffRequestsModalOpen(false)} className="w-full px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors">Close</button>
+                  </div>
+                )}
+
+                {viewCompOffData.extraDayDetails && (
+                  <div className="p-4 rounded-xl bg-purple-50 border border-purple-200">
+                    <p className="text-sm font-semibold text-purple-800 mb-2">Extra Day Details:</p>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between"><span className="text-gray-600">Date:</span><span className="font-medium text-gray-800">{viewCompOffData.extraDayDetails.day || formatDateDisplay(viewCompOffData.extraDayDetails.date)}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Total Hours:</span><span className="font-medium text-gray-800">{viewCompOffData.extraDayDetails.totalHours || 8} hrs</span></div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Reason:</p>
+                  <p className="text-sm text-gray-600">{viewCompOffData.reason}</p>
+                </div>
+
+                {viewCompOffData.status === "rejected" && viewCompOffData.rejectedReason && (
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-200">
+                    <p className="text-xs text-red-600">Rejected Reason: {viewCompOffData.rejectedReason}</p>
+                  </div>
+                )}
+              </div>
+              <div className="sticky bottom-0 p-4 bg-white border-t">
+                <button onClick={() => setIsViewCompOffModalOpen(false)} className="w-full px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors">Close</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 };

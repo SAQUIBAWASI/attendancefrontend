@@ -21,10 +21,15 @@ import {
   FaFileInvoice,
   FaUserClock,
   FaExclamationCircle,
+  FaChevronDown,
+  FaChevronUp,
+  FaUser,
 } from "react-icons/fa";
+import { FiFilter, FiTrash2, FiInbox } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 import "./EmployeeDashboard.css";
 import "./EmployeePageShell.css";
+import "../index.css";
 
 const INITIAL_STOP = {
   locationName: "",
@@ -78,6 +83,8 @@ const ExpenseManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [tableSearch, setTableSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [stops, setStops] = useState([{ ...INITIAL_STOP }]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -95,6 +102,17 @@ const ExpenseManagement = () => {
     if (directId) return directId;
     try {
       return JSON.parse(localStorage.getItem("employeeData") || "{}")?.employeeId || "";
+    } catch {
+      return "";
+    }
+  }, []);
+
+  const employeeName = useMemo(() => {
+    const directName = localStorage.getItem("employeeName");
+    if (directName) return directName;
+    try {
+      const data = JSON.parse(localStorage.getItem("employeeData") || "{}");
+      return data?.name || data?.employeeName || "";
     } catch {
       return "";
     }
@@ -295,17 +313,19 @@ const ExpenseManagement = () => {
 
   const filteredExpenses = useMemo(() => {
     const query = tableSearch.trim().toLowerCase();
-    if (!query) return expenses;
 
     return expenses.filter((expense) => {
       const outcome = expense.outcome || expense.stops?.[0]?.outcome || "";
-      return (
+      const matchesSearch = !query || (
         expense.purpose?.toLowerCase().includes(query) ||
         outcome.toLowerCase().includes(query) ||
         expense.remark?.toLowerCase().includes(query)
       );
+
+      const matchesStatus = !statusFilter || (expense.status || "Pending") === statusFilter;
+      return matchesSearch && matchesStatus;
     });
-  }, [expenses, tableSearch]);
+  }, [expenses, tableSearch, statusFilter]);
 
   const stats = useMemo(() => {
     const totalClaims = expenses.length;
@@ -381,7 +401,7 @@ const ExpenseManagement = () => {
   }
 
   return (
-    <div className="emp-dash emp-page-shell">
+    <div className="emp-dash">
       {showSuccessToast && (
         <div className="emp-toast">
           <div className="emp-toast-content">
@@ -391,295 +411,432 @@ const ExpenseManagement = () => {
         </div>
       )}
 
-      <main>
-        <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">
+      <main className="p-2 sm:p-4 lg:p-6">
+        {/* ── Desktop Header ── */}
+        <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap mb-4">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Expense <span>Management</span>
             </h1>
-            <p className="emp-dash__subtitle">
-              Track your travel claims, reimbursement amount, and meeting outcomes in one place.
-            </p>
           </div>
-          <div className="emp-dash__date-pill">
-            <FaCalendarAlt />
-            <span>
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
+
+          {/* Right side: Compact Filters & Actions (Desktop only) */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Record Expense Button */}
+            <button
+              type="button"
+              onClick={handleOpenAddExpense}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaPlus size={10} /> Record Expense
+            </button>
+
+            {/* Quick Search - Compact */}
+            <div className="relative">
+              <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]" />
+              <input
+                type="text"
+                placeholder="Search expense..."
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                className="w-[150px] pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-medium text-gray-700"
+            >
+              <option value="">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+
+            {/* Clear Filters Button */}
+            {(tableSearch || statusFilter) && (
+              <button
+                onClick={() => {
+                  setTableSearch("");
+                  setStatusFilter("");
+                }}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" />
+                Clear
+              </button>
+            )}
+
+            {/* Refresh Button */}
+            <button
+              onClick={fetchInitialData}
+              disabled={loading}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FaSync className={loading ? "animate-spin" : ""} size={10} />
+              {loading ? "Loading..." : "Refresh"}
+            </button>
+
+            {/* Employee info pill */}
+            {employeeName && (
+              <div className="emp-dash__date-pill">
+                <FaUser className="text-blue-600 text-[10px]" />
+                <span>{employeeName}</span>
+                {employeeId && <span className="text-gray-400 text-[10px] font-medium">· {employeeId}</span>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Mobile Header ── */}
+        <div className="sm:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <h1 className="text-base font-bold whitespace-nowrap">
+            Expense <span className="text-indigo-600">Management</span>
+          </h1>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={handleOpenAddExpense}
+              className="px-2.5 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg flex items-center gap-1 shadow-sm"
+            >
+              <FaPlus size={10} /> Record
+            </button>
+            <span className="text-xs text-gray-500">
+              <strong>{filteredExpenses.length}</strong> records
             </span>
           </div>
         </div>
 
-        <div className="emp-dash__stats">
+        {/* Mobile Filters Toggle */}
+        <div className="sm:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; Actions</span>
+              {showMobileFilters ? (
+                <FaChevronUp className="text-gray-400" />
+              ) : (
+                <FaChevronDown className="text-gray-400" />
+              )}
+            </button>
+          </div>
+
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search purpose or remark..."
+                    value={tableSearch}
+                    onChange={(e) => setTableSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg bg-white"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 space-y-2">
+                <button
+                  onClick={() => {
+                    setTableSearch("");
+                    setStatusFilter("");
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                  Clear Filters
+                </button>
+                <button
+                  onClick={fetchInitialData}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all shadow-sm"
+                >
+                  <FaSync className={loading ? "animate-spin" : ""} size={14} />
+                  {loading ? "Loading..." : "Refresh Data"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── KPI Stat Cards ── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Claims</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FaFileInvoice />
+                <FaFileInvoice className="text-blue-500" />
               </div>
             </div>
             <div className="emp-dash__stat-value">{stats.totalClaims}</div>
-            <div className="emp-dash__stat-meta">records submitted</div>
+            <div className="emp-dash__stat-meta">records submitted 📋</div>
           </div>
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Distance</span>
+              <span className="emp-dash__stat-label">Total Distance</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FaCar />
+                <FaCar className="text-emerald-500" />
               </div>
             </div>
-            <div className="emp-dash__stat-value">{Math.round(stats.totalDistance)}</div>
-            <div className="emp-dash__stat-meta">km claimed overall</div>
+            <div className="emp-dash__stat-value">{Math.round(stats.totalDistance)} km</div>
+            <div className="emp-dash__stat-meta">claimed overall 🚗</div>
           </div>
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Amount</span>
+              <span className="emp-dash__stat-label">Reimbursable</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
-                <FaWallet />
+                <FaWallet className="text-amber-500" />
               </div>
             </div>
             <div className="emp-dash__stat-value">{formatCurrency(stats.totalAmount)}</div>
-            <div className="emp-dash__stat-meta">reimbursable amount</div>
+            <div className="emp-dash__stat-meta">total claim amount 💳</div>
           </div>
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">This Month</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
-                <FaUserClock />
+                <FaUserClock className="text-purple-500" />
               </div>
             </div>
             <div className="emp-dash__stat-value">{stats.monthlyClaims}</div>
-            <div className="emp-dash__stat-meta">claims in current month</div>
+            <div className="emp-dash__stat-meta">claims in current month 📅</div>
           </div>
         </div>
 
-        <div className="emp-page__hero">
-          <div>
-            <div className="emp-page__hero-eyebrow">
-              <FaRoute /> Travel reimbursement
+        {/* ── Rate Banner ── */}
+        <div className="p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-blue-100 rounded-2xl mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20 flex-shrink-0">
+              <FaRoute size={18} />
             </div>
-            <div className="emp-page__hero-title">
-              Rate: {formatCurrency(kmRate)} <span style={{ fontSize: "0.8rem", fontWeight: "normal" }}>per KM</span>
-            </div>
-            <p className="emp-page__hero-copy">
-              Enter your trip details and stops. Distance is automatically calculated from your stops or you can enter it manually.
-            </p>
-          </div>
-          <div className="emp-page__hero-actions">
-            <button type="button" className="emp-page__hero-btn" onClick={handleOpenAddExpense}>
-              <FaPlus />
-              Record Expense
-            </button>
-            <button type="button" className="emp-page__hero-btn--ghost" onClick={fetchInitialData}>
-              <FaSync className={loading ? "animate-spin" : ""} />
-              Refresh
-            </button>
-          </div>
-        </div>
-
-        <div className="emp-dash__card">
-          <div className="emp-dash__card-header">
             <div>
-              <h3 className="emp-dash__card-title">Expense History</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-800">Reimbursement Rate</span>
+                <span className="px-2 py-0.5 text-xs font-bold bg-blue-600 text-white rounded-full">
+                  {formatCurrency(kmRate)} / KM
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Distance is automatically calculated from visit stops or entered manually.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleOpenAddExpense}
+            className="px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all flex items-center gap-1.5 shadow-sm whitespace-nowrap self-stretch sm:self-auto justify-center"
+          >
+            <FaPlus size={12} /> Record Expense
+          </button>
+        </div>
+
+        {/* ── Card Container ── */}
+        <div className="emp-dash__card mb-6">
+          <div className="emp-dash__card-header flex items-center justify-between">
+            <div>
+              <h3 className="emp-dash__card-title flex items-center gap-2">
+                <FaMoneyBillWave className="text-blue-600" />
+                Expense History
+              </h3>
               <p className="emp-dash__card-desc">Review and manage all your submitted travel claims.</p>
             </div>
-            <div className="emp-page__pill">
-              <FaMoneyBillWave />
+            <div className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
               {formatCurrency(stats.totalAmount)}
             </div>
           </div>
 
-          <div className="emp-dash__card-body" style={{ paddingBottom: "1rem" }}>
-            <div className="emp-page__filters">
-              <div className="emp-page__search-wrap">
-                <FaSearch className="emp-page__search-icon" />
-                <input
-                  type="text"
-                  value={tableSearch}
-                  onChange={(e) => setTableSearch(e.target.value)}
-                  className="emp-page__search"
-                  placeholder="Search by purpose, outcome, or remark..."
-                />
-                {tableSearch && (
-                  <FaTimes className="emp-page__search-clear" onClick={() => setTableSearch("")} />
-                )}
+          <div className="emp-dash__card-body">
+            {filteredExpenses.length === 0 ? (
+              <div className="py-12 text-center">
+                <div className="flex flex-col items-center gap-2">
+                  <FiInbox className="text-5xl text-gray-300 mb-1" />
+                  <p className="text-base font-semibold text-gray-600">No Expense Records Found</p>
+                  <p className="text-xs text-gray-400 max-w-sm">
+                    {tableSearch || statusFilter
+                      ? "Try adjusting your search terms or filters."
+                      : "Start tracking your travel expenses by recording your first claim."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleOpenAddExpense}
+                    className="mt-3 px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
+                  >
+                    Record Expense
+                  </button>
+                </div>
               </div>
+            ) : (
+              <>
+                {/* Desktop Table View */}
+                <div className="emp-dash__table-wrap hidden lg:block border border-gray-100 rounded-xl overflow-hidden">
+                  <table className="emp-dash__table">
+                    <thead>
+                      <tr>
+                        <th>Purpose &amp; Date</th>
+                        <th className="text-center">Distance</th>
+                        <th className="text-center">Stops</th>
+                        <th className="text-center">Status</th>
+                        <th className="text-right">Amount</th>
+                        <th className="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredExpenses.map((expense, index) => {
+                        const stopCount = expense.stops?.length || 0;
+                        return (
+                          <tr key={`${expense._id || expense.date}-${index}`} className="hover:bg-gray-50/60 transition-colors group">
+                            <td>
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">{expense.purpose}</span>
+                                <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                  <FaCalendarAlt size={10} /> {formatDate(expense.date)}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="text-center whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                                <FaCar className="text-slate-500" size={10} />
+                                {Number(expense.km || 0).toFixed(1)} km
+                              </span>
+                            </td>
+                            <td className="text-center whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                <FaMapMarkerAlt size={10} />
+                                {stopCount > 0 ? `${stopCount} stop${stopCount > 1 ? "s" : ""}` : "Single visit"}
+                              </span>
+                            </td>
+                            <td className="text-center whitespace-nowrap">
+                              <StatusBadge status={expense.status || "Pending"} />
+                            </td>
+                            <td className="text-right whitespace-nowrap font-bold text-slate-900 text-sm">
+                              {formatCurrency(expense.totalAmount)}
+                            </td>
+                            <td className="text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  className="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1 shadow-2xs"
+                                  onClick={() => handleViewExpense(expense)}
+                                  title="View details"
+                                >
+                                  <FaEye size={11} /> View
+                                </button>
+                                <button
+                                  type="button"
+                                  className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors flex items-center gap-1 shadow-2xs"
+                                  onClick={() => handleEditExpense(expense)}
+                                  title="Edit"
+                                >
+                                  <FaEdit size={11} /> Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  className="px-2.5 py-1 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1 shadow-2xs"
+                                  onClick={() => handleDeleteExpense(expense._id, expense.purpose)}
+                                  disabled={isDeleting}
+                                  title="Delete"
+                                >
+                                  <FaTrashAlt size={11} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
 
-              <div className="emp-page__pill emp-page__pill--muted">
-                <FaClipboardList />
-                {filteredExpenses.length} records
-              </div>
-            </div>
-          </div>
-
-          {filteredExpenses.length === 0 ? (
-            <div className="emp-page__empty">
-              <div className="emp-page__empty-icon">
-                <FaFileInvoice />
-              </div>
-              <h3>No expense records found</h3>
-              <p>
-                {tableSearch 
-                  ? "Try adjusting your search terms." 
-                  : "Start tracking your travel expenses by clicking 'Record Expense'."}
-              </p>
-              <button 
-                className="emp-page__hero-btn" 
-                onClick={handleOpenAddExpense}
-                style={{ marginTop: "1rem" }}
-              >
-                <FaPlus /> Create Your First Expense
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="emp-dash__table-wrap">
-                <table className="emp-dash__table">
-                  <thead>
-                    <tr>
-                      <th>Purpose & Date</th>
-                      <th>Distance</th>
-                      <th>Stops</th>
-                      <th>Status</th>
-                      <th>Amount</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredExpenses.map((expense, index) => {
-                      const stopCount = expense.stops?.length || 0;
-                      const primaryOutcome = expense.outcome || expense.stops?.[0]?.outcome || "—";
-                      return (
-                        <tr key={`${expense._id || expense.date}-${index}`}>
-                          <td>
-                            <div className="emp-table__purpose">
-                              <span className="emp-table__purpose-name">{expense.purpose}</span>
-                              <span className="emp-table__purpose-date">{formatDate(expense.date)}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <span className="emp-table__distance">
-                              <FaCar className="emp-table__distance-icon" />
-                              {Number(expense.km || 0).toFixed(1)} km
-                            </span>
-                          </td>
-                          <td>
-                            <span className="emp-page__badge emp-page__badge--primary">
-                              <FaMapMarkerAlt />
-                              {stopCount > 0 ? `${stopCount} stop${stopCount > 1 ? "s" : ""}` : "Single visit"}
-                            </span>
-                          </td>
-                          <td>
-                            <StatusBadge status={expense.status || "Pending"} />
-                          </td>
-                          <td>
-                            <span className="emp-table__amount">{formatCurrency(expense.totalAmount)}</span>
-                          </td>
-                          <td>
-                            <div className="emp-table__actions">
-                              <button
-                                type="button"
-                                className="emp-table__action-btn emp-table__action-btn--view"
-                                onClick={() => handleViewExpense(expense)}
-                                title="View details"
-                              >
-                                <FaEye />
-                              </button>
-                              <button
-                                type="button"
-                                className="emp-table__action-btn emp-table__action-btn--edit"
-                                onClick={() => handleEditExpense(expense)}
-                                title="Edit"
-                              >
-                                <FaEdit />
-                              </button>
-                              <button
-                                type="button"
-                                className="emp-table__action-btn emp-table__action-btn--delete"
-                                onClick={() => handleDeleteExpense(expense._id, expense.purpose)}
-                                disabled={isDeleting}
-                                title="Delete"
-                              >
-                                <FaTrashAlt />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="emp-page__mobile-list">
-                {filteredExpenses.map((expense, index) => {
-                  const stopCount = expense.stops?.length || 0;
-                  const primaryOutcome = expense.outcome || expense.stops?.[0]?.outcome || "—";
-                  return (
-                    <div key={`${expense._id || expense.date}-mobile-${index}`} className="emp-page__mobile-card">
-                      <div className="emp-page__mobile-top">
-                        <div>
-                          <div className="emp-page__mobile-title">{expense.purpose}</div>
-                          <div className="emp-page__mobile-subtitle">
-                            <FaCalendarAlt /> {formatDate(expense.date)}
+                {/* Mobile Cards View */}
+                <div className="lg:hidden space-y-3">
+                  {filteredExpenses.map((expense, index) => {
+                    const stopCount = expense.stops?.length || 0;
+                    return (
+                      <div key={`${expense._id || expense.date}-mobile-${index}`} className="bg-white rounded-xl border border-gray-200 shadow-2xs p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-bold text-gray-900 text-sm line-clamp-1">{expense.purpose}</h4>
+                            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                              <FaCalendarAlt size={10} /> {formatDate(expense.date)}
+                            </p>
                           </div>
-                        </div>
-                        <div className="emp-mobile__actions">
-                          <button
-                            type="button"
-                            className="emp-table__action-btn emp-table__action-btn--view"
-                            onClick={() => handleViewExpense(expense)}
-                          >
-                            <FaEye />
-                          </button>
-                          <button
-                            type="button"
-                            className="emp-table__action-btn emp-table__action-btn--edit"
-                            onClick={() => handleEditExpense(expense)}
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            type="button"
-                            className="emp-table__action-btn emp-table__action-btn--delete"
-                            onClick={() => handleDeleteExpense(expense._id, expense.purpose)}
-                          >
-                            <FaTrashAlt />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="emp-page__mobile-grid">
-                        <div className="emp-page__mobile-field">
-                          <span>Distance</span>
-                          <span>{Number(expense.km || 0).toFixed(1)} km</span>
-                        </div>
-                        <div className="emp-page__mobile-field">
-                          <span>Amount</span>
-                          <span className="emp-table__amount">{formatCurrency(expense.totalAmount)}</span>
-                        </div>
-                        <div className="emp-page__mobile-field">
-                          <span>Stops</span>
-                          <span>{stopCount > 0 ? stopCount : 1}</span>
-                        </div>
-                        <div className="emp-page__mobile-field">
-                          <span>Status</span>
                           <StatusBadge status={expense.status || "Pending"} />
                         </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100 mb-3">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Distance</span>
+                            <span className="font-semibold text-slate-800">{Number(expense.km || 0).toFixed(1)} km</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Amount</span>
+                            <span className="font-bold text-blue-600">{formatCurrency(expense.totalAmount)}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Stops</span>
+                            <span className="font-semibold text-slate-800">{stopCount > 0 ? stopCount : 1} stop(s)</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Rate</span>
+                            <span className="font-semibold text-slate-800">{formatCurrency(kmRate)}/km</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                          <button
+                            type="button"
+                            className="flex-1 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-1"
+                            onClick={() => handleViewExpense(expense)}
+                          >
+                            <FaEye size={11} /> View
+                          </button>
+                          <button
+                            type="button"
+                            className="flex-1 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1"
+                            onClick={() => handleEditExpense(expense)}
+                          >
+                            <FaEdit size={11} /> Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center"
+                            onClick={() => handleDeleteExpense(expense._id, expense.purpose)}
+                          >
+                            <FaTrashAlt size={11} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </main>
 

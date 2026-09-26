@@ -1,56 +1,141 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { 
-  FiPlus, FiEdit2, FiTrash2, FiX, 
-  FiClock, FiStar, FiBell, FiCalendar,
-  FiTrendingUp, FiAward, FiSmile, FiGrid,
-  FiList, FiChevronRight, FiMoreVertical,
-  FiHeart, FiShare2, FiCopy, FiExternalLink,
-  FiZap, FiSun, FiMoon
+import {
+  FiCalendar, FiGift, FiClock, FiActivity, FiFilter, FiTrash2,
+  FiPlus, FiEdit2, FiX, FiCheck, FiRepeat, FiBell, FiGrid,
+  FiList, FiTrendingUp, FiAward, FiSmile
 } from 'react-icons/fi';
-import { FaSearch, FaTimes, FaBirthdayCake, FaGlassCheers, FaTrophy, FaCalendarAlt, FaPlane, FaGraduationCap, FaEllipsisH } from 'react-icons/fa';
+import {
+  FaSearch, FaTimes, FaChevronDown, FaChevronUp
+} from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE_URL } from '../config';
+import '../index.css';
+import './EmployeeDashboard.css';
+import './EmployeeLeaves.css';
 
-// API Service - Inline
-const API_BASE_URL = 'http://localhost:5001/api/events';
+// API Service with local fallback for offline/resilience
+const API_URL = `${API_BASE_URL}/events`;
 
-const eventService = {
-  createEvent: async (eventData) => {
-    try {
-      const response = await axios.post(API_BASE_URL, eventData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-  getMyEvents: async (userId) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/my-events/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-  updateEvent: async (id, eventData) => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/${id}`, eventData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-  deleteEvent: async (id) => {
-    try {
-      const response = await axios.delete(`${API_BASE_URL}/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
+const getLocalEvents = (userId) => {
+  try {
+    const raw = localStorage.getItem(`emp_events_${userId || 'guest'}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
   }
 };
 
+const saveLocalEvents = (userId, events) => {
+  try {
+    localStorage.setItem(`emp_events_${userId || 'guest'}`, JSON.stringify(events));
+  } catch (e) {
+    console.error('Error saving events to storage:', e);
+  }
+};
+
+const eventService = {
+  getMyEvents: async (userId) => {
+    try {
+      const response = await axios.get(`${API_URL}/my-events/${userId}`);
+      const data = response.data?.events || response.data?.data || response.data;
+      if (Array.isArray(data)) {
+        saveLocalEvents(userId, data);
+        return data;
+      }
+      return getLocalEvents(userId);
+    } catch (error) {
+      console.warn('Backend events API unreachable, using local storage:', error.message);
+      return getLocalEvents(userId);
+    }
+  },
+  createEvent: async (eventData, userId) => {
+    try {
+      const response = await axios.post(API_URL, eventData);
+      const newEvent = response.data?.event || response.data?.data || response.data;
+      if (newEvent && newEvent._id) {
+        const local = getLocalEvents(userId);
+        saveLocalEvents(userId, [newEvent, ...local]);
+        return newEvent;
+      }
+    } catch (error) {
+      console.warn('Backend create event failed, saving locally:', error.message);
+    }
+    const fallbackEvent = {
+      ...eventData,
+      _id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      createdAt: new Date().toISOString()
+    };
+    const local = getLocalEvents(userId);
+    saveLocalEvents(userId, [fallbackEvent, ...local]);
+    return fallbackEvent;
+  },
+  updateEvent: async (id, eventData, userId) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}`, eventData);
+      const updated = response.data?.event || response.data?.data || response.data;
+      if (updated) {
+        const local = getLocalEvents(userId).map(e => e._id === id ? updated : e);
+        saveLocalEvents(userId, local);
+        return updated;
+      }
+    } catch (error) {
+      console.warn('Backend update event failed, updating locally:', error.message);
+    }
+    const updated = { ...eventData, _id: id };
+    const local = getLocalEvents(userId).map(e => e._id === id ? updated : e);
+    saveLocalEvents(userId, local);
+    return updated;
+  },
+  deleteEvent: async (id, userId) => {
+    try {
+      await axios.delete(`${API_URL}/${id}`);
+    } catch (error) {
+      console.warn('Backend delete event failed, deleting locally:', error.message);
+    }
+    const local = getLocalEvents(userId).filter(e => e._id !== id);
+    saveLocalEvents(userId, local);
+    return true;
+  }
+};
+
+// Date helpers
+const formatDate = (dateStr) => {
+  if (!dateStr) return 'N/A';
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};
+
+const getDaysRemaining = (dateStr) => {
+  if (!dateStr) return 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const eventDate = new Date(dateStr);
+  eventDate.setHours(0, 0, 0, 0);
+  const diffTime = eventDate - today;
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
+// Event categories metadata
+const EVENT_CATEGORIES = [
+  { value: 'birthday', label: 'Birthday', icon: '🎂', badgeClass: 'bg-rose-50 text-rose-700 border-rose-100', avatarBg: 'bg-rose-100 text-rose-600' },
+  { value: 'anniversary', label: 'Anniversary', icon: '💑', badgeClass: 'bg-amber-50 text-amber-700 border-amber-100', avatarBg: 'bg-amber-100 text-amber-600' },
+  { value: 'achievement', label: 'Achievement', icon: '🏆', badgeClass: 'bg-yellow-50 text-yellow-700 border-yellow-100', avatarBg: 'bg-yellow-100 text-yellow-600' },
+  { value: 'appointment', label: 'Appointment', icon: '📅', badgeClass: 'bg-blue-50 text-blue-700 border-blue-100', avatarBg: 'bg-blue-100 text-blue-600' },
+  { value: 'vacation', label: 'Vacation', icon: '✈️', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-100', avatarBg: 'bg-emerald-100 text-emerald-600' },
+  { value: 'exam', label: 'Exam', icon: '📚', badgeClass: 'bg-purple-50 text-purple-700 border-purple-100', avatarBg: 'bg-purple-100 text-purple-600' },
+  { value: 'other', label: 'Other', icon: '📌', badgeClass: 'bg-gray-50 text-gray-700 border-gray-100', avatarBg: 'bg-gray-100 text-gray-600' }
+];
+
+const getCategoryConfig = (type) => {
+  return EVENT_CATEGORIES.find(c => c.value === type) || EVENT_CATEGORIES[6];
+};
+
 // ============================================
-// PREMIUM EVENT FORM
+// MODAL EVENT FORM COMPONENT
 // ============================================
 const EventForm = ({ event, onSubmit, onCancel, userId, userRole }) => {
   const [formData, setFormData] = useState({
@@ -64,16 +149,6 @@ const EventForm = ({ event, onSubmit, onCancel, userId, userRole }) => {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const eventTypes = [
-    { value: 'birthday', label: 'Birthday', icon: '🎂', color: '#f43f5e', bg: 'linear-gradient(135deg, #fce7f3, #fbcfe8)' },
-    { value: 'anniversary', label: 'Anniversary', icon: '💑', color: '#ec4899', bg: 'linear-gradient(135deg, #fce7f3, #f9a8d4)' },
-    { value: 'achievement', label: 'Achievement', icon: '🏆', color: '#f59e0b', bg: 'linear-gradient(135deg, #fef3c7, #fde68a)' },
-    { value: 'appointment', label: 'Appointment', icon: '📅', color: '#3b82f6', bg: 'linear-gradient(135deg, #dbeafe, #bfdbfe)' },
-    { value: 'vacation', label: 'Vacation', icon: '✈️', color: '#10b981', bg: 'linear-gradient(135deg, #d1fae5, #a7f3d0)' },
-    { value: 'exam', label: 'Exam', icon: '📚', color: '#8b5cf6', bg: 'linear-gradient(135deg, #ede9fe, #ddd6fe)' },
-    { value: 'other', label: 'Other', icon: '📌', color: '#6b7280', bg: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)' }
-  ];
 
   const reminderOptions = [
     { value: 0, label: 'Same Day' },
@@ -93,6 +168,9 @@ const EventForm = ({ event, onSubmit, onCancel, userId, userRole }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const validate = () => {
@@ -121,491 +199,169 @@ const EventForm = ({ event, onSubmit, onCancel, userId, userRole }) => {
     }
   };
 
-  const selectedType = eventTypes.find(t => t.value === formData.eventType);
-
   return (
-    <motion.form 
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 30 }}
-      transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      onSubmit={handleSubmit} 
-      style={premiumStyles.form}
-    >
-      <div style={premiumStyles.formHeader}>
-        <motion.div 
-          whileHover={{ scale: 1.05, rotate: 5 }}
-          style={{ ...premiumStyles.formHeaderIcon, background: selectedType?.bg || '#f0f0f0' }}
-        >
-          <span style={{ fontSize: '32px' }}>{event ? '✏️' : '✨'}</span>
-        </motion.div>
+    <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      {/* Title */}
+      <div>
+        <label className="block text-xs font-semibold text-gray-700 mb-1">
+          Event Title <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
+          placeholder="e.g., Annual Team Meet, Mom's Birthday, Project Launch..."
+          className={`w-full px-3 py-2 text-xs sm:text-sm border rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all ${
+            errors.title ? 'border-red-400 bg-red-50/20' : 'border-gray-300'
+          }`}
+        />
+        {errors.title && <span className="text-[11px] text-red-500 mt-1 block">{errors.title}</span>}
+      </div>
+
+      {/* Type & Date */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <h3 style={premiumStyles.formHeaderTitle}>
-            {event ? 'Update Event' : 'Create New Event'}
-          </h3>
-          <p style={premiumStyles.formHeaderSub}>
-            {event ? 'Make changes to your event details' : 'Add a new event to your wishlist'}
-          </p>
-        </div>
-      </div>
-
-      <div style={premiumStyles.formBody}>
-        <div style={premiumStyles.formGroup}>
-          <label style={premiumStyles.label}>
-            Event Title <span style={{ color: '#ef4444' }}>*</span>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">
+            Category <span className="text-red-500">*</span>
           </label>
-          <motion.input
-            whileFocus={{ scale: 1.01, borderColor: '#3b82f6' }}
-            type="text"
-            name="title"
-            value={formData.title}
+          <select
+            name="eventType"
+            value={formData.eventType}
             onChange={handleChange}
-            placeholder="Enter event title..."
-            style={{ ...premiumStyles.input, ...(errors.title ? premiumStyles.inputError : {}) }}
-          />
-          {errors.title && <span style={premiumStyles.errorText}>{errors.title}</span>}
+            className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            {EVENT_CATEGORIES.map(cat => (
+              <option key={cat.value} value={cat.value}>
+                {cat.icon} {cat.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div style={premiumStyles.row}>
-          <div style={premiumStyles.formGroup}>
-            <label style={premiumStyles.label}>
-              Event Type <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <div style={premiumStyles.selectWrapper}>
-              <select 
-                name="eventType" 
-                value={formData.eventType} 
-                onChange={handleChange} 
-                style={{ ...premiumStyles.input, background: selectedType?.bg + '30' }}
-              >
-                {eventTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.icon} {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div style={premiumStyles.formGroup}>
-            <label style={premiumStyles.label}>
-              Event Date <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <motion.input
-              whileFocus={{ scale: 1.01, borderColor: '#3b82f6' }}
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              style={{ ...premiumStyles.input, ...(errors.date ? premiumStyles.inputError : {}) }}
-            />
-            {errors.date && <span style={premiumStyles.errorText}>{errors.date}</span>}
-          </div>
-        </div>
-
-        <div style={premiumStyles.row}>
-          <div style={premiumStyles.formGroup}>
-            <label style={premiumStyles.label}>⏰ Reminder</label>
-            <select name="reminderBefore" value={formData.reminderBefore} onChange={handleChange} style={premiumStyles.input}>
-              {reminderOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={premiumStyles.formGroup}>
-            <label style={premiumStyles.label}>🔄 Repeat</label>
-            <select name="repeat" value={formData.repeat} onChange={handleChange} style={premiumStyles.input}>
-              {repeatOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div style={premiumStyles.formGroup}>
-          <label style={premiumStyles.label}>📝 Notes</label>
-          <motion.textarea
-            whileFocus={{ scale: 1.01, borderColor: '#3b82f6' }}
-            name="notes"
-            value={formData.notes}
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">
+            Event Date <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="date"
+            name="date"
+            value={formData.date}
             onChange={handleChange}
-            placeholder="Add any additional notes..."
-            rows="2"
-            style={premiumStyles.textarea}
+            className={`w-full px-3 py-2 text-xs sm:text-sm border rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+              errors.date ? 'border-red-400 bg-red-50/20' : 'border-gray-300'
+            }`}
           />
+          {errors.date && <span className="text-[11px] text-red-500 mt-1 block">{errors.date}</span>}
         </div>
       </div>
 
-      <div style={premiumStyles.formActions}>
-        <motion.button 
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="button" 
-          onClick={onCancel} 
-          style={premiumStyles.btnCancel} 
+      {/* Reminder & Repeat */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">
+            ⏰ Reminder
+          </label>
+          <select
+            name="reminderBefore"
+            value={formData.reminderBefore}
+            onChange={handleChange}
+            className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            {reminderOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">
+            🔄 Recurrence
+          </label>
+          <select
+            name="repeat"
+            value={formData.repeat}
+            onChange={handleChange}
+            className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            {repeatOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Notes */}
+      <div>
+        <label className="block text-xs font-semibold text-gray-700 mb-1">
+          📝 Notes / Description
+        </label>
+        <textarea
+          name="notes"
+          value={formData.notes}
+          onChange={handleChange}
+          placeholder="Add any reminders, venue, or details..."
+          rows="3"
+          className="w-full px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+        />
+      </div>
+
+      {/* Form Buttons */}
+      <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+        <button
+          type="button"
+          onClick={onCancel}
           disabled={isSubmitting}
+          className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
         >
-          <FiX size={18} /> Cancel
-        </motion.button>
-        <motion.button 
-          whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(59,130,246,0.4)' }}
-          whileTap={{ scale: 0.98 }}
-          type="submit" 
-          style={premiumStyles.btnSubmit} 
+          Cancel
+        </button>
+        <button
+          type="submit"
           disabled={isSubmitting}
+          className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all disabled:opacity-50"
         >
           {isSubmitting ? (
-            <motion.span
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            >
-              ⏳
-            </motion.span>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : event ? (
-            <><FiEdit2 size={18} /> Update Event</>
+            <><FiEdit2 className="w-3.5 h-3.5" /> Update Event</>
           ) : (
-            <><FiPlus size={18} /> Add Event</>
+            <><FiPlus className="w-3.5 h-3.5" /> Save Event</>
           )}
-        </motion.button>
+        </button>
       </div>
-    </motion.form>
+    </form>
   );
 };
 
 // ============================================
-// PREMIUM EVENT CARD
-// ============================================
-const EventCard = ({ event, onEdit, onDelete, index }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-
-  const getDaysRemaining = (date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const eventDate = new Date(date);
-    eventDate.setHours(0, 0, 0, 0);
-    const diffTime = eventDate - today;
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  const days = getDaysRemaining(event.date);
-
-  const getStatus = () => {
-    if (days === 0) return { label: 'Today!', color: '#16a34a', bg: '#dcfce7', emoji: '🎉', pulse: true };
-    if (days < 0) return { label: `${Math.abs(days)} days ago`, color: '#6b7280', bg: '#f3f4f6', emoji: '⏳', pulse: false };
-    if (days <= 3) return { label: `${days} days left`, color: '#dc2626', bg: '#fee2e2', emoji: '🔥', pulse: true };
-    if (days <= 7) return { label: `${days} days left`, color: '#d97706', bg: '#fef3c7', emoji: '📅', pulse: false };
-    if (days <= 30) return { label: `${days} days left`, color: '#2563eb', bg: '#dbeafe', emoji: '📅', pulse: false };
-    return { label: `${days} days left`, color: '#6b7280', bg: '#f3f4f6', emoji: '📅', pulse: false };
-  };
-
-  const status = getStatus();
-
-  const eventConfig = {
-    birthday: { 
-      gradient: 'linear-gradient(135deg, #fce7f3, #fbcfe8)', 
-      border: '#f9a8d4', 
-      icon: '🎂', 
-      label: 'Birthday',
-      shadow: '0 8px 25px rgba(244,63,94,0.15)'
-    },
-    anniversary: { 
-      gradient: 'linear-gradient(135deg, #fce7f3, #f9a8d4)', 
-      border: '#ec4899', 
-      icon: '💑', 
-      label: 'Anniversary',
-      shadow: '0 8px 25px rgba(236,72,153,0.15)'
-    },
-    achievement: { 
-      gradient: 'linear-gradient(135deg, #fef3c7, #fde68a)', 
-      border: '#fcd34d', 
-      icon: '🏆', 
-      label: 'Achievement',
-      shadow: '0 8px 25px rgba(245,158,11,0.15)'
-    },
-    appointment: { 
-      gradient: 'linear-gradient(135deg, #dbeafe, #bfdbfe)', 
-      border: '#93c5fd', 
-      icon: '📅', 
-      label: 'Appointment',
-      shadow: '0 8px 25px rgba(59,130,246,0.15)'
-    },
-    vacation: { 
-      gradient: 'linear-gradient(135deg, #d1fae5, #a7f3d0)', 
-      border: '#6ee7b7', 
-      icon: '✈️', 
-      label: 'Vacation',
-      shadow: '0 8px 25px rgba(16,185,129,0.15)'
-    },
-    exam: { 
-      gradient: 'linear-gradient(135deg, #ede9fe, #ddd6fe)', 
-      border: '#c4b5fd', 
-      icon: '📚', 
-      label: 'Exam',
-      shadow: '0 8px 25px rgba(139,92,246,0.15)'
-    },
-    other: { 
-      gradient: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)', 
-      border: '#d1d5db', 
-      icon: '📌', 
-      label: 'Other',
-      shadow: '0 8px 25px rgba(107,114,128,0.15)'
-    }
-  };
-
-  const config = eventConfig[event.eventType] || eventConfig.other;
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 50, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1,
-      transition: { 
-        type: "spring", 
-        damping: 25, 
-        stiffness: 300,
-        delay: index * 0.05 
-      }
-    },
-    hover: {
-      y: -8,
-      scale: 1.02,
-      boxShadow: config.shadow || '0 20px 40px rgba(0,0,0,0.12)',
-      transition: { type: "spring", damping: 20, stiffness: 400 }
-    }
-  };
-
-  return (
-    <motion.div
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      whileHover="hover"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        ...premiumStyles.card,
-        background: config.gradient,
-        borderColor: config.border,
-      }}
-    >
-      {/* Premium Glow Effect */}
-      <motion.div
-        animate={{
-          opacity: isHovered ? 1 : 0,
-          scale: isHovered ? 1 : 0.8
-        }}
-        style={{
-          position: 'absolute',
-          top: '-50%',
-          right: '-50%',
-          width: '200%',
-          height: '200%',
-          background: `radial-gradient(circle, ${config.border}20, transparent 70%)`,
-          pointerEvents: 'none',
-          transition: 'all 0.5s'
-        }}
-      />
-
-      {/* Decorative Badge */}
-      <motion.div
-        animate={{
-          scale: isHovered ? 1.1 : 1,
-          rotate: isHovered ? 10 : 0
-        }}
-        style={{
-          ...premiumStyles.cardBadge,
-          background: config.border,
-        }}
-      >
-        {config.icon}
-      </motion.div>
-
-      {/* Like Button */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsLiked(!isLiked)}
-        style={{
-          position: 'absolute',
-          top: '16px',
-          right: '56px',
-          background: 'rgba(255,255,255,0.8)',
-          border: 'none',
-          borderRadius: '50%',
-          width: '32px',
-          height: '32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          backdropFilter: 'blur(10px)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          zIndex: 2
-        }}
-      >
-        <FiHeart 
-          size={16} 
-          style={{ 
-            color: isLiked ? '#ef4444' : '#9ca3af',
-            fill: isLiked ? '#ef4444' : 'none',
-            transition: 'all 0.3s'
-          }} 
-        />
-      </motion.button>
-
-      <div style={premiumStyles.cardHeader}>
-        <div style={premiumStyles.cardTitle}>
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            style={{
-              ...premiumStyles.cardIcon,
-              background: config.border + '40',
-              color: config.border
-            }}
-          >
-            {config.icon}
-          </motion.div>
-          <div>
-            <motion.h3 
-              animate={{
-                color: isHovered ? config.border : '#1a1a1a'
-              }}
-              style={premiumStyles.cardTitleText}
-            >
-              {event.title}
-            </motion.h3>
-            <span style={{
-              ...premiumStyles.eventType,
-              background: config.border + '30',
-              color: config.border
-            }}>
-              {config.label}
-            </span>
-          </div>
-        </div>
-        <div style={premiumStyles.cardActions}>
-          <motion.button 
-            whileHover={{ scale: 1.1, backgroundColor: '#dbeafe' }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onEdit(event)} 
-            style={premiumStyles.btnEdit}
-          >
-            <FiEdit2 size={15} />
-          </motion.button>
-          <motion.button 
-            whileHover={{ scale: 1.1, backgroundColor: '#fee2e2' }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onDelete(event._id)} 
-            style={premiumStyles.btnDelete}
-          >
-            <FiTrash2 size={15} />
-          </motion.button>
-        </div>
-      </div>
-
-      <div style={premiumStyles.cardBody}>
-        <div style={premiumStyles.cardInfo}>
-          <motion.span 
-            animate={{
-              scale: status.pulse ? [1, 1.05, 1] : 1
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: status.pulse ? Infinity : 0,
-              ease: "easeInOut"
-            }}
-            style={{ ...premiumStyles.statusBadge, backgroundColor: status.bg, color: status.color }}
-          >
-            {status.emoji} {status.label}
-          </motion.span>
-        </div>
-
-        <div style={premiumStyles.cardDetails}>
-          <motion.div 
-            whileHover={{ scale: 1.05 }}
-            style={premiumStyles.detailItem}
-          >
-            <FiCalendar size={14} style={{ color: '#6b7280' }} />
-            <span>{new Date(event.date).toLocaleDateString('en-IN', { 
-              day: '2-digit', month: 'short', year: 'numeric' 
-            })}</span>
-          </motion.div>
-          {event.reminderBefore !== undefined && (
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              style={premiumStyles.detailItem}
-            >
-              <FiBell size={14} style={{ color: '#6b7280' }} />
-              <span>{event.reminderBefore === 0 ? 'Same Day' : `${event.reminderBefore} days before`}</span>
-            </motion.div>
-          )}
-          {event.repeat === 'yearly' && (
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              style={premiumStyles.detailItem}
-            >
-              <FiStar size={14} style={{ color: '#f59e0b' }} />
-              <span style={{ color: '#f59e0b' }}>Yearly</span>
-            </motion.div>
-          )}
-        </div>
-
-        {event.notes && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            style={premiumStyles.cardNotes}
-          >
-            <p style={premiumStyles.cardNotesText}>{event.notes}</p>
-          </motion.div>
-        )}
-
-        {/* Share/Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isHovered ? 1 : 0 }}
-          style={premiumStyles.cardFooter}
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            style={premiumStyles.footerBtn}
-          >
-            <FiShare2 size={14} /> Share
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            style={premiumStyles.footerBtn}
-          >
-            <FiCopy size={14} /> Copy
-          </motion.button>
-        </motion.div>
-      </div>
-    </motion.div>
-  );
-};
-
-// ============================================
-// PREMIUM MAIN COMPONENT
+// MAIN COMPONENT
 // ============================================
 const EmployeeEvents = ({ userId: propUserId, userRole: propUserRole }) => {
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState('employee');
   const [displayId, setDisplayId] = useState('');
   const [events, setEvents] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Filters & State
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'upcoming', 'today', 'completed'
+  const [sortBy, setSortBy] = useState('date');
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  // Modal
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [viewMode, setViewMode] = useState('grid');
-  const [sortBy, setSortBy] = useState('date');
 
+  // Resolve user identification
   useEffect(() => {
     const initUser = async () => {
       const resolvedRole = propUserRole || localStorage.getItem('userRole') || 'employee';
@@ -617,7 +373,7 @@ const EmployeeEvents = ({ userId: propUserId, userRole: propUserRole }) => {
       setDisplayId(resolvedDisplayId);
 
       let resolvedUserId = propUserId || localStorage.getItem('userId');
-      
+
       if (!resolvedUserId) {
         if (resolvedRole === 'admin') {
           resolvedUserId = localStorage.getItem('adminId');
@@ -637,7 +393,7 @@ const EmployeeEvents = ({ userId: propUserId, userRole: propUserRole }) => {
             const email = localStorage.getItem('employeeEmail');
             if (email) {
               try {
-                const res = await axios.get(`http://localhost:5001/api/employees/get-employee?email=${email}`);
+                const res = await axios.get(`${API_BASE_URL}/employees/get-employee?email=${email}`);
                 if (res.data && res.data.success && res.data.data) {
                   resolvedUserId = res.data.data._id || res.data.data.id;
                   if (resolvedUserId) {
@@ -645,7 +401,7 @@ const EmployeeEvents = ({ userId: propUserId, userRole: propUserRole }) => {
                   }
                 }
               } catch (err) {
-                console.error('Failed to get employee database ID:', err);
+                console.error('Failed to get employee ID:', err);
               }
             }
           }
@@ -654,50 +410,27 @@ const EmployeeEvents = ({ userId: propUserId, userRole: propUserRole }) => {
 
       if (resolvedUserId) {
         setUserId(resolvedUserId);
+      } else {
+        // Use default fallback ID for guests or local session
+        setUserId('emp_default');
       }
     };
 
     initUser();
   }, [propUserId, propUserRole]);
 
+  // Fetch events
   useEffect(() => {
     if (userId) {
       fetchEvents();
     }
   }, [userId]);
 
-  useEffect(() => {
-    let filtered = [...events];
-    
-    if (filterType !== 'all') {
-      filtered = filtered.filter(e => e.eventType === filterType);
-    }
-    
-    if (searchTerm) {
-      filtered = filtered.filter(e => 
-        e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (e.notes && e.notes.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-    
-    // Sort
-    if (sortBy === 'date') {
-      filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
-    } else if (sortBy === 'title') {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
-    }
-    
-    setFilteredEvents(filtered);
-  }, [events, searchTerm, filterType, sortBy]);
-
   const fetchEvents = async () => {
-    if (!userId) return;
     setLoading(true);
     try {
-      const response = await eventService.getMyEvents(userId);
-      const eventsList = response.events || response.data || [];
-      setEvents(eventsList);
-      setFilteredEvents(eventsList);
+      const list = await eventService.getMyEvents(userId);
+      setEvents(list || []);
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
@@ -707,23 +440,21 @@ const EmployeeEvents = ({ userId: propUserId, userRole: propUserRole }) => {
 
   const handleCreateEvent = async (eventData) => {
     try {
-      const response = await eventService.createEvent(eventData);
-      const newEvent = response.event || response.data;
+      const newEvent = await eventService.createEvent(eventData, userId);
       if (newEvent) {
         setEvents(prev => [newEvent, ...prev]);
       }
       setShowModal(false);
     } catch (error) {
       console.error('Error creating event:', error);
-      alert('Failed to create event');
+      alert('Failed to save event');
     }
   };
 
   const handleUpdateEvent = async (eventData) => {
     try {
       const { id, ...updateData } = eventData;
-      const response = await eventService.updateEvent(id, updateData);
-      const updatedEvent = response.event || response.data;
+      const updatedEvent = await eventService.updateEvent(id, updateData, userId);
       if (updatedEvent) {
         setEvents(prev => prev.map(e => e._id === id ? updatedEvent : e));
       }
@@ -737,1084 +468,863 @@ const EmployeeEvents = ({ userId: propUserId, userRole: propUserRole }) => {
 
   const handleDeleteEvent = async (id) => {
     if (!window.confirm('Are you sure you want to delete this event?')) return;
-    
     try {
-      await eventService.deleteEvent(id);
-      setEvents(events.filter(e => e._id !== id));
+      await eventService.deleteEvent(id, userId);
+      setEvents(prev => prev.filter(e => e._id !== id));
     } catch (error) {
       console.error('Error deleting event:', error);
       alert('Failed to delete event');
     }
   };
 
-  const getStats = () => {
+  // Stats calculation
+  const stats = useMemo(() => {
     const total = events.length;
-    const upcoming = events.filter(e => new Date(e.date) >= new Date()).length;
-    const today = events.filter(e => {
-      const todayDate = new Date();
-      todayDate.setHours(0, 0, 0, 0);
-      const eventDate = new Date(e.date);
-      eventDate.setHours(0, 0, 0, 0);
-      return eventDate.getTime() === todayDate.getTime();
-    }).length;
-    const completed = events.filter(e => new Date(e.date) < new Date()).length;
-    return { total, upcoming, today, completed };
+    const todayCount = events.filter(e => getDaysRemaining(e.date) === 0).length;
+    const upcomingCount = events.filter(e => getDaysRemaining(e.date) > 0).length;
+    const completedCount = events.filter(e => getDaysRemaining(e.date) < 0).length;
+    return { total, today: todayCount, upcoming: upcomingCount, completed: completedCount };
+  }, [events]);
+
+  // Card filter click handler
+  const handleStatCardClick = (status) => {
+    setStatusFilter(prev => prev === status ? 'all' : status);
   };
 
-  const stats = getStats();
+  // Filtered & Sorted events
+  const filteredEvents = useMemo(() => {
+    let result = [...events];
 
-  const eventTypes = [
-    'all', 'birthday', 'anniversary', 'achievement', 
-    'appointment', 'vacation', 'exam', 'other'
-  ];
+    // Status filter
+    if (statusFilter === 'upcoming') {
+      result = result.filter(e => getDaysRemaining(e.date) > 0);
+    } else if (statusFilter === 'today') {
+      result = result.filter(e => getDaysRemaining(e.date) === 0);
+    } else if (statusFilter === 'completed') {
+      result = result.filter(e => getDaysRemaining(e.date) < 0);
+    }
 
-  const eventTypeIcons = {
-    all: '📋',
-    birthday: '🎂',
-    anniversary: '💑',
-    achievement: '🏆',
-    appointment: '📅',
-    vacation: '✈️',
-    exam: '📚',
-    other: '📌'
+    // Category filter
+    if (selectedCategory !== 'all') {
+      result = result.filter(e => e.eventType === selectedCategory);
+    }
+
+    // Month filter
+    if (selectedMonth) {
+      const [year, monthNum] = selectedMonth.split('-').map(Number);
+      result = result.filter(e => {
+        if (!e.date) return false;
+        const d = new Date(e.date);
+        return d.getFullYear() === year && d.getMonth() + 1 === monthNum;
+      });
+    }
+
+    // Search term
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(e =>
+        (e.title && e.title.toLowerCase().includes(q)) ||
+        (e.notes && e.notes.toLowerCase().includes(q)) ||
+        (e.eventType && e.eventType.toLowerCase().includes(q))
+      );
+    }
+
+    // Sorting
+    if (sortBy === 'date') {
+      result.sort((a, b) => new Date(a.date) - new Date(b.date));
+    } else if (sortBy === 'title') {
+      result.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    }
+
+    return result;
+  }, [events, statusFilter, selectedCategory, selectedMonth, searchTerm, sortBy]);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('all');
+    setSelectedMonth('');
+    setStatusFilter('all');
+    setSortBy('date');
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
   };
 
-  const eventTypeLabels = {
-    all: 'All',
-    birthday: 'Birthday',
-    anniversary: 'Anniversary',
-    achievement: 'Achievement',
-    appointment: 'Appointment',
-    vacation: 'Vacation',
-    exam: 'Exam',
-    other: 'Other'
+  const isFilterActive = searchTerm || selectedCategory !== 'all' || selectedMonth || statusFilter !== 'all';
+
+  // Render status / countdown pill
+  const renderCountdownBadge = (days) => {
+    if (days === 0) {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-green-50 border border-green-200 rounded-full">
+          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-[10px] font-bold text-green-700 uppercase tracking-wide">Today! 🎉</span>
+        </div>
+      );
+    }
+    if (days > 0 && days <= 7) {
+      return (
+        <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-orange-50 border border-orange-200 rounded-full">
+          <FiClock className="text-orange-500 text-[10px]" />
+          <span className="text-[10px] font-bold text-orange-600">In {days} day{days > 1 ? 's' : ''}</span>
+        </div>
+      );
+    }
+    if (days > 7) {
+      return (
+        <div className="inline-flex items-center gap-1 text-gray-500">
+          <FiClock className="text-[10px]" />
+          <span className="text-xs font-medium">In {days} days</span>
+        </div>
+      );
+    }
+    return (
+      <div className="inline-flex items-center gap-1 text-gray-400">
+        <FiClock className="text-[10px]" />
+        <span className="text-xs font-normal">{Math.abs(days)}d ago</span>
+      </div>
+    );
   };
 
   return (
-    <div style={premiumStyles.container}>
-      {/* Premium Background Effects */}
-      <div style={premiumStyles.bgGradient1} />
-      <div style={premiumStyles.bgGradient2} />
-      <div style={premiumStyles.bgGradient3} />
-      
-      {/* Floating Particles */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={i}
-          animate={{
-            y: [0, -30, 0],
-            x: [0, 20, 0],
-            opacity: [0.3, 0.6, 0.3]
-          }}
-          transition={{
-            duration: 3 + i * 0.5,
-            repeat: Infinity,
-            delay: i * 0.3
-          }}
-          style={{
-            position: 'fixed',
-            width: '4px',
-            height: '4px',
-            borderRadius: '50%',
-            background: `rgba(59,130,246,${0.1 + i * 0.05})`,
-            top: `${10 + i * 12}%`,
-            left: `${5 + i * 15}%`,
-            pointerEvents: 'none',
-            zIndex: 0
-          }}
-        />
-      ))}
-      
-      <div style={premiumStyles.innerContainer}>
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          style={premiumStyles.header}
-        >
-          <div>
-            <motion.div 
-              whileHover={{ scale: 1.02 }}
-              style={premiumStyles.headerBadge}
-            >
-              <FiZap style={{ marginRight: '8px' }} />
-              <span>✨ Events Wishlist</span>
-            </motion.div>
-            <h1 style={premiumStyles.title}>
-              My Events
-              <motion.span 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.3 }}
-                style={premiumStyles.titleCount}
-              >
-                {events.length}
-              </motion.span>
+    <div className="emp-dash">
+      <main className="p-2 sm:p-4 lg:p-6">
+
+        {/* Desktop Header */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
+              My <span>Events</span>
             </h1>
-            <p style={premiumStyles.subtitle}>
-              <motion.span 
-                whileHover={{ scale: 1.05 }}
-                style={premiumStyles.userBadge}
-              >
-                👤 {userRole.toUpperCase()}
-              </motion.span>
-              {displayId && (
-                <motion.span 
-                  whileHover={{ scale: 1.05 }}
-                  style={premiumStyles.userBadge}
-                >
-                  🆔 {displayId}
-                </motion.span>
-              )}
-            </p>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+              {userRole.toUpperCase()} {displayId ? `• ${displayId}` : ''}
+            </span>
           </div>
-          <motion.button 
-            whileHover={{ scale: 1.05, boxShadow: '0 8px 30px rgba(59,130,246,0.4)' }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              setEditingEvent(null);
-              setShowModal(true);
-            }} 
-            style={premiumStyles.btnAdd}
-          >
-            <FiPlus size={20} /> Add New Event
-          </motion.button>
-        </motion.div>
 
-        {/* Premium Stats */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, type: "spring" }}
-          style={premiumStyles.stats}
-        >
-          {[
-            { icon: <FiCalendar size={22} />, label: 'Total Events', value: stats.total, bg: '#dbeafe', color: '#3b82f6' },
-            { icon: <FiTrendingUp size={22} />, label: 'Upcoming', value: stats.upcoming, bg: '#d1fae5', color: '#10b981' },
-            { icon: <FiSmile size={22} />, label: 'Today', value: stats.today, bg: '#fef3c7', color: '#f59e0b' },
-            { icon: <FiAward size={22} />, label: 'Completed', value: stats.completed, bg: '#ede9fe', color: '#8b5cf6' }
-          ].map((stat, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ 
-                y: -4, 
-                boxShadow: '0 12px 30px rgba(0,0,0,0.08)',
-                transition: { type: "spring", stiffness: 400 }
-              }}
-              style={premiumStyles.statCard}
-            >
-              <div style={{ ...premiumStyles.statIcon, background: stat.bg }}>
-                <span style={{ color: stat.color }}>{stat.icon}</span>
-              </div>
-              <div>
-                <span style={premiumStyles.statLabel}>{stat.label}</span>
-                <motion.strong 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2 + index * 0.1 }}
-                  style={premiumStyles.statValue}
-                >
-                  {stat.value}
-                </motion.strong>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Premium Search & Filters */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          style={premiumStyles.filters}
-        >
-          <div style={premiumStyles.filterTop}>
-            <motion.div 
-              whileFocus={{ borderColor: '#3b82f6' }}
-              style={premiumStyles.searchBox}
-            >
-              <FaSearch color="#9ca3af" size={18} />
+          {/* Right Toolbar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative min-w-[140px]">
+              <span className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <FaSearch className="text-[10px]" />
+              </span>
               <input
                 type="text"
                 placeholder="Search events..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={premiumStyles.searchInput}
+                className="w-[140px] pl-7 pr-6 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
               {searchTerm && (
-                <motion.button 
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setSearchTerm('')} 
-                  style={premiumStyles.clearSearch}
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <FaTimes size={14} />
-                </motion.button>
+                  <FaTimes className="text-[10px]" />
+                </button>
               )}
-            </motion.div>
+            </div>
 
-            <div style={premiumStyles.controls}>
-              <select 
-                value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value)}
-                style={premiumStyles.sortSelect}
+            {/* Category Filter Pills */}
+            <div className="flex bg-gray-100 p-0.5 rounded-lg h-8">
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'birthday', label: '🎂 Bday' },
+                { value: 'anniversary', label: '💑 Anniv' },
+                { value: 'achievement', label: '🏆 Achiev' },
+                { value: 'vacation', label: '✈️ Trip' }
+              ].map(cat => (
+                <button
+                  key={cat.value}
+                  onClick={() => setSelectedCategory(cat.value)}
+                  className={`px-2 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${
+                    selectedCategory === cat.value
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Month Filter */}
+            <div className="relative">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            {/* Sort Filter */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+            >
+              <option value="date">📅 Date</option>
+              <option value="title">🔤 Title</option>
+            </select>
+
+            {/* View Mode Toggle */}
+            <div className="flex bg-gray-100 p-0.5 rounded-lg h-8">
+              <button
+                onClick={() => setViewMode('table')}
+                title="Table View"
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                  viewMode === 'table' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-800'
+                }`}
               >
-                <option value="date">Sort by Date</option>
-                <option value="title">Sort by Title</option>
-              </select>
+                <FiList className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                title="Grid View"
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                  viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                <FiGrid className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
-              <div style={premiumStyles.viewToggle}>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+            {/* Clear Filters */}
+            {isFilterActive && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+              >
+                <FiTrash2 className="w-3 h-3" /> Clear
+              </button>
+            )}
+
+            {/* Add Event Button */}
+            <button
+              onClick={() => {
+                setEditingEvent(null);
+                setShowModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all whitespace-nowrap"
+            >
+              <FiPlus className="w-3.5 h-3.5" /> Add Event
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Header */}
+        <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
+          <div>
+            <h1 className="text-base font-bold whitespace-nowrap">
+              My <span className="text-blue-600">Events</span>
+            </h1>
+            <span className="text-[10px] text-gray-500">{userRole.toUpperCase()} {displayId ? `• ${displayId}` : ''}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setEditingEvent(null);
+                setShowModal(true);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm"
+            >
+              <FiPlus className="w-3.5 h-3.5" /> Add
+            </button>
+            <div className="emp-dash__date-pill text-[10px] px-2 py-1">
+              <FiCalendar className="text-[10px]" />
+              <span>
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short"
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Filters Toggle Drawer */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600 text-base" />
+              <span>Filters &amp; View</span>
+              {showMobileFilters ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">
+                <strong>{filteredEvents.length}</strong> events
+              </span>
+              <div className="flex bg-gray-100 p-0.5 rounded-lg">
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`p-1 rounded ${viewMode === 'table' ? 'bg-white text-blue-600' : 'text-gray-500'}`}
+                >
+                  <FiList className="w-3 h-3" />
+                </button>
+                <button
                   onClick={() => setViewMode('grid')}
-                  style={{
-                    ...premiumStyles.viewBtn,
-                    ...(viewMode === 'grid' ? premiumStyles.viewBtnActive : {})
-                  }}
+                  className={`p-1 rounded ${viewMode === 'grid' ? 'bg-white text-blue-600' : 'text-gray-500'}`}
                 >
-                  <FiGrid size={18} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setViewMode('list')}
-                  style={{
-                    ...premiumStyles.viewBtn,
-                    ...(viewMode === 'list' ? premiumStyles.viewBtnActive : {})
-                  }}
-                >
-                  <FiList size={18} />
-                </motion.button>
+                  <FiGrid className="w-3 h-3" />
+                </button>
               </div>
             </div>
           </div>
 
-          <div style={premiumStyles.filterButtons}>
-            {eventTypes.map(type => (
-              <motion.button
-                key={type}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setFilterType(type)}
-                style={{
-                  ...premiumStyles.filterBtn,
-                  ...(filterType === type ? premiumStyles.filterBtnActive : {})
-                }}
-              >
-                {eventTypeIcons[type]} {eventTypeLabels[type]}
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
+          {showMobileFilters && (
+            <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-sm" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search by title, notes..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
 
-        {/* Events List */}
-        {loading ? (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={premiumStyles.loading}
-          >
-            <motion.div 
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              style={premiumStyles.spinner}
-            />
-            <p style={premiumStyles.loadingText}>Loading your events...</p>
-          </motion.div>
-        ) : filteredEvents.length === 0 ? (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring" }}
-            style={premiumStyles.emptyState}
-          >
-            <motion.div
-              animate={{ 
-                y: [0, -10, 0],
-                rotate: [0, 5, -5, 0]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-              style={premiumStyles.emptyIcon}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  <option value="all">All Categories</option>
+                  {EVENT_CATEGORIES.map(cat => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.icon} {cat.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="w-full px-2 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Sort</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full px-2 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  >
+                    <option value="date">Date</option>
+                    <option value="title">Title</option>
+                  </select>
+                </div>
+              </div>
+
+              {isFilterActive && (
+                <div className="pt-2 border-t border-gray-200">
+                  <button
+                    onClick={clearFilters}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    <FiTrash2 className="w-4 h-4" /> Clear All Filters
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Top KPI Stats Grid - 4 cards matching Events.jsx */}
+        {!loading && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+            {/* Total Events */}
+            <div
+              className={`emp-dash__stat cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
+                statusFilter === 'all' && !isFilterActive ? 'ring-2 ring-blue-400 shadow-md' : ''
+              }`}
+              onClick={() => handleStatCardClick('all')}
             >
-              📭
-            </motion.div>
-            <h3 style={premiumStyles.emptyTitle}>No events found</h3>
-            <p style={premiumStyles.emptyText}>
-              {searchTerm || filterType !== 'all' 
-                ? 'Try adjusting your filters' 
-                : 'Click "Add New Event" to create your first event ✨'}
-            </p>
-          </motion.div>
-        ) : (
-          <div style={{
-            ...premiumStyles.eventsGrid,
-            ...(viewMode === 'list' ? premiumStyles.eventsList : {})
-          }}>
-            {filteredEvents.map((event, index) => (
-              <EventCard
-                key={event._id}
-                event={event}
-                index={index}
-                onEdit={(e) => {
-                  setEditingEvent(e);
-                  setShowModal(true);
-                }}
-                onDelete={handleDeleteEvent}
-              />
-            ))}
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Total Events</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                  <FiActivity className="text-blue-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{stats.total}</div>
+              <div className="emp-dash__stat-meta">tap to see all 📋</div>
+            </div>
+
+            {/* Upcoming */}
+            <div
+              className={`emp-dash__stat cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
+                statusFilter === 'upcoming' ? 'ring-2 ring-emerald-400 shadow-md' : ''
+              }`}
+              onClick={() => handleStatCardClick('upcoming')}
+            >
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Upcoming</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                  <FiClock className="text-emerald-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{stats.upcoming}</div>
+              <div className="emp-dash__stat-meta">tap to filter ⏳</div>
+            </div>
+
+            {/* Today */}
+            <div
+              className={`emp-dash__stat cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
+                statusFilter === 'today' ? 'ring-2 ring-amber-400 shadow-md' : ''
+              }`}
+              onClick={() => handleStatCardClick('today')}
+            >
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Today</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                  <FiGift className="text-amber-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{stats.today}</div>
+              <div className="emp-dash__stat-meta">tap to filter 🎉</div>
+            </div>
+
+            {/* Past / Completed */}
+            <div
+              className={`emp-dash__stat cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
+                statusFilter === 'completed' ? 'ring-2 ring-purple-400 shadow-md' : ''
+              }`}
+              onClick={() => handleStatCardClick('completed')}
+            >
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Completed</span>
+                <div className="emp-dash__stat-icon bg-purple-50 text-purple-600">
+                  <FiAward className="text-purple-600" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{stats.completed}</div>
+              <div className="emp-dash__stat-meta">tap to filter 📜</div>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Premium Modal */}
+        {/* Active Filter Indicator */}
+        {isFilterActive && (
+          <div className="mb-4 flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs">
+            <span className="font-semibold text-blue-700">🔍 Filter active:</span>
+            {statusFilter !== 'all' && (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 capitalize">
+                Status: {statusFilter}
+              </span>
+            )}
+            {selectedCategory !== 'all' && (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 capitalize">
+                {getCategoryConfig(selectedCategory).icon} {selectedCategory}
+              </span>
+            )}
+            {selectedMonth && (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                Month: {selectedMonth}
+              </span>
+            )}
+            {searchTerm && (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-800">
+                "{searchTerm}"
+              </span>
+            )}
+            <button
+              onClick={clearFilters}
+              className="ml-auto text-blue-600 hover:text-blue-800 font-semibold"
+            >
+              Reset Filters ✕
+            </button>
+          </div>
+        )}
+
+        {/* Main Content Card Container */}
+        <div className="emp-dash__card mb-6">
+          {loading ? (
+            <div className="py-14 text-center">
+              <div className="flex flex-col items-center justify-center gap-3">
+                <div className="emp-dash__spinner"></div>
+                <span className="text-sm font-medium text-gray-500">Loading your events...</span>
+              </div>
+            </div>
+          ) : filteredEvents.length === 0 ? (
+            <div className="py-14 text-center">
+              <div className="flex flex-col items-center justify-center gap-3 max-w-sm mx-auto px-4">
+                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-xl">
+                  <FiCalendar />
+                </div>
+                <h3 className="text-base font-semibold text-gray-800">No events found</h3>
+                <p className="text-xs text-gray-500">
+                  {isFilterActive
+                    ? 'No events match your current filter settings. Try resetting filters or search.'
+                    : 'You have not added any personal events yet. Create your first event to keep track!'}
+                </p>
+                {isFilterActive ? (
+                  <button
+                    onClick={clearFilters}
+                    className="mt-1 px-3.5 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setEditingEvent(null);
+                      setShowModal(true);
+                    }}
+                    className="mt-1 flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all"
+                  >
+                    <FiPlus className="w-4 h-4" /> Add Your First Event
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : viewMode === 'table' ? (
+            /* ================= DESKTOP & MOBILE TABLE VIEW ================= */
+            <div className="emp-dash__table-wrap">
+              <table className="emp-dash__table">
+                <thead>
+                  <tr>
+                    <th className="text-center w-12">S.No</th>
+                    <th>Event Details</th>
+                    <th>Category</th>
+                    <th className="text-center">Event Date</th>
+                    <th className="text-center">Countdown</th>
+                    <th>Reminder &amp; Repeat</th>
+                    <th>Notes</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <AnimatePresence>
+                    {filteredEvents.map((event, index) => {
+                      const config = getCategoryConfig(event.eventType);
+                      const days = getDaysRemaining(event.date);
+
+                      return (
+                        <motion.tr
+                          key={event._id || index}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: Math.min(index * 0.02, 0.3) }}
+                          className="hover:bg-gray-50/70 transition-all group"
+                        >
+                          {/* S.No */}
+                          <td className="text-center font-bold text-gray-400 whitespace-nowrap">
+                            {index + 1}
+                          </td>
+
+                          {/* Event Details */}
+                          <td className="whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-sm ${config.avatarBg}`}>
+                                {config.icon}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                  {event.title}
+                                </span>
+                                {event.notes && (
+                                  <span className="text-[10px] text-gray-400 font-normal line-clamp-1 max-w-[220px]">
+                                    {event.notes}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Category Badge */}
+                          <td className="whitespace-nowrap">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${config.badgeClass}`}>
+                              <span>{config.icon}</span>
+                              <span>{config.label}</span>
+                            </span>
+                          </td>
+
+                          {/* Date */}
+                          <td className="text-center whitespace-nowrap">
+                            <div className="flex flex-col items-center">
+                              <span className="font-bold text-gray-800">
+                                {formatDate(event.date)}
+                              </span>
+                              {event.repeat === 'yearly' && (
+                                <span className="text-[10px] font-semibold text-amber-600 flex items-center gap-0.5">
+                                  <FiRepeat className="text-[9px]" /> Yearly
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Countdown */}
+                          <td className="text-center whitespace-nowrap">
+                            {renderCountdownBadge(days)}
+                          </td>
+
+                          {/* Reminder & Repeat */}
+                          <td className="whitespace-nowrap">
+                            <div className="flex flex-col items-start gap-1">
+                              {event.reminderBefore !== undefined && event.reminderBefore !== null ? (
+                                <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+                                  <FiBell className="text-gray-400 text-[10px]" />
+                                  {event.reminderBefore === 0 ? 'Same day' : `${event.reminderBefore}d before`}
+                                </span>
+                              ) : (
+                                <span className="text-gray-300 text-xs">—</span>
+                              )}
+                              {event.repeat === 'yearly' && (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-medium">
+                                  <FiRepeat className="text-[9px]" /> Repeats yearly
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Notes */}
+                          <td className="whitespace-nowrap">
+                            <span className="text-xs text-gray-500 line-clamp-1 max-w-[160px]" title={event.notes}>
+                              {event.notes || <span className="text-gray-300">—</span>}
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setEditingEvent(event);
+                                  setShowModal(true);
+                                }}
+                                className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-gray-200 hover:border-blue-300"
+                                title="Edit Event"
+                              >
+                                <FiEdit2 className="text-xs" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteEvent(event._id)}
+                                className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-gray-200 hover:border-red-300"
+                                title="Delete Event"
+                              >
+                                <FiTrash2 className="text-xs" />
+                              </button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            /* ================= MODERN GRID VIEW ================= */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 sm:p-6 bg-gray-50/40">
+              <AnimatePresence>
+                {filteredEvents.map((event, index) => {
+                  const config = getCategoryConfig(event.eventType);
+                  const days = getDaysRemaining(event.date);
+
+                  return (
+                    <motion.div
+                      key={event._id || index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(index * 0.02, 0.3) }}
+                      className="bg-white rounded-xl border border-gray-200 hover:border-blue-300 p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
+                    >
+                      <div>
+                        {/* Top header of card */}
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base shadow-sm ${config.avatarBg}`}>
+                              {config.icon}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors line-clamp-1">
+                                {event.title}
+                              </h4>
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${config.badgeClass}`}>
+                                {config.label}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Countdown badge */}
+                          {renderCountdownBadge(days)}
+                        </div>
+
+                        {/* Date and details */}
+                        <div className="space-y-1.5 text-xs text-gray-600 mb-3 pt-2 border-t border-gray-100">
+                          <div className="flex items-center gap-1.5">
+                            <FiCalendar className="text-gray-400 text-xs" />
+                            <span className="font-medium text-gray-800">{formatDate(event.date)}</span>
+                          </div>
+
+                          {(event.reminderBefore !== undefined || event.repeat === 'yearly') && (
+                            <div className="flex items-center gap-3 text-[11px] text-gray-500">
+                              {event.reminderBefore !== undefined && (
+                                <span className="flex items-center gap-1">
+                                  <FiBell className="text-gray-400" />
+                                  {event.reminderBefore === 0 ? 'Same day' : `${event.reminderBefore}d before`}
+                                </span>
+                              )}
+                              {event.repeat === 'yearly' && (
+                                <span className="flex items-center gap-1 text-amber-600 font-semibold">
+                                  <FiRepeat className="text-[10px]" /> Yearly
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {event.notes && (
+                            <p className="text-[11px] text-gray-500 italic line-clamp-2 bg-gray-50 p-2 rounded border border-gray-100 mt-2">
+                              "{event.notes}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-gray-100">
+                        <button
+                          onClick={() => {
+                            setEditingEvent(event);
+                            setShowModal(true);
+                          }}
+                          className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md border border-gray-200 transition-colors"
+                        >
+                          <FiEdit2 className="text-[11px]" /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEvent(event._id)}
+                          className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md border border-gray-200 transition-colors"
+                        >
+                          <FiTrash2 className="text-[11px]" /> Delete
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Footer matching Events.jsx */}
+          {!loading && filteredEvents.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-6 py-3 border-t border-gray-100 bg-gray-50/50">
+              <p className="text-xs font-semibold text-gray-500">
+                Showing <span className="text-gray-900 font-bold">{filteredEvents.length}</span> of {events.length} events
+              </p>
+              <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold text-gray-400">
+                <span
+                  className={`flex items-center gap-1 cursor-pointer hover:text-gray-600 transition-colors ${
+                    selectedCategory === 'birthday' ? 'text-rose-500' : ''
+                  }`}
+                  onClick={() => setSelectedCategory(selectedCategory === 'birthday' ? 'all' : 'birthday')}
+                >
+                  <span className="w-2 h-2 bg-rose-400 rounded-full"></span> Birthdays
+                </span>
+                <span
+                  className={`flex items-center gap-1 cursor-pointer hover:text-gray-600 transition-colors ${
+                    selectedCategory === 'anniversary' ? 'text-amber-500' : ''
+                  }`}
+                  onClick={() => setSelectedCategory(selectedCategory === 'anniversary' ? 'all' : 'anniversary')}
+                >
+                  <span className="w-2 h-2 bg-amber-400 rounded-full"></span> Anniversaries
+                </span>
+                <span
+                  className={`flex items-center gap-1 cursor-pointer hover:text-gray-600 transition-colors ${
+                    selectedCategory === 'all' ? 'text-blue-500' : ''
+                  }`}
+                  onClick={() => setSelectedCategory('all')}
+                >
+                  <span className="w-2 h-2 bg-blue-400 rounded-full"></span> All Categories
+                </span>
+                {isFilterActive && (
+                  <span
+                    className="text-blue-500 cursor-pointer hover:underline text-[9px]"
+                    onClick={clearFilters}
+                  >
+                    Reset All
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+      </main>
+
+      {/* Modern Add / Edit Event Modal */}
       <AnimatePresence>
         {showModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={premiumStyles.modalOverlay} 
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm overflow-y-auto"
             onClick={() => {
               setShowModal(false);
               setEditingEvent(null);
             }}
           >
-            <motion.div 
-              initial={{ scale: 0.8, y: 50, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.8, y: 50, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              style={premiumStyles.modal} 
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-lg overflow-hidden my-8"
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={premiumStyles.modalHeader}>
-                <h2 style={premiumStyles.modalTitle}>
-                  {editingEvent ? '✏️ Edit Event' : '✨ Add New Event'}
-                </h2>
-                <motion.button 
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/60">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">
+                    {editingEvent ? '✏️ Edit Event' : '✨ Add New Event'}
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {editingEvent ? 'Update details for this event' : 'Create an event with reminders and recurrence'}
+                  </p>
+                </div>
+                <button
                   onClick={() => {
                     setShowModal(false);
                     setEditingEvent(null);
-                  }} 
-                  style={premiumStyles.modalClose}
-                >
-                  <FaTimes size={20} />
-                </motion.button>
-              </div>
-              <div style={premiumStyles.modalBody}>
-                <EventForm
-                  event={editingEvent}
-                  userId={userId}
-                  userRole={userRole}
-                  onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
-                  onCancel={() => {
-                    setShowModal(false);
-                    setEditingEvent(null);
                   }}
-                />
+                  className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
               </div>
+
+              {/* Modal Body */}
+              <EventForm
+                event={editingEvent}
+                userId={userId}
+                userRole={userRole}
+                onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
+                onCancel={() => {
+                  setShowModal(false);
+                  setEditingEvent(null);
+                }}
+              />
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
   );
 };
-
-// ============================================
-// PREMIUM STYLES
-// ============================================
-const premiumStyles = {
-  container: {
-    minHeight: '100vh',
-    padding: '32px',
-    background: 'linear-gradient(135deg, #f0f4ff 0%, #faf5ff 25%, #fff5f5 50%, #f0fdf4 75%, #f5f3ff 100%)',
-    position: 'relative',
-    overflow: 'hidden'
-  },
-  bgGradient1: {
-    position: 'fixed',
-    top: '-400px',
-    right: '-300px',
-    width: '800px',
-    height: '800px',
-    background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)',
-    borderRadius: '50%',
-    pointerEvents: 'none',
-    zIndex: 0
-  },
-  bgGradient2: {
-    position: 'fixed',
-    bottom: '-300px',
-    left: '-300px',
-    width: '700px',
-    height: '700px',
-    background: 'radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)',
-    borderRadius: '50%',
-    pointerEvents: 'none',
-    zIndex: 0
-  },
-  bgGradient3: {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '1000px',
-    height: '1000px',
-    background: 'radial-gradient(circle, rgba(236,72,153,0.03) 0%, transparent 70%)',
-    borderRadius: '50%',
-    pointerEvents: 'none',
-    zIndex: 0
-  },
-  innerContainer: {
-    maxWidth: '1440px',
-    margin: '0 auto',
-    position: 'relative',
-    zIndex: 1
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '32px',
-    flexWrap: 'wrap',
-    gap: '20px'
-  },
-  headerBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '6px 20px',
-    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-    color: 'white',
-    borderRadius: '24px',
-    fontSize: '12px',
-    fontWeight: 600,
-    marginBottom: '10px',
-    letterSpacing: '0.5px',
-    boxShadow: '0 4px 15px rgba(59,130,246,0.3)'
-  },
-  title: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    fontSize: '38px',
-    fontWeight: 800,
-    color: '#1a1a1a',
-    margin: 0,
-    letterSpacing: '-1px',
-    background: 'linear-gradient(135deg, #1a1a1a, #4b5563)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
-  },
-  titleCount: {
-    fontSize: '16px',
-    fontWeight: 600,
-    background: 'rgba(255,255,255,0.9)',
-    padding: '2px 16px',
-    borderRadius: '24px',
-    color: '#4b5563',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
-    backdropFilter: 'blur(10px)'
-  },
-  subtitle: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    color: '#666',
-    margin: '6px 0 0',
-    fontSize: '14px',
-    flexWrap: 'wrap'
-  },
-  userBadge: {
-    display: 'inline-block',
-    padding: '4px 16px',
-    background: 'rgba(255,255,255,0.9)',
-    borderRadius: '14px',
-    fontSize: '12px',
-    fontWeight: 500,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-    backdropFilter: 'blur(10px)'
-  },
-  btnAdd: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '16px 32px',
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '16px',
-    fontSize: '15px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    boxShadow: '0 4px 20px rgba(59,130,246,0.35)',
-    transition: 'all 0.3s',
-    whiteSpace: 'nowrap'
-  },
-  stats: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '20px',
-    marginBottom: '32px'
-  },
-  statCard: {
-    background: 'rgba(255,255,255,0.85)',
-    padding: '22px 26px',
-    borderRadius: '20px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px',
-    border: '1px solid rgba(255,255,255,0.5)',
-    transition: 'all 0.3s',
-    backdropFilter: 'blur(20px)',
-    cursor: 'pointer'
-  },
-  statIcon: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '16px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0
-  },
-  statLabel: {
-    color: '#6b7280',
-    fontSize: '13px',
-    fontWeight: 500
-  },
-  statValue: {
-    fontSize: '28px',
-    fontWeight: 700,
-    color: '#1a1a1a',
-    display: 'block',
-    lineHeight: 1.2
-  },
-  filters: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-    marginBottom: '32px'
-  },
-  filterTop: {
-    display: 'flex',
-    gap: '16px',
-    flexWrap: 'wrap',
-    alignItems: 'center'
-  },
-  searchBox: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    background: 'rgba(255,255,255,0.9)',
-    padding: '0 20px',
-    borderRadius: '16px',
-    border: '2px solid #e5e7eb',
-    transition: 'all 0.3s',
-    minWidth: '200px',
-    backdropFilter: 'blur(20px)'
-  },
-  searchInput: {
-    flex: 1,
-    padding: '14px 16px',
-    border: 'none',
-    outline: 'none',
-    fontSize: '14px',
-    background: 'transparent',
-    minWidth: '100px'
-  },
-  clearSearch: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: '#9ca3af',
-    padding: '4px'
-  },
-  controls: {
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'center'
-  },
-  sortSelect: {
-    padding: '12px 18px',
-    border: '2px solid #e5e7eb',
-    borderRadius: '12px',
-    background: 'rgba(255,255,255,0.9)',
-    fontSize: '14px',
-    fontWeight: 500,
-    cursor: 'pointer',
-    color: '#4b5563',
-    outline: 'none',
-    backdropFilter: 'blur(20px)'
-  },
-  viewToggle: {
-    display: 'flex',
-    gap: '4px',
-    background: 'rgba(255,255,255,0.9)',
-    padding: '4px',
-    borderRadius: '12px',
-    border: '2px solid #e5e7eb',
-    backdropFilter: 'blur(20px)'
-  },
-  viewBtn: {
-    padding: '8px 12px',
-    border: 'none',
-    borderRadius: '8px',
-    background: 'transparent',
-    cursor: 'pointer',
-    color: '#9ca3af',
-    transition: 'all 0.3s'
-  },
-  viewBtnActive: {
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-    color: 'white'
-  },
-  filterButtons: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '10px'
-  },
-  filterBtn: {
-    padding: '8px 20px',
-    border: '2px solid #e5e7eb',
-    borderRadius: '24px',
-    background: 'rgba(255,255,255,0.8)',
-    color: '#4b5563',
-    fontSize: '13px',
-    fontWeight: 500,
-    cursor: 'pointer',
-    transition: 'all 0.3s',
-    backdropFilter: 'blur(10px)'
-  },
-  filterBtnActive: {
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-    color: 'white',
-    borderColor: '#3b82f6',
-    boxShadow: '0 4px 20px rgba(59,130,246,0.3)'
-  },
-  eventsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
-    gap: '28px'
-  },
-  eventsList: {
-    gridTemplateColumns: '1fr'
-  },
-  card: {
-    position: 'relative',
-    borderRadius: '24px',
-    padding: '28px 30px',
-    borderLeft: '6px solid',
-    transition: 'all 0.3s',
-    boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
-    overflow: 'hidden',
-    backdropFilter: 'blur(10px)',
-    cursor: 'pointer'
-  },
-  cardBadge: {
-    position: 'absolute',
-    top: '-10px',
-    right: '-10px',
-    width: '56px',
-    height: '56px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '24px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-    transition: 'all 0.3s'
-  },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '16px'
-  },
-  cardTitle: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    flex: 1
-  },
-  cardIcon: {
-    width: '52px',
-    height: '52px',
-    borderRadius: '16px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '26px',
-    flexShrink: 0
-  },
-  cardTitleText: {
-    margin: 0,
-    fontSize: '19px',
-    fontWeight: 600,
-    color: '#1a1a1a',
-    transition: 'color 0.3s'
-  },
-  eventType: {
-    fontSize: '11px',
-    fontWeight: 600,
-    padding: '3px 16px',
-    borderRadius: '14px',
-    display: 'inline-block',
-    textTransform: 'capitalize'
-  },
-  cardActions: {
-    display: 'flex',
-    gap: '6px'
-  },
-  btnEdit: {
-    padding: '6px 10px',
-    border: 'none',
-    background: 'rgba(255,255,255,0.8)',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    color: '#3b82f6',
-    transition: 'all 0.3s',
-    backdropFilter: 'blur(10px)'
-  },
-  btnDelete: {
-    padding: '6px 10px',
-    border: 'none',
-    background: 'rgba(255,255,255,0.8)',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    color: '#ef4444',
-    transition: 'all 0.3s',
-    backdropFilter: 'blur(10px)'
-  },
-  cardBody: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px'
-  },
-  cardInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    flexWrap: 'wrap'
-  },
-  statusBadge: {
-    fontSize: '13px',
-    fontWeight: 600,
-    padding: '4px 18px',
-    borderRadius: '20px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '4px'
-  },
-  cardDetails: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '16px',
-    fontSize: '13px',
-    color: '#4b5563'
-  },
-  detailItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '4px 8px',
-    borderRadius: '8px',
-    background: 'rgba(255,255,255,0.5)',
-    transition: 'all 0.3s',
-    cursor: 'pointer'
-  },
-  cardNotes: {
-    paddingTop: '14px',
-    borderTop: '1px solid rgba(0,0,0,0.06)',
-    overflow: 'hidden'
-  },
-  cardNotesText: {
-    margin: 0,
-    fontSize: '13px',
-    color: '#6b7280',
-    lineHeight: 1.5
-  },
-  cardFooter: {
-    display: 'flex',
-    gap: '12px',
-    paddingTop: '14px',
-    borderTop: '1px solid rgba(0,0,0,0.06)',
-    marginTop: '4px'
-  },
-  footerBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '6px 14px',
-    background: 'rgba(255,255,255,0.6)',
-    border: 'none',
-    borderRadius: '8px',
-    color: '#6b7280',
-    fontSize: '12px',
-    fontWeight: 500,
-    cursor: 'pointer',
-    transition: 'all 0.3s',
-    backdropFilter: 'blur(10px)'
-  },
-  loading: {
-    textAlign: 'center',
-    padding: '80px 20px',
-    color: '#6b7280'
-  },
-  loadingText: {
-    marginTop: '16px',
-    fontSize: '16px',
-    color: '#4b5563'
-  },
-  spinner: {
-    width: '52px',
-    height: '52px',
-    margin: '0 auto',
-    border: '4px solid #e5e7eb',
-    borderTop: '4px solid #3b82f6',
-    borderRadius: '50%'
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: '80px 20px',
-    background: 'rgba(255,255,255,0.9)',
-    borderRadius: '28px',
-    border: '2px dashed #e5e7eb',
-    backdropFilter: 'blur(20px)'
-  },
-  emptyIcon: {
-    fontSize: '88px',
-    marginBottom: '20px'
-  },
-  emptyTitle: {
-    margin: '0 0 10px',
-    fontSize: '24px',
-    color: '#1a1a1a',
-    fontWeight: 700
-  },
-  emptyText: {
-    color: '#6b7280',
-    margin: 0,
-    fontSize: '16px'
-  },
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0,0,0,0.5)',
-    backdropFilter: 'blur(12px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px'
-  },
-  modal: {
-    background: 'white',
-    borderRadius: '32px',
-    maxWidth: '640px',
-    width: '100%',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    boxShadow: '0 32px 80px rgba(0,0,0,0.2)'
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '28px 36px',
-    borderBottom: '2px solid #f0f0f0'
-  },
-  modalTitle: {
-    margin: 0,
-    fontSize: '26px',
-    fontWeight: 700,
-    color: '#1a1a1a'
-  },
-  modalClose: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: '#6b7280',
-    padding: '8px',
-    borderRadius: '12px',
-    transition: 'all 0.3s'
-  },
-  modalBody: {
-    padding: '36px'
-  },
-  // Form Styles
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '28px'
-  },
-  formHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px',
-    padding: '20px 28px',
-    background: 'linear-gradient(135deg, #f0f4ff, #faf5ff)',
-    borderRadius: '20px',
-    marginBottom: '4px'
-  },
-  formHeaderIcon: {
-    width: '64px',
-    height: '64px',
-    borderRadius: '18px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0
-  },
-  formHeaderTitle: {
-    margin: 0,
-    fontSize: '22px',
-    fontWeight: 700,
-    color: '#1a1a1a'
-  },
-  formHeaderSub: {
-    margin: '2px 0 0',
-    fontSize: '14px',
-    color: '#6b7280'
-  },
-  formBody: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px'
-  },
-  formGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-    flex: 1
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: 600,
-    color: '#374151'
-  },
-  input: {
-    padding: '14px 20px',
-    border: '2px solid #e5e7eb',
-    borderRadius: '16px',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    width: '100%',
-    boxSizing: 'border-box',
-    transition: 'all 0.3s',
-    background: 'white'
-  },
-  inputError: {
-    borderColor: '#ef4444'
-  },
-  errorText: {
-    color: '#ef4444',
-    fontSize: '12px',
-    marginTop: '2px'
-  },
-  textarea: {
-    padding: '14px 20px',
-    border: '2px solid #e5e7eb',
-    borderRadius: '16px',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    width: '100%',
-    boxSizing: 'border-box',
-    resize: 'vertical',
-    minHeight: '70px',
-    transition: 'all 0.3s',
-    background: 'white'
-  },
-  row: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '20px'
-  },
-  selectWrapper: {
-    position: 'relative'
-  },
-  formActions: {
-    display: 'flex',
-    gap: '16px',
-    justifyContent: 'flex-end',
-    paddingTop: '28px',
-    borderTop: '2px solid #f0f0f0',
-    marginTop: '4px'
-  },
-  btnCancel: {
-    padding: '14px 32px',
-    background: '#f3f4f6',
-    border: 'none',
-    borderRadius: '16px',
-    cursor: 'pointer',
-    fontWeight: 600,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    transition: 'all 0.3s',
-    color: '#4b5563'
-  },
-  btnSubmit: {
-    padding: '14px 36px',
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '16px',
-    cursor: 'pointer',
-    fontWeight: 600,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    transition: 'all 0.3s',
-    boxShadow: '0 4px 20px rgba(59,130,246,0.35)'
-  }
-};
-
-// Add animation keyframes
-const styleSheet = document.createElement("style");
-styleSheet.textContent = `
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  * {
-    box-sizing: border-box;
-  }
-  
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    border-radius: 10px;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-  }
-  
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  }
-`;
-document.head.appendChild(styleSheet);
 
 export default EmployeeEvents;

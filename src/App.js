@@ -234,6 +234,8 @@ import CustomerReferralOP from "./Pages/CustomerReferralOP.js";
 import InactivePatients from "./Pages/InactivePatients.js";
 import PatientLogin from "./Pages/PatientLogin.jsx";
 import PatientDashboard from "./Pages/PatientDashboard.js";
+import WeekOff from "./Pages/WeekOff.js";
+import Rosters from "./Pages/Rosters.js";
 
 function App() {
   return (
@@ -282,6 +284,8 @@ function App() {
       <Route path="/employee/inactive-patients" element={<EmployeeLayout><InactivePatients /></EmployeeLayout>} />
       <Route path="/employee/referral-management" element={<EmployeeLayout><DoctorReferralManagement /></EmployeeLayout>} />
       <Route path="/employee/referral-bookings" element={<EmployeeLayout><DoctorReferralOP /></EmployeeLayout>} />
+      <Route path="/Rosters" element={<EmployeeLayout><Rosters /></EmployeeLayout>} />
+
 
       {/* 🔥 OP MANAGEMENT - ADMIN LAYOUT (WITHOUT /employee/ PREFIX) */}
       <Route path="/op-dashboard" element={<AdminLayout><OpDashboard /></AdminLayout>} />
@@ -533,6 +537,7 @@ function App() {
               <Route path="/rejected-visits" element={<RejectedVisits />} />
               <Route path="/letters-section" element={<LettersSection />} />
               <Route path="/employee-events" element={<EmployeeEvents />} />
+                <Route path="/week-off" element={<WeekOff />} />
             </Routes>
           </AdminLayout>
         }
