@@ -521,6 +521,8 @@ export default function OpManagement() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
+  const [apptFromDate, setApptFromDate] = useState("");
+  const [apptToDate, setApptToDate] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeCardFilter, setActiveCardFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -563,6 +565,15 @@ export default function OpManagement() {
   const [partialBooking, setPartialBooking] = useState(null);
   const [partialAmountInput, setPartialAmountInput] = useState("");
   const [savingPartial, setSavingPartial] = useState(false);
+  const [partialPaymentType, setPartialPaymentType] = useState("cash"); // ✅ NEW
+
+
+  // ✅ PAYMENT TYPE EDIT MODAL
+  const [showPaymentTypeEditModal, setShowPaymentTypeEditModal] = useState(false);
+  const [paymentTypeEditBooking, setPaymentTypeEditBooking] = useState(null);
+  const [paymentTypeEditValue, setPaymentTypeEditValue] = useState("cash");
+  const [savingPaymentTypeEdit, setSavingPaymentTypeEdit] = useState(false);
+
 
   const [citySuggestions, setCitySuggestions] = useState([]);
   const [fetchingCity, setFetchingCity] = useState(false);
@@ -615,7 +626,7 @@ export default function OpManagement() {
   const hasActiveFilters =
     searchQuery !== "" || statusFilter !== "All" || feeTypeFilter !== "All" ||
     doctorFilter !== "All" || bookingTypeFilter !== "All" ||
-    fromDate !== "" || toDate !== "" ||
+    fromDate !== "" || toDate !== "" || apptFromDate !== "" || apptToDate !== "" ||
     (selectedMonth && selectedMonth !== "");
 
 
@@ -1670,6 +1681,7 @@ export default function OpManagement() {
   const openPartialModal = (booking) => {
     setPartialBooking(booking);
     setPartialAmountInput(String(booking.amountPaid || booking.partialAmount || ""));
+    setPartialPaymentType(booking.paymentType || "cash"); // ✅ NEW
     setShowPartialModal(true);
   };
 
@@ -1681,6 +1693,7 @@ export default function OpManagement() {
     try {
       const res = await axios.put(`${API_BASE_URL}/appointment-slots/${partialBooking._id}`, {
         paymentStatus: "Paid",
+        paymentType: partialPaymentType, // ✅ NEW
         amountPaid: finalPayable,
         partialAmount: finalPayable,
         balanceAmount: 0,
@@ -1690,6 +1703,7 @@ export default function OpManagement() {
         setShowPartialModal(false);
         setPartialBooking(null);
         setPartialAmountInput("");
+        setPartialPaymentType("cash"); // ✅ NEW
         await fetchBookings();
         refreshPatientBookings();
       } else showToast(res.data.message || "Failed to update payment", "error");
@@ -1699,6 +1713,43 @@ export default function OpManagement() {
       setSavingPartial(false);
     }
   };
+
+
+
+  // ✅ OPEN PAYMENT TYPE EDIT MODAL
+  const openPaymentTypeEditModal = (booking) => {
+    if (!booking) return;
+    setPaymentTypeEditBooking(booking);
+    setPaymentTypeEditValue(booking?.paymentType || "cash");
+    setShowPaymentTypeEditModal(true);
+  };
+
+  // ✅ SAVE PAYMENT TYPE
+  const handleSavePaymentTypeEdit = async () => {
+    if (!paymentTypeEditBooking) return;
+    setSavingPaymentTypeEdit(true);
+    try {
+      const res = await axios.put(
+        `${API_BASE_URL}/appointment-slots/${paymentTypeEditBooking._id}`,
+        { paymentType: paymentTypeEditValue }
+      );
+      if (res?.data?.success) {
+        showToast(`✅ Payment Type updated to ${paymentTypeEditValue}!`, "success");
+        setShowPaymentTypeEditModal(false);
+        setPaymentTypeEditBooking(null);
+        setPaymentTypeEditValue("cash");
+        await fetchBookings();
+        refreshPatientBookings();
+      } else {
+        showToast(res.data?.message || "Failed to update payment type", "error");
+      }
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to update payment type", "error");
+    } finally {
+      setSavingPaymentTypeEdit(false);
+    }
+  };
+
 
   const openMedicineTotalModal = (booking) => {
     setMedicineTotalBooking(booking);
@@ -2648,7 +2699,9 @@ export default function OpManagement() {
   const clearFilters = () => {
     setSearchQuery(""); setStatusFilter("All"); setFeeTypeFilter("All"); setDoctorFilter("All");
     setBookingTypeFilter("All");
-    setFromDate(""); setToDate(""); setSelectedMonth(""); setActiveCardFilter("all"); setCurrentPage(1);
+    setFromDate(""); setToDate(""); setSelectedMonth("");
+    setApptFromDate(""); setApptToDate(""); // ✅ NEW
+    setActiveCardFilter("all"); setCurrentPage(1);
     setActiveFilter("all");
     if (window.innerWidth < 1024) setShowMobileFilters(false);
   };
@@ -2684,42 +2737,123 @@ export default function OpManagement() {
 
       const paymentStatus = getPatientPaymentStatus(p);
       if (statusFilter !== "All" && paymentStatus !== statusFilter) return false;
+
       if (feeTypeFilter !== "All") {
-        const hasMatchingService = (p.serviceItems || []).some((s) => s.name && s.name.toLowerCase().includes(feeTypeFilter.toLowerCase()));
+        const hasMatchingService = (p.serviceItems || []).some(
+          (s) => s.name && s.name.toLowerCase().includes(feeTypeFilter.toLowerCase())
+        );
         if (!hasMatchingService) return false;
       }
+
       if (doctorFilter !== "All") {
-        const hasBookingWithDoctor = bookings.some((b) =>
-          (b.patientPhone === p.phone || (b.patientName && p.name && b.patientName.toLowerCase() === p.name.toLowerCase())) &&
-          b.doctorName === doctorFilter
+        const hasBookingWithDoctor = bookings.some(
+          (b) =>
+            (b.patientPhone === p.phone ||
+              (b.patientName &&
+                p.name &&
+                b.patientName.toLowerCase() === p.name.toLowerCase())) &&
+            b.doctorName === doctorFilter
         );
         if (!hasBookingWithDoctor) return false;
       }
+
       if (bookingTypeFilter !== "All") {
         const matchingBooking = getMatchingBooking(p);
         const bookingType = getBookingType(matchingBooking).label;
         if (bookingType !== bookingTypeFilter) return false;
       }
+
+      // ✅ MONTH FILTER → Appointment Month
       if (selectedMonth && selectedMonth !== "") {
-        const recordDate = new Date(p.createdAt);
-        const recordMonth = recordDate.toISOString().slice(0, 7);
-        if (recordMonth !== selectedMonth) return false;
+        const hasMonthMatch = bookings.some((b) => {
+          const matchesPatient =
+            b.patientPhone === p.phone ||
+            (b.patientName &&
+              p.name &&
+              b.patientName.toLowerCase() === p.name.toLowerCase());
+          if (!matchesPatient) return false;
+
+          const dateStr = b.appointmentDate || b.date;
+          if (!dateStr) return false;
+
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) return false;
+
+          const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          return month === selectedMonth;
+        });
+        if (!hasMonthMatch) return false;
       }
-      if (p.createdAt) {
-        const recordDate = new Date(p.createdAt);
-        if (fromDate && toDate) {
-          const from = new Date(fromDate); from.setHours(0, 0, 0, 0);
-          const to = new Date(toDate); to.setHours(23, 59, 59, 999);
-          if (recordDate < from || recordDate > to) return false;
-        } else if (fromDate) {
-          const from = new Date(fromDate); from.setHours(0, 0, 0, 0);
-          const to = new Date(fromDate); to.setHours(23, 59, 59, 999);
-          if (recordDate < from || recordDate > to) return false;
-        }
+
+      // ✅ REGISTERED DATE FILTER (fromDate / toDate) → booking.createdAt
+      if (fromDate || toDate) {
+        const hasRegDateMatch = bookings.some((b) => {
+          const matchesPatient =
+            b.patientPhone === p.phone ||
+            (b.patientName &&
+              p.name &&
+              b.patientName.toLowerCase() === p.name.toLowerCase());
+          if (!matchesPatient) return false;
+
+          const dateStr = b.createdAt || b.bookedAt;
+          if (!dateStr) return false;
+
+          const bDate = new Date(dateStr);
+          if (isNaN(bDate.getTime())) return false;
+
+          let inRange = true;
+          if (fromDate) {
+            const from = new Date(fromDate);
+            from.setHours(0, 0, 0, 0);
+            if (bDate < from) inRange = false;
+          }
+          if (toDate) {
+            const to = new Date(toDate);
+            to.setHours(23, 59, 59, 999);
+            if (bDate > to) inRange = false;
+          }
+          return inRange;
+        });
+        if (!hasRegDateMatch) return false;
       }
+
+      // ✅ APPOINTMENT DATE FILTER (apptFromDate / apptToDate) → booking.appointmentDate
+      if (apptFromDate || apptToDate) {
+        const hasApptDateMatch = bookings.some((b) => {
+          const matchesPatient =
+            b.patientPhone === p.phone ||
+            (b.patientName &&
+              p.name &&
+              b.patientName.toLowerCase() === p.name.toLowerCase());
+          if (!matchesPatient) return false;
+
+          const dateStr = b.appointmentDate || b.date;
+          if (!dateStr) return false;
+
+          const bDate = new Date(dateStr);
+          if (isNaN(bDate.getTime())) return false;
+
+          let inRange = true;
+          if (apptFromDate) {
+            const from = new Date(apptFromDate);
+            from.setHours(0, 0, 0, 0);
+            if (bDate < from) inRange = false;
+          }
+          if (apptToDate) {
+            const to = new Date(apptToDate);
+            to.setHours(23, 59, 59, 999);
+            if (bDate > to) inRange = false;
+          }
+          return inRange;
+        });
+        if (!hasApptDateMatch) return false;
+      }
+
+      // ✅ SEARCH
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const m = (p.name || "").toLowerCase().includes(q) ||
+        const m =
+          (p.name || "").toLowerCase().includes(q) ||
           (p.phone || "").toLowerCase().includes(q) ||
           (p.address || "").toLowerCase().includes(q) ||
           (p.city || "").toLowerCase().includes(q) ||
@@ -2727,11 +2861,12 @@ export default function OpManagement() {
           (p.reason || "").toLowerCase().includes(q);
         if (!m) return false;
       }
+
       return true;
     });
-  }, [patients, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, searchQuery, fromDate, toDate, selectedMonth, bookings, activeFilter]);
+  }, [patients, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, searchQuery, fromDate, toDate, selectedMonth, apptFromDate, apptToDate, bookings, activeFilter]);
 
-  useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, fromDate, toDate, selectedMonth, activeFilter]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, fromDate, toDate, selectedMonth, apptFromDate, apptToDate, activeFilter]);
 
   const stats = useMemo(() => {
     // ✅ Use filteredPatients instead of patients
@@ -2877,9 +3012,23 @@ export default function OpManagement() {
               <option value="All">All Doctors</option>
               {getUniqueDoctors().map((doc) => <option key={doc.name} value={doc.name}>{doc.name}</option>)}
             </select>
-            <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg" />
-            <input type="date" value={toDate} onChange={handleToDateChange} className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg" />
-            <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg" />
+            {/* ✅ REGISTERED DATE Filter */}
+            <div className="flex items-center gap-1 px-2 h-8 border border-gray-300 bg-white rounded-lg">
+              <span className="text-[9px] font-bold text-gray-500 uppercase whitespace-nowrap">Reg:</span>
+              <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Registered from" />
+              <span className="text-gray-400 text-xs">–</span>
+              <input type="date" value={toDate} onChange={handleToDateChange} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Registered to" />
+            </div>
+
+            {/* ✅ APPOINTMENT DATE Filter */}
+            <div className="flex items-center gap-1 px-2 h-8 border border-gray-300 bg-white rounded-lg">
+              <span className="text-[9px] font-bold text-gray-500 uppercase whitespace-nowrap">Appt:</span>
+              <input type="date" value={apptFromDate} onChange={(e) => { setApptFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Appointment from" />
+              <span className="text-gray-400 text-xs">–</span>
+              <input type="date" value={apptToDate} onChange={(e) => { setApptToDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Appointment to" />
+            </div>
+
+            <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg" title="Appointment month" />
             {/* ✅ Add Patient — Refresh ki purani jagah pe */}
             <button onClick={handleAddNewPatient} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">
               <FiPlus className="w-3 h-3" /> Add Patient
@@ -2944,11 +3093,28 @@ export default function OpManagement() {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
-                <input type="date" value={toDate} onChange={handleToDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+              {/* ✅ REGISTERED DATE */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Registered Date</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" placeholder="From" />
+                  <input type="date" value={toDate} onChange={handleToDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" placeholder="To" />
+                </div>
               </div>
-              <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+
+              {/* ✅ APPOINTMENT DATE */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Appointment Date</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="date" value={apptFromDate} onChange={(e) => { setApptFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" placeholder="From" />
+                  <input type="date" value={apptToDate} onChange={(e) => { setApptToDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" placeholder="To" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Appointment Month</label>
+                <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+              </div>
               <div className="pt-3 border-t border-gray-200 flex gap-2">
                 <button onClick={handleAddNewPatient} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg"><FiPlus className="w-4 h-4" /> Add Patient</button>
                 <button onClick={downloadCSV} disabled={!filteredPatients.length} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg disabled:opacity-50"><FiDownload className="w-4 h-4" /> Export</button>
@@ -3638,6 +3804,7 @@ export default function OpManagement() {
                       <th style={{ textAlign: "center" }}>Total</th>
                       <th style={{ textAlign: "center" }}>Paid</th>
                       <th style={{ textAlign: "center" }}>DUE</th>
+                      <th style={{ textAlign: "center" }}>Payment Type</th>
                       <th style={{ textAlign: "center" }}>Payment Status</th>
                       <th style={{ textAlign: "center" }}>Referred By (Customer)</th>
                       <th style={{ textAlign: "center" }}>Referred By (Doctor)</th>
@@ -3684,10 +3851,14 @@ export default function OpManagement() {
                           <td className="px-3 py-3 whitespace-nowrap text-xs">{patient.phone || "N/A"}</td>
                           <td className="px-3 py-3"><div className="text-xs font-semibold text-purple-800 truncate max-w-[90px]">{matchingBooking?.doctorName || "N/A"}</div></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
-                              <BookingTypeIcon className="w-2.5 h-2.5" />
-                              {bookingTypeInfo.label}
-                            </span>
+                            {matchingBooking ? (
+                              <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
+                                <BookingTypeIcon className="w-2.5 h-2.5" />
+                                {bookingTypeInfo.label}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">N/A</span>
+                            )}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap text-xs">
                             <div className="font-semibold text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</div>
@@ -3792,6 +3963,20 @@ export default function OpManagement() {
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className={`text-xs font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</span>
+                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {matchingBooking?.paymentType ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                                title="Click to change payment type"
+                              >
+                                {matchingBooking.paymentType}
+                                <FiChevronDown className="w-3 h-3" />
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">N/A</span>
+                            )}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {matchingBooking ? (
@@ -4782,6 +4967,26 @@ export default function OpManagement() {
                       </div>
                     </div>
 
+
+
+                    {/* ✅ PAYMENT TYPE SELECTOR */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <FaMoneyBillWave className="text-purple-600" />
+                        Payment Type
+                      </label>
+                      <select
+                        value={partialPaymentType}
+                        onChange={(e) => setPartialPaymentType(e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                      >
+                        {PAYMENT_TYPE_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+
                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-[11px] text-blue-800">
                         Clicking <b>"Mark as Fully Paid"</b> will clear the entire due amount of <b>₹{Math.round(paidInfo.balance)}</b>.
@@ -4796,6 +5001,71 @@ export default function OpManagement() {
                 <button onClick={handleMarkFullPaid} disabled={savingPartial} className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
                   {savingPartial ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaCheckCircle className="w-3.5 h-3.5" />}
                   {savingPartial ? "Saving..." : "Mark as Fully Paid"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+
+        {/* ✅ PAYMENT TYPE EDIT MODAL */}
+        {showPaymentTypeEditModal && paymentTypeEditBooking && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[95] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border relative">
+              <div className="flex items-center justify-between px-5 py-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-slate-700 text-white flex items-center justify-center">
+                    <FaMoneyBillWave className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Change Payment Type</h3>
+                    <p className="text-[10px] text-gray-500 truncate">{paymentTypeEditBooking.patientName}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setShowPaymentTypeEditModal(false); setPaymentTypeEditBooking(null); }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-3">
+                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">
+                  Select Payment Type
+                </label>
+                <select
+                  value={paymentTypeEditValue}
+                  onChange={(e) => setPaymentTypeEditValue(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500"
+                >
+                  {PAYMENT_TYPE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+
+                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                  <p className="text-[10px] text-slate-700">
+                    Clicking <b>"Update"</b> will change this booking's payment type to <b className="uppercase">{paymentTypeEditValue}</b>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
+                <button
+                  onClick={() => { setShowPaymentTypeEditModal(false); setPaymentTypeEditBooking(null); }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSavePaymentTypeEdit}
+                  disabled={savingPaymentTypeEdit}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-slate-700 hover:bg-slate-800 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {savingPaymentTypeEdit ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
+                  {savingPaymentTypeEdit ? "Saving..." : "Update"}
                 </button>
               </div>
             </div>
@@ -5404,13 +5674,7 @@ export default function OpManagement() {
         )}
       </main>
     </div>
-
-
-
   );
-
-
-
 }
 
 
