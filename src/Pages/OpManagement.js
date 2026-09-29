@@ -1154,49 +1154,46 @@ export default function OpManagement() {
     } catch { return 0; }
   };
 
-  const filterSlotsByDoctorAndDate = (doctorId, date) => {
-    if (!doctorId || !date) { setAvailableSlots([]); return; }
-    setSlotsLoading(true);
-    setAvailableSlots([]);
-    setFormData((prev) => ({ ...prev, slotId: "" }));
-    try {
-      const selectedDay = getDayNameFromDate(date);
-      let filtered = allSlots.filter((slot) =>
-        slot.doctorId === doctorId && slot.dayOfWeek === selectedDay && slot.type !== "break"
-      );
+ const filterSlotsByDoctorAndDate = (doctorId, date) => {
+  if (!doctorId || !date) { setAvailableSlots([]); return; }
+  setSlotsLoading(true);
+  setAvailableSlots([]);
+  setFormData((prev) => ({ ...prev, slotId: "" }));
+  try {
+    const selectedDay = getDayNameFromDate(date);
 
-      const seen = new Set();
-      filtered = filtered.filter((slot) => {
-        if (seen.has(slot.startTime)) return false;
-        seen.add(slot.startTime);
-        return true;
-      });
-
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-      if (date === todayStr) {
-        const nowMinutes = today.getHours() * 60 + today.getMinutes();
-        filtered = filtered.filter((slot) => {
-          const slotStart = parseSlotTimeToMinutes(slot.startTime);
-          return slotStart > nowMinutes;
-        });
+    // ✅ Date-priority match
+    let filtered = allSlots.filter((slot) => {
+      if (slot.doctorId !== doctorId) return false;
+      if (slot.type === "break") return false;
+      if (slot.date && slot.date.trim() !== "") {
+        return slot.date === date;
       }
+      return slot.dayOfWeek === selectedDay;
+    });
 
-      filtered.sort((a, b) => {
-        const aMins = parseSlotTimeToMinutes(a.startTime);
-        const bMins = parseSlotTimeToMinutes(b.startTime);
-        return aMins - bMins;
-      });
+    const seen = new Set();
+    filtered = filtered.filter((slot) => {
+      if (seen.has(slot.startTime)) return false;
+      seen.add(slot.startTime);
+      return true;
+    });
 
-      setAvailableSlots(filtered);
-    } catch (error) {
-      console.error("Error filtering slots:", error);
-      setAvailableSlots([]);
-      showToast("Failed to filter slots", "error");
-    } finally { setSlotsLoading(false); }
-  };
+    // ✅ Past-time filter HATA diya — saare slots (past bhi) selectable
 
+    filtered.sort((a, b) => {
+      const aMins = parseSlotTimeToMinutes(a.startTime);
+      const bMins = parseSlotTimeToMinutes(b.startTime);
+      return aMins - bMins;
+    });
+
+    setAvailableSlots(filtered);
+  } catch (error) {
+    console.error("Error filtering slots:", error);
+    setAvailableSlots([]);
+    showToast("Failed to filter slots", "error");
+  } finally { setSlotsLoading(false); }
+};
   const checkExistingPatient = (value) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     if (editingId) { setExistingPatient(null); setShowExistingPatientPopup(false); return; }
@@ -3324,19 +3321,19 @@ export default function OpManagement() {
                       <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">No slots available.</div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto p-1">
-                        {availableSlots.map((slot) => {
-                          const isSelected = formData.slotId === slot._id;
-                          const isBooked = slot.status === "booked";
-                          if (formData.slotId && !isSelected) return null;
-                          return (
-                            <button key={slot._id} type="button" onClick={() => !isBooked && handleSlotSelect(slot._id)} className={`p-2 text-xs font-semibold rounded-lg border text-left ${isSelected ? "border-blue-500 bg-blue-50 text-blue-700" : isBooked ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} disabled={isBooked}>
-                              <div className="font-bold text-xs">{slot.startTime} – {slot.endTime}</div>
-                              <div className="text-[10px] text-gray-500">₹{slot.consultationFee || 0}</div>
-                              {isBooked && <span className="text-[9px] font-bold text-red-500 block">Booked</span>}
-                              {isSelected && <span className="text-[9px] font-bold text-emerald-600 block">✓ Selected</span>}
-                            </button>
-                          );
-                        })}
+           {availableSlots.map((slot) => {
+  const isSelected = formData.slotId === slot._id;
+  const isBooked = slot.status === "booked";
+  if (formData.slotId && !isSelected) return null;
+  return (
+    <button key={slot._id} type="button" onClick={() => !isBooked && handleSlotSelect(slot._id)} className={`p-2 text-xs font-semibold rounded-lg border text-left ${isSelected ? "border-blue-500 bg-blue-50 text-blue-700" : isBooked ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} disabled={isBooked}>
+      <div className="font-bold text-xs">{slot.startTime} – {slot.endTime}</div>
+      <div className="text-[10px] text-gray-500">₹{slot.consultationFee || 0}</div>
+      {isBooked && <span className="text-[9px] font-bold text-red-500 block">Booked</span>}
+      {isSelected && <span className="text-[9px] font-bold text-emerald-600 block">✓ Selected</span>}
+    </button>
+  );
+})}
                       </div>
                     )}
                     {formData.slotId && (

@@ -1904,6 +1904,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Online Bookings", path: "/bookings" },
         { name: "Referral Management", path: "/referral-management" },   // ✅ Combined contacts (doctor+customer tabs)
         { name: "Referral Bookings", path: "/referral-bookings" },       // ✅ Combined OP bookings (doctor+customer tabs)
+            { name: "Appointment Slots", path: "/appointment-slots" },  // ✅ NAYA
                 { name: "Doctors", path: "/doctor-management" },
                         { name: "Services", path: "/services" },
         { name: "Letter Head", path: "/letterhead" },
