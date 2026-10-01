@@ -34,7 +34,6 @@ const LettersSection = () => {
     const [viewingLetter, setViewingLetter] = useState(null);
     const [showSentLetterView, setShowSentLetterView] = useState(false);
 
-    // Letter content state
     const [letterData, setLetterData] = useState({
         employeeName: '',
         employeeId: '',
@@ -218,62 +217,249 @@ const LettersSection = () => {
         setLetterData(prev => ({ ...prev, [name]: value }));
     };
 
+    // ═══════════════════════════════════════════════════════════
+    // ✅ PDF BLOB — Clone to body + Single-page A4 fit
+    // ═══════════════════════════════════════════════════════════
+    const generateLetterPDFBlob = async (ref) => {
+        console.log('═══════════════════════════════════════════');
+        console.log('🔍 [PDF GEN] Started');
+
+        const targetRef = ref || letterRef;
+        if (!targetRef.current) {
+            console.error('❌ [PDF GEN] Letter ref NOT attached!');
+            return null;
+        }
+
+        const original = targetRef.current;
+
+        // Clone letter, move to body (bypass parent clipping)
+        const clone = original.cloneNode(true);
+        clone.setAttribute('data-letter-capture', 'true');
+        clone.style.position = 'fixed';
+        clone.style.left = '-99999px';
+        clone.style.top = '0';
+        clone.style.width = (original.offsetWidth || 896) + 'px';
+        clone.style.height = 'auto';
+        clone.style.maxHeight = 'none';
+        clone.style.overflow = 'visible';
+        clone.style.zIndex = '-1';
+        clone.style.background = '#ffffff';
+        clone.style.margin = '0';
+        clone.style.padding = '40px';
+        clone.style.borderRadius = '0';
+        clone.style.boxShadow = 'none';
+
+        document.body.appendChild(clone);
+        console.log('✅ [PDF GEN] Clone appended to body');
+
+        try {
+            await new Promise(r => setTimeout(r, 100));
+
+            const fullWidth = clone.scrollWidth;
+            const fullHeight = clone.scrollHeight;
+            console.log('🔍 [PDF GEN] Clone size:', fullWidth, 'x', fullHeight);
+
+            const canvas = await html2canvas(clone, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                width: fullWidth,
+                height: fullHeight,
+                windowWidth: fullWidth,
+                windowHeight: fullHeight,
+                scrollX: 0,
+                scrollY: 0
+            });
+            console.log('✅ [PDF GEN] Canvas:', canvas.width, 'x', canvas.height);
+
+            const imgData = canvas.toDataURL('image/jpeg', 0.85);
+            console.log('✅ [PDF GEN] imgData length:', imgData.length);
+
+            // ✅ Single-page A4 PDF — fit by aspect ratio
+            const pdf = new jsPDF('p', 'mm', 'a4', { compress: true });
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            const imgAspect = canvas.width / canvas.height;
+            const pageAspect = pdfWidth / pdfHeight;
+
+            let finalWidth, finalHeight;
+            if (imgAspect > pageAspect) {
+                finalWidth = pdfWidth;
+                finalHeight = pdfWidth / imgAspect;
+            } else {
+                finalHeight = pdfHeight;
+                finalWidth = pdfHeight * imgAspect;
+            }
+
+            const xOffset = (pdfWidth - finalWidth) / 2;
+            const yOffset = 0;
+
+            pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+
+            const blob = pdf.output('blob');
+            console.log('✅ [PDF GEN] Blob:', (blob.size / 1024).toFixed(2), 'KB');
+            console.log('✅ [PDF GEN] Fitted:', finalWidth.toFixed(1), 'x', finalHeight.toFixed(1), 'mm');
+            console.log('✅ [PDF GEN] Pages:', pdf.internal.getNumberOfPages());
+            console.log('═══════════════════════════════════════════');
+            return blob;
+        } catch (err) {
+            console.error('❌ [PDF GEN] Error:', err);
+            console.log('═══════════════════════════════════════════');
+            return null;
+        } finally {
+            if (clone.parentNode) {
+                document.body.removeChild(clone);
+                console.log('🧹 [PDF GEN] Clone removed');
+            }
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // ✅ SAVE — FormData with PDF
+    // ═══════════════════════════════════════════════════════════
     const handleSaveLetter = async () => {
         if (!selectedEmployee) return;
         setSaving(true);
         setError('');
+
+        console.log('═══════════════════════════════════════════');
+        console.log('💾 [SAVE] Started —', selectedEmployee?.name);
+
         try {
-            const response = await axios.post(`${API_BASE_URL}/employees/admin-letters`, {
-                employeeId: selectedEmployee?._id || selectedEmployee?.employeeId,
-                employeeName: letterData.employeeName,
-                letterType,
-                content: letterData,
-            });
+            const pdfBlob = await generateLetterPDFBlob(letterRef);
+            console.log('💾 [SAVE] pdfBlob:', pdfBlob);
+
+            const formData = new FormData();
+            formData.append('employeeId', selectedEmployee?._id || selectedEmployee?.employeeId);
+            formData.append('employeeName', letterData.employeeName || '');
+            formData.append('letterType', letterType);
+            formData.append('content', JSON.stringify(letterData));
+
+            if (pdfBlob) {
+                const safeName = `${letterType}-letter-${selectedEmployee?.employeeId || 'emp'}-${Date.now()}.pdf`;
+                formData.append('letterPdf', pdfBlob, safeName);
+                console.log('✅ [SAVE] letterPdf appended:', safeName);
+            } else {
+                console.warn('⚠️ [SAVE] pdfBlob is NULL');
+            }
+
+            console.log('💾 [SAVE] FormData:');
+            for (let pair of formData.entries()) {
+                console.log('   →', pair[0], ':', pair[1] instanceof File || pair[1] instanceof Blob ? `File(${pair[1].size}b)` : String(pair[1]).substring(0, 80));
+            }
+
+            const response = await axios.post(
+                `${API_BASE_URL}/employees/admin-letters`,
+                formData,
+                { headers: { 'Content-Type': 'multipart/form-data' } }
+            );
+
+            console.log('✅ [SAVE] Response:', response.data);
+            console.log('✅ [SAVE] letterPdfUrl:', response.data?.data?.letterPdfUrl);
+
             if (response.data?.data) setCurrentLetterMeta(response.data.data);
             await loadEmployeeLetters(selectedEmployee);
             setSuccessMessage('✅ Letter draft saved successfully!');
             setTimeout(() => setSuccessMessage(''), 3000);
         } catch (err) {
-            console.error('Error saving letter:', err);
+            console.error('❌ [SAVE] Error:', err);
             setError(err.response?.data?.message || 'Failed to save letter');
             setTimeout(() => setError(''), 3000);
-        } finally { setSaving(false); }
+        } finally {
+            setSaving(false);
+            console.log('═══════════════════════════════════════════');
+        }
     };
 
+    // ═══════════════════════════════════════════════════════════
+    // ✅ SEND — FormData with PDF
+    // ═══════════════════════════════════════════════════════════
     const handleSendLetter = async () => {
         if (!selectedEmployee) return;
         setSending(true);
         setError('');
+
+        console.log('═══════════════════════════════════════════');
+        console.log('📨 [SEND] Started —', selectedEmployee?.name, '/', letterType);
+
         try {
-            const response = await axios.post(`${API_BASE_URL}/employees/admin-letters/send`, {
-                employeeId: selectedEmployee?._id || selectedEmployee?.employeeId,
-                employeeName: letterData.employeeName,
-                letterType,
-                content: letterData,
+            console.log('📨 [SEND] Step 1: Generate PDF...');
+            const pdfBlob = await generateLetterPDFBlob(letterRef);
+            console.log('📨 [SEND] pdfBlob:', pdfBlob, 'size:', pdfBlob?.size);
+
+            console.log('📨 [SEND] Step 2: FormData...');
+            const formData = new FormData();
+            formData.append('employeeId', selectedEmployee?._id || selectedEmployee?.employeeId);
+            formData.append('employeeName', letterData.employeeName || '');
+            formData.append('letterType', letterType);
+            formData.append('content', JSON.stringify(letterData));
+
+            if (pdfBlob) {
+                const safeName = `${letterType}-letter-${selectedEmployee?.employeeId || 'emp'}-${Date.now()}.pdf`;
+                formData.append('letterPdf', pdfBlob, safeName);
+                console.log('✅ [SEND] letterPdf appended:', safeName);
+            } else {
+                console.error('❌ [SEND] pdfBlob NULL — letterPdf NOT appended');
+            }
+
+            console.log('📨 [SEND] FormData:');
+            for (let pair of formData.entries()) {
+                console.log('   →', pair[0], ':', pair[1] instanceof File || pair[1] instanceof Blob ? `File(${pair[1].size}b, ${pair[1].type})` : String(pair[1]).substring(0, 100));
+            }
+
+            const url = `${API_BASE_URL}/employees/admin-letters/send`;
+            console.log('📤 [SEND] Step 3: POST to:', url);
+
+            const response = await axios.post(url, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
+
+            console.log('✅ [SEND] Status:', response.status);
+            console.log('✅ [SEND] Response:', response.data);
+            console.log('✅ [SEND] letterPdfUrl:', response.data?.data?.letterPdfUrl);
+
+            if (response.data?.data?.letterPdfUrl) {
+                console.log('🎉 [SEND] SUCCESS — PDF URL received!');
+            } else {
+                console.error('❌ [SEND] letterPdfUrl MISSING in response!');
+            }
+
             if (response.data?.data) setCurrentLetterMeta(response.data.data);
             await loadEmployeeLetters(selectedEmployee);
             setSuccessMessage('✅ Letter sent successfully!');
             setTimeout(() => setSuccessMessage(''), 3000);
         } catch (err) {
-            console.error('Error sending letter:', err);
+            console.error('❌ [SEND] Error:', err);
+            console.error('❌ [SEND] Response:', err.response?.data);
             setError(err.response?.data?.message || 'Failed to send letter');
             setTimeout(() => setError(''), 3000);
-        } finally { setSending(false); }
+        } finally {
+            setSending(false);
+            console.log('═══════════════════════════════════════════');
+        }
     };
 
     const handleDownloadPDF = async (ref, filename) => {
         const targetRef = ref || letterRef;
         if (!targetRef.current) return;
         try {
-            const element = targetRef.current;
-            const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`${filename || 'letter'}.pdf`);
+            const pdfBlob = await generateLetterPDFBlob(targetRef);
+            if (!pdfBlob) {
+                setError('Failed to generate PDF');
+                setTimeout(() => setError(''), 3000);
+                return;
+            }
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename || 'letter'}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         } catch (err) {
             console.error('Error generating PDF:', err);
             setError('Failed to generate PDF');
@@ -297,8 +483,10 @@ const LettersSection = () => {
     const sentLetters = employeeLetters.filter(letter => letter.status === 'sent');
     const totalLettersGenerated = employeeLetters.length;
 
-    // ─── Letter Templates ────────────────────────────────────────────────────
-    const ExperienceLetter = ({ data: rawData, ref: elRef }) => {
+    // ═══════════════════════════════════════════════════════════
+    // ✅ TEMPLATES — innerRef + data-letter-capture + no overflow-hidden
+    // ═══════════════════════════════════════════════════════════
+    const ExperienceLetter = ({ data: rawData, innerRef: elRef }) => {
         const cleanCompanyName = (name) => {
             if (!name) return 'Timely Healthtech Private Limited';
             const trimmed = name.trim();
@@ -320,7 +508,12 @@ const LettersSection = () => {
         const possessive = gender === 'male' ? 'his' : 'her';
         const salutation = gender === 'male' ? 'Mr.' : 'Ms.';
         return (
-            <div ref={elRef} className="relative bg-white p-10 rounded-lg shadow-lg max-w-4xl mx-auto overflow-hidden flex flex-col" style={{ fontFamily: 'Times New Roman, serif', lineHeight: '1.6', minHeight: '1056px' }}>
+            <div
+                ref={elRef}
+                data-letter-capture="true"
+                className="relative bg-white p-10 rounded-lg shadow-lg max-w-4xl mx-auto flex flex-col"
+                style={{ fontFamily: 'Times New Roman, serif', lineHeight: '1.6', minHeight: '1056px', overflow: 'visible' }}
+            >
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ opacity: 0.1, zIndex: 0 }}>
                     <img src={New} alt="Watermark" className="w-[300px] h-auto object-contain select-none" />
                 </div>
@@ -352,7 +545,7 @@ const LettersSection = () => {
                         This is to certify that <span className="font-semibold">{salutation} {data.employeeName}</span> (Employee ID: <span className="font-semibold">{data.employeeId}</span>) was employed with <span className="font-semibold">{data.companyName}</span> as a <span className="font-semibold">{data.designation}</span> from <span className="font-semibold">{data.joiningDate}</span> to <span className="font-semibold">{data.relievingDate}</span>.
                     </p>
                     <p className="mb-4 text-gray-700 whitespace-pre-line">
-                        {data.experienceBody || `During ${possessive} tenure with us, ${salutation} ${data.employeeName} was a valuable member of our ${data.department || 'Full Stack Development'} team, responsible for developing web applications, managing frontend and backend integration, and delivering efficient technical solutions with strong problem-solving skills.`}
+                        {data.experienceBody || `During ${possessive} tenure with us, ${salutation} ${data.employeeName} was a valuable member of our ${data.department || 'Full Stack Development'} team.`}
                     </p>
                     <p className="mb-4 text-gray-700">
                         <span className="font-semibold">{salutation} {data.employeeName}</span> is a dedicated professional who maintains a positive attitude and works well in a team environment. {pronounCap} is leaving the company of {possessive} own accord to pursue other career opportunities.
@@ -397,7 +590,7 @@ const LettersSection = () => {
         );
     };
 
-    const RelievingLetter = ({ data: rawData, ref: elRef }) => {
+    const RelievingLetter = ({ data: rawData, innerRef: elRef }) => {
         const cleanCompanyName = (name) => {
             if (!name) return 'Timely Healthtech Private Limited';
             const trimmed = name.trim();
@@ -416,7 +609,12 @@ const LettersSection = () => {
         const gender = (data.gender || 'male').toLowerCase();
         const salutation = gender === 'male' ? 'Mr.' : 'Ms.';
         return (
-            <div ref={elRef} className="relative bg-white p-10 rounded-lg shadow-lg max-w-4xl mx-auto overflow-hidden flex flex-col" style={{ fontFamily: 'Times New Roman, serif', lineHeight: '1.6', minHeight: '1056px' }}>
+            <div
+                ref={elRef}
+                data-letter-capture="true"
+                className="relative bg-white p-10 rounded-lg shadow-lg max-w-4xl mx-auto flex flex-col"
+                style={{ fontFamily: 'Times New Roman, serif', lineHeight: '1.6', minHeight: '1056px', overflow: 'visible' }}
+            >
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ opacity: 0.1, zIndex: 0 }}>
                     <img src={New} alt="Watermark" className="w-[300px] h-auto object-contain select-none" />
                 </div>
@@ -491,7 +689,6 @@ const LettersSection = () => {
         );
     };
 
-    // ─── Sent Letter Modal ────────────────────────────────────────────────────
     const SentLetterView = () => {
         if (!viewingLetter) return null;
         const letterDataForView = viewingLetter.content || viewingLetter;
@@ -514,12 +711,23 @@ const LettersSection = () => {
                                 <p className="text-sm text-gray-500">{viewingLetter.employeeName} — {viewingLetter.employeeId}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => handleDownloadPDF(viewLetterRef, `${viewingLetter.letterType}-letter-${viewingLetter.employeeName?.replace(/\s/g, '-')}`)}
-                                    className="px-3 py-1.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1.5"
-                                >
-                                    <FaDownload className="text-xs" /> PDF
-                                </button>
+                                {viewingLetter.letterPdfUrl ? (
+                                    <a
+                                        href={`${API_BASE_URL.replace('/api', '')}${viewingLetter.letterPdfUrl}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-3 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+                                    >
+                                        <FaDownload className="text-xs" /> PDF
+                                    </a>
+                                ) : (
+                                    <button
+                                        onClick={() => handleDownloadPDF(viewLetterRef, `${viewingLetter.letterType}-letter-${viewingLetter.employeeName?.replace(/\s/g, '-')}`)}
+                                        className="px-3 py-1.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1.5"
+                                    >
+                                        <FaDownload className="text-xs" /> PDF
+                                    </button>
+                                )}
                                 <button onClick={handleCloseSentLetterView} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                                     <FaTimes className="text-gray-500" />
                                 </button>
@@ -527,8 +735,8 @@ const LettersSection = () => {
                         </div>
                         <div className="p-6">
                             {isExperience
-                                ? <ExperienceLetter data={letterDataForView} ref={viewLetterRef} />
-                                : <RelievingLetter data={letterDataForView} ref={viewLetterRef} />
+                                ? <ExperienceLetter data={letterDataForView} innerRef={viewLetterRef} />
+                                : <RelievingLetter data={letterDataForView} innerRef={viewLetterRef} />
                             }
                         </div>
                         <div className="sticky bottom-0 bg-gray-50 px-6 py-3 border-t border-gray-200 rounded-b-2xl flex items-center justify-between">
@@ -551,12 +759,10 @@ const LettersSection = () => {
         );
     };
 
-    // ─── Main Render ──────────────────────────────────────────────────────────
     return (
         <div className="emp-dash">
             <main className="p-2 sm:p-4 lg:p-6">
 
-                {/* ── Page Header ── */}
                 <div className="emp-dash__header">
                     <div className="flex items-baseline gap-3 flex-wrap">
                         <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
@@ -581,10 +787,8 @@ const LettersSection = () => {
                     </div>
                 </div>
 
-                {/* ── KPI Stat Cards ── */}
                 {!loading && (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-                        {/* Total Employees */}
                         <div className="emp-dash__stat">
                             <div className="emp-dash__stat-top">
                                 <span className="emp-dash__stat-label">Employees</span>
@@ -596,7 +800,6 @@ const LettersSection = () => {
                             <div className="emp-dash__stat-meta">Total staff 👥</div>
                         </div>
 
-                        {/* Experience Letter */}
                         <div
                             className={`emp-dash__stat cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${letterType === 'experience' && selectedEmployee ? 'ring-2 ring-blue-400 shadow-lg' : ''}`}
                             onClick={() => setLetterType('experience')}
@@ -613,7 +816,6 @@ const LettersSection = () => {
                             <div className="emp-dash__stat-meta">tap to select 📄</div>
                         </div>
 
-                        {/* Relieving Letter */}
                         <div
                             className={`emp-dash__stat cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${letterType === 'relieving' && selectedEmployee ? 'ring-2 ring-amber-400 shadow-lg' : ''}`}
                             onClick={() => setLetterType('relieving')}
@@ -630,7 +832,6 @@ const LettersSection = () => {
                             <div className="emp-dash__stat-meta">tap to select 📋</div>
                         </div>
 
-                        {/* Sent Letters */}
                         <div className="emp-dash__stat col-span-2 lg:col-span-1">
                             <div className="emp-dash__stat-top">
                                 <span className="emp-dash__stat-label">Sent Letters</span>
@@ -644,7 +845,6 @@ const LettersSection = () => {
                     </div>
                 )}
 
-                {/* ── Alert messages ── */}
                 <AnimatePresence>
                     {successMessage && (
                         <motion.div
@@ -672,9 +872,7 @@ const LettersSection = () => {
                     )}
                 </AnimatePresence>
 
-                {/* ── Employee Search & Selection Card ── */}
                 <div className="emp-dash__card mb-6">
-                    {/* Card Header */}
                     <div className="emp-dash__card-header">
                         <div>
                             <h3 className="emp-dash__card-title flex items-center gap-2">
@@ -700,7 +898,6 @@ const LettersSection = () => {
                         </div>
                     </div>
 
-                    {/* Search */}
                     <div className="emp-dash__card-body bg-gray-50/50">
                         <div className="relative mb-4">
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -715,7 +912,6 @@ const LettersSection = () => {
                             />
                         </div>
 
-                        {/* Employee Table */}
                         <div className="emp-dash__table-wrap hidden sm:block border border-gray-100 rounded-xl overflow-hidden">
                             <table className="emp-dash__table">
                                 <thead>
@@ -799,7 +995,6 @@ const LettersSection = () => {
                             </table>
                         </div>
 
-                        {/* Mobile Card List */}
                         <div className="sm:hidden divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden">
                             {loading ? (
                                 <div className="py-10 text-center">
@@ -843,7 +1038,6 @@ const LettersSection = () => {
                             )}
                         </div>
 
-                        {/* Footer count */}
                         {!loading && filteredEmployees.length > 0 && (
                             <div className="flex items-center justify-between gap-2 px-2 pt-3 text-xs text-gray-500 font-medium">
                                 <span>Showing <span className="text-gray-900 font-bold">{filteredEmployees.length}</span> employees</span>
@@ -858,14 +1052,12 @@ const LettersSection = () => {
                     </div>
                 </div>
 
-                {/* ── Letter Editor & Preview ── */}
                 {selectedEmployee && !showSentLetterView && (
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="emp-dash__card mb-6"
                     >
-                        {/* Letter Header */}
                         <div className="emp-dash__card-header">
                             <div>
                                 <h2 className="emp-dash__card-title flex items-center gap-2">
@@ -889,11 +1081,20 @@ const LettersSection = () => {
                                                 Sent {new Date(currentLetterMeta.sentAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                             </span>
                                         )}
+                                        {currentLetterMeta.letterPdfUrl && (
+                                            <a
+                                                href={`${API_BASE_URL.replace('/api', '')}${currentLetterMeta.letterPdfUrl}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700 hover:bg-purple-200"
+                                            >
+                                                📎 Saved PDF
+                                            </a>
+                                        )}
                                     </div>
                                 )}
                             </div>
 
-                            {/* Action Buttons */}
                             <div className="flex flex-wrap gap-2">
                                 <button
                                     onClick={() => setIsEditing(!isEditing)}
@@ -933,7 +1134,6 @@ const LettersSection = () => {
                             </div>
                         </div>
 
-                        {/* Edit Form */}
                         <AnimatePresence>
                             {isEditing && (
                                 <motion.div
@@ -972,7 +1172,6 @@ const LettersSection = () => {
                                                 </div>
                                             ))}
 
-                                            {/* Gender */}
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">Gender</label>
                                                 <select
@@ -986,7 +1185,6 @@ const LettersSection = () => {
                                                 </select>
                                             </div>
 
-                                            {/* Reason for Leaving */}
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">Reason for Leaving</label>
                                                 <input
@@ -999,7 +1197,6 @@ const LettersSection = () => {
                                                 />
                                             </div>
 
-                                            {/* Experience body */}
                                             <div className="md:col-span-2">
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">Experience Letter Body / Duties</label>
                                                 <textarea
@@ -1012,7 +1209,6 @@ const LettersSection = () => {
                                                 />
                                             </div>
 
-                                            {/* Relieving body */}
                                             <div className="md:col-span-2">
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">Relieving Letter Body</label>
                                                 <textarea
@@ -1030,15 +1226,17 @@ const LettersSection = () => {
                             )}
                         </AnimatePresence>
 
-                        {/* Letter Preview */}
-                        <div className="emp-dash__card-body print-only">
+                        {/* ✅ Letter Preview — visible, no clipping */}
+                        <div
+                            className="emp-dash__card-body"
+                            style={{ overflow: 'visible', maxHeight: 'none', padding: '24px' }}
+                        >
                             {letterType === 'experience'
-                                ? <ExperienceLetter data={letterData} ref={letterRef} />
-                                : <RelievingLetter data={letterData} ref={letterRef} />
+                                ? <ExperienceLetter data={letterData} innerRef={letterRef} />
+                                : <RelievingLetter data={letterData} innerRef={letterRef} />
                             }
                         </div>
 
-                        {/* ── Sent Letters Section ── */}
                         <div className="border-t border-gray-100">
                             <div className="emp-dash__card-header">
                                 <div>
@@ -1068,7 +1266,7 @@ const LettersSection = () => {
                                                     <th>Type</th>
                                                     <th>Status</th>
                                                     <th>Sent On</th>
-                                                    <th className="text-right">Action</th>
+                                                    <th className="text-right">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1112,13 +1310,26 @@ const LettersSection = () => {
                                                                 </div>
                                                             </td>
                                                             <td className="text-right whitespace-nowrap">
-                                                                <button
-                                                                    onClick={() => handleViewExistingLetter(letter)}
-                                                                    className="p-2 rounded-lg transition-all transform hover:scale-110 shadow-sm border bg-blue-600 text-white hover:bg-blue-700 border-blue-500"
-                                                                    title="View letter"
-                                                                >
-                                                                    <FaEye className="text-xs" />
-                                                                </button>
+                                                                <div className="flex items-center justify-end gap-1.5">
+                                                                    <button
+                                                                        onClick={() => handleViewExistingLetter(letter)}
+                                                                        className="p-2 rounded-lg transition-all transform hover:scale-110 shadow-sm border bg-blue-600 text-white hover:bg-blue-700 border-blue-500"
+                                                                        title="View letter"
+                                                                    >
+                                                                        <FaEye className="text-xs" />
+                                                                    </button>
+                                                                    {letter.letterPdfUrl && (
+                                                                        <a
+                                                                            href={`${API_BASE_URL.replace('/api', '')}${letter.letterPdfUrl}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="p-2 rounded-lg transition-all transform hover:scale-110 shadow-sm border bg-purple-600 text-white hover:bg-purple-700 border-purple-500"
+                                                                            title="Download PDF"
+                                                                        >
+                                                                            <FaDownload className="text-xs" />
+                                                                        </a>
+                                                                    )}
+                                                                </div>
                                                             </td>
                                                         </motion.tr>
                                                     ))}
@@ -1128,7 +1339,6 @@ const LettersSection = () => {
                                     </div>
                                 )}
 
-                                {/* Mobile Sent Letters */}
                                 {sentLetters.length > 0 && (
                                     <div className="sm:hidden divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden mt-3">
                                         {sentLetters.map((letter) => (
@@ -1142,12 +1352,24 @@ const LettersSection = () => {
                                                                 : '—'}
                                                         </span>
                                                     </div>
-                                                    <button
-                                                        onClick={() => handleViewExistingLetter(letter)}
-                                                        className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
-                                                    >
-                                                        <FaEye className="text-[10px]" /> View
-                                                    </button>
+                                                    <div className="flex gap-1.5">
+                                                        <button
+                                                            onClick={() => handleViewExistingLetter(letter)}
+                                                            className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+                                                        >
+                                                            <FaEye className="text-[10px]" /> View
+                                                        </button>
+                                                        {letter.letterPdfUrl && (
+                                                            <a
+                                                                href={`${API_BASE_URL.replace('/api', '')}${letter.letterPdfUrl}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
+                                                            >
+                                                                <FaDownload className="text-[10px]" /> PDF
+                                                            </a>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -1158,7 +1380,6 @@ const LettersSection = () => {
                     </motion.div>
                 )}
 
-                {/* ── Sent Letter View Modal ── */}
                 <AnimatePresence>
                     {showSentLetterView && <SentLetterView />}
                 </AnimatePresence>

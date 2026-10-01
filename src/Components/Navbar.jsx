@@ -226,6 +226,9 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     { path: "/leavelist", label: "Leave List" },
     { path: "/comp-off-requests", label: "Comp Off Requests" },
     { path: "/comp-off-settings", label: "Comp Off Settings" },
+    { path: "/ot-claims", label: "OT Claims" },
+    { path: "/over-time", label: "Over Time" },
+    { path: "/permissions", label: "Permissions" },
   ];
 
   const isLeavesModule = leavesTabs.some(

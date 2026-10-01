@@ -31,9 +31,6 @@ import "../index.css";
 import "./EmployeeDashboard.css";
 import "./AttendanceSummary.css";
 
-// ============================================
-// 📅 HELPER: Format date to YYYY-MM-DD (LOCAL)
-// ============================================
 const formatDateLocal = (date) => {
   const d = new Date(date);
   const yyyy = d.getFullYear();
@@ -70,36 +67,25 @@ const getManualDeduction = (employeeId, month) => {
   }
 };
 
-// ============================================
-// ✅ WEEK-OFF HELPERS
-// ============================================
 const getWeekOffDatesForEmployee = (weekOffDatesMap, employeeId) => {
   if (!weekOffDatesMap || !employeeId) return [];
   return weekOffDatesMap[employeeId] || [];
 };
 
-// ============================================
-// ✅ COMP-OFF HELPERS
-// ============================================
 const getCompOffDatesForEmployee = (compOffDatesMap, employeeId) => {
   if (!compOffDatesMap || !employeeId) return [];
   return compOffDatesMap[employeeId] || [];
 };
 
-// ============================================
-// ✅ HOLIDAY DEPARTMENT HELPERS
-// ============================================
 const holidayAppliesToDepartment = (holiday, employeeDepartment) => {
   if (!holiday) return false;
 
   let depts = [];
 
-  // Priority 1: departments array
   if (Array.isArray(holiday.departments) && holiday.departments.length > 0) {
     depts = holiday.departments.filter(d => d && typeof d === 'string');
   }
 
-  // Priority 2: department string (agar array empty hai)
   if (depts.length === 0 && holiday.department && typeof holiday.department === 'string') {
     const depStr = holiday.department.trim();
     if (depStr.toLowerCase() !== "all" && depStr.toLowerCase() !== "all departments") {
@@ -107,18 +93,14 @@ const holidayAppliesToDepartment = (holiday, employeeDepartment) => {
     }
   }
 
-  // ✅ Agar koi specific dept nahi → sab employees ko milega
   if (depts.length === 0) return true;
 
-  // ✅ Agar "All" hai → sab ko milega
   if (depts.some(d => d.toLowerCase() === "all" || d.toLowerCase() === "all departments")) {
     return true;
   }
 
-  // ✅ Agar employee ka dept nahi hai → sab ko milega (safe fallback)
   if (!employeeDepartment) return true;
 
-  // ✅ Strict match
   const empDept = employeeDepartment.toLowerCase().trim();
   return depts.some(d => d.toLowerCase().trim() === empDept);
 };
@@ -157,14 +139,23 @@ const calculateHolidayCountForDepartment = (holidaysData, targetMonth, employeeD
   return count;
 };
 
-// Calculate earned week-offs based on admin-assigned dates only
-const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, employeeLeavesData, weekOffDates, shiftHours = 8, holidayDaysInMonth = 0) => {
+// ============================================================================
+// 🔥 FIXED: calculateWeekOffData
+// RULES:
+// 1. Present Days = AS IT IS (week off pe kaam kiya bhi included)
+// 2. Earned Week Offs = floor(totalWorkingDays / 5) capped at weekOffPerMonth
+//    (5 din kaam = 1 week off)
+// 3. Used Week Offs = min(Raw Used, Earned) — UWO kabhi EWO se zyada nahi
+// 4. Worked on Week Off = Carry Forward (display only)
+// ============================================================================
+const calculateWeekOffData = (employeeId, year, monthNum, dailyAttendance, employeeLeavesData, weekOffDates, shiftHours = 8, holidayDaysInMonth = 0, weekOffPerMonth = 4) => {
   const firstDay = new Date(year, monthNum - 1, 1);
   const lastDay = new Date(year, monthNum, 0);
 
   const weekOffDateSet = new Set(weekOffDates || []);
-  const totalWeekOffDays = weekOffDateSet.size;
+  const totalWeekOffDaysInMonth = weekOffDateSet.size;
 
+  // Build attendance map
   const attendanceMap = new Map();
   dailyAttendance.forEach(record => {
     if (record.date || record.checkInTime) {
@@ -196,6 +187,87 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
     });
   };
 
+  // Step 1: Find all week off days in month
+  const allWeekOffDates = [];
+  for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+    const dateKey = formatDateLocal(d);
+    if (weekOffDateSet.has(dateKey)) {
+      allWeekOffDates.push(dateKey);
+    }
+  }
+
+  // Step 2: For each week off day, check WORKED or USED
+  const usedWeekOffDates = [];
+  const workedOnWeekOffDates = [];
+
+  allWeekOffDates.forEach(dateKey => {
+    const hoursWorked = attendanceMap.get(dateKey);
+    const isLeave = isLeaveDay(new Date(dateKey + 'T00:00:00'));
+
+    if (isLeave) {
+      usedWeekOffDates.push(dateKey);
+    } else if (hoursWorked !== undefined && hoursWorked > 0) {
+      workedOnWeekOffDates.push(dateKey);
+    } else {
+      usedWeekOffDates.push(dateKey);
+    }
+  });
+
+  // ============================================================================
+  // Step 3: PRESENT DAYS - AS IT IS (week off pe kaam kiya bhi included)
+  // ============================================================================
+  let presentDays = 0;
+  let halfDays = 0;
+  let leavesCount = 0;
+  let totalWorkingDays = 0;
+  const presentDates = [];
+  const halfDayDates = [];
+  const leaveDates = [];
+
+  for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+    const dateKey = formatDateLocal(d);
+
+    if (isLeaveDay(d)) {
+      leavesCount++;
+      leaveDates.push(dateKey);
+      continue;
+    }
+
+    const hoursWorked = attendanceMap.get(dateKey);
+    if (hoursWorked !== undefined && hoursWorked > 0) {
+      if (hoursWorked >= shiftHours * 0.8) {
+        presentDays++;
+        presentDates.push(dateKey);
+        totalWorkingDays += 1;
+      } else if (hoursWorked >= shiftHours * 0.4) {
+        halfDays += 0.5;
+        halfDayDates.push(dateKey);
+        totalWorkingDays += 0.5;
+      }
+    }
+  }
+
+  // ============================================================================
+  // Step 4: Earned Week Offs
+  // ✅ RULE: 5 days working = 1 week off earned
+  // ✅ Cap at weekOffPerMonth (assigned week offs)
+  // ============================================================================
+  let earnedWeekOffs = Math.floor(totalWorkingDays / 5);
+  const effectiveCap = weekOffPerMonth || 4;
+  earnedWeekOffs = Math.min(earnedWeekOffs, effectiveCap);
+
+  // ============================================================================
+  // Step 5: Counts with UWO capped at EWO
+  // ✅ IMPORTANT: UWO (Used) kabhi EWO (Earned) se zyada nahi ho sakta
+  // ============================================================================
+  const workedOnWeekOff = workedOnWeekOffDates.length;
+  const carryForwardWeekOffs = workedOnWeekOff;
+
+  const rawUsedWeekOffs = usedWeekOffDates.length;
+  const usedWeekOffs = Math.min(rawUsedWeekOffs, earnedWeekOffs);
+  const unearnedAbsentDays = Math.max(0, rawUsedWeekOffs - earnedWeekOffs);
+
+  // Weekly breakdown
   const weeklyBreakdown = [];
   let currentWeekStart = new Date(firstDay);
   while (currentWeekStart.getDay() !== 1) {
@@ -203,90 +275,80 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
   }
 
   let weekNumber = 1;
-  let eligibleWeeks = 0;
-  let totalWorkingDays = 0;
-  let totalLeaves = 0;
-
   while (currentWeekStart <= lastDay) {
     const weekEnd = new Date(currentWeekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
 
-    let presentDays = 0;
-    let halfDays = 0;
-    let leavesCount = 0;
-    let weekOffDays = 0;
-    let totalDays = 0;
-    let actualWorkingDaysInWeek = 0;
+    let weekPresent = 0;
+    let weekHalf = 0;
+    let weekLeaves = 0;
+    let weekOffsUsed = 0;
+    let weekOffsWorked = 0;
+    let daysInMonthInThisWeek = 0;
 
     for (let d = new Date(currentWeekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
       if (d < firstDay || d > lastDay) continue;
-
+      daysInMonthInThisWeek++;
       const dateKey = formatDateLocal(d);
-      const isWeekOff = weekOffDateSet.has(dateKey);
 
-      totalDays++;
-
-      if (isWeekOff) {
-        weekOffDays++;
+      if (weekOffDateSet.has(dateKey)) {
+        if (workedOnWeekOffDates.includes(dateKey)) {
+          weekOffsWorked++;
+        } else {
+          weekOffsUsed++;
+        }
         continue;
       }
 
-      actualWorkingDaysInWeek++;
-
       if (isLeaveDay(d)) {
-        leavesCount++;
-        totalLeaves++;
+        weekLeaves++;
         continue;
       }
 
       const hoursWorked = attendanceMap.get(dateKey);
-      if (hoursWorked !== undefined) {
+      if (hoursWorked !== undefined && hoursWorked > 0) {
         if (hoursWorked >= shiftHours * 0.8) {
-          presentDays++;
-          totalWorkingDays += 1;
-        } else {
-          halfDays += 0.5;
-          totalWorkingDays += 0.5;
+          weekPresent++;
+        } else if (hoursWorked >= shiftHours * 0.4) {
+          weekHalf += 0.5;
         }
       }
     }
 
-    const effectiveWorkingDays = presentDays + halfDays + leavesCount;
-
-    let isEligibleForWeekoff = false;
-    if (totalDays === 7) {
-      isEligibleForWeekoff = effectiveWorkingDays >= 5;
-    } else {
-      const employeeAttendedDays = presentDays + halfDays;
-      isEligibleForWeekoff = (employeeAttendedDays >= actualWorkingDaysInWeek) && (actualWorkingDaysInWeek >= 3);
-    }
-
     weeklyBreakdown.push({
-      weekNumber: weekNumber,
-      daysInMonth: totalDays,
-      presentDays: presentDays,
-      halfDays: halfDays,
-      leaves: leavesCount,
-      weekOffDays: weekOffDays,
-      effectiveWorkingDays: Math.round(effectiveWorkingDays * 10) / 10,
-      isEligibleForWeekoff: isEligibleForWeekoff
+      weekNumber,
+      daysInMonth: daysInMonthInThisWeek,
+      presentDays: weekPresent,
+      halfDays: weekHalf,
+      leaves: weekLeaves,
+      weekOffsUsed,
+      weekOffsWorked,
+      effectiveWorkingDays: Math.round((weekPresent + weekHalf + weekLeaves) * 10) / 10
     });
-
-    if (isEligibleForWeekoff) eligibleWeeks++;
 
     currentWeekStart.setDate(currentWeekStart.getDate() + 7);
     weekNumber++;
   }
 
-  const totalActiveDays = totalWorkingDays + totalLeaves + holidayDaysInMonth;
-  let earnedWeekOffs = Math.max(eligibleWeeks, Math.floor(totalActiveDays / 5));
-  earnedWeekOffs = Math.min(earnedWeekOffs, totalWeekOffDays);
-
   return {
-    weeklyBreakdown: weeklyBreakdown,
-    earnedWeekOffs: earnedWeekOffs,
-    totalWeekOffDays: totalWeekOffDays,
-    weekOffDates: Array.from(weekOffDateSet).sort()
+    weeklyBreakdown,
+    earnedWeekOffs,
+    usedWeekOffs,
+    unearnedAbsentDays,
+    workedOnWeekOff,
+    carryForwardWeekOffs,
+    totalWeekOffDays: totalWeekOffDaysInMonth,
+    maxAllowedWeekOffs: effectiveCap,
+    weekOffDates: Array.from(weekOffDateSet).sort(),
+    usedWeekOffDates: usedWeekOffDates.sort(),
+    workedOnWeekOffDates: workedOnWeekOffDates.sort(),
+    presentDates,
+    halfDayDates,
+    leaveDates,
+    presentDays,
+    halfDays,
+    leavesCount,
+    totalWorkingDaysInMonth: totalWorkingDays
   };
 };
 
@@ -359,6 +421,11 @@ const PayRoll = () => {
 
   const [manualDeductionMap, setManualDeductionMap] = useState({});
 
+  const [showDeductionModal, setShowDeductionModal] = useState(false);
+  const [deductionModalEmployee, setDeductionModalEmployee] = useState(null);
+  const [deductionAmountInput, setDeductionAmountInput] = useState("");
+  const [deductionReasonInput, setDeductionReasonInput] = useState("");
+
   const getSavedItemsPerPage = () => {
     try {
       const saved = localStorage.getItem('payroll_itemsPerPage');
@@ -430,9 +497,6 @@ const PayRoll = () => {
     return 0;
   };
 
-  // ============================================
-  // ✅ Fetch week-off dates from backend
-  // ============================================
   const fetchWeekOffDatesForEmployees = useCallback(async (employeeIds, month) => {
     if (!employeeIds || employeeIds.length === 0 || !month) return {};
 
@@ -466,9 +530,6 @@ const PayRoll = () => {
     return result;
   }, []);
 
-  // ============================================
-  // ✅ Fetch comp-off dates from backend
-  // ============================================
   const fetchCompOffDatesForEmployees = useCallback(async (employeeIds, month) => {
     if (!employeeIds || employeeIds.length === 0 || !month) return {};
 
@@ -1040,8 +1101,6 @@ const PayRoll = () => {
 
       extractUniqueValues(employeesForMonth);
 
-      // ✅ Global holidayCount REMOVED — ab per-employee calculate hoga
-
       const currentLeavesMap = processLeavesData(leavesData, targetMonth);
       const currentCompOffsMap = await processCompOffData(targetMonth, leavesData);
 
@@ -1060,9 +1119,6 @@ const PayRoll = () => {
 
         let attendanceForEmployee = allAttendanceRecords.filter(r => r.employeeId === emp.employeeId);
 
-        // ============================================
-        // ✅ NEW: Per-employee holiday count based on department
-        // ============================================
         const employeeHolidayCount = calculateHolidayCountForDepartment(
           holidaysData,
           targetMonth,
@@ -1070,7 +1126,9 @@ const PayRoll = () => {
         );
 
         const weekOffDates = weekOffMap[emp.employeeId] || [];
-        const weekOffData = calculateEarnedWeekOffs(
+
+        // 🔥 Use new calculateWeekOffData with UWO capped at EWO
+        const weekOffData = calculateWeekOffData(
           emp.employeeId,
           year,
           monthNum,
@@ -1078,12 +1136,18 @@ const PayRoll = () => {
           currentLeavesMap,
           weekOffDates,
           emp.shiftHours || 8,
-          employeeHolidayCount // ✅ Per-employee
+          employeeHolidayCount,
+          emp.weekOffPerMonth || 4
         );
 
-        let earnedWeekOffs = weekOffData.earnedWeekOffs;
+        const earnedWeekOffs = weekOffData.earnedWeekOffs;
+        const usedWeekOffs = weekOffData.usedWeekOffs;       // ✅ Already capped
+        const unearnedAbsentDays = weekOffData.unearnedAbsentDays || 0;
+        const workedOnWeekOff = weekOffData.workedOnWeekOff;
+        const carryForwardWeekOffs = weekOffData.carryForwardWeekOffs;
+        const totalWeekOffDaysInMonth = weekOffData.totalWeekOffDays;
+
         let defaultWeekOffs = weekOffDates.length || (isConsultant ? 2 : (emp.weekOffPerMonth || 4));
-        const finalWeekOffs = Math.min(earnedWeekOffs, defaultWeekOffs);
 
         let salaryForMonth = emp.salaryPerMonth || 0;
         let historicalEffectiveFrom = emp.joinDate;
@@ -1110,72 +1174,52 @@ const PayRoll = () => {
 
         const dailyRate = salaryForMonth > 0 ? salaryForMonth / daysInMonthValue : 0;
 
-        let presentDaysCount = summary.presentDays ?? 0;
-        let halfDaysCount = summary.halfDayWorking ?? 0;
-        let totalWorkingDays = summary.totalWorkingDays ?? 0;
-
-        if (presentDaysCount === 0 && halfDaysCount === 0) {
-          const liveCounts = getLiveAttendanceCounts(emp.employeeId, allAttendanceRecords, employeesMap);
-          presentDaysCount = liveCounts.presentDays;
-          halfDaysCount = liveCounts.halfDayWorking;
-          totalWorkingDays = liveCounts.totalWorkingDays;
-        }
+        // Present Days = AS IT IS (week off pe kaam kiya bhi included)
+        let presentDaysCount = weekOffData.presentDays ?? summary.presentDays ?? 0;
+        let halfDaysCount = weekOffData.halfDays ?? summary.halfDayWorking ?? 0;
+        let totalWorkingDays = summary.totalWorkingDays ?? (presentDaysCount + (halfDaysCount * 0.5));
 
         const fullDayNotWorking = summary.fullDayNotWorking ?? 0;
         const overTimeHours = summary.overTimeHours ?? 0;
 
         const compOffData = currentCompOffsMap[emp.employeeId] || { balance: 0 };
 
-        // ============================================
-        // ✅ COMP-OFF CALCULATION (Single source)
-        // ============================================
         const employeeCompOffDates = compOffMap[emp.employeeId] || [];
         const totalCompOffDays = employeeCompOffDates.reduce((sum, co) => sum + (co.count || 1), 0);
         const compOffAmount = totalCompOffDays * dailyRate;
 
-        // ============================================
-        // ✅ CARRY FORWARD LOGIC
-        // ============================================
-        const expectedWorkingDays = Math.max(0, daysInMonthValue - finalWeekOffs);
-        const actualDaysWorked = presentDaysCount + (halfDaysCount * 0.5);
+        // ✅ FINAL SALARY LOGIC:
+        // Present Days (AS IT IS, week off pe kaam kiya included) + Half×0.5 + Used Week Offs (capped) + Holidays + Comp-offs
+        const payablePresentDays = presentDaysCount + (halfDaysCount * 0.5);
+        const weekOffsForSalary = usedWeekOffs;
 
-        const prevMonth = getPreviousMonth(targetMonth);
-        const prevCarryForward = prevMonth
-          ? parseFloat(localStorage.getItem(getCarryForwardKey(emp.employeeId, prevMonth)) || '0')
-          : 0;
-
-        const adjustedActualDays = actualDaysWorked + prevCarryForward;
-
-        let payablePresentDays;
-        let carryForwardDays;
-
-        if (adjustedActualDays > expectedWorkingDays) {
-          payablePresentDays = expectedWorkingDays;
-          carryForwardDays = Math.round((adjustedActualDays - expectedWorkingDays) * 100) / 100;
-        } else {
-          payablePresentDays = adjustedActualDays;
-          carryForwardDays = 0;
-        }
-
-        localStorage.setItem(getCarryForwardKey(emp.employeeId, targetMonth), String(carryForwardDays));
-
-        // ============================================
-        // ✅ SALARY CALCULATION — Per-employee holiday
-        // ============================================
         let calculatedSalary = 0;
         if (salaryForMonth > 0 && daysInMonthValue > 0) {
-          if (presentDaysCount === 0 && halfDaysCount === 0) {
+          if (presentDaysCount === 0 && halfDaysCount === 0 && usedWeekOffs === 0) {
             calculatedSalary = 0;
           } else {
-            const holidayAddition = employeeHolidayCount; // ✅ Per-employee
+            const holidayAddition = employeeHolidayCount;
             const effectivePaidDays =
               payablePresentDays +
-              (includeWeekOffInSalary ? finalWeekOffs : 0) +
+              weekOffsForSalary +
               holidayAddition +
               totalCompOffDays;
             calculatedSalary = effectivePaidDays * dailyRate;
           }
         }
+
+        const expectedWorkingDays = Math.max(0, daysInMonthValue - usedWeekOffs);
+
+        const actualDaysWorked = payablePresentDays;
+        const prevMonth = getPreviousMonth(targetMonth);
+        const prevCarryForward = prevMonth
+          ? parseFloat(localStorage.getItem(getCarryForwardKey(emp.employeeId, prevMonth)) || '0')
+          : 0;
+
+        // Carry forward = Worked on week off days
+        let carryForwardDays = carryForwardWeekOffs;
+
+        localStorage.setItem(getCarryForwardKey(emp.employeeId, targetMonth), String(carryForwardDays));
 
         let totalOTHours = overTimeHours || 0;
 
@@ -1259,6 +1303,7 @@ const PayRoll = () => {
           department: emp.department || 'N/A',
           month: targetMonth,
 
+          // Present days AS IT IS
           presentDays: presentDaysCount,
           halfDayWorking: halfDaysCount,
           totalWorkingDays: totalWorkingDays,
@@ -1266,11 +1311,21 @@ const PayRoll = () => {
           overTimeHours: totalOTHours,
           overTimeHoursFormatted: formattedOTHours,
 
-          weekOffs: finalWeekOffs,
+          // Week Off breakdown
           earnedWeekOffs: earnedWeekOffs,
+          usedWeekOffs: usedWeekOffs,
+          unearnedAbsentDays: unearnedAbsentDays,
+          workedOnWeekOff: workedOnWeekOff,
+          carryForwardWeekOffs: carryForwardWeekOffs,
+          weekOffs: weekOffsForSalary,
           defaultWeekOffs: defaultWeekOffs,
+          totalWeekOffDays: totalWeekOffDaysInMonth,
+          maxAllowedWeekOffs: weekOffData.maxAllowedWeekOffs,
+
           weekOffDay: emp.weekOffDay,
           weekOffDates: weekOffDates,
+          usedWeekOffDates: weekOffData.usedWeekOffDates || [],
+          workedOnWeekOffDates: weekOffData.workedOnWeekOffDates || [],
           weeklyBreakdown: weekOffData.weeklyBreakdown,
 
           compOffDates: employeeCompOffDates,
@@ -1298,7 +1353,7 @@ const PayRoll = () => {
           manualDeduction: manualDeductionAmount,
           manualDeductionReason: manualDeductionReason,
 
-          holidayCount: employeeHolidayCount, // ✅ Per-employee
+          holidayCount: employeeHolidayCount,
           monthDays: daysInMonthValue,
           includeWeekOffInSalary: includeWeekOffInSalary,
           isHistoricalMonth: isHistorical,
@@ -1516,6 +1571,20 @@ const PayRoll = () => {
     return (salary / daysInMonth).toFixed(2);
   };
 
+  const extractDayNumbers = (datesArray, keyField = null) => {
+    if (!datesArray || datesArray.length === 0) return "";
+    return datesArray
+      .map(item => {
+        const dateStr = keyField ? item[keyField] : item;
+        if (!dateStr) return null;
+        const day = parseInt(String(dateStr).split("-")[2], 10);
+        return isNaN(day) ? null : day;
+      })
+      .filter(d => d !== null)
+      .sort((a, b) => a - b)
+      .join(", ");
+  };
+
   const getEmployeeData = (employee) => {
     const masterData = employeesMasterData[employee.employeeId] || {};
     const employeeFromList = allEmployees.find(emp => emp.employeeId === employee.employeeId);
@@ -1554,13 +1623,13 @@ const PayRoll = () => {
   };
 
   const getWeekOffDaysForDisplay = (employee) => {
-    return employee.weekOffs || 0;
+    return employee.usedWeekOffs || 0;
   };
 
   const handleEdit = (employee) => {
     setSelectedEmployee(employee);
     const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-    const weekOffDaysForSalary = employee.weekOffs || 0;
+    const weekOffDaysForSalary = employee.usedWeekOffs || 0;
 
     setEditFormData({
       presentDays: employee.presentDays || 0,
@@ -1715,7 +1784,7 @@ const PayRoll = () => {
     if (!selectedEmployee) return;
 
     const employeeData = getEmployeeData(selectedEmployee);
-    const weekOffDays = selectedEmployee.weekOffs || 0;
+    const weekOffDays = selectedEmployee.usedWeekOffs || 0;
     const daysInMonth = selectedEmployee.monthDays || monthDays || getDaysInMonth(selectedEmployee.month || selectedMonth);
     const dailyRate = employeeData.salaryPerMonth / daysInMonth;
 
@@ -1754,6 +1823,46 @@ const PayRoll = () => {
     });
 
     alert("Values reset to system calculation. Click 'Save Changes' to apply.");
+  };
+
+  const handleOpenDeductionModal = (employee) => {
+    setDeductionModalEmployee(employee);
+    const existing = manualDeductionMap[employee.employeeId];
+    setDeductionAmountInput(existing?.amount ?? "");
+    setDeductionReasonInput(existing?.reason ?? "");
+    setShowDeductionModal(true);
+  };
+
+  const handleSaveDeduction = () => {
+    if (!deductionModalEmployee) return;
+    const amount = parseFloat(deductionAmountInput) || 0;
+    const reason = deductionReasonInput.trim();
+    if (amount <= 0) {
+      alert("Please enter a valid deduction amount");
+      return;
+    }
+    const newMap = {
+      ...manualDeductionMap,
+      [deductionModalEmployee.employeeId]: { amount, reason }
+    };
+    setManualDeductionMap(newMap);
+    try {
+      localStorage.setItem(`manualDeduction_${deductionModalEmployee.month || selectedMonth}`, JSON.stringify(newMap));
+    } catch (e) { console.error(e); }
+    setShowDeductionModal(false);
+    fetchData(selectedMonth);
+  };
+
+  const handleRemoveDeduction = () => {
+    if (!deductionModalEmployee) return;
+    const newMap = { ...manualDeductionMap };
+    delete newMap[deductionModalEmployee.employeeId];
+    setManualDeductionMap(newMap);
+    try {
+      localStorage.setItem(`manualDeduction_${deductionModalEmployee.month || selectedMonth}`, JSON.stringify(newMap));
+    } catch (e) { console.error(e); }
+    setShowDeductionModal(false);
+    fetchData(selectedMonth);
   };
 
   const handleView = (employee) => {
@@ -1803,6 +1912,11 @@ const PayRoll = () => {
     }
   };
 
+  // ============================================================================
+  // 🔥 UPDATED: generateInvoiceHTML - Sirf ye specific fields show karo
+  // EARNINGS: Basic DA, Working Days (Full: X), Week Off Days (X)
+  // DEDUCTIONS: LOP / Absent, Half Day Deductions, Other Deductions
+  // ============================================================================
   const generateInvoiceHTML = (employee) => {
     const employeeData = getEmployeeData(employee);
 
@@ -1823,7 +1937,7 @@ const PayRoll = () => {
     const dailyRate = parseFloat(calculateDailyRate(employee)) || 0;
     const compOffData = employeeCompOffs[employee.employeeId] || { earned: 0, used: 0, balance: 0 };
 
-    const actualWeekOffDaysNumeric = employee.weekOffs || 0;
+    const actualWeekOffDaysNumeric = employee.usedWeekOffs || 0;
 
     const presentDays = employee.presentDays ?? 0;
     const halfDays = employee.halfDayWorking || 0;
@@ -1837,59 +1951,36 @@ const PayRoll = () => {
     const compOffDays = employee.compOffDays || 0;
     const compOffAmount = employee.compOffAmount || 0;
 
+    // ============================================================================
+    // EARNINGS - Sirf ye show karo
+    // ============================================================================
     const earningsItems = [];
 
+    // Basic DA - employee ka monthly salary
     const basicAmt = employeeData.basicPay || employeeData.salaryPerMonth || 0;
     if (basicAmt > 0) earningsItems.push({ label: 'Basic DA', amount: basicAmt });
 
-    const hraAmt = employeeData.hra || 0;
-    if (hraAmt > 0) earningsItems.push({ label: 'HRA', amount: hraAmt });
-
-    const convAmt = employeeData.conveyanceAllowance || 0;
-    if (convAmt > 0) earningsItems.push({ label: 'Conveyance', amount: convAmt });
-
-    const specialAmt = employeeData.specialAllowance || 0;
-    if (specialAmt > 0) earningsItems.push({ label: 'Special Allowance', amount: specialAmt });
-
-    const otAmount = employee.otAmount || employee.finalOTAmount || 0;
-    if (otAmount > 0) {
-      earningsItems.push({ label: 'Overtime', amount: otAmount });
-    }
-
-    if (compOffAmount > 0) {
-      earningsItems.push({ label: `Comp-off (${compOffDays} day${compOffDays > 1 ? 's' : ''})`, amount: compOffAmount });
-    }
-
-    const compOffPay = compOffData.balance * dailyRate;
-    if (compOffPay > 0 && !compOffAmount) {
-      earningsItems.push({ label: 'Comp-off / Holiday Pay', amount: compOffPay });
-    }
-
+    // Working Days (Full: X) - sirf info, amount nahi
     earningsItems.push({ label: `Working Days (Full: ${presentDays})`, amount: 0, isInfo: true });
+
+    // Week Off Days (X) - sirf info, amount nahi
     earningsItems.push({ label: `Week Off Days (${actualWeekOffDaysNumeric})`, amount: 0, isInfo: true });
 
-    if (compOffDays > 0) {
-      earningsItems.push({ label: `Comp-off Days (${compOffDays})`, amount: 0, isInfo: true });
-    }
-
-    if (holidays > 0) {
-      earningsItems.push({ label: `Public Holidays (${holidays})`, amount: 0, isInfo: true });
-    }
-
+    // ============================================================================
+    // DEDUCTIONS - Sirf ye show karo
+    // ============================================================================
     const deductionsItems = [];
 
+    // LOP / Absent
     let totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + holidays + compOffData.balance + compOffDays;
     let lopDays = Math.max(0, daysInMonth - totalPaidDays);
     let lopAmount = lopDays * dailyRate;
     lopDays = Math.round(lopDays * 10) / 10;
     lopAmount = Math.round(lopAmount * 100) / 100;
 
-    if (lopDays > 0) {
-      deductionsItems.push({ label: `LOP / Absent (${lopDays} days)`, amount: lopAmount });
-    } else {
-      deductionsItems.push({ label: `LOP / Absent (0 days)`, amount: 0 });
-    }
+    deductionsItems.push({ label: `LOP / Absent (${lopDays > 0 ? lopDays : 0} days)`, amount: lopAmount });
 
+    // Half Day Deductions
     const halfDayDeductionAmount = (halfDays * 0.5) * dailyRate;
     if (halfDays > 0) {
       deductionsItems.push({ label: `Half Day Deductions (${halfDays} HD)`, amount: halfDayDeductionAmount });
@@ -1897,6 +1988,7 @@ const PayRoll = () => {
       deductionsItems.push({ label: `Half Day Deductions (0 HD)`, amount: 0 });
     }
 
+    // Other Deductions
     const gmcAmt = employee.gmcAmount || employeeData.gmc || 0;
     const ptaxAmt = employee.ptax || employeeData.profTax || 0;
     const extraDeductions = (employee.otherDeductions || 0) + (employee.extraWork?.deductions || 0);
@@ -1904,6 +1996,7 @@ const PayRoll = () => {
 
     deductionsItems.push({ label: `Other Deductions`, amount: totalOtherDeductions });
 
+    // Manual deduction (agar ho toh)
     if (manualDeductionAmount > 0) {
       deductionsItems.push({
         label: `Manual Deduction${manualDeductionReason ? ` (${manualDeductionReason})` : ''}`,
@@ -1911,9 +2004,15 @@ const PayRoll = () => {
       });
     }
 
+    // ============================================================================
+    // TOTALS
+    // ============================================================================
     const totalEarningsAmt = earningsItems.filter(item => !item.isInfo).reduce((sum, item) => sum + item.amount, 0);
     const totalDeductionsAmt = deductionsItems.reduce((sum, item) => sum + item.amount, 0);
 
+    // ============================================================================
+    // TABLE ROWS
+    // ============================================================================
     let tableRowsHTML = '';
     const maxRows = Math.max(earningsItems.length, deductionsItems.length);
     for (let i = 0; i < maxRows; i++) {
@@ -2120,9 +2219,6 @@ const PayRoll = () => {
     return `${monthNames[parseInt(monthNum) - 1]} ${year}`;
   };
 
-  // ============================================
-  // ✅ ATTENDANCE POPUP MODAL
-  // ============================================
   const AttendancePopupModal = () => {
     const [holidays, setHolidays] = useState([]);
 
@@ -2226,7 +2322,7 @@ const PayRoll = () => {
     const employeeId = selectedEmployee?.employeeId;
     const weekOffDatesList = getWeekOffDatesForEmployee(weekOffDatesMap, employeeId);
     const weekOffDatesSet = new Set(weekOffDatesList);
-    const targetWeekOffCount = weekOffDatesList.length || (selectedEmployee?.weekOffs || 0);
+    const targetWeekOffCount = weekOffDatesList.length || (selectedEmployee?.usedWeekOffs || 0);
 
     const compOffDatesList = getCompOffDatesForEmployee(compOffDatesMap, employeeId);
     const compOffDatesSet = new Set(compOffDatesList.map(co => co.date));
@@ -2301,9 +2397,6 @@ const PayRoll = () => {
               <span className="text-teal-600">Comp-off: <strong>{compOffCount}</strong></span>
               <span className="text-red-600">Leaves: <strong>{leaveCount}</strong></span>
               <span className="text-gray-500">Absent: <strong>{absentCount}</strong></span>
-              {/* {futureCount > 0 && (
-                <span className="text-gray-400">NA: <strong>{futureCount}</strong></span>
-              )} */}
               <span className="text-blue-600">Single Punch: <strong>{singlePunchCount}</strong></span>
               <span className="text-green-600">Present: <strong>{presentCount}</strong></span>
             </div>
@@ -2313,7 +2406,6 @@ const PayRoll = () => {
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-teal-100 border border-teal-300 rounded"></div><span>Comp-off</span></div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div><span>Leave</span></div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div><span>Absent</span></div>
-              {/* <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-50 border border-dashed border-gray-300 rounded"></div><span>NA</span></div> */}
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div><span>Single Punch</span></div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div><span>Present</span></div>
             </div>
@@ -2602,82 +2694,134 @@ const PayRoll = () => {
             <table className="emp-dash__table">
               <thead>
                 <tr>
-                  <th>Emp ID</th>
-                  <th>Name</th>
-                  <th style={{ textAlign: "center" }}>Role</th>
-                  <th style={{ textAlign: "center" }}>Dept</th>
-                  <th style={{ textAlign: "center" }}>Working</th>
-                  <th style={{ textAlign: "center" }}>Present</th>
-                  <th style={{ textAlign: "center" }}>Half</th>
-                  <th style={{ textAlign: "center" }}>Carry Fwd</th>
-                  <th style={{ textAlign: "center" }}>Earned WO</th>
-                  <th style={{ textAlign: "center" }}>Week Off Dates</th>
-                  <th style={{ textAlign: "center" }}>Comp-off Dates</th>
-                  <th style={{ textAlign: "center" }}>Comp-off Amt</th>
-                  <th style={{ textAlign: "center" }}>Default WO</th>
-                  <th style={{ textAlign: "center" }}>Monthly Salary</th>
-                  <th style={{ textAlign: "center" }}>OT Amount</th>
-                  <th style={{ textAlign: "center" }}>Calculated</th>
-                  <th style={{ textAlign: "center" }}>Manual Ded.</th>
-                  <th style={{ textAlign: "center" }}>Final Pay</th>
-                  <th style={{ textAlign: "center" }}>Status</th>
-                  <th style={{ textAlign: "right" }}>Actions</th>
+                  <th style={{ textAlign: "center" }}>ID</th>
+                  <th style={{ textAlign: "left" }}>NAME</th>
+                  <th style={{ textAlign: "center" }}>ROLE</th>
+                  <th style={{ textAlign: "left" }}>DEPT</th>
+                  <th style={{ textAlign: "center" }} title="Present Days (AS IT IS)">PRES</th>
+                  <th style={{ textAlign: "center" }} title="Half Days">HALF</th>
+                  <th style={{ textAlign: "center" }} title="Carry Forward (Worked on Week Off)">CF</th>
+                  <th style={{ textAlign: "center" }} title="Earned Week Off (5 days = 1 WO)">EWO</th>
+                  {/* <th style={{ textAlign: "center" }} title="Used Week Off (Added to Salary)">UWO</th> */}
+                  {/* <th style={{ textAlign: "center" }} title="Worked on Week Off">WW</th> */}
+                  <th style={{ textAlign: "center" }} title="Week Off Dates">WO</th>
+                  <th style={{ textAlign: "center" }} title="Comp-off Dates">COFF</th>
+                  <th style={{ textAlign: "center" }} title="Monthly Salary">SALARY</th>
+                  <th style={{ textAlign: "center" }} title="OT Amount">OT ₹</th>
+                  <th style={{ textAlign: "center" }} title="Calculated Salary">CALC</th>
+                  <th style={{ textAlign: "center" }} title="Manual Deduction">MDED</th>
+                  <th style={{ textAlign: "center" }} title="Final Pay">NET PAY</th>
+                  <th style={{ textAlign: "center" }} title="Employee Status">STATUS</th>
+                  <th style={{ textAlign: "right" }}>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
                 {currentRecords.map((item, index) => (
                   <tr key={item.employeeId} onClick={() => handleRowClick(item)} className={`transition-colors hover:bg-slate-50/50 cursor-pointer ${item.isInactive ? 'bg-red-50/30' : ''}`}>
-                    <td className="font-semibold text-slate-800 text-[11px]">{item.employeeId}</td>
-                    <td>
+
+                    <td className="text-center font-semibold text-slate-800 text-[11px]">{item.employeeId}</td>
+
+                    <td className="text-left">
                       <div className="flex items-center justify-start gap-2">
-                        <div className="flex items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full shadow-inner">{item.name ? item.name.charAt(0).toUpperCase() : "?"}</div>
-                        <span className={`font-semibold text-xs whitespace-nowrap ${item.isInactive ? 'text-gray-500' : 'text-slate-800'}`}>{item.name}</span>
+                        <div className="flex items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full shadow-inner shrink-0">
+                          {item.name ? item.name.charAt(0).toUpperCase() : "?"}
+                        </div>
+                        <span
+                          className={`font-semibold text-xs truncate max-w-[100px] ${item.isInactive ? 'text-gray-500' : 'text-slate-800'}`}
+                          title={item.name}
+                        >
+                          {item.name}
+                        </span>
                       </div>
                     </td>
-                    <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">{item.designation || item.role || '-'}</td>
-                    <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">{item.department}</td>
-                    <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-blue-50 text-blue-700 border border-blue-100'}`}>{item.totalWorkingDays || 0}</span></td>
-                    <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>{item.presentDays || 0}</span></td>
+
+                    <td className="text-center text-slate-600 text-[11px] font-medium">
+                      <span
+                        className="inline-block truncate max-w-[90px] align-middle"
+                        title={item.designation || item.role || '-'}
+                      >
+                        {item.designation || item.role || '-'}
+                      </span>
+                    </td>
+
+                    <td className="text-left text-slate-600 text-[11px] font-medium">
+                      <span
+                        className="inline-block truncate max-w-[100px] align-middle"
+                        title={item.department}
+                      >
+                        {item.department}
+                      </span>
+                    </td>
+
+                    {/* PRESENT DAYS - AS IT IS */}
+                    <td className="text-center whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+                        {item.presentDays || 0}
+                      </span>
+                    </td>
+
                     <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>{item.halfDayWorking || 0}</span></td>
+
                     <td className="text-center whitespace-nowrap">
                       {(item.carryForwardDays > 0 || item.carryForwardFromPrev > 0) ? (
                         <div className="flex flex-col items-center gap-0.5">
-                          {item.carryForwardDays > 0 && (<span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-orange-100 text-orange-700 border border-orange-300'}`} title={`${item.carryForwardDays} extra day(s) carried forward to next month (NOT added to salary)`}>+{item.carryForwardDays}→</span>)}
-                          {item.carryForwardFromPrev > 0 && (<span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-blue-50 text-blue-600 border border-blue-200'}`} title={`${item.carryForwardFromPrev} day(s) carried in from previous month (already counted in payable days)`}>←{item.carryForwardFromPrev}</span>)}
+                          {item.carryForwardDays > 0 && (<span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-orange-100 text-orange-700 border border-orange-300'}`} title={`${item.carryForwardDays} day(s) worked on week off - carried forward to next month`}>+{item.carryForwardDays}→</span>)}
+                          {item.carryForwardFromPrev > 0 && (<span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-blue-50 text-blue-600 border border-blue-200'}`} title={`${item.carryForwardFromPrev} day(s) carried in from previous month`}>←{item.carryForwardFromPrev}</span>)}
                         </div>
                       ) : (<span className="text-gray-300 text-[10px]">—</span>)}
                     </td>
-                    <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>{item.earnedWeekOffs || 0}</span></td>
+
+                    {/* EWO - Earned Week Off */}
+                    <td className="text-center whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+                        {item.earnedWeekOffs || 0}
+                      </span>
+                    </td>
+
+                    {/* UWO - Used Week Off */}
+                    {/* <td className="text-center whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}`}>
+                        {item.usedWeekOffs || 0}
+                      </span>
+                    </td> */}
+
+                    {/* WW - Worked on Week Off */}
+                    {/* <td className="text-center whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-purple-50 text-purple-700 border border-purple-200'}`}>
+                        {item.workedOnWeekOff || 0}
+                      </span>
+                    </td> */}
+
                     <td className="text-center whitespace-nowrap">
                       {item.weekOffDates && item.weekOffDates.length > 0 ? (
-                        <div className="flex flex-wrap gap-0.5 justify-center max-w-[160px]">
-                          {item.weekOffDates.map((d) => (
-                            <span key={d} className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}`} title={d}>
-                              {new Date(d + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (<span className="text-gray-300 text-[10px]">—</span>)}
+                        <span
+                          className={`font-mono text-[11px] font-bold tracking-tight ${item.isInactive ? 'text-gray-400' : 'text-orange-700'}`}
+                          title={item.weekOffDates
+                            .map(d => new Date(d + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }))
+                            .join(", ")}
+                        >
+                          {extractDayNumbers(item.weekOffDates)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300 text-[10px]">—</span>
+                      )}
                     </td>
+
                     <td className="text-center whitespace-nowrap">
                       {item.compOffDates && item.compOffDates.length > 0 ? (
-                        <div className="flex flex-wrap gap-0.5 justify-center max-w-[160px]">
-                          {item.compOffDates.map((co) => (
-                            <span key={co._id || co.date} className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-teal-50 text-teal-700 border border-teal-200'}`} title={`${co.date} (${co.count || 1} day)`}>
-                              {new Date(co.date + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (<span className="text-gray-300 text-[10px]">—</span>)}
-                    </td>
-                    <td className="text-center whitespace-nowrap">
-                      {item.compOffAmount > 0 ? (
-                        <span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-teal-600'}`} title={`${item.compOffDays} comp-off day(s) × ₹${item.salaryPerDay?.toFixed(2) || 0}/day`}>
-                          ₹{item.compOffAmount.toFixed(0)}
+                        <span
+                          className={`font-mono text-[11px] font-bold tracking-tight ${item.isInactive ? 'text-gray-400' : 'text-teal-700'}`}
+                          title={item.compOffDates
+                            .map(co => new Date(co.date + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) + ` (${co.count || 1}d)`)
+                            .join(", ")}
+                        >
+                          {extractDayNumbers(item.compOffDates, 'date')}
                         </span>
-                      ) : (<span className="text-gray-400">-</span>)}
+                      ) : (
+                        <span className="text-gray-300 text-[10px]">—</span>
+                      )}
                     </td>
-                    <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.isInactive ? 'bg-gray-100 text-gray-400 border border-gray-200' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}>{item.defaultWeekOffs || 0}</span></td>
+
                     <td className="text-center whitespace-nowrap">
                       <div className={`font-semibold ${item.isInactive ? 'text-gray-400' : 'text-slate-700'}`}>₹{(item.salaryPerMonth || 0).toLocaleString()}</div>
                     </td>
@@ -2685,9 +2829,24 @@ const PayRoll = () => {
                       {item.finalOTAmount > 0 ? (<span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-green-600'}`} title={item.otSource === 'dashboard' ? `Dashboard OT: ${item.dashboardOTHours}h` : ''}>₹{item.finalOTAmount.toFixed(0)}</span>) : (<span className="text-gray-400">-</span>)}
                     </td>
                     <td className="text-center whitespace-nowrap"><span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-blue-700'}`}>₹{calculateSalary(item).toLocaleString()}</span></td>
+
                     <td className="text-center whitespace-nowrap">
-                      {item.manualDeduction > 0 ? (<span className={`font-bold ${item.isInactive ? 'text-gray-400' : 'text-rose-600'}`} title={item.manualDeductionReason ? `Reason: ${item.manualDeductionReason}` : ''}>- ₹{item.manualDeduction.toLocaleString()}</span>) : (<span className="text-gray-400">-</span>)}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenDeductionModal(item);
+                        }}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer transition-all ${
+                          item.manualDeduction > 0
+                            ? 'bg-rose-100 text-rose-700 border-rose-300 hover:bg-rose-200'
+                            : 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100'
+                        }`}
+                        title={item.manualDeductionReason ? `Reason: ${item.manualDeductionReason}` : 'Click to add/edit manual deduction'}
+                      >
+                        {item.manualDeduction > 0 ? `₹${item.manualDeduction.toLocaleString()}` : '+ Add'}
+                      </button>
                     </td>
+
                     <td className="text-center whitespace-nowrap"><span className={`font-extrabold ${item.isInactive ? 'text-gray-400' : 'text-green-700'}`}>₹{(item.finalPay || item.calculatedSalary || 0).toLocaleString()}</span></td>
                     <td className="text-center whitespace-nowrap"><span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold ${item.isInactive ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>{item.isInactive ? 'INACTIVE' : 'ACTIVE'}</span></td>
                     <td className="text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
@@ -2736,7 +2895,7 @@ const PayRoll = () => {
         </div>
       </main>
 
-      {/* View Modal */}
+      {/* VIEW MODAL */}
       {showViewModal && selectedEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto border border-gray-100">
@@ -2759,15 +2918,24 @@ const PayRoll = () => {
             </div>
 
             <div className="grid grid-cols-1 text-xs sm:grid-cols-2 gap-x-8 gap-y-2 mb-6">
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Present Days</span><span className="font-bold text-emerald-700">{selectedEmployee.presentDays || 0}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Present Days (AS IT IS)</span><span className="font-bold text-emerald-700">{selectedEmployee.presentDays || 0}</span></div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Working Days</span><span className="font-bold text-blue-700">{selectedEmployee.totalWorkingDays || 0}</span></div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Half Days</span><span className="font-bold text-amber-700">{selectedEmployee.halfDayWorking || 0}</span></div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Earned Weekoffs</span><span className="font-bold text-green-700">{selectedEmployee.earnedWeekOffs || 0}</span></div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Default Weekoffs</span><span className="font-bold text-gray-600">{selectedEmployee.defaultWeekOffs || 0}</span></div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">WeekOff Days</span><span className="font-bold text-purple-700">{getWeekOffDaysForDisplay(selectedEmployee)}</span></div>
+
+              <div className="flex justify-between py-1.5 border-b border-green-100 bg-green-50 rounded px-1"><span className="text-green-600 font-semibold">Earned Week Offs (5d = 1WO)</span><span className="font-bold text-green-700">{selectedEmployee.earnedWeekOffs || 0}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-orange-100 bg-orange-50 rounded px-1"><span className="text-orange-600 font-semibold">Used Week Offs (Added to Salary)</span><span className="font-bold text-orange-700">{selectedEmployee.usedWeekOffs || 0}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-purple-100 bg-purple-50 rounded px-1"><span className="text-purple-600 font-semibold">Worked on Week Off (Carry Forward)</span><span className="font-bold text-purple-700">{selectedEmployee.workedOnWeekOff || 0}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Total Week Off Days</span><span className="font-bold text-gray-600">{selectedEmployee.totalWeekOffDays || 0}</span></div>
+
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Month Days</span><span className="font-bold text-slate-700">{selectedEmployee.monthDays || monthDays}</span></div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Expected Working Days</span><span className="font-bold text-slate-600">{selectedEmployee.expectedWorkingDays ?? ((selectedEmployee.monthDays || monthDays) - (selectedEmployee.weekOffs || 0))}</span></div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Payable Present Days</span><span className="font-bold text-blue-700">{typeof selectedEmployee.payablePresentDays === 'number' ? selectedEmployee.payablePresentDays : (selectedEmployee.presentDays || 0)}</span></div>
+
+              {selectedEmployee.unearnedAbsentDays > 0 && (
+                <div className="flex justify-between py-1.5 border-b border-red-100 bg-red-50 rounded px-1 sm:col-span-2">
+                  <span className="text-red-600 font-semibold">Unearned Absent Days (LOP)</span>
+                  <span className="font-bold text-red-700">{selectedEmployee.unearnedAbsentDays}</span>
+                </div>
+              )}
 
               {selectedEmployee.compOffDays > 0 && (
                 <div className="flex justify-between py-1.5 border-b border-teal-100 bg-teal-50 rounded px-1 sm:col-span-2">
@@ -2781,8 +2949,13 @@ const PayRoll = () => {
                   <span className="text-orange-600 font-semibold mb-1">Week Off Dates ({selectedEmployee.weekOffDates.length})</span>
                   <div className="flex flex-wrap gap-1">
                     {selectedEmployee.weekOffDates.map((d) => (
-                      <span key={d} className="px-2 py-0.5 bg-white text-orange-700 border border-orange-200 rounded text-[10px] font-semibold">
+                      <span key={d} className={`px-2 py-0.5 border rounded text-[10px] font-semibold ${
+                        selectedEmployee.usedWeekOffDates?.includes(d)
+                          ? 'bg-orange-100 text-orange-700 border-orange-300'
+                          : 'bg-purple-100 text-purple-700 border-purple-300'
+                      }`}>
                         {new Date(d + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short', weekday: 'short' })}
+                        {selectedEmployee.workedOnWeekOffDates?.includes(d) && ' (Worked)'}
                       </span>
                     ))}
                   </div>
@@ -2830,7 +3003,7 @@ const PayRoll = () => {
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* EDIT MODAL */}
       {showEditModal && selectedEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto border border-gray-100">
@@ -2892,7 +3065,7 @@ const PayRoll = () => {
         </div>
       )}
 
-      {/* Template Modal */}
+      {/* TEMPLATE MODAL */}
       {showTemplateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-2xl border border-gray-100">
@@ -2922,7 +3095,7 @@ const PayRoll = () => {
         </div>
       )}
 
-      {/* OT Selection Modal */}
+      {/* OT MODAL */}
       {showOTModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] flex flex-col border border-gray-100">
@@ -2951,6 +3124,100 @@ const PayRoll = () => {
             </div>
             <div className="flex justify-end pt-4 border-t border-gray-100 mt-4">
               <button onClick={() => setShowOTModal(false)} className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200">Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DEDUCTION MODAL */}
+      {showDeductionModal && deductionModalEmployee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+              <h2 className="text-base font-bold text-gray-800">Add Manual Deduction</h2>
+              <button
+                onClick={() => setShowDeductionModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <FaTimes size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mb-4">
+              {deductionModalEmployee.name} ({deductionModalEmployee.employeeId})
+            </p>
+
+            <div className="bg-slate-50 p-4 rounded-lg mb-4 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Current Net Salary:</span>
+                <span className="font-bold text-slate-800">
+                  ₹{(deductionModalEmployee.finalPay || 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Existing Total Deductions:</span>
+                <span className="font-bold text-rose-500">
+                  ₹{(deductionModalEmployee.deductions || 0).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+              Deduction Amount (₹)
+            </label>
+            <input
+              type="number"
+              value={deductionAmountInput}
+              onChange={(e) => setDeductionAmountInput(e.target.value)}
+              className="w-full p-2 border border-slate-300 rounded-lg mb-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+              step="1"
+              min="0"
+              placeholder="Enter deduction amount"
+            />
+
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+              Reason (optional)
+            </label>
+            <input
+              type="text"
+              value={deductionReasonInput}
+              onChange={(e) => setDeductionReasonInput(e.target.value)}
+              className="w-full p-2 border border-slate-300 rounded-lg mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+              placeholder="e.g. Advance, Penalty, Damage"
+            />
+
+            <div className="text-xs text-slate-500 mb-4">
+              New Net Salary:{" "}
+              <span className="font-bold text-rose-600">
+                ₹{Math.max(
+                  0,
+                  (deductionModalEmployee.finalPay || 0) -
+                    (parseFloat(deductionAmountInput) || 0)
+                ).toLocaleString()}
+              </span>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              {manualDeductionMap[deductionModalEmployee.employeeId] !== undefined && (
+                <button
+                  onClick={handleRemoveDeduction}
+                  className="px-3 py-2 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100"
+                >
+                  Remove
+                </button>
+              )}
+              <button
+                onClick={() => setShowDeductionModal(false)}
+                className="px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveDeduction}
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700"
+              >
+                Save Deduction
+              </button>
             </div>
           </div>
         </div>

@@ -72,6 +72,22 @@ const BOOKING_TYPE_OPTIONS = [
   { value: "Online", label: "Online" }
 ];
 
+
+const REVENUE_CATEGORY_OPTIONS = [
+  { value: "All", label: "All Revenue Types" },
+  { value: "clinic", label: "Clinic Only" },
+  { value: "lab", label: "Lab Only" },
+  { value: "pharmacy", label: "Pharmacy Only" },
+];
+
+const PAYMENT_TYPE_FILTER_OPTIONS = [
+  { value: "All", label: "All Payment Modes" },
+  { value: "cash", label: "Cash" },
+  { value: "online", label: "Online" },
+  { value: "insurance", label: "Insurance" },
+  { value: "card", label: "Card" },
+];
+
 const DISCOUNT_TYPE_OPTIONS = [
   { value: "₹", label: "₹ (Rupees)" },
   { value: "%", label: "% (Percent)" }
@@ -518,6 +534,8 @@ export default function OpManagement() {
   const [feeTypeFilter, setFeeTypeFilter] = useState("All");
   const [doctorFilter, setDoctorFilter] = useState("All");
   const [bookingTypeFilter, setBookingTypeFilter] = useState("All");
+  const [revenueCategoryFilter, setRevenueCategoryFilter] = useState("All");   // ✅ ADD
+const [paymentTypeFilter, setPaymentTypeFilter] = useState("All");           // ✅ ADD
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -622,12 +640,12 @@ export default function OpManagement() {
   const searchTimeoutRef = useRef(null);
 
   const API_BASE_INVURL = 'https://api.timelyhealth.in'
-
-  const hasActiveFilters =
-    searchQuery !== "" || statusFilter !== "All" || feeTypeFilter !== "All" ||
-    doctorFilter !== "All" || bookingTypeFilter !== "All" ||
-    fromDate !== "" || toDate !== "" || apptFromDate !== "" || apptToDate !== "" ||
-    (selectedMonth && selectedMonth !== "");
+const hasActiveFilters =
+  searchQuery !== "" || statusFilter !== "All" || feeTypeFilter !== "All" ||
+  doctorFilter !== "All" || bookingTypeFilter !== "All" ||
+  fromDate !== "" || toDate !== "" || apptFromDate !== "" || apptToDate !== "" ||
+  (selectedMonth && selectedMonth !== "") ||
+  revenueCategoryFilter !== "All" || paymentTypeFilter !== "All";
 
 
 
@@ -2255,46 +2273,92 @@ export default function OpManagement() {
     handlePrintPrescription(booking);
   };
 
-  const handlePrintPrescription = (booking) => {
-    const b = booking || selectedBookingForPrescription;
-    if (!b) { showToast("No prescription data to print", "error"); return; }
-    const win = window.open("", "_blank", "width=800,height=1100");
-    if (!win) return;
-    win.document.write(`
-      <!DOCTYPE html><html><head><title>Prescription - ${b.patientName || "Patient"}</title>
+ const handlePrintPrescription = (booking) => {
+  const b = booking || selectedBookingForPrescription;
+  if (!b) { showToast("No prescription data to print", "error"); return; }
+  const win = window.open("", "_blank", "width=800,height=1100");
+  if (!win) return;
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Prescription</title>
       <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:Arial,sans-serif; background:#fff; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:20px; }
-        .prescription-page { max-width:650px; width:100%; position:relative; background:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.1); border-radius:12px; overflow:hidden; margin-bottom:30px; page-break-after:always; }
-        .prescription-page img { width:100%; height:auto; display:block; }
-        .page-label { text-align:center; font-size:11px; color:#888; padding:6px 0; background:#f5f5f5; border-bottom:1px solid #ddd; font-weight:bold; letter-spacing:1px; }
-        .overlay-print { position:absolute; top:0; left:0; right:0; bottom:0; }
-        .overlay-print .fld { position:absolute; font-size:15px; font-weight:600; color:#1a1a1a; letter-spacing:0.2px; line-height:1.3; }
-        @media print { body { padding:0; } .prescription-page { box-shadow:none; border-radius:0; margin-bottom:0; } .page-label { display:none; } }
-      </style></head><body>
+        html, body {
+          margin: 0;
+          padding: 0;
+          background: #fff;
+          width: 100%;
+        }
+        .prescription-page {
+          width: 100%;
+          max-width: 100%;
+          position: relative;
+          background: #fff;
+          display: block;
+          margin: 0;
+          padding: 0;
+        }
+        .prescription-page img {
+          width: 100%;
+          height: auto;
+          display: block;
+          margin: 0;
+          padding: 0;
+        }
+        .overlay-print {
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+        }
+        .overlay-print .fld {
+          position: absolute;
+          font-size: 15px;
+          font-weight: 600;
+          color: #1a1a1a;
+          letter-spacing: 0.2px;
+          line-height: 1.3;
+        }
+        @page {
+          size: auto;
+          margin: 0;
+        }
+        @media print {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .prescription-page {
+            margin: 0 !important;
+            padding: 0 !important;
+            page-break-after: avoid;
+          }
+        }
+      </style>
+    </head>
+    <body>
       <div class="prescription-page">
-        <div class="page-label">📄 Front Side - Prescription</div>
-        <img src="${prescriptionTemplate}" alt="Front" />
+        <img src="${prescriptionTemplate}" alt="Prescription" />
         <div class="overlay-print">
-          <div class="fld" style="top:78px;left:90px;max-width:280px;">${b.patientTitle || ""} ${b.patientName || "N/A"}</div>
-          <div class="fld" style="top:78px;right:20px;">${formatDateToDDMMYYYY(b.appointmentDate || b.date)}</div>
-          <div class="fld" style="top:104px;left:90px;">${b.patientAge || "N/A"}</div>
-          <div class="fld" style="top:104px;left:230px;">${b.patientGender || "N/A"}</div>
-          <div class="fld" style="top:104px;right:100px;">${b.patientPhone || "N/A"}</div>
-          <div class="fld" style="top:130px;left:90px;max-width:320px;">${b.purpose || "N/A"}</div>
-          <div class="fld" style="top:160px;left:90px;">${b.vitalsTemp || ""}</div>
-          <div class="fld" style="top:160px;left:230px;">${b.vitalsBp || ""}</div>
-          <div class="fld" style="top:160px;left:400px;">${b.vitalsPr || ""}</div>
-          <div class="fld" style="top:160px;right:80px;">${b.vitalsWeight || ""}</div>
+          <div class="fld" style="top:102px;left:90px;max-width:280px;">${b.patientTitle || ""} ${b.patientName || "N/A"}</div>
+          <div class="fld" style="top:106px;right:40px;">${formatDateToDDMMYYYY(b.appointmentDate || b.date)}</div>
+          <div class="fld" style="top:138px;left:90px;">${b.patientAge || "N/A"}</div>
+          <div class="fld" style="top:138px;left:320px;">${b.patientGender || "N/A"}</div>
+          <div class="fld" style="top:138px;right:100px;">${b.patientPhone || "N/A"}</div>
+          <div class="fld" style="top:168px;left:90px;max-width:320px;">${b.purpose || "N/A"}</div>
+          <div class="fld" style="top:200px;left:90px;">${b.vitalsTemp || ""}</div>
+          <div class="fld" style="top:200px;left:300px;">${b.vitalsBp || ""}</div>
+          <div class="fld" style="top:200px;left:500px;">${b.vitalsPr || ""}</div>
+          <div class="fld" style="top:200px;right:80px;">${b.vitalsWeight || ""}</div>
         </div>
       </div>
-      <div class="prescription-page"><div class="page-label">📄 Back Side</div><img src="${prescriptionBackTemplate}" alt="Back" /></div>
-      <script>window.onload = function() { window.print(); }</script></body></html>
-    `);
-    win.document.close();
-    win.focus();
-  };
-
+      <script>window.onload = function() { window.print(); }</script>
+    </body>
+    </html>
+  `);
+  win.document.close();
+  win.focus();
+};
   const getPatientTotalFee = (patient) => {
     const list = bookings.filter((b) => b.patientPhone === patient.phone ||
       (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
@@ -2693,15 +2757,17 @@ export default function OpManagement() {
   const handleToDateChange = (e) => { setToDate(e.target.value); if (e.target.value) setSelectedMonth(""); };
   const handleMonthChange = (e) => { setSelectedMonth(e.target.value); setFromDate(""); setToDate(""); };
 
-  const clearFilters = () => {
-    setSearchQuery(""); setStatusFilter("All"); setFeeTypeFilter("All"); setDoctorFilter("All");
-    setBookingTypeFilter("All");
-    setFromDate(""); setToDate(""); setSelectedMonth("");
-    setApptFromDate(""); setApptToDate(""); // ✅ NEW
-    setActiveCardFilter("all"); setCurrentPage(1);
-    setActiveFilter("all");
-    if (window.innerWidth < 1024) setShowMobileFilters(false);
-  };
+const clearFilters = () => {
+  setSearchQuery(""); setStatusFilter("All"); setFeeTypeFilter("All"); setDoctorFilter("All");
+  setBookingTypeFilter("All");
+  setFromDate(""); setToDate(""); setSelectedMonth("");
+  setApptFromDate(""); setApptToDate("");
+  setRevenueCategoryFilter("All");       // ✅ NEW
+  setPaymentTypeFilter("All");           // ✅ NEW
+  setActiveCardFilter("all"); setCurrentPage(1);
+  setActiveFilter("all");
+  if (window.innerWidth < 1024) setShowMobileFilters(false);
+};
 
   const handleCardClick = (type) => {
     setActiveCardFilter(type); setCurrentPage(1);
@@ -2742,6 +2808,40 @@ export default function OpManagement() {
         if (!hasMatchingService) return false;
       }
 
+
+      // ✅ REVENUE CATEGORY FILTER (Clinic / Lab / Pharmacy)
+if (revenueCategoryFilter !== "All") {
+  const hasMatchingRevenue = bookings.some((b) => {
+    const matchesPatient =
+      b.patientPhone === p.phone ||
+      (b.patientName &&
+        p.name &&
+        b.patientName.toLowerCase() === p.name.toLowerCase());
+    if (!matchesPatient) return false;
+
+    const bd = getAmountBreakdown(b);
+    if (revenueCategoryFilter === "clinic") return (Number(bd.clinic) || 0) > 0;
+    if (revenueCategoryFilter === "lab") return (Number(bd.lab) || 0) > 0;
+    if (revenueCategoryFilter === "pharmacy") return (Number(bd.pharmacy) || 0) > 0;
+    return false;
+  });
+  if (!hasMatchingRevenue) return false;
+}
+
+// ✅ PAYMENT TYPE FILTER (Cash / Online / Insurance / Card)
+if (paymentTypeFilter !== "All") {
+  const hasMatchingPayment = bookings.some((b) => {
+    const matchesPatient =
+      b.patientPhone === p.phone ||
+      (b.patientName &&
+        p.name &&
+        b.patientName.toLowerCase() === p.name.toLowerCase());
+    if (!matchesPatient) return false;
+    return (b.paymentType || "").toLowerCase() === paymentTypeFilter.toLowerCase();
+  });
+  if (!hasMatchingPayment) return false;
+}
+
       if (doctorFilter !== "All") {
         const hasBookingWithDoctor = bookings.some(
           (b) =>
@@ -2753,6 +2853,7 @@ export default function OpManagement() {
         );
         if (!hasBookingWithDoctor) return false;
       }
+
 
       if (bookingTypeFilter !== "All") {
         const matchingBooking = getMatchingBooking(p);
@@ -2861,9 +2962,9 @@ export default function OpManagement() {
 
       return true;
     });
-  }, [patients, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, searchQuery, fromDate, toDate, selectedMonth, apptFromDate, apptToDate, bookings, activeFilter]);
+  }, [patients, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, searchQuery, fromDate, toDate, selectedMonth, apptFromDate, apptToDate, bookings, activeFilter,  revenueCategoryFilter, paymentTypeFilter]);
 
-  useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, fromDate, toDate, selectedMonth, apptFromDate, apptToDate, activeFilter]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, fromDate, toDate, selectedMonth, apptFromDate, apptToDate, activeFilter, revenueCategoryFilter, paymentTypeFilter]);
 
   const stats = useMemo(() => {
     // ✅ Use filteredPatients instead of patients
@@ -2907,6 +3008,41 @@ export default function OpManagement() {
     const v = Number(e.target.value);
     setItemsPerPage(v); localStorage.setItem("opMgmt_itemsPerPage", String(v)); setCurrentPage(1);
   };
+
+
+  // ✅ REVENUE SUMMARY (based on filtered data)
+const revenueSummary = useMemo(() => {
+  let clinic = 0, lab = 0, pharmacy = 0;
+  let cash = 0, online = 0, insurance = 0, card = 0;
+  let totalCollected = 0, totalDue = 0, grossTotal = 0;
+
+  filteredPatients.forEach((p) => {
+    const list = bookings.filter(
+      (b) =>
+        b.patientPhone === p.phone ||
+        (b.patientName && p.name && b.patientName.toLowerCase() === p.name.toLowerCase())
+    );
+    list.forEach((b) => {
+      const bd = getAmountBreakdown(b);
+      clinic += Number(bd.clinic) || 0;
+      lab += Number(bd.lab) || 0;
+      pharmacy += Number(bd.pharmacy) || 0;
+
+      const paid = getBookingPaidInfo(b);
+      totalCollected += paid.paid;
+      totalDue += paid.balance;
+      grossTotal += paid.final;
+
+      const pt = (b.paymentType || "cash").toLowerCase();
+      if (pt === "cash") cash += paid.paid;
+      else if (pt === "online") online += paid.paid;
+      else if (pt === "insurance") insurance += paid.paid;
+      else if (pt === "card") card += paid.paid;
+    });
+  });
+
+  return { clinic, lab, pharmacy, cash, online, insurance, card, totalCollected, totalDue, grossTotal };
+}, [filteredPatients, bookings]);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -3009,6 +3145,30 @@ export default function OpManagement() {
               <option value="All">All Doctors</option>
               {getUniqueDoctors().map((doc) => <option key={doc.name} value={doc.name}>{doc.name}</option>)}
             </select>
+
+            {/* ✅ REVENUE CATEGORY FILTER */}
+<select
+  value={revenueCategoryFilter}
+  onChange={(e) => setRevenueCategoryFilter(e.target.value)}
+  className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg"
+  title="Filter by revenue type"
+>
+  {REVENUE_CATEGORY_OPTIONS.map((opt) => (
+    <option key={opt.value} value={opt.value}>{opt.label}</option>
+  ))}
+</select>
+
+{/* ✅ PAYMENT TYPE FILTER */}
+<select
+  value={paymentTypeFilter}
+  onChange={(e) => setPaymentTypeFilter(e.target.value)}
+  className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg"
+  title="Filter by payment mode"
+>
+  {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (
+    <option key={opt.value} value={opt.value}>{opt.label}</option>
+  ))}
+</select>
             {/* ✅ REGISTERED DATE Filter */}
             <div className="flex items-center gap-1 px-2 h-8 border border-gray-300 bg-white rounded-lg">
               <span className="text-[9px] font-bold text-gray-500 uppercase whitespace-nowrap">Reg:</span>
@@ -3090,6 +3250,28 @@ export default function OpManagement() {
                   ))}
                 </select>
               </div>
+
+              {/* ✅ Revenue Category + Payment Type (Mobile) */}
+<div className="grid grid-cols-2 gap-2">
+  <select
+    value={revenueCategoryFilter}
+    onChange={(e) => setRevenueCategoryFilter(e.target.value)}
+    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg"
+  >
+    {REVENUE_CATEGORY_OPTIONS.map((opt) => (
+      <option key={opt.value} value={opt.value}>{opt.label}</option>
+    ))}
+  </select>
+  <select
+    value={paymentTypeFilter}
+    onChange={(e) => setPaymentTypeFilter(e.target.value)}
+    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg"
+  >
+    {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (
+      <option key={opt.value} value={opt.value}>{opt.label}</option>
+    ))}
+  </select>
+</div>
               {/* ✅ REGISTERED DATE */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Registered Date</label>
@@ -3164,6 +3346,90 @@ export default function OpManagement() {
             <div className="emp-dash__stat-meta">collected revenue</div>
           </div>
         </div>
+
+
+        {/* ✅ REVENUE BREAKDOWN PANEL */}
+<div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+  <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
+    <div className="flex items-center gap-2">
+      <FaMoneyBillWave className="text-indigo-600 w-4 h-4" />
+      <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+        Revenue Breakdown
+      </h3>
+      <span className="text-[10px] text-gray-500">
+        (based on current filters)
+      </span>
+    </div>
+    <span className="text-[10px] font-bold text-indigo-700 bg-white px-2 py-0.5 rounded-full border border-indigo-200">
+      {filteredPatients.length} patients
+    </span>
+  </div>
+
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 p-3">
+    {/* Clinic */}
+    <div className="rounded-lg p-2.5 border border-blue-200 bg-blue-50">
+      <div className="flex items-center gap-1 text-[9px] font-bold text-blue-700 uppercase">
+        <FaClinicMedical className="text-[9px]" /> Clinic Revenue
+      </div>
+      <div className="text-sm font-extrabold text-blue-800 mt-0.5">
+        ₹{Math.round(revenueSummary.clinic).toLocaleString()}
+      </div>
+    </div>
+
+    {/* Lab */}
+    <div className="rounded-lg p-2.5 border border-purple-200 bg-purple-50">
+      <div className="flex items-center gap-1 text-[9px] font-bold text-purple-700 uppercase">
+        <FaFlask className="text-[9px]" /> Lab Revenue
+      </div>
+      <div className="text-sm font-extrabold text-purple-800 mt-0.5">
+        ₹{Math.round(revenueSummary.lab).toLocaleString()}
+      </div>
+    </div>
+
+    {/* Pharmacy */}
+    <div className="rounded-lg p-2.5 border border-green-200 bg-green-50">
+      <div className="flex items-center gap-1 text-[9px] font-bold text-green-700 uppercase">
+        <FaPills className="text-[9px]" /> Pharmacy Revenue
+      </div>
+      <div className="text-sm font-extrabold text-green-800 mt-0.5">
+        ₹{Math.round(revenueSummary.pharmacy).toLocaleString()}
+      </div>
+    </div>
+
+    {/* Cash */}
+    <div className="rounded-lg p-2.5 border border-emerald-200 bg-emerald-50">
+      <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-700 uppercase">
+        <FaMoneyBillWave className="text-[9px]" /> Cash Collected
+      </div>
+      <div className="text-sm font-extrabold text-emerald-800 mt-0.5">
+        ₹{Math.round(revenueSummary.cash).toLocaleString()}
+      </div>
+    </div>
+
+    {/* Online */}
+    <div className="rounded-lg p-2.5 border border-cyan-200 bg-cyan-50">
+      <div className="flex items-center gap-1 text-[9px] font-bold text-cyan-700 uppercase">
+        <FaGlobe className="text-[9px]" /> Online Collected
+      </div>
+      <div className="text-sm font-extrabold text-cyan-800 mt-0.5">
+        ₹{Math.round(revenueSummary.online).toLocaleString()}
+      </div>
+    </div>
+
+    {/* Total Collected + Due */}
+    <div className="rounded-lg p-2.5 border border-slate-300 bg-slate-50">
+      <div className="flex items-center gap-1 text-[9px] font-bold text-slate-700 uppercase">
+        <FaRupeeSign className="text-[9px]" /> Total Collected
+      </div>
+      <div className="text-sm font-extrabold text-slate-900 mt-0.5">
+        ₹{Math.round(revenueSummary.totalCollected).toLocaleString()}
+      </div>
+      <div className="text-[9px] font-semibold text-red-600 mt-0.5">
+        Due: ₹{Math.round(revenueSummary.totalDue).toLocaleString()}
+      </div>
+    </div>
+  </div>
+</div>
 
         {/* ADD/EDIT MODAL */}
         {showForm && (

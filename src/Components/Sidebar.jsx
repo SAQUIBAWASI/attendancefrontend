@@ -1739,7 +1739,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/company-ip": "Company IP",
       "/my-products": "My Products",
       "/visits-data": "Visit Data",
-      "/letters-section": "Reliving Letters",
+      "/letters-section": "Letters Section",
       "/late-today": "Late Today",
       "/bookings": "Online Bookings",
       "/op-management": "WalkIn OP",
@@ -1748,7 +1748,9 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/services": "Services",
       "/letterhead": "Letter Head",
       "/referral-management": "Referral Management",
-      "/referral-bookings": "Referral Bookings"
+      "/referral-bookings": "Referral Bookings",
+      "/timely-plan-bookings": "Plan Booking",
+      "/timely-plans": "Timely Plans",
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1801,7 +1803,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
   const navigateToIngrainHire = () => {
     const userRole = localStorage.getItem('userRole');
     let email = '', password = '';
-    
+
     if (userRole === 'admin') {
       email = localStorage.getItem('adminEmail') || '';
       try {
@@ -1820,13 +1822,13 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         password = localStorage.getItem('employeePassword') || '';
       }
     }
-    
+
     if (!email || !password) {
       const employeeDataRaw = localStorage.getItem("employeeData");
       let employeeData = {};
       try {
         employeeData = JSON.parse(employeeDataRaw || "{}");
-      } catch (e) {}
+      } catch (e) { }
       email = email || employeeData.email || employeeData.employeeEmail || '';
       password = password || employeeData.password || employeeData.employeePassword || localStorage.getItem("employeePassword") || '456789';
     }
@@ -1840,7 +1842,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     params.append('role', userRole || 'employee');
     params.append('clientLogin', 'true');
     params.append('skipOtp', 'true');
-    
+
     const url = `${baseUrl}?${params.toString()}`;
     window.open(url, '_blank');
   };
@@ -1860,7 +1862,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Employee Locations", path: "/employee-locations" },
       ],
     },
-    
+
     {
       icon: <i className="ri-calendar-fill"></i>,
       name: "Attendance",
@@ -1876,9 +1878,17 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
 
     {
       icon: <i className="ri-file-list-fill"></i>,
-      name: "Leave List",
-      path: "/leavelist",
+      name: "Requests",
+      dropdown: [
+        { name: "Leave List", path: "/leavelist" },
+        { name: "Comp Off Requests", path: "/comp-off-requests" },
+        { name: "Comp Off Settings", path: "/comp-off-settings" },
+        { name: "Permissions", path: "/permissions" },
+        { name: "OT Claims", path: "/ot-claims" },
+        { name: "Over Time", path: "/over-time" },
+      ],
     },
+
 
     {
       icon: <i className="ri-user-fill"></i>,
@@ -1890,7 +1900,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "User Activity", path: "/useractivity" },
         { name: "User Access", path: "/useraccess" },
         { name: "Shifts", path: "/shift" },
-        { name:"Rosters", path:"/week-off" },
+        { name: "Rosters", path: "/week-off" },
       ],
     },
 
@@ -1904,10 +1914,21 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Online Bookings", path: "/bookings" },
         { name: "Referral Management", path: "/referral-management" },   // ✅ Combined contacts (doctor+customer tabs)
         { name: "Referral Bookings", path: "/referral-bookings" },       // ✅ Combined OP bookings (doctor+customer tabs)
-            { name: "Appointment Slots", path: "/appointment-slots" },  // ✅ NAYA
-                { name: "Doctors", path: "/doctor-management" },
-                        { name: "Services", path: "/services" },
+        { name: "Appointment Slots", path: "/appointment-slots" },  // ✅ NAYA
+        { name: "Doctors", path: "/doctor-management" },
+        { name: "Services", path: "/services" },
         { name: "Letter Head", path: "/letterhead" },
+      ],
+    },
+
+    {
+      icon: <i className="ri-mail-open-fill"></i>,
+      name: "Letters",
+      dropdown: [
+        { name: "Letters Section", path: "/letters-section" },
+        // Future me aur add kar sakte ho:
+        // { name: "Experience Letters", path: "/experience-letters" },
+        // { name: "Relieving Letters", path: "/relieving-letters" },
       ],
     },
 
@@ -1916,6 +1937,13 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       name: "Hire",
       action: navigateToIngrainHire,
       isExternal: true,
+    },
+
+
+    {
+      icon: <i className="ri-filter-3-fill"></i>,
+      name: "Digital Leads",
+      path: "/digital-leads",
     },
 
     {
@@ -1963,7 +1991,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       name: "Locations",
       path: "/locationlist",
     },
-    
+
     {
       icon: <i className="ri-qr-code-fill"></i>,
       name: "QR Scanner",
@@ -1985,6 +2013,15 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       path: "/visits-data",
       badge: "NEW",
       blink: true
+    },
+
+    // ✅ NEW — TIMELY PLANS SECTION (below Visit Data)
+    {
+      icon: <i className="ri-vip-crown-2-fill"></i>,
+      name: "Timely Plans",
+      dropdown: [
+        { name: "Plan Booking", path: "/timely-plan-bookings" },
+      ],
     },
     {
       icon: <i className="ri-logout-box-r-line"></i>,
@@ -2180,10 +2217,10 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                 <>
                   <div
                     className={`group flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer sidebar-item ${isDropdownActive(item.dropdown)
-                        ? "active-gradient text-white"
-                        : openDropdown === item.name
-                          ? "bg-indigo-50/80 text-[#1E3A8A] border border-indigo-100/50"
-                          : "text-gray-600 hover:bg-blue-50/80 hover:text-[#175cd3] hover:shadow-sm"
+                      ? "active-gradient text-white"
+                      : openDropdown === item.name
+                        ? "bg-indigo-50/80 text-[#1E3A8A] border border-indigo-100/50"
+                        : "text-gray-600 hover:bg-blue-50/80 hover:text-[#175cd3] hover:shadow-sm"
                       }`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -2201,19 +2238,19 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                   >
                     <div className="flex items-center gap-2.5">
                       <span className={`text-base transition-colors duration-200 ${isDropdownActive(item.dropdown)
-                          ? "text-white"
-                          : openDropdown === item.name
-                            ? "text-[#175cd3]"
-                            : "text-gray-500 group-hover:text-[#175cd3]"
+                        ? "text-white"
+                        : openDropdown === item.name
+                          ? "text-[#175cd3]"
+                          : "text-gray-500 group-hover:text-[#175cd3]"
                         }`}>
                         {item.icon}
                       </span>
                       {!isCollapsed && (
                         <span className={`text-[15px] font-medium leading-tight ${isDropdownActive(item.dropdown)
-                            ? "text-white"
-                            : openDropdown === item.name
-                              ? "text-[#1E3A8A]"
-                              : "text-gray-700"
+                          ? "text-white"
+                          : openDropdown === item.name
+                            ? "text-[#1E3A8A]"
+                            : "text-gray-700"
                           }`}>
                           {item.name}
                         </span>
@@ -2228,10 +2265,10 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
                           className={`text-[12px] transition-transform duration-300 cursor-pointer ${isDropdownActive(item.dropdown)
-                              ? "text-white"
-                              : openDropdown === item.name
-                                ? "text-[#175cd3]"
-                                : "text-gray-400"
+                            ? "text-white"
+                            : openDropdown === item.name
+                              ? "text-[#175cd3]"
+                              : "text-gray-400"
                             } ${openDropdown === item.name ? "rotate-180" : ""}`}
                           style={{
                             width: '18px',
@@ -2252,8 +2289,8 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                           <div
                             onClick={() => handleDropdownItemClick(sub)}
                             className={`block py-1.5 px-2 text-[14px] transition-all duration-200 rounded-lg cursor-pointer ${sub.external
-                                ? "text-purple-600 hover:text-purple-800 hover:bg-purple-50/50"
-                                : ""
+                              ? "text-purple-600 hover:text-purple-800 hover:bg-purple-50/50"
+                              : ""
                               } ${isActive(sub.path) && !sub.external
                                 ? "text-[#175cd3] font-semibold bg-blue-50/50"
                                 : "text-gray-600 hover:text-[#175cd3] hover:bg-blue-50/50"
@@ -2308,27 +2345,27 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                     }
                   }}
                   className={`group flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer sidebar-item ${item.isExternal
-                      ? "external-glow text-white hover:shadow-lg hover:scale-[1.02]"
-                      : isActive(item.path)
-                        ? "active-gradient text-white shadow-md"
-                        : "text-gray-600 hover:bg-blue-50/80 hover:text-[#175cd3] hover:shadow-sm"
+                    ? "external-glow text-white hover:shadow-lg hover:scale-[1.02]"
+                    : isActive(item.path)
+                      ? "active-gradient text-white shadow-md"
+                      : "text-gray-600 hover:bg-blue-50/80 hover:text-[#175cd3] hover:shadow-sm"
                     }`}
                 >
                   <span className={`text-base transition-all duration-200 ${item.isExternal
+                    ? "text-white"
+                    : isActive(item.path)
                       ? "text-white"
-                      : isActive(item.path)
-                        ? "text-white"
-                        : "text-gray-500 group-hover:text-[#175cd3] group-hover:scale-110"
+                      : "text-gray-500 group-hover:text-[#175cd3] group-hover:scale-110"
                     }`}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (
                     <div className="flex items-center flex-1 min-w-0 gap-1.5">
                       <span className={`text-[15px] font-medium leading-tight truncate ${item.isExternal
+                        ? "text-white"
+                        : isActive(item.path)
                           ? "text-white"
-                          : isActive(item.path)
-                            ? "text-white"
-                            : "text-gray-700"
+                          : "text-gray-700"
                         }`}>
                         {item.name}
                       </span>

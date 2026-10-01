@@ -236,6 +236,10 @@ import PatientLogin from "./Pages/PatientLogin.jsx";
 import PatientDashboard from "./Pages/PatientDashboard.js";
 import WeekOff from "./Pages/WeekOff.js";
 import Rosters from "./Pages/Rosters.js";
+import DigitalLeads from "./Pages/DigitalLeads.js";
+import TimelyPlanBookings from './Pages/TimelyPlanBookings.js';
+
+
 
 function App() {
   return (
@@ -537,7 +541,9 @@ function App() {
               <Route path="/rejected-visits" element={<RejectedVisits />} />
               <Route path="/letters-section" element={<LettersSection />} />
               <Route path="/employee-events" element={<EmployeeEvents />} />
-                <Route path="/week-off" element={<WeekOff />} />
+              <Route path="/week-off" element={<WeekOff />} />
+              <Route path="/digital-leads" element={<DigitalLeads />} />
+              <Route path="/timely-plan-bookings" element={<TimelyPlanBookings />} />
             </Routes>
           </AdminLayout>
         }

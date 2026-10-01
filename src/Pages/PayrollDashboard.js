@@ -131,9 +131,6 @@ const calculateHolidayCountForDepartment = (holidaysData, targetMonth, employeeD
   return count;
 };
 
-// ============================================
-// ✅ NEW: Get list of holidays that apply to employee + their departments
-// ============================================
 const getEmployeeHolidaysForMonth = (holidaysData, targetMonth, employeeDepartment) => {
   if (!Array.isArray(holidaysData)) return [];
 
@@ -161,9 +158,6 @@ const getEmployeeHolidaysForMonth = (holidaysData, targetMonth, employeeDepartme
   });
 };
 
-// ============================================
-// ✅ NEW: Extract unique assigned departments from holiday list
-// ============================================
 const extractAssignedDepartments = (holidayList) => {
   const deptSet = new Set();
   holidayList.forEach(h => {
@@ -318,10 +312,6 @@ const PayrollDashboard = () => {
   const [otHoursInput, setOtHoursInput] = useState("");
   const [otAppliedMap, setOtAppliedMap] = useState({});
 
-  const [showDeductionModal, setShowDeductionModal] = useState(false);
-  const [deductionModalEmployee, setDeductionModalEmployee] = useState(null);
-  const [deductionAmountInput, setDeductionAmountInput] = useState("");
-  const [deductionReasonInput, setDeductionReasonInput] = useState("");
   const [manualDeductionMap, setManualDeductionMap] = useState({});
 
   const navigate = useNavigate();
@@ -354,12 +344,6 @@ const PayrollDashboard = () => {
     } catch (e) { console.error(e); }
   };
 
-  const saveManualDeduction = (map) => {
-    try {
-      localStorage.setItem(`manualDeduction_${selectedMonth}`, JSON.stringify(map));
-    } catch (e) { console.error(e); }
-  };
-
   const handleOpenOTModal = (employee) => {
     if (employee.hasApprovedOT && employee.approvedOTAmount > 0) {
       alert(`⚠️ This employee already has approved OT of ₹${employee.approvedOTAmount.toFixed(2)} (${employee.approvedOTHours}h) from OT Claims page. It will be used automatically.`);
@@ -389,42 +373,6 @@ const PayrollDashboard = () => {
     setOtAppliedMap(newMap);
     saveOTApplied(newMap);
     setShowOTModal(false);
-    fetchData(selectedMonth);
-  };
-
-  const handleOpenDeductionModal = (employee) => {
-    setDeductionModalEmployee(employee);
-    const existing = manualDeductionMap[employee.employeeId];
-    setDeductionAmountInput(existing?.amount ?? "");
-    setDeductionReasonInput(existing?.reason ?? "");
-    setShowDeductionModal(true);
-  };
-
-  const handleSaveDeduction = () => {
-    if (!deductionModalEmployee) return;
-    const amount = parseFloat(deductionAmountInput) || 0;
-    const reason = deductionReasonInput.trim();
-    if (amount <= 0) {
-      alert("Please enter a valid deduction amount");
-      return;
-    }
-    const newMap = {
-      ...manualDeductionMap,
-      [deductionModalEmployee.employeeId]: { amount, reason }
-    };
-    setManualDeductionMap(newMap);
-    saveManualDeduction(newMap);
-    setShowDeductionModal(false);
-    fetchData(selectedMonth);
-  };
-
-  const handleRemoveDeduction = () => {
-    if (!deductionModalEmployee) return;
-    const newMap = { ...manualDeductionMap };
-    delete newMap[deductionModalEmployee.employeeId];
-    setManualDeductionMap(newMap);
-    saveManualDeduction(newMap);
-    setShowDeductionModal(false);
     fetchData(selectedMonth);
   };
 
@@ -643,7 +591,6 @@ const PayrollDashboard = () => {
 
       const employeesForMonth = filterEmployeesByJoiningDate(employeesData, targetMonth);
 
-      // ✅ FETCH APPROVED OT CLAIMS
       let approvedOTMapLocal = {};
       try {
         const [year, monthNum] = targetMonth.split('-').map(Number);
@@ -679,7 +626,6 @@ const PayrollDashboard = () => {
         console.warn("Failed to fetch approved OT claims:", err);
       }
 
-      // ✅ FETCH COMP-OFF DATES
       let compOffDatesMapLocal = {};
       try {
         const [year, monthNum] = targetMonth.split('-').map(Number);
@@ -778,16 +724,12 @@ const PayrollDashboard = () => {
 
         let attendanceForEmployee = allAttendanceRecords.filter(r => r.employeeId === emp.employeeId);
 
-        // ============================================
-        // ✅ Per-employee holiday count based on department
-        // ============================================
         const employeeHolidayCount = calculateHolidayCountForDepartment(
           holidaysData,
           targetMonth,
           emp.department || ''
         );
 
-        // ✅ NEW: Get employee's holidays + their assigned departments
         const employeeHolidayList = getEmployeeHolidaysForMonth(
           holidaysData,
           targetMonth,
@@ -855,9 +797,6 @@ const PayrollDashboard = () => {
 
         const fullDayNotWorking = summary.fullDayNotWorking ?? 0;
 
-        // ============================================
-        // ✅ COMP-OFF CALCULATION
-        // ============================================
         const employeeCompOffDates = compOffDatesMapLocal[emp.employeeId] || [];
         const totalCompOffDays = employeeCompOffDates.reduce((sum, co) => sum + (co.count || 1), 0);
         const compOffAmount = Math.round(totalCompOffDays * dailyRate);
@@ -899,7 +838,6 @@ const PayrollDashboard = () => {
         const holidayAmount = Math.round(employeeHolidayCount * dailyRate);
         const publicHolidayCount = employeeHolidayCount;
 
-        // ✅ BASE SALARY CALCULATION
         let calculatedSalary = 0;
         if (salaryForMonth > 0 && daysInMonthValue > 0) {
           if (presentDaysCount === 0 && halfDaysCount === 0) {
@@ -915,7 +853,6 @@ const PayrollDashboard = () => {
           }
         }
 
-        // ✅ DEDUCTIONS
         const totalPaidDays = actualDaysWorked + finalWeekOffs + employeeHolidayCount + totalCompOffDays;
         const lopDays = Math.max(0, daysInMonthValue - totalPaidDays);
         const lopAmount = Math.round(lopDays * dailyRate);
@@ -937,7 +874,6 @@ const PayrollDashboard = () => {
           otherDeductions +
           manualDeductionAmount;
 
-        // ✅ OT CALCULATION
         const hourlyRate = (emp.shiftHours && emp.shiftHours > 0) ? dailyRate / emp.shiftHours : 0;
 
         const approvedOTData = approvedOTMapLocal[emp.employeeId] || { totalOTAmount: 0, totalOTHours: 0 };
@@ -1005,7 +941,6 @@ const PayrollDashboard = () => {
           specialAllowance: specialAllowance,
           totalEarnings: totalEarnings,
 
-          // ✅ Holiday info with departments
           holidayCount: publicHolidayCount,
           holidayAmount: holidayAmount,
           holidayList: employeeHolidayList.map(h => ({
@@ -1470,7 +1405,7 @@ const PayrollDashboard = () => {
                 <th className="p-3 text-right">Basic</th>
                 <th className="p-3 text-right">HRA</th>
                 <th className="p-3 text-right">Allowances</th>
-                <th className="p-3 text-right">Holiday </th>
+                <th className="p-3 text-right">Holiday</th>
                 <th className="p-3 text-right">Comp-off</th>
                 <th className="p-3 text-right">OT (₹)</th>
                 <th className="p-3 text-right">LOP (₹)</th>
@@ -1478,7 +1413,6 @@ const PayrollDashboard = () => {
                 <th className="p-3 text-right">Manual Ded.</th>
                 <th className="p-3 text-right">Net Salary</th>
                 <th className="p-3 text-center">OT Action</th>
-                <th className="p-3 text-center">Deduction</th>
                 <th className="p-3 text-center">Status</th>
               </tr>
             </thead>
@@ -1507,22 +1441,21 @@ const PayrollDashboard = () => {
                     <td className="p-3 text-right font-semibold text-slate-700">
                       {otherAllowances > 0 ? `₹${otherAllowances.toLocaleString()}` : "-"}
                     </td>
-                   {/* ✅ Holiday Column — sirf amount */}
-<td className="p-3 text-right font-bold text-purple-600">
-  {emp.holidayAmount > 0 ? (
-    <span
-      title={
-        emp.holidayList && emp.holidayList.length > 0
-          ? emp.holidayList.map(h => `${h.name} (${h.departments.join(", ")})`).join("\n")
-          : ""
-      }
-    >
-      ₹{emp.holidayAmount.toLocaleString()}
-    </span>
-  ) : (
-    <span className="text-slate-300">-</span>
-  )}
-</td>
+                    <td className="p-3 text-right font-bold text-purple-600">
+                      {emp.holidayAmount > 0 ? (
+                        <span
+                          title={
+                            emp.holidayList && emp.holidayList.length > 0
+                              ? emp.holidayList.map(h => `${h.name} (${h.departments.join(", ")})`).join("\n")
+                              : ""
+                          }
+                        >
+                          ₹{emp.holidayAmount.toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">-</span>
+                      )}
+                    </td>
                     <td className="p-3 text-right font-bold text-teal-600">
                       {emp.compOffAmount > 0 ? (
                         <span title={`${emp.compOffDays} day(s)`}>₹{emp.compOffAmount.toLocaleString()}</span>
@@ -1570,20 +1503,6 @@ const PayrollDashboard = () => {
                     </td>
                     <td className="p-3 text-center">
                       <button
-                        onClick={() => handleOpenDeductionModal(emp)}
-                        className={`px-2 py-1 rounded text-[10px] font-bold border cursor-pointer transition-all ${
-                          emp.manualDeduction > 0
-                            ? 'bg-rose-100 text-rose-700 border-rose-300'
-                            : 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100'
-                        }`}
-                      >
-                        {emp.manualDeduction > 0
-                          ? `✓ ₹${emp.manualDeduction}`
-                          : '+ Add Deduction'}
-                      </button>
-                    </td>
-                    <td className="p-3 text-center">
-                      <button
                         onClick={() => handleToggleStatus(emp.employeeId, emp.paymentStatus)}
                         className={`px-3 py-1 rounded-full text-[10px] font-bold border cursor-pointer hover:opacity-80 transition-all ${
                           emp.paymentStatus === "Paid"
@@ -1599,7 +1518,7 @@ const PayrollDashboard = () => {
               })}
               {filteredEmployeesList.length === 0 && (
                 <tr>
-                  <td colSpan="18" className="text-center p-8 text-slate-400 font-semibold">
+                  <td colSpan="17" className="text-center p-8 text-slate-400 font-semibold">
                     No employee records found matching current criteria.
                   </td>
                 </tr>
@@ -1675,90 +1594,6 @@ const PayrollDashboard = () => {
                 className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
               >
                 Save OT
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showDeductionModal && deductionModalEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-bold text-slate-800 mb-2">Add Manual Deduction</h2>
-            <p className="text-xs text-slate-500 mb-4">
-              {deductionModalEmployee.name} ({deductionModalEmployee.employeeId})
-            </p>
-
-            <div className="bg-slate-50 p-4 rounded-lg mb-4 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Current Net Salary:</span>
-                <span className="font-bold text-slate-800">
-                  ₹{(deductionModalEmployee.finalPay || 0).toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Existing Total Deductions:</span>
-                <span className="font-bold text-rose-500">
-                  ₹{(deductionModalEmployee.deductions || 0).toLocaleString()}
-                </span>
-              </div>
-            </div>
-
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-              Deduction Amount (₹)
-            </label>
-            <input
-              type="number"
-              value={deductionAmountInput}
-              onChange={(e) => setDeductionAmountInput(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg mb-3 text-sm font-semibold"
-              step="1"
-              min="0"
-              placeholder="Enter deduction amount"
-            />
-
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-              Reason (optional)
-            </label>
-            <input
-              type="text"
-              value={deductionReasonInput}
-              onChange={(e) => setDeductionReasonInput(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg mb-4 text-sm"
-              placeholder="e.g. Advance, Penalty, Damage"
-            />
-
-            <div className="text-xs text-slate-500 mb-4">
-              New Net Salary:{" "}
-              <span className="font-bold text-rose-600">
-                ₹{Math.max(
-                  0,
-                  (deductionModalEmployee.finalPay || 0) -
-                    (parseFloat(deductionAmountInput) || 0)
-                ).toLocaleString()}
-              </span>
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              {manualDeductionMap[deductionModalEmployee.employeeId] !== undefined && (
-                <button
-                  onClick={handleRemoveDeduction}
-                  className="px-3 py-2 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100"
-                >
-                  Remove
-                </button>
-              )}
-              <button
-                onClick={() => setShowDeductionModal(false)}
-                className="px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveDeduction}
-                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700"
-              >
-                Save Deduction
               </button>
             </div>
           </div>
