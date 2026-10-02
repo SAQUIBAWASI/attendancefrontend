@@ -1,4 +1,4 @@
-// OpDashboard.js — Backend-filtered + Time filters + Collection summary (Cash / Online / Card / Insurance / Due)
+// OpDashboard.js — Backend-filtered + Time filters + Stats + Revenue Breakdown (OpManagement style) + Mobile Welcome Popup
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,7 @@ import {
   Banknote, Calendar, RefreshCw, ArrowRight, BarChart2, Activity,
   UserPlus, CalendarDays, Stethoscope, BookOpen,
   Gift, FlaskConical, Pill, Star, ShieldCheck, Wallet,
-  Search, Trash2, Filter, AlertCircle, Smartphone
+  Search, Trash2, Filter, AlertCircle, Smartphone, ChevronDown, ChevronUp, Plus
 } from "lucide-react";
 import {
   ResponsiveContainer, ComposedChart, Area, Bar, Line, XAxis, YAxis,
@@ -44,14 +44,15 @@ const PAYMENT_TYPE_FILTER_OPTIONS = [
   { value: "card", label: "Card" },
 ];
 
+// ✅ All moved to END
 const TIME_FILTER_OPTIONS = [
-  { value: "All", label: "All" },
   { value: "today", label: "Today" },
   { value: "yesterday", label: "Yesterday" },
   { value: "thisWeek", label: "This Week" },
   { value: "thisMonth", label: "This Month" },
   { value: "lastMonth", label: "Last Month" },
   { value: "thisYear", label: "This Year" },
+  { value: "All", label: "All" },
 ];
 
 const classifyService = (svc) => {
@@ -75,7 +76,7 @@ const OpDashboard = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ══════════ ALL FILTERS ══════════
+  // ══════════ FILTERS ══════════
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [doctorFilter, setDoctorFilter] = useState("All");
@@ -90,6 +91,13 @@ const OpDashboard = () => {
   const [timeFilter, setTimeFilter] = useState("All");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // ✅ Show/Hide toggles
+  const [showFilters, setShowFilters] = useState(false);
+  const [showRevenueBreakdown, setShowRevenueBreakdown] = useState(true);
+
+  // ✅ Mobile Welcome Popup
+  const [showMobileWelcome, setShowMobileWelcome] = useState(false);
+
   const [selectedTrendMonth, setSelectedTrendMonth] = useState(
     new Date().toISOString().slice(0, 7)
   );
@@ -97,7 +105,23 @@ const OpDashboard = () => {
 
   useEffect(() => { fetchAllData(); }, []);
 
-  // ✅ REFETCH when filters change
+  // ✅ Mobile Welcome Popup — on every mount in mobile view
+  useEffect(() => {
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      setShowMobileWelcome(true);
+    }
+  }, []);
+
+  const handleMobileWelcomeChoice = (choice) => {
+    setShowMobileWelcome(false);
+    if (choice === "register") {
+      setTimeout(() => {
+        handleQuickAction("/op-management", { openAddPatient: true });
+      }, 200);
+    }
+  };
+
   useEffect(() => {
     fetchBookingsData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -198,6 +222,7 @@ const OpDashboard = () => {
             createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
             bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
             isOP: b.isOP === true,
+            isActive: b.isActive !== undefined ? b.isActive : true,
             reviews,
             isReviewed: b.isReviewed === true,
           };
@@ -305,7 +330,6 @@ const OpDashboard = () => {
     return booking.isOP === true ? "Walk-In" : "Online";
   };
 
-  // ✅ Backend already filters — so bookings = filtered data directly
   const filteredBookings = bookings;
 
   const filteredPatients = useMemo(() => {
@@ -315,6 +339,7 @@ const OpDashboard = () => {
       if (!key) return;
       if (!map.has(key)) map.set(key, {
         phone: b.patientPhone, name: b.patientName,
+        isActive: b.isActive !== undefined ? b.isActive : true,
         totalFee: 0, totalPaid: 0, isPaid: false, bookingCount: 0,
       });
       const p = map.get(key);
@@ -328,7 +353,86 @@ const OpDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookings]);
 
-  // ── Client-side collection fallback (used if backend stats are missing) ──
+  // ══════════ STATS (OpManagement style) ══════════
+  const stats = useMemo(() => {
+    if (backendStats) {
+      return {
+        total: backendStats.totalPatients || 0,
+        active: backendStats.active || 0,
+        inactive: backendStats.inactive || 0,
+        paid: backendStats.paid || 0,
+        partial: backendStats.partial || 0,
+        due: backendStats.due || 0,
+        pending: backendStats.pending || 0,
+      };
+    }
+    // Fallback: client-compute
+    const uniquePatients = new Set();
+    let active = 0, inactive = 0;
+    bookings.forEach((b) => {
+      const key = (b.patientPhone || b.patientName || "").toString().trim();
+      if (!key) return;
+      uniquePatients.add(key);
+      const isActive = b.isActive !== undefined ? b.isActive : true;
+      if (isActive) active += 1; else inactive += 1;
+    });
+    return {
+      total: uniquePatients.size,
+      active: active,
+      inactive: inactive,
+      paid: bookings.filter(isPaidBooking).length,
+      partial: bookings.filter(isPartialBooking).length,
+      due: bookings.filter((b) => b.paymentStatus === "Due").length,
+      pending: bookings.filter((b) => b.paymentStatus === "Pending").length,
+    };
+  }, [backendStats, bookings]);
+
+  // ══════════ CATEGORY REVENUE (FootFall wala — OpManagement style) ══════════
+  const categoryRevenue = useMemo(() => {
+    const result = {
+      clinic: { total: 0, cash: 0, online: 0, card: 0, insurance: 0, due: 0, footFall: 0 },
+      lab:    { total: 0, cash: 0, online: 0, card: 0, insurance: 0, due: 0, footFall: 0 },
+      pharmacy: { total: 0, cash: 0, online: 0, card: 0, insurance: 0, due: 0, footFall: 0 },
+    };
+    const seenSets = { clinic: new Set(), lab: new Set(), pharmacy: new Set() };
+
+    bookings.forEach((b) => {
+      const bd = getAmountBreakdown(b);
+      const pi = getBookingPaidInfo(b);
+      const mode = (b.paymentType || "cash").toString().toLowerCase();
+      const patientKey = (b.patientPhone || b.patientName || "").toString().trim();
+      const catTotal = (Number(bd.clinic) || 0) + (Number(bd.lab) || 0) + (Number(bd.pharmacy) || 0);
+      if (catTotal <= 0) return;
+
+      ["clinic", "lab", "pharmacy"].forEach((cat) => {
+        const amt = Number(bd[cat]) || 0;
+        if (amt <= 0) return;
+
+        const ratio = amt / catTotal;
+        const collected = pi.paid * ratio;
+        const due = pi.balance * ratio;
+
+        result[cat].total += collected;
+        if (mode === "cash") result[cat].cash += collected;
+        else if (mode === "online") result[cat].online += collected;
+        else if (mode === "card") result[cat].card += collected;
+        else if (mode === "insurance") result[cat].insurance += collected;
+        result[cat].due += due;
+
+        if (patientKey && !seenSets[cat].has(patientKey)) {
+          seenSets[cat].add(patientKey);
+          result[cat].footFall += 1;
+        }
+      });
+    });
+
+    const grandTotal = result.clinic.total + result.lab.total + result.pharmacy.total;
+    const grandFootFall = result.clinic.footFall + result.lab.footFall + result.pharmacy.footFall;
+
+    return { ...result, grandTotal, grandFootFall };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookings]);
+
   const clientCollection = useMemo(() => {
     const r = { cash: 0, online: 0, card: 0, insurance: 0, due: 0 };
     const c = { cash: 0, online: 0, card: 0, insurance: 0 };
@@ -345,33 +449,26 @@ const OpDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookings]);
 
-  // ── METRICS — from backendStats (fallback to client calc) ──
   const metrics = useMemo(() => {
     const ca = clientCollection.amounts;
     const cc = clientCollection.counts;
 
     if (backendStats) {
       const rb = backendStats.revenueBreakdown || {};
-
       const cashRevenue = rb.cashCollected ?? ca.cash;
       const onlineRevenue = rb.onlineCollected ?? ca.online;
       const cardRevenue = rb.cardCollected ?? ca.card;
       const insuranceRevenue = rb.insuranceCollected ?? ca.insurance;
-      const totalCollected =
-        rb.totalCollected ?? backendStats.totalRevenue ??
+      const totalCollected = rb.totalCollected ?? backendStats.totalRevenue ??
         (cashRevenue + onlineRevenue + cardRevenue + insuranceRevenue);
       const dueAmount = rb.dueAmount ?? ca.due;
       const totalBilled = totalCollected + dueAmount;
       const totalPatients = backendStats.totalPatients || 0;
 
       return {
-        total: totalPatients,
-        totalRevenue: totalCollected,
-        totalCollected,
-        pendingRevenue: dueAmount,
-        dueAmount,
-        totalExpectedRevenue: totalBilled,
-        totalBilled,
+        total: totalPatients, totalRevenue: totalCollected, totalCollected,
+        pendingRevenue: dueAmount, dueAmount,
+        totalExpectedRevenue: totalBilled, totalBilled,
         avgFee: totalPatients > 0 ? Math.round(totalBilled / totalPatients) : 0,
         collectionRate: totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100) : 0,
         totalBookings: totalPatients,
@@ -388,7 +485,6 @@ const OpDashboard = () => {
         totalOfferDeduction: bookings.reduce((s, b) => s + (b.offerApplied ? Number(b.offerApplied.offerAmount) || 0 : 0), 0),
         reviewedBookingsCount: bookings.filter((b) => b.isReviewed === true).length,
         totalReviewServices: bookings.reduce((s, b) => s + (Array.isArray(b.reviews) ? b.reviews.length : 0), 0),
-        totalReviewRevenue: 0,
       };
     }
     return {
@@ -401,7 +497,7 @@ const OpDashboard = () => {
       doctorsCount: doctors.length,
       totalClinic: 0, totalLab: 0, totalPharmacy: 0,
       bookingsWithOfferCount: 0, totalOfferDeduction: 0,
-      reviewedBookingsCount: 0, totalReviewServices: 0, totalReviewRevenue: 0,
+      reviewedBookingsCount: 0, totalReviewServices: 0,
     };
   }, [backendStats, bookings, doctors, clientCollection]);
 
@@ -457,7 +553,6 @@ const OpDashboard = () => {
         if (dayMap[day]) {
           dayMap[day].patients += 1;
           dayMap[day].bookings += 1;
-          // ✅ Revenue = actually collected amount (paid + partial)
           dayMap[day].revenue += getRevenueForBooking(b);
           if (isPaidBooking(b)) dayMap[day].paidPatients += 1;
           else dayMap[day].pendingPatients += 1;
@@ -501,7 +596,6 @@ const OpDashboard = () => {
     ];
   }, [bookings]);
 
-  // ✅ Gender demographics — derived from bookings (no patients API)
   const genderData = useMemo(() => {
     const c = { Male: 0, Female: 0, Other: 0 };
     const seen = new Set();
@@ -632,154 +726,155 @@ const OpDashboard = () => {
     );
   }
 
-  // Collection cards config (Cash / Online / Card / Insurance)
-  const collectionCards = [
-    { key: "cash", label: "Cash Collected", amount: metrics.cashRevenue, count: metrics.cashCount, Icon: Banknote,
-      box: "border-emerald-200 bg-emerald-50", text: "text-emerald-800", sub: "text-emerald-600", iconBg: "bg-emerald-100", icon: "text-emerald-600" },
-    { key: "online", label: "Online Collected", amount: metrics.onlineRevenue, count: metrics.onlineCount, Icon: Smartphone,
-      box: "border-indigo-200 bg-indigo-50", text: "text-indigo-800", sub: "text-indigo-600", iconBg: "bg-indigo-100", icon: "text-indigo-600" },
-    { key: "card", label: "Card Collected", amount: metrics.cardRevenue, count: metrics.cardCount, Icon: CreditCard,
-      box: "border-cyan-200 bg-cyan-50", text: "text-cyan-800", sub: "text-cyan-600", iconBg: "bg-cyan-100", icon: "text-cyan-600" },
-    { key: "insurance", label: "Insurance Collected", amount: metrics.insuranceRevenue, count: metrics.insuranceCount, Icon: ShieldCheck,
-      box: "border-purple-200 bg-purple-50", text: "text-purple-800", sub: "text-purple-600", iconBg: "bg-purple-100", icon: "text-purple-600" },
-  ];
-
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
 
+        {/* ✅ Mobile Welcome Popup */}
+        {showMobileWelcome && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 lg:hidden">
+            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-4 text-white">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base">Welcome to OP Dashboard</h3>
+                    <p className="text-xs text-blue-100">What would you like to do?</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-5 space-y-3">
+                <button onClick={() => handleMobileWelcomeChoice("register")}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 bg-emerald-50 border-2 border-emerald-200 rounded-xl hover:bg-emerald-100 hover:border-emerald-400 transition-all text-left group">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold text-emerald-800 text-sm">New OP Register</div>
+                    <div className="text-[11px] text-emerald-600">Register a new patient & book slot</div>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-emerald-400 -rotate-90" />
+                </button>
+                <button onClick={() => handleMobileWelcomeChoice("manage")}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-400 transition-all text-left group">
+                  <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+                    <Activity className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold text-blue-800 text-sm">View Dashboard</div>
+                    <div className="text-[11px] text-blue-600">Analytics, revenue & bookings</div>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-blue-400 -rotate-90" />
+                </button>
+              </div>
+              <div className="px-5 pb-5">
+                <p className="text-[10px] text-gray-400 text-center">You can always access these options from the main screen.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ══════════ HEADER DESKTOP ══════════ */}
-        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
-          <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
-            OP <span>Dashboard</span>
-          </h1>
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-3">
+          <div className="flex items-center gap-3">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
+              OP <span>Dashboard</span>
+            </h1>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 shadow-sm transition-colors"
+            >
+              {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              {showFilters ? "Hide Filters" : "Expand Filters"}
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => handleQuickAction("/op-management", { openAddPatient: true })}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">
+              <UserPlus className="w-4 h-4" /> Register New OP
+            </button>
+            <button onClick={fetchAllData}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
+              <RefreshCw className="w-4 h-4" /> Refresh
+            </button>
+          </div>
         </div>
 
-        {/* ══════════ FILTER BAR — Desktop ══════════ */}
-        <div className="hidden lg:flex items-center gap-2 flex-wrap mb-6">
-          <div className="relative min-w-[130px]">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+        {/* ══════════ FILTER BAR — Desktop (Main, always visible) ══════════ */}
+        <div className="hidden lg:flex items-center gap-2.5 flex-wrap mb-3">
+          <div className="relative min-w-[180px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
             <input
               type="text"
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[200px] pl-8 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-[220px] pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
           </div>
-
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg">
             <option value="All">All Payment</option>
             <option value="Pending">Pending</option>
             <option value="Partial">Partial</option>
             <option value="Paid">Paid</option>
             <option value="Due">Due</option>
           </select>
-
-          <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
+          <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg">
             {BOOKING_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-
-          <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg max-w-[130px] truncate">
+          <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg max-w-[160px] truncate">
             <option value="All">All Doctors</option>
             {getUniqueDoctors().map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
-
-          <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
+          <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)} className="h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg">
             {REVENUE_CATEGORY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-
-          <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
+          <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg">
             {PAYMENT_TYPE_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
 
-          {/* ✅ TIME FILTER — Quick Buttons */}
-          <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200">
+          {/* TIME FILTER */}
+          <div className="flex items-center gap-0.5 bg-gray-100 p-1.5 rounded-lg border border-gray-200">
             {TIME_FILTER_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => handleTimeFilterChange(opt.value)}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all whitespace-nowrap ${
+              <button key={opt.value} onClick={() => handleTimeFilterChange(opt.value)}
+                className={`px-3 py-2 text-xs font-bold rounded-md transition-all whitespace-nowrap ${
                   timeFilter === opt.value
                     ? "bg-blue-600 text-white shadow-sm"
                     : "text-gray-600 hover:bg-white hover:text-gray-900"
-                }`}
-                title={opt.label}
-              >
+                }`}>
                 {opt.label}
               </button>
             ))}
           </div>
 
-          {/* REG DATE */}
-          <div className="flex items-center gap-1 px-2 h-8 border border-gray-300 bg-white rounded-lg">
-            <span className="text-[9px] font-bold text-gray-500 uppercase whitespace-nowrap">REG:</span>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={handleFromDateChange}
-              className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none"
-            />
-            <span className="text-gray-400 text-xs">–</span>
-            <input
-              type="date"
-              value={toDate}
-              onChange={handleToDateChange}
-              className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none"
-            />
-          </div>
-
-          {/* APPT DATE */}
-          <div className="flex items-center gap-1 px-2 h-8 border border-gray-300 bg-white rounded-lg">
-            <span className="text-[9px] font-bold text-gray-500 uppercase whitespace-nowrap">APPT:</span>
-            <input
-              type="date"
-              value={apptFromDate}
-              onChange={handleApptFromChange}
-              className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none"
-            />
-            <span className="text-gray-400 text-xs">–</span>
-            <input
-              type="date"
-              value={apptToDate}
-              onChange={handleApptToChange}
-              className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none"
-            />
-          </div>
-
-          {/* Month */}
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={handleMonthChange}
-            className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg"
-            title="Appointment month"
-          />
-
-          <button
-            onClick={() => handleQuickAction("/op-management", { openAddPatient: true })}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm"
-          >
-            <UserPlus className="w-3 h-3" /> Register New OP
-          </button>
-
-          <button
-            onClick={fetchAllData}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
-            title="Refresh"
-          >
-            <RefreshCw className="w-3 h-3" />
-          </button>
-
           {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
-            >
-              <Trash2 className="w-3 h-3 text-red-500" /> Clear
+            <button onClick={clearFilters}
+              className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
+              <Trash2 className="w-4 h-4 text-red-500" /> Clear
             </button>
           )}
         </div>
+
+        {/* ══════════ EXPANDED FILTERS — Desktop ══════════ */}
+        {showFilters && (
+          <div className="hidden lg:flex items-center gap-2.5 flex-wrap mb-6">
+            <div className="flex items-center gap-1.5 px-3 h-11 border border-gray-300 bg-white rounded-lg">
+              <span className="text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Reg:</span>
+              <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-[125px] h-8 px-1 text-xs border-0 bg-transparent text-gray-900 rounded focus:outline-none" />
+              <span className="text-gray-400 text-sm">–</span>
+              <input type="date" value={toDate} onChange={handleToDateChange} className="w-[125px] h-8 px-1 text-xs border-0 bg-transparent text-gray-900 rounded focus:outline-none" />
+            </div>
+            <div className="flex items-center gap-1.5 px-3 h-11 border border-gray-300 bg-white rounded-lg">
+              <span className="text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Appt:</span>
+              <input type="date" value={apptFromDate} onChange={handleApptFromChange} className="w-[125px] h-8 px-1 text-xs border-0 bg-transparent text-gray-900 rounded focus:outline-none" />
+              <span className="text-gray-400 text-sm">–</span>
+              <input type="date" value={apptToDate} onChange={handleApptToChange} className="w-[125px] h-8 px-1 text-xs border-0 bg-transparent text-gray-900 rounded focus:outline-none" />
+            </div>
+            <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-[150px] h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg" />
+          </div>
+        )}
 
         {/* ══════════ MOBILE HEADER ══════════ */}
         <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
@@ -791,34 +886,27 @@ const OpDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-1 flex-wrap justify-end">
-            <button
-              onClick={() => handleQuickAction("/op-management", { openAddPatient: true })}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg"
-            >
+            <button onClick={() => handleQuickAction("/op-management", { openAddPatient: true })}
+              className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg">
               <UserPlus className="w-3 h-3" /> Add
             </button>
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg"
-            >
+            <button onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
               <Filter className="w-3 h-3" /> Filters
             </button>
           </div>
         </div>
 
-        {/* ══════════ MOBILE TIME FILTER QUICK BUTTONS ══════════ */}
+        {/* ══════════ MOBILE TIME FILTER ══════════ */}
         <div className="lg:hidden mb-3">
-          <div className="flex items-center gap-1 overflow-x-auto pb-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
             {TIME_FILTER_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => handleTimeFilterChange(opt.value)}
-                className={`px-2.5 py-1.5 text-[11px] font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${
+              <button key={opt.value} onClick={() => handleTimeFilterChange(opt.value)}
+                className={`px-4 py-2.5 text-xs font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${
                   timeFilter === opt.value
                     ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                     : "bg-white text-gray-600 border-gray-300"
-                }`}
-              >
+                }`}>
                 {opt.label}
               </button>
             ))}
@@ -833,12 +921,8 @@ const OpDashboard = () => {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg"
-                  />
+                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -881,12 +965,7 @@ const OpDashboard = () => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={handleMonthChange}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg"
-                />
+                <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
               </div>
               {hasActiveFilters && (
                 <button onClick={clearFilters} className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
@@ -945,183 +1024,168 @@ const OpDashboard = () => {
           </button>
         </div>
 
-        {/* ══════════ KPI ROW 1 ══════════ */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+        {/* ══════════ STATS GRID (OpManagement style — 6 cards) ══════════ */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-6">
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Bookings</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><Calendar className="w-4 h-4 text-blue-600" /></div>
+              <span className="emp-dash__stat-label">Total Clinic Patients</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><Users className="w-4 h-4 text-blue-600" /></div>
             </div>
-            <div className="emp-dash__stat-value">{metrics.totalBookings}</div>
-            <div className="emp-dash__stat-meta">{metrics.doctorsCount} doctors</div>
+            <div className="emp-dash__stat-value">{stats.total}</div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[10px] font-bold leading-tight">
+              <span className="text-emerald-600 whitespace-nowrap">Active: {stats.active}</span>
+              <span className="text-red-500 whitespace-nowrap">Inactive: {stats.inactive}</span>
+            </div>
           </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Paid</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><CheckCircle2 className="w-4 h-4 text-emerald-600" /></div>
+            </div>
+            <div className="emp-dash__stat-value text-emerald-600">{stats.paid}</div>
+            <div className="emp-dash__stat-meta">completed payments</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Partial</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><Clock className="w-4 h-4 text-amber-600" /></div>
+            </div>
+            <div className="emp-dash__stat-value text-amber-600">{stats.partial}</div>
+            <div className="emp-dash__stat-meta">partially paid</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Pending</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late"><Clock className="w-4 h-4 text-gray-500" /></div>
+            </div>
+            <div className="emp-dash__stat-value text-gray-600">{stats.pending}</div>
+            <div className="emp-dash__stat-meta">awaiting payment</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Due</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late"><AlertCircle className="w-4 h-4 text-red-500" /></div>
+            </div>
+            <div className="emp-dash__stat-value text-red-500">{stats.due}</div>
+            <div className="emp-dash__stat-meta">overdue payments</div>
+          </div>
+
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Collected</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><IndianRupee className="w-4 h-4 text-emerald-600" /></div>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><IndianRupee className="w-4 h-4 text-blue-700" /></div>
             </div>
-            <div className="emp-dash__stat-value text-emerald-600">{inr(metrics.totalCollected)}</div>
-            <div className="emp-dash__stat-meta">{metrics.collectionRate}% of {inr(metrics.totalBilled)} billed</div>
-            <div className="mt-2 pt-2 border-t border-gray-100 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] font-semibold">
-              <span className="text-emerald-700">Cash: {inr(metrics.cashRevenue)}</span>
-              <span className="text-indigo-700">Online: {inr(metrics.onlineRevenue)}</span>
-              {metrics.cardRevenue > 0 && <span className="text-cyan-700">Card: {inr(metrics.cardRevenue)}</span>}
-              {metrics.insuranceRevenue > 0 && <span className="text-purple-700">Insurance: {inr(metrics.insuranceRevenue)}</span>}
-              <span className="text-red-600">Due: {inr(metrics.dueAmount)}</span>
+            <div className="emp-dash__stat-value text-blue-700">{inr(categoryRevenue.grandTotal)}</div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[9px] font-bold leading-tight">
+              <span className="text-blue-700 whitespace-nowrap">Clinic: {inr(categoryRevenue.clinic.total)}</span>
+              <span className="text-purple-700 whitespace-nowrap">Lab: {inr(categoryRevenue.lab.total)}</span>
+              <span className="text-green-700 whitespace-nowrap">Pharmacy: {inr(categoryRevenue.pharmacy.total)}</span>
             </div>
-          </div>
-          <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Due Amount</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--late"><Clock className="w-4 h-4 text-amber-600" /></div>
-            </div>
-            <div className="emp-dash__stat-value text-amber-600">{inr(metrics.dueAmount)}</div>
-            <div className="emp-dash__stat-meta">{metrics.bookingPendingCount + metrics.bookingPartialCount} bookings pending</div>
-          </div>
-          <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Avg Fee / Booking</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><TrendingUp className="w-4 h-4 text-indigo-600" /></div>
-            </div>
-            <div className="emp-dash__stat-value text-indigo-600">{inr(metrics.avgFee)}</div>
-            <div className="emp-dash__stat-meta">average total payable</div>
           </div>
         </div>
 
-        {/* ══════════ PAYMENT COLLECTION SUMMARY (Cash / Online / Card / Insurance / Due) ══════════ */}
+        {/* ══════════ REVENUE BREAKDOWN (FootFall wala — OpManagement style) ══════════ */}
         <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-emerald-50 to-indigo-50 border-b border-gray-200">
+          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
             <div className="flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Payment Collection</h3>
-              <span className="text-[10px] text-gray-500">(based on current filters)</span>
+              <Wallet className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Revenue Breakdown</h3>
+              <span className="text-xs text-gray-500">(based on current filters)</span>
             </div>
-            <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
-              {metrics.collectionRate}% collected
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-indigo-700 bg-white px-3 py-1 rounded-full border border-indigo-200">
+                {filteredPatients.length} patients
+              </span>
+              <button
+                onClick={() => setShowRevenueBreakdown(!showRevenueBreakdown)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 shadow-sm transition-colors">
+                {showRevenueBreakdown ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                {showRevenueBreakdown ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 p-3">
-            {collectionCards.map((c) => (
-              <div key={c.key} className={`rounded-lg p-3 border ${c.box}`}>
-                <div className={`flex items-center justify-between text-[10px] font-bold uppercase ${c.sub}`}>
-                  <span>{c.label}</span>
-                  <span className={`w-6 h-6 rounded-md flex items-center justify-center ${c.iconBg}`}>
-                    <c.Icon className={`w-3.5 h-3.5 ${c.icon}`} />
-                  </span>
+          {showRevenueBreakdown && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3">
+
+              {/* Clinic Revenue */}
+              <div className="rounded-lg p-4 border border-blue-200 bg-blue-50 min-h-[115px] flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase">
+                    <Stethoscope className="w-3 h-3" /> Clinic Revenue
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] font-bold text-blue-600 leading-tight">FootFall: {categoryRevenue.clinic.footFall}</span>
+                    <span className="text-xl font-extrabold text-blue-800">{inr(categoryRevenue.clinic.total)}</span>
+                  </div>
                 </div>
-                <div className={`text-lg font-extrabold mt-1 ${c.text}`}>{inr(c.amount)}</div>
-                <div className={`text-[10px] font-semibold ${c.sub}`}>{c.count} bookings</div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
+                  <span className="text-emerald-700 whitespace-nowrap">Cash: {inr(categoryRevenue.clinic.cash)}</span>
+                  <span className="text-cyan-700 whitespace-nowrap">Online: {inr(categoryRevenue.clinic.online)}</span>
+                  <span className="text-red-600 whitespace-nowrap">Due: {inr(categoryRevenue.clinic.due)}</span>
+                </div>
               </div>
-            ))}
 
-            {/* TOTAL COLLECTED */}
-            <div className="rounded-lg p-3 border border-slate-300 bg-slate-50">
-              <div className="flex items-center justify-between text-[10px] font-bold uppercase text-slate-600">
-                <span>Total Collected</span>
-                <span className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-200">
-                  <IndianRupee className="w-3.5 h-3.5 text-slate-700" />
-                </span>
+              {/* Lab Revenue */}
+              <div className="rounded-lg p-4 border border-purple-200 bg-purple-50 min-h-[115px] flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-purple-700 uppercase">
+                    <FlaskConical className="w-3 h-3" /> Lab Revenue
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] font-bold text-purple-600 leading-tight">FootFall: {categoryRevenue.lab.footFall}</span>
+                    <span className="text-xl font-extrabold text-purple-800">{inr(categoryRevenue.lab.total)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
+                  <span className="text-emerald-700 whitespace-nowrap">Cash: {inr(categoryRevenue.lab.cash)}</span>
+                  <span className="text-cyan-700 whitespace-nowrap">Online: {inr(categoryRevenue.lab.online)}</span>
+                  <span className="text-red-600 whitespace-nowrap">Due: {inr(categoryRevenue.lab.due)}</span>
+                </div>
               </div>
-              <div className="text-lg font-extrabold mt-1 text-slate-900">{inr(metrics.totalCollected)}</div>
-              <div className="text-[10px] font-semibold text-slate-500">{metrics.bookingPaidCount} paid · {metrics.bookingPartialCount} partial</div>
-            </div>
 
-            {/* DUE */}
-            <div className="rounded-lg p-3 border border-red-200 bg-red-50">
-              <div className="flex items-center justify-between text-[10px] font-bold uppercase text-red-600">
-                <span>Due</span>
-                <span className="w-6 h-6 rounded-md flex items-center justify-center bg-red-100">
-                  <AlertCircle className="w-3.5 h-3.5 text-red-600" />
-                </span>
+              {/* Pharmacy Revenue */}
+              <div className="rounded-lg p-4 border border-green-200 bg-green-50 min-h-[115px] flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-green-700 uppercase">
+                    <Pill className="w-3 h-3" /> Pharmacy Revenue
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] font-bold text-green-600 leading-tight">FootFall: {categoryRevenue.pharmacy.footFall}</span>
+                    <span className="text-xl font-extrabold text-green-800">{inr(categoryRevenue.pharmacy.total)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
+                  <span className="text-emerald-700 whitespace-nowrap">Cash: {inr(categoryRevenue.pharmacy.cash)}</span>
+                  <span className="text-cyan-700 whitespace-nowrap">Online: {inr(categoryRevenue.pharmacy.online)}</span>
+                  <span className="text-red-600 whitespace-nowrap">Due: {inr(categoryRevenue.pharmacy.due)}</span>
+                </div>
               </div>
-              <div className="text-lg font-extrabold mt-1 text-red-700">{inr(metrics.dueAmount)}</div>
-              <div className="text-[10px] font-semibold text-red-500">{metrics.bookingPendingCount + metrics.bookingPartialCount} bookings</div>
-            </div>
-          </div>
 
-          {/* Collected vs Due progress */}
-          <div className="px-4 pb-3">
-            <div className="flex items-center justify-between text-[10px] font-semibold text-gray-500 mb-1">
-              <span>Collected {inr(metrics.totalCollected)}</span>
-              <span>Billed {inr(metrics.totalBilled)}</span>
-            </div>
-            <div className="w-full h-2 rounded-full bg-red-100 overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 rounded-full transition-all"
-                style={{ width: `${Math.min(100, metrics.collectionRate)}%` }}
-              />
-            </div>
-          </div>
-        </div>
+              {/* Total Collected */}
+              <div className="rounded-lg p-4 border border-slate-300 bg-slate-50 min-h-[115px] flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase">
+                    <IndianRupee className="w-3 h-3" /> Total Collected
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] font-bold text-slate-600 leading-tight">FootFall: {categoryRevenue.grandFootFall}</span>
+                    <span className="text-xl font-extrabold text-slate-900">{inr(categoryRevenue.grandTotal)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
+                  <span className="text-blue-700 whitespace-nowrap">Clinic: {inr(categoryRevenue.clinic.total)}</span>
+                  <span className="text-purple-700 whitespace-nowrap">Lab: {inr(categoryRevenue.lab.total)}</span>
+                  <span className="text-green-700 whitespace-nowrap">Pharmacy: {inr(categoryRevenue.pharmacy.total)}</span>
+                </div>
+              </div>
 
-        {/* ══════════ KPI ROW 2 ══════════ */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-          <div className="emp-dash__stat border-amber-200 bg-amber-50/40">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label text-amber-700">Offers Applied</span>
-              <div className="emp-dash__stat-icon bg-amber-100"><Gift className="w-4 h-4 text-amber-600" /></div>
             </div>
-            <div className="emp-dash__stat-value text-amber-700">{metrics.bookingsWithOfferCount}</div>
-            <div className="emp-dash__stat-meta text-amber-600">− {inr(metrics.totalOfferDeduction)}</div>
-          </div>
-          <div className="emp-dash__stat border-emerald-200 bg-emerald-50/40">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label text-emerald-700">Reviews Done</span>
-              <div className="emp-dash__stat-icon bg-emerald-100"><Star className="w-4 h-4 text-emerald-600" /></div>
-            </div>
-            <div className="emp-dash__stat-value text-emerald-700">{metrics.reviewedBookingsCount}</div>
-            <div className="emp-dash__stat-meta text-emerald-600">{metrics.totalReviewServices} services</div>
-          </div>
-          <div className="emp-dash__stat border-green-200 bg-green-50/40">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label text-green-700">Paid Bookings</span>
-              <div className="emp-dash__stat-icon bg-green-100"><CheckCircle2 className="w-4 h-4 text-green-600" /></div>
-            </div>
-            <div className="emp-dash__stat-value text-green-700">{metrics.bookingPaidCount}</div>
-            <div className="emp-dash__stat-meta text-green-600">fully paid</div>
-          </div>
-          <div className="emp-dash__stat border-red-200 bg-red-50/40">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label text-red-700">Partial / Pending</span>
-              <div className="emp-dash__stat-icon bg-red-100"><AlertCircle className="w-4 h-4 text-red-600" /></div>
-            </div>
-            <div className="emp-dash__stat-value text-red-700">{metrics.bookingPartialCount + metrics.bookingPendingCount}</div>
-            <div className="emp-dash__stat-meta text-red-600">{metrics.bookingPartialCount} partial · {metrics.bookingPendingCount} pending</div>
-          </div>
-        </div>
-
-        {/* ══════════ REVENUE BREAKDOWN (service-wise) ══════════ */}
-        <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <IndianRupee className="w-4 h-4 text-indigo-600" />
-              <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Revenue Breakdown</h3>
-              <span className="text-[10px] text-gray-500">(service-wise · based on filters)</span>
-            </div>
-            <span className="text-[10px] font-bold text-indigo-700 bg-white px-2 py-0.5 rounded-full border border-indigo-200">
-              {filteredBookings.length} bookings
-            </span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-3">
-            <div className="rounded-lg p-2.5 border border-blue-200 bg-blue-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-blue-700 uppercase"><Stethoscope className="w-3 h-3" /> Clinic</div>
-              <div className="text-sm font-extrabold text-blue-800 mt-0.5">{inr(metrics.totalClinic)}</div>
-            </div>
-            <div className="rounded-lg p-2.5 border border-purple-200 bg-purple-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-purple-700 uppercase"><FlaskConical className="w-3 h-3" /> Lab</div>
-              <div className="text-sm font-extrabold text-purple-800 mt-0.5">{inr(metrics.totalLab)}</div>
-            </div>
-            <div className="rounded-lg p-2.5 border border-green-200 bg-green-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-green-700 uppercase"><Pill className="w-3 h-3" /> Pharmacy</div>
-              <div className="text-sm font-extrabold text-green-800 mt-0.5">{inr(metrics.totalPharmacy)}</div>
-            </div>
-            <div className="rounded-lg p-2.5 border border-slate-300 bg-slate-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-slate-700 uppercase"><IndianRupee className="w-3 h-3" /> Total Billed</div>
-              <div className="text-sm font-extrabold text-slate-900 mt-0.5">{inr(metrics.totalBilled)}</div>
-              <div className="text-[9px] font-semibold text-red-600 mt-0.5">Due: {inr(metrics.dueAmount)}</div>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* ══════════ CHARTS ROW 1 ══════════ */}
@@ -1234,9 +1298,9 @@ const OpDashboard = () => {
               </ResponsiveContainer>
             </div>
             <div className="flex justify-around pt-2 text-xs border-t border-gray-100 mt-2">
-              <div className="text-center"><span className="text-emerald-600 font-bold block text-sm">{metrics.bookingPaidCount}</span><span className="text-gray-500 text-[11px]">Paid</span></div>
-              <div className="text-center"><span className="text-amber-600 font-bold block text-sm">{metrics.bookingPartialCount}</span><span className="text-gray-500 text-[11px]">Partial</span></div>
-              <div className="text-center"><span className="text-red-600 font-bold block text-sm">{metrics.bookingPendingCount}</span><span className="text-gray-500 text-[11px]">Pending</span></div>
+              <div className="text-center"><span className="text-emerald-600 font-bold block text-sm">{stats.paid}</span><span className="text-gray-500 text-[11px]">Paid</span></div>
+              <div className="text-center"><span className="text-amber-600 font-bold block text-sm">{stats.partial}</span><span className="text-gray-500 text-[11px]">Partial</span></div>
+              <div className="text-center"><span className="text-red-600 font-bold block text-sm">{stats.pending + stats.due}</span><span className="text-gray-500 text-[11px]">Pending</span></div>
             </div>
           </div>
 

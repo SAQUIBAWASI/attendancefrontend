@@ -7,6 +7,7 @@ import {
   FaPlus,
   FaCheck,
   FaTrash,
+  FaEdit,
   FaTable,
   FaThLarge,
   FaBuilding,
@@ -191,33 +192,45 @@ const MiniMonthCalendar = ({
 // =========================================================================
 // TABLE RECORD CALENDAR CELL (Renders Month Tabs for Selected Months Only)
 // =========================================================================
-const RecordCalendarCell = ({ record, filterMonth, calculateDatesFn, onEnlarge, formatMonthLabel }) => {
+const RecordCalendarCell = ({ record, filterMonth, filterDate, calculateDatesFn, onEnlarge, formatMonthLabel }) => {
   const hasSpecificMonths = Array.isArray(record.selectedMonths) && record.selectedMonths.length > 0;
 
   // Decide initial active month for this row's calendar:
-  // 1. If filterMonth is set and is one of the record's selected months, show filterMonth.
-  // 2. If record has specific months, show record.selectedMonths[0].
-  // 3. Otherwise show filterMonth or current month.
   const defaultMonth = useMemo(() => {
     if (hasSpecificMonths) {
-      if (filterMonth && record.selectedMonths.includes(filterMonth)) {
+      if (filterMonth && filterMonth !== 'all' && record.selectedMonths.includes(filterMonth)) {
         return filterMonth;
       }
       return record.selectedMonths[0];
     }
-    return filterMonth || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    return (filterMonth && filterMonth !== 'all')
+      ? filterMonth
+      : `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
   }, [record, filterMonth, hasSpecificMonths]);
 
   const [activeMonth, setActiveMonth] = useState(defaultMonth);
+  const [showCalendarView, setShowCalendarView] = useState(false);
 
-  // Sync if filterMonth changes and matches
+  // Sync if filterMonth changes
   useEffect(() => {
-    if (hasSpecificMonths && filterMonth && record.selectedMonths.includes(filterMonth)) {
-      setActiveMonth(filterMonth);
+    if (filterMonth && filterMonth !== 'all') {
+      if (!hasSpecificMonths || record.selectedMonths.includes(filterMonth)) {
+        setActiveMonth(filterMonth);
+      }
     } else if (hasSpecificMonths && !record.selectedMonths.includes(activeMonth)) {
       setActiveMonth(record.selectedMonths[0]);
     }
   }, [filterMonth, hasSpecificMonths, record.selectedMonths]);
+
+  // If filterDate is selected, sync activeMonth to that date's month
+  useEffect(() => {
+    if (filterDate && filterDate.length >= 7) {
+      const dateMonth = filterDate.slice(0, 7);
+      if (!hasSpecificMonths || record.selectedMonths.includes(dateMonth)) {
+        setActiveMonth(dateMonth);
+      }
+    }
+  }, [filterDate, hasSpecificMonths, record.selectedMonths]);
 
   const calculatedDates = useMemo(() => {
     return calculateDatesFn(record, activeMonth);
@@ -226,10 +239,10 @@ const RecordCalendarCell = ({ record, filterMonth, calculateDatesFn, onEnlarge, 
   const isInactive = hasSpecificMonths && !record.selectedMonths.includes(activeMonth);
 
   return (
-    <div className="flex flex-col items-center justify-center py-1">
+    <div className="flex flex-col items-center justify-center py-1 w-full max-w-[280px] mx-auto text-left">
       {/* If record has multiple selected months, show 1-click month tabs */}
       {hasSpecificMonths && record.selectedMonths.length > 1 && (
-        <div className="flex flex-wrap gap-1 mb-1.5 justify-center max-w-[210px]">
+        <div className="flex flex-wrap gap-1 mb-1.5 justify-center max-w-[270px]">
           {record.selectedMonths.map(m => (
             <button
               key={m}
@@ -258,16 +271,83 @@ const RecordCalendarCell = ({ record, filterMonth, calculateDatesFn, onEnlarge, 
         </div>
       )}
 
-      {/* Mini Calendar Widget */}
-      <MiniMonthCalendar
-        monthStr={activeMonth}
-        calculatedDates={calculatedDates}
-        specificDates={record.specificDates || []}
-        onEnlarge={() => onEnlarge(record, activeMonth)}
-        showTitle={true}
-        interactive={true}
-        isInactiveMonth={isInactive}
-      />
+      {/* Monthly-Wise Dates List Container */}
+      <div className="w-full bg-slate-50/90 rounded-xl p-2.5 border border-slate-200 shadow-2xs">
+        <div className="flex items-center justify-between gap-1 mb-1.5 pb-1 border-b border-slate-200">
+          <span className="text-[11px] font-bold text-indigo-700 flex items-center gap-1">
+            <FaCalendarAlt className="text-[10px]" />
+            {formatMonthLabel(activeMonth)}
+          </span>
+          <span className="px-1.5 py-0.2 text-[9px] font-bold text-emerald-800 bg-emerald-100 rounded-full border border-emerald-200">
+            {calculatedDates.length} Days Off
+          </span>
+        </div>
+
+        {/* Date chips listed monthly-wise */}
+        {calculatedDates.length > 0 ? (
+          <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-0.5">
+            {calculatedDates.map(d => {
+              const dateObj = new Date(d + 'T00:00:00');
+              const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+              const dayNum = String(dateObj.getDate()).padStart(2, '0');
+              const isMatch = filterDate === d;
+              return (
+                <span
+                  key={d}
+                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-all ${
+                    isMatch
+                      ? 'bg-amber-400 text-slate-900 border-amber-500 ring-2 ring-amber-300 font-bold scale-105'
+                      : 'bg-white text-slate-700 border-slate-200 shadow-2xs'
+                  }`}
+                  title={`${d} (${dayName})`}
+                >
+                  <span className="font-bold">{dayNum}</span>
+                  <span className="text-[9px] text-slate-500 font-normal">({dayName})</span>
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-[10px] text-slate-400 italic py-1 text-center">
+            No week-off dates for this month
+          </div>
+        )}
+
+        {/* Toggle Calendar View */}
+        <div className="mt-2 pt-1 border-t border-slate-200/80 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setShowCalendarView(!showCalendarView)}
+            className="text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
+          >
+            <span>{showCalendarView ? 'Hide Calendar' : 'Show Calendar'}</span>
+            <span>{showCalendarView ? '▴' : '▾'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onEnlarge(record, activeMonth)}
+            className="text-[10px] text-slate-400 hover:text-indigo-600 p-0.5 rounded"
+            title="Enlarge Full Calendar"
+          >
+            <FaExpandAlt className="text-[9px]" />
+          </button>
+        </div>
+
+        {/* Mini Calendar Widget (Collapsible) */}
+        {showCalendarView && (
+          <div className="mt-2 pt-2 border-t border-slate-200 flex justify-center">
+            <MiniMonthCalendar
+              monthStr={activeMonth}
+              calculatedDates={calculatedDates}
+              specificDates={record.specificDates || []}
+              onEnlarge={() => onEnlarge(record, activeMonth)}
+              showTitle={false}
+              interactive={true}
+              isInactiveMonth={isInactive}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -628,10 +708,8 @@ export default function WeekOff() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
   const [filterMode, setFilterMode] = useState('all'); // 'all', 'weekly', 'weekwise'
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  });
+  const [selectedMonth, setSelectedMonth] = useState('all');
+  const [filterDate, setFilterDate] = useState('');
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const departmentFilterRef = useRef(null);
@@ -652,6 +730,7 @@ export default function WeekOff() {
 
   // Modal states
   const [showWeekOffModal, setShowWeekOffModal] = useState(false);
+  const [editingRecordId, setEditingRecordId] = useState(null);
   const [weekOffSubmitting, setWeekOffSubmitting] = useState(false);
   const [modalActiveTab, setModalActiveTab] = useState(1); // 1: Audience, 2: Pattern, 3: Overrides/Months
   const [weekOffDateInput, setWeekOffDateInput] = useState('');
@@ -798,6 +877,27 @@ export default function WeekOff() {
     return Array.from(depts).sort();
   }, [allEmployees]);
 
+  // Available Months for dropdown (past 2 months to next 5 months + all months in records)
+  const availableMonths = useMemo(() => {
+    const monthsSet = new Set();
+    const now = new Date();
+    for (let i = -2; i <= 6; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      monthsSet.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
+    weekOffRecords.forEach(r => {
+      if (Array.isArray(r.selectedMonths)) {
+        r.selectedMonths.forEach(m => monthsSet.add(m));
+      }
+      if (Array.isArray(r.specificDates)) {
+        r.specificDates.forEach(d => {
+          if (d && d.length >= 7) monthsSet.add(d.slice(0, 7));
+        });
+      }
+    });
+    return Array.from(monthsSet).sort();
+  }, [weekOffRecords]);
+
   // Format month helper: "2026-09" => "Sep 2026"
   const formatMonthLabel = (monthValue) => {
     if (!monthValue) return '';
@@ -915,7 +1015,7 @@ export default function WeekOff() {
     return Array.from(new Set(calculatedDates)).sort();
   };
 
-  // Filter records based on search, department, pattern mode
+  // Filter records based on search, department, pattern mode, month, and date
   const filteredRecords = useMemo(() => {
     return weekOffRecords.filter(rec => {
       // 1. Pattern Mode filter
@@ -935,7 +1035,26 @@ export default function WeekOff() {
         }
       }
 
-      // 3. Search query
+      // 3. Month filter
+      if (selectedMonth && selectedMonth !== 'all') {
+        const hasSpecificMonths = Array.isArray(rec.selectedMonths) && rec.selectedMonths.length > 0;
+        if (hasSpecificMonths && !rec.selectedMonths.includes(selectedMonth)) {
+          const hasSpecificInMonth = Array.isArray(rec.specificDates) && rec.specificDates.some(d => d.startsWith(selectedMonth));
+          if (!hasSpecificInMonth) return false;
+        }
+        const calculated = calculateDatesFromPattern(rec, selectedMonth);
+        if (calculated.length === 0) return false;
+      }
+
+      // 4. Specific Date filter (e.g. '2026-10-04')
+      if (filterDate) {
+        const dateMonth = filterDate.slice(0, 7);
+        const calculated = calculateDatesFromPattern(rec, dateMonth);
+        const isOffOnDate = calculated.includes(filterDate) || (Array.isArray(rec.specificDates) && rec.specificDates.includes(filterDate));
+        if (!isOffOnDate) return false;
+      }
+
+      // 5. Search query
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase().trim();
         const matchesScope = rec.selectAllEmployees && 'all company employees'.includes(query);
@@ -949,15 +1068,18 @@ export default function WeekOff() {
           `week ${item.week} ${item.day}`.toLowerCase().includes(query)
         );
         const matchesMode = (rec.selectionMode || 'weekly').toLowerCase().includes(query);
+        const matchesMonth = (rec.selectedMonths || []).some(m =>
+          formatMonthLabel(m).toLowerCase().includes(query) || m.includes(query)
+        );
 
-        if (!matchesScope && !matchesEmp && !matchesPatternDays && !matchesWeekwise && !matchesMode) {
+        if (!matchesScope && !matchesEmp && !matchesPatternDays && !matchesWeekwise && !matchesMode && !matchesMonth) {
           return false;
         }
       }
 
       return true;
     });
-  }, [weekOffRecords, filterMode, filterDepartment, searchTerm]);
+  }, [weekOffRecords, filterMode, filterDepartment, searchTerm, selectedMonth, filterDate]);
 
   // KPI summary statistics
   const stats = useMemo(() => {
@@ -1015,15 +1137,17 @@ export default function WeekOff() {
     setSearchTerm('');
     setFilterDepartment('');
     setFilterMode('all');
-    const now = new Date();
-    setSelectedMonth(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+    setSelectedMonth('all');
+    setFilterDate('');
     setCurrentPage(1);
   };
 
   const isAnyFilterActive = Boolean(
     searchTerm ||
     filterDepartment ||
-    filterMode !== 'all'
+    filterMode !== 'all' ||
+    (selectedMonth && selectedMonth !== 'all') ||
+    filterDate
   );
 
   // Open Full Calendar Modal
@@ -1043,8 +1167,9 @@ export default function WeekOff() {
     });
   };
 
-  // Modal open handler
+  // Modal open handler (Create)
   const openWeekOffModal = () => {
+    setEditingRecordId(null);
     setWeekOffForm({
       selectedEmployees: [],
       weekOffDays: ['Sunday'],
@@ -1054,6 +1179,27 @@ export default function WeekOff() {
       selectionMode: 'weekly',
       weekwiseSelection: [],
       monthlyPattern: []
+    });
+    setWeekOffDateInput('');
+    setWeekOffEmpSearch('');
+    setModalDepartmentFilter('');
+    setModalActiveTab(1);
+    setShowWeekOffModal(true);
+  };
+
+  // Modal open handler (Edit / Update)
+  const handleEditWeekOff = (record) => {
+    if (!record) return;
+    setEditingRecordId(record._id);
+    setWeekOffForm({
+      selectedEmployees: Array.isArray(record.selectedEmployees) ? record.selectedEmployees : [],
+      weekOffDays: Array.isArray(record.weekOffDays) ? record.weekOffDays : ['Sunday'],
+      specificDates: Array.isArray(record.specificDates) ? record.specificDates : [],
+      selectAllEmployees: !!record.selectAllEmployees,
+      selectedMonths: Array.isArray(record.selectedMonths) ? record.selectedMonths : [],
+      selectionMode: record.selectionMode || 'weekly',
+      weekwiseSelection: Array.isArray(record.weekwiseSelection) ? record.weekwiseSelection : [],
+      monthlyPattern: Array.isArray(record.monthlyPattern) ? record.monthlyPattern : []
     });
     setWeekOffDateInput('');
     setWeekOffEmpSearch('');
@@ -1232,19 +1378,29 @@ export default function WeekOff() {
         monthlyPattern: []
       };
 
-      const res = await axios.post(`${API_BASE_URL}/shifts/week-off`, payload);
+      let res;
+      if (editingRecordId) {
+        res = await axios.put(`${API_BASE_URL}/shifts/week-off/${editingRecordId}`, payload);
+      } else {
+        res = await axios.post(`${API_BASE_URL}/shifts/week-off`, payload);
+      }
+
       if (res.data.success) {
         const countDesc = weekOffForm.selectAllEmployees
           ? 'all company employees'
           : `${weekOffForm.selectedEmployees.length} employee(s)`;
-        setSuccess(`Week-off policy configured successfully for ${countDesc}.`);
+        setSuccess(editingRecordId
+          ? `Week-off policy updated successfully for ${countDesc}.`
+          : `Week-off policy configured successfully for ${countDesc}.`
+        );
         setShowWeekOffModal(false);
+        setEditingRecordId(null);
         fetchWeekOffRecords();
       } else {
-        setError(res.data.message || 'Failed to save week off policy.');
+        setError(res.data.message || (editingRecordId ? 'Failed to update week off policy.' : 'Failed to save week off policy.'));
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save week off policy.');
+      setError(err.response?.data?.message || (editingRecordId ? 'Failed to update week off policy.' : 'Failed to save week off policy.'));
     } finally {
       setWeekOffSubmitting(false);
     }
@@ -1303,9 +1459,7 @@ export default function WeekOff() {
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Week Off <span>Management</span>
             </h1>
-            <span className="text-xs text-slate-500 font-medium">
-              Configure &amp; track automated weekly and week-wise employee offs
-            </span>
+         
           </div>
 
           {/* Right Side: Filters and Action Button */}
@@ -1396,6 +1550,35 @@ export default function WeekOff() {
               </select>
             </div>
 
+            {/* Month Filter */}
+            <div className="relative">
+              <select
+                value={selectedMonth}
+                onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className={`h-8 pl-7 pr-2.5 py-1 text-xs font-medium border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white shadow-2xs appearance-none ${
+                  selectedMonth !== 'all'
+                    ? 'border-indigo-500 text-indigo-700 bg-indigo-50 font-semibold'
+                    : 'border-gray-300 text-gray-700'
+                }`}
+                style={{ minWidth: '130px' }}
+              >
+                <option value="all">All Months</option>
+                {availableMonths.map((m) => (
+                  <option key={m} value={m}>
+                    {formatMonthLabel(m)}
+                  </option>
+                ))}
+              </select>
+              <FaCalendarAlt
+                className={`absolute left-2 top-1/2 -translate-y-1/2 text-[10px] pointer-events-none ${
+                  selectedMonth !== 'all' ? 'text-indigo-500' : 'text-gray-400'
+                }`}
+              />
+            </div>
+
             {/* Clear Filters Button */}
             {isAnyFilterActive && (
               <button
@@ -1483,6 +1666,30 @@ export default function WeekOff() {
                     <option value="weekwise">Week-wise</option>
                   </select>
                 </div>
+              </div>
+              {/* Month Filter - Mobile */}
+              <div>
+                <label className="block text-[11px] font-semibold text-gray-600 mb-1 flex items-center gap-1">
+                  <FaCalendarAlt className="text-[10px] text-indigo-400" />
+                  Month
+                </label>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => {
+                    setSelectedMonth(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className={`w-full px-2 py-1.5 text-xs border rounded-lg bg-white ${
+                    selectedMonth !== 'all'
+                      ? 'border-indigo-500 text-indigo-700 bg-indigo-50 font-semibold'
+                      : 'border-gray-300 text-gray-700'
+                  }`}
+                >
+                  <option value="all">All Months</option>
+                  {availableMonths.map((m) => (
+                    <option key={m} value={m}>{formatMonthLabel(m)}</option>
+                  ))}
+                </select>
               </div>
               {isAnyFilterActive && (
                 <button
@@ -1812,14 +2019,24 @@ export default function WeekOff() {
 
                         {/* Actions */}
                         <td className="px-3 py-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteWeekOff(record._id)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete this week-off policy"
-                          >
-                            <FaTrash className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleEditWeekOff(record)}
+                              className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
+                              title="Update / Edit this week-off policy"
+                            >
+                              <FaEdit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteWeekOff(record._id)}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete this week-off policy"
+                            >
+                              <FaTrash className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1858,14 +2075,24 @@ export default function WeekOff() {
                             </p>
                           </div>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteWeekOff(record._id)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete policy"
-                        >
-                          <FaTrash className="w-3 h-3" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleEditWeekOff(record)}
+                            className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Update policy"
+                          >
+                            <FaEdit className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteWeekOff(record._id)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete policy"
+                          >
+                            <FaTrash className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Pattern Badge & Configured Months */}
@@ -2074,10 +2301,12 @@ export default function WeekOff() {
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-gray-900 leading-tight">
-                      Set Week-Off Policy
+                      {editingRecordId ? 'Update Week-Off Policy' : 'Set Week-Off Policy'}
                     </h3>
                     <p className="text-xs text-gray-500">
-                      Configure automated weekly or alternating week-wise days off
+                      {editingRecordId
+                        ? 'Modify existing automated weekly or alternating week-wise days off'
+                        : 'Configure automated weekly or alternating week-wise days off'}
                     </p>
                   </div>
                 </div>
@@ -2731,12 +2960,12 @@ export default function WeekOff() {
                     {weekOffSubmitting ? (
                       <>
                         <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                        <span>Saving Policy...</span>
+                        <span>{editingRecordId ? 'Updating Policy...' : 'Saving Policy...'}</span>
                       </>
                     ) : (
                       <>
                         <FaCheck className="text-xs" />
-                        <span>Save Week-Off Policy</span>
+                        <span>{editingRecordId ? 'Update Week-Off Policy' : 'Save Week-Off Policy'}</span>
                       </>
                     )}
                   </button>

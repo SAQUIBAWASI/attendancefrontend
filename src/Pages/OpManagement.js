@@ -1,4 +1,4 @@
-// OpManagement.js — COMPLETE (Backend-filtered + Time Filter)
+// OpManagement.js — COMPLETE (Backend-filtered + Time Filter + FootFall + Toggle + Filter Collapse + Mobile Welcome Popup + Compact Mobile Form + Calculation Popup)
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -15,6 +15,7 @@ import {
   FaHeartbeat, FaNotesMedical, FaAllergies, FaTint, FaBirthdayCake, FaVenusMars,
   FaEnvelope, FaIdCard, FaStickyNote, FaCommentMedical, FaUserCheck, FaUserClock,
   FaToggleOn, FaToggleOff, FaStar, FaWalking, FaGlobe, FaDownload, FaWhatsapp,
+  FaCalculator,
 } from "react-icons/fa";
 import {
   FiUsers, FiUserCheck, FiClock, FiFilter, FiDownload, FiTrash2, FiPlus,
@@ -87,14 +88,15 @@ const PAYMENT_TYPE_FILTER_OPTIONS = [
   { value: "card", label: "Card" },
 ];
 
+// ✅ All moved to END
 const TIME_FILTER_OPTIONS = [
-  { value: "All", label: "All" },
   { value: "today", label: "Today" },
   { value: "yesterday", label: "Yesterday" },
   { value: "thisWeek", label: "This Week" },
   { value: "thisMonth", label: "This Month" },
   { value: "lastMonth", label: "Last Month" },
   { value: "thisYear", label: "This Year" },
+  { value: "All", label: "All" },
 ];
 
 const DISCOUNT_TYPE_OPTIONS = [
@@ -409,6 +411,7 @@ export default function OpManagement() {
 
   const [bookings, setBookings] = useState([]);
   const [backendStats, setBackendStats] = useState(null);
+  const [categoryBreakdown, setCategoryBreakdown] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [allSlots, setAllSlots] = useState([]);
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -446,10 +449,22 @@ export default function OpManagement() {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [apptFromDate, setApptFromDate] = useState("");
   const [apptToDate, setApptToDate] = useState("");
-  const [timeFilter, setTimeFilter] = useState("All"); // ✅ NEW
+  const [timeFilter, setTimeFilter] = useState("All");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeCardFilter, setActiveCardFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
+
+  // ✅ NEW — Show/Hide toggles
+  const [showFilters, setShowFilters] = useState(false);
+  const [showRevenueBreakdown, setShowRevenueBreakdown] = useState(true);
+
+  // ✅ NEW — Mobile Welcome Popup
+  const [showMobileWelcome, setShowMobileWelcome] = useState(false);
+
+  // ✅ NEW — Filter Calculation Popup
+  const [showCalculationPopup, setShowCalculationPopup] = useState(false);
+  const [calculationData, setCalculationData] = useState(null);
+  const [userClosedCalcPopup, setUserClosedCalcPopup] = useState(false);
 
   const [toast, setToast] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -545,6 +560,23 @@ export default function OpManagement() {
     (selectedMonth && selectedMonth !== "") ||
     (timeFilter && timeFilter !== "All") ||
     revenueCategoryFilter !== "All" || paymentTypeFilter !== "All";
+
+  // ✅ Mobile Welcome Popup — show on first mount in mobile view
+  useEffect(() => {
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      setShowMobileWelcome(true);
+    }
+  }, []);
+
+  const handleMobileWelcomeChoice = (choice) => {
+    setShowMobileWelcome(false);
+    if (choice === "register") {
+      setTimeout(() => {
+        handleAddNewPatient();
+      }, 200);
+    }
+  };
 
   const openClinicServicesModal = (booking) => {
     if (!booking) return;
@@ -750,7 +782,6 @@ export default function OpManagement() {
     setFormData((prev) => ({ ...prev, appointmentDate: today }));
   }, []);
 
-  // ✅ REFETCH when filters change
   useEffect(() => {
     fetchBookings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -760,6 +791,69 @@ export default function OpManagement() {
     doctorFilter, paymentTypeFilter, statusFilter,
     bookingTypeFilter, revenueCategoryFilter, searchQuery
   ]);
+
+// ✅ Auto-show Calculation Popup when Time + Revenue Category both specific
+useEffect(() => {
+  const isSpecificTimeFilter = timeFilter && timeFilter !== "All";
+  const isSpecificRevenueFilter = revenueCategoryFilter !== "All";
+
+  if (isSpecificTimeFilter && isSpecificRevenueFilter && bookings.length > 0) {
+    const details = bookings
+      .map((b) => {
+        const bd = getAmountBreakdown(b);
+        const pi = getBookingPaidInfo(b);
+        const mode = (b.paymentType || "cash").toString().toLowerCase();
+        const catTotal = (Number(bd.clinic) || 0) + (Number(bd.lab) || 0) + (Number(bd.pharmacy) || 0);
+        const catAmount = Number(bd[revenueCategoryFilter]) || 0;
+        const ratio = catTotal > 0 ? catAmount / catTotal : 0;
+        const catPaid = pi.paid * ratio;
+        const catDue = pi.balance * ratio;
+
+        return {
+          bookingId: b._id,
+          patientName: b.patientName || "N/A",
+          patientPhone: b.patientPhone || "",
+          doctorName: b.doctorName || "",
+          date: b.appointmentDate || b.date || "",
+          paymentType: mode,
+          clinic: Number(bd.clinic) || 0,
+          lab: Number(bd.lab) || 0,
+          pharmacy: Number(bd.pharmacy) || 0,
+          categoryAmount: catAmount,
+          categoryPaid: catPaid,
+          categoryDue: catDue,
+          cash: mode === "cash" ? catPaid : 0,
+          online: mode === "online" ? catPaid : 0,
+          card: mode === "card" ? catPaid : 0,
+          insurance: mode === "insurance" ? catPaid : 0,
+        };
+      })
+      .filter((d) => d.categoryAmount > 0);
+
+    const sum = (key) => details.reduce((s, d) => s + (d[key] || 0), 0);
+
+    setCalculationData({
+      timeFilter,
+      revenueCategory: revenueCategoryFilter,
+      bookings: details,
+      total: sum("categoryAmount"),
+      totalPaid: sum("categoryPaid"),
+      totalDue: sum("categoryDue"),
+      cash: sum("cash"),
+      online: sum("online"),
+      card: sum("card"),
+      insurance: sum("insurance"),
+    });
+    setUserClosedCalcPopup(false);
+    setShowCalculationPopup(true);
+  } else {
+    setShowCalculationPopup(false);
+    setCalculationData(null);
+    setUserClosedCalcPopup(false);
+  }
+}, [bookings, timeFilter, revenueCategoryFilter]);
+
+
 
   useEffect(() => {
     if (location.state?.openAddPatient) {
@@ -805,7 +899,6 @@ export default function OpManagement() {
     fetchReferralContacts();
   };
 
-  // ✅ FETCH BOOKINGS — with backend filters
   const fetchBookings = async () => {
     setLoading(true);
     try {
@@ -830,6 +923,7 @@ export default function OpManagement() {
       if (res.data?.success) {
         bookingsData = res.data.bookings || res.data.data || [];
         if (res.data.stats) setBackendStats(res.data.stats);
+        if (res.data.categoryBreakdown) setCategoryBreakdown(res.data.categoryBreakdown);
       } else if (Array.isArray(res.data)) {
         bookingsData = res.data;
       }
@@ -946,6 +1040,7 @@ export default function OpManagement() {
       console.error("Error fetching bookings:", error);
       setBookings([]);
       setBackendStats(null);
+      setCategoryBreakdown(null);
     } finally {
       setLoading(false);
     }
@@ -1234,6 +1329,7 @@ export default function OpManagement() {
     else if (name === "dob") handleDobChange(value);
     else if (name === "gender") handleGenderChange(value);
     else if (name === "title") handleTitleChange(value);
+    else if (name === "name") setFormData((prev) => ({ ...prev, name: value.toUpperCase() }));
     else setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -1374,7 +1470,9 @@ export default function OpManagement() {
     } catch (err) {
       console.error("Error fetching patient data:", err);
       showToast("Failed to fetch patient data", "error");
-    } finally { setHistoryLoading(false); }
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   const handleStatusDropdownToggle = (bookingId, e) => {
@@ -2246,6 +2344,50 @@ export default function OpManagement() {
     };
   }, [backendStats]);
 
+  const categoryRevenue = useMemo(() => {
+    const cb = categoryBreakdown || {};
+    const clinic = cb.clinic || {};
+    const lab = cb.lab || {};
+    const pharmacy = cb.pharmacy || {};
+    return {
+      clinic: {
+        total: Number(clinic.total) || 0,
+        cash: Number(clinic.cash) || 0,
+        online: Number(clinic.online) || 0,
+        card: Number(clinic.card) || 0,
+        insurance: Number(clinic.insurance) || 0,
+        due: Number(clinic.due) || 0,
+        footFall: Number(clinic.footFall) || 0,
+      },
+      lab: {
+        total: Number(lab.total) || 0,
+        cash: Number(lab.cash) || 0,
+        online: Number(lab.online) || 0,
+        card: Number(lab.card) || 0,
+        insurance: Number(lab.insurance) || 0,
+        due: Number(lab.due) || 0,
+        footFall: Number(lab.footFall) || 0,
+      },
+      pharmacy: {
+        total: Number(pharmacy.total) || 0,
+        cash: Number(pharmacy.cash) || 0,
+        online: Number(pharmacy.online) || 0,
+        card: Number(pharmacy.card) || 0,
+        insurance: Number(pharmacy.insurance) || 0,
+        due: Number(pharmacy.due) || 0,
+        footFall: Number(pharmacy.footFall) || 0,
+      },
+      grandTotal:
+        (Number(clinic.total) || 0) +
+        (Number(lab.total) || 0) +
+        (Number(pharmacy.total) || 0),
+      grandFootFall:
+        (Number(clinic.footFall) || 0) +
+        (Number(lab.footFall) || 0) +
+        (Number(pharmacy.footFall) || 0),
+    };
+  }, [categoryBreakdown]);
+
   const formatTime = (dateStr) => !dateStr ? "" : new Date(dateStr).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 
   const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
@@ -2340,6 +2482,8 @@ export default function OpManagement() {
 
   const isEditMode = Boolean(editingId);
 
+  const fmt = (n) => `₹${Math.round(Number(n) || 0).toLocaleString("en-IN")}`;
+
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
@@ -2350,85 +2494,163 @@ export default function OpManagement() {
           </div>
         )}
 
-        {/* Header Desktop */}
-        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-6">
-          <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">OP <span>Management</span></h1>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative min-w-[130px]">
-              <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-              <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[200px] pl-8 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-            </div>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
-              <option value="All">All Payment</option><option value="Pending">Pending</option><option value="Partial">Partial</option><option value="Paid">Paid</option><option value="Due">Due</option>
-            </select>
-            <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
-              {BOOKING_TYPE_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
-            </select>
-            <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg max-w-[130px] truncate">
-              <option value="All">All Doctors</option>
-              {getUniqueDoctors().map((doc) => <option key={doc.name} value={doc.name}>{doc.name}</option>)}
-            </select>
-
-            <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)}
-              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg" title="Filter by revenue type">
-              {REVENUE_CATEGORY_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
-            </select>
-
-            <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)}
-              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg" title="Filter by payment mode">
-              {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
-            </select>
-
-            {/* ✅ TIME FILTER — Quick Buttons */}
-            <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200">
-              {TIME_FILTER_OPTIONS.map((opt) => (
+        {/* ✅ Mobile Welcome Popup */}
+        {showMobileWelcome && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 lg:hidden">
+            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-4 text-white">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <FaUserInjured className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base">Welcome to OP Management</h3>
+                    <p className="text-xs text-blue-100">What would you like to do?</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-5 space-y-3">
                 <button
-                  key={opt.value}
-                  onClick={() => handleTimeFilterChange(opt.value)}
-                  className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all whitespace-nowrap ${
-                    timeFilter === opt.value
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-gray-600 hover:bg-white hover:text-gray-900"
-                  }`}
-                  title={opt.label}
+                  onClick={() => handleMobileWelcomeChoice("register")}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 bg-emerald-50 border-2 border-emerald-200 rounded-xl hover:bg-emerald-100 hover:border-emerald-400 transition-all text-left group"
                 >
-                  {opt.label}
+                  <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+                    <FaPlus className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold text-emerald-800 text-sm">New OP Register</div>
+                    <div className="text-[11px] text-emerald-600">Register a new patient & book slot</div>
+                  </div>
+                  <FiChevronDown className="w-4 h-4 text-emerald-400 -rotate-90" />
                 </button>
-              ))}
+                <button
+                  onClick={() => handleMobileWelcomeChoice("manage")}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-400 transition-all text-left group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+                    <FiUsers className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold text-blue-800 text-sm">Manage OP</div>
+                    <div className="text-[11px] text-blue-600">View & manage all patient records</div>
+                  </div>
+                  <FiChevronDown className="w-4 h-4 text-blue-400 -rotate-90" />
+                </button>
+              </div>
+              <div className="px-5 pb-5">
+                <p className="text-[10px] text-gray-400 text-center">You can always access these options from the main screen.</p>
+              </div>
             </div>
+          </div>
+        )}
 
-            <div className="flex items-center gap-1 px-2 h-8 border border-gray-300 bg-white rounded-lg">
-              <span className="text-[9px] font-bold text-gray-500 uppercase whitespace-nowrap">Reg:</span>
-              <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Registered from" />
-              <span className="text-gray-400 text-xs">–</span>
-              <input type="date" value={toDate} onChange={handleToDateChange} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Registered to" />
-            </div>
-
-            <div className="flex items-center gap-1 px-2 h-8 border border-gray-300 bg-white rounded-lg">
-              <span className="text-[9px] font-bold text-gray-500 uppercase whitespace-nowrap">Appt:</span>
-              <input type="date" value={apptFromDate} onChange={handleApptFromChange} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Appointment from" />
-              <span className="text-gray-400 text-xs">–</span>
-              <input type="date" value={apptToDate} onChange={handleApptToChange} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Appointment to" />
-            </div>
-
-            <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg" title="Appointment month" />
-            <button onClick={handleAddNewPatient} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">
-              <FiPlus className="w-3 h-3" /> Add Patient
+        {/* ✅ Global Controls Row */}
+        <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-3">
+          <div className="flex items-center gap-3">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">OP <span>Management</span></h1>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 shadow-sm transition-colors"
+              title={showFilters ? "Hide Filters" : "Expand Filters"}
+            >
+              {showFilters ? <FiChevronUp className="w-4 h-4" /> : <FiChevronDown className="w-4 h-4" />}
+              {showFilters ? "Hide Filters" : "Expand Filters"}
             </button>
-            <button onClick={downloadCSV} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-sm">
-              <FiDownload className="w-3 h-3" /> Export CSV
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={handleAddNewPatient} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">
+              <FiPlus className="w-4 h-4" /> Add Patient
             </button>
-            <button onClick={() => handleRoleBasedNavigate("/inactive-patients")} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
-              <FiClock className="w-3 h-3 text-amber-600" /> Inactive Patients
+            <button onClick={downloadCSV} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-sm">
+              <FiDownload className="w-4 h-4" /> Export CSV
             </button>
-            {hasActiveFilters && (
-              <button onClick={clearFilters} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
-                <FiTrash2 className="w-3 h-3 text-red-500" /> Clear
-              </button>
-            )}
+            <button onClick={() => handleRoleBasedNavigate("/inactive-patients")} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
+              <FiClock className="w-4 h-4 text-amber-600" /> Inactive Patients
+            </button>
           </div>
         </div>
+
+        {/* ✅ Main Filters Row */}
+        <div className="hidden lg:flex items-center gap-2.5 flex-wrap mb-3">
+          <div className="relative min-w-[180px]">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+            <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-[220px] pl-9 pr-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg">
+            <option value="All">All Payment</option><option value="Pending">Pending</option><option value="Partial">Partial</option><option value="Paid">Paid</option><option value="Due">Due</option>
+          </select>
+          <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg">
+            {BOOKING_TYPE_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+          </select>
+          <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg max-w-[160px] truncate">
+            <option value="All">All Doctors</option>
+            {getUniqueDoctors().map((doc) => <option key={doc.name} value={doc.name}>{doc.name}</option>)}
+          </select>
+          <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)}
+            className="h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg" title="Filter by revenue type">
+            {REVENUE_CATEGORY_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+          </select>
+          <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)}
+            className="h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg" title="Filter by payment mode">
+            {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+          </select>
+
+          {/* TIME FILTER */}
+          <div className="flex items-center gap-0.5 bg-gray-100 p-1.5 rounded-lg border border-gray-200">
+            {TIME_FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleTimeFilterChange(opt.value)}
+                className={`px-3 py-2 text-xs font-bold rounded-md transition-all whitespace-nowrap ${timeFilter === opt.value
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-gray-600 hover:bg-white hover:text-gray-900"
+                  }`}
+                title={opt.label}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ✅ Calculation button (only when both filters specific) */}
+          {timeFilter !== "All" && revenueCategoryFilter !== "All" && calculationData && (
+            <button
+              onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }}
+              className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+              title="Show Calculation"
+            >
+              <FaCalculator className="w-4 h-4" /> Calculation
+            </button>
+          )}
+
+          {hasActiveFilters && (
+            <button onClick={clearFilters} className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
+              <FiTrash2 className="w-4 h-4 text-red-500" /> Clear
+            </button>
+          )}
+        </div>
+
+        {/* ✅ Expanded Filters Row */}
+        {showFilters && (
+          <div className="hidden lg:flex items-center gap-2.5 flex-wrap mb-6">
+            <div className="flex items-center gap-1.5 px-3 h-11 border border-gray-300 bg-white rounded-lg">
+              <span className="text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Reg:</span>
+              <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-[125px] h-8 px-1 text-xs border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Registered from" />
+              <span className="text-gray-400 text-sm">–</span>
+              <input type="date" value={toDate} onChange={handleToDateChange} className="w-[125px] h-8 px-1 text-xs border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Registered to" />
+            </div>
+
+            <div className="flex items-center gap-1.5 px-3 h-11 border border-gray-300 bg-white rounded-lg">
+              <span className="text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Appt:</span>
+              <input type="date" value={apptFromDate} onChange={handleApptFromChange} className="w-[125px] h-8 px-1 text-xs border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Appointment from" />
+              <span className="text-gray-400 text-sm">–</span>
+              <input type="date" value={apptToDate} onChange={handleApptToChange} className="w-[125px] h-8 px-1 text-xs border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Appointment to" />
+            </div>
+
+            <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-[150px] h-11 px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg" title="Appointment month" />
+          </div>
+        )}
 
         {/* Header Mobile */}
         <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
@@ -2449,23 +2671,30 @@ export default function OpManagement() {
           </div>
         </div>
 
-        {/* Mobile Time Filter Quick Buttons (always visible) */}
         <div className="lg:hidden mb-3">
-          <div className="flex items-center gap-1 overflow-x-auto pb-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
             {TIME_FILTER_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => handleTimeFilterChange(opt.value)}
-                className={`px-2.5 py-1.5 text-[11px] font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${
-                  timeFilter === opt.value
+                className={`px-4 py-2.5 text-xs font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${timeFilter === opt.value
                     ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                     : "bg-white text-gray-600 border-gray-300"
-                }`}
+                  }`}
               >
                 {opt.label}
               </button>
             ))}
           </div>
+          {/* ✅ Calculation button — mobile */}
+          {timeFilter !== "All" && revenueCategoryFilter !== "All" && calculationData && (
+            <button
+              onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }}
+              className="mt-2 flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+            >
+              <FaCalculator className="w-3 h-3" /> Show Calculation
+            </button>
+          )}
         </div>
 
         {/* Mobile Filters */}
@@ -2532,19 +2761,120 @@ export default function OpManagement() {
           )}
         </div>
 
+        {/* ✅ Revenue Breakdown */}
+        <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <FaMoneyBillWave className="text-indigo-600 w-5 h-5" />
+              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Revenue Breakdown</h3>
+              <span className="text-xs text-gray-500">(based on current filters)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-indigo-700 bg-white px-3 py-1 rounded-full border border-indigo-200">
+                {filteredPatients.length} patients
+              </span>
+              {timeFilter !== "All" && revenueCategoryFilter !== "All" && calculationData && (
+                <button
+                  onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 shadow-sm transition-colors"
+                >
+                  <FaCalculator className="w-3.5 h-3.5" /> Calculation
+                </button>
+              )}
+              <button
+                onClick={() => setShowRevenueBreakdown(!showRevenueBreakdown)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 shadow-sm transition-colors"
+              >
+                {showRevenueBreakdown ? <FiChevronUp className="w-3.5 h-3.5" /> : <FiChevronDown className="w-3.5 h-3.5" />}
+                {showRevenueBreakdown ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+
+          {showRevenueBreakdown && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3">
+
+              <div className="rounded-lg p-4 border border-blue-200 bg-blue-50 min-h-[115px] flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase">
+                    <FaClinicMedical className="text-xs" /> Clinic Revenue
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] font-bold text-blue-600 leading-tight">FootFall: {categoryRevenue.clinic.footFall}</span>
+                    <span className="text-xl font-extrabold text-blue-800">{fmt(categoryRevenue.clinic.total)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
+                  <span className="text-emerald-700 whitespace-nowrap">Cash: {fmt(categoryRevenue.clinic.cash)}</span>
+                  <span className="text-cyan-700 whitespace-nowrap">Online: {fmt(categoryRevenue.clinic.online)}</span>
+                  <span className="text-red-600 whitespace-nowrap">Due: {fmt(categoryRevenue.clinic.due)}</span>
+                </div>
+              </div>
+
+              <div className="rounded-lg p-4 border border-purple-200 bg-purple-50 min-h-[115px] flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-purple-700 uppercase">
+                    <FaFlask className="text-xs" /> Lab Revenue
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] font-bold text-purple-600 leading-tight">FootFall: {categoryRevenue.lab.footFall}</span>
+                    <span className="text-xl font-extrabold text-purple-800">{fmt(categoryRevenue.lab.total)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
+                  <span className="text-emerald-700 whitespace-nowrap">Cash: {fmt(categoryRevenue.lab.cash)}</span>
+                  <span className="text-cyan-700 whitespace-nowrap">Online: {fmt(categoryRevenue.lab.online)}</span>
+                  <span className="text-red-600 whitespace-nowrap">Due: {fmt(categoryRevenue.lab.due)}</span>
+                </div>
+              </div>
+
+              <div className="rounded-lg p-4 border border-green-200 bg-green-50 min-h-[115px] flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-green-700 uppercase">
+                    <FaPills className="text-xs" /> Pharmacy Revenue
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] font-bold text-green-600 leading-tight">FootFall: {categoryRevenue.pharmacy.footFall}</span>
+                    <span className="text-xl font-extrabold text-green-800">{fmt(categoryRevenue.pharmacy.total)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
+                  <span className="text-emerald-700 whitespace-nowrap">Cash: {fmt(categoryRevenue.pharmacy.cash)}</span>
+                  <span className="text-cyan-700 whitespace-nowrap">Online: {fmt(categoryRevenue.pharmacy.online)}</span>
+                  <span className="text-red-600 whitespace-nowrap">Due: {fmt(categoryRevenue.pharmacy.due)}</span>
+                </div>
+              </div>
+
+              <div className="rounded-lg p-4 border border-slate-300 bg-slate-50 min-h-[115px] flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase">
+                    <FaRupeeSign className="text-xs" /> Total Collected
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] font-bold text-slate-600 leading-tight">FootFall: {categoryRevenue.grandFootFall}</span>
+                    <span className="text-xl font-extrabold text-slate-900">{fmt(categoryRevenue.grandTotal)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
+                  <span className="text-blue-700 whitespace-nowrap">Clinic: {fmt(categoryRevenue.clinic.total)}</span>
+                  <span className="text-purple-700 whitespace-nowrap">Lab: {fmt(categoryRevenue.lab.total)}</span>
+                  <span className="text-green-700 whitespace-nowrap">Pharmacy: {fmt(categoryRevenue.pharmacy.total)}</span>
+                </div>
+              </div>
+
+            </div>
+          )}
+        </div>
+
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 md:gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-6">
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""}`} onClick={() => handleCardClick("all")}>
-            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Patients</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div></div>
-            <div className="emp-dash__stat-value">{stats.total}</div><div className="emp-dash__stat-meta">all registered OPD</div>
-          </div>
-          <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "active" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("active")}>
-            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Active</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div></div>
-            <div className="emp-dash__stat-value text-emerald-600">{stats.active}</div><div className="emp-dash__stat-meta">active patients</div>
-          </div>
-          <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "inactive" ? "ring-2 ring-red-500/20 border-red-400" : ""}`} onClick={() => handleCardClick("inactive")}>
-            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Inactive</span><div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiUserX /></div></div>
-            <div className="emp-dash__stat-value text-red-500">{stats.inactive}</div><div className="emp-dash__stat-meta">inactive patients</div>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Clinic Patients</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div></div>
+            <div className="emp-dash__stat-value">{stats.total}</div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[10px] font-bold leading-tight">
+              <span className="text-emerald-600 whitespace-nowrap">Active: {stats.active}</span>
+              <span className="text-red-500 whitespace-nowrap">Inactive: {stats.inactive}</span>
+            </div>
           </div>
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "Paid" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("Paid")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Paid</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div></div>
@@ -2562,78 +2892,34 @@ export default function OpManagement() {
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Due</span><div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiXCircle /></div></div>
             <div className="emp-dash__stat-value text-red-500">{stats.due}</div><div className="emp-dash__stat-meta">overdue payments</div>
           </div>
-         <div className="emp-dash__stat">
-  <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Collected</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FaRupeeSign /></div></div>
-  <div className="emp-dash__stat-value text-blue-700">₹{Math.round(revenueSummary.totalCollected || stats.totalRevenue).toLocaleString("en-IN")}</div>
-  {(() => {
-    const f = (n) => `₹${Math.round(Number(n) || 0).toLocaleString("en-IN")}`;
-    return (
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[9px] font-bold leading-tight">
-        <span className="text-emerald-700 whitespace-nowrap">Cash: {f(revenueSummary.cash)}</span>
-        <span className="text-cyan-700 whitespace-nowrap">Online: {f(revenueSummary.online)}</span>
-        {revenueSummary.card > 0 && <span className="text-indigo-700 whitespace-nowrap">Card: {f(revenueSummary.card)}</span>}
-        {revenueSummary.insurance > 0 && <span className="text-purple-700 whitespace-nowrap">Insurance: {f(revenueSummary.insurance)}</span>}
-        <span className="text-red-600 whitespace-nowrap">Due: {f(revenueSummary.totalDue)}</span>
-      </div>
-    );
-  })()}
-</div>
-        </div>
 
-        {/* Revenue Breakdown */}
-        <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <FaMoneyBillWave className="text-indigo-600 w-4 h-4" />
-              <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Revenue Breakdown</h3>
-              <span className="text-[10px] text-gray-500">(based on current filters)</span>
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Total Collected</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FaRupeeSign /></div>
             </div>
-            <span className="text-[10px] font-bold text-indigo-700 bg-white px-2 py-0.5 rounded-full border border-indigo-200">
-              {filteredPatients.length} patients
-            </span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 p-3">
-            <div className="rounded-lg p-2.5 border border-blue-200 bg-blue-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-blue-700 uppercase"><FaClinicMedical className="text-[9px]" /> Clinic Revenue</div>
-              <div className="text-sm font-extrabold text-blue-800 mt-0.5">₹{Math.round(revenueSummary.clinic).toLocaleString()}</div>
-            </div>
-            <div className="rounded-lg p-2.5 border border-purple-200 bg-purple-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-purple-700 uppercase"><FaFlask className="text-[9px]" /> Lab Revenue</div>
-              <div className="text-sm font-extrabold text-purple-800 mt-0.5">₹{Math.round(revenueSummary.lab).toLocaleString()}</div>
-            </div>
-            <div className="rounded-lg p-2.5 border border-green-200 bg-green-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-green-700 uppercase"><FaPills className="text-[9px]" /> Pharmacy Revenue</div>
-              <div className="text-sm font-extrabold text-green-800 mt-0.5">₹{Math.round(revenueSummary.pharmacy).toLocaleString()}</div>
-            </div>
-            <div className="rounded-lg p-2.5 border border-emerald-200 bg-emerald-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-700 uppercase"><FaMoneyBillWave className="text-[9px]" /> Cash Collected</div>
-              <div className="text-sm font-extrabold text-emerald-800 mt-0.5">₹{Math.round(revenueSummary.cash).toLocaleString()}</div>
-            </div>
-            <div className="rounded-lg p-2.5 border border-cyan-200 bg-cyan-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-cyan-700 uppercase"><FaGlobe className="text-[9px]" /> Online Collected</div>
-              <div className="text-sm font-extrabold text-cyan-800 mt-0.5">₹{Math.round(revenueSummary.online).toLocaleString()}</div>
-            </div>
-            <div className="rounded-lg p-2.5 border border-slate-300 bg-slate-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-slate-700 uppercase"><FaRupeeSign className="text-[9px]" /> Total Collected</div>
-              <div className="text-sm font-extrabold text-slate-900 mt-0.5">₹{Math.round(revenueSummary.totalCollected).toLocaleString()}</div>
-              <div className="text-[9px] font-semibold text-red-600 mt-0.5">Due: ₹{Math.round(revenueSummary.totalDue).toLocaleString()}</div>
+            <div className="emp-dash__stat-value text-blue-700">{fmt(categoryRevenue.grandTotal)}</div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[9px] font-bold leading-tight">
+              <span className="text-blue-700 whitespace-nowrap">Clinic: {fmt(categoryRevenue.clinic.total)}</span>
+              <span className="text-purple-700 whitespace-nowrap">Lab: {fmt(categoryRevenue.lab.total)}</span>
+              <span className="text-green-700 whitespace-nowrap">Pharmacy: {fmt(categoryRevenue.pharmacy.total)}</span>
             </div>
           </div>
         </div>
 
-        {/* ADD/EDIT MODAL — (unchanged) */}
+        {/* ADD/EDIT MODAL */}
         {showForm && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <button onClick={cancelForm} className="absolute top-4 right-16 sm:top-6 sm:right-24 z-[60] w-10 h-10 rounded-full bg-white text-gray-700 hover:bg-red-500 hover:text-white shadow-2xl border-2 border-gray-200 hover:border-red-500 flex items-center justify-center transition-all" title="Close">
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+            <button onClick={cancelForm} className="absolute top-4 right-4 sm:top-6 sm:right-24 z-[60] w-10 h-10 rounded-full bg-white text-gray-700 hover:bg-red-500 hover:text-white shadow-2xl border-2 border-gray-200 hover:border-red-500 flex items-center justify-center transition-all" title="Close">
               <FaTimes className="w-5 h-5" />
             </button>
-            <div className="bg-white rounded-2xl w-[95vw] max-w-[1200px] p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[95vh] overflow-y-auto">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold"><FaUserInjured className="w-5 h-5" /></div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base">{isEditMode ? "Edit Patient Details" : "Register OPD Patient & Book Slot"}</h3>
-                    <p className="text-xs text-gray-500">{isEditMode ? "Patient info editable — amount/lab/medicine locked" : "Fill in patient and consultation details below"}</p>
+            <div className="bg-white rounded-2xl w-full max-w-[1200px] p-4 sm:p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[96vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold flex-shrink-0"><FaUserInjured className="w-4 h-4 sm:w-5 sm:h-5" /></div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">{isEditMode ? "Edit Patient Details" : "Register OPD Patient & Book Slot"}</h3>
+                    <p className="text-[11px] sm:text-xs text-gray-500 truncate">{isEditMode ? "Patient info editable — amount/lab/medicine locked" : "Fill in patient and consultation details below"}</p>
                   </div>
                 </div>
               </div>
@@ -2655,72 +2941,112 @@ export default function OpManagement() {
                 </div>
               )}
 
-              <form onSubmit={isEditMode ? handleUpdateNow : handleBookNow} className="mt-5 space-y-4" noValidate>
+              <form onSubmit={isEditMode ? handleUpdateNow : handleBookNow} className="mt-4 sm:mt-5 space-y-4" noValidate>
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-2">
                     <FaPhoneAlt className="text-blue-600" /> Phone Number
                   </label>
                   <div className="relative">
-                    <FaPhoneAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                    <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className={`w-full border rounded-lg pl-9 pr-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+                    <FaPhoneAlt className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className={`w-full border rounded-xl pl-10 pr-3 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
                   <div className="col-span-1">
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Title</label>
-                    <select name="title" value={formData.title} onChange={handleInputChange} className={`w-full border rounded-lg px-2 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode}>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Title</label>
+                    <select name="title" value={formData.title} onChange={handleInputChange} className={`w-full border rounded-xl px-2 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode}>
                       {TITLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   </div>
-                  <div className="col-span-3">
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Patient Name</label>
-                    <input ref={nameInputRef} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter patient full name" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+                  <div className="col-span-2 sm:col-span-3">
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Patient Name</label>
+                    <input ref={nameInputRef} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter patient full name" className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium uppercase ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">DOB</label>
-                    <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+                {/* ✅ Mobile: Age + Gender only | Desktop: DOB + Age + Gender */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <div className="hidden sm:block">
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">DOB</label>
+                    <input
+                      type="date"
+                      name="dob"
+                      value={formData.dob}
+                      onChange={handleInputChange}
+                      className={`w-full border rounded-xl px-3 py-3.5 text-sm font-medium ${
+                        isEditMode
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+                          : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                      }`}
+                      disabled={isEditMode}
+                    />
                   </div>
+
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Age</label>
-                    <input type="number" name="age" value={formData.age} onChange={(e) => { const val = e.target.value; setFormData((prev) => ({ ...prev, age: val })); }} placeholder="Auto or enter manually" min="0" max="120" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Age</label>
+                    <input
+                      type="number"
+                      name="age"
+                      value={formData.age}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, age: e.target.value }))}
+                      placeholder="Enter age"
+                      min="0"
+                      max="120"
+                      className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium ${
+                        isEditMode
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+                          : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                      }`}
+                      disabled={isEditMode}
+                    />
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Gender</label>
-                    <select name="gender" value={formData.gender} onChange={handleInputChange} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode}>
+
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Gender</label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleInputChange}
+                      className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium ${
+                        isEditMode
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+                          : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                      }`}
+                      disabled={isEditMode}
+                    >
                       <option value="">Select Gender</option>
-                      {GENDER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      {GENDER_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-2">
                     <FaMapMarkerAlt className="text-blue-600 text-[10px]" /> Address
                   </label>
-                  <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Patient street address" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+                  <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Patient street address" className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="hidden sm:grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center justify-between">
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                       <span>Pincode</span>
                       {fetchingCity && <FiRefreshCw className="w-3 h-3 text-blue-500 animate-spin" />}
                     </label>
-                    <input type="text" name="pincode" value={formData.pincode} onChange={handlePincodeChange} onFocus={() => { if (citySuggestions.length > 0) setShowCitySuggestions(true); }} placeholder="Enter 6-digit pincode" maxLength="6" inputMode="numeric" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+                    <input type="text" name="pincode" value={formData.pincode} onChange={handlePincodeChange} onFocus={() => { if (citySuggestions.length > 0) setShowCitySuggestions(true); }} placeholder="Enter 6-digit pincode" maxLength="6" inputMode="numeric" className={`w-full border rounded-xl px-3 py-3.5 text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
                   </div>
 
                   <div className="relative city-dropdown-add-patient">
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                       City
                       {formData.city && !isEditMode && (
                         <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">✓ Auto</span>
                       )}
                     </label>
-                    <input type="text" name="city" value={formData.city} onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))} onFocus={() => { if (!isEditMode && citySuggestions.length > 0) setShowCitySuggestions(true); }} placeholder="Auto-filled from pincode" autoComplete="off" className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`} disabled={isEditMode} />
+                    <input type="text" name="city" value={formData.city} onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))} onFocus={() => { if (!isEditMode && citySuggestions.length > 0) setShowCitySuggestions(true); }} placeholder="Auto-filled from pincode" autoComplete="off" className={`w-full border rounded-xl px-3 py-3.5 text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
                     {!isEditMode && showCitySuggestions && citySuggestions.length > 0 && (
                       <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-52 overflow-y-auto z-50">
                         <div className="px-3 py-1.5 bg-blue-50 border-b border-blue-100 sticky top-0">
@@ -2740,22 +3066,29 @@ export default function OpManagement() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
-                      Select Doctor
-                      {isEditMode && <FaLock className="text-amber-500 text-[10px]" />}
-                    </label>
-                    <select name="doctorId" value={formData.doctorId} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider flex items-center gap-2">
+                        Select Doctor
+                        {isEditMode && <FaLock className="text-amber-500 text-[10px]" />}
+                      </label>
+                      {!isEditMode && (
+                        <button type="button" onClick={() => handleRoleBasedNavigate("/doctor-management")} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5" title="Add New Doctor">
+                          <FaPlus className="w-2.5 h-2.5" /> Add
+                        </button>
+                      )}
+                    </div>
+                    <select name="doctorId" value={formData.doctorId} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}>
                       <option value="">Select Doctor</option>
                       {doctors.map((d) => <option key={d._id || d.id} value={d._id || d.id}>{d.name || "Doctor"}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-2">
                       Appointment Date
                     </label>
-                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} className="w-full border rounded-lg px-3 py-2.5 text-sm bg-white border-gray-300" />
+                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
                   </div>
                 </div>
 
@@ -2765,7 +3098,17 @@ export default function OpManagement() {
                     {slotsLoading ? (
                       <div className="text-xs text-gray-500 py-3 text-center"><FiRefreshCw className="w-4 h-4 animate-spin inline" /> Loading...</div>
                     ) : availableSlots.length === 0 ? (
-                      <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">No slots available.</div>
+                      <div className="text-xs text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200 flex items-center justify-between gap-3 flex-wrap">
+                        <span className="font-semibold">No slots available for this doctor on this date.</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRoleBasedNavigate("/appointment-slots")}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+                          title="Manage Appointment Slots"
+                        >
+                          <FaPlus className="w-3 h-3" /> Add Slots for this Doctor
+                        </button>
+                      </div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto p-1">
                         {availableSlots.map((slot) => {
@@ -2789,22 +3132,19 @@ export default function OpManagement() {
                   </div>
                 )}
 
-                <div className={`border rounded-xl p-4 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-blue-50/30 border-gray-200"}`}>
+                <div className="border rounded-xl p-3 sm:p-4 bg-blue-50/30 border-gray-200">
                   <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
                     <FaShareAlt className="text-blue-600" /> Referred By
-                    {isEditMode && <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200"><FaLock /> Locked</span>}
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="text-[10px] font-semibold text-gray-500 uppercase flex items-center gap-1.5">
                           <FaUserFriends className="text-blue-500" /> Customer
                         </label>
-                        {!isEditMode && (
-                          <button type="button" onClick={handleAddCustomerReferral} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5">
-                            <FaPlus className="w-2.5 h-2.5" /> Add
-                          </button>
-                        )}
+                        <button type="button" onClick={handleAddCustomerReferral} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5">
+                          <FaPlus className="w-2.5 h-2.5" /> Add
+                        </button>
                       </div>
                       <select value={formData.referralCustomerId} onChange={(e) => {
                         const id = e.target.value;
@@ -2813,7 +3153,7 @@ export default function OpManagement() {
                           setFormData((p) => ({ ...p, referredByCustomer: "", referralCustomerId: "", offerApplied: null }));
                           setSelectedCustomerOffers([]); setSelectedOfferId(""); setAppliedOffer(null);
                         }
-                      }} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
+                      }} className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none">
                         <option value="">-- Select Customer --</option>
                         {referralContacts.filter((c) => c.referralType === "customer").map((c) => (
                           <option key={c._id} value={c._id}>{c.customerName || "N/A"} {c.customerPhone ? `(${c.customerPhone})` : ""}</option>
@@ -2864,7 +3204,7 @@ export default function OpManagement() {
                                 }));
                               }
                             } else { setAppliedOffer(null); setFormData((prev) => ({ ...prev, offerApplied: null })); }
-                          }} disabled={isEditMode} className="w-full bg-white border border-amber-300 rounded-lg px-3 py-2 text-sm">
+                          }} className="w-full bg-white border border-amber-300 rounded-lg px-3 py-3 text-base sm:text-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
                             <option value="">-- No Offer --</option>
                             {selectedCustomerOffers.map((o) => (
                               <option key={o._id} value={o._id}>{o.offerName} — ₹{o.offerAmount}</option>
@@ -2887,17 +3227,15 @@ export default function OpManagement() {
                         <label className="text-[10px] font-semibold text-gray-500 uppercase flex items-center gap-1.5">
                           <FaUserMdIcon className="text-indigo-500" /> Doctor
                         </label>
-                        {!isEditMode && (
-                          <button type="button" onClick={handleAddDoctorReferral} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5">
-                            <FaPlus className="w-2.5 h-2.5" /> Add
-                          </button>
-                        )}
+                        <button type="button" onClick={handleAddDoctorReferral} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5">
+                          <FaPlus className="w-2.5 h-2.5" /> Add
+                        </button>
                       </div>
                       <select value={formData.referralDoctorId} onChange={(e) => {
                         const id = e.target.value;
                         if (id) { const c = referralContacts.find((x) => x._id === id && x.referralType === "doctor"); if (c) handleReferralDoctorSelect(c); }
                         else { setFormData((p) => ({ ...p, referredByDoctor: "", referralDoctorId: "" })); }
-                      }} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
+                      }} className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none">
                         <option value="">-- Select Doctor --</option>
                         {referralContacts.filter((c) => c.referralType === "doctor").map((c) => (
                           <option key={c._id} value={c._id}>{c.doctorName || "N/A"} {c.doctorSpecialization ? `(${c.doctorSpecialization})` : ""}</option>
@@ -2913,7 +3251,7 @@ export default function OpManagement() {
                   </div>
                 </div>
 
-                <div className="border rounded-xl p-4 bg-gray-50/50 border-gray-200">
+                <div className="border rounded-xl p-3 sm:p-4 bg-gray-50/50 border-gray-200">
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
                       <FaServicestack className="text-blue-600" /> Services
@@ -2932,13 +3270,13 @@ export default function OpManagement() {
                     </div>
                   )}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex-1 min-w-[150px] relative service-dropdown-add-patient">
+                    <div className="flex-1 min-w-[140px] relative service-dropdown-add-patient">
                       <input type="text" value={formData.serviceName || ""} onChange={(e) => {
                         const v = e.target.value;
                         setFormData((p) => ({ ...p, serviceName: v }));
                         if (v.trim()) { setFilteredServices(services.filter((s) => s.name.toLowerCase().includes(v.toLowerCase()))); setShowServiceSuggestions(true); }
                         else { setFilteredServices([]); setShowServiceSuggestions(false); }
-                      }} placeholder="Service name" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
+                      }} placeholder="Service name" className="w-full bg-white border border-gray-300 rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
                       {showServiceSuggestions && filteredServices.length > 0 && (
                         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
                           {filteredServices.map((svc) => (
@@ -2949,8 +3287,8 @@ export default function OpManagement() {
                         </div>
                       )}
                     </div>
-                    <input type="number" value={formData.servicePrice || ""} onChange={(e) => setFormData((p) => ({ ...p, servicePrice: e.target.value }))} placeholder="Price" className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
-                    <button type="button" onClick={handleAddCustomServiceItem} className="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-lg flex items-center gap-1"><FaPlus className="w-3 h-3" /> Add</button>
+                    <input type="number" value={formData.servicePrice || ""} onChange={(e) => setFormData((p) => ({ ...p, servicePrice: e.target.value }))} placeholder="Price" className="w-24 bg-white border border-gray-300 rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
+                    <button type="button" onClick={handleAddCustomServiceItem} className="px-4 py-3.5 text-xs font-bold text-white bg-emerald-600 rounded-xl flex items-center gap-1"><FaPlus className="w-3 h-3" /> Add</button>
                   </div>
                   {formData.serviceItems.length > 0 && (
                     <div className="mt-3 p-2.5 bg-white rounded-lg border border-gray-200 flex justify-between">
@@ -2961,11 +3299,11 @@ export default function OpManagement() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Reason / Symptoms</label>
-                  <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none bg-white border-gray-300" placeholder="Enter reason or symptoms" />
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1.5">Reason / Symptoms</label>
+                  <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows={2} className="w-full border rounded-xl px-3 py-3 text-base sm:text-sm font-medium resize-none bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" placeholder="Enter reason or symptoms" />
                 </div>
 
-                <div className={`border rounded-xl p-4 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-purple-50/30 border-gray-200"}`}>
+                <div className={`border rounded-xl p-3 sm:p-4 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-purple-50/30 border-gray-200"}`}>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
                     <FaMoneyBillWave className="text-purple-600" /> Payment Details
                     {isEditMode && <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200"><FaLock /> Amount Locked</span>}
@@ -3045,26 +3383,26 @@ export default function OpManagement() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-3">
-                          <div className="md:col-span-2">
+                        <div className="grid grid-cols-2 md:grid-cols-12 gap-2 sm:gap-3 mb-3">
+                          <div className="col-span-1 md:col-span-2">
                             <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1 flex items-center gap-1.5">
                               <FaPercent className="text-[10px]" /> Type
                             </label>
-                            <select name="discountType" value={formData.discountType} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2.5 text-sm">
+                            <select name="discountType" value={formData.discountType} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-xl px-2 py-3.5 text-base sm:text-sm font-medium focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none">
                               {DISCOUNT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                             </select>
                           </div>
-                          <div className="md:col-span-3">
+                          <div className="col-span-1 md:col-span-3">
                             <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1">Discount</label>
-                            <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} placeholder={formData.discountType === "%" ? "Enter %" : "Enter amount"} min="0" max={formData.discountType === "%" ? "100" : undefined} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
+                            <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} placeholder={formData.discountType === "%" ? "Enter %" : "Enter amount"} min="0" max={formData.discountType === "%" ? "100" : undefined} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none" />
                           </div>
-                          <div className="md:col-span-3">
+                          <div className="col-span-2 md:col-span-3">
                             <label className="block text-[11px] font-bold text-amber-700 uppercase mb-1">Amount Received (₹)</label>
-                            <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="0 for Pending" min="0" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
+                            <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="0 for Pending" min="0" className="w-full bg-white border border-gray-300 rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none" />
                           </div>
-                          <div className="md:col-span-4">
+                          <div className="col-span-2 md:col-span-4">
                             <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Payment Mode</label>
-                            <select name="paymentType" value={formData.paymentType} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
+                            <select name="paymentType" value={formData.paymentType} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}>
                               {PAYMENT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                             </select>
                           </div>
@@ -3095,8 +3433,8 @@ export default function OpManagement() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t">
-                  <button type="button" onClick={cancelForm} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200">Cancel</button>
-                  <button type="submit" className={`px-5 py-2 rounded-lg text-xs font-bold text-white shadow-sm flex items-center gap-1.5 ${isEditMode ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}`}>
+                  <button type="button" onClick={cancelForm} className="px-4 py-3 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200">Cancel</button>
+                  <button type="submit" className={`px-5 py-3 rounded-xl text-xs font-bold text-white shadow-sm flex items-center gap-1.5 ${isEditMode ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}`}>
                     {submitting ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : isEditMode ? <FiEdit2 className="w-3.5 h-3.5" /> : <FiCalendar className="w-3.5 h-3.5" />}
                     {submitting ? "Saving..." : isEditMode ? "Update Appointment" : "Confirm & Book Slot"}
                   </button>
@@ -3621,6 +3959,182 @@ export default function OpManagement() {
               </div>
               <div className="flex justify-end gap-3 px-6 py-3 border-t bg-gray-50/50 rounded-b-2xl">
                 <button onClick={() => { setShowInvoiceModal(false); setInvoiceModalUrl(""); setInvoiceModalBooking(null); }} className="px-5 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Close</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ FILTER CALCULATION POPUP */}
+        {showCalculationPopup && calculationData && !userClosedCalcPopup && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4">
+            <div className="bg-white rounded-2xl w-full max-w-5xl shadow-2xl border border-gray-200 max-h-[92vh] overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between px-5 py-4 border-b bg-gradient-to-r from-indigo-50 to-blue-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
+                    <FaRupeeSign className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base flex items-center gap-2 flex-wrap">
+                      Filter Calculation Details
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">
+                        {timeFilter}
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${
+                        revenueCategoryFilter === "clinic" ? "bg-blue-100 text-blue-700 border-blue-200" :
+                        revenueCategoryFilter === "lab" ? "bg-purple-100 text-purple-700 border-purple-200" :
+                        "bg-green-100 text-green-700 border-green-200"
+                      }`}>
+                        {revenueCategoryFilter} Only
+                      </span>
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {calculationData.bookings.length} bookings with {revenueCategoryFilter} revenue — verification purposes
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowCalculationPopup(false);
+                    setUserClosedCalcPopup(true);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+
+           {/* ✅ Summary Cards — only selected category (Cash / Online / Due / Total) */}
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border-b bg-gray-50">
+  {/* Cash */}
+  <div className={`rounded-lg p-2.5 border ${
+    revenueCategoryFilter === "clinic" ? "border-blue-200 bg-blue-50" :
+    revenueCategoryFilter === "lab" ? "border-purple-200 bg-purple-50" :
+    "border-green-200 bg-green-50"
+  }`}>
+    <div className={`text-[9px] font-bold uppercase ${
+      revenueCategoryFilter === "clinic" ? "text-blue-700" :
+      revenueCategoryFilter === "lab" ? "text-purple-700" :
+      "text-green-700"
+    }`}>Cash</div>
+    <div className={`text-sm font-extrabold ${
+      revenueCategoryFilter === "clinic" ? "text-blue-800" :
+      revenueCategoryFilter === "lab" ? "text-purple-800" :
+      "text-green-800"
+    }`}>{fmt(calculationData.cash)}</div>
+  </div>
+
+  {/* Online */}
+  <div className={`rounded-lg p-2.5 border ${
+    revenueCategoryFilter === "clinic" ? "border-blue-200 bg-blue-50" :
+    revenueCategoryFilter === "lab" ? "border-purple-200 bg-purple-50" :
+    "border-green-200 bg-green-50"
+  }`}>
+    <div className={`text-[9px] font-bold uppercase ${
+      revenueCategoryFilter === "clinic" ? "text-blue-700" :
+      revenueCategoryFilter === "lab" ? "text-purple-700" :
+      "text-green-700"
+    }`}>Online</div>
+    <div className={`text-sm font-extrabold ${
+      revenueCategoryFilter === "clinic" ? "text-blue-800" :
+      revenueCategoryFilter === "lab" ? "text-purple-800" :
+      "text-green-800"
+    }`}>{fmt(calculationData.online)}</div>
+  </div>
+
+  {/* Due */}
+  <div className="rounded-lg p-2.5 border border-red-200 bg-red-50">
+    <div className="text-[9px] font-bold text-red-700 uppercase">Due</div>
+    <div className="text-sm font-extrabold text-red-800">{fmt(calculationData.totalDue)}</div>
+  </div>
+
+  {/* Total */}
+  <div className={`rounded-lg p-2.5 border-2 ${
+    revenueCategoryFilter === "clinic" ? "border-blue-400 bg-blue-100" :
+    revenueCategoryFilter === "lab" ? "border-purple-400 bg-purple-100" :
+    "border-green-400 bg-green-100"
+  }`}>
+    <div className={`text-[9px] font-bold uppercase ${
+      revenueCategoryFilter === "clinic" ? "text-blue-800" :
+      revenueCategoryFilter === "lab" ? "text-purple-800" :
+      "text-green-800"
+    }`}>Total ({revenueCategoryFilter})</div>
+    <div className={`text-sm font-extrabold ${
+      revenueCategoryFilter === "clinic" ? "text-blue-900" :
+      revenueCategoryFilter === "lab" ? "text-purple-900" :
+      "text-green-900"
+    }`}>{fmt(calculationData.total)}</div>
+  </div>
+</div>
+              <div className="flex-1 overflow-y-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-gray-100 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-bold text-gray-600" style={{ width: "40px" }}>#</th>
+                      <th className="px-3 py-2 text-left font-bold text-gray-600">Patient</th>
+                      <th className="px-3 py-2 text-left font-bold text-gray-600">Doctor</th>
+                      <th className="px-3 py-2 text-left font-bold text-gray-600">Date</th>
+                      <th className="px-3 py-2 text-right font-bold text-blue-700">Clinic</th>
+                      <th className="px-3 py-2 text-right font-bold text-purple-700">Lab</th>
+                      <th className="px-3 py-2 text-right font-bold text-green-700">Pharmacy</th>
+                      <th className="px-3 py-2 text-right font-bold text-indigo-700 bg-indigo-50">
+                        {revenueCategoryFilter.toUpperCase()}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {calculationData.bookings.map((d, i) => (
+                      <tr key={d.bookingId || i} className="border-b border-gray-100 hover:bg-blue-50/30">
+                        <td className="px-3 py-2 text-gray-500 font-semibold">{i + 1}</td>
+                        <td className="px-3 py-2">
+                          <div className="font-semibold text-gray-800 truncate max-w-[140px]">{d.patientName}</div>
+                          <div className="text-[10px] text-gray-400">{d.patientPhone}</div>
+                        </td>
+                        <td className="px-3 py-2 text-gray-600 truncate max-w-[120px]">{d.doctorName || "N/A"}</td>
+                        <td className="px-3 py-2 text-gray-500">{formatDateToDDMMYYYY(d.date)}</td>
+                        <td className={`px-3 py-2 text-right font-bold ${revenueCategoryFilter === "clinic" ? "text-blue-700 bg-blue-50/50" : "text-gray-400"}`}>
+                          ₹{Math.round(d.clinic)}
+                        </td>
+                        <td className={`px-3 py-2 text-right font-bold ${revenueCategoryFilter === "lab" ? "text-purple-700 bg-purple-50/50" : "text-gray-400"}`}>
+                          ₹{Math.round(d.lab)}
+                        </td>
+                        <td className={`px-3 py-2 text-right font-bold ${revenueCategoryFilter === "pharmacy" ? "text-green-700 bg-green-50/50" : "text-gray-400"}`}>
+                          ₹{Math.round(d.pharmacy)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-extrabold text-indigo-800 bg-indigo-50/50">
+                          ₹{Math.round(d.categoryAmount)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-indigo-100 sticky bottom-0">
+                    <tr>
+                      <td colSpan="4" className="px-3 py-3 text-right font-bold text-gray-800 uppercase tracking-wider">
+                        Grand Total:
+                      </td>
+                      <td className="px-3 py-3 text-right font-bold text-blue-800">₹{Math.round(calculationData.totalClinic)}</td>
+                      <td className="px-3 py-3 text-right font-bold text-purple-800">₹{Math.round(calculationData.totalLab)}</td>
+                      <td className="px-3 py-3 text-right font-bold text-green-800">₹{Math.round(calculationData.totalPharmacy)}</td>
+                      <td className="px-3 py-3 text-right font-extrabold text-indigo-900 text-sm">
+                        ₹{Math.round(calculationData.total)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div className="flex justify-between items-center gap-3 px-5 py-3 border-t bg-gray-50">
+                <div className="text-[11px] text-gray-500">
+                  💡 This popup shows the manual calculation breakdown. Use it to verify against backend response.
+                </div>
+                <button
+                  onClick={() => {
+                    setShowCalculationPopup(false);
+                    setUserClosedCalcPopup(true);
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  Got it, Close
+                </button>
               </div>
             </div>
           </div>
