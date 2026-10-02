@@ -1,4 +1,4 @@
-// OpManagement.js — COMPLETE FINAL VERSION (Offer Applied + PDF Modal)
+// OpManagement.js — COMPLETE (Backend-filtered + Time Filter)
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -72,7 +72,6 @@ const BOOKING_TYPE_OPTIONS = [
   { value: "Online", label: "Online" }
 ];
 
-
 const REVENUE_CATEGORY_OPTIONS = [
   { value: "All", label: "All Revenue Types" },
   { value: "clinic", label: "Clinic Only" },
@@ -88,47 +87,35 @@ const PAYMENT_TYPE_FILTER_OPTIONS = [
   { value: "card", label: "Card" },
 ];
 
+const TIME_FILTER_OPTIONS = [
+  { value: "All", label: "All" },
+  { value: "today", label: "Today" },
+  { value: "yesterday", label: "Yesterday" },
+  { value: "thisWeek", label: "This Week" },
+  { value: "thisMonth", label: "This Month" },
+  { value: "lastMonth", label: "Last Month" },
+  { value: "thisYear", label: "This Year" },
+];
+
 const DISCOUNT_TYPE_OPTIONS = [
   { value: "₹", label: "₹ (Rupees)" },
   { value: "%", label: "% (Percent)" }
 ];
 
 const EMPTY_FORM = {
-  title: "Mr.",
-  name: "",
-  dob: "",
-  age: "",
-  gender: "Male",
-  phone: "",
-  address: "",
-  city: "",
-  pincode: "",
-  serviceItems: [],
-  paymentType: "cash",
-  reason: "",
-  paymentStatus: "Pending",
-  doctorId: "",
-  slotId: "",
-  appointmentDate: "",
-  selectedServices: [],
-  referredByCustomer: "",
-  referredByDoctor: "",
-  referralCustomerId: "",
-  referralDoctorId: "",
-  referralCommission: "",
-  referralCommissionType: "",
-  partialAmount: "",
-  discount: "",
-  discountType: "₹",
-  bookingId: "",
-  status: "confirmed",
-  offerApplied: null, // ✅ NEW
+  title: "Mr.", name: "", dob: "", age: "", gender: "Male",
+  phone: "", address: "", city: "", pincode: "",
+  serviceItems: [], paymentType: "cash", reason: "", paymentStatus: "Pending",
+  doctorId: "", slotId: "", appointmentDate: "", selectedServices: [],
+  referredByCustomer: "", referredByDoctor: "", referralCustomerId: "",
+  referralDoctorId: "", referralCommission: "", referralCommissionType: "",
+  partialAmount: "", discount: "", discountType: "₹", bookingId: "",
+  status: "confirmed", offerApplied: null,
 };
 
 const CLINIC_INFO = {
   name: "TimelyHealth",
-  address:
-    "Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, H. No: 1-98/9/25/p, Opp Style on Studio, VIP Hills, near Bank of Baroda, Arunodaya Colony, Sri Sai Nagar, Madhapur, Hyderabad, Telangana 500081",
+  address: "Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, H. No: 1-98/9/25/p, Opp Style on Studio, VIP Hills, near Bank of Baroda, Arunodaya Colony, Sri Sai Nagar, Madhapur, Hyderabad, Telangana 500081",
   contact: "9505397000"
 };
 
@@ -228,9 +215,7 @@ const getPaymentStatusColors = (status) => {
 
 const getBookingType = (booking) => {
   if (!booking) return { label: "Walk-In", icon: FaWalking, color: "bg-amber-50 text-amber-700 border-amber-200" };
-  if (booking.isOP === true) {
-    return { label: "Walk-In", icon: FaWalking, color: "bg-amber-50 text-amber-700 border-amber-200" };
-  }
+  if (booking.isOP === true) return { label: "Walk-In", icon: FaWalking, color: "bg-amber-50 text-amber-700 border-amber-200" };
   return { label: "Online", icon: FaGlobe, color: "bg-cyan-50 text-cyan-700 border-cyan-200" };
 };
 
@@ -251,15 +236,8 @@ const numberToWords = (num) => {
 
 const getBookingServices = (booking) => {
   if (!booking) return [];
-
-  const fromServiceItems =
-    Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0
-      ? booking.serviceItems
-      : null;
-  const fromServices =
-    Array.isArray(booking.services) && booking.services.length > 0
-      ? booking.services
-      : null;
+  const fromServiceItems = Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0 ? booking.serviceItems : null;
+  const fromServices = Array.isArray(booking.services) && booking.services.length > 0 ? booking.services : null;
   const arr = fromServiceItems || fromServices || [];
 
   const baseServices = arr.map((s) => ({
@@ -301,15 +279,7 @@ const classifyService = (svc) => {
 
 const getAmountBreakdown = (booking) => {
   if (!booking)
-    return {
-      clinic: 0,
-      lab: 0,
-      pharmacy: 0,
-      total: 0,
-      manualMedicineTotal: 0,
-      manualLabTotal: 0,
-      reviewTotal: 0,
-    };
+    return { clinic: 0, lab: 0, pharmacy: 0, total: 0, manualMedicineTotal: 0, manualLabTotal: 0, reviewTotal: 0 };
 
   const services = getBookingServices(booking);
   let clinic = 0, lab = 0, pharmacy = 0;
@@ -317,16 +287,14 @@ const getAmountBreakdown = (booking) => {
   services.forEach((s) => {
     const cat = classifyService(s);
     const price = Number(s.price) || 0;
-    if (s.isReviewService) {
-      clinic += price;
-    } else if (cat === "lab") lab += price;
+    if (s.isReviewService) clinic += price;
+    else if (cat === "lab") lab += price;
     else if (cat === "pharmacy") pharmacy += price;
     else clinic += price;
   });
 
   const manualMedicineTotal = Number(booking?.medicineTotal) || 0;
   const manualLabTotal = Number(booking?.labTotal) || 0;
-
   pharmacy += manualMedicineTotal;
   lab += manualLabTotal;
 
@@ -336,19 +304,12 @@ const getAmountBreakdown = (booking) => {
   const computed = clinic + lab + pharmacy;
   if (computed === 0) {
     const fallback =
-      Number(booking.finalPayable) ||
-      Number(booking.finalPayableAmount) ||
-      Number(booking.grandTotal) ||
-      Number(booking.totalAmount) ||
-      0;
+      Number(booking.finalPayable) || Number(booking.finalPayableAmount) ||
+      Number(booking.grandTotal) || Number(booking.totalAmount) || 0;
     clinic = fallback;
   }
 
-  return {
-    clinic, lab, pharmacy,
-    total: clinic + lab + pharmacy,
-    manualMedicineTotal, manualLabTotal, reviewTotal,
-  };
+  return { clinic, lab, pharmacy, total: clinic + lab + pharmacy, manualMedicineTotal, manualLabTotal, reviewTotal };
 };
 
 const getBookingSubtotal = (booking) => {
@@ -360,11 +321,8 @@ const getBookingSubtotal = (booking) => {
 const getBookingFinalPayable = (booking) => {
   if (!booking) return 0;
   const final =
-    Number(booking.finalPayable) ||
-    Number(booking.finalPayableAmount) ||
-    Number(booking.grandTotal) ||
-    Number(booking.totalAmount) ||
-    0;
+    Number(booking.finalPayable) || Number(booking.finalPayableAmount) ||
+    Number(booking.grandTotal) || Number(booking.totalAmount) || 0;
   if (final > 0) return final;
   const subtotal = getBookingSubtotal(booking);
   const commission = Number(booking.commissionAmount) || 0;
@@ -385,61 +343,37 @@ const getBookingPaidInfo = (booking) => {
 
 const getReviewWindowStatus = (booking) => {
   if (!booking) return { canReview: false, daysLeft: 0, expired: false, isReviewed: false };
-
   const appointmentDateStr = booking.appointmentDate || booking.date;
   if (!appointmentDateStr) return { canReview: false, daysLeft: 0, expired: false, isReviewed: false };
-
   const appointmentDate = new Date(appointmentDateStr);
   if (isNaN(appointmentDate.getTime())) return { canReview: false, daysLeft: 0, expired: false, isReviewed: false };
-
   appointmentDate.setHours(23, 59, 59, 999);
   const today = new Date();
   const diffMs = today - appointmentDate;
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
   const daysLeft = Math.max(0, REVIEW_WINDOW_DAYS - diffDays);
-
-  return {
-    canReview: true,
-    daysLeft: daysLeft,
-    expired: false,
-    isReviewed: booking.isReviewed === true,
-  };
+  return { canReview: true, daysLeft, expired: false, isReviewed: booking.isReviewed === true };
 };
 
 const fetchCityFromPincode = async (pincode) => {
   if (!pincode || pincode.trim().length < 6) return null;
   try {
-    const res = await axios.get(
-      `https://api.postalpincode.in/pincode/${encodeURIComponent(pincode.trim())}`
-    );
+    const res = await axios.get(`https://api.postalpincode.in/pincode/${encodeURIComponent(pincode.trim())}`);
     if (Array.isArray(res.data) && res.data[0]?.Status === "Success") {
       const offices = res.data[0].PostOffice || [];
       if (offices.length > 0) {
         const first = offices[0];
-        return {
-          city: first.District || first.Block || first.Name || "",
-          state: first.State || "",
-          area: first.Name || "",
-          allOffices: offices,
-        };
+        return { city: first.District || first.Block || first.Name || "", state: first.State || "", area: first.Name || "", allOffices: offices };
       }
     }
     return null;
-  } catch (err) {
-    console.warn("City fetch failed:", err);
-    return null;
-  }
+  } catch (err) { console.warn("City fetch failed:", err); return null; }
 };
 
 const computePaymentStatusFromAmount = (amountEntered, finalPayable) => {
   const amt = parseFloat(amountEntered) || 0;
   const final = parseFloat(finalPayable) || 0;
-
-  if (final <= 0) {
-    return amt > 0 ? "Paid" : "Pending";
-  }
-
+  if (final <= 0) return amt > 0 ? "Paid" : "Pending";
   if (amt <= 0) return "Pending";
   if (amt >= final) return "Paid";
   return "Partial";
@@ -448,56 +382,25 @@ const computePaymentStatusFromAmount = (amountEntered, finalPayable) => {
 const computeDiscountAmount = (subtotal, discountValue, discountType) => {
   const val = parseFloat(discountValue) || 0;
   if (val <= 0) return 0;
-  if (discountType === "%") {
-    return (subtotal * val) / 100;
-  }
+  if (discountType === "%") return (subtotal * val) / 100;
   return val;
 };
 
-// ✅ UPDATED: offerAmount deduct karo
-const computeFinancials = (
-  serviceItems,
-  {
-    labTotal = 0,
-    medicineTotal = 0,
-    referralCommission = 0,
-    discount = 0,
-    discountType = "₹",
-    partialAmount = 0,
-    offerAmount = 0, // ✅ NEW
-  } = {}
-) => {
+const computeFinancials = (serviceItems, { labTotal = 0, medicineTotal = 0, referralCommission = 0, discount = 0, discountType = "₹", partialAmount = 0, offerAmount = 0 } = {}) => {
   const servicesSubtotal = (serviceItems || []).reduce((sum, s) => sum + (Number(s.price) || 0), 0);
   const subtotal = servicesSubtotal + (Number(labTotal) || 0) + (Number(medicineTotal) || 0);
   const commissionPercent = parseFloat(referralCommission) || 0;
   const commissionAmount = (subtotal * commissionPercent) / 100;
   const discountAmount = computeDiscountAmount(subtotal, discount, discountType);
-
-  // ✅ Offer deduction
   const offerDeduction = Number(offerAmount) || 0;
-
   const finalPayable = Math.max(0, subtotal - commissionAmount - discountAmount - offerDeduction);
 
   const parsedPartial = parseFloat(partialAmount) || 0;
   const paymentStatus = computePaymentStatusFromAmount(parsedPartial, finalPayable);
-  const amountPaid = paymentStatus === "Paid"
-    ? finalPayable
-    : (paymentStatus === "Partial" ? Math.min(parsedPartial, finalPayable) : 0);
+  const amountPaid = paymentStatus === "Paid" ? finalPayable : (paymentStatus === "Partial" ? Math.min(parsedPartial, finalPayable) : 0);
   const balanceAmount = Math.max(0, finalPayable - amountPaid);
 
-  return {
-    servicesSubtotal,
-    subtotal,
-    commissionPercent,
-    commissionAmount,
-    discountAmount,
-    offerDeduction, // ✅
-    finalPayable,
-    parsedPartial,
-    paymentStatus,
-    amountPaid,
-    balanceAmount,
-  };
+  return { servicesSubtotal, subtotal, commissionPercent, commissionAmount, discountAmount, offerDeduction, finalPayable, parsedPartial, paymentStatus, amountPaid, balanceAmount };
 };
 
 export default function OpManagement() {
@@ -505,6 +408,7 @@ export default function OpManagement() {
   const location = useLocation();
 
   const [bookings, setBookings] = useState([]);
+  const [backendStats, setBackendStats] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [allSlots, setAllSlots] = useState([]);
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -529,18 +433,20 @@ export default function OpManagement() {
   const [showExistingPatientPopup, setShowExistingPatientPopup] = useState(false);
   const [searchingPatient, setSearchingPatient] = useState(false);
 
+  // ✅ FILTERS
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [feeTypeFilter, setFeeTypeFilter] = useState("All");
   const [doctorFilter, setDoctorFilter] = useState("All");
   const [bookingTypeFilter, setBookingTypeFilter] = useState("All");
-  const [revenueCategoryFilter, setRevenueCategoryFilter] = useState("All");   // ✅ ADD
-const [paymentTypeFilter, setPaymentTypeFilter] = useState("All");           // ✅ ADD
+  const [revenueCategoryFilter, setRevenueCategoryFilter] = useState("All");
+  const [paymentTypeFilter, setPaymentTypeFilter] = useState("All");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [apptFromDate, setApptFromDate] = useState("");
   const [apptToDate, setApptToDate] = useState("");
+  const [timeFilter, setTimeFilter] = useState("All"); // ✅ NEW
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeCardFilter, setActiveCardFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -562,7 +468,6 @@ const [paymentTypeFilter, setPaymentTypeFilter] = useState("All");           // 
     return saved ? parseInt(saved, 10) : 10;
   });
 
-  // ✅ PDF MODAL STATES
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [invoiceModalUrl, setInvoiceModalUrl] = useState("");
   const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
@@ -583,15 +488,12 @@ const [paymentTypeFilter, setPaymentTypeFilter] = useState("All");           // 
   const [partialBooking, setPartialBooking] = useState(null);
   const [partialAmountInput, setPartialAmountInput] = useState("");
   const [savingPartial, setSavingPartial] = useState(false);
-  const [partialPaymentType, setPartialPaymentType] = useState("cash"); // ✅ NEW
+  const [partialPaymentType, setPartialPaymentType] = useState("cash");
 
-
-  // ✅ PAYMENT TYPE EDIT MODAL
   const [showPaymentTypeEditModal, setShowPaymentTypeEditModal] = useState(false);
   const [paymentTypeEditBooking, setPaymentTypeEditBooking] = useState(null);
   const [paymentTypeEditValue, setPaymentTypeEditValue] = useState("cash");
   const [savingPaymentTypeEdit, setSavingPaymentTypeEdit] = useState(false);
-
 
   const [citySuggestions, setCitySuggestions] = useState([]);
   const [fetchingCity, setFetchingCity] = useState(false);
@@ -610,19 +512,15 @@ const [paymentTypeFilter, setPaymentTypeFilter] = useState("All");           // 
   const [reviewData, setReviewData] = useState({ isReviewed: false, reviewDate: "" });
   const [savingReview, setSavingReview] = useState(false);
 
-  // ✅ REVIEW SERVICES
   const [reviewServices, setReviewServices] = useState([]);
   const [reviewServiceInput, setReviewServiceInput] = useState("");
   const [showReviewServiceSuggestions, setShowReviewServiceSuggestions] = useState(false);
   const [filteredReviewServices, setFilteredReviewServices] = useState([]);
 
-  // ✅ OFFER STATE
   const [selectedCustomerOffers, setSelectedCustomerOffers] = useState([]);
   const [selectedOfferId, setSelectedOfferId] = useState("");
   const [appliedOffer, setAppliedOffer] = useState(null);
 
-
-  // ✅ CLINIC SERVICES POPUP
   const [showClinicServicesModal, setShowClinicServicesModal] = useState(false);
   const [clinicServicesBooking, setClinicServicesBooking] = useState(null);
   const [clinicServicesList, setClinicServicesList] = useState([]);
@@ -632,25 +530,22 @@ const [paymentTypeFilter, setPaymentTypeFilter] = useState("All");           // 
   const [showClinicServiceSuggestions, setShowClinicServiceSuggestions] = useState(false);
   const [savingClinicServices, setSavingClinicServices] = useState(false);
 
-
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
 
   const phoneInputRef = useRef(null);
   const nameInputRef = useRef(null);
   const searchTimeoutRef = useRef(null);
 
-  const API_BASE_INVURL = 'https://api.timelyhealth.in'
-const hasActiveFilters =
-  searchQuery !== "" || statusFilter !== "All" || feeTypeFilter !== "All" ||
-  doctorFilter !== "All" || bookingTypeFilter !== "All" ||
-  fromDate !== "" || toDate !== "" || apptFromDate !== "" || apptToDate !== "" ||
-  (selectedMonth && selectedMonth !== "") ||
-  revenueCategoryFilter !== "All" || paymentTypeFilter !== "All";
+  const API_BASE_INVURL = 'https://api.timelyhealth.in';
 
+  const hasActiveFilters =
+    searchQuery !== "" || statusFilter !== "All" || feeTypeFilter !== "All" ||
+    doctorFilter !== "All" || bookingTypeFilter !== "All" ||
+    fromDate !== "" || toDate !== "" || apptFromDate !== "" || apptToDate !== "" ||
+    (selectedMonth && selectedMonth !== "") ||
+    (timeFilter && timeFilter !== "All") ||
+    revenueCategoryFilter !== "All" || paymentTypeFilter !== "All";
 
-
-
-  // ✅ OPEN CLINIC SERVICES POPUP
   const openClinicServicesModal = (booking) => {
     if (!booking) return;
     const allServices = getBookingServices(booking);
@@ -659,14 +554,12 @@ const hasActiveFilters =
       const cat = classifyService(s);
       return cat === "clinic";
     });
-    setClinicServicesList(
-      clinicOnly.map((s) => ({
-        serviceId: s.serviceId || s._id || "",
-        name: s.name,
-        price: Number(s.price) || 0,
-        description: s.description || "",
-      }))
-    );
+    setClinicServicesList(clinicOnly.map((s) => ({
+      serviceId: s.serviceId || s._id || "",
+      name: s.name,
+      price: Number(s.price) || 0,
+      description: s.description || "",
+    })));
     setClinicServicesBooking(booking);
     setClinicServiceInput("");
     setClinicServicePrice("");
@@ -675,85 +568,50 @@ const hasActiveFilters =
     setShowClinicServicesModal(true);
   };
 
-  // ✅ ADD CLINIC SERVICE (from dropdown)
   const handleAddClinicServiceItem = (service) => {
     if (!service) return;
-    const alreadyExists = clinicServicesList.some(
-      (s) => s.name.toLowerCase() === (service.name || "").toLowerCase()
-    );
-    if (alreadyExists) {
-      showToast("Service already added!", "info");
-      return;
-    }
-    setClinicServicesList((prev) => [
-      ...prev,
-      {
-        serviceId: service._id || "",
-        name: service.name,
-        price: Number(service.price) || 0,
-        description: service.description || "",
-      },
-    ]);
+    const alreadyExists = clinicServicesList.some((s) => s.name.toLowerCase() === (service.name || "").toLowerCase());
+    if (alreadyExists) { showToast("Service already added!", "info"); return; }
+    setClinicServicesList((prev) => [...prev, {
+      serviceId: service._id || "",
+      name: service.name,
+      price: Number(service.price) || 0,
+      description: service.description || "",
+    }]);
     setClinicServiceInput("");
     setClinicServicePrice("");
     setClinicServiceSuggestions([]);
     setShowClinicServiceSuggestions(false);
   };
 
-  // ✅ ADD CLINIC SERVICE (custom typed)
   const handleAddCustomClinicService = async () => {
     const name = clinicServiceInput.trim();
     const price = clinicServicePrice.trim();
     if (!name) { showToast("Please enter a service name", "error"); return; }
     if (!price) { showToast("Please enter service price", "error"); return; }
+    const alreadyExists = clinicServicesList.some((s) => s.name.toLowerCase() === name.toLowerCase());
+    if (alreadyExists) { showToast("Service already added!", "info"); return; }
+    const existingService = services.find((s) => s.name.toLowerCase() === name.toLowerCase());
+    if (existingService) { handleAddClinicServiceItem(existingService); return; }
 
-    const alreadyExists = clinicServicesList.some(
-      (s) => s.name.toLowerCase() === name.toLowerCase()
-    );
-    if (alreadyExists) {
-      showToast("Service already added!", "info");
-      return;
-    }
-
-    // Check if exists in services list
-    const existingService = services.find(
-      (s) => s.name.toLowerCase() === name.toLowerCase()
-    );
-    if (existingService) {
-      handleAddClinicServiceItem(existingService);
-      return;
-    }
-
-    // Create new service in DB
     try {
-      const res = await axios.post(`${API_BASE_URL}/services/addservice`, {
-        name,
-        price: parseFloat(price),
-        description: "",
-      });
+      const res = await axios.post(`${API_BASE_URL}/services/addservice`, { name, price: parseFloat(price), description: "" });
       if (res?.data?.success) {
         const newService = res.data.data;
         await fetchServices();
-        setClinicServicesList((prev) => [
-          ...prev,
-          {
-            serviceId: newService._id || "",
-            name: newService.name,
-            price: Number(newService.price) || 0,
-            description: "",
-          },
-        ]);
+        setClinicServicesList((prev) => [...prev, {
+          serviceId: newService._id || "",
+          name: newService.name,
+          price: Number(newService.price) || 0,
+          description: "",
+        }]);
         setClinicServiceInput("");
         setClinicServicePrice("");
         setClinicServiceSuggestions([]);
         setShowClinicServiceSuggestions(false);
         showToast(`Service "${newService.name}" created and added!`, "success");
-      } else {
-        showToast(res.data?.message || "Failed to create service", "error");
-      }
-    } catch (error) {
-      showToast(error.response?.data?.message || "Failed to create service", "error");
-    }
+      } else { showToast(res.data?.message || "Failed to create service", "error"); }
+    } catch (error) { showToast(error.response?.data?.message || "Failed to create service", "error"); }
   };
 
   const handleRemoveClinicServiceItem = (index) => {
@@ -761,45 +619,31 @@ const hasActiveFilters =
   };
 
   const handleUpdateClinicServicePrice = (index, newPrice) => {
-    setClinicServicesList((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, price: Number(newPrice) || 0 } : s))
-    );
+    setClinicServicesList((prev) => prev.map((s, i) => (i === index ? { ...s, price: Number(newPrice) || 0 } : s)));
   };
 
-  // ✅ SAVE CLINIC SERVICES → API CALL
   const handleSaveClinicServices = async () => {
     if (!clinicServicesBooking) return;
     setSavingClinicServices(true);
     try {
       const booking = clinicServicesBooking;
-
-      // Keep non-clinic services (lab, pharmacy)
       const allServices = getBookingServices(booking);
       const nonClinic = allServices.filter((s) => {
         if (s.isReviewService) return false;
         const cat = classifyService(s);
         return cat !== "clinic";
       });
-
-      // Merge: new clinic + existing non-clinic
       const mergedServices = [
         ...clinicServicesList.map((s) => ({
-          serviceId: s.serviceId || "",
-          name: s.name,
-          price: Number(s.price) || 0,
-          description: s.description || "",
-          category: "clinic",
+          serviceId: s.serviceId || "", name: s.name, price: Number(s.price) || 0,
+          description: s.description || "", category: "clinic",
         })),
         ...nonClinic.map((s) => ({
-          serviceId: s.serviceId || s._id || "",
-          name: s.name,
-          price: Number(s.price) || 0,
-          description: s.description || "",
-          category: s.category || "",
+          serviceId: s.serviceId || s._id || "", name: s.name, price: Number(s.price) || 0,
+          description: s.description || "", category: s.category || "",
         })),
       ];
 
-      // Recompute financials
       const fin = computeFinancials(mergedServices, {
         labTotal: Number(booking.labTotal) || 0,
         medicineTotal: Number(booking.medicineTotal) || 0,
@@ -811,50 +655,28 @@ const hasActiveFilters =
       });
 
       const payload = {
-        patientTitle: booking.patientTitle,
-        patientName: booking.patientName,
-        patientPhone: booking.patientPhone,
-        patientAge: booking.patientAge,
-        patientDob: booking.patientDob,
-        patientGender: booking.patientGender,
-        patientAddress: booking.patientAddress,
-        patientCity: booking.patientCity,
-        patientPincode: booking.patientPincode,
-        purpose: booking.purpose,
-        paymentType: booking.paymentType,
-        paymentStatus: fin.paymentStatus,
-        partialAmount: fin.parsedPartial,
-        amountPaid: fin.amountPaid,
-        balanceAmount: fin.balanceAmount,
-        subtotal: fin.subtotal,
-        commissionAmount: fin.commissionAmount,
-        discount: fin.discountAmount,
-        discountType: booking.discountType || "₹",
-        offerDeduction: fin.offerDeduction,
-        finalPayable: fin.finalPayable,
-        finalPayableAmount: fin.finalPayable,
-        grandTotal: fin.finalPayable,
-        totalAmount: fin.finalPayable,
-        doctorId: booking.doctorId,
-        appointmentDate: booking.appointmentDate,
-        isOP: true,
-        status: booking.status || "confirmed",
-        serviceItems: mergedServices,
-        services: mergedServices,
-        referredByCustomer: booking.referredByCustomer,
-        referredByDoctor: booking.referredByDoctor,
-        referralCustomerId: booking.referralCustomerId,
-        referralDoctorId: booking.referralDoctorId,
-        referralCommission: booking.referralCommission,
-        referralCommissionType: booking.referralCommissionType,
+        patientTitle: booking.patientTitle, patientName: booking.patientName,
+        patientPhone: booking.patientPhone, patientAge: booking.patientAge,
+        patientDob: booking.patientDob, patientGender: booking.patientGender,
+        patientAddress: booking.patientAddress, patientCity: booking.patientCity,
+        patientPincode: booking.patientPincode, purpose: booking.purpose,
+        paymentType: booking.paymentType, paymentStatus: fin.paymentStatus,
+        partialAmount: fin.parsedPartial, amountPaid: fin.amountPaid,
+        balanceAmount: fin.balanceAmount, subtotal: fin.subtotal,
+        commissionAmount: fin.commissionAmount, discount: fin.discountAmount,
+        discountType: booking.discountType || "₹", offerDeduction: fin.offerDeduction,
+        finalPayable: fin.finalPayable, finalPayableAmount: fin.finalPayable,
+        grandTotal: fin.finalPayable, totalAmount: fin.finalPayable,
+        doctorId: booking.doctorId, appointmentDate: booking.appointmentDate,
+        isOP: true, status: booking.status || "confirmed",
+        serviceItems: mergedServices, services: mergedServices,
+        referredByCustomer: booking.referredByCustomer, referredByDoctor: booking.referredByDoctor,
+        referralCustomerId: booking.referralCustomerId, referralDoctorId: booking.referralDoctorId,
+        referralCommission: booking.referralCommission, referralCommissionType: booking.referralCommissionType,
         offerApplied: booking.offerApplied || null,
       };
 
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/updateop/${booking._id}`,
-        payload
-      );
-
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${booking._id}`, payload);
       if (res?.data?.success) {
         showToast(`✅ Services updated! ${clinicServicesList.length} clinic service${clinicServicesList.length !== 1 ? "s" : ""}.`, "success");
         setShowClinicServicesModal(false);
@@ -862,19 +684,12 @@ const hasActiveFilters =
         setClinicServicesList([]);
         await fetchBookings();
         refreshPatientBookings();
-      } else {
-        showToast(res.data?.message || "Failed to update services", "error");
-      }
+      } else { showToast(res.data?.message || "Failed to update services", "error"); }
     } catch (err) {
       console.error("Clinic services save error:", err);
       showToast(err.response?.data?.message || "Failed to update services", "error");
-    } finally {
-      setSavingClinicServices(false);
-    }
+    } finally { setSavingClinicServices(false); }
   };
-
-
-
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -886,32 +701,23 @@ const hasActiveFilters =
     if (userRole === "employee") {
       const cleanPath = path.startsWith("/") ? path.substring(1) : path;
       navigate(`/employee/${cleanPath}`);
-    } else {
-      navigate(path);
-    }
+    } else { navigate(path); }
   };
 
   const patients = useMemo(() => {
     const map = new Map();
-    const sortedBookings = [...bookings].sort(
-      (a, b) => new Date(b.createdAt || b.bookedAt || 0) - new Date(a.createdAt || a.bookedAt || 0)
-    );
+    const sortedBookings = [...bookings].sort((a, b) => new Date(b.createdAt || b.bookedAt || 0) - new Date(a.createdAt || a.bookedAt || 0));
     sortedBookings.forEach((b) => {
       const key = (b.patientPhone || b.patientName || "").toString().trim();
       if (!key) return;
       if (!map.has(key)) {
         map.set(key, {
           _id: b.patientId || b._id || key,
-          title: b.patientTitle || "Mr.",
-          name: b.patientName || "",
-          dob: b.patientDob || "",
-          age: b.patientAge || "",
-          gender: b.patientGender || "",
-          phone: b.patientPhone || "",
-          email: b.patientEmail || "",
-          address: b.patientAddress || "",
-          city: b.patientCity || "",
-          pincode: b.patientPincode || "",
+          title: b.patientTitle || "Mr.", name: b.patientName || "",
+          dob: b.patientDob || "", age: b.patientAge || "",
+          gender: b.patientGender || "", phone: b.patientPhone || "",
+          email: b.patientEmail || "", address: b.patientAddress || "",
+          city: b.patientCity || "", pincode: b.patientPincode || "",
           bloodGroup: b.patientBloodGroup || "",
           medicalHistory: b.patientMedicalHistory || "",
           allergies: b.patientAllergies || "",
@@ -944,6 +750,17 @@ const hasActiveFilters =
     setFormData((prev) => ({ ...prev, appointmentDate: today }));
   }, []);
 
+  // ✅ REFETCH when filters change
+  useEffect(() => {
+    fetchBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    timeFilter,
+    fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
+    doctorFilter, paymentTypeFilter, statusFilter,
+    bookingTypeFilter, revenueCategoryFilter, searchQuery
+  ]);
+
   useEffect(() => {
     if (location.state?.openAddPatient) {
       setTimeout(() => {
@@ -968,7 +785,7 @@ const hasActiveFilters =
       if (!e.target.closest(".payment-dropdown")) setOpenPaymentDropdown(null);
       if (!e.target.closest(".service-dropdown-add-patient")) setShowServiceSuggestions(false);
       if (!e.target.closest(".city-dropdown-add-patient")) setShowCitySuggestions(false);
-      if (!e.target.closest(".action-dropdown")) setOpenActionDropdown(null); // ✅ ADD
+      if (!e.target.closest(".action-dropdown")) setOpenActionDropdown(null);
     };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
@@ -988,13 +805,31 @@ const hasActiveFilters =
     fetchReferralContacts();
   };
 
+  // ✅ FETCH BOOKINGS — with backend filters
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings`);
+      const params = new URLSearchParams();
+      if (timeFilter && timeFilter !== "All") params.append("timeFilter", timeFilter);
+      if (apptFromDate) params.append("apptFrom", apptFromDate);
+      if (apptToDate) params.append("apptTo", apptToDate);
+      if (fromDate) params.append("regFrom", fromDate);
+      if (toDate) params.append("regTo", toDate);
+      if (selectedMonth) params.append("month", selectedMonth);
+      if (doctorFilter !== "All") params.append("doctor", doctorFilter);
+      if (paymentTypeFilter !== "All") params.append("paymentType", paymentTypeFilter);
+      if (statusFilter !== "All") params.append("paymentStatus", statusFilter);
+      if (bookingTypeFilter !== "All") params.append("bookingType", bookingTypeFilter);
+      if (revenueCategoryFilter !== "All") params.append("revenueCategory", revenueCategoryFilter);
+      if (searchQuery.trim()) params.append("search", searchQuery.trim());
+
+      const url = `${API_BASE_URL}/appointment-slots/getallbookings${params.toString() ? "?" + params.toString() : ""}`;
+      const res = await axios.get(url);
+
       let bookingsData = [];
       if (res.data?.success) {
         bookingsData = res.data.bookings || res.data.data || [];
+        if (res.data.stats) setBackendStats(res.data.stats);
       } else if (Array.isArray(res.data)) {
         bookingsData = res.data;
       }
@@ -1103,7 +938,6 @@ const hasActiveFilters =
           reviews: Array.isArray(b.reviews) ? b.reviews : [],
           reviewServicesTotal: Number(b.reviewServicesTotal) || 0,
           invoiceUrl: b.invoiceUrl || null,
-          // ✅ OFFER APPLIED
           offerApplied: b.offerApplied || null,
         };
       });
@@ -1111,6 +945,7 @@ const hasActiveFilters =
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setBookings([]);
+      setBackendStats(null);
     } finally {
       setLoading(false);
     }
@@ -1149,12 +984,9 @@ const hasActiveFilters =
     } catch (error) { console.error("Error fetching referral contacts:", error); setReferralContacts([]); }
   };
 
-  // ✅ OFFER HELPERS
   const getCustomerOffers = (customerId) => {
     if (!customerId) return [];
-    const contact = referralContacts.find(
-      (c) => c._id === customerId && c.referralType === "customer"
-    );
+    const contact = referralContacts.find((c) => c._id === customerId && c.referralType === "customer");
     return Array.isArray(contact?.offers) ? contact.offers : [];
   };
 
@@ -1172,46 +1004,38 @@ const hasActiveFilters =
     } catch { return 0; }
   };
 
- const filterSlotsByDoctorAndDate = (doctorId, date) => {
-  if (!doctorId || !date) { setAvailableSlots([]); return; }
-  setSlotsLoading(true);
-  setAvailableSlots([]);
-  setFormData((prev) => ({ ...prev, slotId: "" }));
-  try {
-    const selectedDay = getDayNameFromDate(date);
-
-    // ✅ Date-priority match
-    let filtered = allSlots.filter((slot) => {
-      if (slot.doctorId !== doctorId) return false;
-      if (slot.type === "break") return false;
-      if (slot.date && slot.date.trim() !== "") {
-        return slot.date === date;
-      }
-      return slot.dayOfWeek === selectedDay;
-    });
-
-    const seen = new Set();
-    filtered = filtered.filter((slot) => {
-      if (seen.has(slot.startTime)) return false;
-      seen.add(slot.startTime);
-      return true;
-    });
-
-    // ✅ Past-time filter HATA diya — saare slots (past bhi) selectable
-
-    filtered.sort((a, b) => {
-      const aMins = parseSlotTimeToMinutes(a.startTime);
-      const bMins = parseSlotTimeToMinutes(b.startTime);
-      return aMins - bMins;
-    });
-
-    setAvailableSlots(filtered);
-  } catch (error) {
-    console.error("Error filtering slots:", error);
+  const filterSlotsByDoctorAndDate = (doctorId, date) => {
+    if (!doctorId || !date) { setAvailableSlots([]); return; }
+    setSlotsLoading(true);
     setAvailableSlots([]);
-    showToast("Failed to filter slots", "error");
-  } finally { setSlotsLoading(false); }
-};
+    setFormData((prev) => ({ ...prev, slotId: "" }));
+    try {
+      const selectedDay = getDayNameFromDate(date);
+      let filtered = allSlots.filter((slot) => {
+        if (slot.doctorId !== doctorId) return false;
+        if (slot.type === "break") return false;
+        if (slot.date && slot.date.trim() !== "") return slot.date === date;
+        return slot.dayOfWeek === selectedDay;
+      });
+      const seen = new Set();
+      filtered = filtered.filter((slot) => {
+        if (seen.has(slot.startTime)) return false;
+        seen.add(slot.startTime);
+        return true;
+      });
+      filtered.sort((a, b) => {
+        const aMins = parseSlotTimeToMinutes(a.startTime);
+        const bMins = parseSlotTimeToMinutes(b.startTime);
+        return aMins - bMins;
+      });
+      setAvailableSlots(filtered);
+    } catch (error) {
+      console.error("Error filtering slots:", error);
+      setAvailableSlots([]);
+      showToast("Failed to filter slots", "error");
+    } finally { setSlotsLoading(false); }
+  };
+
   const checkExistingPatient = (value) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     if (editingId) { setExistingPatient(null); setShowExistingPatientPopup(false); return; }
@@ -1227,14 +1051,10 @@ const hasActiveFilters =
           _id: latest.patientId || latest._id,
           title: latest.patientTitle || "Mr.",
           name: latest.patientName || "",
-          dob: latest.patientDob || "",
-          age: latest.patientAge || "",
-          gender: latest.patientGender || "",
-          phone: latest.patientPhone || "",
-          address: latest.patientAddress || "",
-          city: latest.patientCity || "",
-          pincode: latest.patientPincode || "",
-          reason: latest.purpose || "",
+          dob: latest.patientDob || "", age: latest.patientAge || "",
+          gender: latest.patientGender || "", phone: latest.patientPhone || "",
+          address: latest.patientAddress || "", city: latest.patientCity || "",
+          pincode: latest.patientPincode || "", reason: latest.purpose || "",
           paymentType: latest.paymentType || "cash",
           paymentStatus: latest.paymentStatus || "Pending",
           serviceItems: getBookingServices(latest),
@@ -1247,10 +1067,7 @@ const hasActiveFilters =
         };
         setExistingPatient(derived);
         setShowExistingPatientPopup(true);
-      } else {
-        setExistingPatient(null);
-        setShowExistingPatientPopup(false);
-      }
+      } else { setExistingPatient(null); setShowExistingPatientPopup(false); }
       setSearchingPatient(false);
     }, 500);
   };
@@ -1274,23 +1091,14 @@ const hasActiveFilters =
       referralDoctorId: existingPatient.referralDoctorId || "",
       referralCommission: existingPatient.referralCommission || "",
       referralCommissionType: existingPatient.referralCommissionType || "",
-      serviceItems: [],
-      paymentStatus: "Pending",
-      partialAmount: "",
-      discount: "",
-      discountType: "₹",
-      paymentType: "cash",
-      doctorId: "",
-      slotId: "",
-      offerApplied: null,
+      serviceItems: [], paymentStatus: "Pending", partialAmount: "",
+      discount: "", discountType: "₹", paymentType: "cash",
+      doctorId: "", slotId: "", offerApplied: null,
     }));
-    // ✅ Restore offers if customer exists
     if (existingPatient.referralCustomerId) {
       const offers = getCustomerOffers(existingPatient.referralCustomerId);
       setSelectedCustomerOffers(offers);
-    } else {
-      setSelectedCustomerOffers([]);
-    }
+    } else { setSelectedCustomerOffers([]); }
     setSelectedOfferId("");
     setAppliedOffer(null);
     setCitySuggestions([]);
@@ -1305,13 +1113,7 @@ const hasActiveFilters =
       const autoTitle = autoSelectTitleFromDob(dob, prev.gender);
       const finalTitle = autoTitle || prev.title;
       const autoGender = genderFromTitle(finalTitle);
-      return {
-        ...prev,
-        dob,
-        age: newAge,
-        title: finalTitle,
-        gender: autoGender || prev.gender,
-      };
+      return { ...prev, dob, age: newAge, title: finalTitle, gender: autoGender || prev.gender };
     });
   };
 
@@ -1333,33 +1135,19 @@ const hasActiveFilters =
   const handlePincodeChange = (e) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 6);
     setFormData((prev) => ({ ...prev, pincode: value }));
-
     if (pincodeDebounceRef.current) clearTimeout(pincodeDebounceRef.current);
-
-    if (!value || value.length < 6) {
-      setCitySuggestions([]);
-      setShowCitySuggestions(false);
-      return;
-    }
-
+    if (!value || value.length < 6) { setCitySuggestions([]); setShowCitySuggestions(false); return; }
     pincodeDebounceRef.current = setTimeout(async () => {
       setFetchingCity(true);
       const result = await fetchCityFromPincode(value);
       setFetchingCity(false);
-
       if (result) {
         setCitySuggestions(result.allOffices.map((o) => ({
-          pincode: o.Pincode,
-          area: o.Name,
-          district: o.District,
-          state: o.State,
+          pincode: o.Pincode, area: o.Name, district: o.District, state: o.State,
         })));
         setShowCitySuggestions(true);
         setFormData((prev) => ({ ...prev, city: prev.city || result.city }));
-      } else {
-        setCitySuggestions([]);
-        setShowCitySuggestions(false);
-      }
+      } else { setCitySuggestions([]); setShowCitySuggestions(false); }
     }, 500);
   };
 
@@ -1372,7 +1160,6 @@ const hasActiveFilters =
     setShowCitySuggestions(false);
   };
 
-  // ✅ UPDATED: Customer select + offers load
   const handleReferralCustomerSelect = (contact) => {
     if (!contact) return;
     const offers = Array.isArray(contact.offers) ? contact.offers : [];
@@ -1402,13 +1189,9 @@ const hasActiveFilters =
   const handleAddServiceItem = (service) => {
     if (!service) return;
     if (formData.serviceItems.some((s) => s._id === service._id)) {
-      showToast("Service already added!", "info");
-      return;
+      showToast("Service already added!", "info"); return;
     }
-    setFormData((prev) => ({
-      ...prev,
-      serviceItems: [...prev.serviceItems, { ...service, custom: false }]
-    }));
+    setFormData((prev) => ({ ...prev, serviceItems: [...prev.serviceItems, { ...service, custom: false }] }));
     setFilteredServices([]);
     setShowServiceSuggestions(false);
   };
@@ -1418,14 +1201,12 @@ const hasActiveFilters =
     const servicePrice = formData.servicePrice?.trim();
     if (!serviceName) { showToast("Please enter a service name", "error"); return; }
     if (!servicePrice) { showToast("Please enter service price", "error"); return; }
-
     let existingService = services.find((s) => s.name.toLowerCase() === serviceName.toLowerCase());
     if (existingService) {
       handleAddServiceItem(existingService);
       setFormData((prev) => ({ ...prev, serviceName: "", servicePrice: "" }));
       return;
     }
-
     try {
       const res = await axios.post(`${API_BASE_URL}/services/addservice`, {
         name: serviceName, price: parseFloat(servicePrice), description: ""
@@ -1439,35 +1220,21 @@ const hasActiveFilters =
           serviceName: "", servicePrice: ""
         }));
         showToast(`Service "${newService.name}" created and added!`, "success");
-      } else {
-        showToast(res.data?.message || "Failed to create service", "error");
-      }
-    } catch (error) {
-      showToast(error.response?.data?.message || "Failed to create service", "error");
-    }
+      } else { showToast(res.data?.message || "Failed to create service", "error"); }
+    } catch (error) { showToast(error.response?.data?.message || "Failed to create service", "error"); }
   };
 
   const handleRemoveServiceItem = (serviceId) => {
-    setFormData((prev) => ({
-      ...prev,
-      serviceItems: prev.serviceItems.filter((s) => s._id !== serviceId)
-    }));
+    setFormData((prev) => ({ ...prev, serviceItems: prev.serviceItems.filter((s) => s._id !== serviceId) }));
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === "phone") {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-      checkExistingPatient(value);
-    } else if (name === "dob") {
-      handleDobChange(value);
-    } else if (name === "gender") {
-      handleGenderChange(value);
-    } else if (name === "title") {
-      handleTitleChange(value);
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    if (name === "phone") { setFormData((prev) => ({ ...prev, [name]: value })); checkExistingPatient(value); }
+    else if (name === "dob") handleDobChange(value);
+    else if (name === "gender") handleGenderChange(value);
+    else if (name === "title") handleTitleChange(value);
+    else setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSlotSelect = (slotId) => setFormData((prev) => ({ ...prev, slotId }));
@@ -1509,9 +1276,7 @@ const hasActiveFilters =
       offerApplied: existingBooking?.offerApplied || null,
     });
 
-    // ✅ Restore offers
-    const customerId =
-      existingBooking?.referralCustomerId || patient.referralCustomerId || "";
+    const customerId = existingBooking?.referralCustomerId || patient.referralCustomerId || "";
     if (customerId) {
       const offers = getCustomerOffers(customerId);
       setSelectedCustomerOffers(offers);
@@ -1520,9 +1285,7 @@ const hasActiveFilters =
       if (appliedOfferId) {
         const offer = offers.find((o) => o._id === appliedOfferId);
         setAppliedOffer(offer || null);
-      } else {
-        setAppliedOffer(null);
-      }
+      } else { setAppliedOffer(null); }
     } else {
       setSelectedCustomerOffers([]);
       setSelectedOfferId("");
@@ -1556,7 +1319,6 @@ const hasActiveFilters =
     setShowServiceSuggestions(false);
     setCitySuggestions([]);
     setShowCitySuggestions(false);
-    // ✅ Reset offers
     setSelectedCustomerOffers([]);
     setSelectedOfferId("");
     setAppliedOffer(null);
@@ -1574,7 +1336,6 @@ const hasActiveFilters =
     setShowServiceSuggestions(false);
     setCitySuggestions([]);
     setShowCitySuggestions(false);
-    // ✅ Reset offers
     setSelectedCustomerOffers([]);
     setSelectedOfferId("");
     setAppliedOffer(null);
@@ -1582,31 +1343,20 @@ const hasActiveFilters =
 
   const handleToggleActiveStatus = async (patient) => {
     const matchingBooking = getMatchingBooking(patient);
-    if (!matchingBooking) {
-      showToast("No booking found for this patient", "error");
-      return;
-    }
+    if (!matchingBooking) { showToast("No booking found for this patient", "error"); return; }
     const currentStatus = matchingBooking.isActive !== undefined ? matchingBooking.isActive : true;
     const newStatus = !currentStatus;
-
     setTogglingStatus(patient._id);
     try {
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/toggle-active/${matchingBooking._id}`,
-        { isActive: newStatus }
-      );
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/toggle-active/${matchingBooking._id}`, { isActive: newStatus });
       if (res?.data?.success) {
         showToast(`Patient marked as ${newStatus ? "Active" : "Inactive"}!`, "success");
         await fetchBookings();
         refreshPatientBookings();
-      } else {
-        showToast(res.data.message || "Failed to update status", "error");
-      }
+      } else { showToast(res.data.message || "Failed to update status", "error"); }
     } catch (error) {
       showToast(error.response?.data?.message || "Failed to update status", "error");
-    } finally {
-      setTogglingStatus(null);
-    }
+    } finally { setTogglingStatus(null); }
   };
 
   const handleRowClick = (patient) => fetchPatientData(patient);
@@ -1615,10 +1365,9 @@ const hasActiveFilters =
     setHistoryLoading(true);
     setSelectedPatient(patient);
     try {
-      const list = bookings.filter(
-        (b) => b.patientPhone === patient.phone ||
-          (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase())
-      );
+      const list = bookings.filter((b) =>
+        b.patientPhone === patient.phone ||
+        (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
       list.sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
       setPatientBookings(list);
       setShowPatientModal(true);
@@ -1657,17 +1406,12 @@ const hasActiveFilters =
 
   const handlePaymentSelect = async (booking, paymentStatus, e) => {
     if (e) { e.stopPropagation(); e.preventDefault(); }
-    if (paymentUpdating || paymentStatus === booking.paymentStatus) {
-      setOpenPaymentDropdown(null);
-      return;
-    }
-
+    if (paymentUpdating || paymentStatus === booking.paymentStatus) { setOpenPaymentDropdown(null); return; }
     if (paymentStatus === "Partial" || paymentStatus === "Pending") {
       openPartialModal(booking);
       setOpenPaymentDropdown(null);
       return;
     }
-
     setPaymentUpdating(true);
     try {
       const res = await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, { paymentStatus });
@@ -1684,10 +1428,9 @@ const hasActiveFilters =
 
   const refreshPatientBookings = () => {
     if (selectedPatient) {
-      const updated = bookings.filter(
-        (b) => b.patientPhone === selectedPatient.phone ||
-          (b.patientName && selectedPatient.name && b.patientName.toLowerCase() === selectedPatient.name.toLowerCase())
-      );
+      const updated = bookings.filter((b) =>
+        b.patientPhone === selectedPatient.phone ||
+        (b.patientName && selectedPatient.name && b.patientName.toLowerCase() === selectedPatient.name.toLowerCase()));
       updated.sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
       setPatientBookings(updated);
     }
@@ -1696,19 +1439,18 @@ const hasActiveFilters =
   const openPartialModal = (booking) => {
     setPartialBooking(booking);
     setPartialAmountInput(String(booking.amountPaid || booking.partialAmount || ""));
-    setPartialPaymentType(booking.paymentType || "cash"); // ✅ NEW
+    setPartialPaymentType(booking.paymentType || "cash");
     setShowPartialModal(true);
   };
 
   const handleMarkFullPaid = async () => {
     if (!partialBooking) return;
     const finalPayable = getBookingFinalPayable(partialBooking);
-
     setSavingPartial(true);
     try {
       const res = await axios.put(`${API_BASE_URL}/appointment-slots/${partialBooking._id}`, {
         paymentStatus: "Paid",
-        paymentType: partialPaymentType, // ✅ NEW
+        paymentType: partialPaymentType,
         amountPaid: finalPayable,
         partialAmount: finalPayable,
         balanceAmount: 0,
@@ -1718,20 +1460,15 @@ const hasActiveFilters =
         setShowPartialModal(false);
         setPartialBooking(null);
         setPartialAmountInput("");
-        setPartialPaymentType("cash"); // ✅ NEW
+        setPartialPaymentType("cash");
         await fetchBookings();
         refreshPatientBookings();
       } else showToast(res.data.message || "Failed to update payment", "error");
     } catch (error) {
       showToast(error.response?.data?.message || "Failed to update payment", "error");
-    } finally {
-      setSavingPartial(false);
-    }
+    } finally { setSavingPartial(false); }
   };
 
-
-
-  // ✅ OPEN PAYMENT TYPE EDIT MODAL
   const openPaymentTypeEditModal = (booking) => {
     if (!booking) return;
     setPaymentTypeEditBooking(booking);
@@ -1739,15 +1476,11 @@ const hasActiveFilters =
     setShowPaymentTypeEditModal(true);
   };
 
-  // ✅ SAVE PAYMENT TYPE
   const handleSavePaymentTypeEdit = async () => {
     if (!paymentTypeEditBooking) return;
     setSavingPaymentTypeEdit(true);
     try {
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/${paymentTypeEditBooking._id}`,
-        { paymentType: paymentTypeEditValue }
-      );
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${paymentTypeEditBooking._id}`, { paymentType: paymentTypeEditValue });
       if (res?.data?.success) {
         showToast(`✅ Payment Type updated to ${paymentTypeEditValue}!`, "success");
         setShowPaymentTypeEditModal(false);
@@ -1755,16 +1488,11 @@ const hasActiveFilters =
         setPaymentTypeEditValue("cash");
         await fetchBookings();
         refreshPatientBookings();
-      } else {
-        showToast(res.data?.message || "Failed to update payment type", "error");
-      }
+      } else { showToast(res.data?.message || "Failed to update payment type", "error"); }
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to update payment type", "error");
-    } finally {
-      setSavingPaymentTypeEdit(false);
-    }
+    } finally { setSavingPaymentTypeEdit(false); }
   };
-
 
   const openMedicineTotalModal = (booking) => {
     setMedicineTotalBooking(booking);
@@ -1778,10 +1506,7 @@ const hasActiveFilters =
     if (total < 0) { showToast("Invalid amount", "error"); return; }
     setSavingMedicineTotal(true);
     try {
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/updatecharges/${medicineTotalBooking._id}`,
-        { medicineTotal: total }
-      );
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/updatecharges/${medicineTotalBooking._id}`, { medicineTotal: total });
       if (res?.data?.success) {
         showToast(`Medicine ₹${total} saved. New Total: ₹${res.data.data.totalAmount}`, "success");
         setShowMedicineTotalModal(false);
@@ -1806,10 +1531,7 @@ const hasActiveFilters =
     if (total < 0) { showToast("Invalid amount", "error"); return; }
     setSavingLabTotal(true);
     try {
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/updatecharges/${labTotalBooking._id}`,
-        { labTotal: total }
-      );
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/updatecharges/${labTotalBooking._id}`, { labTotal: total });
       if (res?.data?.success) {
         showToast(`Lab ₹${total} saved. New Total: ₹${res.data.data.totalAmount}`, "success");
         setShowLabTotalModal(false);
@@ -1825,10 +1547,8 @@ const hasActiveFilters =
   const openVitalsModal = (booking) => {
     setVitalsBooking(booking);
     setVitalsData({
-      temp: booking.vitalsTemp || "",
-      bp: booking.vitalsBp || "",
-      pr: booking.vitalsPr || "",
-      weight: booking.vitalsWeight || "",
+      temp: booking.vitalsTemp || "", bp: booking.vitalsBp || "",
+      pr: booking.vitalsPr || "", weight: booking.vitalsWeight || "",
     });
     setShowVitalsModal(true);
   };
@@ -1837,15 +1557,10 @@ const hasActiveFilters =
     if (!vitalsBooking) return;
     setSavingVitals(true);
     try {
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/vitals/${vitalsBooking._id}`,
-        {
-          vitalsTemp: vitalsData.temp,
-          vitalsBp: vitalsData.bp,
-          vitalsPr: vitalsData.pr,
-          vitalsWeight: vitalsData.weight,
-        }
-      );
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/vitals/${vitalsBooking._id}`, {
+        vitalsTemp: vitalsData.temp, vitalsBp: vitalsData.bp,
+        vitalsPr: vitalsData.pr, vitalsWeight: vitalsData.weight,
+      });
       if (res?.data?.success) {
         showToast("Vitals saved successfully!", "success");
         setShowVitalsModal(false);
@@ -1853,50 +1568,37 @@ const hasActiveFilters =
         setVitalsData({ temp: "", bp: "", pr: "", weight: "" });
         await fetchBookings();
         refreshPatientBookings();
-      } else {
-        showToast(res.data.message || "Failed to save vitals", "error");
-      }
+      } else { showToast(res.data.message || "Failed to save vitals", "error"); }
     } catch (error) {
       showToast(error.response?.data?.message || "Failed to save vitals", "error");
-    } finally {
-      setSavingVitals(false);
-    }
+    } finally { setSavingVitals(false); }
   };
 
   const openReviewModal = (booking) => {
     if (!booking) return;
-
     setReviewBooking(booking);
     setReviewData({
       isReviewed: booking.isReviewed === true,
       reviewDate: booking.reviewDate || new Date().toISOString(),
     });
-
     setReviewServices([]);
     setReviewServiceInput("");
     setFilteredReviewServices([]);
     setShowReviewServiceSuggestions(false);
-
     setShowReviewModal(true);
   };
 
   const handleReviewServiceInputChange = (value) => {
     setReviewServiceInput(value);
     if (value.trim()) {
-      const filtered = services.filter((s) =>
-        s.name.toLowerCase().includes(value.toLowerCase())
-      );
+      const filtered = services.filter((s) => s.name.toLowerCase().includes(value.toLowerCase()));
       setFilteredReviewServices(filtered);
       setShowReviewServiceSuggestions(true);
-    } else {
-      setFilteredReviewServices([]);
-      setShowReviewServiceSuggestions(false);
-    }
+    } else { setFilteredReviewServices([]); setShowReviewServiceSuggestions(false); }
   };
 
   const handleAddReviewService = (service) => {
     if (!service) return;
-
     const newReviewService = {
       serviceId: service._id || service.serviceId || "",
       name: service.name || "",
@@ -1905,7 +1607,6 @@ const hasActiveFilters =
       description: service.description || "",
       addedAt: new Date().toISOString(),
     };
-
     setReviewServices((prev) => [...prev, newReviewService]);
     setReviewServiceInput("");
     setFilteredReviewServices([]);
@@ -1914,108 +1615,56 @@ const hasActiveFilters =
 
   const handleAddCustomReviewService = () => {
     const name = reviewServiceInput.trim();
-    if (!name) {
-      showToast("Please enter a service name", "error");
-      return;
-    }
-
-    const matched = services.find(
-      (s) => s.name.toLowerCase() === name.toLowerCase()
-    );
-
-    if (matched) {
-      handleAddReviewService(matched);
-      return;
-    }
-
-    setReviewServices((prev) => [
-      ...prev,
-      {
-        serviceId: "",
-        name,
-        price: 0,
-        category: "",
-        description: "",
-        custom: true,
-        addedAt: new Date().toISOString(),
-      },
-    ]);
+    if (!name) { showToast("Please enter a service name", "error"); return; }
+    const matched = services.find((s) => s.name.toLowerCase() === name.toLowerCase());
+    if (matched) { handleAddReviewService(matched); return; }
+    setReviewServices((prev) => [...prev, {
+      serviceId: "", name, price: 0, category: "", description: "",
+      custom: true, addedAt: new Date().toISOString(),
+    }]);
     setReviewServiceInput("");
     setFilteredReviewServices([]);
     setShowReviewServiceSuggestions(false);
   };
 
   const handleUpdateReviewServicePrice = (index, newPrice) => {
-    setReviewServices((prev) =>
-      prev.map((r, i) =>
-        i === index ? { ...r, price: Number(newPrice) || 0 } : r
-      )
-    );
+    setReviewServices((prev) => prev.map((r, i) => (i === index ? { ...r, price: Number(newPrice) || 0 } : r)));
   };
 
   const handleRemoveReviewService = (index) => {
     setReviewServices((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const getReviewServicesTotal = () => {
-    return reviewServices.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
-  };
+  const getReviewServicesTotal = () => reviewServices.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
 
   const handleSaveReview = async () => {
     if (!reviewBooking) return;
-
-    if (reviewServices.length === 0) {
-      showToast("Please add at least one service before marking review.", "error");
-      return;
-    }
-
+    if (reviewServices.length === 0) { showToast("Please add at least one service before marking review.", "error"); return; }
     setSavingReview(true);
     try {
-      const existingReviews = Array.isArray(reviewBooking.reviews)
-        ? reviewBooking.reviews
-        : [];
-
+      const existingReviews = Array.isArray(reviewBooking.reviews) ? reviewBooking.reviews : [];
       const mergedReviews = [
         ...existingReviews.map((r) => ({
-          serviceId: r.serviceId || "",
-          name: r.name || "",
-          price: Number(r.price) || 0,
-          category: r.category || "",
-          description: r.description || "",
-          addedAt: r.addedAt || new Date().toISOString(),
+          serviceId: r.serviceId || "", name: r.name || "",
+          price: Number(r.price) || 0, category: r.category || "",
+          description: r.description || "", addedAt: r.addedAt || new Date().toISOString(),
         })),
         ...reviewServices.map((r) => ({
-          serviceId: r.serviceId || "",
-          name: r.name || "",
-          price: Number(r.price) || 0,
-          category: r.category || "",
-          description: r.description || "",
-          addedAt: r.addedAt || new Date().toISOString(),
+          serviceId: r.serviceId || "", name: r.name || "",
+          price: Number(r.price) || 0, category: r.category || "",
+          description: r.description || "", addedAt: r.addedAt || new Date().toISOString(),
         })),
       ];
-
-      const mergedTotal = mergedReviews.reduce(
-        (sum, r) => sum + (Number(r.price) || 0),
-        0
-      );
-
+      const mergedTotal = mergedReviews.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
       const payload = {
         isReviewed: true,
         reviewDate: new Date().toISOString(),
         reviews: mergedReviews,
         reviewServicesTotal: mergedTotal,
       };
-
-      const res = await axios.put(
-        `${API_BASE_URL}/appointment-slots/review/${reviewBooking._id}`,
-        payload
-      );
-
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/review/${reviewBooking._id}`, payload);
       if (res?.data?.success || res?.status === 200) {
-        showToast(
-          `✅ Review updated! ${reviewServices.length} new service${reviewServices.length > 1 ? "s" : ""} added.`,
-          "success"
-        );
+        showToast(`✅ Review updated! ${reviewServices.length} new service${reviewServices.length > 1 ? "s" : ""} added.`, "success");
         setShowReviewModal(false);
         setReviewBooking(null);
         setReviewData({ isReviewed: false, reviewDate: "" });
@@ -2025,29 +1674,15 @@ const hasActiveFilters =
         setShowReviewServiceSuggestions(false);
         await fetchBookings();
         refreshPatientBookings();
-      } else {
-        showToast(res.data?.message || "Failed to save review", "error");
-      }
+      } else { showToast(res.data?.message || "Failed to save review", "error"); }
     } catch (error) {
       console.error("Review save error:", error);
-      const existingReviews = Array.isArray(reviewBooking.reviews)
-        ? reviewBooking.reviews
-        : [];
+      const existingReviews = Array.isArray(reviewBooking.reviews) ? reviewBooking.reviews : [];
       const merged = [...existingReviews, ...reviewServices];
-
       setBookings((prev) =>
         prev.map((b) =>
           b._id === reviewBooking._id
-            ? {
-              ...b,
-              isReviewed: true,
-              reviewDate: new Date().toISOString(),
-              reviews: merged,
-              reviewServicesTotal: merged.reduce(
-                (s, r) => s + (Number(r.price) || 0),
-                0
-              ),
-            }
+            ? { ...b, isReviewed: true, reviewDate: new Date().toISOString(), reviews: merged, reviewServicesTotal: merged.reduce((s, r) => s + (Number(r.price) || 0), 0) }
             : b
         )
       );
@@ -2055,63 +1690,41 @@ const hasActiveFilters =
       setShowReviewModal(false);
       setReviewBooking(null);
       setReviewServices([]);
-    } finally {
-      setSavingReview(false);
-    }
+    } finally { setSavingReview(false); }
   };
 
-  // ✅ UPDATED: offer amount pass karo
   const handleBookNow = async (e) => {
     e.preventDefault();
-
     setSubmitting(true);
     try {
       const fin = computeFinancials(formData.serviceItems, {
-        labTotal: 0,
-        medicineTotal: 0,
+        labTotal: 0, medicineTotal: 0,
         referralCommission: formData.referralCommission,
-        discount: formData.discount,
-        discountType: formData.discountType,
+        discount: formData.discount, discountType: formData.discountType,
         partialAmount: formData.partialAmount,
         offerAmount: appliedOffer?.offerAmount || 0,
       });
 
       const bookingPayload = {
-        patientTitle: formData.title,
-        patientName: formData.name,
-        patientPhone: formData.phone,
-        patientAge: formData.age,
-        patientDob: formData.dob,
-        patientGender: formData.gender,
-        patientAddress: formData.address,
-        patientCity: formData.city,
-        patientPincode: formData.pincode,
-        purpose: formData.reason,
-        paymentType: formData.paymentType,
-        paymentStatus: fin.paymentStatus,
-        partialAmount: fin.parsedPartial,
-        amountPaid: fin.amountPaid,
-        balanceAmount: fin.balanceAmount,
-
-        subtotal: fin.subtotal,
-        commissionAmount: fin.commissionAmount,
-        discount: fin.discountAmount,
-        discountType: formData.discountType,
-        offerDeduction: fin.offerDeduction,
-        finalPayable: fin.finalPayable,
-        finalPayableAmount: fin.finalPayable,
-        grandTotal: fin.finalPayable,
-        totalAmount: fin.finalPayable,
-
-        doctorId: formData.doctorId,
-        appointmentDate: formData.appointmentDate,
-        isOP: true,
-        status: formData.status || "confirmed",
+        patientTitle: formData.title, patientName: formData.name,
+        patientPhone: formData.phone, patientAge: formData.age,
+        patientDob: formData.dob, patientGender: formData.gender,
+        patientAddress: formData.address, patientCity: formData.city,
+        patientPincode: formData.pincode, purpose: formData.reason,
+        paymentType: formData.paymentType, paymentStatus: fin.paymentStatus,
+        partialAmount: fin.parsedPartial, amountPaid: fin.amountPaid,
+        balanceAmount: fin.balanceAmount, subtotal: fin.subtotal,
+        commissionAmount: fin.commissionAmount, discount: fin.discountAmount,
+        discountType: formData.discountType, offerDeduction: fin.offerDeduction,
+        finalPayable: fin.finalPayable, finalPayableAmount: fin.finalPayable,
+        grandTotal: fin.finalPayable, totalAmount: fin.finalPayable,
+        doctorId: formData.doctorId, appointmentDate: formData.appointmentDate,
+        isOP: true, status: formData.status || "confirmed",
         serviceItems: formData.serviceItems.map((s) => ({
-          serviceId: s._id, name: s.name, price: Number(s.price) || 0, description: s.description || ""
+          serviceId: s._id, name: s.name, price: Number(s.price) || 0, description: s.description || "",
         })),
         services: formData.serviceItems.map((s) => ({
-          serviceId: s._id, name: s.name, price: Number(s.price) || 0, description: s.description || ""
+          serviceId: s._id, name: s.name, price: Number(s.price) || 0, description: s.description || "",
         })),
         referredByCustomer: formData.referredByCustomer,
         referredByDoctor: formData.referredByDoctor,
@@ -2120,12 +1733,10 @@ const hasActiveFilters =
         referralCommission: formData.referralCommission,
         referralCommissionType: formData.referralCommissionType,
         slotId: formData.slotId,
-        // ✅ OFFER APPLIED OBJECT
         offerApplied: formData.offerApplied || null,
       };
 
       const slotRes = await axios.post(`${API_BASE_URL}/appointment-slots/book`, bookingPayload);
-
       if (slotRes.data.success) {
         showToast(`✅ Appointment booked successfully for ${formData.title} ${formData.name}!`, "success");
         await fetchBookings();
@@ -2137,84 +1748,49 @@ const hasActiveFilters =
         setExistingPatient(null); setShowExistingPatientPopup(false);
         setFilteredServices([]); setShowServiceSuggestions(false);
         setCitySuggestions([]); setShowCitySuggestions(false);
-        // ✅ Reset offers
-        setSelectedCustomerOffers([]);
-        setSelectedOfferId("");
-        setAppliedOffer(null);
-      } else {
-        showToast(slotRes.data.message || "Failed to book appointment", "error");
-      }
+        setSelectedCustomerOffers([]); setSelectedOfferId(""); setAppliedOffer(null);
+      } else { showToast(slotRes.data.message || "Failed to book appointment", "error"); }
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to book appointment", "error");
     } finally { setSubmitting(false); }
   };
 
-  // ✅ UPDATED: offer amount pass karo
   const handleUpdateNow = async (e) => {
     e.preventDefault();
-
     setSubmitting(true);
     try {
-      const matchBForUpdate = getMatchingBooking({
-        phone: formData.phone,
-        name: formData.name,
-        _id: formData.bookingId,
-      });
+      const matchBForUpdate = getMatchingBooking({ phone: formData.phone, name: formData.name, _id: formData.bookingId });
       const labTotalForUpdate = Number(matchBForUpdate?.labTotal) || 0;
       const medicineTotalForUpdate = Number(matchBForUpdate?.medicineTotal) || 0;
 
       const fin = computeFinancials(formData.serviceItems, {
-        labTotal: labTotalForUpdate,
-        medicineTotal: medicineTotalForUpdate,
+        labTotal: labTotalForUpdate, medicineTotal: medicineTotalForUpdate,
         referralCommission: formData.referralCommission,
-        discount: formData.discount,
-        discountType: formData.discountType,
+        discount: formData.discount, discountType: formData.discountType,
         partialAmount: formData.partialAmount,
         offerAmount: appliedOffer?.offerAmount || 0,
       });
 
       const bookingPayload = {
-        patientTitle: formData.title,
-        patientName: formData.name,
-        patientPhone: formData.phone,
-        patientAge: formData.age,
-        patientDob: formData.dob,
-        patientGender: formData.gender,
-        patientAddress: formData.address,
-        patientCity: formData.city,
-        patientPincode: formData.pincode,
-        purpose: formData.reason,
-        paymentType: formData.paymentType,
-        paymentStatus: fin.paymentStatus,
-        partialAmount: fin.parsedPartial,
-        amountPaid: fin.amountPaid,
-        balanceAmount: fin.balanceAmount,
-
-        subtotal: fin.subtotal,
-        commissionAmount: fin.commissionAmount,
-        discount: fin.discountAmount,
-        discountType: formData.discountType,
-        offerDeduction: fin.offerDeduction,
-        finalPayable: fin.finalPayable,
-        finalPayableAmount: fin.finalPayable,
-        grandTotal: fin.finalPayable,
-        totalAmount: fin.finalPayable,
-
-        doctorId: formData.doctorId,
-        appointmentDate: formData.appointmentDate,
-        isOP: true,
-        status: formData.status || "confirmed",
+        patientTitle: formData.title, patientName: formData.name,
+        patientPhone: formData.phone, patientAge: formData.age,
+        patientDob: formData.dob, patientGender: formData.gender,
+        patientAddress: formData.address, patientCity: formData.city,
+        patientPincode: formData.pincode, purpose: formData.reason,
+        paymentType: formData.paymentType, paymentStatus: fin.paymentStatus,
+        partialAmount: fin.parsedPartial, amountPaid: fin.amountPaid,
+        balanceAmount: fin.balanceAmount, subtotal: fin.subtotal,
+        commissionAmount: fin.commissionAmount, discount: fin.discountAmount,
+        discountType: formData.discountType, offerDeduction: fin.offerDeduction,
+        finalPayable: fin.finalPayable, finalPayableAmount: fin.finalPayable,
+        grandTotal: fin.finalPayable, totalAmount: fin.finalPayable,
+        doctorId: formData.doctorId, appointmentDate: formData.appointmentDate,
+        isOP: true, status: formData.status || "confirmed",
         serviceItems: formData.serviceItems.map((s) => ({
-          serviceId: s._id || s.serviceId,
-          name: s.name,
-          price: Number(s.price) || 0,
-          description: s.description || "",
+          serviceId: s._id || s.serviceId, name: s.name, price: Number(s.price) || 0, description: s.description || "",
         })),
         services: formData.serviceItems.map((s) => ({
-          serviceId: s._id || s.serviceId,
-          name: s.name,
-          price: Number(s.price) || 0,
-          description: s.description || "",
+          serviceId: s._id || s.serviceId, name: s.name, price: Number(s.price) || 0, description: s.description || "",
         })),
         referredByCustomer: formData.referredByCustomer,
         referredByDoctor: formData.referredByDoctor,
@@ -2222,19 +1798,12 @@ const hasActiveFilters =
         referralDoctorId: formData.referralDoctorId,
         referralCommission: formData.referralCommission,
         referralCommissionType: formData.referralCommissionType,
-        // ✅ OFFER APPLIED OBJECT
         offerApplied: formData.offerApplied || null,
       };
 
-      if (formData.slotId) {
-        bookingPayload.slotId = formData.slotId;
-      }
+      if (formData.slotId) bookingPayload.slotId = formData.slotId;
 
-      const slotRes = await axios.put(
-        `${API_BASE_URL}/appointment-slots/updateop/${formData.bookingId}`,
-        bookingPayload
-      );
-
+      const slotRes = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${formData.bookingId}`, bookingPayload);
       if (slotRes.data.success) {
         showToast(`✅ Appointment updated successfully for ${formData.title} ${formData.name}!`, "success");
         await fetchBookings();
@@ -2244,28 +1813,16 @@ const hasActiveFilters =
         }
         const today = new Date().toISOString().split("T")[0];
         setFormData({ ...EMPTY_FORM, appointmentDate: today });
-        setEditingId(null);
-        setShowForm(false);
-        setAvailableSlots([]);
-        setExistingPatient(null);
-        setShowExistingPatientPopup(false);
-        setFilteredServices([]);
-        setShowServiceSuggestions(false);
-        setCitySuggestions([]);
-        setShowCitySuggestions(false);
-        // ✅ Reset offers
-        setSelectedCustomerOffers([]);
-        setSelectedOfferId("");
-        setAppliedOffer(null);
-      } else {
-        showToast(slotRes.data.message || "Failed to update appointment", "error");
-      }
+        setEditingId(null); setShowForm(false); setAvailableSlots([]);
+        setExistingPatient(null); setShowExistingPatientPopup(false);
+        setFilteredServices([]); setShowServiceSuggestions(false);
+        setCitySuggestions([]); setShowCitySuggestions(false);
+        setSelectedCustomerOffers([]); setSelectedOfferId(""); setAppliedOffer(null);
+      } else { showToast(slotRes.data.message || "Failed to update appointment", "error"); }
     } catch (err) {
       console.error("❌ API Error:", err);
       showToast(err.response?.data?.message || "Failed to update appointment", "error");
-    } finally {
-      setSubmitting(false);
-    }
+    } finally { setSubmitting(false); }
   };
 
   const openPrescriptionModal = (booking) => {
@@ -2273,115 +1830,52 @@ const hasActiveFilters =
     handlePrintPrescription(booking);
   };
 
- const handlePrintPrescription = (booking) => {
-  const b = booking || selectedBookingForPrescription;
-  if (!b) { showToast("No prescription data to print", "error"); return; }
-  const win = window.open("", "_blank", "width=800,height=1100");
-  if (!win) return;
-  win.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Prescription</title>
-      <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        html, body {
-          margin: 0;
-          padding: 0;
-          background: #fff;
-          width: 100%;
-        }
-        .prescription-page {
-          width: 100%;
-          max-width: 100%;
-          position: relative;
-          background: #fff;
-          display: block;
-          margin: 0;
-          padding: 0;
-        }
-        .prescription-page img {
-          width: 100%;
-          height: auto;
-          display: block;
-          margin: 0;
-          padding: 0;
-        }
-        .overlay-print {
-          position: absolute;
-          top: 0; left: 0; right: 0; bottom: 0;
-        }
-        .overlay-print .fld {
-          position: absolute;
-          font-size: 15px;
-          font-weight: 600;
-          color: #1a1a1a;
-          letter-spacing: 0.2px;
-          line-height: 1.3;
-        }
-        @page {
-          size: auto;
-          margin: 0;
-        }
-        @media print {
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
+  const handlePrintPrescription = (booking) => {
+    const b = booking || selectedBookingForPrescription;
+    if (!b) { showToast("No prescription data to print", "error"); return; }
+    const win = window.open("", "_blank", "width=800,height=1100");
+    if (!win) return;
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Prescription</title>
+        <style>
+          * { margin:0; padding:0; box-sizing:border-box; }
+          html, body { margin: 0; padding: 0; background: #fff; width: 100%; }
+          .prescription-page { width: 100%; max-width: 100%; position: relative; background: #fff; display: block; margin: 0; padding: 0; }
+          .prescription-page img { width: 100%; height: auto; display: block; margin: 0; padding: 0; }
+          .overlay-print { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+          .overlay-print .fld { position: absolute; font-size: 15px; font-weight: 600; color: #1a1a1a; letter-spacing: 0.2px; line-height: 1.3; }
+          @page { size: auto; margin: 0; }
+          @media print {
+            html, body { margin: 0 !important; padding: 0 !important; }
+            .prescription-page { margin: 0 !important; padding: 0 !important; page-break-after: avoid; }
           }
-          .prescription-page {
-            margin: 0 !important;
-            padding: 0 !important;
-            page-break-after: avoid;
-          }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="prescription-page">
-        <img src="${prescriptionTemplate}" alt="Prescription" />
-        <div class="overlay-print">
-          <div class="fld" style="top:102px;left:90px;max-width:280px;">${b.patientTitle || ""} ${b.patientName || "N/A"}</div>
-          <div class="fld" style="top:106px;right:40px;">${formatDateToDDMMYYYY(b.appointmentDate || b.date)}</div>
-          <div class="fld" style="top:138px;left:90px;">${b.patientAge || "N/A"}</div>
-          <div class="fld" style="top:138px;left:320px;">${b.patientGender || "N/A"}</div>
-          <div class="fld" style="top:138px;right:100px;">${b.patientPhone || "N/A"}</div>
-          <div class="fld" style="top:168px;left:90px;max-width:320px;">${b.purpose || "N/A"}</div>
-          <div class="fld" style="top:200px;left:90px;">${b.vitalsTemp || ""}</div>
-          <div class="fld" style="top:200px;left:300px;">${b.vitalsBp || ""}</div>
-          <div class="fld" style="top:200px;left:500px;">${b.vitalsPr || ""}</div>
-          <div class="fld" style="top:200px;right:80px;">${b.vitalsWeight || ""}</div>
+        </style>
+      </head>
+      <body>
+        <div class="prescription-page">
+          <img src="${prescriptionTemplate}" alt="Prescription" />
+          <div class="overlay-print">
+            <div class="fld" style="top:102px;left:90px;max-width:280px;">${b.patientTitle || ""} ${b.patientName || "N/A"}</div>
+            <div class="fld" style="top:106px;right:40px;">${formatDateToDDMMYYYY(b.appointmentDate || b.date)}</div>
+            <div class="fld" style="top:138px;left:90px;">${b.patientAge || "N/A"}</div>
+            <div class="fld" style="top:138px;left:320px;">${b.patientGender || "N/A"}</div>
+            <div class="fld" style="top:138px;right:100px;">${b.patientPhone || "N/A"}</div>
+            <div class="fld" style="top:168px;left:90px;max-width:320px;">${b.purpose || "N/A"}</div>
+            <div class="fld" style="top:200px;left:90px;">${b.vitalsTemp || ""}</div>
+            <div class="fld" style="top:200px;left:300px;">${b.vitalsBp || ""}</div>
+            <div class="fld" style="top:200px;left:500px;">${b.vitalsPr || ""}</div>
+            <div class="fld" style="top:200px;right:80px;">${b.vitalsWeight || ""}</div>
+          </div>
         </div>
-      </div>
-      <script>window.onload = function() { window.print(); }</script>
-    </body>
-    </html>
-  `);
-  win.document.close();
-  win.focus();
-};
-  const getPatientTotalFee = (patient) => {
-    const list = bookings.filter((b) => b.patientPhone === patient.phone ||
-      (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
-    if (!list.length) return 0;
-    return list.reduce((t, b) => t + getBookingFinalPayable(b), 0);
-  };
-
-  const getPatientServices = (patient) => {
-    const list = bookings.filter((b) => b.patientPhone === patient.phone ||
-      (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
-    const all = [];
-    list.forEach((b) => getBookingServices(b).forEach((s) => all.push({
-      name: s.name, price: s.price, bookingDate: b.date || b.appointmentDate,
-      serviceId: s.serviceId, bookingId: b._id
-    })));
-    return all;
-  };
-
-  const getPatientPaymentStatus = (patient) => {
-    const list = bookings.filter((b) => b.patientPhone === patient.phone ||
-      (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
-    if (!list.length) return patient.paymentStatus || "Pending";
-    return list.some((b) => b.paymentStatus === "Paid") ? "Paid" : "Pending";
+        <script>window.onload = function() { window.print(); }</script>
+      </body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
   };
 
   const getMatchingBooking = (patient) => bookings.find((b) =>
@@ -2402,7 +1896,6 @@ const hasActiveFilters =
     const b = getMatchingBooking(patient);
     return b ? (b.bookedAt || b.createdAt || "-") : "-";
   };
-
   const getPatientActiveStatus = (patient) => {
     const b = getMatchingBooking(patient);
     return b ? (b.isActive !== undefined ? b.isActive : true) : true;
@@ -2415,59 +1908,36 @@ const hasActiveFilters =
       if (groups[cat]) groups[cat].push(it);
       else groups.clinic.push(it);
     });
-
     const categoryLabel = { clinic: "CONSULTATION", lab: "LAB", pharmacy: "PHARMACY" };
-
     let runningIdx = 0;
     let rowsHtml = "";
-
     ["clinic", "lab", "pharmacy"].forEach((catKey) => {
       const items = groups[catKey];
-
       if (items.length === 0) return;
-
       const subtotal = items.reduce((s, x) => s + (Number(x.amount) || 0), 0);
-
       items.forEach((item) => {
         runningIdx++;
         rowsHtml += `
           <tr>
             <td style="padding:6px 6px;font-size:11px;color:#333;border-bottom:1px solid #eee;text-align:center;">${runningIdx}</td>
             <td style="padding:6px 6px;font-size:12px;color:#111;border-bottom:1px solid #eee;">${item.name}</td>
-            <td style="padding:6px 6px;font-size:12px;font-weight:600;color:#111;text-align:right;border-bottom:1px solid #eee;">
-              ₹ ${Number(item.amount).toFixed(2)}
-            </td>
-          </tr>
-        `;
+            <td style="padding:6px 6px;font-size:12px;font-weight:600;color:#111;text-align:right;border-bottom:1px solid #eee;">₹ ${Number(item.amount).toFixed(2)}</td>
+          </tr>`;
       });
-
       if (items.length > 1) {
         rowsHtml += `
           <tr style="background:#f9fafb;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;">
-            <td colspan="2" style="text-align:right;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#374151;padding:7px 8px;">
-              Subtotal — ${categoryLabel[catKey]}
-            </td>
-            <td style="text-align:right;font-size:12px;font-weight:bold;color:#111;padding:7px 8px;">
-              ₹ ${subtotal.toFixed(2)}
-            </td>
-          </tr>
-        `;
+            <td colspan="2" style="text-align:right;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#374151;padding:7px 8px;">Subtotal — ${categoryLabel[catKey]}</td>
+            <td style="text-align:right;font-size:12px;font-weight:bold;color:#111;padding:7px 8px;">₹ ${subtotal.toFixed(2)}</td>
+          </tr>`;
       }
     });
-
-    const grossTotal =
-      (bd.breakdown?.clinic || 0) + (bd.breakdown?.lab || 0) + (bd.breakdown?.pharmacy || 0);
-
+    const grossTotal = (bd.breakdown?.clinic || 0) + (bd.breakdown?.lab || 0) + (bd.breakdown?.pharmacy || 0);
     rowsHtml += `
       <tr style="background:#e5e7eb;border-top:2px solid #111;border-bottom:2px solid #111;">
-        <td colspan="2" style="text-align:right;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#111;padding:9px 8px;">
-          Gross Total
-        </td>
-        <td style="text-align:right;font-size:14px;font-weight:bold;color:#111;padding:9px 8px;">
-          ₹ ${grossTotal.toFixed(2)}
-        </td>
-      </tr>
-    `;
+        <td colspan="2" style="text-align:right;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#111;padding:9px 8px;">Gross Total</td>
+        <td style="text-align:right;font-size:14px;font-weight:bold;color:#111;padding:9px 8px;">₹ ${grossTotal.toFixed(2)}</td>
+      </tr>`;
 
     return `
       <!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Bill - ${bd.invoiceNo}</title>
@@ -2517,7 +1987,6 @@ const hasActiveFilters =
             <div><span class="label">Doctor</span>: ${bd.doctorName}</div>
             <div><span class="label">Appt. Date</span>: ${formatDateToDDMMYYYY(bk?.date)}</div>
           </div>
-
           <table class="items">
             <thead><tr>
               <th style="width:8%;text-align:center;">No.</th>
@@ -2526,7 +1995,6 @@ const hasActiveFilters =
             </tr></thead>
             <tbody>${rowsHtml}</tbody>
           </table>
-
           <div class="totals-box">
             <div class="row"><span>Gross Amount</span><span style="font-weight:bold;">₹ ${bd.grossAmount.toFixed(2)}</span></div>
             ${bd.discount > 0 ? `<div class="row"><span>Discount</span><span style="color:#dc2626;">− ₹ ${bd.discount.toFixed(2)}</span></div>` : ""}
@@ -2545,10 +2013,7 @@ const hasActiveFilters =
   const saveInvoiceToBackend = async (bookingId, billHtml) => {
     if (!bookingId || !billHtml) return null;
     try {
-      const res = await axios.post(
-        `${API_BASE_URL}/appointment-slots/save-invoice`,
-        { bookingId, html: billHtml }
-      );
+      const res = await axios.post(`${API_BASE_URL}/appointment-slots/save-invoice`, { bookingId, html: billHtml });
       if (res?.data?.success) {
         setBookings((prev) =>
           prev.map((b) =>
@@ -2568,36 +2033,24 @@ const hasActiveFilters =
   };
 
   const handleSendInvoice = async (booking) => {
-    if (!booking || !booking._id) {
-      showToast("Booking data missing", "error");
-      return;
-    }
+    if (!booking || !booking._id) { showToast("Booking data missing", "error"); return; }
     if (!booking.invoiceUrl || booking.invoiceUrl.trim() === "") {
-      showToast("Invoice not generated yet. Please generate invoice first.", "error");
-      return;
+      showToast("Invoice not generated yet. Please generate invoice first.", "error"); return;
     }
     setInvoiceSending(booking._id);
     try {
-      const res = await axios.post(
-        `${API_BASE_URL}/appointment-slots/send-invoice`,
-        { bookingId: booking._id }
-      );
+      const res = await axios.post(`${API_BASE_URL}/appointment-slots/send-invoice`, { bookingId: booking._id });
       if (res?.data?.success) {
         showToast(`✅ Invoice sent to ${booking.patientName || "patient"} on WhatsApp!`, "success");
-      } else {
-        showToast(res.data?.message || "Failed to send invoice", "error");
-      }
+      } else { showToast(res.data?.message || "Failed to send invoice", "error"); }
     } catch (err) {
       console.error("Send invoice error:", err);
       showToast(err.response?.data?.message || err.message || "Failed to send invoice", "error");
-    } finally {
-      setInvoiceSending(null);
-    }
+    } finally { setInvoiceSending(null); }
   };
 
   const openBillingModal = async (booking) => {
     if (!booking) return;
-
     if (booking.invoiceUrl && booking.invoiceUrl.trim() !== "") {
       const base = API_BASE_INVURL.replace(/\/$/, "");
       const fullUrl = booking.invoiceUrl.startsWith("http")
@@ -2610,51 +2063,29 @@ const hasActiveFilters =
     }
 
     setInvoiceLoading(booking._id);
-
     const normalizedItems = getBookingServices(booking);
     const items = [];
 
     normalizedItems.forEach((s, idx) => {
       const cat = classifyService(s);
       const finalCat = s.isReviewService ? "clinic" : cat;
-
       items.push({
-        no: items.length + 1,
-        name: s.name,
-        serviceCode: s.serviceId
-          ? String(s.serviceId).slice(-6).toUpperCase()
-          : `SVC-${String(idx + 1).padStart(2, "0")}`,
-        remarks: s.isReviewService
-          ? "Review Service"
-          : finalCat === "lab"
-            ? "Lab Test"
-            : finalCat === "pharmacy"
-              ? "Pharmacy"
-              : "Consultation",
-        category: finalCat,
-        amount: Number(s.price) || 0,
+        no: items.length + 1, name: s.name,
+        serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
+        remarks: s.isReviewService ? "Review Service" : finalCat === "lab" ? "Lab Test" : finalCat === "pharmacy" ? "Pharmacy" : "Consultation",
+        category: finalCat, amount: Number(s.price) || 0,
         paymentStatus: booking.paymentStatus || "Pending",
         isReviewService: s.isReviewService || false,
       });
     });
 
     if (items.length === 0) {
-      const fallback =
-        Number(booking.finalPayable) ||
-        Number(booking.finalPayableAmount) ||
-        Number(booking.grandTotal) ||
-        Number(booking.totalAmount) ||
-        0;
+      const fallback = Number(booking.finalPayable) || Number(booking.finalPayableAmount) || Number(booking.grandTotal) || Number(booking.totalAmount) || 0;
       if (fallback > 0) {
         items.push({
-          no: 1,
-          name: "Consultation Fee",
-          serviceCode: "CONS",
-          remarks: "Consultation",
-          category: "clinic",
-          amount: fallback,
-          paymentStatus: booking.paymentStatus || "Pending",
-          isReviewService: false,
+          no: 1, name: "Consultation Fee", serviceCode: "CONS", remarks: "Consultation",
+          category: "clinic", amount: fallback,
+          paymentStatus: booking.paymentStatus || "Pending", isReviewService: false,
         });
       }
     }
@@ -2666,57 +2097,27 @@ const hasActiveFilters =
       else finalBreakdown.clinic += it.amount;
     });
 
-    const grossAmount = items.reduce(
-      (sum, s) => sum + (Number(s.amount) || 0),
-      0
-    );
-
+    const grossAmount = items.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
     const commissionPercent = parseFloat(booking.referralCommission) || 0;
-    const commissionAmount =
-      Number(booking.commissionAmount) ||
-      (grossAmount * commissionPercent) / 100;
+    const commissionAmount = Number(booking.commissionAmount) || (grossAmount * commissionPercent) / 100;
     const discountAmount = Number(booking.discount) || 0;
-
-    const netAmount =
-      Number(booking.finalPayable) ||
-      Number(booking.finalPayableAmount) ||
-      Number(booking.grandTotal) ||
-      grossAmount - commissionAmount - discountAmount;
+    const netAmount = Number(booking.finalPayable) || Number(booking.finalPayableAmount) || Number(booking.grandTotal) || grossAmount - commissionAmount - discountAmount;
 
     const isPaid = booking.paymentStatus === "Paid";
     const isPartial = booking.paymentStatus === "Partial";
-    const paidAmount = isPaid
-      ? netAmount
-      : isPartial
-        ? Number(booking.amountPaid) || 0
-        : 0;
+    const paidAmount = isPaid ? netAmount : isPartial ? Number(booking.amountPaid) || 0 : 0;
     const balanceAmount = Math.max(0, netAmount - paidAmount);
 
     const now = new Date();
-    const dateStamp = `${now.getFullYear()}${String(
-      now.getMonth() + 1
-    ).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-    const shortId =
-      String(booking._id || "").slice(-6).toUpperCase() || "000000";
+    const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    const shortId = String(booking._id || "").slice(-6).toUpperCase() || "000000";
     const invoiceNo = `${dateStamp}-${shortId}`;
-    const dateTimeLabel = `${now.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })} ${now.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
+    const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
 
     const newBillingData = {
-      invoiceNo,
-      invoiceDate: dateTimeLabel,
-      receiptNo: `R-${shortId.slice(-4)}`,
-      receiptDate: dateTimeLabel,
-      paymentMode: booking.paymentType
-        ? booking.paymentType.charAt(0).toUpperCase() +
-        booking.paymentType.slice(1)
-        : "Cash",
+      invoiceNo, invoiceDate: dateTimeLabel,
+      receiptNo: `R-${shortId.slice(-4)}`, receiptDate: dateTimeLabel,
+      paymentMode: booking.paymentType ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1) : "Cash",
       receivedBy: "Front Desk",
       branch: booking.doctorSpecialization || "Main Branch",
       doctorName: booking.doctorName || "General OP Doctor",
@@ -2726,11 +2127,7 @@ const hasActiveFilters =
         lab: Math.round(finalBreakdown.lab || 0),
         pharmacy: Math.round(finalBreakdown.pharmacy || 0),
       },
-      grossAmount,
-      discount: discountAmount,
-      netAmount,
-      paidAmount,
-      balanceAmount,
+      grossAmount, discount: discountAmount, netAmount, paidAmount, balanceAmount,
       paymentStatus: booking.paymentStatus || "Pending",
       amountInWords: numberToWords(netAmount),
     };
@@ -2741,49 +2138,53 @@ const hasActiveFilters =
 
     if (savedUrl) {
       const base = API_BASE_INVURL.replace(/\/$/, "");
-      const fullUrl = savedUrl.startsWith("http")
-        ? savedUrl
-        : `${base}${savedUrl.startsWith("/") ? "" : "/"}${savedUrl}`;
+      const fullUrl = savedUrl.startsWith("http") ? savedUrl : `${base}${savedUrl.startsWith("/") ? "" : "/"}${savedUrl}`;
       setInvoiceModalUrl(fullUrl);
       setInvoiceModalBooking(booking);
       setShowInvoiceModal(true);
       showToast(`✅ Invoice generated!`, "success");
-    } else {
-      showToast("Invoice generation failed", "error");
-    }
+    } else { showToast("Invoice generation failed", "error"); }
   };
 
   const handleFromDateChange = (e) => { setFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); };
   const handleToDateChange = (e) => { setToDate(e.target.value); if (e.target.value) setSelectedMonth(""); };
-  const handleMonthChange = (e) => { setSelectedMonth(e.target.value); setFromDate(""); setToDate(""); };
+  const handleMonthChange = (e) => { setSelectedMonth(e.target.value); setFromDate(""); setToDate(""); setTimeFilter("All"); };
 
-const clearFilters = () => {
-  setSearchQuery(""); setStatusFilter("All"); setFeeTypeFilter("All"); setDoctorFilter("All");
-  setBookingTypeFilter("All");
-  setFromDate(""); setToDate(""); setSelectedMonth("");
-  setApptFromDate(""); setApptToDate("");
-  setRevenueCategoryFilter("All");       // ✅ NEW
-  setPaymentTypeFilter("All");           // ✅ NEW
-  setActiveCardFilter("all"); setCurrentPage(1);
-  setActiveFilter("all");
-  if (window.innerWidth < 1024) setShowMobileFilters(false);
-};
+  const handleApptFromChange = (e) => {
+    setApptFromDate(e.target.value);
+    if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
+  };
+  const handleApptToChange = (e) => {
+    setApptToDate(e.target.value);
+    if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
+  };
+  const handleTimeFilterChange = (value) => {
+    setTimeFilter(value);
+    if (value !== "All") {
+      setApptFromDate("");
+      setApptToDate("");
+      setSelectedMonth("");
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchQuery(""); setStatusFilter("All"); setFeeTypeFilter("All"); setDoctorFilter("All");
+    setBookingTypeFilter("All");
+    setFromDate(""); setToDate(""); setSelectedMonth("");
+    setApptFromDate(""); setApptToDate("");
+    setTimeFilter("All");
+    setRevenueCategoryFilter("All"); setPaymentTypeFilter("All");
+    setActiveCardFilter("all"); setCurrentPage(1);
+    setActiveFilter("all");
+    if (window.innerWidth < 1024) setShowMobileFilters(false);
+  };
 
   const handleCardClick = (type) => {
     setActiveCardFilter(type); setCurrentPage(1);
-    if (type === "all") {
-      setStatusFilter("All");
-      setActiveFilter("all");
-    } else if (type === "active") {
-      setActiveFilter("active");
-      setStatusFilter("All");
-    } else if (type === "inactive") {
-      setActiveFilter("inactive");
-      handleRoleBasedNavigate("/inactive-patients");
-    } else {
-      setStatusFilter(type);
-      setActiveFilter("all");
-    }
+    if (type === "all") { setStatusFilter("All"); setActiveFilter("all"); }
+    else if (type === "active") { setActiveFilter("active"); setStatusFilter("All"); }
+    else if (type === "inactive") { setActiveFilter("inactive"); handleRoleBasedNavigate("/inactive-patients"); }
+    else { setStatusFilter(type); setActiveFilter("all"); }
   };
 
   const getUniqueDoctors = () => {
@@ -2798,204 +2199,52 @@ const clearFilters = () => {
       if (activeFilter === "active" && !isActive) return false;
       if (activeFilter === "inactive" && isActive) return false;
 
-      const paymentStatus = getPatientPaymentStatus(p);
-      if (statusFilter !== "All" && paymentStatus !== statusFilter) return false;
-
       if (feeTypeFilter !== "All") {
         const hasMatchingService = (p.serviceItems || []).some(
           (s) => s.name && s.name.toLowerCase().includes(feeTypeFilter.toLowerCase())
         );
         if (!hasMatchingService) return false;
       }
-
-
-      // ✅ REVENUE CATEGORY FILTER (Clinic / Lab / Pharmacy)
-if (revenueCategoryFilter !== "All") {
-  const hasMatchingRevenue = bookings.some((b) => {
-    const matchesPatient =
-      b.patientPhone === p.phone ||
-      (b.patientName &&
-        p.name &&
-        b.patientName.toLowerCase() === p.name.toLowerCase());
-    if (!matchesPatient) return false;
-
-    const bd = getAmountBreakdown(b);
-    if (revenueCategoryFilter === "clinic") return (Number(bd.clinic) || 0) > 0;
-    if (revenueCategoryFilter === "lab") return (Number(bd.lab) || 0) > 0;
-    if (revenueCategoryFilter === "pharmacy") return (Number(bd.pharmacy) || 0) > 0;
-    return false;
-  });
-  if (!hasMatchingRevenue) return false;
-}
-
-// ✅ PAYMENT TYPE FILTER (Cash / Online / Insurance / Card)
-if (paymentTypeFilter !== "All") {
-  const hasMatchingPayment = bookings.some((b) => {
-    const matchesPatient =
-      b.patientPhone === p.phone ||
-      (b.patientName &&
-        p.name &&
-        b.patientName.toLowerCase() === p.name.toLowerCase());
-    if (!matchesPatient) return false;
-    return (b.paymentType || "").toLowerCase() === paymentTypeFilter.toLowerCase();
-  });
-  if (!hasMatchingPayment) return false;
-}
-
-      if (doctorFilter !== "All") {
-        const hasBookingWithDoctor = bookings.some(
-          (b) =>
-            (b.patientPhone === p.phone ||
-              (b.patientName &&
-                p.name &&
-                b.patientName.toLowerCase() === p.name.toLowerCase())) &&
-            b.doctorName === doctorFilter
-        );
-        if (!hasBookingWithDoctor) return false;
-      }
-
-
-      if (bookingTypeFilter !== "All") {
-        const matchingBooking = getMatchingBooking(p);
-        const bookingType = getBookingType(matchingBooking).label;
-        if (bookingType !== bookingTypeFilter) return false;
-      }
-
-      // ✅ MONTH FILTER → Appointment Month
-      if (selectedMonth && selectedMonth !== "") {
-        const hasMonthMatch = bookings.some((b) => {
-          const matchesPatient =
-            b.patientPhone === p.phone ||
-            (b.patientName &&
-              p.name &&
-              b.patientName.toLowerCase() === p.name.toLowerCase());
-          if (!matchesPatient) return false;
-
-          const dateStr = b.appointmentDate || b.date;
-          if (!dateStr) return false;
-
-          const d = new Date(dateStr);
-          if (isNaN(d.getTime())) return false;
-
-          const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-          return month === selectedMonth;
-        });
-        if (!hasMonthMatch) return false;
-      }
-
-      // ✅ REGISTERED DATE FILTER (fromDate / toDate) → booking.createdAt
-      if (fromDate || toDate) {
-        const hasRegDateMatch = bookings.some((b) => {
-          const matchesPatient =
-            b.patientPhone === p.phone ||
-            (b.patientName &&
-              p.name &&
-              b.patientName.toLowerCase() === p.name.toLowerCase());
-          if (!matchesPatient) return false;
-
-          const dateStr = b.createdAt || b.bookedAt;
-          if (!dateStr) return false;
-
-          const bDate = new Date(dateStr);
-          if (isNaN(bDate.getTime())) return false;
-
-          let inRange = true;
-          if (fromDate) {
-            const from = new Date(fromDate);
-            from.setHours(0, 0, 0, 0);
-            if (bDate < from) inRange = false;
-          }
-          if (toDate) {
-            const to = new Date(toDate);
-            to.setHours(23, 59, 59, 999);
-            if (bDate > to) inRange = false;
-          }
-          return inRange;
-        });
-        if (!hasRegDateMatch) return false;
-      }
-
-      // ✅ APPOINTMENT DATE FILTER (apptFromDate / apptToDate) → booking.appointmentDate
-      if (apptFromDate || apptToDate) {
-        const hasApptDateMatch = bookings.some((b) => {
-          const matchesPatient =
-            b.patientPhone === p.phone ||
-            (b.patientName &&
-              p.name &&
-              b.patientName.toLowerCase() === p.name.toLowerCase());
-          if (!matchesPatient) return false;
-
-          const dateStr = b.appointmentDate || b.date;
-          if (!dateStr) return false;
-
-          const bDate = new Date(dateStr);
-          if (isNaN(bDate.getTime())) return false;
-
-          let inRange = true;
-          if (apptFromDate) {
-            const from = new Date(apptFromDate);
-            from.setHours(0, 0, 0, 0);
-            if (bDate < from) inRange = false;
-          }
-          if (apptToDate) {
-            const to = new Date(apptToDate);
-            to.setHours(23, 59, 59, 999);
-            if (bDate > to) inRange = false;
-          }
-          return inRange;
-        });
-        if (!hasApptDateMatch) return false;
-      }
-
-      // ✅ SEARCH
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const m =
-          (p.name || "").toLowerCase().includes(q) ||
-          (p.phone || "").toLowerCase().includes(q) ||
-          (p.address || "").toLowerCase().includes(q) ||
-          (p.city || "").toLowerCase().includes(q) ||
-          (p.pincode || "").toLowerCase().includes(q) ||
-          (p.reason || "").toLowerCase().includes(q);
-        if (!m) return false;
-      }
-
       return true;
     });
-  }, [patients, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, searchQuery, fromDate, toDate, selectedMonth, apptFromDate, apptToDate, bookings, activeFilter,  revenueCategoryFilter, paymentTypeFilter]);
+  }, [patients, activeFilter, feeTypeFilter]);
 
-  useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter, fromDate, toDate, selectedMonth, apptFromDate, apptToDate, activeFilter, revenueCategoryFilter, paymentTypeFilter]);
+  useEffect(() => { setCurrentPage(1); }, [
+    searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter,
+    fromDate, toDate, selectedMonth, apptFromDate, apptToDate, activeFilter,
+    revenueCategoryFilter, paymentTypeFilter, timeFilter
+  ]);
 
   const stats = useMemo(() => {
-    // ✅ Use filteredPatients instead of patients
-    const source = filteredPatients;
-    const total = source.length;
-    let paidTotal = 0, paidCount = 0, pendingCount = 0, partialCount = 0, dueCount = 0;
-    let activeCount = 0, inactiveCount = 0;
+    if (backendStats) {
+      return {
+        total: backendStats.totalPatients || 0,
+        active: backendStats.active || 0,
+        inactive: backendStats.inactive || 0,
+        paid: backendStats.paid || 0,
+        partial: backendStats.partial || 0,
+        due: backendStats.due || 0,
+        pending: backendStats.pending || 0,
+        totalRevenue: backendStats.totalRevenue || 0,
+      };
+    }
+    return { total: 0, active: 0, inactive: 0, paid: 0, partial: 0, due: 0, pending: 0, totalRevenue: 0 };
+  }, [backendStats]);
 
-    source.forEach((p) => {
-      const isActive = getPatientActiveStatus(p);
-      if (isActive) activeCount++;
-      else inactiveCount++;
-
-      const list = bookings.filter((b) => b.patientPhone === p.phone ||
-        (b.patientName && p.name && b.patientName.toLowerCase() === p.name.toLowerCase()));
-      let totalFee = 0;
-      list.forEach((b) => { totalFee += Number(b.finalPayable ?? b.totalAmount ?? 0) || 0; });
-      const status = getPatientPaymentStatus(p);
-      if (status === "Paid") { paidCount++; paidTotal += totalFee; }
-      else if (status === "Partial") {
-        partialCount++;
-        paidTotal += list.reduce((s, b) => s + (Number(b.amountPaid) || 0), 0);
-      } else if (status === "Due") dueCount++;
-      else pendingCount++;
-    });
-
+  const revenueSummary = useMemo(() => {
+    const rb = backendStats?.revenueBreakdown || {};
     return {
-      total, active: activeCount, inactive: inactiveCount, paid: paidCount,
-      pending: pendingCount, partial: partialCount, due: dueCount, totalRevenue: paidTotal,
+      clinic: rb.clinicRevenue || 0,
+      lab: rb.labRevenue || 0,
+      pharmacy: rb.pharmacyRevenue || 0,
+      cash: rb.cashCollected || 0,
+      online: rb.onlineCollected || 0,
+      insurance: rb.insuranceCollected || 0,
+      card: rb.cardCollected || 0,
+      totalCollected: rb.totalCollected || 0,
+      totalDue: rb.dueAmount || 0,
     };
-  }, [filteredPatients, bookings]);
+  }, [backendStats]);
 
   const formatTime = (dateStr) => !dateStr ? "" : new Date(dateStr).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 
@@ -3006,43 +2255,10 @@ if (paymentTypeFilter !== "All") {
 
   const handleItemsPerPageChange = (e) => {
     const v = Number(e.target.value);
-    setItemsPerPage(v); localStorage.setItem("opMgmt_itemsPerPage", String(v)); setCurrentPage(1);
+    setItemsPerPage(v);
+    localStorage.setItem("opMgmt_itemsPerPage", String(v));
+    setCurrentPage(1);
   };
-
-
-  // ✅ REVENUE SUMMARY (based on filtered data)
-const revenueSummary = useMemo(() => {
-  let clinic = 0, lab = 0, pharmacy = 0;
-  let cash = 0, online = 0, insurance = 0, card = 0;
-  let totalCollected = 0, totalDue = 0, grossTotal = 0;
-
-  filteredPatients.forEach((p) => {
-    const list = bookings.filter(
-      (b) =>
-        b.patientPhone === p.phone ||
-        (b.patientName && p.name && b.patientName.toLowerCase() === p.name.toLowerCase())
-    );
-    list.forEach((b) => {
-      const bd = getAmountBreakdown(b);
-      clinic += Number(bd.clinic) || 0;
-      lab += Number(bd.lab) || 0;
-      pharmacy += Number(bd.pharmacy) || 0;
-
-      const paid = getBookingPaidInfo(b);
-      totalCollected += paid.paid;
-      totalDue += paid.balance;
-      grossTotal += paid.final;
-
-      const pt = (b.paymentType || "cash").toLowerCase();
-      if (pt === "cash") cash += paid.paid;
-      else if (pt === "online") online += paid.paid;
-      else if (pt === "insurance") insurance += paid.paid;
-      else if (pt === "card") card += paid.paid;
-    });
-  });
-
-  return { clinic, lab, pharmacy, cash, online, insurance, card, totalCollected, totalDue, grossTotal };
-}, [filteredPatients, bookings]);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -3053,18 +2269,26 @@ const revenueSummary = useMemo(() => {
     return pages;
   };
 
+  const getPatientServices = (patient) => {
+    const list = bookings.filter((b) =>
+      b.patientPhone === patient.phone ||
+      (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
+    const all = [];
+    list.forEach((b) => getBookingServices(b).forEach((s) => all.push({
+      name: s.name, price: s.price, bookingDate: b.date || b.appointmentDate,
+      serviceId: s.serviceId, bookingId: b._id
+    })));
+    return all;
+  };
+
   const downloadCSV = () => {
     if (!filteredPatients.length) { alert("No patient records available to export!"); return; }
-    const headers = ["#", "Patient Name", "Phone", "Address", "City", "Pincode", "Doctor", "Booking Type", "Appointment Date & Time", "Booking Status", "Active Status",
-      "Services", "Clinic Amount", "Lab Amount", "Pharmacy Amount", "Medicine Total", "Discount", "Offer Applied", "Offer Amount", "Total Fee", "Paid Amount", "Balance Amount", "Payment Status", "Payment Mode", "Reason", "Referred By Customer", "Referred By Doctor", "Created At", "Registered", "Review Status", "Reviewed On"];
+    const headers = ["#", "Patient Name", "Phone", "Address", "City", "Pincode", "Doctor", "Booking Type", "Appointment Date & Time", "Booking Status", "Active Status", "Services", "Clinic Amount", "Lab Amount", "Pharmacy Amount", "Medicine Total", "Discount", "Offer Applied", "Offer Amount", "Total Fee", "Paid Amount", "Balance Amount", "Payment Status", "Payment Mode", "Reason", "Referred By Customer", "Referred By Doctor", "Created At", "Registered", "Review Status", "Reviewed On"];
     const csvRows = [headers.join(","), ...filteredPatients.map((p, idx) => {
-      const totalFee = getPatientTotalFee(p);
-      const services = getPatientServices(p);
       const booking = getMatchingBooking(p);
       const paidInfo = getBookingPaidInfo(booking);
-      const regDate = p.createdAt ? formatDateToDDMMYYYY(p.createdAt) : "-";
-      const regTime = p.createdAt ? formatTime(p.createdAt) : "-";
       const breakdown = getAmountBreakdown(booking);
+      const services = getPatientServices(p);
       const slotTiming = getSlotTiming(p);
       const isActive = getPatientActiveStatus(p);
       const reviewStatus = booking?.isReviewed ? "Reviewed" : (getReviewWindowStatus(booking).expired ? "Expired" : "Pending");
@@ -3072,6 +2296,9 @@ const revenueSummary = useMemo(() => {
       const bookingType = getBookingType(booking).label;
       const offerName = booking?.offerApplied?.offerName || "";
       const offerAmount = booking?.offerApplied?.offerAmount || 0;
+      const totalFee = paidInfo.final;
+      const regDate = p.createdAt ? formatDateToDDMMYYYY(p.createdAt) : "-";
+      const regTime = p.createdAt ? formatTime(p.createdAt) : "-";
       return [
         idx + 1,
         `"${(p.title || "")} ${(p.name || "").replace(/"/g, '""')}"`,
@@ -3088,8 +2315,7 @@ const revenueSummary = useMemo(() => {
         breakdown.clinic, breakdown.lab, breakdown.pharmacy,
         booking?.medicineTotal || 0,
         booking?.discount || 0,
-        `"${offerName}"`,
-        offerAmount,
+        `"${offerName}"`, offerAmount,
         totalFee, paidInfo.paid, paidInfo.balance,
         `"${getConsultationPaymentStatus(p)}"`,
         `"${p.paymentType || "cash"}"`,
@@ -3137,39 +2363,41 @@ const revenueSummary = useMemo(() => {
               <option value="All">All Payment</option><option value="Pending">Pending</option><option value="Partial">Partial</option><option value="Paid">Paid</option><option value="Due">Due</option>
             </select>
             <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
-              {BOOKING_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
+              {BOOKING_TYPE_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
             </select>
             <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg max-w-[130px] truncate">
               <option value="All">All Doctors</option>
               {getUniqueDoctors().map((doc) => <option key={doc.name} value={doc.name}>{doc.name}</option>)}
             </select>
 
-            {/* ✅ REVENUE CATEGORY FILTER */}
-<select
-  value={revenueCategoryFilter}
-  onChange={(e) => setRevenueCategoryFilter(e.target.value)}
-  className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg"
-  title="Filter by revenue type"
->
-  {REVENUE_CATEGORY_OPTIONS.map((opt) => (
-    <option key={opt.value} value={opt.value}>{opt.label}</option>
-  ))}
-</select>
+            <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg" title="Filter by revenue type">
+              {REVENUE_CATEGORY_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+            </select>
 
-{/* ✅ PAYMENT TYPE FILTER */}
-<select
-  value={paymentTypeFilter}
-  onChange={(e) => setPaymentTypeFilter(e.target.value)}
-  className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg"
-  title="Filter by payment mode"
->
-  {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (
-    <option key={opt.value} value={opt.value}>{opt.label}</option>
-  ))}
-</select>
-            {/* ✅ REGISTERED DATE Filter */}
+            <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg" title="Filter by payment mode">
+              {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+            </select>
+
+            {/* ✅ TIME FILTER — Quick Buttons */}
+            <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200">
+              {TIME_FILTER_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => handleTimeFilterChange(opt.value)}
+                  className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all whitespace-nowrap ${
+                    timeFilter === opt.value
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-gray-600 hover:bg-white hover:text-gray-900"
+                  }`}
+                  title={opt.label}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
             <div className="flex items-center gap-1 px-2 h-8 border border-gray-300 bg-white rounded-lg">
               <span className="text-[9px] font-bold text-gray-500 uppercase whitespace-nowrap">Reg:</span>
               <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Registered from" />
@@ -3177,16 +2405,14 @@ const revenueSummary = useMemo(() => {
               <input type="date" value={toDate} onChange={handleToDateChange} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Registered to" />
             </div>
 
-            {/* ✅ APPOINTMENT DATE Filter */}
             <div className="flex items-center gap-1 px-2 h-8 border border-gray-300 bg-white rounded-lg">
               <span className="text-[9px] font-bold text-gray-500 uppercase whitespace-nowrap">Appt:</span>
-              <input type="date" value={apptFromDate} onChange={(e) => { setApptFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Appointment from" />
+              <input type="date" value={apptFromDate} onChange={handleApptFromChange} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Appointment from" />
               <span className="text-gray-400 text-xs">–</span>
-              <input type="date" value={apptToDate} onChange={(e) => { setApptToDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Appointment to" />
+              <input type="date" value={apptToDate} onChange={handleApptToChange} className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none" title="Appointment to" />
             </div>
 
             <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg" title="Appointment month" />
-            {/* ✅ Add Patient — Refresh ki purani jagah pe */}
             <button onClick={handleAddNewPatient} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">
               <FiPlus className="w-3 h-3" /> Add Patient
             </button>
@@ -3223,6 +2449,25 @@ const revenueSummary = useMemo(() => {
           </div>
         </div>
 
+        {/* Mobile Time Filter Quick Buttons (always visible) */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center gap-1 overflow-x-auto pb-1">
+            {TIME_FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleTimeFilterChange(opt.value)}
+                className={`px-2.5 py-1.5 text-[11px] font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${
+                  timeFilter === opt.value
+                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                    : "bg-white text-gray-600 border-gray-300"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Mobile Filters */}
         <div className="lg:hidden">
           {showMobileFilters && (
@@ -3245,51 +2490,31 @@ const revenueSummary = useMemo(() => {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Booking Type</label>
                 <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
-                  {BOOKING_TYPE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
+                  {BOOKING_TYPE_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
                 </select>
               </div>
-
-              {/* ✅ Revenue Category + Payment Type (Mobile) */}
-<div className="grid grid-cols-2 gap-2">
-  <select
-    value={revenueCategoryFilter}
-    onChange={(e) => setRevenueCategoryFilter(e.target.value)}
-    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg"
-  >
-    {REVENUE_CATEGORY_OPTIONS.map((opt) => (
-      <option key={opt.value} value={opt.value}>{opt.label}</option>
-    ))}
-  </select>
-  <select
-    value={paymentTypeFilter}
-    onChange={(e) => setPaymentTypeFilter(e.target.value)}
-    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg"
-  >
-    {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (
-      <option key={opt.value} value={opt.value}>{opt.label}</option>
-    ))}
-  </select>
-</div>
-              {/* ✅ REGISTERED DATE */}
+              <div className="grid grid-cols-2 gap-2">
+                <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
+                  {REVENUE_CATEGORY_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                </select>
+                <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
+                  {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                </select>
+              </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Registered Date</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" placeholder="From" />
-                  <input type="date" value={toDate} onChange={handleToDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" placeholder="To" />
+                  <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+                  <input type="date" value={toDate} onChange={handleToDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
                 </div>
               </div>
-
-              {/* ✅ APPOINTMENT DATE */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Appointment Date</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <input type="date" value={apptFromDate} onChange={(e) => { setApptFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" placeholder="From" />
-                  <input type="date" value={apptToDate} onChange={(e) => { setApptToDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" placeholder="To" />
+                  <input type="date" value={apptFromDate} onChange={handleApptFromChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+                  <input type="date" value={apptToDate} onChange={handleApptToChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
                 </div>
               </div>
-
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Appointment Month</label>
                 <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
@@ -3313,17 +2538,14 @@ const revenueSummary = useMemo(() => {
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Patients</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div></div>
             <div className="emp-dash__stat-value">{stats.total}</div><div className="emp-dash__stat-meta">all registered OPD</div>
           </div>
-
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "active" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("active")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Active</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div></div>
             <div className="emp-dash__stat-value text-emerald-600">{stats.active}</div><div className="emp-dash__stat-meta">active patients</div>
           </div>
-
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "inactive" ? "ring-2 ring-red-500/20 border-red-400" : ""}`} onClick={() => handleCardClick("inactive")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Inactive</span><div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiUserX /></div></div>
             <div className="emp-dash__stat-value text-red-500">{stats.inactive}</div><div className="emp-dash__stat-meta">inactive patients</div>
           </div>
-
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "Paid" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("Paid")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Paid</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div></div>
             <div className="emp-dash__stat-value text-emerald-600">{stats.paid}</div><div className="emp-dash__stat-meta">completed payments</div>
@@ -3340,106 +2562,69 @@ const revenueSummary = useMemo(() => {
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Due</span><div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiXCircle /></div></div>
             <div className="emp-dash__stat-value text-red-500">{stats.due}</div><div className="emp-dash__stat-meta">overdue payments</div>
           </div>
-          <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Revenue</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FaRupeeSign /></div></div>
-            <div className="emp-dash__stat-value text-blue-700">₹{stats.totalRevenue.toLocaleString()}</div>
-            <div className="emp-dash__stat-meta">collected revenue</div>
+         <div className="emp-dash__stat">
+  <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Collected</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FaRupeeSign /></div></div>
+  <div className="emp-dash__stat-value text-blue-700">₹{Math.round(revenueSummary.totalCollected || stats.totalRevenue).toLocaleString("en-IN")}</div>
+  {(() => {
+    const f = (n) => `₹${Math.round(Number(n) || 0).toLocaleString("en-IN")}`;
+    return (
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[9px] font-bold leading-tight">
+        <span className="text-emerald-700 whitespace-nowrap">Cash: {f(revenueSummary.cash)}</span>
+        <span className="text-cyan-700 whitespace-nowrap">Online: {f(revenueSummary.online)}</span>
+        {revenueSummary.card > 0 && <span className="text-indigo-700 whitespace-nowrap">Card: {f(revenueSummary.card)}</span>}
+        {revenueSummary.insurance > 0 && <span className="text-purple-700 whitespace-nowrap">Insurance: {f(revenueSummary.insurance)}</span>}
+        <span className="text-red-600 whitespace-nowrap">Due: {f(revenueSummary.totalDue)}</span>
+      </div>
+    );
+  })()}
+</div>
+        </div>
+
+        {/* Revenue Breakdown */}
+        <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <FaMoneyBillWave className="text-indigo-600 w-4 h-4" />
+              <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Revenue Breakdown</h3>
+              <span className="text-[10px] text-gray-500">(based on current filters)</span>
+            </div>
+            <span className="text-[10px] font-bold text-indigo-700 bg-white px-2 py-0.5 rounded-full border border-indigo-200">
+              {filteredPatients.length} patients
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 p-3">
+            <div className="rounded-lg p-2.5 border border-blue-200 bg-blue-50">
+              <div className="flex items-center gap-1 text-[9px] font-bold text-blue-700 uppercase"><FaClinicMedical className="text-[9px]" /> Clinic Revenue</div>
+              <div className="text-sm font-extrabold text-blue-800 mt-0.5">₹{Math.round(revenueSummary.clinic).toLocaleString()}</div>
+            </div>
+            <div className="rounded-lg p-2.5 border border-purple-200 bg-purple-50">
+              <div className="flex items-center gap-1 text-[9px] font-bold text-purple-700 uppercase"><FaFlask className="text-[9px]" /> Lab Revenue</div>
+              <div className="text-sm font-extrabold text-purple-800 mt-0.5">₹{Math.round(revenueSummary.lab).toLocaleString()}</div>
+            </div>
+            <div className="rounded-lg p-2.5 border border-green-200 bg-green-50">
+              <div className="flex items-center gap-1 text-[9px] font-bold text-green-700 uppercase"><FaPills className="text-[9px]" /> Pharmacy Revenue</div>
+              <div className="text-sm font-extrabold text-green-800 mt-0.5">₹{Math.round(revenueSummary.pharmacy).toLocaleString()}</div>
+            </div>
+            <div className="rounded-lg p-2.5 border border-emerald-200 bg-emerald-50">
+              <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-700 uppercase"><FaMoneyBillWave className="text-[9px]" /> Cash Collected</div>
+              <div className="text-sm font-extrabold text-emerald-800 mt-0.5">₹{Math.round(revenueSummary.cash).toLocaleString()}</div>
+            </div>
+            <div className="rounded-lg p-2.5 border border-cyan-200 bg-cyan-50">
+              <div className="flex items-center gap-1 text-[9px] font-bold text-cyan-700 uppercase"><FaGlobe className="text-[9px]" /> Online Collected</div>
+              <div className="text-sm font-extrabold text-cyan-800 mt-0.5">₹{Math.round(revenueSummary.online).toLocaleString()}</div>
+            </div>
+            <div className="rounded-lg p-2.5 border border-slate-300 bg-slate-50">
+              <div className="flex items-center gap-1 text-[9px] font-bold text-slate-700 uppercase"><FaRupeeSign className="text-[9px]" /> Total Collected</div>
+              <div className="text-sm font-extrabold text-slate-900 mt-0.5">₹{Math.round(revenueSummary.totalCollected).toLocaleString()}</div>
+              <div className="text-[9px] font-semibold text-red-600 mt-0.5">Due: ₹{Math.round(revenueSummary.totalDue).toLocaleString()}</div>
+            </div>
           </div>
         </div>
 
-
-        {/* ✅ REVENUE BREAKDOWN PANEL */}
-<div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-  <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
-    <div className="flex items-center gap-2">
-      <FaMoneyBillWave className="text-indigo-600 w-4 h-4" />
-      <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
-        Revenue Breakdown
-      </h3>
-      <span className="text-[10px] text-gray-500">
-        (based on current filters)
-      </span>
-    </div>
-    <span className="text-[10px] font-bold text-indigo-700 bg-white px-2 py-0.5 rounded-full border border-indigo-200">
-      {filteredPatients.length} patients
-    </span>
-  </div>
-
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 p-3">
-    {/* Clinic */}
-    <div className="rounded-lg p-2.5 border border-blue-200 bg-blue-50">
-      <div className="flex items-center gap-1 text-[9px] font-bold text-blue-700 uppercase">
-        <FaClinicMedical className="text-[9px]" /> Clinic Revenue
-      </div>
-      <div className="text-sm font-extrabold text-blue-800 mt-0.5">
-        ₹{Math.round(revenueSummary.clinic).toLocaleString()}
-      </div>
-    </div>
-
-    {/* Lab */}
-    <div className="rounded-lg p-2.5 border border-purple-200 bg-purple-50">
-      <div className="flex items-center gap-1 text-[9px] font-bold text-purple-700 uppercase">
-        <FaFlask className="text-[9px]" /> Lab Revenue
-      </div>
-      <div className="text-sm font-extrabold text-purple-800 mt-0.5">
-        ₹{Math.round(revenueSummary.lab).toLocaleString()}
-      </div>
-    </div>
-
-    {/* Pharmacy */}
-    <div className="rounded-lg p-2.5 border border-green-200 bg-green-50">
-      <div className="flex items-center gap-1 text-[9px] font-bold text-green-700 uppercase">
-        <FaPills className="text-[9px]" /> Pharmacy Revenue
-      </div>
-      <div className="text-sm font-extrabold text-green-800 mt-0.5">
-        ₹{Math.round(revenueSummary.pharmacy).toLocaleString()}
-      </div>
-    </div>
-
-    {/* Cash */}
-    <div className="rounded-lg p-2.5 border border-emerald-200 bg-emerald-50">
-      <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-700 uppercase">
-        <FaMoneyBillWave className="text-[9px]" /> Cash Collected
-      </div>
-      <div className="text-sm font-extrabold text-emerald-800 mt-0.5">
-        ₹{Math.round(revenueSummary.cash).toLocaleString()}
-      </div>
-    </div>
-
-    {/* Online */}
-    <div className="rounded-lg p-2.5 border border-cyan-200 bg-cyan-50">
-      <div className="flex items-center gap-1 text-[9px] font-bold text-cyan-700 uppercase">
-        <FaGlobe className="text-[9px]" /> Online Collected
-      </div>
-      <div className="text-sm font-extrabold text-cyan-800 mt-0.5">
-        ₹{Math.round(revenueSummary.online).toLocaleString()}
-      </div>
-    </div>
-
-    {/* Total Collected + Due */}
-    <div className="rounded-lg p-2.5 border border-slate-300 bg-slate-50">
-      <div className="flex items-center gap-1 text-[9px] font-bold text-slate-700 uppercase">
-        <FaRupeeSign className="text-[9px]" /> Total Collected
-      </div>
-      <div className="text-sm font-extrabold text-slate-900 mt-0.5">
-        ₹{Math.round(revenueSummary.totalCollected).toLocaleString()}
-      </div>
-      <div className="text-[9px] font-semibold text-red-600 mt-0.5">
-        Due: ₹{Math.round(revenueSummary.totalDue).toLocaleString()}
-      </div>
-    </div>
-  </div>
-</div>
-
-        {/* ADD/EDIT MODAL */}
+        {/* ADD/EDIT MODAL — (unchanged) */}
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-
-            <button
-              onClick={cancelForm}
-              className="absolute top-4 right-16 sm:top-6 sm:right-24 z-[60] w-10 h-10 rounded-full bg-white text-gray-700 hover:bg-red-500 hover:text-white shadow-2xl border-2 border-gray-200 hover:border-red-500 flex items-center justify-center transition-all"
-              title="Close"
-            >
+            <button onClick={cancelForm} className="absolute top-4 right-16 sm:top-6 sm:right-24 z-[60] w-10 h-10 rounded-full bg-white text-gray-700 hover:bg-red-500 hover:text-white shadow-2xl border-2 border-gray-200 hover:border-red-500 flex items-center justify-center transition-all" title="Close">
               <FaTimes className="w-5 h-5" />
             </button>
             <div className="bg-white rounded-2xl w-[95vw] max-w-[1200px] p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[95vh] overflow-y-auto">
@@ -3448,9 +2633,7 @@ const revenueSummary = useMemo(() => {
                   <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold"><FaUserInjured className="w-5 h-5" /></div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base">{isEditMode ? "Edit Patient Details" : "Register OPD Patient & Book Slot"}</h3>
-                    <p className="text-xs text-gray-500">
-                      {isEditMode ? "Patient info editable — amount/lab/medicine locked" : "Fill in patient and consultation details below"}
-                    </p>
+                    <p className="text-xs text-gray-500">{isEditMode ? "Patient info editable — amount/lab/medicine locked" : "Fill in patient and consultation details below"}</p>
                   </div>
                 </div>
               </div>
@@ -3557,7 +2740,6 @@ const revenueSummary = useMemo(() => {
                   </div>
                 </div>
 
-                {/* DOCTOR + DATE */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-2">
@@ -3577,7 +2759,6 @@ const revenueSummary = useMemo(() => {
                   </div>
                 </div>
 
-                {/* SLOTS — right below doctor */}
                 {formData.doctorId && formData.appointmentDate && !isEditMode && (
                   <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
                     <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">Available Slots ({getDayNameFromDate(formData.appointmentDate)})</label>
@@ -3587,19 +2768,19 @@ const revenueSummary = useMemo(() => {
                       <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">No slots available.</div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto p-1">
-           {availableSlots.map((slot) => {
-  const isSelected = formData.slotId === slot._id;
-  const isBooked = slot.status === "booked";
-  if (formData.slotId && !isSelected) return null;
-  return (
-    <button key={slot._id} type="button" onClick={() => !isBooked && handleSlotSelect(slot._id)} className={`p-2 text-xs font-semibold rounded-lg border text-left ${isSelected ? "border-blue-500 bg-blue-50 text-blue-700" : isBooked ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} disabled={isBooked}>
-      <div className="font-bold text-xs">{slot.startTime} – {slot.endTime}</div>
-      <div className="text-[10px] text-gray-500">₹{slot.consultationFee || 0}</div>
-      {isBooked && <span className="text-[9px] font-bold text-red-500 block">Booked</span>}
-      {isSelected && <span className="text-[9px] font-bold text-emerald-600 block">✓ Selected</span>}
-    </button>
-  );
-})}
+                        {availableSlots.map((slot) => {
+                          const isSelected = formData.slotId === slot._id;
+                          const isBooked = slot.status === "booked";
+                          if (formData.slotId && !isSelected) return null;
+                          return (
+                            <button key={slot._id} type="button" onClick={() => !isBooked && handleSlotSelect(slot._id)} className={`p-2 text-xs font-semibold rounded-lg border text-left ${isSelected ? "border-blue-500 bg-blue-50 text-blue-700" : isBooked ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} disabled={isBooked}>
+                              <div className="font-bold text-xs">{slot.startTime} – {slot.endTime}</div>
+                              <div className="text-[10px] text-gray-500">₹{slot.consultationFee || 0}</div>
+                              {isBooked && <span className="text-[9px] font-bold text-red-500 block">Booked</span>}
+                              {isSelected && <span className="text-[9px] font-bold text-emerald-600 block">✓ Selected</span>}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                     {formData.slotId && (
@@ -3608,7 +2789,6 @@ const revenueSummary = useMemo(() => {
                   </div>
                 )}
 
-                {/* REFERRED BY — below slots */}
                 <div className={`border rounded-xl p-4 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-blue-50/30 border-gray-200"}`}>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
                     <FaShareAlt className="text-blue-600" /> Referred By
@@ -3621,7 +2801,7 @@ const revenueSummary = useMemo(() => {
                           <FaUserFriends className="text-blue-500" /> Customer
                         </label>
                         {!isEditMode && (
-                          <button type="button" onClick={handleAddCustomerReferral} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5" title="Add new customer referral">
+                          <button type="button" onClick={handleAddCustomerReferral} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5">
                             <FaPlus className="w-2.5 h-2.5" /> Add
                           </button>
                         )}
@@ -3631,9 +2811,7 @@ const revenueSummary = useMemo(() => {
                         if (id) { const c = referralContacts.find((x) => x._id === id && x.referralType === "customer"); if (c) handleReferralCustomerSelect(c); }
                         else {
                           setFormData((p) => ({ ...p, referredByCustomer: "", referralCustomerId: "", offerApplied: null }));
-                          setSelectedCustomerOffers([]);
-                          setSelectedOfferId("");
-                          setAppliedOffer(null);
+                          setSelectedCustomerOffers([]); setSelectedOfferId(""); setAppliedOffer(null);
                         }
                       }} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
                         <option value="">-- Select Customer --</option>
@@ -3651,102 +2829,53 @@ const revenueSummary = useMemo(() => {
                       {formData.referralCustomerId && selectedCustomerOffers.length > 0 && (
                         <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
                           <label className="block text-[10px] font-bold text-amber-700 uppercase mb-1.5 flex items-center gap-1.5">
-                            <FaGift className="text-amber-600" />
-                            Apply Offer (Optional)
+                            <FaGift className="text-amber-600" /> Apply Offer (Optional)
                           </label>
-                          <select
-                            value={selectedOfferId}
-                            onChange={(e) => {
-                              const offerId = e.target.value;
-                              setSelectedOfferId(offerId);
-                              if (offerId) {
-                                const offer = selectedCustomerOffers.find((o) => o._id === offerId);
-                                if (offer) {
-                                  setAppliedOffer(offer);
-
-                                  // ✅ Sirf NAME match karo (case-insensitive + trim)
-                                  const offerNameLower = (offer.offerName || "").trim().toLowerCase();
-
-                                  let matchedService = services.find(
-                                    (s) => (s.name || "").trim().toLowerCase() === offerNameLower
-                                  );
-
-                                  // Fallback: partial name match
-                                  if (!matchedService && offerNameLower) {
-                                    matchedService = services.find((s) => {
-                                      const svcName = (s.name || "").trim().toLowerCase();
-                                      return (
-                                        svcName.includes(offerNameLower) ||
-                                        offerNameLower.includes(svcName)
-                                      );
-                                    });
-                                  }
-
-                                  let newServiceItems = formData.serviceItems;
-
-                                  if (matchedService) {
-                                    const alreadyAdded = formData.serviceItems.some(
-                                      (s) => s._id === matchedService._id || s.serviceId === matchedService._id
-                                    );
-
-                                    if (!alreadyAdded) {
-                                      newServiceItems = [
-                                        ...formData.serviceItems,
-                                        { ...matchedService, custom: false },
-                                      ];
-                                      showToast(
-                                        `✅ Offer applied & service "${matchedService.name}" (₹${matchedService.price}) auto-added!`,
-                                        "success"
-                                      );
-                                    } else {
-                                      showToast(
-                                        `Offer applied: ${offer.offerName} — service already in list`,
-                                        "info"
-                                      );
-                                    }
-                                  } else {
-                                    showToast(
-                                      `Offer applied: ${offer.offerName} (₹${offer.offerAmount}) — no matching service found`,
-                                      "info"
-                                    );
-                                  }
-
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    serviceItems: newServiceItems,
-                                    offerApplied: {
-                                      referralContactId: prev.referralCustomerId,
-                                      offerId: offer._id,
-                                      offerName: offer.offerName,
-                                      offerAmount: Number(offer.offerAmount) || 0,
-                                    },
-                                  }));
+                          <select value={selectedOfferId} onChange={(e) => {
+                            const offerId = e.target.value;
+                            setSelectedOfferId(offerId);
+                            if (offerId) {
+                              const offer = selectedCustomerOffers.find((o) => o._id === offerId);
+                              if (offer) {
+                                setAppliedOffer(offer);
+                                const offerNameLower = (offer.offerName || "").trim().toLowerCase();
+                                let matchedService = services.find((s) => (s.name || "").trim().toLowerCase() === offerNameLower);
+                                if (!matchedService && offerNameLower) {
+                                  matchedService = services.find((s) => {
+                                    const svcName = (s.name || "").trim().toLowerCase();
+                                    return (svcName.includes(offerNameLower) || offerNameLower.includes(svcName));
+                                  });
                                 }
-                              } else {
-                                setAppliedOffer(null);
-                                setFormData((prev) => ({ ...prev, offerApplied: null }));
+                                let newServiceItems = formData.serviceItems;
+                                if (matchedService) {
+                                  const alreadyAdded = formData.serviceItems.some((s) => s._id === matchedService._id || s.serviceId === matchedService._id);
+                                  if (!alreadyAdded) {
+                                    newServiceItems = [...formData.serviceItems, { ...matchedService, custom: false }];
+                                    showToast(`✅ Offer applied & service "${matchedService.name}" (₹${matchedService.price}) auto-added!`, "success");
+                                  } else { showToast(`Offer applied: ${offer.offerName} — service already in list`, "info"); }
+                                } else { showToast(`Offer applied: ${offer.offerName} (₹${offer.offerAmount}) — no matching service found`, "info"); }
+                                setFormData((prev) => ({
+                                  ...prev, serviceItems: newServiceItems,
+                                  offerApplied: {
+                                    referralContactId: prev.referralCustomerId,
+                                    offerId: offer._id, offerName: offer.offerName,
+                                    offerAmount: Number(offer.offerAmount) || 0,
+                                  },
+                                }));
                               }
-                            }}
-                            disabled={isEditMode}
-                            className="w-full bg-white border border-amber-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
-                          >
+                            } else { setAppliedOffer(null); setFormData((prev) => ({ ...prev, offerApplied: null })); }
+                          }} disabled={isEditMode} className="w-full bg-white border border-amber-300 rounded-lg px-3 py-2 text-sm">
                             <option value="">-- No Offer --</option>
                             {selectedCustomerOffers.map((o) => (
-                              <option key={o._id} value={o._id}>
-                                {o.offerName} — ₹{o.offerAmount}
-                              </option>
+                              <option key={o._id} value={o._id}>{o.offerName} — ₹{o.offerAmount}</option>
                             ))}
                           </select>
-
                           {appliedOffer && (
                             <div className="mt-2 flex items-center justify-between bg-white px-3 py-2 rounded border border-amber-300">
                               <span className="text-xs font-semibold text-amber-800 flex items-center gap-1">
-                                <FaGift className="text-amber-600" />
-                                {appliedOffer.offerName}
+                                <FaGift className="text-amber-600" /> {appliedOffer.offerName}
                               </span>
-                              <span className="text-sm font-extrabold text-amber-900">
-                                − ₹{appliedOffer.offerAmount}
-                              </span>
+                              <span className="text-sm font-extrabold text-amber-900">− ₹{appliedOffer.offerAmount}</span>
                             </div>
                           )}
                         </div>
@@ -3759,7 +2888,7 @@ const revenueSummary = useMemo(() => {
                           <FaUserMdIcon className="text-indigo-500" /> Doctor
                         </label>
                         {!isEditMode && (
-                          <button type="button" onClick={handleAddDoctorReferral} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5" title="Add new doctor referral">
+                          <button type="button" onClick={handleAddDoctorReferral} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5">
                             <FaPlus className="w-2.5 h-2.5" /> Add
                           </button>
                         )}
@@ -3784,7 +2913,6 @@ const revenueSummary = useMemo(() => {
                   </div>
                 </div>
 
-                {/* SERVICES — below referrals */}
                 <div className="border rounded-xl p-4 bg-gray-50/50 border-gray-200">
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
@@ -3837,7 +2965,6 @@ const revenueSummary = useMemo(() => {
                   <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none bg-white border-gray-300" placeholder="Enter reason or symptoms" />
                 </div>
 
-                {/* PAYMENT DETAILS — reordered */}
                 <div className={`border rounded-xl p-4 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-purple-50/30 border-gray-200"}`}>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
                     <FaMoneyBillWave className="text-purple-600" /> Payment Details
@@ -3845,20 +2972,14 @@ const revenueSummary = useMemo(() => {
                   </label>
 
                   {(() => {
-                    const matchB = getMatchingBooking({
-                      phone: formData.phone,
-                      name: formData.name,
-                      _id: formData.bookingId,
-                    });
+                    const matchB = getMatchingBooking({ phone: formData.phone, name: formData.name, _id: formData.bookingId });
                     const labTotal = Number(matchB?.labTotal) || 0;
                     const medicineTotal = Number(matchB?.medicineTotal) || 0;
 
                     const fin = computeFinancials(formData.serviceItems, {
-                      labTotal,
-                      medicineTotal,
+                      labTotal, medicineTotal,
                       referralCommission: formData.referralCommission,
-                      discount: formData.discount,
-                      discountType: formData.discountType,
+                      discount: formData.discount, discountType: formData.discountType,
                       partialAmount: formData.partialAmount,
                       offerAmount: appliedOffer?.offerAmount || 0,
                     });
@@ -3881,7 +3002,6 @@ const revenueSummary = useMemo(() => {
                                 ))}
                               </>
                             )}
-
                             {labTotal > 0 && (
                               <div className="flex justify-between items-center py-1 border-b border-gray-100">
                                 <span className="text-purple-700 text-[11px] font-semibold flex items-center gap-1">
@@ -3890,7 +3010,6 @@ const revenueSummary = useMemo(() => {
                                 <span className="font-bold text-purple-700">₹{labTotal}</span>
                               </div>
                             )}
-
                             {medicineTotal > 0 && (
                               <div className="flex justify-between items-center py-1 border-b border-gray-100">
                                 <span className="text-green-700 text-[11px] font-semibold flex items-center gap-1">
@@ -3899,12 +3018,10 @@ const revenueSummary = useMemo(() => {
                                 <span className="font-bold text-green-700">₹{medicineTotal}</span>
                               </div>
                             )}
-
                             <div className="flex justify-between items-center py-1.5 border-b border-t-2 border-gray-800 bg-gray-50 px-2 -mx-2 mt-1">
                               <span className="text-gray-900 text-[11px] font-bold">SUBTOTAL</span>
                               <span className="font-extrabold text-gray-900">₹{fin.subtotal}</span>
                             </div>
-
                             {fin.discountAmount > 0 && (
                               <div className="flex justify-between items-center py-1 border-b border-gray-100">
                                 <span className="text-red-600 text-[11px] font-semibold flex items-center gap-1">
@@ -3913,7 +3030,6 @@ const revenueSummary = useMemo(() => {
                                 <span className="font-bold text-red-600">− ₹{Math.round(fin.discountAmount)}</span>
                               </div>
                             )}
-
                             {fin.offerDeduction > 0 && (
                               <div className="flex justify-between items-center py-1 border-b border-gray-100">
                                 <span className="text-amber-700 text-[11px] font-semibold flex items-center gap-1">
@@ -3922,7 +3038,6 @@ const revenueSummary = useMemo(() => {
                                 <span className="font-bold text-amber-700">− ₹{Math.round(fin.offerDeduction)}</span>
                               </div>
                             )}
-
                             <div className="flex justify-between items-center py-2 border-t-2 border-gray-800">
                               <span className="font-bold text-gray-800">Payable Amount</span>
                               <span className="font-bold text-emerald-700 text-sm">₹{Math.round(fin.finalPayable)}</span>
@@ -3930,69 +3045,30 @@ const revenueSummary = useMemo(() => {
                           </div>
                         </div>
 
-                        {/* ✅ Single Row: Type + Discount + Amount Received + Payment Mode */}
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-3">
                           <div className="md:col-span-2">
                             <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1 flex items-center gap-1.5">
                               <FaPercent className="text-[10px]" /> Type
                             </label>
-                            <select
-                              name="discountType"
-                              value={formData.discountType}
-                              onChange={handleInputChange}
-                              className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                            >
-                              {DISCOUNT_TYPE_OPTIONS.map((o) => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
-                              ))}
+                            <select name="discountType" value={formData.discountType} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2.5 text-sm">
+                              {DISCOUNT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                             </select>
                           </div>
-
                           <div className="md:col-span-3">
                             <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1">Discount</label>
-                            <input
-                              type="number"
-                              name="discount"
-                              value={formData.discount}
-                              onChange={handleInputChange}
-                              placeholder={formData.discountType === "%" ? "Enter %" : "Enter amount"}
-                              min="0"
-                              max={formData.discountType === "%" ? "100" : undefined}
-                              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                            />
+                            <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} placeholder={formData.discountType === "%" ? "Enter %" : "Enter amount"} min="0" max={formData.discountType === "%" ? "100" : undefined} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
                           </div>
-
                           <div className="md:col-span-3">
-                            <label className="block text-[11px] font-bold text-amber-700 uppercase mb-1">
-                              Amount Received (₹)
-                            </label>
-                            <input
-                              type="number"
-                              name="partialAmount"
-                              value={formData.partialAmount}
-                              onChange={handleInputChange}
-                              placeholder="0 for Pending"
-                              min="0"
-                              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
-                            />
+                            <label className="block text-[11px] font-bold text-amber-700 uppercase mb-1">Amount Received (₹)</label>
+                            <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="0 for Pending" min="0" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
                           </div>
-
                           <div className="md:col-span-4">
                             <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Payment Mode</label>
-                            <select
-                              name="paymentType"
-                              value={formData.paymentType}
-                              onChange={handleInputChange}
-                              disabled={isEditMode}
-                              className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
-                            >
-                              {PAYMENT_TYPE_OPTIONS.map((o) => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
-                              ))}
+                            <select name="paymentType" value={formData.paymentType} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-3 py-2.5 text-sm ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}>
+                              {PAYMENT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                             </select>
                           </div>
                         </div>
-                        {/* Live summary */}
                         <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
                           <div className="space-y-1 text-[10px]">
                             <div className="flex justify-between text-amber-800">
@@ -4007,12 +3083,7 @@ const revenueSummary = useMemo(() => {
                               <span>{fin.balanceAmount > 0 ? "Balance Remaining:" : "Status:"}</span>
                               <span className="font-bold">{fin.balanceAmount > 0 ? `₹${Math.round(fin.balanceAmount)}` : "✓ Fully Paid"}</span>
                             </div>
-                            <div className={`flex items-center justify-between border rounded-md px-2 py-1 mt-1 ${fin.paymentStatus === "Paid"
-                              ? "text-emerald-700 bg-emerald-50 border-emerald-200"
-                              : fin.paymentStatus === "Partial"
-                                ? "text-amber-700 bg-amber-50 border-amber-200"
-                                : "text-gray-600 bg-gray-50 border-gray-200"
-                              }`}>
+                            <div className={`flex items-center justify-between border rounded-md px-2 py-1 mt-1 ${fin.paymentStatus === "Paid" ? "text-emerald-700 bg-emerald-50 border-emerald-200" : fin.paymentStatus === "Partial" ? "text-amber-700 bg-amber-50 border-amber-200" : "text-gray-600 bg-gray-50 border-gray-200"}`}>
                               <span className="font-semibold">Payment Status:</span>
                               <span className="font-extrabold uppercase tracking-wide">{fin.paymentStatus}</span>
                             </div>
@@ -4034,6 +3105,7 @@ const revenueSummary = useMemo(() => {
             </div>
           </div>
         )}
+
         {/* TABLE */}
         <div className="emp-dash__card">
           {loading ? (
@@ -4051,7 +3123,6 @@ const revenueSummary = useMemo(() => {
             </div>
           ) : (
             <>
-              {/* DESKTOP TABLE */}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="emp-dash__table op-compact-table">
                   <thead>
@@ -4116,18 +3187,13 @@ const revenueSummary = useMemo(() => {
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {matchingBooking ? (
                               <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
-                                <BookingTypeIcon className="w-2.5 h-2.5" />
-                                {bookingTypeInfo.label}
+                                <BookingTypeIcon className="w-2.5 h-2.5" /> {bookingTypeInfo.label}
                               </span>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic">N/A</span>
-                            )}
+                            ) : (<span className="text-[10px] text-gray-400 italic">N/A</span>)}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap text-xs">
                             <div className="font-semibold text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</div>
-                            {slotTiming !== "-" && (
-                              <div className="text-[10px] text-blue-700 font-semibold mt-0.5">{slotTiming}</div>
-                            )}
+                            {slotTiming !== "-" && (<div className="text-[10px] text-blue-700 font-semibold mt-0.5">{slotTiming}</div>)}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {bookingStatus !== "No Booking" && matchingBooking ? (
@@ -4149,52 +3215,29 @@ const revenueSummary = useMemo(() => {
                           </td>
                           <td className="px-3 py-3" style={{ minWidth: "150px" }}>
                             <div className="flex flex-col gap-1">
-                              {/* Clinic Row — ✅ + icon added */}
                               <div className="flex items-center justify-between gap-1 px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 text-[10px]">
-                                <span className="font-semibold whitespace-nowrap flex items-center gap-1">
-                                  <FaClinicMedical className="text-[9px]" /> Clinic:
-                                </span>
+                                <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaClinicMedical className="text-[9px]" /> Clinic:</span>
                                 <span className="font-bold whitespace-nowrap flex items-center gap-1">
                                   ₹{Math.round(Number(amountBreakdown?.clinic) || 0)}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); if (matchingBooking) openClinicServicesModal(matchingBooking); }}
-                                    className="p-0.5 rounded hover:bg-blue-100"
-                                    title="Add / Edit Services"
-                                  >
+                                  <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openClinicServicesModal(matchingBooking); }} className="p-0.5 rounded hover:bg-blue-100" title="Add / Edit Services">
                                     <FaPlus className="w-2.5 h-2.5 text-blue-600" />
                                   </button>
                                 </span>
                               </div>
-
-                              {/* Lab Row — ✅ Rupee icon → + icon */}
                               <div className="flex items-center justify-between gap-1 px-2 py-1 rounded border border-purple-200 bg-purple-50 text-purple-700 text-[10px]">
-                                <span className="font-semibold whitespace-nowrap flex items-center gap-1">
-                                  <FaFlask className="text-[9px]" /> Lab:
-                                </span>
+                                <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaFlask className="text-[9px]" /> Lab:</span>
                                 <span className="font-bold whitespace-nowrap flex items-center gap-1">
                                   ₹{Math.round(Number(amountBreakdown?.lab) || 0)}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); if (matchingBooking) openLabTotalModal(matchingBooking); }}
-                                    className="p-0.5 rounded hover:bg-purple-100"
-                                    title="Edit Lab Total"
-                                  >
+                                  <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openLabTotalModal(matchingBooking); }} className="p-0.5 rounded hover:bg-purple-100" title="Edit Lab Total">
                                     <FaPlus className="w-2.5 h-2.5 text-purple-600" />
                                   </button>
                                 </span>
                               </div>
-
-                              {/* Pharmacy Row — ✅ Rupee icon → + icon */}
                               <div className="flex items-center justify-between gap-1 px-2 py-1 rounded border border-green-200 bg-green-50 text-green-700 text-[10px]">
-                                <span className="font-semibold whitespace-nowrap flex items-center gap-1">
-                                  <FaPills className="text-[9px]" /> Pharmacy:
-                                </span>
+                                <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaPills className="text-[9px]" /> Pharmacy:</span>
                                 <span className="font-bold whitespace-nowrap flex items-center gap-1">
                                   ₹{Math.round(Number(amountBreakdown?.pharmacy) || 0)}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); if (matchingBooking) openMedicineTotalModal(matchingBooking); }}
-                                    className="p-0.5 rounded hover:bg-green-100"
-                                    title="Edit Medicine Total"
-                                  >
+                                  <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openMedicineTotalModal(matchingBooking); }} className="p-0.5 rounded hover:bg-green-100" title="Edit Medicine Total">
                                     <FaPlus className="w-2.5 h-2.5 text-green-600" />
                                   </button>
                                 </span>
@@ -4202,44 +3245,27 @@ const revenueSummary = useMemo(() => {
                             </div>
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {discountAmount > 0 ? (
-                              <span className="text-xs font-bold text-red-600">− ₹{Math.round(discountAmount)}</span>
-                            ) : <span className="text-xs text-gray-400">—</span>}
+                            {discountAmount > 0 ? (<span className="text-xs font-bold text-red-600">− ₹{Math.round(discountAmount)}</span>) : <span className="text-xs text-gray-400">—</span>}
                           </td>
-                          {/* ✅ OFFER COLUMN */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {offerApplied && offerApplied.offerAmount > 0 ? (
                               <div className="flex flex-col items-center gap-0.5">
                                 <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
-                                  <FaGift className="w-2.5 h-2.5" />
-                                  {offerApplied.offerName}
+                                  <FaGift className="w-2.5 h-2.5" /> {offerApplied.offerName}
                                 </span>
                                 <span className="text-[10px] font-extrabold text-amber-900">− ₹{offerApplied.offerAmount}</span>
                               </div>
                             ) : <span className="text-[10px] text-gray-400 italic">—</span>}
                           </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className="text-xs font-bold text-slate-800">₹{Math.round(paidInfo.final)}</span>
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className="text-xs font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span>
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className={`text-xs font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</span>
-                          </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-slate-800">₹{Math.round(paidInfo.final)}</span></td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span></td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {matchingBooking?.paymentType ? (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }}
-                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
-                                title="Click to change payment type"
-                              >
-                                {matchingBooking.paymentType}
-                                <FiChevronDown className="w-3 h-3" />
+                              <button onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer">
+                                {matchingBooking.paymentType} <FiChevronDown className="w-3 h-3" />
                               </button>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic">N/A</span>
-                            )}
+                            ) : (<span className="text-[10px] text-gray-400 italic">N/A</span>)}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {matchingBooking ? (
@@ -4248,14 +3274,8 @@ const revenueSummary = useMemo(() => {
                                   <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> Paid
                                 </span>
                               ) : (isPartial || consultationPaymentStatus === "Pending") ? (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); openPartialModal(matchingBooking); }}
-                                  className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${paymentColors.bg} ${paymentColors.text} ${paymentColors.border} hover:opacity-80`}
-                                  title="Click to update payment"
-                                >
-                                  <paymentColors.icon className={`w-2.5 h-2.5 ${paymentColors.iconColor}`} />
-                                  {consultationPaymentStatus}
-                                  <FiChevronDown className="w-3 h-3" />
+                                <button onClick={(e) => { e.stopPropagation(); openPartialModal(matchingBooking); }} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${paymentColors.bg} ${paymentColors.text} ${paymentColors.border} hover:opacity-80`}>
+                                  <paymentColors.icon className={`w-2.5 h-2.5 ${paymentColors.iconColor}`} /> {consultationPaymentStatus} <FiChevronDown className="w-3 h-3" />
                                 </button>
                               ) : (
                                 <div className="relative inline-block payment-dropdown">
@@ -4290,162 +3310,60 @@ const revenueSummary = useMemo(() => {
                             {(() => {
                               const rStatus = getReviewWindowStatus(matchingBooking);
                               if (matchingBooking?.isReviewed) {
-                                return (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-emerald-50 text-emerald-700 border-emerald-200" title={`Reviewed on ${formatDateToDDMMYYYY(matchingBooking.reviewDate)}`}>
-                                    <FaCheckCircle className="w-2.5 h-2.5" /> Reviewed
-                                  </span>
-                                );
+                                return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-emerald-50 text-emerald-700 border-emerald-200"><FaCheckCircle className="w-2.5 h-2.5" /> Reviewed</span>);
                               }
                               if (rStatus.expired) {
-                                return (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-red-50 text-red-700 border-red-200" title="Review window expired">
-                                    <FaTimesCircle className="w-2.5 h-2.5" /> Expired
-                                  </span>
-                                );
+                                return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-red-50 text-red-700 border-red-200"><FaTimesCircle className="w-2.5 h-2.5" /> Expired</span>);
                               }
                               if (rStatus.canReview) {
-                                return (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-amber-50 text-amber-700 border-amber-200" title={`${rStatus.daysLeft} day${rStatus.daysLeft !== 1 ? "s" : ""} left`}>
-                                    <FaClock className="w-2.5 h-2.5" /> Pending ({rStatus.daysLeft}d)
-                                  </span>
-                                );
+                                return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-amber-50 text-amber-700 border-amber-200"><FaClock className="w-2.5 h-2.5" /> Pending ({rStatus.daysLeft}d)</span>);
                               }
-                              return (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-gray-50 text-gray-500 border-gray-200" title="Not yet available">
-                                  <FaClock className="w-2.5 h-2.5" /> —
-                                </span>
-                              );
+                              return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-gray-50 text-gray-500 border-gray-200"><FaClock className="w-2.5 h-2.5" /> —</span>);
                             })()}
                           </td>
-
                           <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="relative inline-block action-dropdown">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenActionDropdown(openActionDropdown === patient._id ? null : patient._id);
-                                }}
-                                className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                                title="Actions"
-                              >
+                              <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(openActionDropdown === patient._id ? null : patient._id); }} className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors" title="Actions">
                                 <FiMoreVertical className="w-4 h-4" />
                               </button>
-
                               {openActionDropdown === patient._id && (
-                                <div
-                                  className="absolute right-0 top-full mt-1 z-[9999] bg-white rounded-xl shadow-2xl border border-gray-200 py-2 min-w-[170px]"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {/* Header */}
+                                <div className="absolute right-0 top-full mt-1 z-[9999] bg-white rounded-xl shadow-2xl border border-gray-200 py-2 min-w-[170px]" onClick={(e) => e.stopPropagation()}>
                                   <div className="px-3 pb-2 mb-1 border-b border-gray-100">
-                                    <div className="text-[11px] font-bold text-slate-800 truncate">
-                                      {patient.title || ""} {patient.name || "N/A"}
-                                    </div>
-                                    <div className="text-[9px] text-gray-400">
-                                      {patient.phone || ""}
-                                    </div>
+                                    <div className="text-[11px] font-bold text-slate-800 truncate">{patient.title || ""} {patient.name || "N/A"}</div>
+                                    <div className="text-[9px] text-gray-400">{patient.phone || ""}</div>
                                   </div>
-
-                                  {/* View */}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); handleRowClick(patient); }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors"
-                                  >
-                                    <FiEye className="w-3.5 h-3.5" /> View
-                                  </button>
-
-                                  {/* Edit */}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); handleEdit(patient, matchingBooking); }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
-                                  >
-                                    <FiEdit2 className="w-3.5 h-3.5" /> Edit
-                                  </button>
-
+                                  <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); handleRowClick(patient); }} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors"><FiEye className="w-3.5 h-3.5" /> View</button>
+                                  <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); handleEdit(patient, matchingBooking); }} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-blue-700 hover:bg-blue-50 transition-colors"><FiEdit2 className="w-3.5 h-3.5" /> Edit</button>
                                   {matchingBooking && (
                                     <>
-                                      {/* Prescription */}
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); openPrescriptionModal(matchingBooking); }}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-teal-700 hover:bg-teal-50 transition-colors"
-                                      >
-                                        <FaPrescription className="w-3.5 h-3.5" /> Prescription
-                                      </button>
-
-                                      {/* Vitals */}
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); openVitalsModal(matchingBooking); }}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-pink-700 hover:bg-pink-50 transition-colors"
-                                      >
-                                        <FaHeartbeat className="w-3.5 h-3.5" /> Vitals
-                                      </button>
-
-                                      {/* Invoice */}
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); openBillingModal(matchingBooking); }}
-                                        disabled={invoiceLoading === matchingBooking._id}
-                                        className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold transition-colors disabled:opacity-50 ${matchingBooking?.invoiceUrl
-                                          ? "text-blue-700 hover:bg-blue-50"
-                                          : "text-emerald-700 hover:bg-emerald-50"
-                                          }`}
-                                      >
-                                        {invoiceLoading === matchingBooking._id ? (
-                                          <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                        ) : (
-                                          <FaFileInvoiceDollar className="w-3.5 h-3.5" />
-                                        )}
+                                      <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); openPrescriptionModal(matchingBooking); }} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-teal-700 hover:bg-teal-50 transition-colors"><FaPrescription className="w-3.5 h-3.5" /> Prescription</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); openVitalsModal(matchingBooking); }} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-pink-700 hover:bg-pink-50 transition-colors"><FaHeartbeat className="w-3.5 h-3.5" /> Vitals</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); openBillingModal(matchingBooking); }} disabled={invoiceLoading === matchingBooking._id} className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold transition-colors disabled:opacity-50 ${matchingBooking?.invoiceUrl ? "text-blue-700 hover:bg-blue-50" : "text-emerald-700 hover:bg-emerald-50"}`}>
+                                        {invoiceLoading === matchingBooking._id ? (<FiRefreshCw className="w-3.5 h-3.5 animate-spin" />) : (<FaFileInvoiceDollar className="w-3.5 h-3.5" />)}
                                         {matchingBooking?.invoiceUrl ? "View Invoice" : "Generate Bill"}
                                       </button>
-
-                                      {/* Review */}
                                       {(() => {
                                         const rStatus = getReviewWindowStatus(matchingBooking);
                                         const isReviewed = matchingBooking.isReviewed === true;
                                         const isDisabled = !rStatus.canReview && !isReviewed;
-
                                         return (
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              if (isDisabled) {
-                                                if (rStatus.expired) showToast("Review window expired (3 days limit).", "error");
-                                                else showToast("Review will be available on appointment date.", "info");
-                                                return;
-                                              }
-                                              setOpenActionDropdown(null);
-                                              openReviewModal(matchingBooking);
-                                            }}
-                                            disabled={isDisabled}
-                                            className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold transition-colors ${isReviewed
-                                              ? "text-emerald-700 hover:bg-emerald-50"
-                                              : isDisabled
-                                                ? "text-gray-300 cursor-not-allowed"
-                                                : "text-amber-700 hover:bg-amber-50"
-                                              }`}
-                                          >
-                                            <FaStar className="w-3.5 h-3.5" />
-                                            {isReviewed ? "Reviewed" : "Mark Review"}
+                                          <button onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (isDisabled) {
+                                              if (rStatus.expired) showToast("Review window expired (3 days limit).", "error");
+                                              else showToast("Review will be available on appointment date.", "info");
+                                              return;
+                                            }
+                                            setOpenActionDropdown(null);
+                                            openReviewModal(matchingBooking);
+                                          }} disabled={isDisabled} className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold transition-colors ${isReviewed ? "text-emerald-700 hover:bg-emerald-50" : isDisabled ? "text-gray-300 cursor-not-allowed" : "text-amber-700 hover:bg-amber-50"}`}>
+                                            <FaStar className="w-3.5 h-3.5" /> {isReviewed ? "Reviewed" : "Mark Review"}
                                           </button>
                                         );
                                       })()}
-
-                                      {/* Active Toggle */}
                                       <div className="border-t border-gray-100 mt-1 pt-1">
-                                        <button
-                                          onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); handleToggleActiveStatus(patient); }}
-                                          disabled={isToggling}
-                                          className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold transition-colors disabled:opacity-50 ${isActive
-                                            ? "text-emerald-700 hover:bg-emerald-50"
-                                            : "text-gray-600 hover:bg-gray-50"
-                                            }`}
-                                        >
-                                          {isToggling ? (
-                                            <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                          ) : isActive ? (
-                                            <FaToggleOn className="w-4 h-4 text-emerald-600" />
-                                          ) : (
-                                            <FaToggleOff className="w-4 h-4 text-gray-500" />
-                                          )}
+                                        <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(null); handleToggleActiveStatus(patient); }} disabled={isToggling} className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold transition-colors disabled:opacity-50 ${isActive ? "text-emerald-700 hover:bg-emerald-50" : "text-gray-600 hover:bg-gray-50"}`}>
+                                          {isToggling ? (<FiRefreshCw className="w-3.5 h-3.5 animate-spin" />) : isActive ? (<FaToggleOn className="w-4 h-4 text-emerald-600" />) : (<FaToggleOff className="w-4 h-4 text-gray-500" />)}
                                           {isActive ? "Mark Inactive" : "Mark Active"}
                                         </button>
                                       </div>
@@ -4481,7 +3399,6 @@ const revenueSummary = useMemo(() => {
                   const discountAmount = Number(matchingBooking?.discount) || 0;
                   const referredByCustomer = matchingBooking?.referredByCustomer || patient.referredByCustomer || "";
                   const referredByDoctor = matchingBooking?.referredByDoctor || patient.referredByDoctor || "";
-                  const createdAt = matchingBooking?.createdAt || matchingBooking?.bookedAt || patient.createdAt;
                   const bookingTypeInfo = getBookingType(matchingBooking);
                   const BookingTypeIcon = bookingTypeInfo.icon;
                   const offerApplied = matchingBooking?.offerApplied;
@@ -4494,19 +3411,11 @@ const revenueSummary = useMemo(() => {
                             {patient.name ? patient.name.charAt(0).toUpperCase() : "P"}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="font-bold text-slate-800 text-sm truncate">
-                              {patient.title || ""} {patient.name || "N/A"}
-                            </div>
-                            <div className="text-[11px] text-gray-500 flex items-center gap-1">
-                              <FaPhoneAlt className="text-[9px]" /> {patient.phone || "N/A"}
-                            </div>
+                            <div className="font-bold text-slate-800 text-sm truncate">{patient.title || ""} {patient.name || "N/A"}</div>
+                            <div className="text-[11px] text-gray-500 flex items-center gap-1"><FaPhoneAlt className="text-[9px]" /> {patient.phone || "N/A"}</div>
                           </div>
                         </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleToggleActiveStatus(patient); }}
-                          disabled={isToggling}
-                          className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border-2 flex-shrink-0 ${isActive ? "bg-emerald-50 text-emerald-700 border-emerald-400" : "bg-gray-100 text-gray-600 border-gray-400"} disabled:opacity-50`}
-                        >
+                        <button onClick={(e) => { e.stopPropagation(); handleToggleActiveStatus(patient); }} disabled={isToggling} className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border-2 flex-shrink-0 ${isActive ? "bg-emerald-50 text-emerald-700 border-emerald-400" : "bg-gray-100 text-gray-600 border-gray-400"} disabled:opacity-50`}>
                           {isToggling ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : isActive ? <FaToggleOn className="w-4 h-4 text-emerald-600" /> : <FaToggleOff className="w-4 h-4 text-gray-500" />}
                           <span>{isActive ? "Active" : "Inactive"}</span>
                         </button>
@@ -4514,124 +3423,59 @@ const revenueSummary = useMemo(() => {
 
                       <div className="p-3 space-y-2.5">
                         <div className="grid grid-cols-2 gap-2 text-[11px]">
-                          <div>
-                            <div className="text-[9px] font-bold uppercase text-gray-400">Doctor</div>
-                            <div className="font-semibold text-purple-700 truncate">{matchingBooking?.doctorName || "N/A"}</div>
-                          </div>
-                          <div>
-                            <div className="text-[9px] font-bold uppercase text-gray-400">Age / Gender</div>
-                            <div className="font-semibold text-slate-700">{patient.age || "N/A"} yrs · {patient.gender || "N/A"}</div>
-                          </div>
+                          <div><div className="text-[9px] font-bold uppercase text-gray-400">Doctor</div><div className="font-semibold text-purple-700 truncate">{matchingBooking?.doctorName || "N/A"}</div></div>
+                          <div><div className="text-[9px] font-bold uppercase text-gray-400">Age / Gender</div><div className="font-semibold text-slate-700">{patient.age || "N/A"} yrs · {patient.gender || "N/A"}</div></div>
                           <div>
                             <div className="text-[9px] font-bold uppercase text-gray-400">Booking Type</div>
                             <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
-                              <BookingTypeIcon className="w-2.5 h-2.5" />
-                              {bookingTypeInfo.label}
+                              <BookingTypeIcon className="w-2.5 h-2.5" /> {bookingTypeInfo.label}
                             </span>
                           </div>
-                          <div>
-                            <div className="text-[9px] font-bold uppercase text-gray-400">Appt. Date</div>
-                            <div className="font-semibold text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</div>
-                          </div>
-                          <div>
-                            <div className="text-[9px] font-bold uppercase text-gray-400">Slot Time</div>
-                            <div className="font-semibold text-blue-700">{slotTiming !== "-" ? slotTiming : "N/A"}</div>
-                          </div>
+                          <div><div className="text-[9px] font-bold uppercase text-gray-400">Appt. Date</div><div className="font-semibold text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</div></div>
+                          <div><div className="text-[9px] font-bold uppercase text-gray-400">Slot Time</div><div className="font-semibold text-blue-700">{slotTiming !== "-" ? slotTiming : "N/A"}</div></div>
                         </div>
 
                         {(referredByCustomer || referredByDoctor) && (
                           <div className="flex flex-wrap gap-1.5 pt-1">
-                            {referredByCustomer && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                                <FaUserFriends className="text-[8px]" /> {referredByCustomer}
-                              </span>
-                            )}
-                            {referredByDoctor && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                <FaUserMdIcon className="text-[8px]" /> {referredByDoctor}
-                              </span>
-                            )}
+                            {referredByCustomer && (<span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><FaUserFriends className="text-[8px]" /> {referredByCustomer}</span>)}
+                            {referredByDoctor && (<span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200"><FaUserMdIcon className="text-[8px]" /> {referredByDoctor}</span>)}
                           </div>
                         )}
 
-                        {/* ✅ OFFER DISPLAY (Mobile) */}
                         {offerApplied && offerApplied.offerAmount > 0 && (
                           <div className="p-2 bg-amber-50 rounded-lg border border-amber-200 flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-amber-700 flex items-center gap-1">
-                              <FaGift className="w-3 h-3" />
-                              {offerApplied.offerName}
-                            </span>
+                            <span className="text-[10px] font-bold text-amber-700 flex items-center gap-1"><FaGift className="w-3 h-3" /> {offerApplied.offerName}</span>
                             <span className="text-xs font-extrabold text-amber-900">− ₹{offerApplied.offerAmount}</span>
                           </div>
                         )}
                         <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-gray-100">
                           <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200">
-                            <div className="text-[8px] font-bold text-blue-600 uppercase flex items-center justify-center gap-0.5">
-                              <FaClinicMedical className="text-[8px]" /> Clinic
-                            </div>
+                            <div className="text-[8px] font-bold text-blue-600 uppercase flex items-center justify-center gap-0.5"><FaClinicMedical className="text-[8px]" /> Clinic</div>
                             <div className="text-xs font-extrabold text-blue-800 flex items-center justify-center gap-0.5">
                               ₹{Math.round(Number(amountBreakdown?.clinic) || 0)}
-                              <button
-                                onClick={(e) => { e.stopPropagation(); if (matchingBooking) handleEdit(patient, matchingBooking); }}
-                                className="p-0.5 rounded hover:bg-blue-100"
-                                title="Add / Edit Services"
-                              >
-                                <FaPlus className="w-2 h-2 text-blue-600" />
-                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) handleEdit(patient, matchingBooking); }} className="p-0.5 rounded hover:bg-blue-100" title="Add / Edit Services"><FaPlus className="w-2 h-2 text-blue-600" /></button>
                             </div>
                           </div>
-
                           <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200">
-                            <div className="text-[8px] font-bold text-purple-600 uppercase flex items-center justify-center gap-0.5">
-                              <FaFlask className="text-[8px]" /> Lab
-                            </div>
+                            <div className="text-[8px] font-bold text-purple-600 uppercase flex items-center justify-center gap-0.5"><FaFlask className="text-[8px]" /> Lab</div>
                             <div className="text-xs font-extrabold text-purple-800 flex items-center justify-center gap-0.5">
                               ₹{Math.round(Number(amountBreakdown?.lab) || 0)}
-                              <button
-                                onClick={(e) => { e.stopPropagation(); if (matchingBooking) openLabTotalModal(matchingBooking); }}
-                                className="p-0.5 rounded hover:bg-purple-100"
-                                title="Edit Lab Total"
-                              >
-                                <FaPlus className="w-2 h-2 text-purple-600" />
-                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openLabTotalModal(matchingBooking); }} className="p-0.5 rounded hover:bg-purple-100" title="Edit Lab Total"><FaPlus className="w-2 h-2 text-purple-600" /></button>
                             </div>
                           </div>
-
                           <div className="text-center p-1.5 rounded-lg bg-green-50 border border-green-200">
-                            <div className="text-[8px] font-bold text-green-600 uppercase flex items-center justify-center gap-0.5">
-                              <FaPills className="text-[8px]" /> Pharmacy
-                            </div>
+                            <div className="text-[8px] font-bold text-green-600 uppercase flex items-center justify-center gap-0.5"><FaPills className="text-[8px]" /> Pharmacy</div>
                             <div className="text-xs font-extrabold text-green-800 flex items-center justify-center gap-0.5">
                               ₹{Math.round(Number(amountBreakdown?.pharmacy) || 0)}
-                              <button
-                                onClick={(e) => { e.stopPropagation(); if (matchingBooking) openMedicineTotalModal(matchingBooking); }}
-                                className="p-0.5 rounded hover:bg-green-100"
-                                title="Edit Medicine Total"
-                              >
-                                <FaPlus className="w-2 h-2 text-green-600" />
-                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openMedicineTotalModal(matchingBooking); }} className="p-0.5 rounded hover:bg-green-100" title="Edit Medicine Total"><FaPlus className="w-2 h-2 text-green-600" /></button>
                             </div>
                           </div>
                         </div>
                         <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-gray-100 text-[10px]">
-                          <div className="text-center">
-                            <div className="text-[8px] font-bold uppercase text-gray-400">Total</div>
-                            <div className="font-bold text-slate-800">₹{Math.round(paidInfo.final)}</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-[8px] font-bold uppercase text-gray-400">Paid</div>
-                            <div className="font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-[8px] font-bold uppercase text-gray-400">Due</div>
-                            <div className={`font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-[8px] font-bold uppercase text-gray-400">Discount</div>
-                            <div className={`font-bold ${discountAmount > 0 ? "text-red-600" : "text-gray-400"}`}>
-                              {discountAmount > 0 ? `−₹${Math.round(discountAmount)}` : "—"}
-                            </div>
-                          </div>
+                          <div className="text-center"><div className="text-[8px] font-bold uppercase text-gray-400">Total</div><div className="font-bold text-slate-800">₹{Math.round(paidInfo.final)}</div></div>
+                          <div className="text-center"><div className="text-[8px] font-bold uppercase text-gray-400">Paid</div><div className="font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</div></div>
+                          <div className="text-center"><div className="text-[8px] font-bold uppercase text-gray-400">Due</div><div className={`font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</div></div>
+                          <div className="text-center"><div className="text-[8px] font-bold uppercase text-gray-400">Discount</div><div className={`font-bold ${discountAmount > 0 ? "text-red-600" : "text-gray-400"}`}>{discountAmount > 0 ? `−₹${Math.round(discountAmount)}` : "—"}</div></div>
                         </div>
 
                         <div className="flex items-center justify-center gap-2 pt-2 border-t border-gray-100 flex-wrap">
@@ -4651,21 +3495,12 @@ const revenueSummary = useMemo(() => {
                               )}
                             </div>
                           ) : null}
-
                           {matchingBooking ? (
                             isPaid ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border bg-emerald-50 text-emerald-700 border-emerald-200">
-                                <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> Paid
-                              </span>
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border bg-emerald-50 text-emerald-700 border-emerald-200"><FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> Paid</span>
                             ) : (isPartial || consultationPaymentStatus === "Pending") ? (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); openPartialModal(matchingBooking); }}
-                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${paymentColors.bg} ${paymentColors.text} ${paymentColors.border}`}
-                                title="Click to update payment"
-                              >
-                                <paymentColors.icon className={`w-2.5 h-2.5 ${paymentColors.iconColor}`} />
-                                {consultationPaymentStatus}
-                                <FiChevronDown className="w-3 h-3" />
+                              <button onClick={(e) => { e.stopPropagation(); openPartialModal(matchingBooking); }} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${paymentColors.bg} ${paymentColors.text} ${paymentColors.border}`}>
+                                <paymentColors.icon className={`w-2.5 h-2.5 ${paymentColors.iconColor}`} /> {consultationPaymentStatus} <FiChevronDown className="w-3 h-3" />
                               </button>
                             ) : (
                               <div className="relative payment-dropdown">
@@ -4691,87 +3526,37 @@ const revenueSummary = useMemo(() => {
                           {(() => {
                             const rStatus = getReviewWindowStatus(matchingBooking);
                             const isReviewed = matchingBooking?.isReviewed === true;
-
-                            if (isReviewed) {
-                              return (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border bg-emerald-50 text-emerald-700 border-emerald-200">
-                                  <FaStar className="w-3 h-3" /> Reviewed · {formatDateToDDMMYYYY(matchingBooking.reviewDate)}
-                                </span>
-                              );
-                            }
-                            if (rStatus.expired) {
-                              return (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border bg-red-50 text-red-700 border-red-200">
-                                  <FaTimesCircle className="w-3 h-3" /> Review Expired
-                                </span>
-                              );
-                            }
-                            if (rStatus.canReview) {
-                              return (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); openReviewModal(matchingBooking); }}
-                                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
-                                >
-                                  <FaStar className="w-3 h-3" /> Mark Reviewed ({rStatus.daysLeft}d left)
-                                </button>
-                              );
-                            }
-                            return (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border bg-gray-50 text-gray-500 border-gray-200">
-                                <FaClock className="w-3 h-3" /> Review N/A
-                              </span>
-                            );
+                            if (isReviewed) return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border bg-emerald-50 text-emerald-700 border-emerald-200"><FaStar className="w-3 h-3" /> Reviewed · {formatDateToDDMMYYYY(matchingBooking.reviewDate)}</span>);
+                            if (rStatus.expired) return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border bg-red-50 text-red-700 border-red-200"><FaTimesCircle className="w-3 h-3" /> Review Expired</span>);
+                            if (rStatus.canReview) return (<button onClick={(e) => { e.stopPropagation(); openReviewModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"><FaStar className="w-3 h-3" /> Mark Reviewed ({rStatus.daysLeft}d left)</button>);
+                            return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border bg-gray-50 text-gray-500 border-gray-200"><FaClock className="w-3 h-3" /> Review N/A</span>);
                           })()}
                         </div>
 
                         <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
-                          <button onClick={(e) => { e.stopPropagation(); handleRowClick(patient); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold" title="View">
-                            <FiEye className="w-3.5 h-3.5" /> View
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); handleEdit(patient, matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold" title="Edit">
-                            <FiEdit2 className="w-3.5 h-3.5" /> Edit
-                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); handleRowClick(patient); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold" title="View"><FiEye className="w-3.5 h-3.5" /> View</button>
+                          <button onClick={(e) => { e.stopPropagation(); handleEdit(patient, matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold" title="Edit"><FiEdit2 className="w-3.5 h-3.5" /> Edit</button>
                           {matchingBooking && (
                             <>
-                              <button onClick={(e) => { e.stopPropagation(); openPrescriptionModal(matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg text-[10px] font-bold" title="Prescription">
-                                <FaPrescription className="w-3.5 h-3.5" /> Rx
-                              </button>
-                              <button onClick={(e) => { e.stopPropagation(); openVitalsModal(matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg text-[10px] font-bold" title="Vitals">
-                                <FaHeartbeat className="w-3.5 h-3.5" /> Vitals
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); openBillingModal(matchingBooking); }}
-                                disabled={invoiceLoading === matchingBooking._id}
-                                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${matchingBooking?.invoiceUrl ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"} disabled:opacity-50`}
-                                title={matchingBooking?.invoiceUrl ? "Open Invoice" : "Generate & Save Invoice"}
-                              >
+                              <button onClick={(e) => { e.stopPropagation(); openPrescriptionModal(matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg text-[10px] font-bold" title="Prescription"><FaPrescription className="w-3.5 h-3.5" /> Rx</button>
+                              <button onClick={(e) => { e.stopPropagation(); openVitalsModal(matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg text-[10px] font-bold" title="Vitals"><FaHeartbeat className="w-3.5 h-3.5" /> Vitals</button>
+                              <button onClick={(e) => { e.stopPropagation(); openBillingModal(matchingBooking); }} disabled={invoiceLoading === matchingBooking._id} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${matchingBooking?.invoiceUrl ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"} disabled:opacity-50`}>
                                 {invoiceLoading === matchingBooking._id ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaFileInvoiceDollar className="w-3.5 h-3.5" />} {matchingBooking?.invoiceUrl ? "Invoice" : "Bill"}
                               </button>
                               {(() => {
                                 const rStatus = getReviewWindowStatus(matchingBooking);
                                 const isReviewed = matchingBooking.isReviewed === true;
                                 const isDisabled = !rStatus.canReview && !isReviewed;
-
                                 return (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (isDisabled) {
-                                        if (rStatus.expired) showToast("Review window expired (3 days limit).", "error");
-                                        else showToast("Review will be available on appointment date.", "info");
-                                        return;
-                                      }
-                                      openReviewModal(matchingBooking);
-                                    }}
-                                    disabled={isDisabled}
-                                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${isReviewed
-                                      ? "bg-emerald-100 text-emerald-700"
-                                      : isDisabled
-                                        ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-                                        : "bg-amber-50 text-amber-600"
-                                      }`}
-                                    title={isReviewed ? "Reviewed" : isDisabled ? "Not available" : "Mark Reviewed"}
-                                  >
+                                  <button onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isDisabled) {
+                                      if (rStatus.expired) showToast("Review window expired (3 days limit).", "error");
+                                      else showToast("Review will be available on appointment date.", "info");
+                                      return;
+                                    }
+                                    openReviewModal(matchingBooking);
+                                  }} disabled={isDisabled} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${isReviewed ? "bg-emerald-100 text-emerald-700" : isDisabled ? "bg-gray-100 text-gray-300 cursor-not-allowed" : "bg-amber-50 text-amber-600"}`}>
                                     <FaStar className="w-3.5 h-3.5" /> Review
                                   </button>
                                 );
@@ -4814,96 +3599,34 @@ const revenueSummary = useMemo(() => {
             <div className="bg-white rounded-2xl w-full max-w-5xl shadow-2xl border flex flex-col max-h-[95vh]">
               <div className="flex items-center justify-between px-6 py-4 border-b bg-white rounded-t-2xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center">
-                    <FaFileInvoiceDollar />
-                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center"><FaFileInvoiceDollar /></div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base">Invoice Preview</h3>
-                    <p className="text-xs text-gray-500">
-                      {invoiceModalBooking?.patientTitle} {invoiceModalBooking?.patientName} • {invoiceModalBooking?.patientPhone}
-                    </p>
+                    <p className="text-xs text-gray-500">{invoiceModalBooking?.patientTitle} {invoiceModalBooking?.patientName} • {invoiceModalBooking?.patientPhone}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => window.open(invoiceModalUrl, "_blank")}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
-                    title="Open in new tab"
-                  >
-                    <FaExternalLinkAlt className="w-3 h-3" /> Open
-                  </button>
-                  <button
-                    onClick={() => {
-                      const a = document.createElement("a");
-                      a.href = invoiceModalUrl;
-                      a.download = `invoice-${invoiceModalBooking?._id || "download"}.pdf`;
-                      a.target = "_blank";
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg"
-                    title="Download PDF"
-                  >
-                    <FaDownload className="w-3 h-3" /> Download
-                  </button>
-
-                  <button
-                    onClick={() => handleSendInvoice(invoiceModalBooking)}
-                    disabled={invoiceSending === invoiceModalBooking?._id}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50"
-                    title="Send Invoice on WhatsApp"
-                  >
-                    {invoiceSending === invoiceModalBooking?._id ? (
-                      <FiRefreshCw className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <FaWhatsapp className="w-3 h-3" />
-                    )}
+                  <button onClick={() => window.open(invoiceModalUrl, "_blank")} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"><FaExternalLinkAlt className="w-3 h-3" /> Open</button>
+                  <button onClick={() => { const a = document.createElement("a"); a.href = invoiceModalUrl; a.download = `invoice-${invoiceModalBooking?._id || "download"}.pdf`; a.target = "_blank"; document.body.appendChild(a); a.click(); document.body.removeChild(a); }} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg"><FaDownload className="w-3 h-3" /> Download</button>
+                  <button onClick={() => handleSendInvoice(invoiceModalBooking)} disabled={invoiceSending === invoiceModalBooking?._id} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50">
+                    {invoiceSending === invoiceModalBooking?._id ? (<FiRefreshCw className="w-3 h-3 animate-spin" />) : (<FaWhatsapp className="w-3 h-3" />)}
                     {invoiceSending === invoiceModalBooking?._id ? "Sending..." : "Send Invoice"}
                   </button>
-                  <button
-                    onClick={() => {
-                      const iframe = document.getElementById("invoice-pdf-iframe");
-                      if (iframe) iframe.contentWindow.print();
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
-                    title="Print"
-                  >
-                    <FaPrint className="w-3 h-3" /> Print
-                  </button>
-                  <button
-                    onClick={() => { setShowInvoiceModal(false); setInvoiceModalUrl(""); setInvoiceModalBooking(null); }}
-                    className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
-                    title="Close"
-                  >
-                    <FaTimes className="w-4 h-4" />
-                  </button>
+                  <button onClick={() => { const iframe = document.getElementById("invoice-pdf-iframe"); if (iframe) iframe.contentWindow.print(); }} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"><FaPrint className="w-3 h-3" /> Print</button>
+                  <button onClick={() => { setShowInvoiceModal(false); setInvoiceModalUrl(""); setInvoiceModalBooking(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
                 </div>
               </div>
-
               <div className="flex-1 overflow-hidden bg-gray-100">
-                <iframe
-                  id="invoice-pdf-iframe"
-                  src={invoiceModalUrl}
-                  title="Invoice PDF"
-                  className="w-full h-full border-0"
-                  style={{ minHeight: "70vh" }}
-                />
+                <iframe id="invoice-pdf-iframe" src={invoiceModalUrl} title="Invoice PDF" className="w-full h-full border-0" style={{ minHeight: "70vh" }} />
               </div>
-
               <div className="flex justify-end gap-3 px-6 py-3 border-t bg-gray-50/50 rounded-b-2xl">
-                <button
-                  onClick={() => { setShowInvoiceModal(false); setInvoiceModalUrl(""); setInvoiceModalBooking(null); }}
-                  className="px-5 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
-                >
-                  Close
-                </button>
+                <button onClick={() => { setShowInvoiceModal(false); setInvoiceModalUrl(""); setInvoiceModalBooking(null); }} className="px-5 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Close</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* PATIENT MODAL (VIEW POPUP) */}
+        {/* PATIENT MODAL */}
         {showPatientModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border">
@@ -4963,10 +3686,7 @@ const revenueSummary = useMemo(() => {
                             const BookingTypeIcon = bookingTypeInfo.icon;
                             const reviewServicesList = Array.isArray(booking.reviews) ? booking.reviews : [];
                             const hasReviews = reviewServicesList.length > 0;
-                            const reviewTotal = reviewServicesList.reduce(
-                              (s, r) => s + (Number(r.price) || 0),
-                              0
-                            );
+                            const reviewTotal = reviewServicesList.reduce((s, r) => s + (Number(r.price) || 0), 0);
                             const offerApplied = booking.offerApplied;
 
                             return (
@@ -4976,19 +3696,18 @@ const revenueSummary = useMemo(() => {
                                     <span className="font-bold text-gray-500 text-xs">#{bIdx + 1}</span>
                                     <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${statusColors.text} ${statusColors.bg} ${statusColors.border}`}>{booking.status || "N/A"}</span>
                                     <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
-                                      <BookingTypeIcon className="w-2.5 h-2.5 inline mr-1" />
-                                      {bookingTypeInfo.label}
+                                      <BookingTypeIcon className="w-2.5 h-2.5 inline mr-1" /> {bookingTypeInfo.label}
                                     </span>
                                     <span className="text-xs text-gray-600">{formatDateToDDMMYYYY(booking.appointmentDate || booking.date)}</span>
                                     {slotTiming !== "N/A" && <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200">{slotTiming}</span>}
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <button onClick={() => openBillingModal(booking)} disabled={invoiceLoading === booking._id} className={`p-1.5 rounded-lg ${booking?.invoiceUrl ? "text-blue-700 bg-blue-50" : "text-emerald-700 hover:bg-emerald-50"} disabled:opacity-50`} title={booking?.invoiceUrl ? "Open Invoice" : "Billing"}>
+                                    <button onClick={() => openBillingModal(booking)} disabled={invoiceLoading === booking._id} className={`p-1.5 rounded-lg ${booking?.invoiceUrl ? "text-blue-700 bg-blue-50" : "text-emerald-700 hover:bg-emerald-50"} disabled:opacity-50`}>
                                       {invoiceLoading === booking._id ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaFileInvoiceDollar className="w-3.5 h-3.5" />}
                                     </button>
-                                    <button onClick={() => openPrescriptionModal(booking)} className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg" title="Prescription"><FaPrescription className="w-3.5 h-3.5" /></button>
-                                    <button onClick={() => openVitalsModal(booking)} className="p-1.5 text-pink-600 hover:bg-pink-50 rounded-lg" title="Vitals"><FaHeartbeat className="w-3.5 h-3.5" /></button>
-                                    <button onClick={() => openReviewModal(booking)} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg" title="Review"><FaStar className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => openPrescriptionModal(booking)} className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg"><FaPrescription className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => openVitalsModal(booking)} className="p-1.5 text-pink-600 hover:bg-pink-50 rounded-lg"><FaHeartbeat className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => openReviewModal(booking)} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg"><FaStar className="w-3.5 h-3.5" /></button>
                                   </div>
                                 </div>
 
@@ -5014,25 +3733,14 @@ const revenueSummary = useMemo(() => {
 
                                   {(booking.referredByCustomer || booking.referredByDoctor) && (
                                     <div className="flex flex-wrap gap-2">
-                                      {booking.referredByCustomer && (
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                                          <FaUserFriends className="text-[9px]" /> Customer: {booking.referredByCustomer}
-                                        </span>
-                                      )}
-                                      {booking.referredByDoctor && (
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                          <FaUserMdIcon className="text-[9px]" /> Doctor: {booking.referredByDoctor}
-                                        </span>
-                                      )}
+                                      {booking.referredByCustomer && (<span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><FaUserFriends className="text-[9px]" /> Customer: {booking.referredByCustomer}</span>)}
+                                      {booking.referredByDoctor && (<span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200"><FaUserMdIcon className="text-[9px]" /> Doctor: {booking.referredByDoctor}</span>)}
                                     </div>
                                   )}
 
-                                  {/* ✅ OFFER APPLIED (Detail) */}
                                   {offerApplied && offerApplied.offerAmount > 0 && (
                                     <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                                      <div className="text-[10px] font-bold uppercase text-amber-700 mb-1 flex items-center gap-1">
-                                        <FaGift /> Offer Applied
-                                      </div>
+                                      <div className="text-[10px] font-bold uppercase text-amber-700 mb-1 flex items-center gap-1"><FaGift /> Offer Applied</div>
                                       <div className="flex items-center justify-between text-xs">
                                         <span className="font-semibold text-amber-800">{offerApplied.offerName}</span>
                                         <span className="font-extrabold text-amber-900">− ₹{offerApplied.offerAmount}</span>
@@ -5045,9 +3753,7 @@ const revenueSummary = useMemo(() => {
                                       <div className="text-[10px] font-bold uppercase text-gray-400">Services</div>
                                       <div className="flex flex-wrap gap-1.5 mt-1">
                                         {items.map((svc, sIdx) => (
-                                          <span key={sIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                                            {svc.name} ₹{svc.price}
-                                          </span>
+                                          <span key={sIdx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">{svc.name} ₹{svc.price}</span>
                                         ))}
                                       </div>
                                     </div>
@@ -5056,13 +3762,8 @@ const revenueSummary = useMemo(() => {
                                   {hasReviews && (
                                     <div className="border rounded-xl overflow-hidden border-emerald-200">
                                       <div className="px-3 py-2 bg-emerald-50 border-b border-emerald-200 flex items-center justify-between">
-                                        <div className="text-[10px] font-bold uppercase text-emerald-800 flex items-center gap-1.5">
-                                          <FaClipboardList className="text-emerald-600 text-[11px]" />
-                                          Review Services ({reviewServicesList.length})
-                                        </div>
-                                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-                                          ₹{reviewTotal}
-                                        </span>
+                                        <div className="text-[10px] font-bold uppercase text-emerald-800 flex items-center gap-1.5"><FaClipboardList className="text-emerald-600 text-[11px]" /> Review Services ({reviewServicesList.length})</div>
+                                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">₹{reviewTotal}</span>
                                       </div>
                                       <div className="overflow-x-auto">
                                         <table className="w-full text-xs">
@@ -5081,19 +3782,13 @@ const revenueSummary = useMemo(() => {
                                                 <td className="px-3 py-2 text-[10px] font-bold text-emerald-700">{rIdx + 1}</td>
                                                 <td className="px-3 py-2 font-semibold text-gray-800">{r.name || "N/A"}</td>
                                                 <td className="px-3 py-2 text-[10px] text-gray-500">{r.category || "—"}</td>
-                                                <td className="px-3 py-2 text-[10px] text-gray-500">
-                                                  {r.addedAt ? formatDateToDDMMYYYY(r.addedAt) : "—"}
-                                                </td>
+                                                <td className="px-3 py-2 text-[10px] text-gray-500">{r.addedAt ? formatDateToDDMMYYYY(r.addedAt) : "—"}</td>
                                                 <td className="px-3 py-2 text-right font-bold text-emerald-700">₹{r.price || 0}</td>
                                               </tr>
                                             ))}
                                             <tr className="bg-emerald-100/60 border-t-2 border-emerald-300">
-                                              <td colSpan="4" className="px-3 py-2 text-right text-[10px] font-extrabold uppercase text-emerald-900 tracking-wider">
-                                                Review Total:
-                                              </td>
-                                              <td className="px-3 py-2 text-right text-sm font-extrabold text-emerald-900">
-                                                ₹{reviewTotal}
-                                              </td>
+                                              <td colSpan="4" className="px-3 py-2 text-right text-[10px] font-extrabold uppercase text-emerald-900 tracking-wider">Review Total:</td>
+                                              <td className="px-3 py-2 text-right text-sm font-extrabold text-emerald-900">₹{reviewTotal}</td>
                                             </tr>
                                           </tbody>
                                         </table>
@@ -5107,35 +3802,23 @@ const revenueSummary = useMemo(() => {
                                     <div><div className="text-[10px] font-bold uppercase text-gray-400">Balance</div><div className={`text-sm font-extrabold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</div></div>
                                     <div><div className="text-[10px] font-bold uppercase text-gray-400">Mode</div><div className="font-bold capitalize">{booking.paymentType || "cash"}</div></div>
                                     <div><div className="text-[10px] font-bold uppercase text-gray-400">Status</div>
-                                      <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${booking.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : booking.paymentStatus === "Partial" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-red-50 text-red-700 border-red-200"}`}>
-                                        {booking.paymentStatus || "N/A"}
-                                      </span>
+                                      <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${booking.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : booking.paymentStatus === "Partial" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-red-50 text-red-700 border-red-200"}`}>{booking.paymentStatus || "N/A"}</span>
                                     </div>
                                   </div>
 
                                   {booking.invoiceUrl && (
                                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                                       <div className="text-[10px] font-bold uppercase text-blue-700 mb-1">Invoice</div>
-                                      <button
-                                        onClick={() => {
-                                          const base = API_BASE_INVURL.replace(/\/$/, "");
-                                          const fullUrl = booking.invoiceUrl.startsWith("http")
-                                            ? booking.invoiceUrl
-                                            : `${base}${booking.invoiceUrl.startsWith("/") ? "" : "/"}${booking.invoiceUrl}`;
-                                          setInvoiceModalUrl(fullUrl);
-                                          setInvoiceModalBooking(booking);
-                                          setShowInvoiceModal(true);
-                                        }}
-                                        className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:underline"
-                                      >
-                                        <FaFilePdf className="w-3.5 h-3.5" />
-                                        View Invoice PDF
+                                      <button onClick={() => {
+                                        const base = API_BASE_INVURL.replace(/\/$/, "");
+                                        const fullUrl = booking.invoiceUrl.startsWith("http") ? booking.invoiceUrl : `${base}${booking.invoiceUrl.startsWith("/") ? "" : "/"}${booking.invoiceUrl}`;
+                                        setInvoiceModalUrl(fullUrl);
+                                        setInvoiceModalBooking(booking);
+                                        setShowInvoiceModal(true);
+                                      }} className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:underline">
+                                        <FaFilePdf className="w-3.5 h-3.5" /> View Invoice PDF
                                       </button>
-                                      {booking.invoiceGeneratedAt && (
-                                        <div className="text-[10px] text-blue-600 mt-1">
-                                          Generated: {formatDateTimeToDDMMYYYY(booking.invoiceGeneratedAt)}
-                                        </div>
-                                      )}
+                                      {booking.invoiceGeneratedAt && (<div className="text-[10px] text-blue-600 mt-1">Generated: {formatDateTimeToDDMMYYYY(booking.invoiceGeneratedAt)}</div>)}
                                     </div>
                                   )}
                                 </div>
@@ -5166,7 +3849,7 @@ const revenueSummary = useMemo(() => {
               </div>
               <div className="border-b pb-2 mb-2">
                 <div className="text-center text-[10px] font-bold text-gray-400 py-1 bg-gray-50">Front Side - Prescription</div>
-                <div ref={prescriptionRef} className="relative w-full overflow-hidden" style={{ transform: "scale(1)", transformOrigin: "top center", width: "100%", marginLeft: "0" }}>
+                <div ref={prescriptionRef} className="relative w-full overflow-hidden">
                   <img src={prescriptionTemplate} alt="Front" className="w-full h-auto object-contain" />
                   <div className="absolute inset-0 text-black">
                     <div style={{ position: "absolute", top: "78px", left: "90px", fontSize: "15px", fontWeight: 600 }}>{selectedBookingForPrescription?.patientTitle || ""} {selectedBookingForPrescription?.patientName || "N/A"}</div>
@@ -5184,7 +3867,7 @@ const revenueSummary = useMemo(() => {
               </div>
               <div>
                 <div className="text-center text-[10px] font-bold text-gray-400 py-1 bg-gray-50">Back Side</div>
-                <div className="relative w-full overflow-hidden" style={{ transform: "scale(1)", transformOrigin: "top center", width: "100%", marginLeft: "0" }}>
+                <div className="relative w-full overflow-hidden">
                   <img src={prescriptionBackTemplate} alt="Back" className="w-full h-auto object-contain" />
                 </div>
               </div>
@@ -5215,45 +3898,21 @@ const revenueSummary = useMemo(() => {
                     <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-3">Payment Summary</div>
                       <div className="space-y-2 text-xs">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Total Payable</span>
-                          <span className="font-bold text-gray-900 text-sm">₹{Math.round(finalPayable)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Already Paid</span>
-                          <span className="font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span>
-                        </div>
-                        <div className="flex justify-between items-center pt-2 border-t-2 border-gray-800">
-                          <span className="font-bold text-gray-800">Due Amount</span>
-                          <span className="font-bold text-red-600 text-lg">₹{Math.round(paidInfo.balance)}</span>
-                        </div>
+                        <div className="flex justify-between items-center"><span className="text-gray-600">Total Payable</span><span className="font-bold text-gray-900 text-sm">₹{Math.round(finalPayable)}</span></div>
+                        <div className="flex justify-between items-center"><span className="text-gray-600">Already Paid</span><span className="font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span></div>
+                        <div className="flex justify-between items-center pt-2 border-t-2 border-gray-800"><span className="font-bold text-gray-800">Due Amount</span><span className="font-bold text-red-600 text-lg">₹{Math.round(paidInfo.balance)}</span></div>
                       </div>
                     </div>
 
-
-
-                    {/* ✅ PAYMENT TYPE SELECTOR */}
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                        <FaMoneyBillWave className="text-purple-600" />
-                        Payment Type
-                      </label>
-                      <select
-                        value={partialPaymentType}
-                        onChange={(e) => setPartialPaymentType(e.target.value)}
-                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                      >
-                        {PAYMENT_TYPE_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><FaMoneyBillWave className="text-purple-600" /> Payment Type</label>
+                      <select value={partialPaymentType} onChange={(e) => setPartialPaymentType(e.target.value)} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800">
+                        {PAYMENT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                       </select>
                     </div>
 
-
                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-[11px] text-blue-800">
-                        Clicking <b>"Mark as Fully Paid"</b> will clear the entire due amount of <b>₹{Math.round(paidInfo.balance)}</b>.
-                      </p>
+                      <p className="text-[11px] text-blue-800">Clicking <b>"Mark as Fully Paid"</b> will clear the entire due amount of <b>₹{Math.round(paidInfo.balance)}</b>.</p>
                     </div>
                   </div>
                 );
@@ -5270,63 +3929,32 @@ const revenueSummary = useMemo(() => {
           </div>
         )}
 
-
-
-        {/* ✅ PAYMENT TYPE EDIT MODAL */}
+        {/* PAYMENT TYPE EDIT MODAL */}
         {showPaymentTypeEditModal && paymentTypeEditBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[95] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border relative">
               <div className="flex items-center justify-between px-5 py-4 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-slate-700 text-white flex items-center justify-center">
-                    <FaMoneyBillWave className="w-4 h-4" />
-                  </div>
+                  <div className="w-9 h-9 rounded-xl bg-slate-700 text-white flex items-center justify-center"><FaMoneyBillWave className="w-4 h-4" /></div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-sm">Change Payment Type</h3>
                     <p className="text-[10px] text-gray-500 truncate">{paymentTypeEditBooking.patientName}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => { setShowPaymentTypeEditModal(false); setPaymentTypeEditBooking(null); }}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
-                >
-                  <FaTimes className="w-4 h-4" />
-                </button>
+                <button onClick={() => { setShowPaymentTypeEditModal(false); setPaymentTypeEditBooking(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
-
               <div className="p-5 space-y-3">
-                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">
-                  Select Payment Type
-                </label>
-                <select
-                  value={paymentTypeEditValue}
-                  onChange={(e) => setPaymentTypeEditValue(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500"
-                >
-                  {PAYMENT_TYPE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
+                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">Select Payment Type</label>
+                <select value={paymentTypeEditValue} onChange={(e) => setPaymentTypeEditValue(e.target.value)} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800">
+                  {PAYMENT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                 </select>
-
                 <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                  <p className="text-[10px] text-slate-700">
-                    Clicking <b>"Update"</b> will change this booking's payment type to <b className="uppercase">{paymentTypeEditValue}</b>.
-                  </p>
+                  <p className="text-[10px] text-slate-700">Clicking <b>"Update"</b> will change this booking's payment type to <b className="uppercase">{paymentTypeEditValue}</b>.</p>
                 </div>
               </div>
-
               <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
-                <button
-                  onClick={() => { setShowPaymentTypeEditModal(false); setPaymentTypeEditBooking(null); }}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSavePaymentTypeEdit}
-                  disabled={savingPaymentTypeEdit}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-slate-700 hover:bg-slate-800 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-                >
+                <button onClick={() => { setShowPaymentTypeEditModal(false); setPaymentTypeEditBooking(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
+                <button onClick={handleSavePaymentTypeEdit} disabled={savingPaymentTypeEdit} className="px-4 py-2 rounded-lg text-xs font-bold bg-slate-700 hover:bg-slate-800 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
                   {savingPaymentTypeEdit ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
                   {savingPaymentTypeEdit ? "Saving..." : "Update"}
                 </button>
@@ -5395,186 +4023,81 @@ const revenueSummary = useMemo(() => {
           </div>
         )}
 
-
-
-        {/* ✅ CLINIC SERVICES POPUP — Small Dedicated */}
+        {/* CLINIC SERVICES POPUP */}
         {showClinicServicesModal && clinicServicesBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
-              {/* Header */}
               <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-5 py-4 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center">
-                    <FaClinicMedical className="w-4 h-4" />
-                  </div>
+                  <div className="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center"><FaClinicMedical className="w-4 h-4" /></div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-sm">Clinic Services</h3>
-                    <p className="text-[10px] text-gray-500">
-                      {clinicServicesBooking.patientTitle} {clinicServicesBooking.patientName}
-                    </p>
+                    <p className="text-[10px] text-gray-500">{clinicServicesBooking.patientTitle} {clinicServicesBooking.patientName}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => { setShowClinicServicesModal(false); setClinicServicesBooking(null); setClinicServicesList([]); }}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
-                >
-                  <FaTimes className="w-4 h-4" />
-                </button>
+                <button onClick={() => { setShowClinicServicesModal(false); setClinicServicesBooking(null); setClinicServicesList([]); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
 
-              {/* Body */}
               <div className="p-5 space-y-4">
-                {/* Existing Services List */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">
-                      Services ({clinicServicesList.length})
-                    </label>
-                    {clinicServicesList.length > 0 && (
-                      <span className="text-[11px] font-extrabold text-blue-700">
-                        Total: ₹{clinicServicesList.reduce((s, x) => s + (Number(x.price) || 0), 0)}
-                      </span>
-                    )}
+                    <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Services ({clinicServicesList.length})</label>
+                    {clinicServicesList.length > 0 && (<span className="text-[11px] font-extrabold text-blue-700">Total: ₹{clinicServicesList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span>)}
                   </div>
-
                   {clinicServicesList.length === 0 ? (
-                    <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">
-                      No services yet — add below 👇
-                    </div>
+                    <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">No services yet — add below 👇</div>
                   ) : (
                     <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                       {clinicServicesList.map((svc, i) => (
-                        <div
-                          key={`${svc.serviceId}-${i}`}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-blue-50 border border-blue-200"
-                        >
-                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                            {i + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-gray-800 truncate">{svc.name}</div>
-                          </div>
+                        <div key={`${svc.serviceId}-${i}`} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-blue-50 border border-blue-200">
+                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
+                          <div className="flex-1 min-w-0"><div className="font-semibold text-gray-800 truncate">{svc.name}</div></div>
                           <div className="flex items-center gap-1">
                             <span className="text-[11px] font-bold text-gray-600">₹</span>
-                            <input
-                              type="number"
-                              value={svc.price}
-                              onChange={(e) => handleUpdateClinicServicePrice(i, e.target.value)}
-                              className="w-20 px-2 py-1 text-xs font-bold text-emerald-700 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                              min="0"
-                            />
+                            <input type="number" value={svc.price} onChange={(e) => handleUpdateClinicServicePrice(i, e.target.value)} className="w-20 px-2 py-1 text-xs font-bold text-emerald-700 border border-gray-300 rounded" min="0" />
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveClinicServiceItem(i)}
-                            className="text-red-400 hover:text-red-600 p-1"
-                            title="Remove"
-                          >
-                            <FaMinusCircle className="w-3.5 h-3.5" />
-                          </button>
+                          <button type="button" onClick={() => handleRemoveClinicServiceItem(i)} className="text-red-400 hover:text-red-600 p-1"><FaMinusCircle className="w-3.5 h-3.5" /></button>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
 
-                {/* Add Service Input */}
                 <div className="border rounded-xl p-3 bg-gray-50 border-gray-200">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
-                    Add New Service
-                  </div>
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Add New Service</div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <div className="flex-1 min-w-[180px] relative">
-                      <input
-                        type="text"
-                        value={clinicServiceInput}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setClinicServiceInput(v);
-                          if (v.trim()) {
-                            const filtered = services.filter((s) =>
-                              s.name.toLowerCase().includes(v.toLowerCase())
-                            );
-                            setClinicServiceSuggestions(filtered);
-                            setShowClinicServiceSuggestions(true);
-                          } else {
-                            setClinicServiceSuggestions([]);
-                            setShowClinicServiceSuggestions(false);
-                          }
-                        }}
-                        onFocus={() => {
-                          if (clinicServiceInput.trim() && clinicServiceSuggestions.length > 0)
-                            setShowClinicServiceSuggestions(true);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddCustomClinicService();
-                          }
-                        }}
-                        placeholder="🔍 Search or type service name..."
-                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                        autoComplete="off"
-                      />
+                      <input type="text" value={clinicServiceInput} onChange={(e) => {
+                        const v = e.target.value;
+                        setClinicServiceInput(v);
+                        if (v.trim()) {
+                          const filtered = services.filter((s) => s.name.toLowerCase().includes(v.toLowerCase()));
+                          setClinicServiceSuggestions(filtered);
+                          setShowClinicServiceSuggestions(true);
+                        } else { setClinicServiceSuggestions([]); setShowClinicServiceSuggestions(false); }
+                      }} onFocus={() => { if (clinicServiceInput.trim() && clinicServiceSuggestions.length > 0) setShowClinicServiceSuggestions(true); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCustomClinicService(); } }} placeholder="🔍 Search or type service name..." className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm" autoComplete="off" />
                       {showClinicServiceSuggestions && clinicServiceSuggestions.length > 0 && (
                         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-40 overflow-y-auto z-50">
                           {clinicServiceSuggestions.map((svc) => (
-                            <button
-                              key={svc._id}
-                              type="button"
-                              onMouseDown={(e) => { e.preventDefault(); handleAddClinicServiceItem(svc); }}
-                              className="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0"
-                            >
+                            <button key={svc._id} type="button" onMouseDown={(e) => { e.preventDefault(); handleAddClinicServiceItem(svc); }} className="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0">
                               <span className="font-semibold text-gray-800">{svc.name}</span>
-                              <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                ₹{svc.price}
-                              </span>
+                              <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">₹{svc.price}</span>
                             </button>
                           ))}
                         </div>
                       )}
                     </div>
-                    <input
-                      type="number"
-                      value={clinicServicePrice}
-                      onChange={(e) => setClinicServicePrice(e.target.value)}
-                      placeholder="Price"
-                      className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                      min="0"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddCustomClinicService}
-                      disabled={!clinicServiceInput.trim()}
-                      className="px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center gap-1 disabled:opacity-50"
-                    >
-                      <FaPlus className="w-3 h-3" /> Add
-                    </button>
+                    <input type="number" value={clinicServicePrice} onChange={(e) => setClinicServicePrice(e.target.value)} placeholder="Price" className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm" min="0" />
+                    <button type="button" onClick={handleAddCustomClinicService} disabled={!clinicServiceInput.trim()} className="px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center gap-1 disabled:opacity-50"><FaPlus className="w-3 h-3" /> Add</button>
                   </div>
-                  <p className="text-[10px] text-gray-500 mt-2">
-                    💡 Dropdown se select karo ya type karke <b>Add</b>/<b>Enter</b> dabao.
-                  </p>
+                  <p className="text-[10px] text-gray-500 mt-2">💡 Dropdown se select karo ya type karke <b>Add</b>/<b>Enter</b> dabao.</p>
                 </div>
               </div>
 
-              {/* Footer */}
               <div className="sticky bottom-0 flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur rounded-b-2xl">
-                <button
-                  onClick={() => { setShowClinicServicesModal(false); setClinicServicesBooking(null); setClinicServicesList([]); }}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveClinicServices}
-                  disabled={savingClinicServices}
-                  className="px-5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  {savingClinicServices ? (
-                    <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <FiCheckCircle className="w-3.5 h-3.5" />
-                  )}
+                <button onClick={() => { setShowClinicServicesModal(false); setClinicServicesBooking(null); setClinicServicesList([]); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
+                <button onClick={handleSaveClinicServices} disabled={savingClinicServices} className="px-5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
+                  {savingClinicServices ? (<FiRefreshCw className="w-3.5 h-3.5 animate-spin" />) : (<FiCheckCircle className="w-3.5 h-3.5" />)}
                   {savingClinicServices ? "Saving..." : `Save Services (${clinicServicesList.length})`}
                 </button>
               </div>
@@ -5597,22 +4120,10 @@ const revenueSummary = useMemo(() => {
                 <button onClick={() => { setShowVitalsModal(false); setVitalsBooking(null); setVitalsData({ temp: "", bp: "", pr: "", weight: "" }); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
               <div className="p-5 space-y-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">Temp (°F)</label>
-                  <input type="text" value={vitalsData.temp} onChange={(e) => setVitalsData((prev) => ({ ...prev, temp: e.target.value }))} placeholder="e.g. 98.6" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">BP (mmHg)</label>
-                  <input type="text" value={vitalsData.bp} onChange={(e) => setVitalsData((prev) => ({ ...prev, bp: e.target.value }))} placeholder="e.g. 120/80" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">PR (bpm)</label>
-                  <input type="text" value={vitalsData.pr} onChange={(e) => setVitalsData((prev) => ({ ...prev, pr: e.target.value }))} placeholder="e.g. 72" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">Weight (kg)</label>
-                  <input type="text" value={vitalsData.weight} onChange={(e) => setVitalsData((prev) => ({ ...prev, weight: e.target.value }))} placeholder="e.g. 70" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
-                </div>
+                <div><label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">Temp (°F)</label><input type="text" value={vitalsData.temp} onChange={(e) => setVitalsData((prev) => ({ ...prev, temp: e.target.value }))} placeholder="e.g. 98.6" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" /></div>
+                <div><label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">BP (mmHg)</label><input type="text" value={vitalsData.bp} onChange={(e) => setVitalsData((prev) => ({ ...prev, bp: e.target.value }))} placeholder="e.g. 120/80" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" /></div>
+                <div><label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">PR (bpm)</label><input type="text" value={vitalsData.pr} onChange={(e) => setVitalsData((prev) => ({ ...prev, pr: e.target.value }))} placeholder="e.g. 72" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" /></div>
+                <div><label className="block text-[11px] font-bold text-pink-700 uppercase tracking-wider mb-1">Weight (kg)</label><input type="text" value={vitalsData.weight} onChange={(e) => setVitalsData((prev) => ({ ...prev, weight: e.target.value }))} placeholder="e.g. 70" className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" /></div>
               </div>
               <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
                 <button onClick={() => { setShowVitalsModal(false); setVitalsBooking(null); setVitalsData({ temp: "", bp: "", pr: "", weight: "" }); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
@@ -5631,110 +4142,56 @@ const revenueSummary = useMemo(() => {
             <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border relative max-h-[92vh] overflow-y-auto">
               <div className="sticky top-0 bg-white z-20 flex items-center justify-between px-6 py-4 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center">
-                    <FaStar className="w-5 h-5" />
-                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center"><FaStar className="w-5 h-5" /></div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base">Patient Review</h3>
-                    <p className="text-xs text-gray-500">
-                      {reviewBooking.patientName} • {reviewBooking.patientPhone}
-                    </p>
+                    <p className="text-xs text-gray-500">{reviewBooking.patientName} • {reviewBooking.patientPhone}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setShowReviewModal(false);
-                    setReviewBooking(null);
-                    setReviewData({ isReviewed: false, reviewDate: "" });
-                    setReviewServices([]);
-                    setReviewServiceInput("");
-                    setFilteredReviewServices([]);
-                    setShowReviewServiceSuggestions(false);
-                  }}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
-                >
-                  <FaTimes className="w-4 h-4" />
-                </button>
+                <button onClick={() => {
+                  setShowReviewModal(false);
+                  setReviewBooking(null);
+                  setReviewData({ isReviewed: false, reviewDate: "" });
+                  setReviewServices([]);
+                  setReviewServiceInput("");
+                  setFilteredReviewServices([]);
+                  setShowReviewServiceSuggestions(false);
+                }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
 
               <div className="p-6 space-y-4">
                 <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 mb-3">
-                    Appointment Details
-                  </div>
+                  <div className="text-[10px] font-bold uppercase text-gray-400 mb-3">Appointment Details</div>
                   <div className="space-y-2 text-xs">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Doctor</span>
-                      <span className="font-bold text-gray-900">
-                        {reviewBooking.doctorName || "N/A"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Appointment Date</span>
-                      <span className="font-bold text-gray-900">
-                        {formatDateToDDMMYYYY(
-                          reviewBooking.appointmentDate || reviewBooking.date
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Purpose</span>
-                      <span className="font-bold text-gray-900 truncate max-w-[280px]">
-                        {reviewBooking.purpose || "N/A"}
-                      </span>
-                    </div>
+                    <div className="flex justify-between items-center"><span className="text-gray-600">Doctor</span><span className="font-bold text-gray-900">{reviewBooking.doctorName || "N/A"}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-600">Appointment Date</span><span className="font-bold text-gray-900">{formatDateToDDMMYYYY(reviewBooking.appointmentDate || reviewBooking.date)}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-600">Purpose</span><span className="font-bold text-gray-900 truncate max-w-[280px]">{reviewBooking.purpose || "N/A"}</span></div>
                   </div>
                 </div>
 
                 {Array.isArray(reviewBooking.reviews) && reviewBooking.reviews.length > 0 && (
                   <div className="border rounded-xl p-4 bg-emerald-50/40 border-emerald-200">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="text-xs font-bold text-emerald-800 uppercase flex items-center gap-2">
-                        <FaClipboardList className="text-emerald-600" />
-                        Previously Reviewed Services
-                      </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                        {reviewBooking.reviews.length} old
-                      </span>
+                      <div className="text-xs font-bold text-emerald-800 uppercase flex items-center gap-2"><FaClipboardList className="text-emerald-600" /> Previously Reviewed Services</div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">{reviewBooking.reviews.length} old</span>
                     </div>
                     <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                       {reviewBooking.reviews.map((r, i) => (
-                        <div
-                          key={`old-${i}`}
-                          className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-emerald-200 text-xs"
-                        >
+                        <div key={`old-${i}`} className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-emerald-200 text-xs">
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                              {i + 1}
-                            </span>
+                            <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
                             <div className="min-w-0">
-                              <div className="font-semibold text-gray-800 truncate">
-                                {r.name}
-                              </div>
-                              {r.addedAt && (
-                                <div className="text-[9px] text-gray-500">
-                                  {formatDateToDDMMYYYY(r.addedAt)}
-                                </div>
-                              )}
+                              <div className="font-semibold text-gray-800 truncate">{r.name}</div>
+                              {r.addedAt && (<div className="text-[9px] text-gray-500">{formatDateToDDMMYYYY(r.addedAt)}</div>)}
                             </div>
                           </div>
-                          <span className="font-bold text-emerald-700 flex-shrink-0">
-                            ₹{r.price}
-                          </span>
+                          <span className="font-bold text-emerald-700 flex-shrink-0">₹{r.price}</span>
                         </div>
                       ))}
                     </div>
                     <div className="flex justify-between items-center px-3 py-2 bg-emerald-100 rounded-lg border border-emerald-300 mt-2">
-                      <span className="text-xs font-bold text-emerald-900">
-                        Previous Total:
-                      </span>
-                      <span className="text-sm font-extrabold text-emerald-900">
-                        ₹
-                        {reviewBooking.reviews.reduce(
-                          (s, r) => s + (Number(r.price) || 0),
-                          0
-                        )}
-                      </span>
+                      <span className="text-xs font-bold text-emerald-900">Previous Total:</span>
+                      <span className="text-sm font-extrabold text-emerald-900">₹{reviewBooking.reviews.reduce((s, r) => s + (Number(r.price) || 0), 0)}</span>
                     </div>
                   </div>
                 )}
@@ -5743,152 +4200,63 @@ const revenueSummary = useMemo(() => {
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
                       <FaPlus className="text-blue-600" />
-                      {Array.isArray(reviewBooking.reviews) && reviewBooking.reviews.length > 0
-                        ? "Add New Services (Today's Visit)"
-                        : "Add Review Services"}
+                      {Array.isArray(reviewBooking.reviews) && reviewBooking.reviews.length > 0 ? "Add New Services (Today's Visit)" : "Add Review Services"}
                     </label>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-300">
-                      {reviewServices.length} new
-                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-300">{reviewServices.length} new</span>
                   </div>
 
                   {reviewServices.length > 0 && (
                     <div className="space-y-2 mb-3 max-h-64 overflow-y-auto pr-1">
                       {reviewServices.map((svc, i) => (
-                        <div
-                          key={`new-${i}-${svc.serviceId || svc.name}-${svc.addedAt}`}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-white border border-blue-200"
-                        >
-                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                            {i + 1}
-                          </span>
+                        <div key={`new-${i}-${svc.serviceId || svc.name}-${svc.addedAt}`} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-white border border-blue-200">
+                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-gray-800 truncate">
-                              {svc.name}
-                            </div>
-                            {svc.category && (
-                              <div className="text-[10px] text-gray-500">
-                                {svc.category}
-                              </div>
-                            )}
+                            <div className="font-semibold text-gray-800 truncate">{svc.name}</div>
+                            {svc.category && (<div className="text-[10px] text-gray-500">{svc.category}</div>)}
                           </div>
                           <div className="flex items-center gap-1">
                             <span className="text-[11px] font-bold text-gray-600">₹</span>
-                            <input
-                              type="number"
-                              value={svc.price}
-                              onChange={(e) =>
-                                handleUpdateReviewServicePrice(i, e.target.value)
-                              }
-                              className="w-20 px-2 py-1 text-xs font-bold text-emerald-700 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                              min="0"
-                            />
+                            <input type="number" value={svc.price} onChange={(e) => handleUpdateReviewServicePrice(i, e.target.value)} className="w-20 px-2 py-1 text-xs font-bold text-emerald-700 border border-gray-300 rounded" min="0" />
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveReviewService(i)}
-                            className="text-red-400 hover:text-red-600 p-1"
-                            title="Remove"
-                          >
-                            <FaMinusCircle className="w-3.5 h-3.5" />
-                          </button>
+                          <button type="button" onClick={() => handleRemoveReviewService(i)} className="text-red-400 hover:text-red-600 p-1"><FaMinusCircle className="w-3.5 h-3.5" /></button>
                         </div>
                       ))}
-
                       <div className="flex justify-between items-center px-3 py-2 bg-blue-100 rounded-lg border border-blue-300 sticky bottom-0">
-                        <span className="text-xs font-bold text-blue-800">
-                          New Services Total:
-                        </span>
-                        <span className="text-sm font-extrabold text-blue-900">
-                          ₹{getReviewServicesTotal()}
-                        </span>
+                        <span className="text-xs font-bold text-blue-800">New Services Total:</span>
+                        <span className="text-sm font-extrabold text-blue-900">₹{getReviewServicesTotal()}</span>
                       </div>
                     </div>
                   )}
 
                   <div className="flex items-center gap-2 flex-wrap">
                     <div className="flex-1 min-w-[180px] relative">
-                      <input
-                        type="text"
-                        value={reviewServiceInput}
-                        onChange={(e) =>
-                          handleReviewServiceInputChange(e.target.value)
-                        }
-                        onFocus={() => {
-                          if (
-                            reviewServiceInput.trim() &&
-                            filteredReviewServices.length > 0
-                          ) {
-                            setShowReviewServiceSuggestions(true);
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddCustomReviewService();
-                          }
-                        }}
-                        placeholder="🔍 Search or type service name..."
-                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                        autoComplete="off"
-                      />
-                      {showReviewServiceSuggestions &&
-                        filteredReviewServices.length > 0 && (
-                          <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
-                            <div className="px-3 py-1.5 bg-blue-50 border-b border-blue-100 sticky top-0">
-                              <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
-                                {filteredReviewServices.length} service
-                                {filteredReviewServices.length > 1 ? "s" : ""} found
-                              </p>
-                            </div>
-                            {filteredReviewServices.map((svc) => (
-                              <button
-                                key={svc._id}
-                                type="button"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  handleAddReviewService(svc);
-                                }}
-                                className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0"
-                              >
-                                <div className="flex flex-col">
-                                  <span className="font-semibold text-gray-800">
-                                    {svc.name}
-                                  </span>
-                                  {svc.category && (
-                                    <span className="text-[10px] text-gray-500">
-                                      {svc.category}
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                  ₹{svc.price}
-                                </span>
-                              </button>
-                            ))}
+                      <input type="text" value={reviewServiceInput} onChange={(e) => handleReviewServiceInputChange(e.target.value)} onFocus={() => { if (reviewServiceInput.trim() && filteredReviewServices.length > 0) setShowReviewServiceSuggestions(true); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCustomReviewService(); } }} placeholder="🔍 Search or type service name..." className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm" autoComplete="off" />
+                      {showReviewServiceSuggestions && filteredReviewServices.length > 0 && (
+                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
+                          <div className="px-3 py-1.5 bg-blue-50 border-b border-blue-100 sticky top-0">
+                            <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">{filteredReviewServices.length} service{filteredReviewServices.length > 1 ? "s" : ""} found</p>
                           </div>
-                        )}
+                          {filteredReviewServices.map((svc) => (
+                            <button key={svc._id} type="button" onMouseDown={(e) => { e.preventDefault(); handleAddReviewService(svc); }} className="w-full px-3.5 py-2.5 text-left text-xs hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0">
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-gray-800">{svc.name}</span>
+                                {svc.category && (<span className="text-[10px] text-gray-500">{svc.category}</span>)}
+                              </div>
+                              <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">₹{svc.price}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleAddCustomReviewService}
-                      disabled={!reviewServiceInput.trim()}
-                      className="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-lg flex items-center gap-1 disabled:opacity-50 hover:bg-emerald-700"
-                    >
-                      <FaPlus className="w-3 h-3" /> Add
-                    </button>
+                    <button type="button" onClick={handleAddCustomReviewService} disabled={!reviewServiceInput.trim()} className="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-lg flex items-center gap-1 disabled:opacity-50"><FaPlus className="w-3 h-3" /> Add</button>
                   </div>
-                  <p className="text-[10px] text-gray-500 mt-2">
-                    💡 Dropdown se select karo ya type karke <b>Add</b> / <b>Enter</b> dabao. Jitni services chahiye add karo, phir ek baar Save karo.
-                  </p>
+                  <p className="text-[10px] text-gray-500 mt-2">💡 Dropdown se select karo ya type karke <b>Add</b> / <b>Enter</b> dabao.</p>
                 </div>
 
                 {reviewServices.length > 0 && (
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-[11px] text-blue-800">
-                      Clicking <b>"Save Review"</b> will add{" "}
-                      <b>{reviewServices.length}</b> new service
-                      {reviewServices.length !== 1 ? "s" : ""} (₹{getReviewServicesTotal()})
+                      Clicking <b>"Save Review"</b> will add <b>{reviewServices.length}</b> new service{reviewServices.length !== 1 ? "s" : ""} (₹{getReviewServicesTotal()})
                       {Array.isArray(reviewBooking.reviews) && reviewBooking.reviews.length > 0 && (
                         <> to the existing <b>{reviewBooking.reviews.length}</b> reviewed service{reviewBooking.reviews.length !== 1 ? "s" : ""}</>
                       )}.
@@ -5898,38 +4266,18 @@ const revenueSummary = useMemo(() => {
               </div>
 
               <div className="sticky bottom-0 flex justify-end gap-3 px-6 py-4 border-t bg-gray-50/80 backdrop-blur">
-                <button
-                  onClick={() => {
-                    setShowReviewModal(false);
-                    setReviewBooking(null);
-                    setReviewData({ isReviewed: false, reviewDate: "" });
-                    setReviewServices([]);
-                    setReviewServiceInput("");
-                    setFilteredReviewServices([]);
-                    setShowReviewServiceSuggestions(false);
-                  }}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveReview}
-                  disabled={savingReview || reviewServices.length === 0}
-                  className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={
-                    reviewServices.length === 0
-                      ? "Add at least one service"
-                      : `Save ${reviewServices.length} new review${reviewServices.length > 1 ? "s" : ""}`
-                  }
-                >
-                  {savingReview ? (
-                    <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <FaCheckCircle className="w-3.5 h-3.5" />
-                  )}
-                  {savingReview
-                    ? "Saving..."
-                    : `Save Review (${reviewServices.length})`}
+                <button onClick={() => {
+                  setShowReviewModal(false);
+                  setReviewBooking(null);
+                  setReviewData({ isReviewed: false, reviewDate: "" });
+                  setReviewServices([]);
+                  setReviewServiceInput("");
+                  setFilteredReviewServices([]);
+                  setShowReviewServiceSuggestions(false);
+                }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
+                <button onClick={handleSaveReview} disabled={savingReview || reviewServices.length === 0} className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                  {savingReview ? (<FiRefreshCw className="w-3.5 h-3.5 animate-spin" />) : (<FaCheckCircle className="w-3.5 h-3.5" />)}
+                  {savingReview ? "Saving..." : `Save Review (${reviewServices.length})`}
                 </button>
               </div>
             </div>
@@ -5939,6 +4287,3 @@ const revenueSummary = useMemo(() => {
     </div>
   );
 }
-
-
-

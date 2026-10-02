@@ -1,3 +1,4 @@
+// OpDashboard.js — Backend-filtered + Time filters + Collection summary (Cash / Online / Card / Insurance / Due)
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -5,9 +6,9 @@ import { API_BASE_URL } from "../config";
 import {
   Users, IndianRupee, CheckCircle2, Clock, TrendingUp, CreditCard,
   Banknote, Calendar, RefreshCw, ArrowRight, BarChart2, Activity,
-  UserPlus, CalendarDays, Stethoscope, BookOpen, X,
+  UserPlus, CalendarDays, Stethoscope, BookOpen,
   Gift, FlaskConical, Pill, Star, ShieldCheck, Wallet,
-  Search, Trash2, Filter
+  Search, Trash2, Filter, AlertCircle, Smartphone
 } from "lucide-react";
 import {
   ResponsiveContainer, ComposedChart, Area, Bar, Line, XAxis, YAxis,
@@ -43,6 +44,16 @@ const PAYMENT_TYPE_FILTER_OPTIONS = [
   { value: "card", label: "Card" },
 ];
 
+const TIME_FILTER_OPTIONS = [
+  { value: "All", label: "All" },
+  { value: "today", label: "Today" },
+  { value: "yesterday", label: "Yesterday" },
+  { value: "thisWeek", label: "This Week" },
+  { value: "thisMonth", label: "This Month" },
+  { value: "lastMonth", label: "Last Month" },
+  { value: "thisYear", label: "This Year" },
+];
+
 const classifyService = (svc) => {
   if (!svc) return "clinic";
   const cat = (svc.category || svc.serviceCategory || svc.type || "").toString().toLowerCase();
@@ -52,32 +63,19 @@ const classifyService = (svc) => {
   return "clinic";
 };
 
-const isDateInRange = (dateStr, from, to) => {
-  if (!from && !to) return true;
-  if (!dateStr) return false;
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return false;
-  if (from && to) {
-    const f = new Date(from); f.setHours(0, 0, 0, 0);
-    const t = new Date(to); t.setHours(23, 59, 59, 999);
-    return d >= f && d <= t;
-  }
-  if (from) { const f = new Date(from); f.setHours(0, 0, 0, 0); return d >= f; }
-  if (to) { const t = new Date(to); t.setHours(23, 59, 59, 999); return d <= t; }
-  return true;
-};
+const inr = (n) => `₹${Math.round(Number(n) || 0).toLocaleString("en-IN")}`;
 
 const OpDashboard = () => {
   const navigate = useNavigate();
 
-  const [patients, setPatients] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [backendStats, setBackendStats] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [slots, setSlots] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ══════════ ALL FILTERS (exact same as OpManagement) ══════════
+  // ══════════ ALL FILTERS ══════════
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [doctorFilter, setDoctorFilter] = useState("All");
@@ -89,6 +87,7 @@ const OpDashboard = () => {
   const [apptFromDate, setApptFromDate] = useState("");
   const [apptToDate, setApptToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
+  const [timeFilter, setTimeFilter] = useState("All");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const [selectedTrendMonth, setSelectedTrendMonth] = useState(
@@ -98,29 +97,43 @@ const OpDashboard = () => {
 
   useEffect(() => { fetchAllData(); }, []);
 
-  const fetchAllData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        fetchPatientsData(), fetchBookingsData(),
-        fetchDoctorsData(), fetchSlotsData(), fetchServicesData(),
-      ]);
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
-  };
+  // ✅ REFETCH when filters change
+  useEffect(() => {
+    fetchBookingsData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    timeFilter, fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
+    doctorFilter, paymentTypeFilter, statusFilter, bookingTypeFilter,
+    revenueCategoryFilter, searchQuery
+  ]);
 
-  const fetchPatientsData = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/patients`);
-      if (res.data?.success) setPatients(res.data.data || []);
-      else if (Array.isArray(res.data)) setPatients(res.data);
-      else setPatients([]);
-    } catch { setPatients([]); }
+  const fetchAllData = () => {
+    fetchBookingsData();
+    fetchDoctorsData();
+    fetchSlotsData();
+    fetchServicesData();
   };
 
   const fetchBookingsData = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings`);
+      const params = new URLSearchParams();
+      if (timeFilter && timeFilter !== "All") params.append("timeFilter", timeFilter);
+      if (apptFromDate) params.append("apptFrom", apptFromDate);
+      if (apptToDate) params.append("apptTo", apptToDate);
+      if (fromDate) params.append("regFrom", fromDate);
+      if (toDate) params.append("regTo", toDate);
+      if (selectedMonth) params.append("month", selectedMonth);
+      if (doctorFilter !== "All") params.append("doctor", doctorFilter);
+      if (paymentTypeFilter !== "All") params.append("paymentType", paymentTypeFilter);
+      if (statusFilter !== "All") params.append("paymentStatus", statusFilter);
+      if (bookingTypeFilter !== "All") params.append("bookingType", bookingTypeFilter);
+      if (revenueCategoryFilter !== "All") params.append("revenueCategory", revenueCategoryFilter);
+      if (searchQuery.trim()) params.append("search", searchQuery.trim());
+
+      const url = `${API_BASE_URL}/appointment-slots/getallbookings${params.toString() ? "?" + params.toString() : ""}`;
+      const res = await axios.get(url);
+
       if (res.data?.success) {
         const arr = res.data.bookings || res.data.data || [];
         const transformed = arr.map((b) => {
@@ -190,8 +203,18 @@ const OpDashboard = () => {
           };
         });
         setBookings(transformed);
-      } else setBookings([]);
-    } catch { setBookings([]); }
+        if (res.data.stats) setBackendStats(res.data.stats);
+      } else {
+        setBookings([]);
+        setBackendStats(null);
+      }
+    } catch (err) {
+      console.error("Error fetching bookings:", err);
+      setBookings([]);
+      setBackendStats(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchDoctorsData = async () => {
@@ -277,65 +300,17 @@ const OpDashboard = () => {
 
   const getRevenueForBooking = (b) => getBookingPaidInfo(b).paid;
 
-  const getCategoryPaidAmounts = (booking) => {
-    if (!booking || !isPaidBooking(booking)) return { clinic: 0, pharmacy: 0, lab: 0 };
-    return getAmountBreakdown(booking);
-  };
-
   const getBookingType = (booking) => {
     if (!booking) return "Walk-In";
     return booking.isOP === true ? "Walk-In" : "Online";
   };
 
-  // ── MASTER FILTER ──
-  const filteredBookings = useMemo(() => {
-    return bookings.filter((b) => {
-      if (!isDateInRange(b.createdAt, fromDate, toDate)) return false;
-      if (!isDateInRange(b.appointmentDate || b.date, apptFromDate, apptToDate)) return false;
-
-      if (selectedMonth) {
-        const ds = b.appointmentDate || b.date;
-        if (!ds) return false;
-        const d = new Date(ds);
-        if (isNaN(d.getTime())) return false;
-        const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        if (m !== selectedMonth) return false;
-      }
-
-      if (doctorFilter !== "All" && b.doctorName !== doctorFilter) return false;
-      if (bookingTypeFilter !== "All" && getBookingType(b) !== bookingTypeFilter) return false;
-      if (statusFilter !== "All" && (b.paymentStatus || "Pending") !== statusFilter) return false;
-      if (paymentTypeFilter !== "All" &&
-        (b.paymentType || "cash").toLowerCase() !== paymentTypeFilter.toLowerCase()) return false;
-
-      if (revenueCategoryFilter !== "All") {
-        const bd = getAmountBreakdown(b);
-        if (revenueCategoryFilter === "clinic" && !(bd.clinic > 0)) return false;
-        if (revenueCategoryFilter === "lab" && !(bd.lab > 0)) return false;
-        if (revenueCategoryFilter === "pharmacy" && !(bd.pharmacy > 0)) return false;
-      }
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const m =
-          (b.patientName || "").toLowerCase().includes(q) ||
-          (b.patientPhone || "").toLowerCase().includes(q) ||
-          (b.doctorName || "").toLowerCase().includes(q) ||
-          (b.purpose || "").toLowerCase().includes(q);
-        if (!m) return false;
-      }
-
-      return true;
-    });
-  }, [
-    bookings, fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
-    doctorFilter, bookingTypeFilter, statusFilter, paymentTypeFilter,
-    revenueCategoryFilter, searchQuery
-  ]);
+  // ✅ Backend already filters — so bookings = filtered data directly
+  const filteredBookings = bookings;
 
   const filteredPatients = useMemo(() => {
     const map = new Map();
-    filteredBookings.forEach((b) => {
+    bookings.forEach((b) => {
       const key = (b.patientPhone || b.patientName || "").toString().trim();
       if (!key) return;
       if (!map.has(key)) map.set(key, {
@@ -350,79 +325,89 @@ const OpDashboard = () => {
       if (isPaidBooking(b)) p.isPaid = true;
     });
     return Array.from(map.values());
-  }, [filteredBookings]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookings]);
 
-  // ── METRICS ──
+  // ── Client-side collection fallback (used if backend stats are missing) ──
+  const clientCollection = useMemo(() => {
+    const r = { cash: 0, online: 0, card: 0, insurance: 0, due: 0 };
+    const c = { cash: 0, online: 0, card: 0, insurance: 0 };
+    bookings.forEach((b) => {
+      const pi = getBookingPaidInfo(b);
+      const mode = (b.paymentType || "cash").toString().toLowerCase();
+      if (pi.paid > 0 && r[mode] !== undefined) {
+        r[mode] += pi.paid;
+        c[mode] += 1;
+      }
+      r.due += pi.balance;
+    });
+    return { amounts: r, counts: c };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookings]);
+
+  // ── METRICS — from backendStats (fallback to client calc) ──
   const metrics = useMemo(() => {
-    const totalRevenue = filteredBookings.reduce((s, b) => s + getRevenueForBooking(b), 0);
-    const totalExpectedRevenue = filteredBookings.reduce((s, b) => s + getTotalBookingFee(b), 0);
-    const pendingRevenue = Math.max(0, totalExpectedRevenue - totalRevenue);
-    const avgFee = filteredBookings.length > 0 ? Math.round(totalExpectedRevenue / filteredBookings.length) : 0;
-    const collectionRate = totalExpectedRevenue > 0 ? Math.round((totalRevenue / totalExpectedRevenue) * 100) : 0;
+    const ca = clientCollection.amounts;
+    const cc = clientCollection.counts;
 
-    const bookingPaidCount = filteredBookings.filter(isPaidBooking).length;
-    const bookingPartialCount = filteredBookings.filter(isPartialBooking).length;
-    const bookingPendingCount = filteredBookings.filter((b) =>
-      b.paymentStatus === "Pending" || b.paymentStatus === "Due"
-    ).length;
+    if (backendStats) {
+      const rb = backendStats.revenueBreakdown || {};
 
-    const paidBookings = filteredBookings.filter(isPaidBooking);
-    const cashCount = paidBookings.filter((b) => b.paymentType === "cash" || !b.paymentType).length;
-    const onlineCount = paidBookings.filter((b) => b.paymentType === "online").length;
-    const insuranceCount = paidBookings.filter((b) => b.paymentType === "insurance").length;
-    const cardCount = paidBookings.filter((b) => b.paymentType === "card").length;
+      const cashRevenue = rb.cashCollected ?? ca.cash;
+      const onlineRevenue = rb.onlineCollected ?? ca.online;
+      const cardRevenue = rb.cardCollected ?? ca.card;
+      const insuranceRevenue = rb.insuranceCollected ?? ca.insurance;
+      const totalCollected =
+        rb.totalCollected ?? backendStats.totalRevenue ??
+        (cashRevenue + onlineRevenue + cardRevenue + insuranceRevenue);
+      const dueAmount = rb.dueAmount ?? ca.due;
+      const totalBilled = totalCollected + dueAmount;
+      const totalPatients = backendStats.totalPatients || 0;
 
-    let cashRevenue = 0, onlineRevenue = 0, insuranceRevenue = 0, cardRevenue = 0;
-    paidBookings.forEach((b) => {
-      const paid = getRevenueForBooking(b);
-      const pt = (b.paymentType || "cash").toLowerCase();
-      if (pt === "cash") cashRevenue += paid;
-      else if (pt === "online") onlineRevenue += paid;
-      else if (pt === "insurance") insuranceRevenue += paid;
-      else if (pt === "card") cardRevenue += paid;
-    });
-
-    let totalClinic = 0, totalPharmacy = 0, totalLab = 0;
-    filteredBookings.forEach((b) => {
-      const cats = getCategoryPaidAmounts(b);
-      totalClinic += cats.clinic;
-      totalPharmacy += cats.pharmacy;
-      totalLab += cats.lab;
-    });
-
-    const bookingsWithOffer = filteredBookings.filter(
-      (b) => b.offerApplied && Number(b.offerApplied.offerAmount) > 0
-    );
-    const totalOfferDeduction = bookingsWithOffer.reduce(
-      (s, b) => s + (Number(b.offerApplied.offerAmount) || 0), 0
-    );
-
-    const reviewedBookings = filteredBookings.filter((b) => b.isReviewed === true);
-    const totalReviewServices = filteredBookings.reduce(
-      (s, b) => s + (Array.isArray(b.reviews) ? b.reviews.length : 0), 0
-    );
-    const totalReviewRevenue = filteredBookings.reduce((s, b) => {
-      if (!isPaidBooking(b)) return s;
-      return s + (Array.isArray(b.reviews) ? b.reviews.reduce((x, r) => x + (Number(r.price) || 0), 0) : 0);
-    }, 0);
-
+      return {
+        total: totalPatients,
+        totalRevenue: totalCollected,
+        totalCollected,
+        pendingRevenue: dueAmount,
+        dueAmount,
+        totalExpectedRevenue: totalBilled,
+        totalBilled,
+        avgFee: totalPatients > 0 ? Math.round(totalBilled / totalPatients) : 0,
+        collectionRate: totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100) : 0,
+        totalBookings: totalPatients,
+        bookingPaidCount: backendStats.paid || 0,
+        bookingPartialCount: backendStats.partial || 0,
+        bookingPendingCount: (backendStats.pending || 0) + (backendStats.due || 0),
+        cashCount: cc.cash, onlineCount: cc.online, insuranceCount: cc.insurance, cardCount: cc.card,
+        cashRevenue, onlineRevenue, insuranceRevenue, cardRevenue,
+        doctorsCount: doctors.length,
+        totalClinic: rb.clinicRevenue || 0,
+        totalLab: rb.labRevenue || 0,
+        totalPharmacy: rb.pharmacyRevenue || 0,
+        bookingsWithOfferCount: bookings.filter((b) => b.offerApplied && Number(b.offerApplied.offerAmount) > 0).length,
+        totalOfferDeduction: bookings.reduce((s, b) => s + (b.offerApplied ? Number(b.offerApplied.offerAmount) || 0 : 0), 0),
+        reviewedBookingsCount: bookings.filter((b) => b.isReviewed === true).length,
+        totalReviewServices: bookings.reduce((s, b) => s + (Array.isArray(b.reviews) ? b.reviews.length : 0), 0),
+        totalReviewRevenue: 0,
+      };
+    }
     return {
-      total: filteredPatients.length,
-      totalRevenue, pendingRevenue, totalExpectedRevenue, avgFee, collectionRate,
-      totalBookings: filteredBookings.length,
-      bookingPaidCount, bookingPartialCount, bookingPendingCount,
-      cashCount, onlineCount, insuranceCount, cardCount,
-      cashRevenue, onlineRevenue, insuranceRevenue, cardRevenue,
+      total: 0, totalRevenue: 0, totalCollected: 0, pendingRevenue: 0, dueAmount: 0,
+      totalExpectedRevenue: 0, totalBilled: 0,
+      avgFee: 0, collectionRate: 0, totalBookings: 0,
+      bookingPaidCount: 0, bookingPartialCount: 0, bookingPendingCount: 0,
+      cashCount: 0, onlineCount: 0, insuranceCount: 0, cardCount: 0,
+      cashRevenue: 0, onlineRevenue: 0, insuranceRevenue: 0, cardRevenue: 0,
       doctorsCount: doctors.length,
-      totalClinic, totalPharmacy, totalLab,
-      bookingsWithOfferCount: bookingsWithOffer.length, totalOfferDeduction,
-      reviewedBookingsCount: reviewedBookings.length, totalReviewServices, totalReviewRevenue,
+      totalClinic: 0, totalLab: 0, totalPharmacy: 0,
+      bookingsWithOfferCount: 0, totalOfferDeduction: 0,
+      reviewedBookingsCount: 0, totalReviewServices: 0, totalReviewRevenue: 0,
     };
-  }, [filteredPatients, filteredBookings, doctors]);
+  }, [backendStats, bookings, doctors, clientCollection]);
 
   const upcomingAppointments = useMemo(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    return filteredBookings
+    return bookings
       .filter((b) => {
         const d = new Date(b.date);
         if (isNaN(d.getTime())) return false;
@@ -430,12 +415,12 @@ const OpDashboard = () => {
         return d >= today;
       })
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [filteredBookings]);
+  }, [bookings]);
 
   const trendData = useMemo(() => {
-    if (!filteredBookings.length) return [];
+    if (!bookings.length) return [];
     const map = {};
-    filteredBookings.forEach((b) => {
+    bookings.forEach((b) => {
       const key = b.createdAt
         ? new Date(b.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })
         : "Unknown";
@@ -444,7 +429,8 @@ const OpDashboard = () => {
       map[key].revenue += getRevenueForBooking(b);
     });
     return Object.values(map).sort((a, b) => a.rawDate - b.rawDate);
-  }, [filteredBookings]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookings]);
 
   const monthlyDailyTrend = useMemo(() => {
     if (!selectedTrendMonth)
@@ -463,7 +449,7 @@ const OpDashboard = () => {
         patients: 0, paidPatients: 0, pendingPatients: 0, revenue: 0, bookings: 0
       };
     }
-    filteredBookings.forEach((b) => {
+    bookings.forEach((b) => {
       if (!b.createdAt) return;
       const d = new Date(b.createdAt);
       if (d.getFullYear() === year && d.getMonth() === monthIdx) {
@@ -471,10 +457,10 @@ const OpDashboard = () => {
         if (dayMap[day]) {
           dayMap[day].patients += 1;
           dayMap[day].bookings += 1;
-          if (isPaidBooking(b)) {
-            dayMap[day].revenue += getTotalBookingFee(b);
-            dayMap[day].paidPatients += 1;
-          } else dayMap[day].pendingPatients += 1;
+          // ✅ Revenue = actually collected amount (paid + partial)
+          dayMap[day].revenue += getRevenueForBooking(b);
+          if (isPaidBooking(b)) dayMap[day].paidPatients += 1;
+          else dayMap[day].pendingPatients += 1;
         }
       }
     });
@@ -489,12 +475,13 @@ const OpDashboard = () => {
       }
     });
     return { daysData, monthLabel, totalMonthPatients, totalMonthRevenue, peakDay };
-  }, [filteredBookings, selectedTrendMonth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookings, selectedTrendMonth]);
 
   const paymentStatusData = useMemo(() => {
-    const paid = filteredBookings.filter(isPaidBooking).length;
-    const partial = filteredBookings.filter(isPartialBooking).length;
-    const pending = filteredBookings.filter((b) =>
+    const paid = bookings.filter(isPaidBooking).length;
+    const partial = bookings.filter(isPartialBooking).length;
+    const pending = bookings.filter((b) =>
       b.paymentStatus === "Pending" || b.paymentStatus === "Due"
     ).length;
     return [
@@ -502,22 +489,27 @@ const OpDashboard = () => {
       { name: "Partial", value: partial, color: COLORS.warning },
       { name: "Pending", value: pending, color: COLORS.danger }
     ];
-  }, [filteredBookings]);
+  }, [bookings]);
 
   const paymentMethodData = useMemo(() => {
-    const paid = filteredBookings.filter(isPaidBooking);
+    const paid = bookings.filter(isPaidBooking);
     return [
       { name: "Cash", value: paid.filter((b) => b.paymentType === "cash" || !b.paymentType).length, color: COLORS.success },
       { name: "Online", value: paid.filter((b) => b.paymentType === "online").length, color: COLORS.indigo },
       { name: "Insurance", value: paid.filter((b) => b.paymentType === "insurance").length, color: COLORS.purple },
       { name: "Card", value: paid.filter((b) => b.paymentType === "card").length, color: COLORS.cyan }
     ];
-  }, [filteredBookings]);
+  }, [bookings]);
 
+  // ✅ Gender demographics — derived from bookings (no patients API)
   const genderData = useMemo(() => {
     const c = { Male: 0, Female: 0, Other: 0 };
-    patients.forEach((p) => {
-      const g = p.gender || "Other";
+    const seen = new Set();
+    bookings.forEach((b) => {
+      const key = (b.patientPhone || b.patientName || "").toString().trim();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      const g = b.patientGender || "Other";
       if (c[g] !== undefined) c[g]++; else c.Other++;
     });
     return [
@@ -525,7 +517,7 @@ const OpDashboard = () => {
       { name: "Female", value: c.Female, color: "#ec4899" },
       { name: "Other", value: c.Other, color: "#a855f7" }
     ];
-  }, [patients]);
+  }, [bookings]);
 
   const formatDate = (s) => !s ? "N/A" : new Date(s).toLocaleDateString("en-IN", {
     day: "2-digit", month: "short", year: "numeric"
@@ -541,14 +533,31 @@ const OpDashboard = () => {
     searchQuery !== "" || statusFilter !== "All" || doctorFilter !== "All" ||
     bookingTypeFilter !== "All" || revenueCategoryFilter !== "All" ||
     paymentTypeFilter !== "All" || fromDate !== "" || toDate !== "" ||
-    apptFromDate !== "" || apptToDate !== "" || selectedMonth !== "";
+    apptFromDate !== "" || apptToDate !== "" || selectedMonth !== "" ||
+    (timeFilter && timeFilter !== "All");
 
   const clearFilters = () => {
     setSearchQuery(""); setStatusFilter("All"); setDoctorFilter("All");
     setBookingTypeFilter("All"); setRevenueCategoryFilter("All");
     setPaymentTypeFilter("All"); setFromDate(""); setToDate("");
     setApptFromDate(""); setApptToDate(""); setSelectedMonth("");
+    setTimeFilter("All");
   };
+
+  const handleTimeFilterChange = (value) => {
+    setTimeFilter(value);
+    if (value !== "All") {
+      setApptFromDate("");
+      setApptToDate("");
+      setSelectedMonth("");
+    }
+  };
+
+  const handleFromDateChange = (e) => { setFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); };
+  const handleToDateChange = (e) => { setToDate(e.target.value); if (e.target.value) setSelectedMonth(""); };
+  const handleMonthChange = (e) => { setSelectedMonth(e.target.value); setFromDate(""); setToDate(""); setTimeFilter("All"); };
+  const handleApptFromChange = (e) => { setApptFromDate(e.target.value); if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); } };
+  const handleApptToChange = (e) => { setApptToDate(e.target.value); if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); } };
 
   const handleQuickAction = (path, state = {}) => {
     const role = localStorage.getItem("userRole");
@@ -568,7 +577,7 @@ const OpDashboard = () => {
           <div className="flex justify-between gap-4 text-emerald-600"><span>Paid:</span><span>{d.paidPatients}</span></div>
           <div className="flex justify-between gap-4 text-amber-600"><span>Pending:</span><span>{d.pendingPatients}</span></div>
           <div className="flex justify-between gap-4 text-purple-700 font-bold pt-1 border-t border-gray-100">
-            <span>Revenue:</span><span>₹{d.revenue.toLocaleString()}</span>
+            <span>Collected:</span><span>₹{d.revenue.toLocaleString()}</span>
           </div>
         </div>
       );
@@ -612,7 +621,7 @@ const OpDashboard = () => {
     );
   };
 
-  if (loading) {
+  if (loading && bookings.length === 0) {
     return (
       <div className="emp-dash">
         <div className="emp-dash__loading">
@@ -623,20 +632,31 @@ const OpDashboard = () => {
     );
   }
 
+  // Collection cards config (Cash / Online / Card / Insurance)
+  const collectionCards = [
+    { key: "cash", label: "Cash Collected", amount: metrics.cashRevenue, count: metrics.cashCount, Icon: Banknote,
+      box: "border-emerald-200 bg-emerald-50", text: "text-emerald-800", sub: "text-emerald-600", iconBg: "bg-emerald-100", icon: "text-emerald-600" },
+    { key: "online", label: "Online Collected", amount: metrics.onlineRevenue, count: metrics.onlineCount, Icon: Smartphone,
+      box: "border-indigo-200 bg-indigo-50", text: "text-indigo-800", sub: "text-indigo-600", iconBg: "bg-indigo-100", icon: "text-indigo-600" },
+    { key: "card", label: "Card Collected", amount: metrics.cardRevenue, count: metrics.cardCount, Icon: CreditCard,
+      box: "border-cyan-200 bg-cyan-50", text: "text-cyan-800", sub: "text-cyan-600", iconBg: "bg-cyan-100", icon: "text-cyan-600" },
+    { key: "insurance", label: "Insurance Collected", amount: metrics.insuranceRevenue, count: metrics.insuranceCount, Icon: ShieldCheck,
+      box: "border-purple-200 bg-purple-50", text: "text-purple-800", sub: "text-purple-600", iconBg: "bg-purple-100", icon: "text-purple-600" },
+  ];
+
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
 
-        {/* ══════════ HEADER (Desktop) — EXACT OpManagement style ══════════ */}
+        {/* ══════════ HEADER DESKTOP ══════════ */}
         <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
             OP <span>Dashboard</span>
           </h1>
         </div>
 
-        {/* ══════════ FILTER BAR — EXACT OpManagement style (Desktop) ══════════ */}
+        {/* ══════════ FILTER BAR — Desktop ══════════ */}
         <div className="hidden lg:flex items-center gap-2 flex-wrap mb-6">
-          {/* Search */}
           <div className="relative min-w-[130px]">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
             <input
@@ -648,12 +668,7 @@ const OpDashboard = () => {
             />
           </div>
 
-          {/* Payment Status */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg"
-          >
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
             <option value="All">All Payment</option>
             <option value="Pending">Pending</option>
             <option value="Partial">Partial</option>
@@ -661,42 +676,40 @@ const OpDashboard = () => {
             <option value="Due">Due</option>
           </select>
 
-          {/* Booking Type */}
-          <select
-            value={bookingTypeFilter}
-            onChange={(e) => setBookingTypeFilter(e.target.value)}
-            className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg"
-          >
+          <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
             {BOOKING_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
 
-          {/* Doctor */}
-          <select
-            value={doctorFilter}
-            onChange={(e) => setDoctorFilter(e.target.value)}
-            className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg max-w-[130px] truncate"
-          >
+          <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg max-w-[130px] truncate">
             <option value="All">All Doctors</option>
             {getUniqueDoctors().map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
 
-          {/* Revenue Category */}
-          <select
-            value={revenueCategoryFilter}
-            onChange={(e) => setRevenueCategoryFilter(e.target.value)}
-            className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg"
-          >
+          <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
             {REVENUE_CATEGORY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
 
-          {/* Payment Type */}
-          <select
-            value={paymentTypeFilter}
-            onChange={(e) => setPaymentTypeFilter(e.target.value)}
-            className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg"
-          >
+          <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg">
             {PAYMENT_TYPE_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
+
+          {/* ✅ TIME FILTER — Quick Buttons */}
+          <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200">
+            {TIME_FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleTimeFilterChange(opt.value)}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all whitespace-nowrap ${
+                  timeFilter === opt.value
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-gray-600 hover:bg-white hover:text-gray-900"
+                }`}
+                title={opt.label}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
 
           {/* REG DATE */}
           <div className="flex items-center gap-1 px-2 h-8 border border-gray-300 bg-white rounded-lg">
@@ -704,14 +717,14 @@ const OpDashboard = () => {
             <input
               type="date"
               value={fromDate}
-              onChange={(e) => { setFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); }}
+              onChange={handleFromDateChange}
               className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none"
             />
             <span className="text-gray-400 text-xs">–</span>
             <input
               type="date"
               value={toDate}
-              onChange={(e) => { setToDate(e.target.value); if (e.target.value) setSelectedMonth(""); }}
+              onChange={handleToDateChange}
               className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none"
             />
           </div>
@@ -722,14 +735,14 @@ const OpDashboard = () => {
             <input
               type="date"
               value={apptFromDate}
-              onChange={(e) => { setApptFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); }}
+              onChange={handleApptFromChange}
               className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none"
             />
             <span className="text-gray-400 text-xs">–</span>
             <input
               type="date"
               value={apptToDate}
-              onChange={(e) => { setApptToDate(e.target.value); if (e.target.value) setSelectedMonth(""); }}
+              onChange={handleApptToChange}
               className="w-[105px] h-6 px-1 text-[11px] border-0 bg-transparent text-gray-900 rounded focus:outline-none"
             />
           </div>
@@ -738,15 +751,11 @@ const OpDashboard = () => {
           <input
             type="month"
             value={selectedMonth}
-            onChange={(e) => {
-              setSelectedMonth(e.target.value);
-              if (e.target.value) { setFromDate(""); setToDate(""); setApptFromDate(""); setApptToDate(""); }
-            }}
+            onChange={handleMonthChange}
             className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg"
             title="Appointment month"
           />
 
-          {/* Register New OP */}
           <button
             onClick={() => handleQuickAction("/op-management", { openAddPatient: true })}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm"
@@ -754,7 +763,6 @@ const OpDashboard = () => {
             <UserPlus className="w-3 h-3" /> Register New OP
           </button>
 
-          {/* Refresh */}
           <button
             onClick={fetchAllData}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
@@ -763,7 +771,6 @@ const OpDashboard = () => {
             <RefreshCw className="w-3 h-3" />
           </button>
 
-          {/* Clear */}
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
@@ -796,6 +803,25 @@ const OpDashboard = () => {
             >
               <Filter className="w-3 h-3" /> Filters
             </button>
+          </div>
+        </div>
+
+        {/* ══════════ MOBILE TIME FILTER QUICK BUTTONS ══════════ */}
+        <div className="lg:hidden mb-3">
+          <div className="flex items-center gap-1 overflow-x-auto pb-1">
+            {TIME_FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleTimeFilterChange(opt.value)}
+                className={`px-2.5 py-1.5 text-[11px] font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${
+                  timeFilter === opt.value
+                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                    : "bg-white text-gray-600 border-gray-300"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -842,15 +868,15 @@ const OpDashboard = () => {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Registered Date</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
-                  <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+                  <input type="date" value={fromDate} onChange={handleFromDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+                  <input type="date" value={toDate} onChange={handleToDateChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Appointment Date</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <input type="date" value={apptFromDate} onChange={(e) => { setApptFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
-                  <input type="date" value={apptToDate} onChange={(e) => { setApptToDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+                  <input type="date" value={apptFromDate} onChange={handleApptFromChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+                  <input type="date" value={apptToDate} onChange={handleApptToChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
                 </div>
               </div>
               <div>
@@ -858,7 +884,7 @@ const OpDashboard = () => {
                 <input
                   type="month"
                   value={selectedMonth}
-                  onChange={(e) => { setSelectedMonth(e.target.value); setFromDate(""); setToDate(""); setApptFromDate(""); setApptToDate(""); }}
+                  onChange={handleMonthChange}
                   className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg"
                 />
               </div>
@@ -931,27 +957,101 @@ const OpDashboard = () => {
           </div>
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Revenue (Paid)</span>
+              <span className="emp-dash__stat-label">Total Collected</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><IndianRupee className="w-4 h-4 text-emerald-600" /></div>
             </div>
-            <div className="emp-dash__stat-value text-emerald-600">₹{metrics.totalRevenue.toLocaleString()}</div>
-            <div className="emp-dash__stat-meta">{metrics.collectionRate}% of ₹{metrics.totalExpectedRevenue.toLocaleString()}</div>
+            <div className="emp-dash__stat-value text-emerald-600">{inr(metrics.totalCollected)}</div>
+            <div className="emp-dash__stat-meta">{metrics.collectionRate}% of {inr(metrics.totalBilled)} billed</div>
+            <div className="mt-2 pt-2 border-t border-gray-100 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] font-semibold">
+              <span className="text-emerald-700">Cash: {inr(metrics.cashRevenue)}</span>
+              <span className="text-indigo-700">Online: {inr(metrics.onlineRevenue)}</span>
+              {metrics.cardRevenue > 0 && <span className="text-cyan-700">Card: {inr(metrics.cardRevenue)}</span>}
+              {metrics.insuranceRevenue > 0 && <span className="text-purple-700">Insurance: {inr(metrics.insuranceRevenue)}</span>}
+              <span className="text-red-600">Due: {inr(metrics.dueAmount)}</span>
+            </div>
           </div>
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Pending Payments</span>
+              <span className="emp-dash__stat-label">Due Amount</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--late"><Clock className="w-4 h-4 text-amber-600" /></div>
             </div>
-            <div className="emp-dash__stat-value text-amber-600">₹{metrics.pendingRevenue.toLocaleString()}</div>
-            <div className="emp-dash__stat-meta">{metrics.bookingPendingCount + metrics.bookingPartialCount} pending</div>
+            <div className="emp-dash__stat-value text-amber-600">{inr(metrics.dueAmount)}</div>
+            <div className="emp-dash__stat-meta">{metrics.bookingPendingCount + metrics.bookingPartialCount} bookings pending</div>
           </div>
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Avg Fee / Booking</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><TrendingUp className="w-4 h-4 text-indigo-600" /></div>
             </div>
-            <div className="emp-dash__stat-value text-indigo-600">₹{metrics.avgFee.toLocaleString()}</div>
+            <div className="emp-dash__stat-value text-indigo-600">{inr(metrics.avgFee)}</div>
             <div className="emp-dash__stat-meta">average total payable</div>
+          </div>
+        </div>
+
+        {/* ══════════ PAYMENT COLLECTION SUMMARY (Cash / Online / Card / Insurance / Due) ══════════ */}
+        <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-emerald-50 to-indigo-50 border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-emerald-600" />
+              <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Payment Collection</h3>
+              <span className="text-[10px] text-gray-500">(based on current filters)</span>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
+              {metrics.collectionRate}% collected
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 p-3">
+            {collectionCards.map((c) => (
+              <div key={c.key} className={`rounded-lg p-3 border ${c.box}`}>
+                <div className={`flex items-center justify-between text-[10px] font-bold uppercase ${c.sub}`}>
+                  <span>{c.label}</span>
+                  <span className={`w-6 h-6 rounded-md flex items-center justify-center ${c.iconBg}`}>
+                    <c.Icon className={`w-3.5 h-3.5 ${c.icon}`} />
+                  </span>
+                </div>
+                <div className={`text-lg font-extrabold mt-1 ${c.text}`}>{inr(c.amount)}</div>
+                <div className={`text-[10px] font-semibold ${c.sub}`}>{c.count} bookings</div>
+              </div>
+            ))}
+
+            {/* TOTAL COLLECTED */}
+            <div className="rounded-lg p-3 border border-slate-300 bg-slate-50">
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase text-slate-600">
+                <span>Total Collected</span>
+                <span className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-200">
+                  <IndianRupee className="w-3.5 h-3.5 text-slate-700" />
+                </span>
+              </div>
+              <div className="text-lg font-extrabold mt-1 text-slate-900">{inr(metrics.totalCollected)}</div>
+              <div className="text-[10px] font-semibold text-slate-500">{metrics.bookingPaidCount} paid · {metrics.bookingPartialCount} partial</div>
+            </div>
+
+            {/* DUE */}
+            <div className="rounded-lg p-3 border border-red-200 bg-red-50">
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase text-red-600">
+                <span>Due</span>
+                <span className="w-6 h-6 rounded-md flex items-center justify-center bg-red-100">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+                </span>
+              </div>
+              <div className="text-lg font-extrabold mt-1 text-red-700">{inr(metrics.dueAmount)}</div>
+              <div className="text-[10px] font-semibold text-red-500">{metrics.bookingPendingCount + metrics.bookingPartialCount} bookings</div>
+            </div>
+          </div>
+
+          {/* Collected vs Due progress */}
+          <div className="px-4 pb-3">
+            <div className="flex items-center justify-between text-[10px] font-semibold text-gray-500 mb-1">
+              <span>Collected {inr(metrics.totalCollected)}</span>
+              <span>Billed {inr(metrics.totalBilled)}</span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-red-100 overflow-hidden">
+              <div
+                className="h-full bg-emerald-500 rounded-full transition-all"
+                style={{ width: `${Math.min(100, metrics.collectionRate)}%` }}
+              />
+            </div>
           </div>
         </div>
 
@@ -963,7 +1063,7 @@ const OpDashboard = () => {
               <div className="emp-dash__stat-icon bg-amber-100"><Gift className="w-4 h-4 text-amber-600" /></div>
             </div>
             <div className="emp-dash__stat-value text-amber-700">{metrics.bookingsWithOfferCount}</div>
-            <div className="emp-dash__stat-meta text-amber-600">− ₹{metrics.totalOfferDeduction.toLocaleString()}</div>
+            <div className="emp-dash__stat-meta text-amber-600">− {inr(metrics.totalOfferDeduction)}</div>
           </div>
           <div className="emp-dash__stat border-emerald-200 bg-emerald-50/40">
             <div className="emp-dash__stat-top">
@@ -973,61 +1073,53 @@ const OpDashboard = () => {
             <div className="emp-dash__stat-value text-emerald-700">{metrics.reviewedBookingsCount}</div>
             <div className="emp-dash__stat-meta text-emerald-600">{metrics.totalReviewServices} services</div>
           </div>
-          <div className="emp-dash__stat border-purple-200 bg-purple-50/40">
+          <div className="emp-dash__stat border-green-200 bg-green-50/40">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label text-purple-700">Insurance Paid</span>
-              <div className="emp-dash__stat-icon bg-purple-100"><ShieldCheck className="w-4 h-4 text-purple-600" /></div>
+              <span className="emp-dash__stat-label text-green-700">Paid Bookings</span>
+              <div className="emp-dash__stat-icon bg-green-100"><CheckCircle2 className="w-4 h-4 text-green-600" /></div>
             </div>
-            <div className="emp-dash__stat-value text-purple-700">₹{metrics.insuranceRevenue.toLocaleString()}</div>
-            <div className="emp-dash__stat-meta text-purple-600">{metrics.insuranceCount} bookings</div>
+            <div className="emp-dash__stat-value text-green-700">{metrics.bookingPaidCount}</div>
+            <div className="emp-dash__stat-meta text-green-600">fully paid</div>
           </div>
-          <div className="emp-dash__stat border-cyan-200 bg-cyan-50/40">
+          <div className="emp-dash__stat border-red-200 bg-red-50/40">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label text-cyan-700">Card Paid</span>
-              <div className="emp-dash__stat-icon bg-cyan-100"><Wallet className="w-4 h-4 text-cyan-600" /></div>
+              <span className="emp-dash__stat-label text-red-700">Partial / Pending</span>
+              <div className="emp-dash__stat-icon bg-red-100"><AlertCircle className="w-4 h-4 text-red-600" /></div>
             </div>
-            <div className="emp-dash__stat-value text-cyan-700">₹{metrics.cardRevenue.toLocaleString()}</div>
-            <div className="emp-dash__stat-meta text-cyan-600">{metrics.cardCount} bookings</div>
+            <div className="emp-dash__stat-value text-red-700">{metrics.bookingPartialCount + metrics.bookingPendingCount}</div>
+            <div className="emp-dash__stat-meta text-red-600">{metrics.bookingPartialCount} partial · {metrics.bookingPendingCount} pending</div>
           </div>
         </div>
 
-        {/* ══════════ REVENUE BREAKDOWN ══════════ */}
+        {/* ══════════ REVENUE BREAKDOWN (service-wise) ══════════ */}
         <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
             <div className="flex items-center gap-2">
               <IndianRupee className="w-4 h-4 text-indigo-600" />
               <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Revenue Breakdown</h3>
-              <span className="text-[10px] text-gray-500">(based on filters · Paid only)</span>
+              <span className="text-[10px] text-gray-500">(service-wise · based on filters)</span>
             </div>
             <span className="text-[10px] font-bold text-indigo-700 bg-white px-2 py-0.5 rounded-full border border-indigo-200">
               {filteredBookings.length} bookings
             </span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 p-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-3">
             <div className="rounded-lg p-2.5 border border-blue-200 bg-blue-50">
               <div className="flex items-center gap-1 text-[9px] font-bold text-blue-700 uppercase"><Stethoscope className="w-3 h-3" /> Clinic</div>
-              <div className="text-sm font-extrabold text-blue-800 mt-0.5">₹{Math.round(metrics.totalClinic).toLocaleString()}</div>
+              <div className="text-sm font-extrabold text-blue-800 mt-0.5">{inr(metrics.totalClinic)}</div>
             </div>
             <div className="rounded-lg p-2.5 border border-purple-200 bg-purple-50">
               <div className="flex items-center gap-1 text-[9px] font-bold text-purple-700 uppercase"><FlaskConical className="w-3 h-3" /> Lab</div>
-              <div className="text-sm font-extrabold text-purple-800 mt-0.5">₹{Math.round(metrics.totalLab).toLocaleString()}</div>
+              <div className="text-sm font-extrabold text-purple-800 mt-0.5">{inr(metrics.totalLab)}</div>
             </div>
             <div className="rounded-lg p-2.5 border border-green-200 bg-green-50">
               <div className="flex items-center gap-1 text-[9px] font-bold text-green-700 uppercase"><Pill className="w-3 h-3" /> Pharmacy</div>
-              <div className="text-sm font-extrabold text-green-800 mt-0.5">₹{Math.round(metrics.totalPharmacy).toLocaleString()}</div>
-            </div>
-            <div className="rounded-lg p-2.5 border border-emerald-200 bg-emerald-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-700 uppercase"><Banknote className="w-3 h-3" /> Cash</div>
-              <div className="text-sm font-extrabold text-emerald-800 mt-0.5">₹{Math.round(metrics.cashRevenue).toLocaleString()}</div>
-            </div>
-            <div className="rounded-lg p-2.5 border border-cyan-200 bg-cyan-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-cyan-700 uppercase"><CreditCard className="w-3 h-3" /> Online</div>
-              <div className="text-sm font-extrabold text-cyan-800 mt-0.5">₹{Math.round(metrics.onlineRevenue).toLocaleString()}</div>
+              <div className="text-sm font-extrabold text-green-800 mt-0.5">{inr(metrics.totalPharmacy)}</div>
             </div>
             <div className="rounded-lg p-2.5 border border-slate-300 bg-slate-50">
-              <div className="flex items-center gap-1 text-[9px] font-bold text-slate-700 uppercase"><IndianRupee className="w-3 h-3" /> Total</div>
-              <div className="text-sm font-extrabold text-slate-900 mt-0.5">₹{Math.round(metrics.totalRevenue).toLocaleString()}</div>
-              <div className="text-[9px] font-semibold text-red-600 mt-0.5">Due: ₹{Math.round(metrics.pendingRevenue).toLocaleString()}</div>
+              <div className="flex items-center gap-1 text-[9px] font-bold text-slate-700 uppercase"><IndianRupee className="w-3 h-3" /> Total Billed</div>
+              <div className="text-sm font-extrabold text-slate-900 mt-0.5">{inr(metrics.totalBilled)}</div>
+              <div className="text-[9px] font-semibold text-red-600 mt-0.5">Due: {inr(metrics.dueAmount)}</div>
             </div>
           </div>
         </div>
@@ -1039,7 +1131,7 @@ const OpDashboard = () => {
               <h3 className="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2">
                 <Activity className="w-4 h-4 text-blue-600" /> Bookings &amp; Revenue Trend
               </h3>
-              <p className="text-xs text-gray-500">Daily booking volume and paid revenue</p>
+              <p className="text-xs text-gray-500">Daily booking volume and collected revenue</p>
             </div>
             {trendData.length === 0 ? (
               <div className="h-64 flex items-center justify-center text-gray-400 text-xs">No trend data for selected filters</div>
@@ -1054,7 +1146,7 @@ const OpDashboard = () => {
                     <Tooltip contentStyle={{ backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "12px" }} />
                     <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
                     <Bar yAxisId="left" dataKey="bookings" name="Bookings" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={24} />
-                    <Line yAxisId="right" type="monotone" dataKey="revenue" name="Revenue (Paid)" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line yAxisId="right" type="monotone" dataKey="revenue" name="Collected" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -1132,7 +1224,7 @@ const OpDashboard = () => {
             <div style={{ width: "100%", height: 180 }}>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={paymentStatusData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
+                  <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={60} />
                   <Tooltip />
                   <Bar dataKey="value" name="Bookings" radius={[0, 6, 6, 0]}>
@@ -1156,7 +1248,7 @@ const OpDashboard = () => {
             <div style={{ width: "100%", height: 180 }}>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={paymentMethodData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
+                  <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={70} />
                   <Tooltip />
                   <Bar dataKey="value" name="Bookings" radius={[0, 6, 6, 0]}>
@@ -1209,7 +1301,7 @@ const OpDashboard = () => {
               <h3 className="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2">
                 <BarChart2 className="w-4 h-4 text-blue-600" /> Daily Booking Trend ({monthlyDailyTrend.monthLabel})
               </h3>
-              <p className="text-xs text-gray-500">Day-by-day booking volume and paid revenue</p>
+              <p className="text-xs text-gray-500">Day-by-day booking volume and collected revenue</p>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-200">
@@ -1237,8 +1329,8 @@ const OpDashboard = () => {
               <span className="font-extrabold text-blue-900 text-sm">{monthlyDailyTrend.totalMonthPatients}</span>
             </div>
             <div className="bg-emerald-50 p-2 rounded-lg">
-              <span className="text-[10px] text-emerald-700 font-bold uppercase block">Revenue (Paid)</span>
-              <span className="font-extrabold text-emerald-900 text-sm">₹{monthlyDailyTrend.totalMonthRevenue.toLocaleString()}</span>
+              <span className="text-[10px] text-emerald-700 font-bold uppercase block">Collected</span>
+              <span className="font-extrabold text-emerald-900 text-sm">{inr(monthlyDailyTrend.totalMonthRevenue)}</span>
             </div>
             <div className="bg-purple-50 p-2 rounded-lg">
               <span className="text-[10px] text-purple-700 font-bold uppercase block">Peak Day</span>
