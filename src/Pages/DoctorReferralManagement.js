@@ -1,25 +1,19 @@
 // ReferralManagement.js — Combined Doctor + Customer Referrals Management
-// ✅ Tabs: Doctor Referrals | Customer Referrals
-// ✅ Multiple Offers Array (Add / Edit / Delete) support
-// ✅ Special Offer field in Add/Edit form
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
-  FaSearch, FaCalendarAlt, FaClock, FaUserMd, FaStethoscope, FaTimes,
-  FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaGraduationCap, FaBriefcase,
-  FaRupeeSign, FaLock, FaEye, FaEyeSlash, FaKey, FaPrint, FaCheckCircle,
+  FaSearch, FaCalendarAlt, FaUserMd, FaTimes,
+  FaPhoneAlt, FaMapMarkerAlt, FaRupeeSign, FaPrint, FaCheckCircle,
   FaTimesCircle, FaTrashAlt, FaAward, FaUser, FaHospital, FaBuilding,
-  FaFlask, FaPills, FaClinicMedical, FaShareAlt, FaUsers, FaChartPie,
-  FaPercent, FaDatabase, FaUserPlus, FaUserCheck, FaGift, FaMoneyBillWave,
-  FaHandshake, FaFilter, FaIdCard, FaMapPin, FaAddressCard
+  FaFlask, FaPills, FaClinicMedical, FaShareAlt, FaUsers, FaDatabase,
+  FaUserPlus, FaUserCheck, FaGift
 } from "react-icons/fa";
 import {
-  FiUsers, FiUserCheck, FiUserX, FiAward, FiFilter, FiDownload,
+  FiUsers, FiUserCheck, FiUserX, FiFilter, FiDownload,
   FiTrash2, FiPlus, FiEdit2, FiEye, FiRefreshCw, FiCheckCircle,
-  FiXCircle, FiClock, FiCalendar, FiChevronDown, FiChevronUp,
-  FiCheck, FiUser, FiUserPlus, FiUserMinus, FiDollarSign, FiPercent,
-  FiFileText, FiActivity, FiGift, FiExternalLink, FiMapPin, FiPhone
+  FiXCircle, FiChevronDown, FiChevronUp, FiCheck,
+  FiPercent, FiActivity, FiGift
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
@@ -28,6 +22,10 @@ const API_BASE_URL = "https://api.timelyhealth.in/api/referralcontacts";
 const BASE_API = "https://api.timelyhealth.in/api";
 
 const STATUS_OPTIONS = ["active", "inactive"];
+const DISCOUNT_UNIT_OPTIONS = [
+  { value: "%", label: "%" },
+  { value: "₹", label: "₹" }
+];
 
 const EMPTY_DOCTOR_FORM = {
   referralType: "doctor",
@@ -35,36 +33,46 @@ const EMPTY_DOCTOR_FORM = {
   doctorOrganization: "",
   doctorPhone: "",
   doctorSpecialization: "",
+  doctorAddress: "",
   clinicCommission: "",
   pharmacyCommission: "",
   labCommission: "",
   totalCommission: "",
-  referralDate: "",
+  onboardDate: "",
   referralNotes: "",
-  status: "active"
+  status: "active",
+  discountFees: "",
+  discountFeesType: "%",
+  discountLab: "",
+  discountLabType: "%"
 };
 
 const EMPTY_CUSTOMER_FORM = {
   referralType: "customer",
   customerName: "",
+  customerOrganization: "",
   customerPhone: "",
   customerAddress: "",
   clinicCommission: "",
   pharmacyCommission: "",
   labCommission: "",
   totalCommission: "",
-  referralDate: "",
+  onboardDate: "",
   referralNotes: "",
-  status: "active"
+  status: "active",
+  discountFees: "",
+  discountFeesType: "%",
+  discountLab: "",
+  discountLabType: "%"
 };
 
 const COMMISSION_FIELDS = [
-  { key: "clinicCommission", label: "Clinic", icon: FaClinicMedical, color: "blue" },
+  { key: "clinicCommission", label: "Fees", icon: FaClinicMedical, color: "blue" },
   { key: "pharmacyCommission", label: "Pharmacy", icon: FaPills, color: "green" },
   { key: "labCommission", label: "Lab", icon: FaFlask, color: "purple" }
 ];
 
-// ==================== SHARED HELPERS ====================
+// ==================== HELPERS ====================
 const extractId = (val) => {
   if (!val) return "";
   if (typeof val === "string") return val;
@@ -104,7 +112,6 @@ const getCommissionPercent = (referrer, category) => {
 
 const getServiceReferrerPayable = (referrer, booking) => {
   if (!referrer || !booking) return 0;
-
   const rawServices =
     (Array.isArray(booking.services) && booking.services.length > 0 && booking.services) ||
     (Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0 && booking.serviceItems) ||
@@ -133,18 +140,22 @@ const getServiceReferrerPayable = (referrer, booking) => {
     const pct = getCommissionPercent(referrer, "clinic");
     return Math.round((totalAmount * pct) / 100);
   }
-
   return 0;
+};
+
+// ✅ Helper: discount display string
+const formatDiscount = (value, type) => {
+  if (!value) return "";
+  const t = type || "%";
+  return t === "₹" ? `₹${value}` : `${value}%`;
 };
 
 export default function ReferralManagement() {
   const navigate = useNavigate();
 
-  // ==================== ACTIVE TAB ====================
   const [activeTab, setActiveTab] = useState("doctor");
   const isDoctorTab = activeTab === "doctor";
 
-  // ==================== DATA ====================
   const [doctorReferrals, setDoctorReferrals] = useState([]);
   const [customerReferrals, setCustomerReferrals] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -152,17 +163,14 @@ export default function ReferralManagement() {
   const [error, setError] = useState("");
   const [apiConnected, setApiConnected] = useState(true);
 
-  // ==================== FORM ====================
   const [formData, setFormData] = useState({ ...EMPTY_DOCTOR_FORM });
   const [editingId, setEditingId] = useState(null);
   const [editingType, setEditingType] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // ✅ SPECIAL OFFER IN FORM
   const [formOffer, setFormOffer] = useState({ offerName: "", amount: "" });
 
-  // ==================== FILTERS ====================
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -171,29 +179,22 @@ export default function ReferralManagement() {
   const statusDropdownRef = useRef(null);
   const [activeCardFilter, setActiveCardFilter] = useState("all");
 
-  // ==================== UI STATE ====================
   const [toast, setToast] = useState(null);
   const [selectedReferral, setSelectedReferral] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // ==================== ✅ OFFER MODAL STATE ====================
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [selectedOfferReferral, setSelectedOfferReferral] = useState(null);
   const [offerSubmitting, setOfferSubmitting] = useState(false);
   const [editingOfferId, setEditingOfferId] = useState(null);
-  const [offerForm, setOfferForm] = useState({
-    offerName: "",
-    amount: ""
-  });
+  const [offerForm, setOfferForm] = useState({ offerName: "", amount: "" });
 
-  // ==================== PAGINATION ====================
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
     const saved = localStorage.getItem("referralManagement_itemsPerPage");
     return saved ? parseInt(saved, 10) : 10;
   });
 
-  // ==================== CLICK OUTSIDE ====================
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (statusDropdownRef.current && !statusDropdownRef.current.contains(e.target)) {
@@ -209,7 +210,6 @@ export default function ReferralManagement() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // ==================== FETCH BOOKINGS ====================
   const fetchBookingsData = async () => {
     try {
       const res = await axios.get(`${BASE_API}/appointment-slots/getallreferralbookings`);
@@ -257,15 +257,12 @@ export default function ReferralManagement() {
     }
   };
 
-  // ==================== FETCH REFERRALS ====================
   const fetchReferrals = async () => {
     setLoading(true);
     setError("");
     setApiConnected(true);
-
     try {
       await fetchBookingsData();
-
       const res = await axios.get(`${API_BASE_URL}/getallreferralcontacts`);
 
       let referralsData = [];
@@ -279,7 +276,6 @@ export default function ReferralManagement() {
         referralsData = res.data;
       }
 
-      // ✅ Ensure har referral mein offers array ho
       referralsData = referralsData.map((r) => ({
         ...r,
         offers: Array.isArray(r.offers) ? r.offers : []
@@ -309,30 +305,22 @@ export default function ReferralManagement() {
     }
   };
 
-  useEffect(() => {
-    fetchReferrals();
-  }, []);
+  useEffect(() => { fetchReferrals(); }, []);
 
-  // ==================== ACTIVE DATA ====================
   const activeReferrals = isDoctorTab ? doctorReferrals : customerReferrals;
   const setActiveReferrals = isDoctorTab ? setDoctorReferrals : setCustomerReferrals;
-
   const referrerLabel = isDoctorTab ? "Doctor" : "Customer";
   const referrerLabelPlural = isDoctorTab ? "Doctors" : "Customers";
   const headerAccent = isDoctorTab ? "text-purple-600" : "text-indigo-600";
   const avatarBg = isDoctorTab ? "bg-purple-500" : "bg-indigo-500";
   const addButtonBg = isDoctorTab ? "bg-purple-600 hover:bg-purple-700" : "bg-indigo-600 hover:bg-indigo-700";
 
-  // ==================== GET METRICS ====================
   const getReferralMetrics = (referral) => {
     if (!referral) {
       return { opCount: 0, revenue: 0, patientCount: 0, lastVisit: null, bookingIds: [], bookings: [] };
     }
-
     const refId = String(referral._id || "");
-    const refName = (
-      isDoctorTab ? (referral.doctorName || "") : (referral.customerName || "")
-    ).trim().toLowerCase();
+    const refName = (isDoctorTab ? (referral.doctorName || "") : (referral.customerName || "")).trim().toLowerCase();
 
     const matchedBookings = bookings.filter((b) => {
       const cId = extractId(b.referralContactId);
@@ -347,24 +335,16 @@ export default function ReferralManagement() {
       const refDoctorName = (extractName(b.referralDoctorId) || b.referredByDoctor || "").trim().toLowerCase();
       const referredBy = (b.referredBy || "").trim().toLowerCase();
 
-      if (refName && (refCustomerName === refName || refDoctorName === refName || referredBy === refName)) {
-        return true;
-      }
+      if (refName && (refCustomerName === refName || refDoctorName === refName || referredBy === refName)) return true;
       return false;
     });
 
     const opCount = matchedBookings.filter((b) => b.isOP === true).length;
-
-    const revenue = matchedBookings.reduce((sum, b) => {
-      return sum + getServiceReferrerPayable(referral, b);
-    }, 0);
-
+    const revenue = matchedBookings.reduce((sum, b) => sum + getServiceReferrerPayable(referral, b), 0);
     const patientCount = new Set(matchedBookings.map((b) => b.patientName)).size;
 
     return {
-      opCount,
-      revenue,
-      patientCount,
+      opCount, revenue, patientCount,
       lastVisit: matchedBookings.length > 0
         ? matchedBookings.reduce((latest, b) => {
             const d = new Date(b.createdAt || b.bookedAt);
@@ -376,21 +356,9 @@ export default function ReferralManagement() {
     };
   };
 
-  // ==================== CRUD ====================
-  const addReferral = async (payload) => {
-    const res = await axios.post(`${API_BASE_URL}/addreferralcontact`, payload);
-    return res;
-  };
-
-  const updateReferral = async (id, payload) => {
-    const res = await axios.put(`${API_BASE_URL}/updatereferralcontact/${id}`, payload);
-    return res;
-  };
-
-  const deleteReferral = async (id) => {
-    const res = await axios.delete(`${API_BASE_URL}/deletereferralcontact/${id}`);
-    return res;
-  };
+  const addReferral = async (payload) => axios.post(`${API_BASE_URL}/addreferralcontact`, payload);
+  const updateReferral = async (id, payload) => axios.put(`${API_BASE_URL}/updatereferralcontact/${id}`, payload);
+  const deleteReferral = async (id) => axios.delete(`${API_BASE_URL}/deletereferralcontact/${id}`);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -407,13 +375,12 @@ export default function ReferralManagement() {
     }
   };
 
-  // ✅ UPDATED: Offer bhi save hoga
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (isDoctorTab) {
       if (!formData.doctorName || !formData.doctorOrganization) {
-        showToast("Please fill in Doctor Name and Organization", "error");
+        showToast("Please fill in Doctor Name and Organisation Name", "error");
         return;
       }
     } else {
@@ -423,7 +390,6 @@ export default function ReferralManagement() {
       }
     }
 
-    // ✅ Offer validation — agar ek field bhara hai to dono chahiye
     const hasOfferName = formOffer.offerName.trim();
     const hasOfferAmt = formOffer.amount.toString().trim();
     if ((hasOfferName && !hasOfferAmt) || (!hasOfferName && hasOfferAmt)) {
@@ -433,11 +399,7 @@ export default function ReferralManagement() {
 
     setSubmitting(true);
     try {
-      const payload = {
-        ...formData,
-        referralType: isDoctorTab ? "doctor" : "customer"
-      };
-
+      const payload = { ...formData, referralType: isDoctorTab ? "doctor" : "customer" };
       let savedReferral = null;
 
       if (editingId) {
@@ -454,9 +416,7 @@ export default function ReferralManagement() {
         const res = await addReferral(payload);
         if (res.data.success) {
           const newData = res.data.data || {
-            _id: Date.now().toString(),
-            ...payload,
-            offers: [],
+            _id: Date.now().toString(), ...payload, offers: [],
             createdAt: new Date().toISOString()
           };
           savedReferral = { ...newData, offers: newData.offers || [] };
@@ -465,32 +425,23 @@ export default function ReferralManagement() {
         }
       }
 
-      // ✅ Offer bhi add karo (agar bhara hai)
       if (savedReferral && hasOfferName && hasOfferAmt) {
         try {
           const offerRes = await axios.post(
             `${API_BASE_URL}/addoffer/${savedReferral._id}`,
-            {
-              offerName: formOffer.offerName.trim(),
-              offerAmount: Number(formOffer.amount),
-            }
+            { offerName: formOffer.offerName.trim(), offerAmount: Number(formOffer.amount) }
           );
-
           if (offerRes.data.success) {
             const withOffer = {
               ...offerRes.data.data,
-              offers: Array.isArray(offerRes.data.data?.offers)
-                ? offerRes.data.data.offers
-                : [],
+              offers: Array.isArray(offerRes.data.data?.offers) ? offerRes.data.data.offers : []
             };
-            setActiveReferrals((prev) =>
-              prev.map((r) => (r._id === withOffer._id ? withOffer : r))
-            );
+            setActiveReferrals((prev) => prev.map((r) => (r._id === withOffer._id ? withOffer : r)));
             showToast("Offer added successfully!");
           }
         } catch (offerErr) {
           console.error("Offer add error:", offerErr);
-          showToast("Referral saved but offer failed. Add offer from Actions.", "info");
+          showToast("Referral saved but offer failed.", "info");
         }
       }
 
@@ -498,10 +449,10 @@ export default function ReferralManagement() {
       setEditingId(null);
       setEditingType(null);
       setShowForm(false);
-      setFormOffer({ offerName: "", amount: "" }); // ✅ reset
+      setFormOffer({ offerName: "", amount: "" });
     } catch (err) {
       console.error(`Error saving ${referrerLabel.toLowerCase()} referral:`, err);
-      showToast(err.response?.data?.message || `Failed to save ${referrerLabel.toLowerCase()} referral`, "error");
+      showToast(err.response?.data?.message || `Failed to save referral`, "error");
     } finally {
       setSubmitting(false);
     }
@@ -515,33 +466,43 @@ export default function ReferralManagement() {
         doctorOrganization: referral.doctorOrganization || "",
         doctorPhone: referral.doctorPhone || "",
         doctorSpecialization: referral.doctorSpecialization || "",
+        doctorAddress: referral.doctorAddress || "",
         clinicCommission: referral.clinicCommission || "",
         pharmacyCommission: referral.pharmacyCommission || "",
         labCommission: referral.labCommission || "",
         totalCommission: referral.totalCommission || "",
-        referralDate: referral.referralDate || "",
+        onboardDate: referral.onboardDate || referral.referralDate || "",
         referralNotes: referral.referralNotes || "",
-        status: referral.status || "active"
+        status: referral.status || "active",
+        discountFees: referral.discountFees || "",
+        discountFeesType: referral.discountFeesType || "%",
+        discountLab: referral.discountLab || "",
+        discountLabType: referral.discountLabType || "%"
       });
       setEditingType("doctor");
     } else {
       setFormData({
         referralType: "customer",
         customerName: referral.customerName || "",
+        customerOrganization: referral.customerOrganization || "",
         customerPhone: referral.customerPhone || "",
         customerAddress: referral.customerAddress || "",
         clinicCommission: referral.clinicCommission || "",
         pharmacyCommission: referral.pharmacyCommission || "",
         labCommission: referral.labCommission || "",
         totalCommission: referral.totalCommission || "",
-        referralDate: referral.referralDate || "",
+        onboardDate: referral.onboardDate || referral.referralDate || "",
         referralNotes: referral.referralNotes || "",
-        status: referral.status || "active"
+        status: referral.status || "active",
+        discountFees: referral.discountFees || "",
+        discountFeesType: referral.discountFeesType || "%",
+        discountLab: referral.discountLab || "",
+        discountLabType: referral.discountLabType || "%"
       });
       setEditingType("customer");
     }
     setEditingId(referral._id);
-    setFormOffer({ offerName: "", amount: "" }); // ✅ reset offer
+    setFormOffer({ offerName: "", amount: "" });
     setShowForm(true);
   };
 
@@ -561,9 +522,7 @@ export default function ReferralManagement() {
     try {
       const res = await updateReferral(referral._id, { status: newStatus });
       if (res.data.success) {
-        setActiveReferrals((prev) =>
-          prev.map((r) => (r._id === referral._id ? { ...r, status: newStatus } : r))
-        );
+        setActiveReferrals((prev) => prev.map((r) => (r._id === referral._id ? { ...r, status: newStatus } : r)));
         if (selectedReferral && selectedReferral._id === referral._id) {
           setSelectedReferral((prev) => ({ ...prev, status: newStatus }));
         }
@@ -575,8 +534,6 @@ export default function ReferralManagement() {
     }
   };
 
-  // ==================== ✅ OFFER HANDLERS (ARRAY) ====================
-
   const openOfferModal = (referral) => {
     setSelectedOfferReferral(referral);
     setEditingOfferId(null);
@@ -587,10 +544,7 @@ export default function ReferralManagement() {
   const openEditOfferModal = (referral, offer) => {
     setSelectedOfferReferral(referral);
     setEditingOfferId(offer._id);
-    setOfferForm({
-      offerName: offer.offerName || "",
-      amount: offer.offerAmount || ""
-    });
+    setOfferForm({ offerName: offer.offerName || "", amount: offer.offerAmount || "" });
     setShowOfferModal(true);
   };
 
@@ -608,7 +562,6 @@ export default function ReferralManagement() {
 
   const handleOfferSubmit = async (e) => {
     e.preventDefault();
-
     if (!offerForm.offerName || !offerForm.amount) {
       showToast("Please fill Offer Name and Amount", "error");
       return;
@@ -617,22 +570,12 @@ export default function ReferralManagement() {
 
     setOfferSubmitting(true);
     try {
-      const payload = {
-        offerName: offerForm.offerName,
-        offerAmount: Number(offerForm.amount)
-      };
-
+      const payload = { offerName: offerForm.offerName, offerAmount: Number(offerForm.amount) };
       let res;
       if (editingOfferId) {
-        res = await axios.put(
-          `${API_BASE_URL}/updateoffer/${selectedOfferReferral._id}/${editingOfferId}`,
-          payload
-        );
+        res = await axios.put(`${API_BASE_URL}/updateoffer/${selectedOfferReferral._id}/${editingOfferId}`, payload);
       } else {
-        res = await axios.post(
-          `${API_BASE_URL}/addoffer/${selectedOfferReferral._id}`,
-          payload
-        );
+        res = await axios.post(`${API_BASE_URL}/addoffer/${selectedOfferReferral._id}`, payload);
       }
 
       if (res.data.success) {
@@ -640,15 +583,8 @@ export default function ReferralManagement() {
           ...res.data.data,
           offers: Array.isArray(res.data.data?.offers) ? res.data.data.offers : []
         };
-
-        setActiveReferrals((prev) =>
-          prev.map((r) => (r._id === updatedReferral._id ? updatedReferral : r))
-        );
-
-        if (selectedReferral && selectedReferral._id === updatedReferral._id) {
-          setSelectedReferral(updatedReferral);
-        }
-
+        setActiveReferrals((prev) => prev.map((r) => (r._id === updatedReferral._id ? updatedReferral : r)));
+        if (selectedReferral && selectedReferral._id === updatedReferral._id) setSelectedReferral(updatedReferral);
         showToast(editingOfferId ? "Offer updated successfully!" : "Offer added successfully!");
         closeOfferModal();
       }
@@ -662,26 +598,15 @@ export default function ReferralManagement() {
 
   const handleDeleteOffer = async (referral, offerId) => {
     if (!window.confirm("Are you sure you want to delete this offer?")) return;
-
     try {
-      const res = await axios.delete(
-        `${API_BASE_URL}/deleteoffer/${referral._id}/${offerId}`
-      );
-
+      const res = await axios.delete(`${API_BASE_URL}/deleteoffer/${referral._id}/${offerId}`);
       if (res.data.success) {
         const updatedReferral = {
           ...res.data.data,
           offers: Array.isArray(res.data.data?.offers) ? res.data.data.offers : []
         };
-
-        setActiveReferrals((prev) =>
-          prev.map((r) => (r._id === updatedReferral._id ? updatedReferral : r))
-        );
-
-        if (selectedReferral && selectedReferral._id === updatedReferral._id) {
-          setSelectedReferral(updatedReferral);
-        }
-
+        setActiveReferrals((prev) => prev.map((r) => (r._id === updatedReferral._id ? updatedReferral : r)));
+        if (selectedReferral && selectedReferral._id === updatedReferral._id) setSelectedReferral(updatedReferral);
         showToast("Offer deleted successfully!");
       }
     } catch (err) {
@@ -695,7 +620,7 @@ export default function ReferralManagement() {
     setEditingId(null);
     setEditingType(null);
     setShowForm(false);
-    setFormOffer({ offerName: "", amount: "" }); // ✅ reset offer
+    setFormOffer({ offerName: "", amount: "" });
   };
 
   const clearFilters = () => {
@@ -708,11 +633,7 @@ export default function ReferralManagement() {
   };
 
   const hasActiveFilters = searchQuery || statusFilter !== "All" || monthFilter !== "";
-
-  const getStatusLabel = () => {
-    if (statusFilter === "All") return "Status";
-    return statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
-  };
+  const getStatusLabel = () => statusFilter === "All" ? "Status" : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
 
   const handleCardClick = (type) => {
     setActiveCardFilter(type);
@@ -721,7 +642,6 @@ export default function ReferralManagement() {
     else setStatusFilter(type);
   };
 
-  // ==================== FILTERED DATA ====================
   const filteredReferrals = useMemo(() => {
     return activeReferrals.filter((r) => {
       if (monthFilter && monthFilter !== "") {
@@ -729,9 +649,7 @@ export default function ReferralManagement() {
         const referralMonth = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, "0")}`;
         if (referralMonth !== monthFilter) return false;
       }
-
       if (statusFilter !== "All" && r.status !== statusFilter) return false;
-
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         if (isDoctorTab) {
@@ -751,42 +669,25 @@ export default function ReferralManagement() {
     });
   }, [activeReferrals, statusFilter, searchQuery, monthFilter, isDoctorTab]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, statusFilter, monthFilter, activeTab]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, monthFilter, activeTab]);
 
-  // ==================== STATS ====================
   const stats = useMemo(() => {
     const total = activeReferrals.length;
     const active = activeReferrals.filter((r) => r.status === "active").length;
     const inactive = activeReferrals.filter((r) => r.status === "inactive").length;
-
     let totalOps = 0;
-    activeReferrals.forEach((r) => {
-      const metrics = getReferralMetrics(r);
-      totalOps += metrics.opCount;
-    });
-
+    activeReferrals.forEach((r) => { totalOps += getReferralMetrics(r).opCount; });
     return { total, active, inactive, totalOps };
   }, [activeReferrals, bookings, activeTab]);
 
-  // ==================== FORMATTERS ====================
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
+    return new Date(dateStr).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   };
 
   const formatTime = (dateStr) => {
     if (!dateStr) return "";
-    return new Date(dateStr).toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true
-    });
+    return new Date(dateStr).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
   };
 
   const getStatusBadgeColor = (status) => {
@@ -801,62 +702,43 @@ export default function ReferralManagement() {
       : "bg-purple-50 text-purple-700 border-purple-200";
   };
 
-  // ==================== CSV EXPORT ====================
   const downloadCSV = () => {
     if (filteredReferrals.length === 0) {
       alert(`No ${referrerLabel.toLowerCase()} referral records available to download!`);
       return;
     }
-
     const headers = isDoctorTab
-      ? [
-          "Sl No", "Referral ID", "Name", "Organization", "Phone", "Specialization",
-          "Clinic Commission (%)", "Pharmacy Commission (%)", "Lab Commission (%)",
-          "Total Commission (%)", "Offers", "Status", "Date"
-        ]
-      : [
-          "Sl No", "Referral ID", "Name", "Phone", "Address",
-          "Clinic Commission (%)", "Pharmacy Commission (%)", "Lab Commission (%)",
-          "Total Commission (%)", "Offers", "Status", "Date"
-        ];
+      ? ["Sl No", "Name", "Organisation", "Phone", "Specialization", "Address", "Fees %", "Pharmacy %", "Lab %", "Total %", "Discount Fees", "Discount Lab", "Status", "Onboard Date"]
+      : ["Sl No", "Name", "Phone", "Address", "Fees %", "Pharmacy %", "Lab %", "Total %", "Discount Fees", "Discount Lab", "Status", "Onboard Date"];
 
     const csvRows = [
       headers.join(","),
       ...filteredReferrals.map((r, idx) => {
-        const offersStr = (r.offers || [])
-          .map((o) => `${o.offerName}:₹${o.offerAmount}`)
-          .join(" | ");
-
+        const discountFeesStr = r.discountFees ? `${r.discountFees}${r.discountFeesType || "%"}` : "";
+        const discountLabStr = r.discountLab ? `${r.discountLab}${r.discountLabType || "%"}` : "";
         if (isDoctorTab) {
           return [
             idx + 1,
-            `"${r._id}"`,
             `"${(r.doctorName || "").replace(/"/g, '""')}"`,
             `"${(r.doctorOrganization || "").replace(/"/g, '""')}"`,
             `"${r.doctorPhone || ""}"`,
             `"${(r.doctorSpecialization || "").replace(/"/g, '""')}"`,
-            r.clinicCommission || 0,
-            r.pharmacyCommission || 0,
-            r.labCommission || 0,
-            r.totalCommission || 0,
-            `"${offersStr.replace(/"/g, '""')}"`,
+            `"${(r.doctorAddress || "").replace(/"/g, '""')}"`,
+            r.clinicCommission || 0, r.pharmacyCommission || 0, r.labCommission || 0, r.totalCommission || 0,
+            `"${discountFeesStr}"`, `"${discountLabStr}"`,
             `"${r.status || "active"}"`,
-            `"${formatDate(r.createdAt)}"`
+            `"${formatDate(r.onboardDate || r.referralDate || r.createdAt)}"`
           ].join(",");
         } else {
           return [
             idx + 1,
-            `"${r._id}"`,
             `"${(r.customerName || "").replace(/"/g, '""')}"`,
             `"${r.customerPhone || ""}"`,
             `"${(r.customerAddress || "").replace(/"/g, '""')}"`,
-            r.clinicCommission || 0,
-            r.pharmacyCommission || 0,
-            r.labCommission || 0,
-            r.totalCommission || 0,
-            `"${offersStr.replace(/"/g, '""')}"`,
+            r.clinicCommission || 0, r.pharmacyCommission || 0, r.labCommission || 0, r.totalCommission || 0,
+            `"${discountFeesStr}"`, `"${discountLabStr}"`,
             `"${r.status || "active"}"`,
-            `"${formatDate(r.createdAt)}"`
+            `"${formatDate(r.onboardDate || r.referralDate || r.createdAt)}"`
           ].join(",");
         }
       })
@@ -870,10 +752,9 @@ export default function ReferralManagement() {
     a.download = `${referrerLabel.toLowerCase()}_referral_records_${new Date().toLocaleDateString().replace(/\//g, "-")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast(`Exported ${filteredReferrals.length} ${referrerLabel.toLowerCase()} referral records to CSV!`);
+    showToast(`Exported ${filteredReferrals.length} records!`);
   };
 
-  // ==================== PAGINATION ====================
   const totalPages = Math.ceil(filteredReferrals.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -889,16 +770,12 @@ export default function ReferralManagement() {
   const getPageNumbers = () => {
     const pageNumbers = [];
     for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-        pageNumbers.push(i);
-      } else if (i === currentPage - 3 || i === currentPage + 3) {
-        pageNumbers.push("...");
-      }
+      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) pageNumbers.push(i);
+      else if (i === currentPage - 3 || i === currentPage + 3) pageNumbers.push("...");
     }
     return pageNumbers;
   };
 
-  // ==================== TAB CHANGE ====================
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSearchQuery("");
@@ -913,7 +790,6 @@ export default function ReferralManagement() {
     setFormOffer({ offerName: "", amount: "" });
   };
 
-  // ==================== LOADING ====================
   if (loading) {
     return (
       <div className="emp-dash">
@@ -925,7 +801,6 @@ export default function ReferralManagement() {
     );
   }
 
-  // ==================== RENDER ====================
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
@@ -936,402 +811,158 @@ export default function ReferralManagement() {
           </div>
         )}
 
-        {/* ==================== TABS ==================== */}
+        {/* TABS */}
         <div className="flex items-center gap-2 mb-4 border-b-2 border-gray-200 overflow-x-auto">
-          <button
-            onClick={() => handleTabChange("doctor")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${
-              activeTab === "doctor"
-                ? "border-purple-600 text-purple-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <FaUserMd className="w-4 h-4" />
-            Doctor Referrals
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-              activeTab === "doctor" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"
-            }`}>
-              {doctorReferrals.length}
-            </span>
+          <button onClick={() => handleTabChange("doctor")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${activeTab === "doctor" ? "border-purple-600 text-purple-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+            <FaUserMd className="w-4 h-4" /> Doctor Referrals
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "doctor" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>{doctorReferrals.length}</span>
           </button>
-          <button
-            onClick={() => handleTabChange("customer")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${
-              activeTab === "customer"
-                ? "border-indigo-600 text-indigo-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <FaUser className="w-4 h-4" />
-            Customer Referrals
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-              activeTab === "customer" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-500"
-            }`}>
-              {customerReferrals.length}
-            </span>
+          <button onClick={() => handleTabChange("customer")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${activeTab === "customer" ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+            <FaUser className="w-4 h-4" /> Customer Referrals
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "customer" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-500"}`}>{customerReferrals.length}</span>
           </button>
         </div>
 
-        {/* ==================== HEADER DESKTOP ==================== */}
+        {/* HEADER DESKTOP */}
         <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
-              {referrerLabel} <span>Referrals</span>
-            </h1>
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">{referrerLabel} <span>Referrals</span></h1>
           </div>
-
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="emp-dash__date-pill flex-shrink-0">
-              {isDoctorTab ? <FaUserMd /> : <FaUser />}
-              <span>{activeReferrals.length} {referrerLabelPlural}</span>
-            </div>
-
+            <div className="emp-dash__date-pill flex-shrink-0">{isDoctorTab ? <FaUserMd /> : <FaUser />}<span>{activeReferrals.length} {referrerLabelPlural}</span></div>
             <div className="relative min-w-[150px]">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-              <input
-                type="text"
-                placeholder={isDoctorTab ? "Search Name, Org..." : "Search Name, Phone..."}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[180px] pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              />
+              <input type="text" placeholder={isDoctorTab ? "Search Name, Org..." : "Search Name, Phone..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-[180px] pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" />
             </div>
-
-            <input
-              type="month"
-              value={monthFilter}
-              onChange={(e) => setMonthFilter(e.target.value)}
-              className="px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-              title="Filter by month"
-            />
-
+            <input type="month" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} className="px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none bg-white" />
             <div className="relative" ref={statusDropdownRef}>
-              <button
-                onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-                  statusFilter !== "All"
-                    ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
+              <button onClick={() => setShowStatusDropdown(!showStatusDropdown)} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${statusFilter !== "All" ? "border-blue-500 text-blue-700 bg-blue-50" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
                 <FiActivity className="text-gray-400 text-[10px]" />
                 <span className="truncate max-w-[60px]">{getStatusLabel()}</span>
                 <span className="text-gray-400 text-[10px]">▾</span>
               </button>
               {showStatusDropdown && (
-                <div
-                  className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[150px]"
-                  style={{
-                    zIndex: 99999,
-                    top: statusDropdownRef.current ? statusDropdownRef.current.getBoundingClientRect().bottom + 4 : "auto",
-                    left: statusDropdownRef.current ? statusDropdownRef.current.getBoundingClientRect().left : "auto"
-                  }}
-                >
-                  <div
-                    onClick={() => { setStatusFilter("All"); setShowStatusDropdown(false); }}
-                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                      statusFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                    }`}
-                  >
-                    <span>All Status</span>
-                    {statusFilter === "All" && <FiCheck className="w-3 h-3 text-blue-600" />}
+                <div className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[150px]" style={{ zIndex: 99999, top: statusDropdownRef.current ? statusDropdownRef.current.getBoundingClientRect().bottom + 4 : "auto", left: statusDropdownRef.current ? statusDropdownRef.current.getBoundingClientRect().left : "auto" }}>
+                  <div onClick={() => { setStatusFilter("All"); setShowStatusDropdown(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${statusFilter === "All" ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"}`}>
+                    <span>All Status</span>{statusFilter === "All" && <FiCheck className="w-3 h-3 text-blue-600" />}
                   </div>
                   {STATUS_OPTIONS.map((status) => (
-                    <div
-                      key={status}
-                      onClick={() => { setStatusFilter(status); setShowStatusDropdown(false); }}
-                      className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${
-                        statusFilter === status ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                      }`}
-                    >
-                      <span className="capitalize">{status}</span>
-                      {statusFilter === status && <FiCheck className="w-3 h-3 text-blue-600" />}
+                    <div key={status} onClick={() => { setStatusFilter(status); setShowStatusDropdown(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 flex items-center justify-between ${statusFilter === status ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"}`}>
+                      <span className="capitalize">{status}</span>{statusFilter === status && <FiCheck className="w-3 h-3 text-blue-600" />}
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
             {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-              >
-                <FiTrash2 className="w-3 h-3 text-red-500" />
-                Clear
+              <button onClick={clearFilters} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 whitespace-nowrap">
+                <FiTrash2 className="w-3 h-3 text-red-500" /> Clear
               </button>
             )}
-
-            <button
-              onClick={fetchReferrals}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
-              title="Refresh Data"
-            >
-              <FiRefreshCw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-            <button
-              onClick={downloadCSV}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
-              title="Export CSV"
-            >
-              <FiDownload className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Export CSV</span>
-            </button>
-
-            <button
-              onClick={() => navigate(isDoctorTab ? "/referral-bookings" : "/referral-bookings")}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
-              title={`View ${referrerLabel} Referred OP Bookings`}
-            >
-              {isDoctorTab ? <FaStethoscope className="w-3.5 h-3.5" /> : <FaUsers className="w-3.5 h-3.5" />}
-              <span>{referrerLabel} Referred OP</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM });
-                setEditingId(null);
-                setEditingType(null);
-                setFormOffer({ offerName: "", amount: "" });
-                setShowForm(true);
-              }}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white ${addButtonBg} rounded-lg transition-all shadow-sm`}
-            >
-              {isDoctorTab ? <FaUserMd className="w-3.5 h-3.5" /> : <FaUserPlus className="w-3.5 h-3.5" />}
-              <span>Add {referrerLabel}</span>
+            <button onClick={fetchReferrals} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"><FiRefreshCw className="w-3.5 h-3.5" /><span className="hidden sm:inline">Refresh</span></button>
+            <button onClick={downloadCSV} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700"><FiDownload className="w-3.5 h-3.5" /><span className="hidden sm:inline">Export CSV</span></button>
+            <button onClick={() => navigate("/referral-bookings")} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"><FaUsers className="w-3.5 h-3.5" /><span>{referrerLabel} Referred OP</span></button>
+            <button onClick={() => { setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM }); setEditingId(null); setEditingType(null); setFormOffer({ offerName: "", amount: "" }); setShowForm(true); }} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white ${addButtonBg} rounded-lg shadow-sm`}>
+              {isDoctorTab ? <FaUserMd className="w-3.5 h-3.5" /> : <FaUserPlus className="w-3.5 h-3.5" />}<span>Add {referrerLabel}</span>
             </button>
           </div>
         </div>
 
-        {/* ==================== HEADER MOBILE ==================== */}
+        {/* HEADER MOBILE */}
         <div className="lg:hidden flex flex-col gap-2 mb-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <h1 className="text-base font-bold whitespace-nowrap">
-              {referrerLabel} <span className={headerAccent}>Referrals</span>
-            </h1>
-            <div className="emp-dash__date-pill text-[10px] px-2 py-1">
-              {isDoctorTab ? <FaUserMd className="text-[10px]" /> : <FaUser className="text-[10px]" />}
-              <span>{activeReferrals.length} {referrerLabelPlural}</span>
-            </div>
+            <h1 className="text-base font-bold whitespace-nowrap">{referrerLabel} <span className={headerAccent}>Referrals</span></h1>
+            <div className="emp-dash__date-pill text-[10px] px-2 py-1">{isDoctorTab ? <FaUserMd className="text-[10px]" /> : <FaUser className="text-[10px]" />}<span>{activeReferrals.length} {referrerLabelPlural}</span></div>
           </div>
-
           <div className="relative flex-1">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-            <input
-              type="text"
-              placeholder={`Search ${referrerLabel.toLowerCase()}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-            />
+            <input type="text" placeholder={`Search ${referrerLabel.toLowerCase()}...`} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none bg-white" />
           </div>
-
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-            >
-              <FiFilter className="text-blue-600 text-sm" />
-              <span>Filter</span>
-              {showMobileFilters ? <FiChevronUp className="text-gray-400 text-xs" /> : <FiChevronDown className="text-gray-400 text-xs" />}
+            <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+              <FiFilter className="text-blue-600 text-sm" /><span>Filter</span>{showMobileFilters ? <FiChevronUp className="text-gray-400 text-xs" /> : <FiChevronDown className="text-gray-400 text-xs" />}
             </button>
-
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-              >
-                <FiTrash2 className="w-3 h-3 text-red-500" />
-                Clear
-              </button>
-            )}
-
-            <button
-              onClick={() => navigate(isDoctorTab ? "/referral-bookings" : "/referral-bookings")}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
-            >
-              {isDoctorTab ? <FaStethoscope className="w-3.5 h-3.5" /> : <FaUsers className="w-3.5 h-3.5" />}
-              <span>Referred OP</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM });
-                setEditingId(null);
-                setEditingType(null);
-                setFormOffer({ offerName: "", amount: "" });
-                setShowForm(true);
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white ${addButtonBg} rounded-lg transition-all shadow-sm`}
-            >
-              {isDoctorTab ? <FaUserMd className="w-3.5 h-3.5" /> : <FaUserPlus className="w-3.5 h-3.5" />}
-              <span>{referrerLabel}</span>
+            {hasActiveFilters && (<button onClick={clearFilters} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"><FiTrash2 className="w-3 h-3 text-red-500" />Clear</button>)}
+            <button onClick={() => navigate("/referral-bookings")} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"><FaUsers className="w-3.5 h-3.5" /><span>Referred OP</span></button>
+            <button onClick={() => { setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM }); setEditingId(null); setEditingType(null); setFormOffer({ offerName: "", amount: "" }); setShowForm(true); }} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white ${addButtonBg} rounded-lg`}>
+              {isDoctorTab ? <FaUserMd className="w-3.5 h-3.5" /> : <FaUserPlus className="w-3.5 h-3.5" />}<span>{referrerLabel}</span>
             </button>
           </div>
-
           {showMobileFilters && (
             <div className="p-4 bg-white rounded-xl border border-gray-200 space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
-                <input
-                  type="month"
-                  value={monthFilter}
-                  onChange={(e) => setMonthFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                />
+                <input type="month" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg bg-white" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                >
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg bg-white">
                   <option value="All">All Status</option>
-                  {STATUS_OPTIONS.map((status) => (
-                    <option key={status} value={status} className="capitalize">{status}</option>
-                  ))}
+                  {STATUS_OPTIONS.map((status) => (<option key={status} value={status} className="capitalize">{status}</option>))}
                 </select>
-              </div>
-              <div className="pt-3 border-t border-gray-200 space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={downloadCSV}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
-                  >
-                    <FiDownload className="w-4 h-4" />
-                    Export CSV
-                  </button>
-                  <button
-                    onClick={fetchReferrals}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                  >
-                    <FiRefreshCw className="w-4 h-4" />
-                    Refresh
-                  </button>
-                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* ==================== STATS CARDS ==================== */}
+        {/* STATS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-          <div
-            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
-              activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""
-            }`}
-            onClick={() => handleCardClick("all")}
-          >
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total {referrerLabelPlural}</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div>
-            </div>
+          <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""}`} onClick={() => handleCardClick("all")}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total {referrerLabelPlural}</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div></div>
             <div className="emp-dash__stat-value">{stats.total}</div>
-            <div className="emp-dash__stat-meta">all {referrerLabel.toLowerCase()} referrals</div>
+            <div className="emp-dash__stat-meta">all referrals</div>
           </div>
-
-          <div
-            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
-              activeCardFilter === "active" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""
-            }`}
-            onClick={() => handleCardClick("active")}
-          >
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Active</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div>
-            </div>
+          <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "active" ? "ring-2 ring-emerald-500/20 border-emerald-400" : ""}`} onClick={() => handleCardClick("active")}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Active</span><div className="emp-dash__stat-icon emp-dash__stat-icon--present"><FiUserCheck /></div></div>
             <div className="emp-dash__stat-value text-emerald-600">{stats.active}</div>
             <div className="emp-dash__stat-meta">active referrals</div>
           </div>
-
-          <div
-            className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${
-              activeCardFilter === "inactive" ? "ring-2 ring-red-500/20 border-red-400" : ""
-            }`}
-            onClick={() => handleCardClick("inactive")}
-          >
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Inactive</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiUserX /></div>
-            </div>
+          <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200 ${activeCardFilter === "inactive" ? "ring-2 ring-red-500/20 border-red-400" : ""}`} onClick={() => handleCardClick("inactive")}>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Inactive</span><div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiUserX /></div></div>
             <div className="emp-dash__stat-value text-red-500">{stats.inactive}</div>
             <div className="emp-dash__stat-meta">inactive referrals</div>
           </div>
-
           <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total OPs</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FaUsers className="w-4 h-4 text-blue-600" />
-              </div>
-            </div>
+            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total OPs</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FaUsers className="w-4 h-4 text-blue-600" /></div></div>
             <div className="emp-dash__stat-value text-blue-600">{stats.totalOps}</div>
             <div className="emp-dash__stat-meta">total OP visits</div>
           </div>
         </div>
 
-        {/* ==================== MAIN TABLE / CARD ==================== */}
+        {/* TABLE + CARD VIEW */}
         <div className="emp-dash__card">
           {activeReferrals.length === 0 && !loading ? (
             <div className="emp-dash__card-body py-12 text-center text-gray-500">
-              <div className="mb-3 text-4xl text-gray-300">
-                {isDoctorTab ? <FaUserMd className="w-12 h-12 text-gray-300 mx-auto" /> : <FaUser className="w-12 h-12 text-gray-300 mx-auto" />}
-              </div>
+              <div className="mb-3 text-4xl text-gray-300">{isDoctorTab ? <FaUserMd className="w-12 h-12 text-gray-300 mx-auto" /> : <FaUser className="w-12 h-12 text-gray-300 mx-auto" />}</div>
               <p className="mb-1 text-sm font-semibold text-gray-800">No {referrerLabel.toLowerCase()} referrals found</p>
-              <p className="text-xs text-gray-500 mb-5 max-w-xs mx-auto">
-                Click "Add {referrerLabel}" to create a new {referrerLabel.toLowerCase()} referral.
-              </p>
-              <button
-                onClick={() => {
-                  setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM });
-                  setEditingId(null);
-                  setEditingType(null);
-                  setFormOffer({ offerName: "", amount: "" });
-                  setShowForm(true);
-                }}
-                className={`px-4 py-2 text-xs font-semibold text-white ${addButtonBg} rounded-lg transition-all shadow-sm inline-flex items-center gap-1.5`}
-              >
-                {isDoctorTab ? <FaUserMd className="w-3.5 h-3.5" /> : <FaUserPlus className="w-3.5 h-3.5" />}
-                Add {referrerLabel}
+              <button onClick={() => { setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM }); setEditingId(null); setEditingType(null); setFormOffer({ offerName: "", amount: "" }); setShowForm(true); }} className={`px-4 py-2 text-xs font-semibold text-white ${addButtonBg} rounded-lg inline-flex items-center gap-1.5`}>
+                {isDoctorTab ? <FaUserMd className="w-3.5 h-3.5" /> : <FaUserPlus className="w-3.5 h-3.5" />}Add {referrerLabel}
               </button>
             </div>
           ) : filteredReferrals.length === 0 && !loading ? (
             <div className="emp-dash__card-body py-12 text-center text-gray-500">
-              <div className="mb-3 text-4xl text-gray-300">
-                {isDoctorTab ? <FaUserMd className="w-12 h-12 text-gray-300 mx-auto" /> : <FaUser className="w-12 h-12 text-gray-300 mx-auto" />}
-              </div>
               <p className="mb-1 text-sm font-semibold text-gray-800">No matching records found</p>
-              <p className="text-xs text-gray-500 mb-5 max-w-xs mx-auto">
-                No {referrerLabel.toLowerCase()} referrals matching your current filter criteria.
-              </p>
-              <button
-                onClick={clearFilters}
-                className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
-              >
-                Clear Filters
-              </button>
+              <button onClick={clearFilters} className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Clear Filters</button>
             </div>
           ) : (
             <>
-              {/* ===== DESKTOP TABLE VIEW ===== */}
+              {/* DESKTOP TABLE */}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="emp-dash__table">
                   <thead>
                     <tr>
                       <th style={{ width: "40px", textAlign: "center" }}>S.No</th>
                       <th>{referrerLabel}</th>
-                      {isDoctorTab && <th>Organization</th>}
+                      <th>Organisation</th>
                       <th>Phone</th>
-                      {isDoctorTab ? <th>Specialization</th> : <th>Address</th>}
-                      <th style={{ textAlign: "center" }}>Clinic %</th>
+                      <th>{isDoctorTab ? "Specialization" : "Address"}</th>
+                      <th style={{ textAlign: "center" }}>Fees %</th>
                       <th style={{ textAlign: "center" }}>Pharmacy %</th>
                       <th style={{ textAlign: "center" }}>Lab %</th>
                       <th style={{ textAlign: "center" }}>Total %</th>
-                      <th style={{ textAlign: "center" }}>Offers</th>
+                      <th style={{ textAlign: "center" }}>Discount</th>
                       <th style={{ textAlign: "center" }}>Status</th>
-                      <th style={{ textAlign: "center" }}>Date</th>
+                      <th style={{ textAlign: "center" }}>Onboard Date</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
                     </tr>
                   </thead>
@@ -1346,141 +977,61 @@ export default function ReferralManagement() {
 
                       return (
                         <tr key={referral._id} className="transition-colors hover:bg-slate-50/50">
-                          <td className="px-3 py-3 font-semibold text-center text-slate-500 text-[11px]">
-                            {indexOfFirstItem + idx + 1}
-                          </td>
-
+                          <td className="px-3 py-3 font-semibold text-center text-slate-500 text-[11px]">{indexOfFirstItem + idx + 1}</td>
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-2.5">
-                              <div className={`w-8 h-8 rounded-full ${avatarBg} text-white font-bold flex items-center justify-center flex-shrink-0 text-xs shadow-sm`}>
-                                {name.charAt(0).toUpperCase()}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="font-semibold text-slate-800 text-xs truncate">{name}</div>
-                              </div>
+                              <div className={`w-8 h-8 rounded-full ${avatarBg} text-white font-bold flex items-center justify-center flex-shrink-0 text-xs shadow-sm`}>{name.charAt(0).toUpperCase()}</div>
+                              <div className="font-semibold text-slate-800 text-xs truncate">{name}</div>
                             </div>
                           </td>
-
-                          {isDoctorTab && (
-                            <td className="px-3 py-3 whitespace-nowrap">
-                              <div className="text-xs font-medium text-slate-700 flex items-center gap-1">
-                                <FaBuilding className="text-gray-400 text-[11px]" />
-                                <span className="truncate max-w-[150px]">{referral.doctorOrganization || "N/A"}</span>
-                              </div>
-                            </td>
-                          )}
-
                           <td className="px-3 py-3 whitespace-nowrap">
-                            <span className="text-xs font-medium text-slate-700 flex items-center gap-1">
-                              <FaPhoneAlt className="text-gray-400 text-[10px]" />
-                              {isDoctorTab ? (referral.doctorPhone || "N/A") : (referral.customerPhone || "N/A")}
-                            </span>
+                            <div className="text-xs font-medium text-slate-700 flex items-center gap-1">
+                              <FaBuilding className="text-gray-400 text-[11px]" />
+                              <span className="truncate max-w-[150px]">{isDoctorTab ? (referral.doctorOrganization || "N/A") : (referral.customerOrganization || "N/A")}</span>
+                            </div>
                           </td>
-
+                          <td className="px-3 py-3 whitespace-nowrap">
+                            <span className="text-xs font-medium text-slate-700 flex items-center gap-1"><FaPhoneAlt className="text-gray-400 text-[10px]" />{isDoctorTab ? (referral.doctorPhone || "N/A") : (referral.customerPhone || "N/A")}</span>
+                          </td>
                           {isDoctorTab ? (
-                            <td className="px-3 py-3 whitespace-nowrap">
-                              <span className="text-xs font-medium text-slate-700 flex items-center gap-1">
-                                <FiAward className="text-gray-400 text-[11px]" />
-                                {referral.doctorSpecialization || "General"}
-                              </span>
-                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap"><span className="text-xs font-medium text-slate-700 flex items-center gap-1"><FaAward className="text-gray-400 text-[11px]" />{referral.doctorSpecialization || "General"}</span></td>
                           ) : (
-                            <td className="px-3 py-3 whitespace-nowrap">
-                              <div className="text-xs font-medium text-slate-700 flex items-center gap-1">
-                                <FaMapMarkerAlt className="text-gray-400 text-[11px]" />
-                                <span className="truncate max-w-[150px]">{referral.customerAddress || "N/A"}</span>
-                              </div>
-                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap"><span className="text-xs font-medium text-slate-700 flex items-center gap-1"><FaMapMarkerAlt className="text-gray-400 text-[11px]" /><span className="truncate max-w-[150px]">{referral.customerAddress || "N/A"}</span></span></td>
                           )}
-
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{clinic}%</span>
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-100">{pharmacy}%</span>
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">{lab}%</span>
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <span className="text-xs font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">{total}%</span>
-                          </td>
-
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{clinic}%</span></td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-100">{pharmacy}%</span></td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">{lab}%</span></td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">{total}%</span></td>
                           <td className="px-3 py-3 text-center">
-                            {offers.length > 0 ? (
-                              <div className="flex flex-col items-center gap-1 max-w-[160px]">
-                                {offers.map((offer) => (
-                                  <div
-                                    key={offer._id}
-                                    className="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 w-full justify-between"
-                                  >
-                                    <span className="flex items-center gap-1 truncate">
-                                      <FiGift className="w-2.5 h-2.5 flex-shrink-0" />
-                                      <span className="truncate">{offer.offerName}</span>
-                                    </span>
-                                    <span className="text-amber-900 flex-shrink-0">₹{offer.offerAmount}</span>
+                            {(referral.discountFees || referral.discountLab) ? (
+                              <div className="flex flex-col gap-1 text-[10px] font-bold">
+                                {referral.discountFees && <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Fees: {formatDiscount(referral.discountFees, referral.discountFeesType)}</span>}
+                                {referral.discountLab && <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Lab: {formatDiscount(referral.discountLab, referral.discountLabType)}</span>}
+                              </div>
+                            ) : offers.length > 0 ? (
+                              <div className="flex flex-col items-center gap-1">
+                                {offers.slice(0, 1).map((offer) => (
+                                  <div key={offer._id} className="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                    <FiGift className="w-2.5 h-2.5" />{offer.offerName}: ₹{offer.offerAmount}
                                   </div>
                                 ))}
                               </div>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic">No offer</span>
-                            )}
+                            ) : <span className="text-[10px] text-gray-400 italic">-</span>}
                           </td>
-
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <div className="flex flex-col items-center gap-1">
-                              <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${getStatusBadgeColor(referral.status)}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${referral.status === "active" ? "bg-emerald-500" : "bg-red-500"}`}></span>
-                                {referral.status}
-                              </span>
-                              <select
-                                value={referral.status}
-                                onChange={(e) => handleStatusChange(referral, e.target.value)}
-                                className="text-[9px] font-medium border border-gray-200 rounded px-1.5 py-0.5 bg-white focus:outline-none"
-                              >
-                                {STATUS_OPTIONS.map((status) => (
-                                  <option key={status} value={status} className="capitalize">{status}</option>
-                                ))}
-                              </select>
-                            </div>
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${getStatusBadgeColor(referral.status)}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${referral.status === "active" ? "bg-emerald-500" : "bg-red-500"}`}></span>{referral.status}
+                            </span>
                           </td>
-
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <div className="font-semibold text-slate-700 text-[11px]">{formatDate(referral.createdAt)}</div>
-                            <div className="text-[10px] text-gray-400">{formatTime(referral.createdAt)}</div>
+                            <div className="font-semibold text-slate-700 text-[11px]">{formatDate(referral.onboardDate || referral.referralDate || referral.createdAt)}</div>
                           </td>
-
                           <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1">
-                              <button
-                                onClick={() => openOfferModal(referral)}
-                                className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-100"
-                                title="Add Offer"
-                              >
-                                <FiGift className="w-4 h-4" />
-                              </button>
-
-                              <button
-                                onClick={() => { setSelectedReferral(referral); setShowDetailModal(true); }}
-                                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
-                                title="View Details"
-                              >
-                                <FiEye className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleEdit(referral)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
-                                title="Edit Referral"
-                              >
-                                <FiEdit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(referral._id)}
-                                className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-                                title="Delete Record"
-                              >
-                                <FiTrash2 className="w-4 h-4" />
-                              </button>
+                              <button onClick={() => openOfferModal(referral)} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg" title="Add Offer"><FiGift className="w-4 h-4" /></button>
+                              <button onClick={() => { setSelectedReferral(referral); setShowDetailModal(true); }} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg" title="View Details"><FiEye className="w-4 h-4" /></button>
+                              <button onClick={() => handleEdit(referral)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit"><FiEdit2 className="w-4 h-4" /></button>
+                              <button onClick={() => handleDelete(referral._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg" title="Delete"><FiTrash2 className="w-4 h-4" /></button>
                             </div>
                           </td>
                         </tr>
@@ -1490,163 +1041,73 @@ export default function ReferralManagement() {
                 </table>
               </div>
 
-              {/* ===== MOBILE CARD VIEW ===== */}
+              {/* MOBILE CARD VIEW */}
               <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
-                {currentReferrals.map((referral, idx) => {
+                {currentReferrals.map((referral) => {
                   const clinic = parseFloat(referral.clinicCommission) || 0;
                   const pharmacy = parseFloat(referral.pharmacyCommission) || 0;
                   const lab = parseFloat(referral.labCommission) || 0;
                   const total = parseFloat(referral.totalCommission) || 0;
                   const name = isDoctorTab ? (referral.doctorName || "N/A") : (referral.customerName || "N/A");
-                  const offers = referral.offers || [];
 
                   return (
                     <div key={referral._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                       <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <div className={`w-9 h-9 rounded-full ${avatarBg} text-white font-bold flex items-center justify-center text-xs flex-shrink-0`}>
-                            {name.charAt(0).toUpperCase()}
-                          </div>
+                          <div className={`w-9 h-9 rounded-full ${avatarBg} text-white font-bold flex items-center justify-center text-xs flex-shrink-0`}>{name.charAt(0).toUpperCase()}</div>
                           <div className="min-w-0 flex-1">
                             <div className="font-bold text-slate-800 text-sm truncate">{name}</div>
-                            <div className="text-[11px] text-gray-500 flex items-center gap-1">
-                              <FaPhoneAlt className="text-[9px]" />
-                              {isDoctorTab ? (referral.doctorPhone || "N/A") : (referral.customerPhone || "N/A")}
-                            </div>
+                            <div className="text-[11px] text-gray-500 flex items-center gap-1"><FaPhoneAlt className="text-[9px]" />{isDoctorTab ? (referral.doctorPhone || "N/A") : (referral.customerPhone || "N/A")}</div>
                           </div>
                         </div>
                         <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border ${getStatusBadgeColor(referral.status)} flex-shrink-0`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${referral.status === "active" ? "bg-emerald-500" : "bg-red-500"}`}></span>
-                          {referral.status}
+                          <span className={`w-1.5 h-1.5 rounded-full ${referral.status === "active" ? "bg-emerald-500" : "bg-red-500"}`}></span>{referral.status}
                         </span>
                       </div>
-
                       <div className="p-3 space-y-2.5">
                         <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div>
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Organisation</div>
+                            <div className="font-semibold text-slate-700 truncate">{isDoctorTab ? (referral.doctorOrganization || "N/A") : (referral.customerOrganization || "N/A")}</div>
+                          </div>
                           {isDoctorTab ? (
-                            <>
-                              <div>
-                                <div className="text-[9px] font-bold uppercase text-gray-400">Organization</div>
-                                <div className="font-semibold text-slate-700 truncate">{referral.doctorOrganization || "N/A"}</div>
-                              </div>
-                              <div>
-                                <div className="text-[9px] font-bold uppercase text-gray-400">Specialization</div>
-                                <div className="font-semibold text-slate-700 truncate">{referral.doctorSpecialization || "General"}</div>
-                              </div>
-                            </>
+                            <div>
+                              <div className="text-[9px] font-bold uppercase text-gray-400">Specialization</div>
+                              <div className="font-semibold text-slate-700 truncate">{referral.doctorSpecialization || "General"}</div>
+                            </div>
                           ) : (
-                            <div className="col-span-2">
+                            <div>
                               <div className="text-[9px] font-bold uppercase text-gray-400">Address</div>
                               <div className="font-semibold text-slate-700 truncate">{referral.customerAddress || "N/A"}</div>
                             </div>
                           )}
                         </div>
-
-                        <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-gray-100">
-                          <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200">
-                            <div className="text-[8px] font-bold text-blue-600 uppercase">Clinic</div>
-                            <div className="text-xs font-extrabold text-blue-800">{clinic}%</div>
-                          </div>
-                          <div className="text-center p-1.5 rounded-lg bg-green-50 border border-green-200">
-                            <div className="text-[8px] font-bold text-green-600 uppercase">Pharm</div>
-                            <div className="text-xs font-extrabold text-green-800">{pharmacy}%</div>
-                          </div>
-                          <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200">
-                            <div className="text-[8px] font-bold text-purple-600 uppercase">Lab</div>
-                            <div className="text-xs font-extrabold text-purple-800">{lab}%</div>
-                          </div>
-                          <div className="text-center p-1.5 rounded-lg bg-gray-100 border border-gray-200">
-                            <div className="text-[8px] font-bold text-gray-600 uppercase">Total</div>
-                            <div className="text-xs font-extrabold text-gray-800">{total}%</div>
-                          </div>
-                        </div>
-
-                        {offers.length > 0 && (
-                          <div className="space-y-1.5 pt-2 border-t border-gray-100">
-                            <div className="text-[9px] font-bold uppercase text-gray-400">
-                              Offers ({offers.length})
-                            </div>
-                            {offers.map((offer) => (
-                              <div
-                                key={offer._id}
-                                className="p-2 bg-amber-50 rounded-lg border border-amber-200 flex items-center justify-between"
-                              >
-                                <span className="text-[10px] font-bold text-amber-700 flex items-center gap-1 truncate flex-1">
-                                  <FiGift className="w-3 h-3 flex-shrink-0" />
-                                  <span className="truncate">{offer.offerName}</span>
-                                </span>
-                                <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-xs font-extrabold text-amber-900">
-                                    ₹{offer.offerAmount}
-                                  </span>
-                                  <button
-                                    onClick={() => openEditOfferModal(referral, offer)}
-                                    className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                                    title="Edit Offer"
-                                  >
-                                    <FiEdit2 className="w-3 h-3" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteOffer(referral, offer._id)}
-                                    className="p-1 text-red-500 hover:bg-red-100 rounded"
-                                    title="Delete Offer"
-                                  >
-                                    <FiTrash2 className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
+                        {isDoctorTab && referral.doctorAddress && (
+                          <div className="text-[11px]">
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Address</div>
+                            <div className="font-semibold text-slate-700 truncate">{referral.doctorAddress}</div>
                           </div>
                         )}
-
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[9px] font-bold uppercase text-gray-400">Status:</span>
-                            <select
-                              value={referral.status}
-                              onChange={(e) => handleStatusChange(referral, e.target.value)}
-                              className="text-[10px] font-medium border border-gray-200 rounded px-1.5 py-0.5 bg-white focus:outline-none"
-                            >
-                              {STATUS_OPTIONS.map((status) => (
-                                <option key={status} value={status} className="capitalize">{status}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="text-[10px] text-slate-600 font-medium">
-                            {formatDate(referral.createdAt)}
-                          </div>
+                        <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-gray-100">
+                          <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200"><div className="text-[8px] font-bold text-blue-600 uppercase">Fees</div><div className="text-xs font-extrabold text-blue-800">{clinic}%</div></div>
+                          <div className="text-center p-1.5 rounded-lg bg-green-50 border border-green-200"><div className="text-[8px] font-bold text-green-600 uppercase">Pharm</div><div className="text-xs font-extrabold text-green-800">{pharmacy}%</div></div>
+                          <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200"><div className="text-[8px] font-bold text-purple-600 uppercase">Lab</div><div className="text-xs font-extrabold text-purple-800">{lab}%</div></div>
+                          <div className="text-center p-1.5 rounded-lg bg-gray-100 border border-gray-200"><div className="text-[8px] font-bold text-gray-600 uppercase">Total</div><div className="text-xs font-extrabold text-gray-800">{total}%</div></div>
                         </div>
-
+                        {(referral.discountFees || referral.discountLab) && (
+                          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                            <div className="text-center p-1.5 rounded-lg bg-amber-50 border border-amber-200"><div className="text-[8px] font-bold text-amber-600 uppercase">Discount Fees</div><div className="text-xs font-extrabold text-amber-800">{formatDiscount(referral.discountFees, referral.discountFeesType) || "-"}</div></div>
+                            <div className="text-center p-1.5 rounded-lg bg-amber-50 border border-amber-200"><div className="text-[8px] font-bold text-amber-600 uppercase">Discount Lab</div><div className="text-xs font-extrabold text-amber-800">{formatDiscount(referral.discountLab, referral.discountLabType) || "-"}</div></div>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-end text-[11px] pt-2 border-t border-gray-100">
+                          <div className="text-slate-600 font-medium">{formatDate(referral.onboardDate || referral.referralDate || referral.createdAt)}</div>
+                        </div>
                         <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
-                          <button
-                            onClick={() => openOfferModal(referral)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg text-[10px] font-bold"
-                            title="Add Offer"
-                          >
-                            <FiGift className="w-3.5 h-3.5" /> Add Offer
-                          </button>
-
-                          <button
-                            onClick={() => { setSelectedReferral(referral); setShowDetailModal(true); }}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold"
-                            title="View Details"
-                          >
-                            <FiEye className="w-3.5 h-3.5" /> View
-                          </button>
-                          <button
-                            onClick={() => handleEdit(referral)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold"
-                            title="Edit Referral"
-                          >
-                            <FiEdit2 className="w-3.5 h-3.5" /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(referral._id)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-[10px] font-bold"
-                            title="Delete Record"
-                          >
-                            <FiTrash2 className="w-3.5 h-3.5" /> Delete
-                          </button>
+                          <button onClick={() => openOfferModal(referral)} className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg text-[10px] font-bold"><FiGift className="w-3.5 h-3.5" /> Add Offer</button>
+                          <button onClick={() => { setSelectedReferral(referral); setShowDetailModal(true); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold"><FiEye className="w-3.5 h-3.5" /> View</button>
+                          <button onClick={() => handleEdit(referral)} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold"><FiEdit2 className="w-3.5 h-3.5" /> Edit</button>
+                          <button onClick={() => handleDelete(referral._id)} className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-[10px] font-bold"><FiTrash2 className="w-3.5 h-3.5" /> Delete</button>
                         </div>
                       </div>
                     </div>
@@ -1654,558 +1115,341 @@ export default function ReferralManagement() {
                 })}
               </div>
 
-              {/* ==================== PAGINATION ==================== */}
+              {/* PAGINATION */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <span>Show</span>
-                    <select
-                      value={itemsPerPage}
-                      onChange={handleItemsPerPageChange}
-                      className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
+                    <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-1 border border-gray-300 rounded-md bg-white text-gray-700">
+                      <option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option>
                     </select>
                     <span>entries</span>
                   </div>
-                  <div className="text-xs text-gray-500 font-medium">
-                    Showing <strong className="text-gray-800">{filteredReferrals.length === 0 ? 0 : indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredReferrals.length)}</strong> of <strong className="text-gray-800">{filteredReferrals.length}</strong> records
-                  </div>
+                  <div className="text-xs text-gray-500 font-medium">Showing <strong className="text-gray-800">{filteredReferrals.length === 0 ? 0 : indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredReferrals.length)}</strong> of <strong className="text-gray-800">{filteredReferrals.length}</strong></div>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                      currentPage === 1 ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
-                    }`}
-                  >
-                    Prev
-                  </button>
+                  <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className={`px-2.5 py-1 text-xs font-semibold border rounded-lg ${currentPage === 1 ? "text-gray-400 bg-gray-100 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50"}`}>Prev</button>
                   {getPageNumbers().map((page, index) => (
-                    <button
-                      key={index}
-                      onClick={() => (typeof page === "number" ? setCurrentPage(page) : null)}
-                      disabled={page === "..."}
-                      className={`px-3 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[32px] ${
-                        page === "..." ? "text-gray-400 bg-transparent border-transparent cursor-default"
-                        : currentPage === page ? "text-white bg-blue-600 border-blue-600 shadow-sm"
-                        : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"
-                      }`}
-                    >
-                      {page}
-                    </button>
+                    <button key={index} onClick={() => (typeof page === "number" ? setCurrentPage(page) : null)} disabled={page === "..."} className={`px-3 py-1 text-xs font-semibold border rounded-lg min-w-[32px] ${page === "..." ? "text-gray-400 border-transparent" : currentPage === page ? "text-white bg-blue-600 border-blue-600" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300"}`}>{page}</button>
                   ))}
-                  <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
-                      currentPage === totalPages || totalPages === 0 ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
-                    }`}
-                  >
-                    Next
-                  </button>
+                  <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages || totalPages === 0} className={`px-2.5 py-1 text-xs font-semibold border rounded-lg ${currentPage === totalPages || totalPages === 0 ? "text-gray-400 bg-gray-100 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50"}`}>Next</button>
                 </div>
               </div>
             </>
           )}
         </div>
 
-        {/* ==================== ADD/EDIT FORM MODAL ==================== */}
+        {/* ==================== ADD/EDIT FORM MODAL (BIGGER) ==================== */}
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl ${isDoctorTab ? "bg-purple-600 shadow-purple-500/20" : "bg-indigo-600 shadow-indigo-500/20"} text-white flex items-center justify-center font-bold shadow-md`}>
-                    {isDoctorTab ? <FaUserMd className="w-5 h-5" /> : <FaUserPlus className="w-5 h-5" />}
+            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-gray-200 relative max-h-[92vh] overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between px-7 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-xl ${isDoctorTab ? "bg-purple-600" : "bg-indigo-600"} text-white flex items-center justify-center font-bold shadow-md`}>
+                    {isDoctorTab ? <FaUserMd className="w-6 h-6" /> : <FaUserPlus className="w-6 h-6" />}
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-base">
-                      {editingType === (isDoctorTab ? "doctor" : "customer")
-                        ? `Edit ${referrerLabel} Referral`
-                        : `Add ${referrerLabel} Referral`}
-                    </h3>
-                    <p className="text-xs text-gray-500">Fill in the {referrerLabel.toLowerCase()} referral details</p>
+                    <h3 className="font-bold text-gray-900 text-lg">{editingType === (isDoctorTab ? "doctor" : "customer") ? `Edit ${referrerLabel} Referral` : `Add ${referrerLabel} Referral`}</h3>
+                    <p className="text-sm text-gray-500">Fill in the {referrerLabel.toLowerCase()} referral details below</p>
                   </div>
                 </div>
-                <button
-                  onClick={cancelForm}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <FaTimes className="w-4 h-4" />
-                </button>
+                <button onClick={cancelForm} className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100"><FaTimes className="w-5 h-5" /></button>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-                {isDoctorTab ? (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                          Doctor Name <span className="text-purple-600">*</span>
-                        </label>
-                        <div className="relative">
-                          <FaUserMd className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                          <input
-                            type="text"
-                            name="doctorName"
-                            value={formData.doctorName || ""}
-                            onChange={handleInputChange}
-                            placeholder="Dr. Jane Smith"
-                            className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-medium"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                          Organization <span className="text-purple-600">*</span>
-                        </label>
-                        <div className="relative">
-                          <FaBuilding className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                          <input
-                            type="text"
-                            name="doctorOrganization"
-                            value={formData.doctorOrganization || ""}
-                            onChange={handleInputChange}
-                            placeholder="City Hospital, Clinic"
-                            className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-medium"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
+              {/* Body */}
+              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-7 py-6">
+                <div className="space-y-6">
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                          Phone Number
-                        </label>
-                        <div className="relative">
-                          <FaPhoneAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                          <input
-                            type="tel"
-                            name="doctorPhone"
-                            value={formData.doctorPhone || ""}
-                            onChange={handleInputChange}
-                            placeholder="+91 9876543210"
-                            className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-medium"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                          Specialization
-                        </label>
-                        <div className="relative">
-                          <FiAward className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                          <input
-                            type="text"
-                            name="doctorSpecialization"
-                            value={formData.doctorSpecialization || ""}
-                            onChange={handleInputChange}
-                            placeholder="Cardiologist, General"
-                            className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-medium"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                          Customer Name <span className="text-indigo-600">*</span>
-                        </label>
-                        <div className="relative">
-                          <FaUser className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                          <input
-                            type="text"
-                            name="customerName"
-                            value={formData.customerName || ""}
-                            onChange={handleInputChange}
-                            placeholder="John Doe"
-                            className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                          Phone Number <span className="text-indigo-600">*</span>
-                        </label>
-                        <div className="relative">
-                          <FaPhoneAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                          <input
-                            type="tel"
-                            name="customerPhone"
-                            value={formData.customerPhone || ""}
-                            onChange={handleInputChange}
-                            placeholder="+91 9876543210"
-                            className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                        Address
-                      </label>
-                      <div className="relative">
-                        <FaMapMarkerAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                        <input
-                          type="text"
-                          name="customerAddress"
-                          value={formData.customerAddress || ""}
-                          onChange={handleInputChange}
-                          placeholder="Customer's address"
-                          className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Commission Distribution (%)
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {COMMISSION_FIELDS.map((field) => {
-                      const Icon = field.icon;
-                      const colorMap = {
-                        blue: "border-blue-500 focus:ring-blue-500/20 bg-blue-50/30",
-                        green: "border-green-500 focus:ring-green-500/20 bg-green-50/30",
-                        purple: "border-purple-500 focus:ring-purple-500/20 bg-purple-50/30"
-                      };
-                      return (
-                        <div key={field.key}>
-                          <label className="block text-[10px] font-medium text-gray-500 mb-1 flex items-center gap-1">
-                            <Icon className="text-[12px]" />
-                            {field.label}
-                          </label>
+                  {/* ===== SECTION: Basic Info ===== */}
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-100">
+                      Basic Information
+                    </h4>
+                    {isDoctorTab ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Doctor Name <span className="text-purple-600">*</span></label>
                           <div className="relative">
+                            <FaUserMd className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                            <input type="text" name="doctorName" value={formData.doctorName || ""} onChange={handleInputChange} placeholder="Dr. Jane Smith" className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-medium" required />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Organisation Name <span className="text-purple-600">*</span></label>
+                          <div className="relative">
+                            <FaBuilding className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                            <input type="text" name="doctorOrganization" value={formData.doctorOrganization || ""} onChange={handleInputChange} placeholder="City Hospital" className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-medium" required />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Phone Number</label>
+                          <div className="relative">
+                            <FaPhoneAlt className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                            <input type="tel" name="doctorPhone" value={formData.doctorPhone || ""} onChange={handleInputChange} placeholder="+91 9876543210" className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none font-medium" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Specialization</label>
+                          <div className="relative">
+                            <FaAward className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                            <input type="text" name="doctorSpecialization" value={formData.doctorSpecialization || ""} onChange={handleInputChange} placeholder="Cardiologist" className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none font-medium" />
+                          </div>
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Address</label>
+                          <div className="relative">
+                            <FaMapMarkerAlt className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                            <input type="text" name="doctorAddress" value={formData.doctorAddress || ""} onChange={handleInputChange} placeholder="Clinic/Hospital full address" className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none font-medium" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Customer Name <span className="text-indigo-600">*</span></label>
+                          <div className="relative">
+                            <FaUser className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                            <input type="text" name="customerName" value={formData.customerName || ""} onChange={handleInputChange} placeholder="John Doe" className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-medium" required />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Organisation Name</label>
+                          <div className="relative">
+                            <FaBuilding className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                            <input type="text" name="customerOrganization" value={formData.customerOrganization || ""} onChange={handleInputChange} placeholder="Organisation" className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none font-medium" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Phone Number <span className="text-indigo-600">*</span></label>
+                          <div className="relative">
+                            <FaPhoneAlt className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                            <input type="tel" name="customerPhone" value={formData.customerPhone || ""} onChange={handleInputChange} placeholder="+91 9876543210" className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none font-medium" required />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Address</label>
+                          <div className="relative">
+                            <FaMapMarkerAlt className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                            <input type="text" name="customerAddress" value={formData.customerAddress || ""} onChange={handleInputChange} placeholder="Customer's address" className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none font-medium" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ===== SECTION: Consultant Fee ===== */}
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-100">
+                      Consultant Fee (%)
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      {COMMISSION_FIELDS.map((field) => {
+                        const Icon = field.icon;
+                        const colorMap = {
+                          blue: "border-blue-300 focus:ring-blue-500/20 focus:border-blue-500 bg-blue-50/20",
+                          green: "border-green-300 focus:ring-green-500/20 focus:border-green-500 bg-green-50/20",
+                          purple: "border-purple-300 focus:ring-purple-500/20 focus:border-purple-500 bg-purple-50/20"
+                        };
+                        return (
+                          <div key={field.key}>
+                            <label className="block text-[11px] font-semibold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                              <Icon className="text-[13px]" />
+                              {field.label}
+                            </label>
+                            <div className="relative">
+                              <input type="number" name={field.key} value={formData[field.key] || ""} onChange={handleInputChange} placeholder="0" min="0" max="100" className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${colorMap[field.color]} font-semibold`} />
+                              <span className="absolute right-3 top-2.5 text-sm font-bold text-gray-400">%</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {(formData.clinicCommission || formData.pharmacyCommission || formData.labCommission) && (
+                      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold text-blue-700 flex items-center gap-1.5"><FiPercent className="w-4 h-4" />Total Consultant Fee</span>
+                          <span className="text-lg font-extrabold text-blue-900">{formData.totalCommission || 0}%</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ===== SECTION: Onboard Date + Status ===== */}
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-100">
+                      Additional Details
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Onboard Date</label>
+                        <div className="relative">
+                          <FaCalendarAlt className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                          <input type="date" name="onboardDate" value={formData.onboardDate || ""} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none font-medium" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Status</label>
+                        <select name="status" value={formData.status || "active"} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none font-medium">
+                          {STATUS_OPTIONS.map((status) => (<option key={status} value={status} className="capitalize">{status}</option>))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Notes</label>
+                        <textarea name="referralNotes" value={formData.referralNotes || ""} onChange={handleInputChange} rows="2" placeholder="Add any additional notes..." className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none font-medium resize-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ===== SECTION: Special Offers (Discount) with % / ₹ dropdown ===== */}
+                  <div className="border rounded-xl p-5 bg-amber-50/40 border-amber-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-2">
+                        <FiGift className="text-amber-600 w-4 h-4" /> Special Offers (Discount)
+                      </label>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {/* Fees with dropdown */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-600 uppercase mb-1.5">Fees Discount</label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <FiPercent className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
                             <input
                               type="number"
-                              name={field.key}
-                              value={formData[field.key] || ""}
+                              name="discountFees"
+                              value={formData.discountFees || ""}
                               onChange={handleInputChange}
                               placeholder="0"
                               min="0"
-                              max="100"
-                              className={`w-full bg-white border rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 ${colorMap[field.color]} font-medium`}
+                              className="w-full bg-white border border-amber-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium"
                             />
-                            <span className="absolute right-3 top-2.5 text-xs font-bold text-gray-400">%</span>
                           </div>
+                          <select
+                            name="discountFeesType"
+                            value={formData.discountFeesType || "%"}
+                            onChange={handleInputChange}
+                            className="w-[70px] bg-white border border-amber-300 rounded-lg px-2 py-2.5 text-sm font-bold text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                          >
+                            {DISCOUNT_UNIT_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
                         </div>
-                      );
-                    })}
-                  </div>
-                  {(formData.clinicCommission || formData.pharmacyCommission || formData.labCommission) && (
-                    <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-blue-700 flex items-center gap-1">
-                          <FiPercent className="w-3.5 h-3.5" />
-                          Total Commission
+                      </div>
+
+                      {/* Lab with dropdown */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-600 uppercase mb-1.5">Lab Discount</label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <FaFlask className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                            <input
+                              type="number"
+                              name="discountLab"
+                              value={formData.discountLab || ""}
+                              onChange={handleInputChange}
+                              placeholder="0"
+                              min="0"
+                              className="w-full bg-white border border-amber-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium"
+                            />
+                          </div>
+                          <select
+                            name="discountLabType"
+                            value={formData.discountLabType || "%"}
+                            onChange={handleInputChange}
+                            className="w-[70px] bg-white border border-amber-300 rounded-lg px-2 py-2.5 text-sm font-bold text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                          >
+                            {DISCOUNT_UNIT_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {(formData.discountFees || formData.discountLab) && (
+                      <div className="mt-3 p-3 bg-white rounded-lg border border-amber-200 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-amber-800 flex items-center gap-1.5"><FiGift className="w-4 h-4" />Discount Applied</span>
+                        <span className="text-base font-extrabold text-amber-900">
+                          {formData.discountFees ? `Fees: ${formatDiscount(formData.discountFees, formData.discountFeesType)}` : ""}
+                          {formData.discountFees && formData.discountLab ? " • " : ""}
+                          {formData.discountLab ? `Lab: ${formatDiscount(formData.discountLab, formData.discountLabType)}` : ""}
                         </span>
-                        <span className="text-base font-extrabold text-blue-900">
-                          {formData.totalCommission || 0}%
-                        </span>
                       </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Referral Date
-                    </label>
-                    <div className="relative">
-                      <FaCalendarAlt className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                      <input
-                        type="date"
-                        name="referralDate"
-                        value={formData.referralDate || ""}
-                        onChange={handleInputChange}
-                        className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status || "active"}
-                      onChange={handleInputChange}
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
-                    >
-                      {STATUS_OPTIONS.map((status) => (
-                        <option key={status} value={status} className="capitalize">{status}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Notes
-                  </label>
-                  <textarea
-                    name="referralNotes"
-                    value={formData.referralNotes || ""}
-                    onChange={handleInputChange}
-                    rows="2"
-                    placeholder="Add any additional notes..."
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium resize-none"
-                  />
-                </div>
-
-                {/* ✅ SPECIAL OFFER SECTION */}
-                <div className="border rounded-xl p-4 bg-amber-50/40 border-amber-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-[11px] font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
-                      <FiGift className="text-amber-600" />
-                      Special Offer (Optional)
-                    </label>
-                    <span className="text-[10px] text-amber-600 italic">
-                      {editingId ? "Adds as new offer" : "Initial offer"}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-gray-500 uppercase mb-1">
-                        Offer Name
-                      </label>
-                      <div className="relative">
-                        <FiGift className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                        <input
-                          type="text"
-                          value={formOffer.offerName}
-                          onChange={(e) => setFormOffer((p) => ({ ...p, offerName: e.target.value }))}
-                          placeholder="e.g. Consultation Discount"
-                          className="w-full bg-white border border-amber-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-gray-500 uppercase mb-1">
-                        Amount (₹)
-                      </label>
-                      <div className="relative">
-                        <FaRupeeSign className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                        <input
-                          type="number"
-                          value={formOffer.amount}
-                          onChange={(e) => setFormOffer((p) => ({ ...p, amount: e.target.value }))}
-                          placeholder="150"
-                          min="0"
-                          className="w-full bg-white border border-amber-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {formOffer.offerName && formOffer.amount && (
-                    <div className="mt-2 p-2 bg-white rounded-lg border border-amber-200 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-amber-800 flex items-center gap-1">
-                        <FiGift className="w-3.5 h-3.5" />
-                        {formOffer.offerName}
-                      </span>
-                      <span className="text-sm font-extrabold text-amber-900">₹{formOffer.amount}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={cancelForm}
-                    className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className={`px-5 py-2 rounded-lg text-xs font-bold ${addButtonBg} text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50`}
-                  >
-                    {submitting ? (
-                      <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : editingType === (isDoctorTab ? "doctor" : "customer") ? (
-                      <FiCheckCircle className="w-3.5 h-3.5" />
-                    ) : (
-                      isDoctorTab ? <FaUserMd className="w-3.5 h-3.5" /> : <FaUserPlus className="w-3.5 h-3.5" />
                     )}
-                    {editingType === (isDoctorTab ? "doctor" : "customer")
-                      ? `Update ${referrerLabel}`
-                      : `Add ${referrerLabel}`}
-                  </button>
+                  </div>
                 </div>
               </form>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 px-7 py-4 border-t border-gray-100 bg-gray-50">
+                <button type="button" onClick={cancelForm} className="px-5 py-2.5 rounded-lg text-sm font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-300">Cancel</button>
+                <button type="submit" onClick={handleSubmit} disabled={submitting} className={`px-6 py-2.5 rounded-lg text-sm font-bold ${addButtonBg} text-white shadow-sm flex items-center gap-2 disabled:opacity-50`}>
+                  {submitting ? <FiRefreshCw className="w-4 h-4 animate-spin" /> : editingType === (isDoctorTab ? "doctor" : "customer") ? <FiCheckCircle className="w-4 h-4" /> : (isDoctorTab ? <FaUserMd className="w-4 h-4" /> : <FaUserPlus className="w-4 h-4" />)}
+                  {editingType === (isDoctorTab ? "doctor" : "customer") ? `Update ${referrerLabel}` : `Add ${referrerLabel}`}
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* ==================== DETAIL MODAL ==================== */}
+        {/* DETAIL MODAL */}
         {showDetailModal && selectedReferral && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between pb-4 border-b border-gray-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
-                    <FaShareAlt className="w-5 h-5" />
-                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold"><FaShareAlt className="w-5 h-5" /></div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base">{referrerLabel} Referral Details</h3>
                     <p className="text-xs text-gray-500">ID: {selectedReferral._id}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => { setShowDetailModal(false); setSelectedReferral(null); }}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <FaTimes className="w-4 h-4" />
-                </button>
+                <button onClick={() => { setShowDetailModal(false); setSelectedReferral(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
-
               <div className="my-5 bg-gray-50 p-5 rounded-xl border border-gray-200 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${getTypeBadgeColor(isDoctorTab ? "doctor" : "customer")}`}>
-                    {isDoctorTab ? <FaUserMd className="text-[11px]" /> : <FaUser className="text-[11px]" />}
-                    {referrerLabel}
-                  </span>
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${getStatusBadgeColor(selectedReferral.status)}`}>
-                    {selectedReferral.status}
-                  </span>
-                </div>
-
                 <div className="flex items-center gap-3.5 pb-3 border-b border-gray-200">
-                  <div className={`w-12 h-12 rounded-full ${avatarBg} text-white font-bold text-lg flex items-center justify-center flex-shrink-0 shadow-inner`}>
+                  <div className={`w-12 h-12 rounded-full ${avatarBg} text-white font-bold text-lg flex items-center justify-center flex-shrink-0`}>
                     {(isDoctorTab ? selectedReferral.doctorName : selectedReferral.customerName)?.charAt(0).toUpperCase() || (isDoctorTab ? "D" : "C")}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-base font-bold text-gray-900 truncate">
-                      {isDoctorTab ? selectedReferral.doctorName : selectedReferral.customerName}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                      {isDoctorTab ? (
-                        <>
-                          <FaBuilding className="text-gray-400 text-[10px]" />
-                          <span>{selectedReferral.doctorOrganization || "N/A"}</span>
-                          <span className="text-gray-300">|</span>
-                          <FaPhoneAlt className="text-gray-400 text-[10px]" />
-                          <span>{selectedReferral.doctorPhone || "N/A"}</span>
-                        </>
-                      ) : (
-                        <>
-                          <FaPhoneAlt className="text-gray-400 text-[10px]" />
-                          <span>{selectedReferral.customerPhone || "N/A"}</span>
-                        </>
-                      )}
+                    <div className="text-base font-bold text-gray-900 truncate">{isDoctorTab ? selectedReferral.doctorName : selectedReferral.customerName}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {isDoctorTab ? `${selectedReferral.doctorOrganization || "N/A"} • ${selectedReferral.doctorPhone || "N/A"}` : `${selectedReferral.customerPhone || "N/A"}`}
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <div className="text-[10px] font-bold uppercase text-gray-400">
-                    {isDoctorTab ? "Specialization" : "Address"}
+                {(selectedReferral.doctorAddress || selectedReferral.customerAddress) && (
+                  <div>
+                    <div className="text-[10px] font-bold uppercase text-gray-400">Address</div>
+                    <div className="text-xs font-medium text-gray-700 mt-0.5">{isDoctorTab ? selectedReferral.doctorAddress : selectedReferral.customerAddress}</div>
                   </div>
-                  <div className="text-xs font-medium text-gray-700 mt-0.5 flex items-center gap-1">
-                    {isDoctorTab ? (
-                      <>
-                        <FiAward className="text-gray-400 text-[11px]" />
-                        {selectedReferral.doctorSpecialization || "General"}
-                      </>
-                    ) : (
-                      <>
-                        <FaMapMarkerAlt className="text-gray-400 text-[11px]" />
-                        {selectedReferral.customerAddress || "N/A"}
-                      </>
-                    )}
+                )}
+
+                {isDoctorTab && selectedReferral.doctorSpecialization && (
+                  <div>
+                    <div className="text-[10px] font-bold uppercase text-gray-400">Specialization</div>
+                    <div className="text-xs font-medium text-gray-700 mt-0.5">{selectedReferral.doctorSpecialization}</div>
                   </div>
-                </div>
+                )}
 
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="text-[10px] font-bold uppercase text-gray-400">Commission Distribution</div>
+                  <div className="text-[10px] font-bold uppercase text-gray-400">Consultant Fee</div>
                   <div className="grid grid-cols-3 gap-2 mt-1">
-                    <div className="bg-blue-50 p-2 rounded-lg text-center border border-blue-100">
-                      <div className="text-[9px] text-blue-600 font-bold">Clinic</div>
-                      <div className="text-sm font-extrabold text-blue-900">{selectedReferral.clinicCommission || 0}%</div>
-                    </div>
-                    <div className="bg-green-50 p-2 rounded-lg text-center border border-green-100">
-                      <div className="text-[9px] text-green-600 font-bold">Pharmacy</div>
-                      <div className="text-sm font-extrabold text-green-900">{selectedReferral.pharmacyCommission || 0}%</div>
-                    </div>
-                    <div className="bg-purple-50 p-2 rounded-lg text-center border border-purple-100">
-                      <div className="text-[9px] text-purple-600 font-bold">Lab</div>
-                      <div className="text-sm font-extrabold text-purple-900">{selectedReferral.labCommission || 0}%</div>
-                    </div>
-                  </div>
-                  <div className="mt-1 p-2 bg-blue-50 rounded-lg border border-blue-100 text-center">
-                    <span className="text-xs font-semibold text-blue-700">Total Commission</span>
-                    <span className="ml-2 text-base font-extrabold text-blue-900">{selectedReferral.totalCommission || 0}%</span>
+                    <div className="bg-blue-50 p-2 rounded-lg text-center border border-blue-100"><div className="text-[9px] text-blue-600 font-bold">Fees</div><div className="text-sm font-extrabold text-blue-900">{selectedReferral.clinicCommission || 0}%</div></div>
+                    <div className="bg-green-50 p-2 rounded-lg text-center border border-green-100"><div className="text-[9px] text-green-600 font-bold">Pharmacy</div><div className="text-sm font-extrabold text-green-900">{selectedReferral.pharmacyCommission || 0}%</div></div>
+                    <div className="bg-purple-50 p-2 rounded-lg text-center border border-purple-100"><div className="text-[9px] text-purple-600 font-bold">Lab</div><div className="text-sm font-extrabold text-purple-900">{selectedReferral.labCommission || 0}%</div></div>
                   </div>
                 </div>
 
-                {selectedReferral.offers && selectedReferral.offers.length > 0 && (
+                {(selectedReferral.discountFees || selectedReferral.discountLab) && (
                   <div className="pt-2 border-t border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-bold uppercase text-gray-400">
-                        Offers ({selectedReferral.offers.length})
-                      </div>
-                      <button
-                        onClick={() => {
-                          setShowDetailModal(false);
-                          openOfferModal(selectedReferral);
-                        }}
-                        className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
-                      >
-                        <FiPlus className="w-3 h-3" /> Add
-                      </button>
-                    </div>
-                    <div className="mt-1 space-y-1.5">
-                      {selectedReferral.offers.map((offer) => (
-                        <div
-                          key={offer._id}
-                          className="p-2 bg-amber-50 rounded-lg border border-amber-100 flex items-center justify-between"
-                        >
-                          <span className="text-xs font-semibold text-amber-700 flex items-center gap-1 truncate flex-1">
-                            <FiGift className="w-3.5 h-3.5 flex-shrink-0" />
-                            <span className="truncate">{offer.offerName}</span>
-                          </span>
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <span className="text-sm font-extrabold text-amber-900">
-                              ₹{offer.offerAmount}
-                            </span>
-                            <button
-                              onClick={() => {
-                                setShowDetailModal(false);
-                                openEditOfferModal(selectedReferral, offer);
-                              }}
-                              className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                              title="Edit Offer"
-                            >
-                              <FiEdit2 className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteOffer(selectedReferral, offer._id)}
-                              className="p-1 text-red-500 hover:bg-red-100 rounded"
-                              title="Delete Offer"
-                            >
-                              <FiTrash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="text-[10px] font-bold uppercase text-gray-400">Special Offers (Discount)</div>
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      {selectedReferral.discountFees && <div className="bg-amber-50 p-2 rounded-lg text-center border border-amber-100"><div className="text-[9px] text-amber-700 font-bold">Fees</div><div className="text-sm font-extrabold text-amber-900">{formatDiscount(selectedReferral.discountFees, selectedReferral.discountFeesType)}</div></div>}
+                      {selectedReferral.discountLab && <div className="bg-amber-50 p-2 rounded-lg text-center border border-amber-100"><div className="text-[9px] text-amber-700 font-bold">Lab</div><div className="text-sm font-extrabold text-amber-900">{formatDiscount(selectedReferral.discountLab, selectedReferral.discountLabType)}</div></div>}
                     </div>
                   </div>
                 )}
@@ -2213,162 +1457,65 @@ export default function ReferralManagement() {
                 <div className="pt-2 border-t border-gray-200">
                   <div className="text-[10px] font-bold uppercase text-gray-400">OP Metrics</div>
                   <div className="grid grid-cols-2 gap-2 mt-1">
-                    <div className="bg-blue-50 p-2 rounded-lg text-center border border-blue-100">
-                      <div className="text-[9px] text-blue-600 font-bold">Total OPs</div>
-                      <div className="text-sm font-extrabold text-blue-900">{getReferralMetrics(selectedReferral).opCount}</div>
-                    </div>
-                    <div className="bg-emerald-50 p-2 rounded-lg text-center border border-emerald-100">
-                      <div className="text-[9px] text-emerald-600 font-bold">Revenue</div>
-                      <div className="text-sm font-extrabold text-emerald-900">₹{getReferralMetrics(selectedReferral).revenue.toLocaleString()}</div>
-                    </div>
+                    <div className="bg-indigo-50 p-2 rounded-lg text-center border border-indigo-100"><div className="text-[9px] text-indigo-600 font-bold">OP Count</div><div className="text-sm font-extrabold text-indigo-900">{getReferralMetrics(selectedReferral).opCount}</div></div>
+                    <div className="bg-emerald-50 p-2 rounded-lg text-center border border-emerald-100"><div className="text-[9px] text-emerald-600 font-bold">Revenue</div><div className="text-sm font-extrabold text-emerald-900">₹{getReferralMetrics(selectedReferral).revenue.toLocaleString()}</div></div>
                   </div>
+                </div>
+
+                <div className="pt-2 border-t border-gray-200">
+                  <div className="text-[10px] font-bold uppercase text-gray-400">Onboard Date</div>
+                  <div className="text-xs font-medium text-gray-700 mt-0.5">{formatDate(selectedReferral.onboardDate || selectedReferral.referralDate || selectedReferral.createdAt)}</div>
                 </div>
 
                 {selectedReferral.referralNotes && (
                   <div className="pt-2 border-t border-gray-200">
                     <div className="text-[10px] font-bold uppercase text-gray-400">Notes</div>
-                    <div className="text-xs font-medium text-gray-700 mt-0.5 p-2 bg-white rounded-lg border border-gray-200">
-                      {selectedReferral.referralNotes}
-                    </div>
+                    <div className="text-xs font-medium text-gray-700 mt-0.5 p-2 bg-white rounded-lg border border-gray-200">{selectedReferral.referralNotes}</div>
                   </div>
                 )}
-
-                <div className="pt-2 border-t border-gray-200">
-                  <div className="text-[10px] font-bold uppercase text-gray-400">Created</div>
-                  <div className="text-xs font-medium text-gray-700 mt-0.5">
-                    {formatDate(selectedReferral.createdAt)} at {formatTime(selectedReferral.createdAt)}
-                  </div>
-                </div>
               </div>
-
               <div className="flex items-center justify-end gap-2.5 mt-4">
-                <button
-                  onClick={() => window.print()}
-                  className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center gap-1.5 transition-all"
-                >
-                  <FaPrint className="w-3.5 h-3.5" /> Print
-                </button>
-                <button
-                  onClick={() => {
-                    const ref = selectedReferral;
-                    setShowDetailModal(false);
-                    handleEdit(ref);
-                  }}
-                  className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 flex items-center gap-1.5 transition-all"
-                >
-                  <FiEdit2 className="w-3.5 h-3.5" /> Edit
-                </button>
-                <button
-                  onClick={() => { setShowDetailModal(false); setSelectedReferral(null); }}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all"
-                >
-                  Close
-                </button>
+                <button onClick={() => window.print()} className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center gap-1.5"><FaPrint className="w-3.5 h-3.5" /> Print</button>
+                <button onClick={() => { const ref = selectedReferral; setShowDetailModal(false); handleEdit(ref); }} className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 flex items-center gap-1.5"><FiEdit2 className="w-3.5 h-3.5" /> Edit</button>
+                <button onClick={() => { setShowDetailModal(false); setSelectedReferral(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white">Close</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ==================== ✅ OFFER MODAL (Add / Edit) ==================== */}
+        {/* OFFER MODAL */}
         {showOfferModal && selectedOfferReferral && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 relative">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
               <div className="flex items-center justify-between pb-4 border-b border-gray-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
-                    <FiGift className="w-5 h-5" />
-                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold"><FiGift className="w-5 h-5" /></div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-base">
-                      {editingOfferId ? "Edit Offer" : "Add Offer"}
-                    </h3>
-                    <p className="text-xs text-gray-500 truncate max-w-[200px]">
-                      {isDoctorTab
-                        ? selectedOfferReferral.doctorName
-                        : selectedOfferReferral.customerName}
-                    </p>
+                    <h3 className="font-bold text-gray-900 text-base">{editingOfferId ? "Edit Offer" : "Add Offer"}</h3>
+                    <p className="text-xs text-gray-500 truncate max-w-[200px]">{isDoctorTab ? selectedOfferReferral.doctorName : selectedOfferReferral.customerName}</p>
                   </div>
                 </div>
-                <button
-                  onClick={closeOfferModal}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <FaTimes className="w-4 h-4" />
-                </button>
+                <button onClick={closeOfferModal} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
-
               <form onSubmit={handleOfferSubmit} className="mt-5 space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Offer Name <span className="text-amber-600">*</span>
-                  </label>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Offer Name <span className="text-amber-600">*</span></label>
                   <div className="relative">
                     <FiGift className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      name="offerName"
-                      value={offerForm.offerName}
-                      onChange={handleOfferInputChange}
-                      placeholder="e.g. Doctor Consultation, Pharmacy Discount..."
-                      className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
-                      required
-                    />
+                    <input type="text" name="offerName" value={offerForm.offerName} onChange={handleOfferInputChange} placeholder="e.g. Consultation Discount" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium" required />
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Amount (₹) <span className="text-amber-600">*</span>
-                  </label>
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Amount (₹) <span className="text-amber-600">*</span></label>
                   <div className="relative">
                     <FaRupeeSign className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                    <input
-                      type="number"
-                      name="amount"
-                      value={offerForm.amount}
-                      onChange={handleOfferInputChange}
-                      placeholder="150"
-                      min="0"
-                      className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
-                      required
-                    />
+                    <input type="number" name="amount" value={offerForm.amount} onChange={handleOfferInputChange} placeholder="150" min="0" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium" required />
                   </div>
                 </div>
-
-                {offerForm.offerName && offerForm.amount && (
-                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-amber-700 flex items-center gap-1">
-                        <FiGift className="w-3.5 h-3.5" />
-                        {offerForm.offerName}
-                      </span>
-                      <span className="text-base font-extrabold text-amber-900">
-                        ₹{offerForm.amount}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={closeOfferModal}
-                    className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={offerSubmitting}
-                    className="px-5 py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {offerSubmitting ? (
-                      <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : editingOfferId ? (
-                      <FiCheckCircle className="w-3.5 h-3.5" />
-                    ) : (
-                      <FiPlus className="w-3.5 h-3.5" />
-                    )}
+                  <button type="button" onClick={closeOfferModal} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700">Cancel</button>
+                  <button type="submit" disabled={offerSubmitting} className="px-5 py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1.5 disabled:opacity-50">
+                    {offerSubmitting ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : editingOfferId ? <FiCheckCircle className="w-3.5 h-3.5" /> : <FiPlus className="w-3.5 h-3.5" />}
                     {editingOfferId ? "Update Offer" : "Add Offer"}
                   </button>
                 </div>

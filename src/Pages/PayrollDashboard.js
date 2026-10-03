@@ -97,14 +97,23 @@ const holidayAppliesToDepartment = (holiday, employeeDepartment) => {
   return depts.some(d => d.toLowerCase().trim() === empDept);
 };
 
-const calculateHolidayCountForDepartment = (holidaysData, targetMonth, employeeDepartment) => {
+// 🔥 FIXED: Ab attendance/week-off/leave/future dates ko exclude karta hai
+const calculateHolidayCountForDepartment = (
+  holidaysData,
+  targetMonth,
+  employeeDepartment,
+  attendanceMap = null,
+  weekOffDatesSet = null,
+  leaveDatesSet = null
+) => {
   if (!Array.isArray(holidaysData)) return 0;
 
   let count = 0;
   const [sYear, sMonth] = targetMonth.split('-').map(Number);
   const monthPrefix = `${sYear}-${String(sMonth).padStart(2, '0')}`;
-  const startOfMonth = new Date(sYear, sMonth - 1, 1);
-  const endOfMonth = new Date(sYear, sMonth, 0, 23, 59, 59);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   holidaysData.forEach(h => {
     if (h.isActive === false) return;
@@ -112,19 +121,24 @@ const calculateHolidayCountForDepartment = (holidaysData, targetMonth, employeeD
 
     const hStartStr = h.fromDate;
     const hEndStr = h.toDate;
+    if (!hStartStr || !hEndStr) return;
 
-    if (hStartStr && hStartStr.startsWith(monthPrefix) &&
-        hEndStr && hEndStr.startsWith(monthPrefix)) {
-      count += h.totalDays || 1;
-    } else if (hStartStr && hEndStr) {
-      const hStart = new Date(hStartStr);
-      const hEnd = new Date(hEndStr);
-      const overlapStart = new Date(Math.max(hStart.getTime(), startOfMonth.getTime()));
-      const overlapEnd = new Date(Math.min(hEnd.getTime(), endOfMonth.getTime()));
-      if (overlapStart <= overlapEnd) {
-        const days = Math.round((overlapEnd - overlapStart) / (1000 * 60 * 60 * 24));
-        count += Math.max(1, days);
-      }
+    const hStart = new Date(hStartStr + 'T00:00:00');
+    const hEnd = new Date(hEndStr + 'T00:00:00');
+
+    for (let d = new Date(hStart); d <= hEnd; d.setDate(d.getDate() + 1)) {
+      const dateKey = formatDateLocal(d);
+
+      if (!dateKey.startsWith(monthPrefix)) continue;
+
+      const checkDate = new Date(dateKey + 'T00:00:00');
+      if (checkDate > today) continue;
+
+      if (attendanceMap && attendanceMap.has(dateKey) && attendanceMap.get(dateKey) > 0) continue;
+      if (weekOffDatesSet && weekOffDatesSet.has(dateKey)) continue;
+      if (leaveDatesSet && leaveDatesSet.has(dateKey)) continue;
+
+      count++;
     }
   });
 
@@ -177,27 +191,47 @@ const extractAssignedDepartments = (holidayList) => {
   return Array.from(deptSet);
 };
 
-const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, employeeLeavesData, weekOffDay, shiftHours = 8, holidayDaysInMonth = 0) => {
-  const weekOffDayNum = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(weekOffDay);
+// ============================================================================
+// 🔥 FIXED: calculateWeekOffData
+// ============================================================================
+const calculateWeekOffData = (
+  employeeId,
+  year,
+  monthNum,
+  dailyAttendance,
+  employeeLeavesData,
+  weekOffDates,
+  shiftHours = 8,
+  holidayDaysInMonth = 0,
+  weekOffPerMonth = 4
+) => {
   const firstDay = new Date(year, monthNum - 1, 1);
   const lastDay = new Date(year, monthNum, 0);
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const weekOffDateSet = new Set(weekOffDates || []);
+  const totalWeekOffDaysInMonth = weekOffDateSet.size;
+
   const attendanceMap = new Map();
-  dailyAttendance.forEach(record => {
+  (dailyAttendance || []).forEach(record => {
     if (record.date || record.checkInTime) {
       const dateKey = formatDateLocal(record.date || record.checkInTime);
       let hours = 0;
-      if (record.totalHours) {
+      if (record.totalHours && parseFloat(record.totalHours) > 0) {
         hours = parseFloat(record.totalHours);
-      } else if (record.workingHours) {
+      } else if (record.workingHours && parseFloat(record.workingHours) > 0) {
         hours = parseFloat(record.workingHours);
-      } else if (record.checkOutTime) {
+      } else if (record.checkInTime && record.checkOutTime) {
         const cin = new Date(record.checkInTime);
         const cout = new Date(record.checkOutTime);
         hours = (cout - cin) / (1000 * 60 * 60);
       }
-      const existing = attendanceMap.get(dateKey) || 0;
-      attendanceMap.set(dateKey, existing + hours);
+      if (hours > 0) {
+        const existing = attendanceMap.get(dateKey) || 0;
+        attendanceMap.set(dateKey, existing + hours);
+      }
     }
   });
 
@@ -213,89 +247,95 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
     });
   };
 
-  let currentWeekStart = new Date(firstDay);
-  while (currentWeekStart.getDay() !== 1) {
-    currentWeekStart.setDate(currentWeekStart.getDate() - 1);
-  }
-
-  let eligibleWeeks = 0;
-  let totalWorkingDays = 0;
-  let totalLeaves = 0;
-
-  while (currentWeekStart <= lastDay) {
-    const weekEnd = new Date(currentWeekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-
-    let presentDays = 0;
-    let halfDays = 0;
-    let leavesCount = 0;
-    let weekOffDays = 0;
-    let totalDays = 0;
-    let actualWorkingDaysInWeek = 0;
-
-    for (let d = new Date(currentWeekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
-      if (d < firstDay || d > lastDay) continue;
-
-      const dateKey = formatDateLocal(d);
-      const dayOfWeek = d.getDay();
-      const isWeekOff = (dayOfWeek === weekOffDayNum);
-
-      totalDays++;
-
-      if (isWeekOff) {
-        weekOffDays++;
-        continue;
-      }
-
-      actualWorkingDaysInWeek++;
-
-      if (isLeaveDay(d)) {
-        leavesCount++;
-        totalLeaves++;
-        continue;
-      }
-
-      const hoursWorked = attendanceMap.get(dateKey);
-      if (hoursWorked !== undefined) {
-        if (hoursWorked >= shiftHours * 0.8) {
-          presentDays++;
-          totalWorkingDays += 1;
-        } else {
-          halfDays += 0.5;
-          totalWorkingDays += 0.5;
-        }
-      }
-    }
-
-    const effectiveWorkingDays = presentDays + halfDays + leavesCount;
-
-    let isEligibleForWeekoff = false;
-    if (totalDays === 7) {
-      isEligibleForWeekoff = effectiveWorkingDays >= 5;
-    } else {
-      const employeeAttendedDays = presentDays + halfDays;
-      isEligibleForWeekoff = (employeeAttendedDays >= actualWorkingDaysInWeek) && (actualWorkingDaysInWeek >= 3);
-    }
-
-    if (isEligibleForWeekoff) {
-      eligibleWeeks++;
-    }
-
-    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-  }
-
-  let totalWeekOffDays = 0;
+  const allWeekOffDates = [];
   for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
-    if (d.getDay() === weekOffDayNum) {
-      totalWeekOffDays++;
+    const dateKey = formatDateLocal(d);
+    if (weekOffDateSet.has(dateKey)) {
+      allWeekOffDates.push(dateKey);
     }
   }
 
-  const totalActiveDays = totalWorkingDays + totalLeaves + holidayDaysInMonth;
-  let earnedWeekOffs = Math.max(eligibleWeeks, Math.floor(totalActiveDays / 5));
-  earnedWeekOffs = Math.min(earnedWeekOffs, totalWeekOffDays);
+  const usedWeekOffDates = [];
+  const workedOnWeekOffDates = [];
 
-  return { earnedWeekOffs, totalWeekOffDays };
+  allWeekOffDates.forEach(dateKey => {
+    const hoursWorked = attendanceMap.get(dateKey);
+    const isLeave = isLeaveDay(new Date(dateKey + 'T00:00:00'));
+
+    if (isLeave) {
+      usedWeekOffDates.push(dateKey);
+    } else if (hoursWorked !== undefined && hoursWorked > 0) {
+      workedOnWeekOffDates.push(dateKey);
+    } else {
+      usedWeekOffDates.push(dateKey);
+    }
+  });
+
+  let presentDays = 0;
+  let halfDays = 0;
+  let leavesCount = 0;
+  let totalWorkingDays = 0;
+  const presentDates = [];
+  const halfDayDates = [];
+  const leaveDates = [];
+
+  for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+    const dateKey = formatDateLocal(d);
+
+    const checkDate = new Date(d);
+    checkDate.setHours(0, 0, 0, 0);
+    if (checkDate > today) continue;
+
+    if (isLeaveDay(d)) {
+      leavesCount++;
+      leaveDates.push(dateKey);
+      continue;
+    }
+
+    const hoursWorked = attendanceMap.get(dateKey);
+    if (hoursWorked !== undefined && hoursWorked > 0) {
+      if (hoursWorked >= shiftHours * 0.8) {
+        presentDays++;
+        presentDates.push(dateKey);
+        totalWorkingDays += 1;
+      } else if (hoursWorked >= shiftHours * 0.4) {
+        halfDays += 0.5;
+        halfDayDates.push(dateKey);
+        totalWorkingDays += 0.5;
+      }
+    }
+  }
+
+  let earnedWeekOffs = Math.floor(totalWorkingDays / 5);
+  const effectiveCap = weekOffPerMonth || 4;
+  earnedWeekOffs = Math.min(earnedWeekOffs, effectiveCap);
+
+  const workedOnWeekOff = workedOnWeekOffDates.length;
+  const carryForwardWeekOffs = workedOnWeekOff;
+
+  const rawUsedWeekOffs = usedWeekOffDates.length;
+  const usedWeekOffs = Math.min(rawUsedWeekOffs, earnedWeekOffs);
+  const unearnedAbsentDays = Math.max(0, rawUsedWeekOffs - earnedWeekOffs);
+
+  return {
+    earnedWeekOffs,
+    usedWeekOffs,
+    unearnedAbsentDays,
+    workedOnWeekOff,
+    carryForwardWeekOffs,
+    totalWeekOffDays: totalWeekOffDaysInMonth,
+    maxAllowedWeekOffs: effectiveCap,
+    weekOffDates: Array.from(weekOffDateSet).sort(),
+    usedWeekOffDates: usedWeekOffDates.sort(),
+    workedOnWeekOffDates: workedOnWeekOffDates.sort(),
+    presentDates,
+    halfDayDates,
+    leaveDates,
+    presentDays,
+    halfDays,
+    leavesCount,
+    totalWorkingDaysInMonth: totalWorkingDays
+  };
 };
 
 const PayrollDashboard = () => {
@@ -314,6 +354,9 @@ const PayrollDashboard = () => {
 
   const [manualDeductionMap, setManualDeductionMap] = useState({});
 
+  const [weekOffDatesMap, setWeekOffDatesMap] = useState({});
+  const [compOffDatesMap, setCompOffDatesMap] = useState({});
+
   const navigate = useNavigate();
   const isFetchingRef = useRef(false);
 
@@ -323,6 +366,8 @@ const PayrollDashboard = () => {
   const ATTENDANCE_DETAILS_API_URL = `${API_BASE_URL}/attendance/allattendance`;
   const COMPOFF_API_URL = `${API_BASE_URL}/leaves/comp-offs`;
   const APPROVED_OT_API_URL = `${API_BASE_URL}/employees/allotclaimed?status=approved`;
+  // 🚀 BULK API
+  const BULK_PAYROLL_API_URL = `${API_BASE_URL}/attendancesummary/bulk-payroll`;
 
   useEffect(() => {
     try {
@@ -502,6 +547,9 @@ const PayrollDashboard = () => {
     let halfDays = 0;
     let totalOtHours = 0;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const dailyRecords = {};
     allAttendanceRecords.forEach((rec) => {
       if (rec.employeeId !== employeeId) return;
@@ -511,6 +559,10 @@ const PayrollDashboard = () => {
         const recMonth = formatMonthLocal(rec.checkInTime);
         if (recMonth !== targetMonth) return;
       }
+
+      const recDate = new Date(rec.checkInTime);
+      recDate.setHours(0, 0, 0, 0);
+      if (recDate > today) return;
 
       const dateKey = formatDateLocal(rec.checkInTime);
       if (!dailyRecords[dateKey]) dailyRecords[dateKey] = [];
@@ -543,6 +595,9 @@ const PayrollDashboard = () => {
     };
   };
 
+  // ============================================================================
+  // 🚀 FAST fetchData — Single bulk API call
+  // ============================================================================
   const fetchData = useCallback(async (month = "") => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
@@ -556,108 +611,56 @@ const PayrollDashboard = () => {
       const isHistorical = isHistoricalMonth(targetMonth);
       const isCurrent = isCurrentMonth(targetMonth);
 
-      const [employeesRes, leavesRes, holidaysRes, summaryRes] = await Promise.all([
-        fetch(EMPLOYEES_API_URL),
-        fetch(LEAVES_API_URL),
-        fetch(`${API_BASE_URL}/holidays/all`),
-        fetch(`${ATTENDANCE_SUMMARY_API_URL}${targetMonth ? `?month=${targetMonth}` : ""}`)
-      ]);
+      // 🚀 SINGLE BULK API CALL
+      const res = await fetch(`${BULK_PAYROLL_API_URL}?month=${targetMonth}`);
 
-      let employeesData = [];
-      if (employeesRes.ok) {
-        const raw = await employeesRes.json();
-        employeesData = Array.isArray(raw) ? raw : (raw.data || []);
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
       }
 
-      let leavesData = leavesRes.ok ? await leavesRes.json() : [];
-      let holidaysData = holidaysRes.ok ? await holidaysRes.json() : [];
+      const json = await res.json();
 
-      let summaryData = [];
-      if (summaryRes.ok) {
-        const json = await summaryRes.json();
-        summaryData = json.summary || [];
+      if (!json.success) {
+        throw new Error(json.message || "Failed to fetch payroll data");
       }
 
-      let allAttendanceRecords = [];
-      try {
-        const attendanceRes = await fetch(`${ATTENDANCE_DETAILS_API_URL}?month=${targetMonth}`);
-        if (attendanceRes.ok) {
-          const attData = await attendanceRes.json();
-          allAttendanceRecords = attData.records || [];
-        }
-      } catch (err) {
-        console.warn("Failed to fetch attendance records:", err);
-      }
+      const {
+        employees: employeesData,
+        attendanceByEmployee,
+        leavesByEmployee,
+        compOffsByEmployee,
+        weekOffDatesMap: weekOffMap,
+        summaryMap,
+        holidays: holidaysData
+      } = json.data;
+
+      const daysInMonthValue = json.daysInMonth;
 
       const employeesForMonth = filterEmployeesByJoiningDate(employeesData, targetMonth);
 
-      let approvedOTMapLocal = {};
-      try {
-        const [year, monthNum] = targetMonth.split('-').map(Number);
-        const startDate = new Date(year, monthNum - 1, 1);
-        const endDate = new Date(year, monthNum, 0);
+      // Convert leavesByEmployee to array for processLeavesData
+      const allLeavesArray = [];
+      Object.keys(leavesByEmployee).forEach(empId => {
+        leavesByEmployee[empId].forEach(l => allLeavesArray.push(l));
+      });
+      const currentLeavesMap = processLeavesData(allLeavesArray, targetMonth);
 
-        const otRes = await fetch(APPROVED_OT_API_URL);
-        const otData = await otRes.json();
+      // Comp-off map
+      const compOffDatesMapLocal = {};
+      Object.keys(compOffsByEmployee).forEach(empId => {
+        compOffDatesMapLocal[empId] = compOffsByEmployee[empId].map(co => ({
+          date: co.workDate,
+          count: co.count || 1,
+          reason: co.reason || '',
+          workDate: co.workDate,
+          _id: co._id
+        }));
+      });
 
-        if (otData.success) {
-          const monthClaims = (otData.claims || []).filter(claim => {
-            const claimDate = new Date(claim.date);
-            return claimDate >= startDate && claimDate <= endDate;
-          });
+      setWeekOffDatesMap(weekOffMap);
+      setCompOffDatesMap(compOffDatesMapLocal);
 
-          monthClaims.forEach(claim => {
-            const empId = claim.employeeId;
-            if (!approvedOTMapLocal[empId]) {
-              approvedOTMapLocal[empId] = {
-                totalOTHours: 0,
-                totalOTAmount: 0,
-                count: 0,
-                claims: []
-              };
-            }
-            approvedOTMapLocal[empId].totalOTHours += claim.otHours || 0;
-            approvedOTMapLocal[empId].totalOTAmount += claim.otAmount || 0;
-            approvedOTMapLocal[empId].count += 1;
-            approvedOTMapLocal[empId].claims.push(claim);
-          });
-        }
-      } catch (err) {
-        console.warn("Failed to fetch approved OT claims:", err);
-      }
-
-      let compOffDatesMapLocal = {};
-      try {
-        const [year, monthNum] = targetMonth.split('-').map(Number);
-        const startOfMonth = new Date(year, monthNum - 1, 1);
-        const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59);
-
-        const compRes = await axios.get(COMPOFF_API_URL);
-        const compOffs = compRes.data || [];
-
-        for (const co of compOffs) {
-          if (co.status === "approved") {
-            const employeeId = co.employeeId;
-            const workDate = new Date(co.workDate);
-
-            if (workDate >= startOfMonth && workDate <= endOfMonth) {
-              if (!compOffDatesMapLocal[employeeId]) {
-                compOffDatesMapLocal[employeeId] = [];
-              }
-              compOffDatesMapLocal[employeeId].push({
-                date: formatDateLocal(co.workDate),
-                count: co.count || 1,
-                reason: co.reason || '',
-                workDate: co.workDate,
-                _id: co._id
-              });
-            }
-          }
-        }
-      } catch (err) {
-        console.warn("Failed to fetch comp-offs:", err);
-      }
-
+      // Employees map
       const employeesMap = {};
       employeesForMonth.forEach(emp => {
         employeesMap[emp.employeeId] = {
@@ -694,7 +697,6 @@ const PayrollDashboard = () => {
       });
 
       const [year, monthNum] = targetMonth.split("-").map(Number);
-      const daysInMonthValue = getDaysInMonth(targetMonth);
       const processedSalaries = [];
 
       const savedOTMap = (() => {
@@ -711,23 +713,89 @@ const PayrollDashboard = () => {
         } catch { return {}; }
       })();
 
+      // Bulk API se approved OT claims bhi aa rahe hain — par hum abhi bhi alag se fetch kar sakte hain
+      // Yahan hum alag se approved OT map bana rahe hain (localStorage se ya empty)
+      let approvedOTMapLocal = {};
+      try {
+        const [year2, monthNum2] = targetMonth.split('-').map(Number);
+        const startDate = new Date(year2, monthNum2 - 1, 1);
+        const endDate = new Date(year2, monthNum2, 0);
+
+        const otRes = await fetch(APPROVED_OT_API_URL);
+        const otData = await otRes.json();
+
+        if (otData.success) {
+          const monthClaims = (otData.claims || []).filter(claim => {
+            const claimDate = new Date(claim.date);
+            return claimDate >= startDate && claimDate <= endDate;
+          });
+
+          monthClaims.forEach(claim => {
+            const empId = claim.employeeId;
+            if (!approvedOTMapLocal[empId]) {
+              approvedOTMapLocal[empId] = {
+                totalOTHours: 0,
+                totalOTAmount: 0,
+                count: 0,
+                claims: []
+              };
+            }
+            approvedOTMapLocal[empId].totalOTHours += claim.otHours || 0;
+            approvedOTMapLocal[empId].totalOTAmount += claim.otAmount || 0;
+            approvedOTMapLocal[empId].count += 1;
+            approvedOTMapLocal[empId].claims.push(claim);
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to fetch approved OT claims:", err);
+      }
+
+      const summaryData = Object.values(summaryMap);
+
       for (const emp of employeesForMonth) {
         const summary = summaryData.find(x => x.employeeId === emp.employeeId) || {};
-
-        const deptLower = (emp.department || '').toLowerCase().trim();
-        const isDevOrMarketing = deptLower.includes("developer") || deptLower.includes("digital marketing") || deptLower.includes("development");
-        const isConsultant = deptLower.includes("consultant");
-        const isSpecialDept = ["laboratory medicine", "nursing", "medical"].includes(deptLower) || deptLower.includes("laboratory") || deptLower.includes("nursing") || deptLower.includes("medical") || isConsultant;
 
         const employeeRole = summary.role || emp.role || emp.designation || '';
         const isMedicalStaff = isMedicalRole(employeeRole);
 
-        let attendanceForEmployee = allAttendanceRecords.filter(r => r.employeeId === emp.employeeId);
+        let attendanceForEmployee = attendanceByEmployee[emp.employeeId] || [];
+        const weekOffDates = weekOffMap[emp.employeeId] || [];
+
+        const attendanceMapForHoliday = new Map();
+        attendanceForEmployee.forEach(record => {
+          const dateKey = formatDateLocal(record.date || record.checkInTime);
+          let hours = 0;
+          if (record.totalHours && parseFloat(record.totalHours) > 0) {
+            hours = parseFloat(record.totalHours);
+          } else if (record.workingHours && parseFloat(record.workingHours) > 0) {
+            hours = parseFloat(record.workingHours);
+          } else if (record.checkInTime && record.checkOutTime) {
+            hours = (new Date(record.checkOutTime) - new Date(record.checkInTime)) / (1000 * 60 * 60);
+          }
+          if (hours > 0) {
+            attendanceMapForHoliday.set(dateKey, hours);
+          }
+        });
+
+        const weekOffDatesSetForHoliday = new Set(weekOffDates || []);
+
+        const leaveDatesSetForHoliday = new Set();
+        const empLeaveDetails = currentLeavesMap[emp.employeeId]?.leaveDetails || [];
+        empLeaveDetails.forEach(leave => {
+          const s = new Date(leave.startDate);
+          const e = new Date(leave.endDate);
+          for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+            leaveDatesSetForHoliday.add(formatDateLocal(d));
+          }
+        });
 
         const employeeHolidayCount = calculateHolidayCountForDepartment(
           holidaysData,
           targetMonth,
-          emp.department || ''
+          emp.department || '',
+          attendanceMapForHoliday,
+          weekOffDatesSetForHoliday,
+          leaveDatesSetForHoliday
         );
 
         const employeeHolidayList = getEmployeeHolidaysForMonth(
@@ -737,52 +805,44 @@ const PayrollDashboard = () => {
         );
         const assignedHolidayDepartments = extractAssignedDepartments(employeeHolidayList);
 
-        const weekOffDay = emp.weekOffDay || 'Sunday';
-        const weekOffData = calculateEarnedWeekOffs(
+        const weekOffData = calculateWeekOffData(
           emp.employeeId,
           year,
           monthNum,
           attendanceForEmployee,
-          processLeavesData(leavesData, targetMonth),
-          weekOffDay,
+          currentLeavesMap,
+          weekOffDates,
           emp.shiftHours || 8,
-          employeeHolidayCount
+          employeeHolidayCount,
+          emp.weekOffPerMonth || 4
         );
 
-        let earnedWeekOffs = weekOffData.earnedWeekOffs;
-        let defaultWeekOffs = isConsultant ? 2 : (emp.weekOffPerMonth || 4);
-        if (isDevOrMarketing) {
-          defaultWeekOffs = weekOffData.totalWeekOffDays || 5;
-          earnedWeekOffs = defaultWeekOffs;
-        }
-        const finalWeekOffs = Math.min(earnedWeekOffs, defaultWeekOffs);
+        const earnedWeekOffs = weekOffData.earnedWeekOffs;
+        const usedWeekOffs = weekOffData.usedWeekOffs;
+        const unearnedAbsentDays = weekOffData.unearnedAbsentDays || 0;
+        const workedOnWeekOff = weekOffData.workedOnWeekOff;
+        const carryForwardWeekOffs = weekOffData.carryForwardWeekOffs;
 
         let salaryForMonth = emp.salaryPerMonth || 0;
-        let historicalEffectiveFrom = emp.joinDate;
         let originalSalary = emp.originalSalary || emp.salaryPerMonth;
         let incrementDetails = null;
 
-        try {
+        // Salary increments logic (bulk data se)
+        if (emp.salaryIncrements && emp.salaryIncrements.length > 0) {
           const targetDate = new Date(year, monthNum - 1, 15);
-          const formattedDate = targetDate.toISOString().split('T')[0];
-
-          const salaryRes = await fetch(`${API_BASE_URL}/employees/${emp._id}/salary-for-date?date=${formattedDate}`);
-          if (salaryRes.ok) {
-            const salaryData = await salaryRes.json();
-            if (salaryData.success && salaryData.data) {
-              salaryForMonth = salaryData.data.salaryPerMonth;
-              historicalEffectiveFrom = salaryData.data.effectiveFrom || emp.joinDate;
-              originalSalary = salaryData.data.originalSalary || emp.originalSalary || emp.salaryPerMonth;
-              incrementDetails = salaryData.data.incrementDetails;
+          let applicableSalary = emp.originalSalary || emp.salaryPerMonth;
+          emp.salaryIncrements.forEach(inc => {
+            const effDate = new Date(inc.effectiveFrom);
+            if (effDate <= targetDate && inc.newSalary) {
+              applicableSalary = inc.newSalary;
             }
-          }
-        } catch (err) {
-          console.warn(`Failed to fetch salary for ${emp.name}:`, err.message);
+          });
+          salaryForMonth = applicableSalary;
         }
 
         const dailyRate = salaryForMonth > 0 ? salaryForMonth / daysInMonthValue : 0;
 
-        const liveCounts = getLiveAttendanceCounts(emp.employeeId, allAttendanceRecords, targetMonth, employeesMap);
+        const liveCounts = getLiveAttendanceCounts(emp.employeeId, attendanceForEmployee, targetMonth, employeesMap);
 
         let presentDaysCount = liveCounts.presentDays;
         let halfDaysCount = liveCounts.halfDayWorking;
@@ -801,29 +861,32 @@ const PayrollDashboard = () => {
         const totalCompOffDays = employeeCompOffDates.reduce((sum, co) => sum + (co.count || 1), 0);
         const compOffAmount = Math.round(totalCompOffDays * dailyRate);
 
-        const expectedWorkingDays = daysInMonthValue - finalWeekOffs;
-        const actualDaysWorked = presentDaysCount + (halfDaysCount * 0.5);
+        const payablePresentDays = presentDaysCount + (halfDaysCount * 0.5);
+        const weekOffsForSalary = usedWeekOffs;
+
+        let calculatedSalary = 0;
+        if (salaryForMonth > 0 && daysInMonthValue > 0) {
+          if (presentDaysCount === 0 && halfDaysCount === 0 && usedWeekOffs === 0 && totalCompOffDays === 0 && employeeHolidayCount === 0) {
+            calculatedSalary = 0;
+          } else {
+            const effectivePaidDaysRaw =
+              payablePresentDays +
+              weekOffsForSalary +
+              totalCompOffDays +
+              employeeHolidayCount;
+
+            const effectivePaidDays = Math.min(effectivePaidDaysRaw, daysInMonthValue);
+            calculatedSalary = Math.round(effectivePaidDays * dailyRate);
+          }
+        }
 
         const prevMonth = getPreviousMonth(targetMonth);
-        const prevCarryForward = prevMonth
+        const prevCarryForwardRaw = prevMonth
           ? parseFloat(localStorage.getItem(getCarryForwardKey(emp.employeeId, prevMonth)) || '0')
           : 0;
+        const prevCarryForward = Math.max(0, prevCarryForwardRaw || 0);
 
-        const adjustedActualDays = actualDaysWorked + prevCarryForward;
-
-        let payablePresentDays, carryForwardDays;
-        if (adjustedActualDays > expectedWorkingDays) {
-          payablePresentDays = expectedWorkingDays;
-          carryForwardDays = Math.round((adjustedActualDays - expectedWorkingDays) * 100) / 100;
-        } else {
-          payablePresentDays = adjustedActualDays;
-          carryForwardDays = 0;
-        }
-
-        if (isSpecialDept) {
-          carryForwardDays = Math.round((carryForwardDays + employeeHolidayCount) * 100) / 100;
-        }
-
+        let carryForwardDays = Math.max(0, carryForwardWeekOffs || 0);
         localStorage.setItem(getCarryForwardKey(emp.employeeId, targetMonth), String(carryForwardDays));
 
         const basicPay = emp.basicPay || 0;
@@ -838,22 +901,7 @@ const PayrollDashboard = () => {
         const holidayAmount = Math.round(employeeHolidayCount * dailyRate);
         const publicHolidayCount = employeeHolidayCount;
 
-        let calculatedSalary = 0;
-        if (salaryForMonth > 0 && daysInMonthValue > 0) {
-          if (presentDaysCount === 0 && halfDaysCount === 0) {
-            calculatedSalary = 0;
-          } else {
-            const holidayAddition = isSpecialDept ? 0 : employeeHolidayCount;
-            const effectivePaidDays =
-              payablePresentDays +
-              (includeWeekOffInSalary ? finalWeekOffs : 0) +
-              holidayAddition +
-              totalCompOffDays;
-            calculatedSalary = Math.round(effectivePaidDays * dailyRate);
-          }
-        }
-
-        const totalPaidDays = actualDaysWorked + finalWeekOffs + employeeHolidayCount + totalCompOffDays;
+        const totalPaidDays = payablePresentDays + weekOffsForSalary + employeeHolidayCount + totalCompOffDays;
         const lopDays = Math.max(0, daysInMonthValue - totalPaidDays);
         const lopAmount = Math.round(lopDays * dailyRate);
 
@@ -941,6 +989,19 @@ const PayrollDashboard = () => {
           specialAllowance: specialAllowance,
           totalEarnings: totalEarnings,
 
+          earnedWeekOffs: earnedWeekOffs,
+          usedWeekOffs: usedWeekOffs,
+          unearnedAbsentDays: unearnedAbsentDays,
+          workedOnWeekOff: workedOnWeekOff,
+          carryForwardWeekOffs: carryForwardWeekOffs,
+          weekOffs: weekOffsForSalary,
+          weekOffDates: weekOffDates,
+          usedWeekOffDates: weekOffData.usedWeekOffDates || [],
+          workedOnWeekOffDates: weekOffData.workedOnWeekOffDates || [],
+          carryForwardDays: carryForwardDays,
+          carryForwardFromPrev: prevCarryForward,
+          payablePresentDays: payablePresentDays,
+
           holidayCount: publicHolidayCount,
           holidayAmount: holidayAmount,
           holidayList: employeeHolidayList.map(h => ({
@@ -968,7 +1029,6 @@ const PayrollDashboard = () => {
           manualDeductionReason: manualDeductionReason,
           deductions: totalDeductions,
 
-          weekOffs: finalWeekOffs,
           isInactive: isInactive,
           paymentStatus: paymentStatus,
           isProcessed: paymentStatus === "Paid"

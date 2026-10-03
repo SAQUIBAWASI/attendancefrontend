@@ -126,6 +126,23 @@ const getDayNameFromDate = (dateStr) => {
   return d.toLocaleDateString("en-US", { weekday: "long" });
 };
 
+// ✅ Helper: enumerate date strings (YYYY-MM-DD) between two dates inclusive
+const enumerateDateRange = (startStr, endStr) => {
+  if (!startStr || !endStr) return [];
+  const start = new Date(startStr + "T00:00:00");
+  const end = new Date(endStr + "T00:00:00");
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return [];
+  if (end < start) return [];
+  const out = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    out.push(`${yyyy}-${mm}-${dd}`);
+  }
+  return out;
+};
+
 const AppointmentSlots = () => {
   const [slots, setSlots] = useState([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState(null);
@@ -157,7 +174,9 @@ const AppointmentSlots = () => {
 
   const [newSlotDoctor, setNewSlotDoctor] = useState("");
   const [newSlotDays, setNewSlotDays] = useState([]);
-  const [newSlotDate, setNewSlotDate] = useState("");
+  // ✅ Bulk date range
+  const [newSlotStartDate, setNewSlotStartDate] = useState("");
+  const [newSlotEndDate, setNewSlotEndDate] = useState("");
   const [newSlotStartTime, setNewSlotStartTime] = useState("09:00");
   const [newSlotEndTime, setNewSlotEndTime] = useState("09:20");
   const [newSlotGap, setNewSlotGap] = useState(5);
@@ -398,20 +417,39 @@ const AppointmentSlots = () => {
     );
   };
 
+  // ✅ UPDATED: Bulk slot creation — single POST call to `/appointment-slots` with `{ slots: [...] }`
   const handleAddCustomSlot = async () => {
     if (!newSlotDoctor) {
       showToast("Please select a doctor", "error");
       return;
     }
 
-    let daysToUse = newSlotDays;
-    if (newSlotDate) {
-      const dayName = getDayNameFromDate(newSlotDate);
-      if (dayName) daysToUse = [dayName];
+    // Determine list of dates (bulk) OR list of recurring days
+    let datesToUse = [];
+    let daysToUse = [];
+
+    if (newSlotStartDate && newSlotEndDate) {
+      const range = enumerateDateRange(newSlotStartDate, newSlotEndDate);
+      if (range.length === 0) {
+        showToast("Invalid date range (end must be ≥ start)", "error");
+        return;
+      }
+      if (range.length > 90) {
+        showToast("Date range too large. Max 90 days allowed.", "error");
+        return;
+      }
+      datesToUse = range;
+    } else if (newSlotStartDate && !newSlotEndDate) {
+      datesToUse = [newSlotStartDate];
+    } else if (!newSlotStartDate && newSlotEndDate) {
+      showToast("Please select a Start Date first", "error");
+      return;
+    } else {
+      daysToUse = newSlotDays;
     }
 
-    if (daysToUse.length === 0) {
-      showToast("Please select a date or at least one day", "error");
+    if (datesToUse.length === 0 && daysToUse.length === 0) {
+      showToast("Please select a date range or at least one day", "error");
       return;
     }
 
@@ -431,39 +469,69 @@ const AppointmentSlots = () => {
 
     const allNewSlots = [];
 
-    for (const day of daysToUse) {
-      let curr = sStartMins;
-      let slotIdx = 1;
+    // ✅ Bulk generation across each date
+    if (datesToUse.length > 0) {
+      for (const dateStr of datesToUse) {
+        const dayName = getDayNameFromDate(dateStr);
+        let curr = sStartMins;
+        let slotIdx = 1;
 
-      while (curr + newSlotDuration <= sEndMins) {
-        const sStart = curr;
-        const sEnd = curr + newSlotDuration;
+        while (curr + newSlotDuration <= sEndMins) {
+          const sStart = curr;
+          const sEnd = curr + newSlotDuration;
 
-        const slotPayload = {
-          dayOfWeek: day,
-          startTime: minutesTo12Hour(sStart),
-          endTime: minutesTo12Hour(sEnd),
-          startTime24: minutesTo24Hour(sStart),
-          endTime24: minutesTo24Hour(sEnd),
-          duration: newSlotDuration,
-          gap: newSlotGap || 0,
-          shift: newSlotShift,
-          type: "op",
-          status: "available",
-          consultationFee: newSlotConsultationFee,
-          doctorId: selectedDoctor._id,
-          doctorName: selectedDoctor.name,
-          doctorSpecialization: selectedDoctor.specialization,
-          slotNumber: slotIdx++
-        };
+          allNewSlots.push({
+            dayOfWeek: dayName,
+            date: dateStr,
+            startTime: minutesTo12Hour(sStart),
+            endTime: minutesTo12Hour(sEnd),
+            startTime24: minutesTo24Hour(sStart),
+            endTime24: minutesTo24Hour(sEnd),
+            duration: newSlotDuration,
+            gap: newSlotGap || 0,
+            shift: newSlotShift,
+            type: "op",
+            status: "available",
+            consultationFee: newSlotConsultationFee,
+            doctorId: selectedDoctor._id,
+            doctorName: selectedDoctor.name,
+            doctorSpecialization: selectedDoctor.specialization,
+            slotNumber: slotIdx++
+          });
 
-        if (newSlotDate) {
-          slotPayload.date = newSlotDate;
+          curr = sEnd + (newSlotGap || 0);
         }
+      }
+    } else {
+      // Recurring-day mode
+      for (const day of daysToUse) {
+        let curr = sStartMins;
+        let slotIdx = 1;
 
-        allNewSlots.push(slotPayload);
+        while (curr + newSlotDuration <= sEndMins) {
+          const sStart = curr;
+          const sEnd = curr + newSlotDuration;
 
-        curr = sEnd + (newSlotGap || 0);
+          allNewSlots.push({
+            dayOfWeek: day,
+            startTime: minutesTo12Hour(sStart),
+            endTime: minutesTo12Hour(sEnd),
+            startTime24: minutesTo24Hour(sStart),
+            endTime24: minutesTo24Hour(sEnd),
+            duration: newSlotDuration,
+            gap: newSlotGap || 0,
+            shift: newSlotShift,
+            type: "op",
+            status: "available",
+            consultationFee: newSlotConsultationFee,
+            doctorId: selectedDoctor._id,
+            doctorName: selectedDoctor.name,
+            doctorSpecialization: selectedDoctor.specialization,
+            slotNumber: slotIdx++
+          });
+
+          curr = sEnd + (newSlotGap || 0);
+        }
       }
     }
 
@@ -474,31 +542,55 @@ const AppointmentSlots = () => {
 
     setGeneratingSlots(true);
     try {
-      const savedSlots = [];
-      for (const slot of allNewSlots) {
-        const res = await axios.post(`${API_BASE_URL}/appointment-slots`, slot).catch(() => null);
-        if (res && res.data && res.data.slot) {
-          savedSlots.push(res.data.slot);
-        }
-      }
+      // ✅ SINGLE bulk request — same endpoint `/appointment-slots`
+      const res = await axios.post(`${API_BASE_URL}/appointment-slots`, {
+        slots: allNewSlots
+      });
 
-      if (savedSlots.length > 0) {
-        setSlots((prev) => [...prev, ...savedSlots]);
-        const dateInfo = newSlotDate
-          ? `on ${formatDateToDDMMYYYY(newSlotDate)}`
-          : `on ${daysToUse.length} day(s)`;
+      const data = res?.data || {};
+      const created = data.created || [];
+      const skipped = data.skipped || [];
+      const createdCount = data.createdCount ?? created.length;
+      const skippedCount = data.skippedCount ?? skipped.length;
+
+      if (createdCount > 0) {
+        setSlots((prev) => [...prev, ...created]);
+
+        let rangeInfo = "";
+        if (datesToUse.length > 0) {
+          if (datesToUse.length === 1) {
+            rangeInfo = `on ${formatDateToDDMMYYYY(datesToUse[0])}`;
+          } else {
+            rangeInfo = `from ${formatDateToDDMMYYYY(datesToUse[0])} to ${formatDateToDDMMYYYY(
+              datesToUse[datesToUse.length - 1]
+            )} (${datesToUse.length} days)`;
+          }
+        } else {
+          rangeInfo = `on ${daysToUse.length} day(s)`;
+        }
+
+        const skipMsg =
+          skippedCount > 0 ? ` • ${skippedCount} skipped (duplicate/invalid)` : "";
+
         showToast(
-          `Added ${savedSlots.length} slots for ${selectedDoctor.name} ${dateInfo}!`,
-          "success"
+          `Added ${createdCount} slots for ${selectedDoctor.name} ${rangeInfo}${skipMsg}`,
+          skippedCount > 0 && createdCount === 0 ? "error" : "success"
         );
       } else {
-        showToast("Failed to create slots. Please try again.", "error");
+        showToast(
+          skippedCount > 0
+            ? `No slots created — ${skippedCount} skipped (all duplicates)`
+            : "Failed to create slots. Please try again.",
+          "error"
+        );
       }
 
+      // Reset form & close modal
       setShowAddModal(false);
       setNewSlotDoctor("");
       setNewSlotDays([]);
-      setNewSlotDate("");
+      setNewSlotStartDate("");
+      setNewSlotEndDate("");
       setNewSlotStartTime("09:00");
       setNewSlotEndTime("09:20");
       setNewSlotGap(5);
@@ -507,7 +599,10 @@ const AppointmentSlots = () => {
       setNewSlotDuration(20);
     } catch (e) {
       console.error("Error adding slots:", e);
-      showToast("Error adding slots. Please try again.", "error");
+      showToast(
+        e?.response?.data?.message || "Error adding slots. Please try again.",
+        "error"
+      );
     } finally {
       setGeneratingSlots(false);
     }
@@ -559,15 +654,12 @@ const AppointmentSlots = () => {
     return slots;
   }, [slots, selectedDoctorId]);
 
-  // ✅ FIXED: Date filter — sirf exact date match, koi fallback nahi
   const currentDaySlots = useMemo(() => {
     let base = filteredByDoctor;
 
     if (selectedDate) {
-      // ✅ SIRF exact date match
       base = base.filter((s) => s.date === selectedDate);
     } else if (selectedDay !== "All") {
-      // Day filter — sirf jinme date nahi hai (recurring slots)
       base = base.filter(
         (s) =>
           (!s.date || s.date === "") &&
@@ -602,7 +694,6 @@ const AppointmentSlots = () => {
     });
   }, [currentDaySlots, shiftFilter, statusFilter, searchQuery]);
 
-  // ✅ FIXED: stats — exact date match only
   const stats = useMemo(() => {
     const totalSlotsCount = slots.filter((s) => s.type !== "break").length;
     const dayTotalSlots = currentDaySlots.filter((s) => s.type !== "break").length;
@@ -622,7 +713,6 @@ const AppointmentSlots = () => {
       dateAvailable = 0,
       dateBlocked = 0;
     if (selectedDate) {
-      // ✅ SIRF exact date match
       const dateSlots = filteredByDoctor.filter(
         (s) => s.type !== "break" && s.date === selectedDate
       );
@@ -723,7 +813,8 @@ const AppointmentSlots = () => {
   const openAddModal = () => {
     setNewSlotDoctor("");
     setNewSlotDays([]);
-    setNewSlotDate("");
+    setNewSlotStartDate("");
+    setNewSlotEndDate("");
     setNewSlotStartTime("09:00");
     setNewSlotEndTime("09:20");
     setNewSlotGap(5);
@@ -732,6 +823,24 @@ const AppointmentSlots = () => {
     setNewSlotDuration(20);
     setShowAddModal(true);
   };
+
+  // ✅ Live preview helpers
+  const previewDatesCount = useMemo(() => {
+    if (newSlotStartDate && newSlotEndDate) {
+      return enumerateDateRange(newSlotStartDate, newSlotEndDate).length;
+    }
+    if (newSlotStartDate) return 1;
+    return 0;
+  }, [newSlotStartDate, newSlotEndDate]);
+
+  const slotsPerDay = useMemo(() => {
+    if (!newSlotStartTime || !newSlotEndTime) return 0;
+    const diff = timeToMinutes(newSlotEndTime) - timeToMinutes(newSlotStartTime);
+    if (diff <= 0) return 0;
+    const step = newSlotDuration + (newSlotGap || 0);
+    if (step <= 0) return 0;
+    return Math.floor(diff / step);
+  }, [newSlotStartTime, newSlotEndTime, newSlotDuration, newSlotGap]);
 
   return (
     <div className="emp-dash">
@@ -857,7 +966,13 @@ const AppointmentSlots = () => {
                           : "text-gray-700"
                       }`}
                     >
-                      <span>{opt === "All" ? "All Shifts" : opt === "Break" ? "Break Period" : `${opt} Shift`}</span>
+                      <span>
+                        {opt === "All"
+                          ? "All Shifts"
+                          : opt === "Break"
+                          ? "Break Period"
+                          : `${opt} Shift`}
+                      </span>
                       {shiftFilter === opt && <Check className="w-3 h-3 text-blue-600" />}
                     </div>
                   ))}
@@ -1112,11 +1227,13 @@ const AppointmentSlots = () => {
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">
-                Slots ({selectedDate
+                Slots (
+                {selectedDate
                   ? getDayNameFromDate(selectedDate)
                   : selectedDay === "All"
                   ? "All Days"
-                  : selectedDay})
+                  : selectedDay}
+                )
               </span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
                 <FiClock />
@@ -1175,7 +1292,6 @@ const AppointmentSlots = () => {
           <div className="flex items-center gap-1.5 overflow-x-auto py-1 px-1">
             {DAYS_OF_WEEK.map((day) => {
               const isSelected = selectedDay === day && !selectedDate;
-              // ✅ FIXED: Date wale slots ko day count se exclude karo
               const daySlotCount =
                 day === "All"
                   ? filteredByDoctor.filter((s) => s.type !== "break").length
@@ -1244,14 +1360,14 @@ const AppointmentSlots = () => {
                     if (s.type === "break") return false;
                     if (selectedDate) return s.date === selectedDate;
                     return true;
-                  }).length} Slots
+                  }).length}{" "}
+                  Slots
                 </div>
               </div>
             </button>
 
             {uniqueDoctors.map((doc) => {
               const isSelected = selectedDoctorId === doc._id;
-              // ✅ FIXED: Doctor slots count — date filter apply
               const doctorSlots = slots.filter((s) => {
                 if (s.type === "break") return false;
                 const slotDoctorId = typeof s.doctorId === "object" ? s.doctorId?._id : s.doctorId;
@@ -1454,9 +1570,9 @@ const AppointmentSlots = () => {
               {slots.length === 0
                 ? "No appointment slots available. Click 'Add Slots' to generate new slots."
                 : selectedDate
-                ? `No matching slots found on ${formatDateToDDMMYYYY(selectedDate)} (${getDayNameFromDate(
+                ? `No matching slots found on ${formatDateToDDMMYYYY(
                     selectedDate
-                  )}).`
+                  )} (${getDayNameFromDate(selectedDate)}).`
                 : `No matching slots found on ${
                     selectedDay === "All" ? "all days" : selectedDay
                   }.`}
@@ -1617,7 +1733,9 @@ const AppointmentSlots = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base">Generate New Slots</h3>
-                    <p className="text-xs text-gray-500">Create slots by date or recurring days</p>
+                    <p className="text-xs text-gray-500">
+                      Bulk create slots by date range or recurring days
+                    </p>
                   </div>
                 </div>
                 <button
@@ -1661,28 +1779,67 @@ const AppointmentSlots = () => {
                   </div>
                 </div>
 
+                {/* ✅ From → To Date Range (Bulk) */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                    Specific Date (Optional)
+                    Date Range (Bulk){" "}
                     <span className="text-[10px] text-gray-400 font-normal ml-1 normal-case">
-                      — agar date chuno to neeche wale days ignore ho jayenge
+                      — from → to, agar select karo to neeche wale days ignore ho jayenge
                     </span>
                   </label>
-                  <div className="relative">
-                    <Calendar className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-                    <input
-                      type="date"
-                      value={newSlotDate}
-                      onChange={(e) => setNewSlotDate(e.target.value)}
-                      className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative">
+                      <Calendar className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                      <input
+                        type="date"
+                        value={newSlotStartDate}
+                        onChange={(e) => {
+                          setNewSlotStartDate(e.target.value);
+                          if (newSlotEndDate && e.target.value > newSlotEndDate) {
+                            setNewSlotEndDate(e.target.value);
+                          }
+                        }}
+                        className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                      />
+                      <span className="absolute -top-2 left-2 bg-white px-1 text-[10px] font-bold text-blue-600">
+                        FROM
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <Calendar className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                      <input
+                        type="date"
+                        value={newSlotEndDate}
+                        min={newSlotStartDate || undefined}
+                        onChange={(e) => setNewSlotEndDate(e.target.value)}
+                        disabled={!newSlotStartDate}
+                        className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      />
+                      <span className="absolute -top-2 left-2 bg-white px-1 text-[10px] font-bold text-blue-600">
+                        TO
+                      </span>
+                    </div>
                   </div>
-                  {newSlotDate && (
-                    <div className="mt-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-1 inline-flex items-center gap-1">
-                      ✓ {getDayNameFromDate(newSlotDate)} — {formatDateToDDMMYYYY(newSlotDate)}
+
+                  {newSlotStartDate && (
+                    <div className="mt-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-1 inline-flex items-center gap-1 flex-wrap">
+                      {newSlotEndDate ? (
+                        <>
+                          ✓ {formatDateToDDMMYYYY(newSlotStartDate)} →{" "}
+                          {formatDateToDDMMYYYY(newSlotEndDate)} ({previewDatesCount} days)
+                        </>
+                      ) : (
+                        <>
+                          ✓ Single date: {getDayNameFromDate(newSlotStartDate)} —{" "}
+                          {formatDateToDDMMYYYY(newSlotStartDate)}
+                        </>
+                      )}
                       <button
                         type="button"
-                        onClick={() => setNewSlotDate("")}
+                        onClick={() => {
+                          setNewSlotStartDate("");
+                          setNewSlotEndDate("");
+                        }}
                         className="ml-1 text-red-500 hover:text-red-700 font-bold"
                       >
                         ✕
@@ -1693,14 +1850,14 @@ const AppointmentSlots = () => {
 
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                    Or Select Days <span className="text-red-500">*</span>
+                    Or Select Recurring Days <span className="text-red-500">*</span>
                     <span className="text-[10px] text-gray-400 font-normal ml-1">
                       (Select multiple)
                     </span>
                   </label>
                   <div
                     className={`flex flex-wrap gap-1.5 ${
-                      newSlotDate ? "opacity-50 pointer-events-none" : ""
+                      newSlotStartDate ? "opacity-50 pointer-events-none" : ""
                     }`}
                   >
                     {DAYS_OF_WEEK.filter((d) => d !== "All").map((day) => {
@@ -1721,9 +1878,9 @@ const AppointmentSlots = () => {
                       );
                     })}
                   </div>
-                  {newSlotDate && (
+                  {newSlotStartDate && (
                     <p className="text-[10px] text-amber-600 mt-1 font-medium">
-                      ⓘ Days selection disabled kyunki specific date select ki hai
+                      ⓘ Days selection disabled kyunki date range select ki hai
                     </p>
                   )}
                 </div>
@@ -1805,7 +1962,9 @@ const AppointmentSlots = () => {
                       min="0"
                       max="30"
                       value={newSlotGap}
-                      onChange={(e) => setNewSlotGap(Math.max(0, parseInt(e.target.value) || 0))}
+                      onChange={(e) =>
+                        setNewSlotGap(Math.max(0, parseInt(e.target.value) || 0))
+                      }
                       className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
                     />
                     <span className="text-xs text-gray-500">mins</span>
@@ -1865,22 +2024,33 @@ const AppointmentSlots = () => {
                 </div>
 
                 {newSlotDoctor &&
-                  (newSlotDate || newSlotDays.length > 0) &&
+                  (newSlotStartDate || newSlotDays.length > 0) &&
                   newSlotStartTime &&
                   newSlotEndTime && (
                     <div className="bg-blue-50 p-3.5 rounded-xl border border-blue-200 text-xs">
                       <div className="text-[10px] font-bold uppercase text-blue-700 mb-1">
-                        📋 Generated Slots Summary
+                        📋 Slots Generation Summary
                       </div>
                       <div className="font-bold text-gray-800">
                         {doctors.find((d) => d._id === newSlotDoctor)?.name}
                       </div>
                       <div className="text-gray-600 mt-0.5">
-                        {newSlotDate
-                          ? `📅 Date: ${formatDateToDDMMYYYY(newSlotDate)} (${getDayNameFromDate(
-                              newSlotDate
-                            )})`
-                          : `📅 Days: ${newSlotDays.join(", ")}`}
+                        {newSlotStartDate ? (
+                          newSlotEndDate ? (
+                            <>
+                              📅 Range: {formatDateToDDMMYYYY(newSlotStartDate)} →{" "}
+                              {formatDateToDDMMYYYY(newSlotEndDate)} (
+                              <strong>{previewDatesCount} days</strong>)
+                            </>
+                          ) : (
+                            <>
+                              📅 Date: {formatDateToDDMMYYYY(newSlotStartDate)} (
+                              {getDayNameFromDate(newSlotStartDate)})
+                            </>
+                          )
+                        ) : (
+                          <>📅 Days: {newSlotDays.join(", ")}</>
+                        )}
                       </div>
                       <div className="text-gray-600">
                         ⏰ {newSlotStartTime} – {newSlotEndTime} • Duration: {newSlotDuration}m •
@@ -1888,10 +2058,9 @@ const AppointmentSlots = () => {
                       </div>
                       <div className="text-emerald-700 font-bold mt-1">
                         💰 Fee: ₹{newSlotConsultationFee} | 📊 Slots per{" "}
-                        {newSlotDate ? "date" : "day"}:{" "}
-                        {Math.floor(
-                          (timeToMinutes(newSlotEndTime) - timeToMinutes(newSlotStartTime)) /
-                            (newSlotDuration + newSlotGap)
+                        {newSlotStartDate ? "date" : "day"}: {slotsPerDay}
+                        {previewDatesCount > 1 && (
+                          <> | 📦 Total (approx): {slotsPerDay * previewDatesCount}</>
                         )}
                       </div>
                     </div>
@@ -1912,7 +2081,7 @@ const AppointmentSlots = () => {
                   disabled={
                     generatingSlots ||
                     !newSlotDoctor ||
-                    (!newSlotDate && newSlotDays.length === 0) ||
+                    (!newSlotStartDate && newSlotDays.length === 0) ||
                     !newSlotStartTime ||
                     !newSlotEndTime
                   }

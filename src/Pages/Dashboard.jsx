@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   FiCalendar, FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers, 
@@ -46,6 +46,9 @@ const Dashboard = () => {
   const [birthdayNames, setBirthdayNames] = useState([]);
   const [popupShown, setPopupShown] = useState(false);
 
+  // ✅ Duplicate fetch rokne ke liye
+  const isFetchingRef = useRef(false);
+
   const reactNavigate = useNavigate();
 
   useEffect(() => {
@@ -74,201 +77,63 @@ const Dashboard = () => {
     reactNavigate(path);
   };
 
-  // ─── FETCH BIRTHDAYS ───
-  const fetchBirthdays = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/employees/birthdays-today`);
-      const data = response.data?.data || [];
-      setBirthdaysToday(data);
-      
-      const validBirthdays = data.filter(b => b && b.email);
-      
-      if (validBirthdays.length > 0 && !popupShown) {
-        setBirthdayCount(validBirthdays.length);
-        setBirthdayNames(validBirthdays.map(b => b.name || b.employeeName || 'Employee'));
-        setPopupShown(true);
-        setTimeout(() => {
-          setShowBirthdayPopup(true);
-        }, 1500);
-      }
-    } catch (error) {
-      console.error("Error fetching birthdays:", error);
-    }
-  };
+  // ✅ SINGLE API CALL — saara dashboard data ek saath
+  const fetchData = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
-  // ─── FETCH TOP PERFORMERS ───
-  const fetchTopPerformers = async (month = null) => {
-    try {
-      let url = `${API_BASE_URL}/dashboard/top-performers`;
-      if (month) {
-        const [year, monthNum] = month.split('-').map(Number);
-        url = `${API_BASE_URL}/dashboard/top-performers?month=${monthNum}&year=${year}`;
-      }
-      const response = await axios.get(url);
-      console.log("Top Performers API Response:", response.data);
-      
-      if (response.data && response.data.success) {
-        const performers = response.data.performers || [];
-        console.log("Performers data:", performers);
-        
-        const mappedPerformers = performers.map(perf => ({
-          id: perf.employeeCode || perf.employeeId,
-          employeeId: perf.employeeCode || perf.employeeId,
-          name: perf.name || perf.employeeName,
-          rate: Math.round(perf.performancePercentage || 0),
-          performancePercentage: perf.performancePercentage || 0,
-          presentDays: perf.presentDays || 0,
-          expectedWorkingDays: perf.expectedWorkingDays || 0,
-          lateComingDays: perf.lateComingDays || 0,
-          actualWorkingHours: perf.actualWorkingHours || 0,
-          expectedWorkingHours: perf.expectedWorkingHours || 0
-        }));
-        
-        console.log("Mapped performers:", mappedPerformers);
-        setTopPerformersData(mappedPerformers);
-      } else {
-        console.log("No performers data in response");
-        setTopPerformersData([]);
-      }
-    } catch (error) {
-      console.error("Error fetching top performers:", error);
-      setTopPerformersData([]);
-    }
-  };
-
-  // ─── FETCH DEPARTMENT PERFORMANCE ───
-  const fetchDepartmentPerformance = async (month = null) => {
-    try {
-      let url = `${API_BASE_URL}/dashboard/department-performance`;
-      if (month) {
-        const [year, monthNum] = month.split('-').map(Number);
-        url = `${API_BASE_URL}/dashboard/department-performance?month=${monthNum}&year=${year}`;
-      }
-      const response = await axios.get(url);
-      console.log("Department Performance API Response:", response.data);
-      
-      if (response.data && response.data.success) {
-        // Fix: Use departmentPerformance from response
-        const departments = response.data.departmentPerformance || response.data.departments || response.data.data || [];
-        console.log("Departments data:", departments);
-        
-        const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#ef4444', '#175cd3', '#8b5cf6', '#06b6d4'];
-        const mappedDepartments = departments.map((dept, index) => ({
-          name: dept.name || dept.department || 'Unknown',
-          rate: Math.round(dept.rate || dept.performancePercentage || 0),
-          color: dept.color || colors[index % colors.length],
-          employeeCount: dept.employeeCount || 0,
-          presentDays: dept.presentDays || 0,
-          expectedWorkingDays: dept.expectedWorkingDays || 0,
-          actualWorkingHours: dept.actualWorkingHours || 0,
-          expectedWorkingHours: dept.expectedWorkingHours || 0,
-          lateComingDays: dept.lateComingDays || 0
-        }));
-        
-        console.log("Mapped departments:", mappedDepartments);
-        setDepartmentPerformanceData(mappedDepartments);
-      } else {
-        console.log("No department data in response");
-        setDepartmentPerformanceData([]);
-      }
-    } catch (error) {
-      console.error("Error fetching department performance:", error);
-      setDepartmentPerformanceData([]);
-    }
-  };
-
-  const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const empRes = await axios.get(`${API_BASE_URL}/employees/get-employees`);
-      setEmployees(empRes.data || []);
-
-      const shiftsRes = await axios.get(`${API_BASE_URL}/shifts/master`);
-      if (shiftsRes.data.success) {
-        setMasterShifts(shiftsRes.data.data || []);
-      }
-
-      const assignmentsRes = await axios.get(`${API_BASE_URL}/shifts/assignments`);
-      if (assignmentsRes.data.success) {
-        setShiftsData(assignmentsRes.data.data || []);
-      }
-
-      const summaryRes = await axios.get(`${API_BASE_URL}/attendance/summary`);
-      setAttendanceData(summaryRes.data);
-
-      const allAttRes = await axios.get(`${API_BASE_URL}/attendance/allattendance`);
-      const allAttData = allAttRes.data;
-      setAllAttendance(Array.isArray(allAttData) ? allAttData : allAttData.records || allAttData.allAttendance || []);
-
-      try {
-        const leavesRes = await axios.get(`${API_BASE_URL}/leaves/leaves`);
-        let leavesArray = [];
-        if (leavesRes.data && leavesRes.data.data && Array.isArray(leavesRes.data.data)) {
-          leavesArray = leavesRes.data.data;
-        } else if (Array.isArray(leavesRes.data)) {
-          leavesArray = leavesRes.data;
-        } else if (leavesRes.data && leavesRes.data.records && Array.isArray(leavesRes.data.records)) {
-          leavesArray = leavesRes.data.records;
+      const res = await axios.get(`${API_BASE_URL}/dashboard/summary`, {
+        params: {
+          month: new Date(selectedMonth).getMonth() + 1,
+          year: new Date(selectedMonth).getFullYear()
         }
-        setAllLeaves(leavesArray);
-      } catch (err) {
-        console.error("❌ Could not fetch leaves", err);
-        setAllLeaves([]);
-      }
+      });
 
-      try {
-        const issuesRes = await axios.get(`${API_BASE_URL}/employees/get-all-issues`);
-        setAllIssues(issuesRes.data || []);
-      } catch (err) {
-        console.error("❌ Could not fetch issues", err);
-      }
+      if (!res.data.success) throw new Error("Invalid response");
 
-      try {
-        const expensesRes = await axios.get(`${API_BASE_URL}/expense/all`);
-        setAllExpenses(expensesRes.data || []);
-      } catch (err) {
-        console.error("❌ Could not fetch expenses", err);
-      }
+      const d = res.data.data;
 
-      try {
-        const rateRes = await axios.get(`${API_BASE_URL}/expense/rate`);
-        setExpenseRate(rateRes.data || null);
-      } catch (err) {
-        console.error("❌ Could not fetch expense rate", err);
-      }
+      // ─── SET ALL STATES FROM ONE RESPONSE ───
+      setEmployees(d.employees || []);
+      setMasterShifts(d.masterShifts || []);
+      setShiftsData(d.assignments || []);
+      setAllAttendance(d.attendance || []);
+      setAllLeaves(d.leaves || []);
+      setBirthdaysToday(d.birthdaysToday || []);
+      setTopPerformersData(d.topPerformers || []);
+      setDepartmentPerformanceData(d.departmentPerformance || []);
 
-      try {
-        const holidaysRes = await axios.get(`${API_BASE_URL}/holidays/all`);
-        setAllHolidays(holidaysRes.data || []);
-      } catch (err) {
-        console.error("❌ Could not fetch holidays", err);
+      // Birthday popup
+      if (d.birthdaysToday?.length > 0 && !popupShown) {
+        const valid = d.birthdaysToday.filter((b) => b.email);
+        if (valid.length > 0) {
+          setBirthdayCount(valid.length);
+          setBirthdayNames(valid.map((b) => b.name));
+          setPopupShown(true);
+          setTimeout(() => {
+            setShowBirthdayPopup(true);
+          }, 1500);
+        }
       }
-
-      await fetchBirthdays();
-      await fetchTopPerformers(selectedMonth);
-      await fetchDepartmentPerformance(selectedMonth);
 
       setLoading(false);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch dashboard data.");
       setLoading(false);
+    } finally {
+      isFetchingRef.current = false;
     }
-  };
+  }, [selectedMonth, popupShown]);
 
+  // ✅ Ek hi useEffect — month change hone pe fetch
   useEffect(() => {
     fetchData();
-  }, []);
-
-  // Fetch data when month changes
-  useEffect(() => {
-    if (selectedMonth) {
-      fetchTopPerformers(selectedMonth);
-      fetchDepartmentPerformance(selectedMonth);
-    }
-  }, [selectedMonth]);
+  }, [fetchData]);
 
   useEffect(() => {
     if (allAttendance.length > 0) {
@@ -276,6 +141,7 @@ const Dashboard = () => {
       setSelectedMonth(latest.slice(0, 7));
       setFilterMonth(latest.slice(0, 7));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allAttendance]);
 
   // ─── Popup handlers ───
@@ -685,7 +551,6 @@ const Dashboard = () => {
       const empId = emp.employeeId || emp._id;
       if (!empId) return;
 
-      // Get all unique dates this employee was present
       const presentDates = allAttendance
         .filter(r => {
           if (!r.checkInTime) return false;
@@ -702,16 +567,13 @@ const Dashboard = () => {
 
       const uniqueDates = Array.from(new Set(presentDates)).sort();
 
-      // Calculate continuous streak
       let maxStreak = 0;
       let currentStreak = 0;
 
-      // Check each day of the month for continuous attendance
       for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const dateObj = new Date(year, month - 1, d);
         
-        // Skip Sundays (non-working days don't break streak)
         if (dateObj.getDay() === 0) {
           continue;
         }
@@ -724,35 +586,28 @@ const Dashboard = () => {
             maxStreak = currentStreak;
           }
         } else {
-          // If absent on a working day, break the streak
           currentStreak = 0;
         }
       }
 
-      // Calculate current ongoing streak (from last present day until today)
       let ongoingStreak = 0;
       const today = new Date();
       
-      // Find the last present date
       let lastPresentDate = null;
       for (let i = 0; i < uniqueDates.length; i++) {
         lastPresentDate = uniqueDates[i];
       }
 
       if (lastPresentDate) {
-        const lastDate = new Date(lastPresentDate);
         let currentDate = new Date(lastPresentDate);
         let streakCount = 0;
         
-        // Count forward from last present date
         while (currentDate <= today) {
           const dateStr = currentDate.toISOString().split('T')[0];
-          // Skip Sundays
           if (currentDate.getDay() !== 0) {
             if (uniqueDates.includes(dateStr)) {
               streakCount++;
             } else {
-              // If there's a gap, break the streak
               break;
             }
           }
@@ -768,12 +623,10 @@ const Dashboard = () => {
       });
     });
 
-    // Sort by streak descending and take top 5
     const results = streaks
       .sort((a, b) => b.streak - a.streak)
       .slice(0, 5);
 
-    // Filter out employees with 0 streak
     const filteredResults = results.filter(r => r.streak > 0);
 
     if (filteredResults.length === 0) {
@@ -1143,13 +996,9 @@ const Dashboard = () => {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
-  // Handle month filter change
+  // Handle month filter change — fetchData auto chalega useEffect se
   const handleMonthChange = (e) => {
-    const newMonth = e.target.value;
-    setSelectedMonth(newMonth);
-    // Fetch top performers for the selected month
-    fetchTopPerformers(newMonth);
-    fetchDepartmentPerformance(newMonth);
+    setSelectedMonth(e.target.value);
   };
 
   const displayTopPerformers = topPerformersData.length > 0 ? topPerformersData : [];
