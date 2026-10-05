@@ -7,7 +7,7 @@ import {
   FaPhoneAlt, FaMapMarkerAlt, FaRupeeSign, FaPrint, FaCheckCircle,
   FaTimesCircle, FaTrashAlt, FaAward, FaUser, FaHospital, FaBuilding,
   FaFlask, FaPills, FaClinicMedical, FaShareAlt, FaUsers, FaDatabase,
-  FaUserPlus, FaUserCheck, FaGift
+  FaUserPlus, FaUserCheck, FaGift, FaMoneyBillWave
 } from "react-icons/fa";
 import {
   FiUsers, FiUserCheck, FiUserX, FiFilter, FiDownload,
@@ -38,6 +38,7 @@ const EMPTY_DOCTOR_FORM = {
   pharmacyCommission: "",
   labCommission: "",
   totalCommission: "",
+  consultationFee: "",
   onboardDate: "",
   referralNotes: "",
   status: "active",
@@ -57,6 +58,7 @@ const EMPTY_CUSTOMER_FORM = {
   pharmacyCommission: "",
   labCommission: "",
   totalCommission: "",
+  consultationFee: "",
   onboardDate: "",
   referralNotes: "",
   status: "active",
@@ -143,7 +145,6 @@ const getServiceReferrerPayable = (referrer, booking) => {
   return 0;
 };
 
-// ✅ Helper: discount display string
 const formatDiscount = (value, type) => {
   if (!value) return "";
   const t = type || "%";
@@ -471,6 +472,7 @@ export default function ReferralManagement() {
         pharmacyCommission: referral.pharmacyCommission || "",
         labCommission: referral.labCommission || "",
         totalCommission: referral.totalCommission || "",
+        consultationFee: referral.consultationFee || "",
         onboardDate: referral.onboardDate || referral.referralDate || "",
         referralNotes: referral.referralNotes || "",
         status: referral.status || "active",
@@ -491,6 +493,7 @@ export default function ReferralManagement() {
         pharmacyCommission: referral.pharmacyCommission || "",
         labCommission: referral.labCommission || "",
         totalCommission: referral.totalCommission || "",
+        consultationFee: referral.consultationFee || "",
         onboardDate: referral.onboardDate || referral.referralDate || "",
         referralNotes: referral.referralNotes || "",
         status: referral.status || "active",
@@ -708,14 +711,15 @@ export default function ReferralManagement() {
       return;
     }
     const headers = isDoctorTab
-      ? ["Sl No", "Name", "Organisation", "Phone", "Specialization", "Address", "Fees %", "Pharmacy %", "Lab %", "Total %", "Discount Fees", "Discount Lab", "Status", "Onboard Date"]
-      : ["Sl No", "Name", "Phone", "Address", "Fees %", "Pharmacy %", "Lab %", "Total %", "Discount Fees", "Discount Lab", "Status", "Onboard Date"];
+      ? ["Sl No", "Name", "Organisation", "Phone", "Specialization", "Address", "Fees %", "Pharmacy %", "Lab %", "Consultation Fee (₹)", "Discount Fees", "Discount Lab", "Status", "Onboard Date"]
+      : ["Sl No", "Name", "Phone", "Address", "Fees %", "Pharmacy %", "Lab %", "Consultation Fee (₹)", "Discount Fees", "Discount Lab", "Status", "Onboard Date"];
 
     const csvRows = [
       headers.join(","),
       ...filteredReferrals.map((r, idx) => {
         const discountFeesStr = r.discountFees ? `${r.discountFees}${r.discountFeesType || "%"}` : "";
         const discountLabStr = r.discountLab ? `${r.discountLab}${r.discountLabType || "%"}` : "";
+        const consultationFeeStr = r.consultationFee ? `₹${r.consultationFee}` : "";
         if (isDoctorTab) {
           return [
             idx + 1,
@@ -724,7 +728,8 @@ export default function ReferralManagement() {
             `"${r.doctorPhone || ""}"`,
             `"${(r.doctorSpecialization || "").replace(/"/g, '""')}"`,
             `"${(r.doctorAddress || "").replace(/"/g, '""')}"`,
-            r.clinicCommission || 0, r.pharmacyCommission || 0, r.labCommission || 0, r.totalCommission || 0,
+            r.clinicCommission || 0, r.pharmacyCommission || 0, r.labCommission || 0,
+            `"${consultationFeeStr}"`,
             `"${discountFeesStr}"`, `"${discountLabStr}"`,
             `"${r.status || "active"}"`,
             `"${formatDate(r.onboardDate || r.referralDate || r.createdAt)}"`
@@ -735,7 +740,8 @@ export default function ReferralManagement() {
             `"${(r.customerName || "").replace(/"/g, '""')}"`,
             `"${r.customerPhone || ""}"`,
             `"${(r.customerAddress || "").replace(/"/g, '""')}"`,
-            r.clinicCommission || 0, r.pharmacyCommission || 0, r.labCommission || 0, r.totalCommission || 0,
+            r.clinicCommission || 0, r.pharmacyCommission || 0, r.labCommission || 0,
+            `"${consultationFeeStr}"`,
             `"${discountFeesStr}"`, `"${discountLabStr}"`,
             `"${r.status || "active"}"`,
             `"${formatDate(r.onboardDate || r.referralDate || r.createdAt)}"`
@@ -959,7 +965,7 @@ export default function ReferralManagement() {
                       <th style={{ textAlign: "center" }}>Fees %</th>
                       <th style={{ textAlign: "center" }}>Pharmacy %</th>
                       <th style={{ textAlign: "center" }}>Lab %</th>
-                      <th style={{ textAlign: "center" }}>Total %</th>
+                      <th style={{ textAlign: "center" }}>Consultation Fee</th>
                       <th style={{ textAlign: "center" }}>Discount</th>
                       <th style={{ textAlign: "center" }}>Status</th>
                       <th style={{ textAlign: "center" }}>Onboard Date</th>
@@ -971,7 +977,7 @@ export default function ReferralManagement() {
                       const clinic = parseFloat(referral.clinicCommission) || 0;
                       const pharmacy = parseFloat(referral.pharmacyCommission) || 0;
                       const lab = parseFloat(referral.labCommission) || 0;
-                      const total = parseFloat(referral.totalCommission) || 0;
+                      const consultationFee = parseFloat(referral.consultationFee) || 0;
                       const name = isDoctorTab ? (referral.doctorName || "N/A") : (referral.customerName || "N/A");
                       const offers = referral.offers || [];
 
@@ -1001,7 +1007,16 @@ export default function ReferralManagement() {
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{clinic}%</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-100">{pharmacy}%</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">{lab}%</span></td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">{total}%</span></td>
+                          {/* Consultation Fee column */}
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {consultationFee > 0 ? (
+                              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-0.5">
+                                <FaRupeeSign className="text-[9px]" />{Math.round(consultationFee)}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">—</span>
+                            )}
+                          </td>
                           <td className="px-3 py-3 text-center">
                             {(referral.discountFees || referral.discountLab) ? (
                               <div className="flex flex-col gap-1 text-[10px] font-bold">
@@ -1047,7 +1062,7 @@ export default function ReferralManagement() {
                   const clinic = parseFloat(referral.clinicCommission) || 0;
                   const pharmacy = parseFloat(referral.pharmacyCommission) || 0;
                   const lab = parseFloat(referral.labCommission) || 0;
-                  const total = parseFloat(referral.totalCommission) || 0;
+                  const consultationFee = parseFloat(referral.consultationFee) || 0;
                   const name = isDoctorTab ? (referral.doctorName || "N/A") : (referral.customerName || "N/A");
 
                   return (
@@ -1088,11 +1103,25 @@ export default function ReferralManagement() {
                             <div className="font-semibold text-slate-700 truncate">{referral.doctorAddress}</div>
                           </div>
                         )}
-                        <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-gray-100">
+
+                        {/* Consultation Fee display in mobile card */}
+                        {consultationFee > 0 && (
+                          <div className="pt-2 border-t border-gray-100">
+                            <div className="flex items-center justify-between bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200">
+                              <span className="text-[10px] font-bold text-emerald-700 uppercase flex items-center gap-1">
+                                <FaMoneyBillWave className="text-[10px]" /> Consultation Fee
+                              </span>
+                              <span className="text-sm font-extrabold text-emerald-900 flex items-center">
+                                <FaRupeeSign className="text-[10px]" />{Math.round(consultationFee)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-gray-100">
                           <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200"><div className="text-[8px] font-bold text-blue-600 uppercase">Fees</div><div className="text-xs font-extrabold text-blue-800">{clinic}%</div></div>
                           <div className="text-center p-1.5 rounded-lg bg-green-50 border border-green-200"><div className="text-[8px] font-bold text-green-600 uppercase">Pharm</div><div className="text-xs font-extrabold text-green-800">{pharmacy}%</div></div>
                           <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200"><div className="text-[8px] font-bold text-purple-600 uppercase">Lab</div><div className="text-xs font-extrabold text-purple-800">{lab}%</div></div>
-                          <div className="text-center p-1.5 rounded-lg bg-gray-100 border border-gray-200"><div className="text-[8px] font-bold text-gray-600 uppercase">Total</div><div className="text-xs font-extrabold text-gray-800">{total}%</div></div>
                         </div>
                         {(referral.discountFees || referral.discountLab) && (
                           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
@@ -1139,11 +1168,10 @@ export default function ReferralManagement() {
           )}
         </div>
 
-        {/* ==================== ADD/EDIT FORM MODAL (BIGGER) ==================== */}
+        {/* ==================== ADD/EDIT FORM MODAL ==================== */}
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-gray-200 relative max-h-[92vh] overflow-hidden flex flex-col">
-              {/* Header */}
               <div className="flex items-center justify-between px-7 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-xl ${isDoctorTab ? "bg-purple-600" : "bg-indigo-600"} text-white flex items-center justify-center font-bold shadow-md`}>
@@ -1157,11 +1185,10 @@ export default function ReferralManagement() {
                 <button onClick={cancelForm} className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100"><FaTimes className="w-5 h-5" /></button>
               </div>
 
-              {/* Body */}
               <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-7 py-6">
                 <div className="space-y-6">
 
-                  {/* ===== SECTION: Basic Info ===== */}
+                  {/* Basic Info */}
                   <div>
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-100">
                       Basic Information
@@ -1238,7 +1265,7 @@ export default function ReferralManagement() {
                     )}
                   </div>
 
-                  {/* ===== SECTION: Consultant Fee ===== */}
+                  {/* Consultant Fee (%) */}
                   <div>
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-100">
                       Consultant Fee (%)
@@ -1275,7 +1302,48 @@ export default function ReferralManagement() {
                     )}
                   </div>
 
-                  {/* ===== SECTION: Onboard Date + Status ===== */}
+                  {/* Consultation Fee (₹ only) */}
+                  <div className="border rounded-xl p-5 bg-emerald-50/40 border-emerald-200">
+                    <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-3 pb-2 border-b border-emerald-200 flex items-center gap-2">
+                      <FaMoneyBillWave className="text-emerald-600 w-4 h-4" /> Consultation Fee (₹)
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-600 uppercase mb-1.5">
+                          Fixed Consultation Fee Amount
+                        </label>
+                        <div className="relative">
+                          <FaRupeeSign className="w-4 h-4 text-emerald-500 absolute left-3.5 top-3" />
+                          <input
+                            type="number"
+                            name="consultationFee"
+                            value={formData.consultationFee || ""}
+                            onChange={handleInputChange}
+                            placeholder="0"
+                            min="0"
+                            className="w-full bg-white border border-emerald-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold text-emerald-900"
+                          />
+                        </div>
+                        <p className="mt-1.5 text-[10px] text-emerald-700 italic">
+                          This is a fixed fee amount in rupees (₹) — not a percentage.
+                        </p>
+                      </div>
+                      {formData.consultationFee && (
+                        <div className="flex items-end">
+                          <div className="w-full p-3 bg-white rounded-lg border border-emerald-200 flex items-center justify-between">
+                            <span className="text-sm font-semibold text-emerald-700 flex items-center gap-1.5">
+                              <FaMoneyBillWave className="w-4 h-4" /> Consultation Fee
+                            </span>
+                            <span className="text-lg font-extrabold text-emerald-900 flex items-center">
+                              <FaRupeeSign className="text-sm" />{parseFloat(formData.consultationFee) || 0}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Additional Details */}
                   <div>
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-100">
                       Additional Details
@@ -1301,7 +1369,7 @@ export default function ReferralManagement() {
                     </div>
                   </div>
 
-                  {/* ===== SECTION: Special Offers (Discount) with % / ₹ dropdown ===== */}
+                  {/* Special Offers */}
                   <div className="border rounded-xl p-5 bg-amber-50/40 border-amber-200">
                     <div className="flex items-center justify-between mb-4">
                       <label className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-2">
@@ -1309,7 +1377,6 @@ export default function ReferralManagement() {
                       </label>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      {/* Fees with dropdown */}
                       <div>
                         <label className="block text-[11px] font-semibold text-gray-600 uppercase mb-1.5">Fees Discount</label>
                         <div className="flex gap-2">
@@ -1338,7 +1405,6 @@ export default function ReferralManagement() {
                         </div>
                       </div>
 
-                      {/* Lab with dropdown */}
                       <div>
                         <label className="block text-[11px] font-semibold text-gray-600 uppercase mb-1.5">Lab Discount</label>
                         <div className="flex gap-2">
@@ -1382,7 +1448,6 @@ export default function ReferralManagement() {
                 </div>
               </form>
 
-              {/* Footer */}
               <div className="flex items-center justify-end gap-3 px-7 py-4 border-t border-gray-100 bg-gray-50">
                 <button type="button" onClick={cancelForm} className="px-5 py-2.5 rounded-lg text-sm font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-300">Cancel</button>
                 <button type="submit" onClick={handleSubmit} disabled={submitting} className={`px-6 py-2.5 rounded-lg text-sm font-bold ${addButtonBg} text-white shadow-sm flex items-center gap-2 disabled:opacity-50`}>
@@ -1443,6 +1508,20 @@ export default function ReferralManagement() {
                     <div className="bg-purple-50 p-2 rounded-lg text-center border border-purple-100"><div className="text-[9px] text-purple-600 font-bold">Lab</div><div className="text-sm font-extrabold text-purple-900">{selectedReferral.labCommission || 0}%</div></div>
                   </div>
                 </div>
+
+                {selectedReferral.consultationFee && parseFloat(selectedReferral.consultationFee) > 0 && (
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="text-[10px] font-bold uppercase text-gray-400">Consultation Fee (₹)</div>
+                    <div className="mt-1 p-3 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-emerald-700 flex items-center gap-1.5">
+                        <FaMoneyBillWave className="w-4 h-4" /> Fixed Fee
+                      </span>
+                      <span className="text-lg font-extrabold text-emerald-900 flex items-center">
+                        <FaRupeeSign className="text-sm" />{Math.round(parseFloat(selectedReferral.consultationFee))}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {(selectedReferral.discountFees || selectedReferral.discountLab) && (
                   <div className="pt-2 border-t border-gray-200">

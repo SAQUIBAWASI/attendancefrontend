@@ -175,7 +175,8 @@ const formatDateToDDMMYYYY = (dateString) => {
     if (isNaN(date.getTime())) return "N/A";
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
-    return `${day}/${month}/${date.getFullYear()}`;
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`;
   } catch { return "N/A"; }
 };
 
@@ -494,7 +495,6 @@ const DateRangePopup = ({
       className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl"
       style={{ top: position.top, left: position.left, zIndex: 999999, width: 340 }}
     >
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <h3 className="text-base font-bold text-gray-900">Date Range</h3>
         <button
@@ -506,7 +506,6 @@ const DateRangePopup = ({
         </button>
       </div>
 
-      {/* From / To */}
       <div className="px-3 py-3 bg-gray-50 flex items-center gap-2">
         <div className="flex-1">
           <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">From</label>
@@ -522,7 +521,6 @@ const DateRangePopup = ({
         </div>
       </div>
 
-      {/* Calendar */}
       <div className="px-3 py-3">
         <div className="flex items-center justify-between mb-2">
           <button
@@ -584,7 +582,6 @@ const DateRangePopup = ({
         </div>
       </div>
 
-      {/* Footer */}
       <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
         <button
           type="button"
@@ -653,9 +650,8 @@ export default function OpManagement() {
   const [activeCardFilter, setActiveCardFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
 
-  const [showRevenueBreakdown, setShowRevenueBreakdown] = useState(true);
+  const [showRevenueBreakdown, setShowRevenueBreakdown] = useState(false);
 
-  // ✅ NEW — Date Range Popup state
   const [showRegDatePopup, setShowRegDatePopup] = useState(false);
   const [showApptDatePopup, setShowApptDatePopup] = useState(false);
   const [regPopupPos, setRegPopupPos] = useState({ top: 0, left: 0 });
@@ -1077,7 +1073,6 @@ export default function OpManagement() {
       if (!e.target.closest(".service-dropdown-add-patient")) setShowServiceSuggestions(false);
       if (!e.target.closest(".city-dropdown-add-patient")) setShowCitySuggestions(false);
       if (!e.target.closest(".action-dropdown")) setOpenActionDropdown(null);
-      // ✅ Date range popups
       if (!e.target.closest('[data-attr="reg"]') && !e.target.closest('[data-btn="reg"]')) {
         setShowRegDatePopup(false);
       }
@@ -1798,7 +1793,7 @@ export default function OpManagement() {
 
   const openMedicineTotalModal = (booking) => {
     setMedicineTotalBooking(booking);
-    setEditingMedicineTotal(String(booking.medicineTotal || 0));
+    setEditingMedicineTotal(booking.medicineTotal ? String(booking.medicineTotal) : "");
     setShowMedicineTotalModal(true);
   };
 
@@ -1823,10 +1818,9 @@ export default function OpManagement() {
 
   const openLabTotalModal = (booking) => {
     setLabTotalBooking(booking);
-    setEditingLabTotal(String(booking.labTotal || 0));
+    setEditingLabTotal(booking.labTotal ? String(booking.labTotal) : "");
     setShowLabTotalModal(true);
   };
-
   const handleSaveLabTotal = async () => {
     if (!labTotalBooking) return;
     const total = parseFloat(editingLabTotal) || 0;
@@ -2734,246 +2728,241 @@ export default function OpManagement() {
           </div>
         )}
 
-     {/* ✅ ROW 1 — Title | Time Filters (CENTER) | Action Buttons */}
-<div className="hidden lg:grid grid-cols-3 items-center gap-2 mb-3">
-  {/* LEFT — Title */}
-  <div className="flex items-center">
-    <h1 className="emp-dash__greeting text-lg font-bold whitespace-nowrap">
-      OP <span>Management</span>
-    </h1>
-  </div>
+        {/* ✅ ROW 1 — Title | Time Filters (CENTER) | Action Buttons */}
+        <div className="hidden lg:grid grid-cols-3 items-center gap-2 mb-3">
+          <div className="flex items-center">
+            <h1 className="emp-dash__greeting text-lg font-bold whitespace-nowrap">
+              OP <span>Management</span>
+            </h1>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            {/* ✅ Search — Today se pehle */}
+            <div className="relative flex-shrink-0">
+              <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[140px] pl-8 pr-2 py-2 text-xs border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
 
-  {/* CENTER — Quick Time Filters */}
-  <div className="flex items-center justify-center">
-    <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200">
-      {TIME_FILTER_OPTIONS.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => handleTimeFilterChange(opt.value)}
-          className={`px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap ${
-            timeFilter === opt.value
-              ? "bg-blue-600 text-white shadow-sm"
-              : "text-gray-600 hover:bg-white hover:text-gray-900"
-          }`}
-          title={opt.label}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  </div>
-
-  {/* RIGHT — Action buttons */}
-  <div className="flex items-center gap-1.5 justify-end">
-    <button
-      onClick={handleAddNewPatient}
-      className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm whitespace-nowrap"
-    >
-      <FiPlus className="w-3.5 h-3.5" /> Add Patient
-    </button>
-    <button
-      onClick={downloadCSV}
-      className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-sm whitespace-nowrap"
-    >
-      <FiDownload className="w-3.5 h-3.5" /> Export CSV
-    </button>
-    <button
-      onClick={() => handleRoleBasedNavigate("/inactive-patients")}
-      className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm whitespace-nowrap"
-    >
-      <FiClock className="w-3.5 h-3.5 text-amber-600" /> Inactive Patients
-    </button>
-  </div>
-</div>
-        {/* ✅ ROW 2 — Search + dropdowns + Reg/Appt date buttons + Month + Calc + Clear */}
-        <div className="hidden lg:flex items-center gap-1.5 flex-nowrap mb-3">
-          <div className="relative flex-shrink-0">
-            <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[130px] pl-8 pr-2 py-2 text-xs border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            />
+            <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200">
+              {TIME_FILTER_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => handleTimeFilterChange(opt.value)}
+                  className={`px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap ${timeFilter === opt.value
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-gray-600 hover:bg-white hover:text-gray-900"
+                    }`}
+                  title={opt.label}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
-          >
-            <option value="All">All Payment</option>
-            <option value="Pending">Pending</option>
-            <option value="Partial">Partial</option>
-            <option value="Paid">Paid</option>
-            <option value="Due">Due</option>
-          </select>
-
-          <select
-            value={bookingTypeFilter}
-            onChange={(e) => setBookingTypeFilter(e.target.value)}
-            className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
-          >
-            {BOOKING_TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-
-          <select
-            value={doctorFilter}
-            onChange={(e) => setDoctorFilter(e.target.value)}
-            className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg max-w-[110px] truncate flex-shrink-0"
-          >
-            <option value="All">All Doctors</option>
-            {getUniqueDoctors().map((doc) => (
-              <option key={doc.name} value={doc.name}>{doc.name}</option>
-            ))}
-          </select>
-
-          <select
-            value={revenueCategoryFilter}
-            onChange={(e) => setRevenueCategoryFilter(e.target.value)}
-            className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
-          >
-            {REVENUE_CATEGORY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-
-          <select
-            value={paymentTypeFilter}
-            onChange={(e) => setPaymentTypeFilter(e.target.value)}
-            className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
-          >
-            {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-
-          {/* ✅ Reg Date Button */}
-          <div className="relative flex-shrink-0">
+          <div className="flex items-center gap-1.5 justify-end">
             <button
-              data-btn="reg"
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const popupWidth = 340;
-                const left = Math.min(rect.left, window.innerWidth - popupWidth - 20);
-                setRegPopupPos({ top: rect.bottom + 6, left });
-                setShowRegDatePopup(!showRegDatePopup);
-                setShowApptDatePopup(false);
-              }}
-              className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${
-                (fromDate || toDate)
-                  ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10"
-                  : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
-              }`}
+              onClick={handleAddNewPatient}
+              className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm whitespace-nowrap"
             >
-              <FaCalendarAlt className="w-3 h-3" />
-              <span>
-                {!fromDate && !toDate
-                  ? "Reg Date"
-                  : fromDate && toDate
-                  ? `${fromDate.slice(8, 10)}/${fromDate.slice(5, 7)} – ${toDate.slice(8, 10)}/${toDate.slice(5, 7)}`
-                  : fromDate
-                  ? `From ${fromDate.slice(8, 10)}/${fromDate.slice(5, 7)}`
-                  : `To ${toDate.slice(8, 10)}/${toDate.slice(5, 7)}`}
-              </span>
-              {(fromDate || toDate) && (
-                <span
-                  onClick={(e) => { e.stopPropagation(); setFromDate(""); setToDate(""); }}
-                  className="ml-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center hover:bg-red-600 cursor-pointer"
-                >✕</span>
-              )}
+              <FiPlus className="w-3.5 h-3.5" /> Add Patient
             </button>
-            <DateRangePopup
-              isOpen={showRegDatePopup}
-              position={regPopupPos}
-              fromDate={fromDate}
-              toDate={toDate}
-              onFromChange={setFromDate}
-              onToChange={setToDate}
-              onClear={() => { setFromDate(""); setToDate(""); }}
-              onClose={() => setShowRegDatePopup(false)}
-              dataAttr="reg"
-            />
+            <button
+              onClick={downloadCSV}
+              className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-sm whitespace-nowrap"
+            >
+              <FiDownload className="w-3.5 h-3.5" /> Export CSV
+            </button>
+            <button
+              onClick={() => handleRoleBasedNavigate("/inactive-patients")}
+              className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm whitespace-nowrap"
+            >
+              <FiClock className="w-3.5 h-3.5 text-amber-600" /> Inactive Patients
+            </button>
           </div>
-
-          {/* ✅ Appt Date Button */}
-          <div className="relative flex-shrink-0">
-            <button
-              data-btn="appt"
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const popupWidth = 340;
-                const left = Math.min(rect.left, window.innerWidth - popupWidth - 20);
-                setApptPopupPos({ top: rect.bottom + 6, left });
-                setShowApptDatePopup(!showApptDatePopup);
-                setShowRegDatePopup(false);
-              }}
-              className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${
-                (apptFromDate || apptToDate)
-                  ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10"
-                  : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
-              }`}
-            >
-              <FaCalendarAlt className="w-3 h-3" />
-              <span>
-                {!apptFromDate && !apptToDate
-                  ? "Appt Date"
-                  : apptFromDate && apptToDate
-                  ? `${apptFromDate.slice(8, 10)}/${apptFromDate.slice(5, 7)} – ${apptToDate.slice(8, 10)}/${apptToDate.slice(5, 7)}`
-                  : apptFromDate
-                  ? `From ${apptFromDate.slice(8, 10)}/${apptFromDate.slice(5, 7)}`
-                  : `To ${apptToDate.slice(8, 10)}/${apptToDate.slice(5, 7)}`}
-              </span>
-              {(apptFromDate || apptToDate) && (
-                <span
-                  onClick={(e) => { e.stopPropagation(); setApptFromDate(""); setApptToDate(""); }}
-                  className="ml-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center hover:bg-red-600 cursor-pointer"
-                >✕</span>
-              )}
-            </button>
-            <DateRangePopup
-              isOpen={showApptDatePopup}
-              position={apptPopupPos}
-              fromDate={apptFromDate}
-              toDate={apptToDate}
-              onFromChange={setApptFromDate}
-              onToChange={setApptToDate}
-              onClear={() => { setApptFromDate(""); setApptToDate(""); }}
-              onClose={() => setShowApptDatePopup(false)}
-              dataAttr="appt"
-            />
-          </div>
-
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={handleMonthChange}
-            className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0 w-[110px]"
-            title="Appointment month"
-          />
-
-          {timeFilter !== "All" && revenueCategoryFilter !== "All" && calculationData && (
-            <button
-              onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }}
-              className="flex items-center gap-1 h-9 px-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex-shrink-0"
-              title="Show Calculation"
-            >
-              <FaCalculator className="w-3.5 h-3.5" /> Calc
-            </button>
-          )}
-
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="flex items-center gap-1 h-9 px-2.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex-shrink-0"
-            >
-              <FiTrash2 className="w-3 h-3 text-red-500" /> Clear
-            </button>
-          )}
         </div>
+
+        {/* ✅ ROW 2 — Filters (sirf tab dikhe jab Revenue Breakdown ON ho) */}
+        {showRevenueBreakdown && (
+          <div className="hidden lg:flex items-center gap-1.5 flex-nowrap mb-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
+            >
+              <option value="All">All Payment</option>
+              <option value="Pending">Pending</option>
+              <option value="Partial">Partial</option>
+              <option value="Paid">Paid</option>
+              <option value="Due">Due</option>
+            </select>
+
+            <select
+              value={bookingTypeFilter}
+              onChange={(e) => setBookingTypeFilter(e.target.value)}
+              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
+            >
+              {BOOKING_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+
+            <select
+              value={doctorFilter}
+              onChange={(e) => setDoctorFilter(e.target.value)}
+              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg max-w-[110px] truncate flex-shrink-0"
+            >
+              <option value="All">All Doctors</option>
+              {getUniqueDoctors().map((doc) => (
+                <option key={doc.name} value={doc.name}>{doc.name}</option>
+              ))}
+            </select>
+
+            <select
+              value={revenueCategoryFilter}
+              onChange={(e) => setRevenueCategoryFilter(e.target.value)}
+              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
+            >
+              {REVENUE_CATEGORY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+
+            <select
+              value={paymentTypeFilter}
+              onChange={(e) => setPaymentTypeFilter(e.target.value)}
+              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
+            >
+              {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+
+            <div className="relative flex-shrink-0">
+              <button
+                data-btn="reg"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const popupWidth = 340;
+                  const left = Math.min(rect.left, window.innerWidth - popupWidth - 20);
+                  setRegPopupPos({ top: rect.bottom + 6, left });
+                  setShowRegDatePopup(!showRegDatePopup);
+                  setShowApptDatePopup(false);
+                }}
+                className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${(fromDate || toDate)
+                    ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10"
+                    : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                  }`}
+              >
+                <FaCalendarAlt className="w-3 h-3" />
+                <span>
+                  {!fromDate && !toDate
+                    ? "Reg Date"
+                    : fromDate && toDate
+                      ? `${fromDate.slice(8, 10)}/${fromDate.slice(5, 7)} – ${toDate.slice(8, 10)}/${toDate.slice(5, 7)}`
+                      : fromDate
+                        ? `From ${fromDate.slice(8, 10)}/${fromDate.slice(5, 7)}`
+                        : `To ${toDate.slice(8, 10)}/${toDate.slice(5, 7)}`}
+                </span>
+                {(fromDate || toDate) && (
+                  <span
+                    onClick={(e) => { e.stopPropagation(); setFromDate(""); setToDate(""); }}
+                    className="ml-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center hover:bg-red-600 cursor-pointer"
+                  >✕</span>
+                )}
+              </button>
+              <DateRangePopup
+                isOpen={showRegDatePopup}
+                position={regPopupPos}
+                fromDate={fromDate}
+                toDate={toDate}
+                onFromChange={setFromDate}
+                onToChange={setToDate}
+                onClear={() => { setFromDate(""); setToDate(""); }}
+                onClose={() => setShowRegDatePopup(false)}
+                dataAttr="reg"
+              />
+            </div>
+
+            <div className="relative flex-shrink-0">
+              <button
+                data-btn="appt"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const popupWidth = 340;
+                  const left = Math.min(rect.left, window.innerWidth - popupWidth - 20);
+                  setApptPopupPos({ top: rect.bottom + 6, left });
+                  setShowApptDatePopup(!showApptDatePopup);
+                  setShowRegDatePopup(false);
+                }}
+                className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${(apptFromDate || apptToDate)
+                    ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10"
+                    : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                  }`}
+              >
+                <FaCalendarAlt className="w-3 h-3" />
+                <span>
+                  {!apptFromDate && !apptToDate
+                    ? "Appt Date"
+                    : apptFromDate && apptToDate
+                      ? `${apptFromDate.slice(8, 10)}/${apptFromDate.slice(5, 7)} – ${apptToDate.slice(8, 10)}/${apptToDate.slice(5, 7)}`
+                      : apptFromDate
+                        ? `From ${apptFromDate.slice(8, 10)}/${apptFromDate.slice(5, 7)}`
+                        : `To ${apptToDate.slice(8, 10)}/${apptToDate.slice(5, 7)}`}
+                </span>
+                {(apptFromDate || apptToDate) && (
+                  <span
+                    onClick={(e) => { e.stopPropagation(); setApptFromDate(""); setApptToDate(""); }}
+                    className="ml-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center hover:bg-red-600 cursor-pointer"
+                  >✕</span>
+                )}
+              </button>
+              <DateRangePopup
+                isOpen={showApptDatePopup}
+                position={apptPopupPos}
+                fromDate={apptFromDate}
+                toDate={apptToDate}
+                onFromChange={setApptFromDate}
+                onToChange={setApptToDate}
+                onClear={() => { setApptFromDate(""); setApptToDate(""); }}
+                onClose={() => setShowApptDatePopup(false)}
+                dataAttr="appt"
+              />
+            </div>
+
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={handleMonthChange}
+              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0 w-[110px]"
+              title="Appointment month"
+            />
+
+            {timeFilter !== "All" && revenueCategoryFilter !== "All" && calculationData && (
+              <button
+                onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }}
+                className="flex items-center gap-1 h-9 px-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex-shrink-0"
+                title="Show Calculation"
+              >
+                <FaCalculator className="w-3.5 h-3.5" /> Calc
+              </button>
+            )}
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 h-9 px-2.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex-shrink-0"
+              >
+                <FiTrash2 className="w-3 h-3 text-red-500" /> Clear
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Header Mobile */}
         <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
@@ -3001,8 +2990,8 @@ export default function OpManagement() {
                 key={opt.value}
                 onClick={() => handleTimeFilterChange(opt.value)}
                 className={`px-4 py-2.5 text-xs font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${timeFilter === opt.value
-                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                    : "bg-white text-gray-600 border-gray-300"
+                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                  : "bg-white text-gray-600 border-gray-300"
                   }`}
               >
                 {opt.label}
@@ -3021,7 +3010,7 @@ export default function OpManagement() {
 
         {/* Mobile Filters */}
         <div className="lg:hidden">
-          {showMobileFilters && (
+          {showMobileFilters && showRevenueBreakdown && (
             <div className="mb-4 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
               <div><label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
                 <div className="relative">
@@ -3066,19 +3055,17 @@ export default function OpManagement() {
                   <input type="date" value={apptToDate} onChange={handleApptToChange} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
                 </div>
               </div>
-             {/* ✅ Month Wise Filter */}
-{/* ✅ Month Wise Filter */}
-<div className="flex items-center gap-1.5 h-9 px-2 border border-gray-300 bg-white rounded-lg flex-shrink-0">
-  <FaCalendarAlt className="w-3 h-3 text-gray-500" />
-  <span className="text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Month Wise:</span>
-  <input
-    type="month"
-    value={selectedMonth}
-    onChange={handleMonthChange}
-    className="text-[11px] border-0 bg-transparent text-gray-900 focus:outline-none w-[110px]"
-    title="Filter by appointment month"
-  />
-</div>
+              <div className="flex items-center gap-1.5 h-9 px-2 border border-gray-300 bg-white rounded-lg flex-shrink-0">
+                <FaCalendarAlt className="w-3 h-3 text-gray-500" />
+                <span className="text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Month Wise:</span>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={handleMonthChange}
+                  className="text-[11px] border-0 bg-transparent text-gray-900 focus:outline-none w-[110px]"
+                  title="Filter by appointment month"
+                />
+              </div>
               <div className="pt-3 border-t border-gray-200 flex gap-2">
                 <button onClick={handleAddNewPatient} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg"><FiPlus className="w-4 h-4" /> Add Patient</button>
                 <button onClick={downloadCSV} disabled={!filteredPatients.length} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg disabled:opacity-50"><FiDownload className="w-4 h-4" /> Export</button>
@@ -3098,7 +3085,6 @@ export default function OpManagement() {
             <div className="flex items-center gap-2">
               <FaMoneyBillWave className="text-indigo-600 w-5 h-5" />
               <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Revenue Breakdown</h3>
-              <span className="text-xs text-gray-500">(based on current filters)</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-indigo-700 bg-white px-3 py-1 rounded-full border border-indigo-200">
@@ -3236,7 +3222,7 @@ export default function OpManagement() {
           </div>
         </div>
 
-        {/* ADD/EDIT MODAL — unchanged (same as before) */}
+        {/* ADD/EDIT MODAL — unchanged */}
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
             <button onClick={cancelForm} className="absolute top-4 right-4 sm:top-6 sm:right-24 z-[60] w-10 h-10 rounded-full bg-white text-gray-700 hover:bg-red-500 hover:text-white shadow-2xl border-2 border-gray-200 hover:border-red-500 flex items-center justify-center transition-all" title="Close">
@@ -3759,22 +3745,18 @@ export default function OpManagement() {
                   <thead>
                     <tr>
                       <th style={{ width: "35px", textAlign: "center" }}>#</th>
-                      <th>Patient</th><th>Phone</th><th>Doctor</th>
-                      <th style={{ textAlign: "center" }}>Booking Type</th>
-                      <th style={{ textAlign: "center" }}>Appt. Date & Time</th>
-                      <th style={{ textAlign: "center" }}>Booking Status</th>
+                      <th style={{ minWidth: "180px" }}>Patient</th>
+                      <th style={{ minWidth: "170px" }}>Doctor / Booking / Date</th>
+                      <th style={{ textAlign: "center" }}>Bookng Status</th>
                       <th style={{ textAlign: "center", minWidth: "150px" }}>Amount</th>
-                      <th style={{ textAlign: "center" }}>Discount</th>
-                      <th style={{ textAlign: "center" }}>Offer</th>
                       <th style={{ textAlign: "center" }}>Total</th>
-                      <th style={{ textAlign: "center" }}>Paid</th>
+                      <th style={{ textAlign: "center" }}>Disc.</th>
                       <th style={{ textAlign: "center" }}>DUE</th>
-                      <th style={{ textAlign: "center" }}>Payment Type</th>
-                      <th style={{ textAlign: "center" }}>Payment Status</th>
-                      <th style={{ textAlign: "center" }}>Referred By (Customer)</th>
-                      <th style={{ textAlign: "center" }}>Referred By (Doctor)</th>
+                      <th style={{ textAlign: "center" }}>Paid</th>
+                      <th style={{ textAlign: "center" }}>Pment Type</th>
+                      <th style={{ textAlign: "center" }}>Pment Status</th>
+                      <th style={{ textAlign: "center", minWidth: "150px" }}>Referred By</th>
                       <th style={{ textAlign: "center" }}>Created At</th>
-                      <th style={{ textAlign: "center" }}>Review</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
                     </tr>
                   </thead>
@@ -3799,33 +3781,41 @@ export default function OpManagement() {
                       const discountAmount = Number(matchingBooking?.discount) || 0;
                       const bookingTypeInfo = getBookingType(matchingBooking);
                       const BookingTypeIcon = bookingTypeInfo.icon;
-                      const offerApplied = matchingBooking?.offerApplied;
 
                       return (
                         <tr key={patient._id} className="hover:bg-blue-50/40">
                           <td className="px-2 py-3 text-center text-slate-500 text-[11px]">{indexOfFirstItem + idx + 1}</td>
+
+                        <td className="px-3 py-3">
+  <div className="flex items-center gap-2.5">
+    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] flex-shrink-0">
+      {patient.name ? patient.name.charAt(0).toUpperCase() : "P"}
+    </div>
+    <div className="min-w-0 flex-1">
+      <div className="font-semibold text-slate-800 text-xs whitespace-normal break-words leading-tight min-w-[140px]">
+        {patient.title || ""} {patient.name || "N/A"}
+      </div>
+      <div className="text-[10px] text-gray-500 font-medium">{patient.age || "N/A"} yrs · {patient.gender || "N/A"}</div>
+      <div className="text-[10px] text-gray-500 flex items-center gap-1"><FaPhoneAlt className="text-[8px]" /> {patient.phone || "N/A"}</div>
+    </div>
+  </div>
+</td>
+                          {/* ✅ MERGED — Doctor + Booking Type + Appt. Date & Time */}
                           <td className="px-3 py-3">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-[10px]">{patient.name ? patient.name.charAt(0).toUpperCase() : "P"}</div>
+                            <div className="flex flex-col gap-0.5 min-w-[150px]">
+                              <div className="text-xs font-semibold text-purple-800 truncate max-w-[140px]">{matchingBooking?.doctorName || "N/A"}</div>
                               <div>
-                                <div className="font-semibold text-slate-800 text-xs truncate max-w-[80px]">{patient.title || ""} {patient.name || "N/A"}</div>
-                                <div className="text-[9px] text-gray-400">{patient.age || "N/A"} yrs</div>
+                                {matchingBooking ? (
+                                  <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
+                                    <BookingTypeIcon className="w-2 h-2" /> {bookingTypeInfo.label}
+                                  </span>
+                                ) : (<span className="text-[9px] text-gray-400 italic">N/A</span>)}
                               </div>
+                              <div className="text-[10px] font-semibold text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</div>
+                              {slotTiming !== "-" && (<div className="text-[9px] text-blue-700 font-semibold">{slotTiming}</div>)}
                             </div>
                           </td>
-                          <td className="px-3 py-3 whitespace-nowrap text-xs">{patient.phone || "N/A"}</td>
-                          <td className="px-3 py-3"><div className="text-xs font-semibold text-purple-800 truncate max-w-[90px]">{matchingBooking?.doctorName || "N/A"}</div></td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {matchingBooking ? (
-                              <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
-                                <BookingTypeIcon className="w-2.5 h-2.5" /> {bookingTypeInfo.label}
-                              </span>
-                            ) : (<span className="text-[10px] text-gray-400 italic">N/A</span>)}
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap text-xs">
-                            <div className="font-semibold text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</div>
-                            {slotTiming !== "-" && (<div className="text-[10px] text-blue-700 font-semibold mt-0.5">{slotTiming}</div>)}
-                          </td>
+
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {bookingStatus !== "No Booking" && matchingBooking ? (
                               <div className="relative inline-block status-dropdown">
@@ -3875,22 +3865,12 @@ export default function OpManagement() {
                               </div>
                             </div>
                           </td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-slate-800">₹{Math.round(paidInfo.final)}</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {discountAmount > 0 ? (<span className="text-xs font-bold text-red-600">− ₹{Math.round(discountAmount)}</span>) : <span className="text-xs text-gray-400">—</span>}
                           </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {offerApplied && offerApplied.offerAmount > 0 ? (
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
-                                  <FaGift className="w-2.5 h-2.5" /> {offerApplied.offerName}
-                                </span>
-                                <span className="text-[10px] font-extrabold text-amber-900">− ₹{offerApplied.offerAmount}</span>
-                              </div>
-                            ) : <span className="text-[10px] text-gray-400 italic">—</span>}
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-slate-800">₹{Math.round(paidInfo.final)}</span></td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</span></td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {matchingBooking?.paymentType ? (
                               <button onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer">
@@ -3927,31 +3907,44 @@ export default function OpManagement() {
                               )
                             ) : <span className="text-[10px] text-gray-400 italic">N/A</span>}
                           </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {referredByCustomer ? <div className="flex items-center justify-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100"><FaUserFriends className="text-[9px]" /><span className="truncate max-w-[80px]">{referredByCustomer}</span></div> : <span className="text-[10px] text-gray-400 italic">N/A</span>}
+
+                          <td className="px-3 py-3">
+                            <div className="flex flex-col gap-1 min-w-[120px]">
+                              {referredByCustomer ? (
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRoleBasedNavigate("/referral-management");
+                                  }}
+                                  className="flex items-center gap-1 text-[10px] font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors"
+                                  title="Go to Referral Management"
+                                >
+                                  <FaUserFriends className="text-[8px] flex-shrink-0" />
+                                  <span className="truncate max-w-[90px]">{referredByCustomer}</span>
+                                </div>
+                              ) : (<span className="text-[9px] text-gray-400 italic">No Customer</span>)}
+                              {referredByDoctor ? (
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRoleBasedNavigate("/referral-management");
+                                  }}
+                                  className="flex items-center gap-1 text-[10px] font-medium text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-full border border-indigo-100 cursor-pointer hover:bg-indigo-100 transition-colors"
+                                  title="Go to Referral Management"
+                                >
+                                  <FaUserMdIcon className="text-[8px] flex-shrink-0" />
+                                  <span className="truncate max-w-[90px]">{referredByDoctor}</span>
+                                </div>
+                              ) : (<span className="text-[9px] text-gray-400 italic">No Doctor</span>)}
+                            </div>
                           </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {referredByDoctor ? <div className="flex items-center justify-center gap-1 text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100"><FaUserMdIcon className="text-[9px]" /><span className="truncate max-w-[80px]">{referredByDoctor}</span></div> : <span className="text-[10px] text-gray-400 italic">N/A</span>}
-                          </td>
+                          {/* Created At */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <div className="text-[10px] font-semibold text-slate-700">{formatDateToDDMMYYYY(createdAt)}</div>
                             <div className="text-[9px] text-gray-400 mt-0.5">{createdAt ? new Date(createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "N/A"}</div>
                           </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {(() => {
-                              const rStatus = getReviewWindowStatus(matchingBooking);
-                              if (matchingBooking?.isReviewed) {
-                                return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-emerald-50 text-emerald-700 border-emerald-200"><FaCheckCircle className="w-2.5 h-2.5" /> Reviewed</span>);
-                              }
-                              if (rStatus.expired) {
-                                return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-red-50 text-red-700 border-red-200"><FaTimesCircle className="w-2.5 h-2.5" /> Expired</span>);
-                              }
-                              if (rStatus.canReview) {
-                                return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-amber-50 text-amber-700 border-amber-200"><FaClock className="w-2.5 h-2.5" /> Pending ({rStatus.daysLeft}d)</span>);
-                              }
-                              return (<span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-gray-50 text-gray-500 border-gray-200"><FaClock className="w-2.5 h-2.5" /> —</span>);
-                            })()}
-                          </td>
+
+                          {/* Actions */}
                           <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="relative inline-block action-dropdown">
                               <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(openActionDropdown === patient._id ? null : patient._id); }} className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors" title="Actions">
@@ -4011,7 +4004,7 @@ export default function OpManagement() {
                 </table>
               </div>
 
-              {/* MOBILE CARD VIEW — abbreviated (same as before) */}
+              {/* MOBILE CARD VIEW */}
               <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
                 {currentPatients.map((patient, idx) => {
                   const matchingBooking = getMatchingBooking(patient);
@@ -4020,11 +4013,8 @@ export default function OpManagement() {
                   const appointmentDate = getAppointmentDate(patient);
                   const slotTiming = getSlotTiming(patient);
                   const statusColors = getStatusColors(bookingStatus);
-                  const paymentColors = getPaymentStatusColors(consultationPaymentStatus);
                   const paidInfo = getBookingPaidInfo(matchingBooking);
                   const amountBreakdown = getAmountBreakdown(matchingBooking);
-                  const isPaid = consultationPaymentStatus === "Paid";
-                  const isPartial = consultationPaymentStatus === "Partial";
                   const isActive = getPatientActiveStatus(patient);
                   const isToggling = togglingStatus === patient._id;
                   const discountAmount = Number(matchingBooking?.discount) || 0;
@@ -4182,11 +4172,10 @@ export default function OpManagement() {
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">
                         {timeFilter}
                       </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${
-                        revenueCategoryFilter === "clinic" ? "bg-blue-100 text-blue-700 border-blue-200" :
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${revenueCategoryFilter === "clinic" ? "bg-blue-100 text-blue-700 border-blue-200" :
                         revenueCategoryFilter === "lab" ? "bg-purple-100 text-purple-700 border-purple-200" :
-                        "bg-green-100 text-green-700 border-green-200"
-                      }`}>
+                          "bg-green-100 text-green-700 border-green-200"
+                        }`}>
                         {revenueCategoryFilter} Only
                       </span>
                     </h3>
@@ -4277,7 +4266,7 @@ export default function OpManagement() {
           </div>
         )}
 
-        {/* PATIENT MODAL — abbreviated */}
+        {/* PATIENT MODAL */}
         {showPatientModal && selectedPatient && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border">
