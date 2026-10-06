@@ -1,4 +1,4 @@
-// OpManagement.js — COMPLETE (DateRange Popup + Time Filter + Filter Collapse + Compact Mobile Form + Calculation Popup)
+// OpManagement.js — COMPLETE (DateRange Popup + Time Filter + Filter Collapse + Compact Mobile Form + Calculation Popup + 3-Row Payment Columns + Per-Category Status)
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -49,11 +49,11 @@ const PAYMENT_TYPE_OPTIONS = [
   { value: "cash", label: "Cash" },
   { value: "online", label: "Online" },
   { value: "insurance", label: "Insurance" },
-  { value: "card", label: "Card" }
+  { value: "card", label: "Card" },
+  { value: "due", label: "Due" }
 ];
 
 const PAYMENT_STATUS_OPTIONS = [
-  { value: "Pending", label: "Pending" },
   { value: "Partial", label: "Partial" },
   { value: "Paid", label: "Paid" },
   { value: "Due", label: "Due" }
@@ -86,6 +86,7 @@ const PAYMENT_TYPE_FILTER_OPTIONS = [
   { value: "online", label: "Online" },
   { value: "insurance", label: "Insurance" },
   { value: "card", label: "Card" },
+  { value: "due", label: "Due" },
 ];
 
 const TIME_FILTER_OPTIONS = [
@@ -106,7 +107,7 @@ const DISCOUNT_TYPE_OPTIONS = [
 const EMPTY_FORM = {
   title: "Mr.", name: "", dob: "", age: "", gender: "Male",
   phone: "", address: "", city: "", pincode: "",
-  serviceItems: [], paymentType: "cash", reason: "", paymentStatus: "Pending",
+  serviceItems: [], paymentType: "cash", reason: "", paymentStatus: "Due",
   doctorId: "", slotId: "", appointmentDate: "", selectedServices: [],
   referredByCustomer: "", referredByDoctor: "", referralCustomerId: "",
   referralDoctorId: "", referralCommission: "", referralCommissionType: "",
@@ -206,13 +207,13 @@ const getStatusColors = (status) => {
 };
 
 const getPaymentStatusColors = (status) => {
+  const normalized = status === "Pending" ? "Due" : status;
   const map = {
     Paid: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", icon: FaCheckCircle, iconColor: "text-emerald-600" },
     Partial: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", icon: FaClock, iconColor: "text-amber-600" },
-    Pending: { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200", icon: FaClock, iconColor: "text-gray-500" },
     Due: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", icon: FaTimesCircle, iconColor: "text-red-500" }
   };
-  return map[status] || map.Pending;
+  return map[normalized] || map.Due;
 };
 
 const getBookingType = (booking) => {
@@ -242,29 +243,37 @@ const getBookingServices = (booking) => {
   const fromServices = Array.isArray(booking.services) && booking.services.length > 0 ? booking.services : null;
   const arr = fromServiceItems || fromServices || [];
 
-  const baseServices = arr.map((s) => ({
-    serviceId: s.serviceId || s._id || "",
-    _id: s.serviceId || s._id || "",
-    name: s.name || "Service",
-    price: Number(s.price) || 0,
-    description: s.description || "",
-    category: s.category || s.serviceCategory || s.type || "",
-    paymentStatus: s.paymentStatus || booking.paymentStatus || "Pending",
-    isReviewService: false,
-  }));
+  const baseServices = arr.map((s) => {
+    const rawStatus = s.paymentStatus || booking.paymentStatus || "Due";
+    const normalizedStatus = rawStatus === "Pending" ? "Due" : rawStatus;
+    return {
+      serviceId: s.serviceId || s._id || "",
+      _id: s.serviceId || s._id || "",
+      name: s.name || "Service",
+      price: Number(s.price) || 0,
+      description: s.description || "",
+      category: s.category || s.serviceCategory || s.type || "",
+      paymentStatus: normalizedStatus,
+      isReviewService: false,
+    };
+  });
 
   const reviewServices = Array.isArray(booking?.reviews)
-    ? booking.reviews.map((r) => ({
-      serviceId: r.serviceId || r._id || "",
-      _id: r.serviceId || r._id || "",
-      name: r.name || "Review Service",
-      price: Number(r.price) || 0,
-      description: r.description || "",
-      category: "clinic",
-      paymentStatus: booking.paymentStatus || "Pending",
-      isReviewService: true,
-      addedAt: r.addedAt || null,
-    }))
+    ? booking.reviews.map((r) => {
+      const rawStatus = booking.paymentStatus || "Due";
+      const normalizedStatus = rawStatus === "Pending" ? "Due" : rawStatus;
+      return {
+        serviceId: r.serviceId || r._id || "",
+        _id: r.serviceId || r._id || "",
+        name: r.name || "Review Service",
+        price: Number(r.price) || 0,
+        description: r.description || "",
+        category: "clinic",
+        paymentStatus: normalizedStatus,
+        isReviewService: true,
+        addedAt: r.addedAt || null,
+      };
+    })
     : [];
 
   return [...baseServices, ...reviewServices];
@@ -333,14 +342,36 @@ const getBookingFinalPayable = (booking) => {
 };
 
 const getBookingPaidInfo = (booking) => {
-  if (!booking) return { final: 0, paid: 0, balance: 0, status: "Pending" };
+  if (!booking) return { final: 0, paid: 0, balance: 0, status: "Due" };
   const final = getBookingFinalPayable(booking);
-  const status = booking.paymentStatus || "Pending";
+  const rawStatus = booking.paymentStatus || "Due";
+  const status = rawStatus === "Pending" ? "Due" : rawStatus;
   let paid = Number(booking.amountPaid) || 0;
   if (status === "Paid") paid = final;
-  else if (status === "Pending" || status === "Due") paid = 0;
+  else if (status === "Due") paid = 0;
   const balance = Math.max(0, final - paid);
   return { final, paid, balance, status };
+};
+
+const getCategoryStatuses = (breakdown, amountPaid) => {
+  const order = ["clinic", "lab", "pharmacy"];
+  const result = {};
+  let remaining = Number(amountPaid) || 0;
+  order.forEach((cat) => {
+    const amt = Number(breakdown?.[cat]) || 0;
+    if (amt <= 0) {
+      result[cat] = "Due";
+    } else if (remaining >= amt) {
+      result[cat] = "Paid";
+      remaining -= amt;
+    } else if (remaining > 0) {
+      result[cat] = "Partial";
+      remaining = 0;
+    } else {
+      result[cat] = "Due";
+    }
+  });
+  return result;
 };
 
 const getReviewWindowStatus = (booking) => {
@@ -375,8 +406,8 @@ const fetchCityFromPincode = async (pincode) => {
 const computePaymentStatusFromAmount = (amountEntered, finalPayable) => {
   const amt = parseFloat(amountEntered) || 0;
   const final = parseFloat(finalPayable) || 0;
-  if (final <= 0) return amt > 0 ? "Paid" : "Pending";
-  if (amt <= 0) return "Pending";
+  if (final <= 0) return amt > 0 ? "Paid" : "Due";
+  if (amt <= 0) return "Due";
   if (amt >= final) return "Paid";
   return "Partial";
 };
@@ -624,7 +655,8 @@ export default function OpManagement() {
   const [filteredServices, setFilteredServices] = useState([]);
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
 
-  const [openStatusDropdown, setOpenStatusDropdown] = useState(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusModalBooking, setStatusModalBooking] = useState(null);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [openPaymentDropdown, setOpenPaymentDropdown] = useState(null);
   const [paymentUpdating, setPaymentUpdating] = useState(false);
@@ -640,6 +672,7 @@ export default function OpManagement() {
   const [bookingTypeFilter, setBookingTypeFilter] = useState("All");
   const [revenueCategoryFilter, setRevenueCategoryFilter] = useState("All");
   const [paymentTypeFilter, setPaymentTypeFilter] = useState("All");
+  const [referredByFilter, setReferredByFilter] = useState("All");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -756,7 +789,8 @@ export default function OpManagement() {
     fromDate !== "" || toDate !== "" || apptFromDate !== "" || apptToDate !== "" ||
     (selectedMonth && selectedMonth !== "") ||
     (timeFilter && timeFilter !== "All") ||
-    revenueCategoryFilter !== "All" || paymentTypeFilter !== "All";
+    revenueCategoryFilter !== "All" || paymentTypeFilter !== "All" ||
+    referredByFilter !== "All";
 
   useEffect(() => {
     const isMobile = window.innerWidth < 1024;
@@ -798,8 +832,6 @@ export default function OpManagement() {
 
   const handleAddClinicServiceItem = (service) => {
     if (!service) return;
-    const alreadyExists = clinicServicesList.some((s) => s.name.toLowerCase() === (service.name || "").toLowerCase());
-    if (alreadyExists) { showToast("Service already added!", "info"); return; }
     setClinicServicesList((prev) => [...prev, {
       serviceId: service._id || "",
       name: service.name,
@@ -817,8 +849,6 @@ export default function OpManagement() {
     const price = clinicServicePrice.trim();
     if (!name) { showToast("Please enter a service name", "error"); return; }
     if (!price) { showToast("Please enter service price", "error"); return; }
-    const alreadyExists = clinicServicesList.some((s) => s.name.toLowerCase() === name.toLowerCase());
-    if (alreadyExists) { showToast("Service already added!", "info"); return; }
     const existingService = services.find((s) => s.name.toLowerCase() === name.toLowerCase());
     if (existingService) { handleAddClinicServiceItem(existingService); return; }
 
@@ -939,6 +969,8 @@ export default function OpManagement() {
       const key = (b.patientPhone || b.patientName || "").toString().trim();
       if (!key) return;
       if (!map.has(key)) {
+        const rawPS = b.paymentStatus || "Due";
+        const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
         map.set(key, {
           _id: b.patientId || b._id || key,
           title: b.patientTitle || "Mr.", name: b.patientName || "",
@@ -952,7 +984,7 @@ export default function OpManagement() {
           medications: b.patientMedications || "",
           reason: b.purpose || "",
           paymentType: b.paymentType || "cash",
-          paymentStatus: b.paymentStatus || "Pending",
+          paymentStatus: normalizedPS,
           serviceItems: getBookingServices(b),
           referredByCustomer: b.referredByCustomer || "",
           referredByDoctor: b.referredByDoctor || "",
@@ -1068,7 +1100,6 @@ export default function OpManagement() {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!e.target.closest(".status-dropdown")) setOpenStatusDropdown(null);
       if (!e.target.closest(".payment-dropdown")) setOpenPaymentDropdown(null);
       if (!e.target.closest(".service-dropdown-add-patient")) setShowServiceSuggestions(false);
       if (!e.target.closest(".city-dropdown-add-patient")) setShowCitySuggestions(false);
@@ -1134,16 +1165,23 @@ export default function OpManagement() {
           (Array.isArray(b.serviceItems) && b.serviceItems.length > 0 && b.serviceItems) ||
           [];
 
-        const normalizedServices = rawServices.map((s) => ({
-          serviceId: s.serviceId || s._id || "",
-          _id: s.serviceId || s._id || "",
-          name: s.name || "Service",
-          price: Number(s.price) || 0,
-          description: s.description || "",
-          category: s.category || s.serviceCategory || s.type || "",
-          paymentStatus: s.paymentStatus || b.paymentStatus || "Pending",
-          addedAt: s.addedAt || b.createdAt || new Date().toISOString(),
-        }));
+        const normalizedServices = rawServices.map((s) => {
+          const rawSvcPS = s.paymentStatus;
+          const rawBookPS = b.paymentStatus;
+          const fallback = rawSvcPS
+            ? (rawSvcPS === "Pending" ? "Due" : rawSvcPS)
+            : (rawBookPS ? (rawBookPS === "Pending" ? "Due" : rawBookPS) : "Due");
+          return {
+            serviceId: s.serviceId || s._id || "",
+            _id: s.serviceId || s._id || "",
+            name: s.name || "Service",
+            price: Number(s.price) || 0,
+            description: s.description || "",
+            category: s.category || s.serviceCategory || s.type || "",
+            paymentStatus: fallback,
+            addedAt: s.addedAt || b.createdAt || new Date().toISOString(),
+          };
+        });
 
         const servicesTotal = normalizedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
         const subtotal = Number(b.subtotal) || servicesTotal;
@@ -1155,6 +1193,8 @@ export default function OpManagement() {
         const totalAmount = Number(b.totalAmount) || Number(b.grandTotal) || finalPayable;
         const amountPaid = Number(b.amountPaid) || 0;
         const balanceAmount = Number(b.balanceAmount) || Math.max(0, finalPayable - amountPaid);
+        const rawBookingPS = b.paymentStatus || "Due";
+        const normalizedBookingPS = rawBookingPS === "Pending" ? "Due" : rawBookingPS;
 
         return {
           _id: b._id || b.id,
@@ -1186,7 +1226,7 @@ export default function OpManagement() {
           appointmentType: b.appointmentType || "Consultation",
           priority: b.priority || "Normal",
           paymentType: b.paymentType || "cash",
-          paymentStatus: b.paymentStatus || "Pending",
+          paymentStatus: normalizedBookingPS,
           partialAmount: Number(b.partialAmount) || 0,
           subtotal, commissionAmount, discount, finalPayable, finalPayableAmount: finalPayable,
           totalAmount, grandTotal: totalAmount, amountPaid, balanceAmount,
@@ -1341,6 +1381,8 @@ export default function OpManagement() {
         .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       const latest = matches[0];
       if (latest) {
+        const rawPS = latest.paymentStatus || "Due";
+        const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
         const derived = patients.find((p) => p.phone === value) || {
           _id: latest.patientId || latest._id,
           title: latest.patientTitle || "Mr.",
@@ -1350,7 +1392,7 @@ export default function OpManagement() {
           address: latest.patientAddress || "", city: latest.patientCity || "",
           pincode: latest.patientPincode || "", reason: latest.purpose || "",
           paymentType: latest.paymentType || "cash",
-          paymentStatus: latest.paymentStatus || "Pending",
+          paymentStatus: normalizedPS,
           serviceItems: getBookingServices(latest),
           referredByCustomer: latest.referredByCustomer || "",
           referredByDoctor: latest.referredByDoctor || "",
@@ -1385,7 +1427,7 @@ export default function OpManagement() {
       referralDoctorId: existingPatient.referralDoctorId || "",
       referralCommission: existingPatient.referralCommission || "",
       referralCommissionType: existingPatient.referralCommissionType || "",
-      serviceItems: [], paymentStatus: "Pending", partialAmount: "",
+      serviceItems: [], paymentStatus: "Due", partialAmount: "",
       discount: "", discountType: "₹", paymentType: "cash",
       doctorId: "", slotId: "", offerApplied: null,
     }));
@@ -1482,9 +1524,6 @@ export default function OpManagement() {
 
   const handleAddServiceItem = (service) => {
     if (!service) return;
-    if (formData.serviceItems.some((s) => s._id === service._id)) {
-      showToast("Service already added!", "info"); return;
-    }
     setFormData((prev) => ({ ...prev, serviceItems: [...prev.serviceItems, { ...service, custom: false }] }));
     setFilteredServices([]);
     setShowServiceSuggestions(false);
@@ -1541,6 +1580,9 @@ export default function OpManagement() {
     const slotId = existingBooking?.slotId || existingBooking?._id || "";
     const bookingId = existingBooking?._id || "";
 
+    const rawPS = existingBooking?.paymentStatus || patient.paymentStatus || "Due";
+    const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
+
     setFormData({
       title: existingBooking?.patientTitle || patient.title || "Mr.",
       name: existingBooking?.patientName || patient.name || "",
@@ -1554,7 +1596,7 @@ export default function OpManagement() {
       serviceItems: getBookingServices(existingBooking),
       paymentType: existingBooking?.paymentType || patient.paymentType || "cash",
       reason: existingBooking?.purpose || patient.reason || "",
-      paymentStatus: existingBooking?.paymentStatus || patient.paymentStatus || "Pending",
+      paymentStatus: normalizedPS,
       doctorId, slotId, bookingId, appointmentDate,
       selectedServices: existingBooking?.services || [],
       referredByCustomer: existingBooking?.referredByCustomer || patient.referredByCustomer || "",
@@ -1674,26 +1716,30 @@ export default function OpManagement() {
     }
   };
 
-  const handleStatusDropdownToggle = (bookingId, e) => {
-    e.stopPropagation();
-    setOpenStatusDropdown(openStatusDropdown === bookingId ? null : bookingId);
-  };
-
   const handleStatusSelect = async (booking, status, e) => {
     if (e) { e.stopPropagation(); e.preventDefault(); }
-    if (statusUpdating || status === booking.status) { setOpenStatusDropdown(null); return; }
+    if (statusUpdating || status === booking.status) {
+      setShowStatusModal(false);
+      setStatusModalBooking(null);
+      return;
+    }
     setStatusUpdating(true);
     try {
       const res = await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, { status });
       if (res?.data?.success) {
         showToast(`Status updated to ${status}!`, "success");
-        setOpenStatusDropdown(null);
+        setShowStatusModal(false);
+        setStatusModalBooking(null);
         await fetchBookings();
         refreshPatientBookings();
-      } else showToast(res.data.message || "Failed to update status", "error");
+      } else {
+        showToast(res.data.message || "Failed to update status", "error");
+      }
     } catch (error) {
       showToast(error.response?.data?.message || "Failed to update status", "error");
-    } finally { setStatusUpdating(false); }
+    } finally {
+      setStatusUpdating(false);
+    }
   };
 
   const handlePaymentDropdownToggle = (bookingId, e) => {
@@ -1704,7 +1750,7 @@ export default function OpManagement() {
   const handlePaymentSelect = async (booking, paymentStatus, e) => {
     if (e) { e.stopPropagation(); e.preventDefault(); }
     if (paymentUpdating || paymentStatus === booking.paymentStatus) { setOpenPaymentDropdown(null); return; }
-    if (paymentStatus === "Partial" || paymentStatus === "Pending") {
+    if (paymentStatus === "Partial" || paymentStatus === "Due") {
       openPartialModal(booking);
       setOpenPaymentDropdown(null);
       return;
@@ -2178,7 +2224,10 @@ export default function OpManagement() {
     b.patientPhone === patient.phone ||
     (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
 
-  const getConsultationPaymentStatus = (patient) => getMatchingBooking(patient)?.paymentStatus || patient.paymentStatus || "Pending";
+  const getConsultationPaymentStatus = (patient) => {
+    const raw = getMatchingBooking(patient)?.paymentStatus || patient.paymentStatus || "Due";
+    return raw === "Pending" ? "Due" : raw;
+  };
   const getBookingStatus = (patient) => getMatchingBooking(patient)?.status || "No Booking";
   const getAppointmentDate = (patient) => {
     const b = getMatchingBooking(patient);
@@ -2365,12 +2414,14 @@ export default function OpManagement() {
     normalizedItems.forEach((s, idx) => {
       const cat = classifyService(s);
       const finalCat = s.isReviewService ? "clinic" : cat;
+      const rawPS = booking.paymentStatus || "Due";
+      const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
       items.push({
         no: items.length + 1, name: s.name,
         serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
         remarks: s.isReviewService ? "Review Service" : finalCat === "lab" ? "Lab Test" : finalCat === "pharmacy" ? "Pharmacy" : "Consultation",
         category: finalCat, amount: Number(s.price) || 0,
-        paymentStatus: booking.paymentStatus || "Pending",
+        paymentStatus: normalizedPS,
         isReviewService: s.isReviewService || false,
       });
     });
@@ -2378,10 +2429,12 @@ export default function OpManagement() {
     if (items.length === 0) {
       const fallback = Number(booking.finalPayable) || Number(booking.finalPayableAmount) || Number(booking.grandTotal) || Number(booking.totalAmount) || 0;
       if (fallback > 0) {
+        const rawPS = booking.paymentStatus || "Due";
+        const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
         items.push({
           no: 1, name: "Consultation Fee", serviceCode: "CONS", remarks: "Consultation",
           category: "clinic", amount: fallback,
-          paymentStatus: booking.paymentStatus || "Pending", isReviewService: false,
+          paymentStatus: normalizedPS, isReviewService: false,
         });
       }
     }
@@ -2410,6 +2463,9 @@ export default function OpManagement() {
     const invoiceNo = `${dateStamp}-${shortId}`;
     const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
 
+    const rawPS2 = booking.paymentStatus || "Due";
+    const normalizedPS2 = rawPS2 === "Pending" ? "Due" : rawPS2;
+
     const newBillingData = {
       invoiceNo, invoiceDate: dateTimeLabel,
       receiptNo: `R-${shortId.slice(-4)}`, receiptDate: dateTimeLabel,
@@ -2424,7 +2480,7 @@ export default function OpManagement() {
         pharmacy: Math.round(finalBreakdown.pharmacy || 0),
       },
       grossAmount, discount: discountAmount, netAmount, paidAmount, balanceAmount,
-      paymentStatus: booking.paymentStatus || "Pending",
+      paymentStatus: normalizedPS2,
       amountInWords: numberToWords(netAmount),
     };
 
@@ -2470,6 +2526,7 @@ export default function OpManagement() {
     setApptFromDate(""); setApptToDate("");
     setTimeFilter("All");
     setRevenueCategoryFilter("All"); setPaymentTypeFilter("All");
+    setReferredByFilter("All");
     setActiveCardFilter("all"); setCurrentPage(1);
     setActiveFilter("all");
     setShowRegDatePopup(false); setShowApptDatePopup(false);
@@ -2490,6 +2547,19 @@ export default function OpManagement() {
     return Array.from(map.values());
   };
 
+  const getUniqueReferrers = () => {
+    const customers = new Set();
+    const doctors = new Set();
+    bookings.forEach((b) => {
+      if (b.referredByCustomer) customers.add(b.referredByCustomer);
+      if (b.referredByDoctor) doctors.add(b.referredByDoctor);
+    });
+    return {
+      customers: Array.from(customers).sort(),
+      doctors: Array.from(doctors).sort(),
+    };
+  };
+
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
       const isActive = getPatientActiveStatus(p);
@@ -2502,14 +2572,26 @@ export default function OpManagement() {
         );
         if (!hasMatchingService) return false;
       }
+
+      if (referredByFilter !== "All") {
+        const b = getMatchingBooking(p);
+        if (referredByFilter.startsWith("customer::")) {
+          const name = referredByFilter.replace("customer::", "");
+          if ((b?.referredByCustomer || "") !== name) return false;
+        } else if (referredByFilter.startsWith("doctor::")) {
+          const name = referredByFilter.replace("doctor::", "");
+          if ((b?.referredByDoctor || "") !== name) return false;
+        }
+      }
+
       return true;
     });
-  }, [patients, activeFilter, feeTypeFilter]);
+  }, [patients, activeFilter, feeTypeFilter, referredByFilter, bookings]);
 
   useEffect(() => { setCurrentPage(1); }, [
     searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter,
     fromDate, toDate, selectedMonth, apptFromDate, apptToDate, activeFilter,
-    revenueCategoryFilter, paymentTypeFilter, timeFilter
+    revenueCategoryFilter, paymentTypeFilter, timeFilter, referredByFilter
   ]);
 
   const stats = useMemo(() => {
@@ -2521,7 +2603,7 @@ export default function OpManagement() {
         paid: backendStats.paid || 0,
         partial: backendStats.partial || 0,
         due: backendStats.due || 0,
-        pending: backendStats.pending || 0,
+        pending: 0,
         totalRevenue: backendStats.totalRevenue || 0,
       };
     }
@@ -2736,7 +2818,6 @@ export default function OpManagement() {
             </h1>
           </div>
           <div className="flex items-center justify-center gap-2">
-            {/* ✅ Search — Today se pehle */}
             <div className="relative flex-shrink-0">
               <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
               <input
@@ -2754,8 +2835,8 @@ export default function OpManagement() {
                   key={opt.value}
                   onClick={() => handleTimeFilterChange(opt.value)}
                   className={`px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap ${timeFilter === opt.value
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-gray-600 hover:bg-white hover:text-gray-900"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-gray-600 hover:bg-white hover:text-gray-900"
                     }`}
                   title={opt.label}
                 >
@@ -2787,7 +2868,7 @@ export default function OpManagement() {
           </div>
         </div>
 
-        {/* ✅ ROW 2 — Filters (sirf tab dikhe jab Revenue Breakdown ON ho) */}
+        {/* ✅ ROW 2 — Filters */}
         {showRevenueBreakdown && (
           <div className="hidden lg:flex items-center gap-1.5 flex-nowrap mb-3">
             <select
@@ -2796,7 +2877,6 @@ export default function OpManagement() {
               className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
             >
               <option value="All">All Payment</option>
-              <option value="Pending">Pending</option>
               <option value="Partial">Partial</option>
               <option value="Paid">Paid</option>
               <option value="Due">Due</option>
@@ -2843,6 +2923,29 @@ export default function OpManagement() {
               ))}
             </select>
 
+            <select
+              value={referredByFilter}
+              onChange={(e) => setReferredByFilter(e.target.value)}
+              className={`h-9 px-2 text-xs border rounded-lg max-w-[140px] truncate flex-shrink-0 ${referredByFilter !== "All" ? "border-indigo-500 text-indigo-700 bg-indigo-50" : "border-gray-300 bg-white"}`}
+              title="Filter by Referred By"
+            >
+              <option value="All">All Referrers</option>
+              {getUniqueReferrers().customers.length > 0 && (
+                <optgroup label="Customers">
+                  {getUniqueReferrers().customers.map((c) => (
+                    <option key={`c-${c}`} value={`customer::${c}`}>{c}</option>
+                  ))}
+                </optgroup>
+              )}
+              {getUniqueReferrers().doctors.length > 0 && (
+                <optgroup label="Doctors">
+                  {getUniqueReferrers().doctors.map((d) => (
+                    <option key={`d-${d}`} value={`doctor::${d}`}>{d}</option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+
             <div className="relative flex-shrink-0">
               <button
                 data-btn="reg"
@@ -2855,8 +2958,8 @@ export default function OpManagement() {
                   setShowApptDatePopup(false);
                 }}
                 className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${(fromDate || toDate)
-                    ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10"
-                    : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                  ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10"
+                  : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
                   }`}
               >
                 <FaCalendarAlt className="w-3 h-3" />
@@ -2901,8 +3004,8 @@ export default function OpManagement() {
                   setShowRegDatePopup(false);
                 }}
                 className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${(apptFromDate || apptToDate)
-                    ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10"
-                    : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                  ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10"
+                  : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
                   }`}
               >
                 <FaCalendarAlt className="w-3 h-3" />
@@ -3020,7 +3123,7 @@ export default function OpManagement() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
-                  <option value="All">All Status</option><option value="Pending">Pending</option><option value="Partial">Partial</option><option value="Paid">Paid</option><option value="Due">Due</option>
+                  <option value="All">All Status</option><option value="Partial">Partial</option><option value="Paid">Paid</option><option value="Due">Due</option>
                 </select>
                 <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
                   <option value="All">All Doctors</option>
@@ -3039,6 +3142,30 @@ export default function OpManagement() {
                 </select>
                 <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
                   {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Referred By</label>
+                <select
+                  value={referredByFilter}
+                  onChange={(e) => setReferredByFilter(e.target.value)}
+                  className={`w-full px-3 py-2.5 text-sm border rounded-lg ${referredByFilter !== "All" ? "border-indigo-500 text-indigo-700 bg-indigo-50" : "border-gray-300"}`}
+                >
+                  <option value="All">All Referrers</option>
+                  {getUniqueReferrers().customers.length > 0 && (
+                    <optgroup label="Customers">
+                      {getUniqueReferrers().customers.map((c) => (
+                        <option key={`c-${c}`} value={`customer::${c}`}>{c}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {getUniqueReferrers().doctors.length > 0 && (
+                    <optgroup label="Doctors">
+                      {getUniqueReferrers().doctors.map((d) => (
+                        <option key={`d-${d}`} value={`doctor::${d}`}>{d}</option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
               <div>
@@ -3182,7 +3309,7 @@ export default function OpManagement() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""}`} onClick={() => handleCardClick("all")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total Clinic Patients</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div></div>
             <div className="emp-dash__stat-value">{stats.total}</div>
@@ -3198,10 +3325,6 @@ export default function OpManagement() {
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "Partial" ? "ring-2 ring-amber-500/20 border-amber-400" : ""}`} onClick={() => handleCardClick("Partial")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Partial</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FaClock /></div></div>
             <div className="emp-dash__stat-value text-amber-600">{stats.partial}</div><div className="emp-dash__stat-meta">partially paid</div>
-          </div>
-          <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "Pending" ? "ring-2 ring-gray-500/20 border-gray-400" : ""}`} onClick={() => handleCardClick("Pending")}>
-            <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Pending</span><div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiClock /></div></div>
-            <div className="emp-dash__stat-value text-gray-600">{stats.pending}</div><div className="emp-dash__stat-meta">awaiting payment</div>
           </div>
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 ${activeCardFilter === "Due" ? "ring-2 ring-red-500/20 border-red-400" : ""}`} onClick={() => handleCardClick("Due")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Due</span><div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiXCircle /></div></div>
@@ -3222,7 +3345,7 @@ export default function OpManagement() {
           </div>
         </div>
 
-        {/* ADD/EDIT MODAL — unchanged */}
+        {/* ADD/EDIT MODAL */}
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
             <button onClick={cancelForm} className="absolute top-4 right-4 sm:top-6 sm:right-24 z-[60] w-10 h-10 rounded-full bg-white text-gray-700 hover:bg-red-500 hover:text-white shadow-2xl border-2 border-gray-200 hover:border-red-500 flex items-center justify-center transition-all" title="Close">
@@ -3263,20 +3386,19 @@ export default function OpManagement() {
                   </label>
                   <div className="relative">
                     <FaPhoneAlt className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className={`w-full border rounded-xl pl-10 pr-3 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
-                  </div>
+                    <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className="w-full border rounded-xl pl-10 pr-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />                  </div>
                 </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
                   <div className="col-span-1">
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Title</label>
-                    <select name="title" value={formData.title} onChange={handleInputChange} className={`w-full border rounded-xl px-2 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode}>
+                    <select name="title" value={formData.title} onChange={handleInputChange} className="w-full border rounded-xl px-2 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none">
                       {TITLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   </div>
                   <div className="col-span-2 sm:col-span-3">
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Patient Name</label>
-                    <input ref={nameInputRef} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter patient full name" className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium uppercase ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
+                    <input ref={nameInputRef} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter patient full name" className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium uppercase bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
                   </div>
                 </div>
 
@@ -3467,11 +3589,8 @@ export default function OpManagement() {
                                 }
                                 let newServiceItems = formData.serviceItems;
                                 if (matchedService) {
-                                  const alreadyAdded = formData.serviceItems.some((s) => s._id === matchedService._id || s.serviceId === matchedService._id);
-                                  if (!alreadyAdded) {
-                                    newServiceItems = [...formData.serviceItems, { ...matchedService, custom: false }];
-                                    showToast(`✅ Offer applied & service "${matchedService.name}" (₹${matchedService.price}) auto-added!`, "success");
-                                  } else { showToast(`Offer applied: ${offer.offerName} — service already in list`, "info"); }
+                                  newServiceItems = [...formData.serviceItems, { ...matchedService, custom: false }];
+                                  showToast(`✅ Offer applied & service "${matchedService.name}" (₹${matchedService.price}) auto-added!`, "success");
                                 } else { showToast(`Offer applied: ${offer.offerName} (₹${offer.offerAmount}) — no matching service found`, "info"); }
                                 setFormData((prev) => ({
                                   ...prev, serviceItems: newServiceItems,
@@ -3677,7 +3796,7 @@ export default function OpManagement() {
                           </div>
                           <div className="col-span-2 md:col-span-3">
                             <label className="block text-[11px] font-bold text-amber-700 uppercase mb-1">Amount Received (₹)</label>
-                            <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="0 for Pending" min="0" className="w-full bg-white border border-gray-300 rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none" />
+                            <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="0 for Due" min="0" className="w-full bg-white border border-gray-300 rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none" />
                           </div>
                           <div className="col-span-2 md:col-span-4">
                             <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Payment Mode</label>
@@ -3700,7 +3819,7 @@ export default function OpManagement() {
                               <span>{fin.balanceAmount > 0 ? "Balance Remaining:" : "Status:"}</span>
                               <span className="font-bold">{fin.balanceAmount > 0 ? `₹${Math.round(fin.balanceAmount)}` : "✓ Fully Paid"}</span>
                             </div>
-                            <div className={`flex items-center justify-between border rounded-md px-2 py-1 mt-1 ${fin.paymentStatus === "Paid" ? "text-emerald-700 bg-emerald-50 border-emerald-200" : fin.paymentStatus === "Partial" ? "text-amber-700 bg-amber-50 border-amber-200" : "text-gray-600 bg-gray-50 border-gray-200"}`}>
+                            <div className={`flex items-center justify-between border rounded-md px-2 py-1 mt-1 ${fin.paymentStatus === "Paid" ? "text-emerald-700 bg-emerald-50 border-emerald-200" : fin.paymentStatus === "Partial" ? "text-amber-700 bg-amber-50 border-amber-200" : "text-red-700 bg-red-50 border-red-200"}`}>
                               <span className="font-semibold">Payment Status:</span>
                               <span className="font-extrabold uppercase tracking-wide">{fin.paymentStatus}</span>
                             </div>
@@ -3746,15 +3865,15 @@ export default function OpManagement() {
                     <tr>
                       <th style={{ width: "35px", textAlign: "center" }}>#</th>
                       <th style={{ minWidth: "180px" }}>Patient</th>
-                      <th style={{ minWidth: "170px" }}>Doctor / Booking / Date</th>
-                      <th style={{ textAlign: "center" }}>Bookng Status</th>
+                      <th style={{ minWidth: "170px" }}>Doctor / Date</th>
+                      <th style={{ textAlign: "center", minWidth: "140px" }}>Booking Type / Status</th>
                       <th style={{ textAlign: "center", minWidth: "150px" }}>Amount</th>
                       <th style={{ textAlign: "center" }}>Total</th>
                       <th style={{ textAlign: "center" }}>Disc.</th>
                       <th style={{ textAlign: "center" }}>DUE</th>
                       <th style={{ textAlign: "center" }}>Paid</th>
-                      <th style={{ textAlign: "center" }}>Pment Type</th>
-                      <th style={{ textAlign: "center" }}>Pment Status</th>
+                      <th style={{ textAlign: "center", minWidth: "110px" }}>Pment Type</th>
+                      <th style={{ textAlign: "center", minWidth: "130px" }}>Pment Status</th>
                       <th style={{ textAlign: "center", minWidth: "150px" }}>Referred By</th>
                       <th style={{ textAlign: "center" }}>Created At</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
@@ -3770,12 +3889,10 @@ export default function OpManagement() {
                       const statusColors = getStatusColors(bookingStatus);
                       const referredByCustomer = matchingBooking?.referredByCustomer || patient.referredByCustomer || "";
                       const referredByDoctor = matchingBooking?.referredByDoctor || patient.referredByDoctor || "";
-                      const paymentColors = getPaymentStatusColors(consultationPaymentStatus);
                       const createdAt = matchingBooking?.createdAt || matchingBooking?.bookedAt || patient.createdAt;
                       const paidInfo = getBookingPaidInfo(matchingBooking);
                       const amountBreakdown = getAmountBreakdown(matchingBooking);
-                      const isPaid = consultationPaymentStatus === "Paid";
-                      const isPartial = consultationPaymentStatus === "Partial";
+                      const catStatuses = getCategoryStatuses(amountBreakdown, paidInfo.paid);
                       const isActive = getPatientActiveStatus(patient);
                       const isToggling = togglingStatus === patient._id;
                       const discountAmount = Number(matchingBooking?.discount) || 0;
@@ -3786,54 +3903,58 @@ export default function OpManagement() {
                         <tr key={patient._id} className="hover:bg-blue-50/40">
                           <td className="px-2 py-3 text-center text-slate-500 text-[11px]">{indexOfFirstItem + idx + 1}</td>
 
-                        <td className="px-3 py-3">
-  <div className="flex items-center gap-2.5">
-    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] flex-shrink-0">
-      {patient.name ? patient.name.charAt(0).toUpperCase() : "P"}
-    </div>
-    <div className="min-w-0 flex-1">
-      <div className="font-semibold text-slate-800 text-xs whitespace-normal break-words leading-tight min-w-[140px]">
-        {patient.title || ""} {patient.name || "N/A"}
-      </div>
-      <div className="text-[10px] text-gray-500 font-medium">{patient.age || "N/A"} yrs · {patient.gender || "N/A"}</div>
-      <div className="text-[10px] text-gray-500 flex items-center gap-1"><FaPhoneAlt className="text-[8px]" /> {patient.phone || "N/A"}</div>
-    </div>
-  </div>
-</td>
-                          {/* ✅ MERGED — Doctor + Booking Type + Appt. Date & Time */}
+                          <td className="px-3 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] flex-shrink-0">
+                                {patient.name ? patient.name.charAt(0).toUpperCase() : "P"}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="font-semibold text-slate-800 text-xs whitespace-normal break-words leading-tight min-w-[140px]">
+                                  {patient.title || ""} {patient.name || "N/A"}
+                                </div>
+                                <div className="text-[10px] text-gray-500 font-medium">{patient.age || "N/A"} yrs · {patient.gender || "N/A"}</div>
+                                <div className="text-[10px] text-gray-500 flex items-center gap-1"><FaPhoneAlt className="text-[8px]" /> {patient.phone || "N/A"}</div>
+                              </div>
+                            </div>
+                          </td>
+
                           <td className="px-3 py-3">
                             <div className="flex flex-col gap-0.5 min-w-[150px]">
                               <div className="text-xs font-semibold text-purple-800 truncate max-w-[140px]">{matchingBooking?.doctorName || "N/A"}</div>
-                              <div>
-                                {matchingBooking ? (
-                                  <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
-                                    <BookingTypeIcon className="w-2 h-2" /> {bookingTypeInfo.label}
-                                  </span>
-                                ) : (<span className="text-[9px] text-gray-400 italic">N/A</span>)}
-                              </div>
                               <div className="text-[10px] font-semibold text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</div>
                               {slotTiming !== "-" && (<div className="text-[9px] text-blue-700 font-semibold">{slotTiming}</div>)}
                             </div>
                           </td>
 
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {bookingStatus !== "No Booking" && matchingBooking ? (
-                              <div className="relative inline-block status-dropdown">
-                                <button onClick={(e) => handleStatusDropdownToggle(matchingBooking._id, e)} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border}`}>
-                                  <FaCheckCircle className="w-2.5 h-2.5" /> {bookingStatus} <FiChevronDown className="w-3 h-3" />
-                                </button>
-                                {openStatusDropdown === matchingBooking._id && (
-                                  <div className="fixed z-[9999] bg-white rounded-lg shadow-2xl border py-1 min-w-[140px]" style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} onClick={(e) => e.stopPropagation()}>
-                                    {BOOKING_STATUS_OPTIONS.map((st) => {
-                                      const isActive_ = st.value === bookingStatus;
-                                      const colors = getStatusColors(st.value);
-                                      return <button key={st.value} onClick={(e) => { e.stopPropagation(); handleStatusSelect(matchingBooking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 flex items-center gap-2 ${isActive_ ? colors.text : "text-gray-600"}`}><span className={`w-2 h-2 rounded-full ${colors.bg} border ${colors.border}`}></span> {st.label} {isActive_ && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}</button>;
-                                    })}
-                                  </div>
+                          <td className="px-3 py-3 text-center" style={{ minWidth: "140px" }}>
+                            {matchingBooking ? (
+                              <div className="flex flex-col items-center gap-1">
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
+                                  <BookingTypeIcon className="w-2.5 h-2.5" /> {bookingTypeInfo.label}
+                                </span>
+
+                                {bookingStatus !== "No Booking" ? (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setStatusModalBooking(matchingBooking);
+                                      setShowStatusModal(true);
+                                    }}
+                                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border} hover:opacity-80 transition-all cursor-pointer shadow-sm`}
+                                    title="Change Booking Status"
+                                  >
+                                    <FaCheckCircle className="w-2.5 h-2.5" /> {bookingStatus} <FiChevronDown className="w-3 h-3" />
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] text-gray-400 italic">No Booking</span>
                                 )}
                               </div>
-                            ) : <span className="text-[10px] text-gray-400 italic">N/A</span>}
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">N/A</span>
+                            )}
                           </td>
+
+                          {/* AMOUNT COLUMN — 3 Row */}
                           <td className="px-3 py-3" style={{ minWidth: "150px" }}>
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center justify-between gap-1 px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 text-[10px]">
@@ -3865,47 +3986,81 @@ export default function OpManagement() {
                               </div>
                             </div>
                           </td>
+
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-slate-800">₹{Math.round(paidInfo.final)}</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {discountAmount > 0 ? (<span className="text-xs font-bold text-red-600">− ₹{Math.round(discountAmount)}</span>) : <span className="text-xs text-gray-400">—</span>}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span></td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {matchingBooking?.paymentType ? (
-                              <button onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer">
-                                {matchingBooking.paymentType} <FiChevronDown className="w-3 h-3" />
-                              </button>
-                            ) : (<span className="text-[10px] text-gray-400 italic">N/A</span>)}
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
+
+                          {/* ✅ PAYMENT TYPE — 3 Row (no labels) */}
+                          <td className="px-3 py-3" style={{ minWidth: "110px" }}>
                             {matchingBooking ? (
-                              isPaid ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default">
-                                  <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" /> Paid
-                                </span>
-                              ) : (isPartial || consultationPaymentStatus === "Pending") ? (
-                                <button onClick={(e) => { e.stopPropagation(); openPartialModal(matchingBooking); }} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${paymentColors.bg} ${paymentColors.text} ${paymentColors.border} hover:opacity-80`}>
-                                  <paymentColors.icon className={`w-2.5 h-2.5 ${paymentColors.iconColor}`} /> {consultationPaymentStatus} <FiChevronDown className="w-3 h-3" />
-                                </button>
-                              ) : (
-                                <div className="relative inline-block payment-dropdown">
-                                  <button onClick={(e) => handlePaymentDropdownToggle(matchingBooking._id, e)} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${paymentColors.bg} ${paymentColors.text} ${paymentColors.border}`}>
-                                    <paymentColors.icon className={`w-2.5 h-2.5 ${paymentColors.iconColor}`} /> {consultationPaymentStatus} <FiChevronDown className="w-3 h-3" />
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center justify-center gap-1 px-2 py-1 rounded border border-blue-200 bg-blue-50 text-[10px]">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }}
+                                    className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                                    title="Change Payment Type"
+                                  >
+                                    {matchingBooking.paymentType || "cash"} <FiChevronDown className="w-2.5 h-2.5" />
                                   </button>
-                                  {openPaymentDropdown === matchingBooking._id && (
-                                    <div className="fixed z-[9999] bg-white rounded-lg shadow-2xl border py-1 min-w-[140px]" style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} onClick={(e) => e.stopPropagation()}>
-                                      {PAYMENT_STATUS_OPTIONS.map((st) => {
-                                        const isActive_ = st.value === consultationPaymentStatus;
-                                        const colors = getPaymentStatusColors(st.value);
-                                        const Icon = colors.icon;
-                                        return <button key={st.value} onClick={(e) => { e.stopPropagation(); handlePaymentSelect(matchingBooking, st.value, e); }} className={`w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-gray-50 flex items-center gap-2 ${isActive_ ? colors.text : "text-gray-600"}`}><Icon className={`w-3 h-3 ${colors.iconColor}`} /> {st.label} {isActive_ && <FaCheck className="w-2.5 h-2.5 ml-auto text-green-500" />}</button>;
-                                      })}
-                                    </div>
-                                  )}
                                 </div>
-                              )
-                            ) : <span className="text-[10px] text-gray-400 italic">N/A</span>}
+                                <div className="flex items-center justify-center gap-1 px-2 py-1 rounded border border-purple-200 bg-purple-50 text-[10px]">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }}
+                                    className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                                    title="Change Payment Type"
+                                  >
+                                    {matchingBooking.paymentType || "cash"} <FiChevronDown className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                                <div className="flex items-center justify-center gap-1 px-2 py-1 rounded border border-green-200 bg-green-50 text-[10px]">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }}
+                                    className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                                    title="Change Payment Type"
+                                  >
+                                    {matchingBooking.paymentType || "cash"} <FiChevronDown className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic block text-center">N/A</span>
+                            )}
+                          </td>
+
+                          {/* ✅ PAYMENT STATUS — Per-category (Clinic → Lab → Pharmacy order) */}
+                          <td className="px-3 py-3" style={{ minWidth: "130px" }}>
+                            {matchingBooking ? (
+                              <div className="flex flex-col gap-1">
+                                {["clinic", "lab", "pharmacy"].map((cat) => {
+                                  const catStatus = catStatuses[cat] || "Due";
+                                  const catColors = getPaymentStatusColors(catStatus);
+                                  const CatIcon = catColors.icon;
+                                  const borderColor = cat === "clinic" ? "border-blue-200 bg-blue-50" : cat === "lab" ? "border-purple-200 bg-purple-50" : "border-green-200 bg-green-50";
+                                  return (
+                                    <div key={cat} className={`flex items-center justify-center gap-1 px-2 py-1 rounded border ${borderColor} text-[10px]`}>
+                                      {catStatus === "Paid" ? (
+                                        <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default">
+                                          <FaCheckCircle className="w-2 h-2 text-emerald-600" /> Paid
+                                        </span>
+                                      ) : (
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); openPartialModal(matchingBooking); }}
+                                          className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border ${catColors.bg} ${catColors.text} ${catColors.border} hover:opacity-80`}
+                                        >
+                                          <CatIcon className={`w-2 h-2 ${catColors.iconColor}`} /> {catStatus}
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic block text-center">N/A</span>
+                            )}
                           </td>
 
                           <td className="px-3 py-3">
@@ -3938,13 +4093,12 @@ export default function OpManagement() {
                               ) : (<span className="text-[9px] text-gray-400 italic">No Doctor</span>)}
                             </div>
                           </td>
-                          {/* Created At */}
+
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <div className="text-[10px] font-semibold text-slate-700">{formatDateToDDMMYYYY(createdAt)}</div>
                             <div className="text-[9px] text-gray-400 mt-0.5">{createdAt ? new Date(createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "N/A"}</div>
                           </td>
 
-                          {/* Actions */}
                           <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="relative inline-block action-dropdown">
                               <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(openActionDropdown === patient._id ? null : patient._id); }} className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors" title="Actions">
@@ -4583,6 +4737,73 @@ export default function OpManagement() {
                 <button onClick={handleSaveVitals} disabled={savingVitals} className="px-5 py-2 rounded-lg text-xs font-bold bg-pink-600 hover:bg-pink-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
                   {savingVitals ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
                   {savingVitals ? "Saving..." : "Save Vitals"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BOOKING STATUS UPDATE MODAL */}
+        {showStatusModal && statusModalBooking && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border relative overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                    <FaCheckCircle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Update Booking Status</h3>
+                    <p className="text-[10px] text-gray-500 truncate max-w-[180px]">
+                      {statusModalBooking.patientTitle} {statusModalBooking.patientName}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setShowStatusModal(false); setStatusModalBooking(null); }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/50 transition-colors"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
+                <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-2">
+                  Select New Status
+                </label>
+                {BOOKING_STATUS_OPTIONS.map((st) => {
+                  const isActive_ = st.value === statusModalBooking.status;
+                  const colors = getStatusColors(st.value);
+                  return (
+                    <button
+                      key={st.value}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await handleStatusSelect(statusModalBooking, st.value, e);
+                        setShowStatusModal(false);
+                        setStatusModalBooking(null);
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl text-left text-sm font-bold flex items-center justify-between border transition-all ${isActive_
+                        ? `${colors.bg} ${colors.text} ${colors.border} ring-2 ring-blue-500/20`
+                        : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                        }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className={`w-2.5 h-2.5 rounded-full ${colors.bg} border ${colors.border}`}></span>
+                        {st.label}
+                      </div>
+                      {isActive_ && <FaCheck className="w-4 h-4 text-emerald-500" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-end px-5 py-3 border-t bg-gray-50/50">
+                <button
+                  onClick={() => { setShowStatusModal(false); setStatusModalBooking(null); }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
+                >
+                  Cancel
                 </button>
               </div>
             </div>

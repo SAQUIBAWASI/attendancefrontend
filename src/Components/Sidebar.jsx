@@ -2020,6 +2020,8 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       icon: <i className="ri-vip-crown-2-fill"></i>,
       name: "Timely Plans",
       dropdown: [
+        { name: "Timely Plans", path: "/timely-plans" },
+        { name: "Timely Clients", path: "/timely-clients" },
         { name: "Plan Booking", path: "/timely-plan-bookings" },
       ],
     },

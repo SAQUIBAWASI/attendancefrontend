@@ -238,6 +238,8 @@ import WeekOff from "./Pages/WeekOff.js";
 import Rosters from "./Pages/Rosters.js";
 import DigitalLeads from "./Pages/DigitalLeads.js";
 import TimelyPlanBookings from './Pages/TimelyPlanBookings.js';
+import TimelyClients from "./Pages/TimelyClients.js";
+import TimelyPlans from "./Pages/TimelyPlans.js";
 
 
 
@@ -544,6 +546,8 @@ function App() {
               <Route path="/week-off" element={<WeekOff />} />
               <Route path="/digital-leads" element={<DigitalLeads />} />
               <Route path="/timely-plan-bookings" element={<TimelyPlanBookings />} />
+              <Route path="/timely-clients" element={<TimelyClients />} />
+              <Route path="/timely-plans" element={<TimelyPlans />} />
             </Routes>
           </AdminLayout>
         }
