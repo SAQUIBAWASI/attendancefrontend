@@ -1,4 +1,4 @@
-// OpManagement.js — COMPLETE (DateRange Popup + Time Filter + Filter Collapse + Compact Mobile Form + Calculation Popup + 3-Row Payment Columns + Per-Category Status)
+// OpManagement.js — COMPLETE (Per-Category Independent Payment + Legacy Safe)
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -211,7 +211,8 @@ const getPaymentStatusColors = (status) => {
   const map = {
     Paid: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", icon: FaCheckCircle, iconColor: "text-emerald-600" },
     Partial: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", icon: FaClock, iconColor: "text-amber-600" },
-    Due: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", icon: FaTimesCircle, iconColor: "text-red-500" }
+    Due: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", icon: FaTimesCircle, iconColor: "text-red-500" },
+    Empty: { bg: "bg-gray-50", text: "text-gray-400", border: "border-gray-200", icon: FaTimesCircle, iconColor: "text-gray-400" }
   };
   return map[normalized] || map.Due;
 };
@@ -353,24 +354,41 @@ const getBookingPaidInfo = (booking) => {
   return { final, paid, balance, status };
 };
 
-const getCategoryStatuses = (breakdown, amountPaid) => {
-  const order = ["clinic", "lab", "pharmacy"];
+// ✅ Per-category independent payment status (Empty for ₹0)
+const getCategoryStatuses = (booking) => {
+  const breakdown = getAmountBreakdown(booking);
+  const categories = ["clinic", "lab", "pharmacy"];
+  const stored = booking?.categoryPayment || {};
   const result = {};
-  let remaining = Number(amountPaid) || 0;
-  order.forEach((cat) => {
+
+  // Legacy: agar categoryPayment nahi hai but booking Paid hai → sab Paid
+  const legacyFullyPaid = !booking?.categoryPayment && booking?.paymentStatus === "Paid";
+  // Legacy: agar Partial hai but categoryPayment nahi → unknown distribution, fallback to top-level
+  const legacyPartial = !booking?.categoryPayment && booking?.paymentStatus === "Partial";
+
+  categories.forEach((cat) => {
     const amt = Number(breakdown?.[cat]) || 0;
     if (amt <= 0) {
-      result[cat] = "Due";
-    } else if (remaining >= amt) {
+      result[cat] = "Empty";
+      return;
+    }
+
+    const paidAmt = Number(stored?.[cat]?.paidAmount) || 0;
+
+    if (paidAmt >= amt - 0.5) {
       result[cat] = "Paid";
-      remaining -= amt;
-    } else if (remaining > 0) {
+    } else if (paidAmt > 0) {
       result[cat] = "Partial";
-      remaining = 0;
+    } else if (legacyFullyPaid) {
+      result[cat] = "Paid";
+    } else if (legacyPartial) {
+      // Legacy Partial: no per-category data → treat as Due (user can update)
+      result[cat] = "Due";
     } else {
       result[cat] = "Due";
     }
   });
+
   return result;
 };
 
@@ -436,19 +454,11 @@ const computeFinancials = (serviceItems, { labTotal = 0, medicineTotal = 0, refe
   return { servicesSubtotal, subtotal, commissionPercent, commissionAmount, discountAmount, offerDeduction, finalPayable, parsedPartial, paymentStatus, amountPaid, balanceAmount };
 };
 
-/* ============================================================
-   ✅ DateRangePopup — Image jaisa calendar popup
-   ============================================================ */
+/* ============================================================ */
+/* DateRangePopup                                               */
+/* ============================================================ */
 const DateRangePopup = ({
-  isOpen,
-  position,
-  fromDate,
-  toDate,
-  onFromChange,
-  onToChange,
-  onClear,
-  onClose,
-  dataAttr,
+  isOpen, position, fromDate, toDate, onFromChange, onToChange, onClear, onClose, dataAttr,
 }) => {
   const [calendarMonth, setCalendarMonth] = useState(new Date());
 
@@ -528,13 +538,7 @@ const DateRangePopup = ({
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <h3 className="text-base font-bold text-gray-900">Date Range</h3>
-        <button
-          type="button"
-          onClick={onClear}
-          className="text-[11px] font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md border border-red-200 transition-colors"
-        >
-          Reset
-        </button>
+        <button type="button" onClick={onClear} className="text-[11px] font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md border border-red-200 transition-colors">Reset</button>
       </div>
 
       <div className="px-3 py-3 bg-gray-50 flex items-center gap-2">
@@ -554,31 +558,14 @@ const DateRangePopup = ({
 
       <div className="px-3 py-3">
         <div className="flex items-center justify-between mb-2">
-          <button
-            type="button"
-            onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
-            className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600"
-          >
-            <FaChevronLeft className="w-3 h-3" />
-          </button>
+          <button type="button" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600"><FaChevronLeft className="w-3 h-3" /></button>
           <div className="text-xs font-bold text-gray-800">{monthLabel}</div>
-          <button
-            type="button"
-            onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
-            className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600"
-          >
-            <FaChevronRight className="w-3 h-3" />
-          </button>
+          <button type="button" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600"><FaChevronRight className="w-3 h-3" /></button>
         </div>
 
         <div className="grid grid-cols-7 gap-0.5 mb-1">
           {weekdays.map((wd, i) => (
-            <div
-              key={wd}
-              className={`text-[9px] font-bold text-center py-1 ${i === 0 ? "text-red-500" : "text-gray-500"}`}
-            >
-              {wd}
-            </div>
+            <div key={wd} className={`text-[9px] font-bold text-center py-1 ${i === 0 ? "text-red-500" : "text-gray-500"}`}>{wd}</div>
           ))}
         </div>
 
@@ -600,12 +587,7 @@ const DateRangePopup = ({
             else cls += "text-gray-800 hover:bg-orange-50 cursor-pointer ";
 
             return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleDayClick(ymd, currentMonth)}
-                className={cls}
-              >
+              <button key={idx} type="button" onClick={() => handleDayClick(ymd, currentMonth)} className={cls}>
                 {String(date.getDate()).padStart(2, "0")}
               </button>
             );
@@ -614,20 +596,8 @@ const DateRangePopup = ({
       </div>
 
       <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-xs font-bold text-gray-600 hover:text-gray-900"
-        >
-          Close
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-xs font-bold text-orange-600 hover:text-orange-700"
-        >
-          Confirm
-        </button>
+        <button type="button" onClick={onClose} className="text-xs font-bold text-gray-600 hover:text-gray-900">Close</button>
+        <button type="button" onClick={onClose} className="text-xs font-bold text-orange-600 hover:text-orange-700">Confirm</button>
       </div>
     </div>
   );
@@ -729,8 +699,21 @@ export default function OpManagement() {
   const [editingLabTotal, setEditingLabTotal] = useState("");
   const [savingLabTotal, setSavingLabTotal] = useState(false);
 
+  const [showLabItemsModal, setShowLabItemsModal] = useState(false);
+  const [labItemsBooking, setLabItemsBooking] = useState(null);
+  const [labItemsList, setLabItemsList] = useState([]);
+  const [labItemPrice, setLabItemPrice] = useState("");
+  const [savingLabItems, setSavingLabItems] = useState(false);
+
+  const [showPharmacyItemsModal, setShowPharmacyItemsModal] = useState(false);
+  const [pharmacyItemsBooking, setPharmacyItemsBooking] = useState(null);
+  const [pharmacyItemsList, setPharmacyItemsList] = useState([]);
+  const [pharmacyItemPrice, setPharmacyItemPrice] = useState("");
+  const [savingPharmacyItems, setSavingPharmacyItems] = useState(false);
+
   const [showPartialModal, setShowPartialModal] = useState(false);
   const [partialBooking, setPartialBooking] = useState(null);
+  const [partialCategory, setPartialCategory] = useState(null);
   const [partialAmountInput, setPartialAmountInput] = useState("");
   const [savingPartial, setSavingPartial] = useState(false);
   const [partialPaymentType, setPartialPaymentType] = useState("cash");
@@ -783,6 +766,71 @@ export default function OpManagement() {
 
   const API_BASE_INVURL = 'https://api.timelyhealth.in';
 
+  /* ============================================================
+     ✅ Helper Functions
+     ============================================================ */
+
+  // ✅ Preserve existing paid amount correctly — ALL legacy cases handled
+  const computeExistingPaidTotal = (booking) => {
+    if (!booking) return 0;
+
+    const existing = booking.categoryPayment;
+    const rawStatus = booking.paymentStatus || "Due";
+    const wasPaid = rawStatus === "Paid";
+    const wasPartial = rawStatus === "Partial";
+    const bd = getAmountBreakdown(booking);
+
+    // Case 1: New structure (categoryPayment present) — sum paid amounts
+    if (existing && (existing.clinic || existing.lab || existing.pharmacy)) {
+      return (
+        (Number(existing.clinic?.paidAmount) || 0) +
+        (Number(existing.lab?.paidAmount) || 0) +
+        (Number(existing.pharmacy?.paidAmount) || 0)
+      );
+    }
+
+    // Case 2: Legacy Paid — full amount treated as paid
+    if (wasPaid) {
+      return (Number(bd.clinic) || 0) + (Number(bd.lab) || 0) + (Number(bd.pharmacy) || 0);
+    }
+
+    // Case 3: Legacy Partial — use existing amountPaid
+    if (wasPartial) {
+      return Number(booking.amountPaid) || Number(booking.partialAmount) || 0;
+    }
+
+    // Case 4: Legacy Due — 0
+    return 0;
+  };
+
+  // ✅ Category payment snapshot builder — preserves existing paidAmount
+  const buildCategoryPaymentSnapshot = (booking) => {
+    const existing = booking?.categoryPayment;
+    const bd = getAmountBreakdown(booking);
+    const wasPaid = booking?.paymentStatus === "Paid";
+
+    return {
+      clinic: {
+        paidAmount:
+          existing?.clinic?.paidAmount !== undefined
+            ? Number(existing.clinic.paidAmount) || 0
+            : wasPaid ? (Number(bd.clinic) || 0) : 0,
+      },
+      lab: {
+        paidAmount:
+          existing?.lab?.paidAmount !== undefined
+            ? Number(existing.lab.paidAmount) || 0
+            : wasPaid ? (Number(bd.lab) || 0) : 0,
+      },
+      pharmacy: {
+        paidAmount:
+          existing?.pharmacy?.paidAmount !== undefined
+            ? Number(existing.pharmacy.paidAmount) || 0
+            : wasPaid ? (Number(bd.pharmacy) || 0) : 0,
+      },
+    };
+  };
+
   const hasActiveFilters =
     searchQuery !== "" || statusFilter !== "All" || feeTypeFilter !== "All" ||
     doctorFilter !== "All" || bookingTypeFilter !== "All" ||
@@ -794,27 +842,23 @@ export default function OpManagement() {
 
   useEffect(() => {
     const isMobile = window.innerWidth < 1024;
-    if (isMobile) {
-      setShowMobileWelcome(true);
-    }
+    if (isMobile) setShowMobileWelcome(true);
   }, []);
 
   const handleMobileWelcomeChoice = (choice) => {
     setShowMobileWelcome(false);
-    if (choice === "register") {
-      setTimeout(() => {
-        handleAddNewPatient();
-      }, 200);
-    }
+    if (choice === "register") setTimeout(() => { handleAddNewPatient(); }, 200);
   };
 
+  /* ============================================================
+     CLINIC SERVICES MODAL HANDLERS
+     ============================================================ */
   const openClinicServicesModal = (booking) => {
     if (!booking) return;
     const allServices = getBookingServices(booking);
     const clinicOnly = allServices.filter((s) => {
       if (s.isReviewService) return false;
-      const cat = classifyService(s);
-      return cat === "clinic";
+      return classifyService(s) === "clinic";
     });
     setClinicServicesList(clinicOnly.map((s) => ({
       serviceId: s.serviceId || s._id || "",
@@ -888,8 +932,7 @@ export default function OpManagement() {
       const allServices = getBookingServices(booking);
       const nonClinic = allServices.filter((s) => {
         if (s.isReviewService) return false;
-        const cat = classifyService(s);
-        return cat !== "clinic";
+        return classifyService(s) !== "clinic";
       });
       const mergedServices = [
         ...clinicServicesList.map((s) => ({
@@ -908,7 +951,7 @@ export default function OpManagement() {
         referralCommission: booking.referralCommission || 0,
         discount: booking.discount || 0,
         discountType: booking.discountType || "₹",
-        partialAmount: booking.amountPaid || booking.partialAmount || 0,
+        partialAmount: computeExistingPaidTotal(booking),  // ✅ FIX
         offerAmount: booking.offerApplied?.offerAmount || 0,
       });
 
@@ -928,10 +971,13 @@ export default function OpManagement() {
         doctorId: booking.doctorId, appointmentDate: booking.appointmentDate,
         isOP: true, status: booking.status || "confirmed",
         serviceItems: mergedServices, services: mergedServices,
+        labItems: Array.isArray(booking.labItems) ? booking.labItems : [],
+        medicineItems: Array.isArray(booking.medicineItems) ? booking.medicineItems : [],
         referredByCustomer: booking.referredByCustomer, referredByDoctor: booking.referredByDoctor,
         referralCustomerId: booking.referralCustomerId, referralDoctorId: booking.referralDoctorId,
         referralCommission: booking.referralCommission, referralCommissionType: booking.referralCommissionType,
         offerApplied: booking.offerApplied || null,
+        categoryPayment: buildCategoryPaymentSnapshot(booking),
       };
 
       const res = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${booking._id}`, payload);
@@ -947,6 +993,248 @@ export default function OpManagement() {
       console.error("Clinic services save error:", err);
       showToast(err.response?.data?.message || "Failed to update services", "error");
     } finally { setSavingClinicServices(false); }
+  };
+
+  /* ============================================================
+     LAB ITEMS MULTI-ITEM HANDLERS
+     ============================================================ */
+  const openLabItemsModal = (booking) => {
+    if (!booking) return;
+    let items = Array.isArray(booking.labItems) ? booking.labItems : [];
+    if (items.length === 0 && (Number(booking.labTotal) || 0) > 0) {
+      items = [{ serviceId: "", name: "Lab Test", price: Number(booking.labTotal) || 0, description: "", category: "lab" }];
+    }
+    setLabItemsList(items.map((s) => ({
+      serviceId: s.serviceId || s._id || "",
+      name: s.name || "Lab Test",
+      price: Number(s.price) || 0,
+      description: s.description || "",
+    })));
+    setLabItemsBooking(booking);
+    setLabItemPrice("");
+    setShowLabItemsModal(true);
+  };
+
+  const handleAddLabItem = () => {
+    const price = labItemPrice.trim();
+    if (!price) { showToast("Please enter lab amount", "error"); return; }
+    if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
+    setLabItemsList((prev) => [...prev, {
+      serviceId: "",
+      name: `Lab Test ${prev.length + 1}`,
+      price: Number(price) || 0,
+      description: "",
+    }]);
+    setLabItemPrice("");
+  };
+
+  const handleRemoveLabItem = (index) => {
+    setLabItemsList((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateLabItemPrice = (index, newPrice) => {
+    setLabItemsList((prev) => prev.map((s, i) => (i === index ? { ...s, price: Number(newPrice) || 0 } : s)));
+  };
+
+  const handleSaveLabItems = async () => {
+    if (!labItemsBooking) return;
+    setSavingLabItems(true);
+    try {
+      const booking = labItemsBooking;
+      const allServices = getBookingServices(booking);
+      const nonReviewServices = allServices.filter((s) => !s.isReviewService);
+
+      const mergedServices = nonReviewServices.map((s) => ({
+        serviceId: s.serviceId || s._id || "",
+        name: s.name,
+        price: Number(s.price) || 0,
+        description: s.description || "",
+        category: s.category || "",
+      }));
+
+      const labItems = labItemsList.map((s) => ({
+        serviceId: s.serviceId || "",
+        name: s.name,
+        price: Number(s.price) || 0,
+        description: s.description || "",
+        category: "lab",
+      }));
+      const labTotal = labItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+
+      const fin = computeFinancials(mergedServices, {
+        labTotal,
+        medicineTotal: Number(booking.medicineTotal) || 0,
+        referralCommission: booking.referralCommission || 0,
+        discount: booking.discount || 0,
+        discountType: booking.discountType || "₹",
+        partialAmount: computeExistingPaidTotal(booking),  // ✅ FIX
+        offerAmount: booking.offerApplied?.offerAmount || 0,
+      });
+
+      const payload = {
+        patientTitle: booking.patientTitle, patientName: booking.patientName,
+        patientPhone: booking.patientPhone, patientAge: booking.patientAge,
+        patientDob: booking.patientDob, patientGender: booking.patientGender,
+        patientAddress: booking.patientAddress, patientCity: booking.patientCity,
+        patientPincode: booking.patientPincode, purpose: booking.purpose,
+        paymentType: booking.paymentType, paymentStatus: fin.paymentStatus,
+        partialAmount: fin.parsedPartial, amountPaid: fin.amountPaid,
+        balanceAmount: fin.balanceAmount, subtotal: fin.subtotal,
+        commissionAmount: fin.commissionAmount, discount: fin.discountAmount,
+        discountType: booking.discountType || "₹", offerDeduction: fin.offerDeduction,
+        finalPayable: fin.finalPayable, finalPayableAmount: fin.finalPayable,
+        grandTotal: fin.finalPayable, totalAmount: fin.finalPayable,
+        doctorId: booking.doctorId, appointmentDate: booking.appointmentDate,
+        isOP: true, status: booking.status || "confirmed",
+        serviceItems: mergedServices, services: mergedServices,
+        labItems, labTotal,
+        medicineItems: Array.isArray(booking.medicineItems) ? booking.medicineItems : [],
+        medicineTotal: Number(booking.medicineTotal) || 0,
+        referredByCustomer: booking.referredByCustomer, referredByDoctor: booking.referredByDoctor,
+        referralCustomerId: booking.referralCustomerId, referralDoctorId: booking.referralDoctorId,
+        referralCommission: booking.referralCommission, referralCommissionType: booking.referralCommissionType,
+        offerApplied: booking.offerApplied || null,
+        categoryPayment: buildCategoryPaymentSnapshot(booking),
+      };
+
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${booking._id}`, payload);
+      if (res?.data?.success) {
+        showToast(`✅ Lab items updated! Total: ₹${Math.round(labTotal)} (${labItems.length} item${labItems.length !== 1 ? "s" : ""})`, "success");
+        setShowLabItemsModal(false);
+        setLabItemsBooking(null);
+        setLabItemsList([]);
+        await fetchBookings();
+        refreshPatientBookings();
+      } else {
+        showToast(res.data?.message || "Failed to update lab items", "error");
+      }
+    } catch (err) {
+      console.error("Lab items save error:", err);
+      showToast(err.response?.data?.message || "Failed to update lab items", "error");
+    } finally {
+      setSavingLabItems(false);
+    }
+  };
+
+  /* ============================================================
+     PHARMACY ITEMS MULTI-ITEM HANDLERS
+     ============================================================ */
+  const openPharmacyItemsModal = (booking) => {
+    if (!booking) return;
+    let items = Array.isArray(booking.medicineItems) ? booking.medicineItems : [];
+    if (items.length === 0 && (Number(booking.medicineTotal) || 0) > 0) {
+      items = [{ serviceId: "", name: "Medicine", price: Number(booking.medicineTotal) || 0, description: "", category: "pharmacy" }];
+    }
+    setPharmacyItemsList(items.map((s) => ({
+      serviceId: s.serviceId || s._id || "",
+      name: s.name || "Medicine",
+      price: Number(s.price) || 0,
+      description: s.description || "",
+    })));
+    setPharmacyItemsBooking(booking);
+    setPharmacyItemPrice("");
+    setShowPharmacyItemsModal(true);
+  };
+
+  const handleAddPharmacyItem = () => {
+    const price = pharmacyItemPrice.trim();
+    if (!price) { showToast("Please enter medicine amount", "error"); return; }
+    if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
+    setPharmacyItemsList((prev) => [...prev, {
+      serviceId: "",
+      name: `Medicine ${prev.length + 1}`,
+      price: Number(price) || 0,
+      description: "",
+    }]);
+    setPharmacyItemPrice("");
+  };
+
+  const handleRemovePharmacyItem = (index) => {
+    setPharmacyItemsList((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdatePharmacyItemPrice = (index, newPrice) => {
+    setPharmacyItemsList((prev) => prev.map((s, i) => (i === index ? { ...s, price: Number(newPrice) || 0 } : s)));
+  };
+
+  const handleSavePharmacyItems = async () => {
+    if (!pharmacyItemsBooking) return;
+    setSavingPharmacyItems(true);
+    try {
+      const booking = pharmacyItemsBooking;
+      const allServices = getBookingServices(booking);
+      const nonReviewServices = allServices.filter((s) => !s.isReviewService);
+
+      const mergedServices = nonReviewServices.map((s) => ({
+        serviceId: s.serviceId || s._id || "",
+        name: s.name,
+        price: Number(s.price) || 0,
+        description: s.description || "",
+        category: s.category || "",
+      }));
+
+      const medicineItems = pharmacyItemsList.map((s) => ({
+        serviceId: s.serviceId || "",
+        name: s.name,
+        price: Number(s.price) || 0,
+        description: s.description || "",
+        category: "pharmacy",
+      }));
+      const medicineTotal = medicineItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+
+      const fin = computeFinancials(mergedServices, {
+        labTotal: Number(booking.labTotal) || 0,
+        medicineTotal,
+        referralCommission: booking.referralCommission || 0,
+        discount: booking.discount || 0,
+        discountType: booking.discountType || "₹",
+        partialAmount: computeExistingPaidTotal(booking),  // ✅ FIX
+        offerAmount: booking.offerApplied?.offerAmount || 0,
+      });
+
+      const payload = {
+        patientTitle: booking.patientTitle, patientName: booking.patientName,
+        patientPhone: booking.patientPhone, patientAge: booking.patientAge,
+        patientDob: booking.patientDob, patientGender: booking.patientGender,
+        patientAddress: booking.patientAddress, patientCity: booking.patientCity,
+        patientPincode: booking.patientPincode, purpose: booking.purpose,
+        paymentType: booking.paymentType, paymentStatus: fin.paymentStatus,
+        partialAmount: fin.parsedPartial, amountPaid: fin.amountPaid,
+        balanceAmount: fin.balanceAmount, subtotal: fin.subtotal,
+        commissionAmount: fin.commissionAmount, discount: fin.discountAmount,
+        discountType: booking.discountType || "₹", offerDeduction: fin.offerDeduction,
+        finalPayable: fin.finalPayable, finalPayableAmount: fin.finalPayable,
+        grandTotal: fin.finalPayable, totalAmount: fin.finalPayable,
+        doctorId: booking.doctorId, appointmentDate: booking.appointmentDate,
+        isOP: true, status: booking.status || "confirmed",
+        serviceItems: mergedServices, services: mergedServices,
+        labItems: Array.isArray(booking.labItems) ? booking.labItems : [],
+        labTotal: Number(booking.labTotal) || 0,
+        medicineItems, medicineTotal,
+        referredByCustomer: booking.referredByCustomer, referredByDoctor: booking.referredByDoctor,
+        referralCustomerId: booking.referralCustomerId, referralDoctorId: booking.referralDoctorId,
+        referralCommission: booking.referralCommission, referralCommissionType: booking.referralCommissionType,
+        offerApplied: booking.offerApplied || null,
+        categoryPayment: buildCategoryPaymentSnapshot(booking),
+      };
+
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${booking._id}`, payload);
+      if (res?.data?.success) {
+        showToast(`✅ Pharmacy items updated! Total: ₹${Math.round(medicineTotal)} (${medicineItems.length} item${medicineItems.length !== 1 ? "s" : ""})`, "success");
+        setShowPharmacyItemsModal(false);
+        setPharmacyItemsBooking(null);
+        setPharmacyItemsList([]);
+        await fetchBookings();
+        refreshPatientBookings();
+      } else {
+        showToast(res.data?.message || "Failed to update pharmacy items", "error");
+      }
+    } catch (err) {
+      console.error("Pharmacy items save error:", err);
+      showToast(err.response?.data?.message || "Failed to update pharmacy items", "error");
+    } finally {
+      setSavingPharmacyItems(false);
+    }
   };
 
   const showToast = (message, type = "success") => {
@@ -1014,8 +1302,7 @@ export default function OpManagement() {
     fetchBookings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    timeFilter,
-    fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
+    timeFilter, fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
     doctorFilter, paymentTypeFilter, statusFilter,
     bookingTypeFilter, revenueCategoryFilter, searchQuery
   ]);
@@ -1183,6 +1470,26 @@ export default function OpManagement() {
           };
         });
 
+        const normalizedLabItems = Array.isArray(b.labItems)
+          ? b.labItems.map((item) => ({
+            serviceId: item.serviceId || item._id || "",
+            name: item.name || "Lab Test",
+            price: Number(item.price) || 0,
+            description: item.description || "",
+            category: "lab",
+          }))
+          : [];
+
+        const normalizedMedicineItems = Array.isArray(b.medicineItems)
+          ? b.medicineItems.map((item) => ({
+            serviceId: item.serviceId || item._id || "",
+            name: item.name || "Medicine",
+            price: Number(item.price) || 0,
+            description: item.description || "",
+            category: "pharmacy",
+          }))
+          : [];
+
         const servicesTotal = normalizedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
         const subtotal = Number(b.subtotal) || servicesTotal;
         const commissionAmount = Number(b.commissionAmount) || 0;
@@ -1234,6 +1541,10 @@ export default function OpManagement() {
           status: b.status || "confirmed",
           services: normalizedServices,
           serviceItems: normalizedServices,
+          labItems: normalizedLabItems,
+          medicineItems: normalizedMedicineItems,
+          // ✅ CRITICAL: categoryPayment pass-through
+          categoryPayment: b.categoryPayment || null,
           createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
           bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
           appointmentDate: b.appointmentDate || slotDetails.date || "",
@@ -1757,7 +2068,22 @@ export default function OpManagement() {
     }
     setPaymentUpdating(true);
     try {
-      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, { paymentStatus });
+      const payload = { paymentStatus };
+      if (paymentStatus === "Due") {
+        payload.categoryPayment = {
+          clinic: { paidAmount: 0 },
+          lab: { paidAmount: 0 },
+          pharmacy: { paidAmount: 0 },
+        };
+      } else if (paymentStatus === "Paid") {
+        const bd = getAmountBreakdown(booking);
+        payload.categoryPayment = {
+          clinic: { paidAmount: Number(bd.clinic) || 0 },
+          lab: { paidAmount: Number(bd.lab) || 0 },
+          pharmacy: { paidAmount: Number(bd.pharmacy) || 0 },
+        };
+      }
+      const res = await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, payload);
       if (res?.data?.success) {
         showToast(`Payment updated to ${paymentStatus}!`, "success");
         setOpenPaymentDropdown(null);
@@ -1779,8 +2105,9 @@ export default function OpManagement() {
     }
   };
 
-  const openPartialModal = (booking) => {
+  const openPartialModal = (booking, category = null) => {
     setPartialBooking(booking);
+    setPartialCategory(category);
     setPartialAmountInput(String(booking.amountPaid || booking.partialAmount || ""));
     setPartialPaymentType(booking.paymentType || "cash");
     setShowPartialModal(true);
@@ -1788,20 +2115,72 @@ export default function OpManagement() {
 
   const handleMarkFullPaid = async () => {
     if (!partialBooking) return;
-    const finalPayable = getBookingFinalPayable(partialBooking);
+    const bd = getAmountBreakdown(partialBooking);
+
+    // ✅ Preserve existing per-category paidAmounts
+    const existing = partialBooking.categoryPayment;
+    const wasPaid = partialBooking.paymentStatus === "Paid";
+    const categoryPayment = {
+      clinic: {
+        paidAmount: existing?.clinic?.paidAmount !== undefined
+          ? Number(existing.clinic.paidAmount) || 0
+          : wasPaid ? (Number(bd.clinic) || 0) : 0,
+      },
+      lab: {
+        paidAmount: existing?.lab?.paidAmount !== undefined
+          ? Number(existing.lab.paidAmount) || 0
+          : wasPaid ? (Number(bd.lab) || 0) : 0,
+      },
+      pharmacy: {
+        paidAmount: existing?.pharmacy?.paidAmount !== undefined
+          ? Number(existing.pharmacy.paidAmount) || 0
+          : wasPaid ? (Number(bd.pharmacy) || 0) : 0,
+      },
+    };
+
+    // ✅ SIRF clicked category ko mark karo — baaki untouched
+    if (partialCategory) {
+      categoryPayment[partialCategory] = {
+        paidAmount: Number(bd[partialCategory]) || 0,
+      };
+    } else {
+      // Fallback: no category — mark all as paid
+      categoryPayment.clinic = { paidAmount: Number(bd.clinic) || 0 };
+      categoryPayment.lab = { paidAmount: Number(bd.lab) || 0 };
+      categoryPayment.pharmacy = { paidAmount: Number(bd.pharmacy) || 0 };
+    }
+
+    // Recompute overall totals
+    const totalPaid =
+      (categoryPayment.clinic.paidAmount || 0) +
+      (categoryPayment.lab.paidAmount || 0) +
+      (categoryPayment.pharmacy.paidAmount || 0);
+    const totalAmount =
+      (Number(bd.clinic) || 0) + (Number(bd.lab) || 0) + (Number(bd.pharmacy) || 0);
+    const totalDue = Math.max(0, totalAmount - totalPaid);
+
+    let paymentStatus = "Due";
+    if (totalDue <= 0.5 && totalPaid > 0) paymentStatus = "Paid";
+    else if (totalPaid > 0) paymentStatus = "Partial";
+
     setSavingPartial(true);
     try {
       const res = await axios.put(`${API_BASE_URL}/appointment-slots/${partialBooking._id}`, {
-        paymentStatus: "Paid",
+        paymentStatus,
         paymentType: partialPaymentType,
-        amountPaid: finalPayable,
-        partialAmount: finalPayable,
-        balanceAmount: 0,
+        amountPaid: totalPaid,
+        partialAmount: totalPaid,
+        balanceAmount: totalDue,
+        categoryPayment,
       });
       if (res?.data?.success) {
-        showToast(`✅ Payment marked as Fully Paid! ₹${Math.round(finalPayable)} cleared.`, "success");
+        const label = partialCategory
+          ? `${partialCategory.charAt(0).toUpperCase() + partialCategory.slice(1)}`
+          : "Payment";
+        showToast(`✅ ${label} marked as Paid!`, "success");
         setShowPartialModal(false);
         setPartialBooking(null);
+        setPartialCategory(null);
         setPartialAmountInput("");
         setPartialPaymentType("cash");
         await fetchBookings();
@@ -1867,6 +2246,7 @@ export default function OpManagement() {
     setEditingLabTotal(booking.labTotal ? String(booking.labTotal) : "");
     setShowLabTotalModal(true);
   };
+
   const handleSaveLabTotal = async () => {
     if (!labTotalBooking) return;
     const total = parseFloat(editingLabTotal) || 0;
@@ -1976,8 +2356,6 @@ export default function OpManagement() {
   const handleRemoveReviewService = (index) => {
     setReviewServices((prev) => prev.filter((_, i) => i !== index));
   };
-
-  const getReviewServicesTotal = () => reviewServices.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
 
   const handleSaveReview = async () => {
     if (!reviewBooking) return;
@@ -2134,6 +2512,8 @@ export default function OpManagement() {
         services: formData.serviceItems.map((s) => ({
           serviceId: s._id || s.serviceId, name: s.name, price: Number(s.price) || 0, description: s.description || "",
         })),
+        labItems: Array.isArray(matchBForUpdate?.labItems) ? matchBForUpdate.labItems : [],
+        medicineItems: Array.isArray(matchBForUpdate?.medicineItems) ? matchBForUpdate.medicineItems : [],
         referredByCustomer: formData.referredByCustomer,
         referredByDoctor: formData.referredByDoctor,
         referralCustomerId: formData.referralCustomerId,
@@ -2425,6 +2805,31 @@ export default function OpManagement() {
         isReviewService: s.isReviewService || false,
       });
     });
+
+    if (Array.isArray(booking.labItems)) {
+      booking.labItems.forEach((item) => {
+        items.push({
+          no: items.length + 1, name: item.name || "Lab Test",
+          serviceCode: item.serviceId ? String(item.serviceId).slice(-6).toUpperCase() : "LAB",
+          remarks: "Lab Test",
+          category: "lab", amount: Number(item.price) || 0,
+          paymentStatus: booking.paymentStatus || "Due",
+          isReviewService: false,
+        });
+      });
+    }
+    if (Array.isArray(booking.medicineItems)) {
+      booking.medicineItems.forEach((item) => {
+        items.push({
+          no: items.length + 1, name: item.name || "Medicine",
+          serviceCode: item.serviceId ? String(item.serviceId).slice(-6).toUpperCase() : "PHM",
+          remarks: "Pharmacy",
+          category: "pharmacy", amount: Number(item.price) || 0,
+          paymentStatus: booking.paymentStatus || "Due",
+          isReviewService: false,
+        });
+      });
+    }
 
     if (items.length === 0) {
       const fallback = Number(booking.finalPayable) || Number(booking.finalPayableAmount) || Number(booking.grandTotal) || Number(booking.totalAmount) || 0;
@@ -2776,10 +3181,7 @@ export default function OpManagement() {
                 </div>
               </div>
               <div className="p-5 space-y-3">
-                <button
-                  onClick={() => handleMobileWelcomeChoice("register")}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 bg-emerald-50 border-2 border-emerald-200 rounded-xl hover:bg-emerald-100 hover:border-emerald-400 transition-all text-left group"
-                >
+                <button onClick={() => handleMobileWelcomeChoice("register")} className="w-full flex items-center gap-3 px-4 py-3.5 bg-emerald-50 border-2 border-emerald-200 rounded-xl hover:bg-emerald-100 hover:border-emerald-400 transition-all text-left group">
                   <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
                     <FaPlus className="w-4 h-4" />
                   </div>
@@ -2789,10 +3191,7 @@ export default function OpManagement() {
                   </div>
                   <FiChevronDown className="w-4 h-4 text-emerald-400 -rotate-90" />
                 </button>
-                <button
-                  onClick={() => handleMobileWelcomeChoice("manage")}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-400 transition-all text-left group"
-                >
+                <button onClick={() => handleMobileWelcomeChoice("manage")} className="w-full flex items-center gap-3 px-4 py-3.5 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-400 transition-all text-left group">
                   <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
                     <FiUsers className="w-4 h-4" />
                   </div>
@@ -2810,304 +3209,138 @@ export default function OpManagement() {
           </div>
         )}
 
-        {/* ✅ ROW 1 — Title | Time Filters (CENTER) | Action Buttons */}
+        {/* ROW 1 */}
         <div className="hidden lg:grid grid-cols-3 items-center gap-2 mb-3">
           <div className="flex items-center">
-            <h1 className="emp-dash__greeting text-lg font-bold whitespace-nowrap">
-              OP <span>Management</span>
-            </h1>
+            <h1 className="emp-dash__greeting text-lg font-bold whitespace-nowrap">OP <span>Management</span></h1>
           </div>
           <div className="flex items-center justify-center gap-2">
             <div className="relative flex-shrink-0">
               <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[140px] pl-8 pr-2 py-2 text-xs border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              />
+              <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-[140px] pl-8 pr-2 py-2 text-xs border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
             </div>
-
             <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200">
               {TIME_FILTER_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => handleTimeFilterChange(opt.value)}
-                  className={`px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap ${timeFilter === opt.value
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-600 hover:bg-white hover:text-gray-900"
-                    }`}
-                  title={opt.label}
-                >
-                  {opt.label}
-                </button>
+                <button key={opt.value} onClick={() => handleTimeFilterChange(opt.value)} className={`px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap ${timeFilter === opt.value ? "bg-blue-600 text-white shadow-sm" : "text-gray-600 hover:bg-white hover:text-gray-900"}`} title={opt.label}>{opt.label}</button>
               ))}
             </div>
           </div>
-
           <div className="flex items-center gap-1.5 justify-end">
-            <button
-              onClick={handleAddNewPatient}
-              className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm whitespace-nowrap"
-            >
-              <FiPlus className="w-3.5 h-3.5" /> Add Patient
-            </button>
-            <button
-              onClick={downloadCSV}
-              className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-sm whitespace-nowrap"
-            >
-              <FiDownload className="w-3.5 h-3.5" /> Export CSV
-            </button>
-            <button
-              onClick={() => handleRoleBasedNavigate("/inactive-patients")}
-              className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm whitespace-nowrap"
-            >
-              <FiClock className="w-3.5 h-3.5 text-amber-600" /> Inactive Patients
-            </button>
+            <button onClick={handleAddNewPatient} className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm whitespace-nowrap"><FiPlus className="w-3.5 h-3.5" /> Add Patient</button>
+            <button onClick={downloadCSV} className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-sm whitespace-nowrap"><FiDownload className="w-3.5 h-3.5" /> Export CSV</button>
+            <button onClick={() => handleRoleBasedNavigate("/inactive-patients")} className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm whitespace-nowrap"><FiClock className="w-3.5 h-3.5 text-amber-600" /> Inactive Patients</button>
           </div>
         </div>
 
-        {/* ✅ ROW 2 — Filters */}
+        {/* ROW 2 - Filters */}
         {showRevenueBreakdown && (
           <div className="hidden lg:flex items-center gap-1.5 flex-nowrap mb-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
-            >
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
               <option value="All">All Payment</option>
               <option value="Partial">Partial</option>
               <option value="Paid">Paid</option>
               <option value="Due">Due</option>
             </select>
-
-            <select
-              value={bookingTypeFilter}
-              onChange={(e) => setBookingTypeFilter(e.target.value)}
-              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
-            >
-              {BOOKING_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
+            <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
+              {BOOKING_TYPE_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
             </select>
-
-            <select
-              value={doctorFilter}
-              onChange={(e) => setDoctorFilter(e.target.value)}
-              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg max-w-[110px] truncate flex-shrink-0"
-            >
+            <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg max-w-[110px] truncate flex-shrink-0">
               <option value="All">All Doctors</option>
-              {getUniqueDoctors().map((doc) => (
-                <option key={doc.name} value={doc.name}>{doc.name}</option>
-              ))}
+              {getUniqueDoctors().map((doc) => (<option key={doc.name} value={doc.name}>{doc.name}</option>))}
             </select>
-
-            <select
-              value={revenueCategoryFilter}
-              onChange={(e) => setRevenueCategoryFilter(e.target.value)}
-              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
-            >
-              {REVENUE_CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
+            <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
+              {REVENUE_CATEGORY_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
             </select>
-
-            <select
-              value={paymentTypeFilter}
-              onChange={(e) => setPaymentTypeFilter(e.target.value)}
-              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0"
-            >
-              {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
+            <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
+              {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
             </select>
-
-            <select
-              value={referredByFilter}
-              onChange={(e) => setReferredByFilter(e.target.value)}
-              className={`h-9 px-2 text-xs border rounded-lg max-w-[140px] truncate flex-shrink-0 ${referredByFilter !== "All" ? "border-indigo-500 text-indigo-700 bg-indigo-50" : "border-gray-300 bg-white"}`}
-              title="Filter by Referred By"
-            >
+            <select value={referredByFilter} onChange={(e) => setReferredByFilter(e.target.value)} className={`h-9 px-2 text-xs border rounded-lg max-w-[140px] truncate flex-shrink-0 ${referredByFilter !== "All" ? "border-indigo-500 text-indigo-700 bg-indigo-50" : "border-gray-300 bg-white"}`} title="Filter by Referred By">
               <option value="All">All Referrers</option>
               {getUniqueReferrers().customers.length > 0 && (
                 <optgroup label="Customers">
-                  {getUniqueReferrers().customers.map((c) => (
-                    <option key={`c-${c}`} value={`customer::${c}`}>{c}</option>
-                  ))}
+                  {getUniqueReferrers().customers.map((c) => (<option key={`c-${c}`} value={`customer::${c}`}>{c}</option>))}
                 </optgroup>
               )}
               {getUniqueReferrers().doctors.length > 0 && (
                 <optgroup label="Doctors">
-                  {getUniqueReferrers().doctors.map((d) => (
-                    <option key={`d-${d}`} value={`doctor::${d}`}>{d}</option>
-                  ))}
+                  {getUniqueReferrers().doctors.map((d) => (<option key={`d-${d}`} value={`doctor::${d}`}>{d}</option>))}
                 </optgroup>
               )}
             </select>
 
             <div className="relative flex-shrink-0">
-              <button
-                data-btn="reg"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const popupWidth = 340;
-                  const left = Math.min(rect.left, window.innerWidth - popupWidth - 20);
-                  setRegPopupPos({ top: rect.bottom + 6, left });
-                  setShowRegDatePopup(!showRegDatePopup);
-                  setShowApptDatePopup(false);
-                }}
-                className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${(fromDate || toDate)
-                  ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10"
-                  : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
-                  }`}
-              >
+              <button data-btn="reg" onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const popupWidth = 340;
+                const left = Math.min(rect.left, window.innerWidth - popupWidth - 20);
+                setRegPopupPos({ top: rect.bottom + 6, left });
+                setShowRegDatePopup(!showRegDatePopup);
+                setShowApptDatePopup(false);
+              }} className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${(fromDate || toDate) ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}>
                 <FaCalendarAlt className="w-3 h-3" />
                 <span>
-                  {!fromDate && !toDate
-                    ? "Reg Date"
-                    : fromDate && toDate
-                      ? `${fromDate.slice(8, 10)}/${fromDate.slice(5, 7)} – ${toDate.slice(8, 10)}/${toDate.slice(5, 7)}`
-                      : fromDate
-                        ? `From ${fromDate.slice(8, 10)}/${fromDate.slice(5, 7)}`
-                        : `To ${toDate.slice(8, 10)}/${toDate.slice(5, 7)}`}
+                  {!fromDate && !toDate ? "Reg Date" : fromDate && toDate ? `${fromDate.slice(8, 10)}/${fromDate.slice(5, 7)} – ${toDate.slice(8, 10)}/${toDate.slice(5, 7)}` : fromDate ? `From ${fromDate.slice(8, 10)}/${fromDate.slice(5, 7)}` : `To ${toDate.slice(8, 10)}/${toDate.slice(5, 7)}`}
                 </span>
-                {(fromDate || toDate) && (
-                  <span
-                    onClick={(e) => { e.stopPropagation(); setFromDate(""); setToDate(""); }}
-                    className="ml-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center hover:bg-red-600 cursor-pointer"
-                  >✕</span>
-                )}
+                {(fromDate || toDate) && (<span onClick={(e) => { e.stopPropagation(); setFromDate(""); setToDate(""); }} className="ml-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center hover:bg-red-600 cursor-pointer">✕</span>)}
               </button>
-              <DateRangePopup
-                isOpen={showRegDatePopup}
-                position={regPopupPos}
-                fromDate={fromDate}
-                toDate={toDate}
-                onFromChange={setFromDate}
-                onToChange={setToDate}
-                onClear={() => { setFromDate(""); setToDate(""); }}
-                onClose={() => setShowRegDatePopup(false)}
-                dataAttr="reg"
-              />
+              <DateRangePopup isOpen={showRegDatePopup} position={regPopupPos} fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate} onClear={() => { setFromDate(""); setToDate(""); }} onClose={() => setShowRegDatePopup(false)} dataAttr="reg" />
             </div>
 
             <div className="relative flex-shrink-0">
-              <button
-                data-btn="appt"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const popupWidth = 340;
-                  const left = Math.min(rect.left, window.innerWidth - popupWidth - 20);
-                  setApptPopupPos({ top: rect.bottom + 6, left });
-                  setShowApptDatePopup(!showApptDatePopup);
-                  setShowRegDatePopup(false);
-                }}
-                className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${(apptFromDate || apptToDate)
-                  ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10"
-                  : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
-                  }`}
-              >
+              <button data-btn="appt" onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const popupWidth = 340;
+                const left = Math.min(rect.left, window.innerWidth - popupWidth - 20);
+                setApptPopupPos({ top: rect.bottom + 6, left });
+                setShowApptDatePopup(!showApptDatePopup);
+                setShowRegDatePopup(false);
+              }} className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${(apptFromDate || apptToDate) ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}>
                 <FaCalendarAlt className="w-3 h-3" />
                 <span>
-                  {!apptFromDate && !apptToDate
-                    ? "Appt Date"
-                    : apptFromDate && apptToDate
-                      ? `${apptFromDate.slice(8, 10)}/${apptFromDate.slice(5, 7)} – ${apptToDate.slice(8, 10)}/${apptToDate.slice(5, 7)}`
-                      : apptFromDate
-                        ? `From ${apptFromDate.slice(8, 10)}/${apptFromDate.slice(5, 7)}`
-                        : `To ${apptToDate.slice(8, 10)}/${apptToDate.slice(5, 7)}`}
+                  {!apptFromDate && !apptToDate ? "Appt Date" : apptFromDate && apptToDate ? `${apptFromDate.slice(8, 10)}/${apptFromDate.slice(5, 7)} – ${apptToDate.slice(8, 10)}/${apptToDate.slice(5, 7)}` : apptFromDate ? `From ${apptFromDate.slice(8, 10)}/${apptFromDate.slice(5, 7)}` : `To ${apptToDate.slice(8, 10)}/${apptToDate.slice(5, 7)}`}
                 </span>
-                {(apptFromDate || apptToDate) && (
-                  <span
-                    onClick={(e) => { e.stopPropagation(); setApptFromDate(""); setApptToDate(""); }}
-                    className="ml-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center hover:bg-red-600 cursor-pointer"
-                  >✕</span>
-                )}
+                {(apptFromDate || apptToDate) && (<span onClick={(e) => { e.stopPropagation(); setApptFromDate(""); setApptToDate(""); }} className="ml-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center hover:bg-red-600 cursor-pointer">✕</span>)}
               </button>
-              <DateRangePopup
-                isOpen={showApptDatePopup}
-                position={apptPopupPos}
-                fromDate={apptFromDate}
-                toDate={apptToDate}
-                onFromChange={setApptFromDate}
-                onToChange={setApptToDate}
-                onClear={() => { setApptFromDate(""); setApptToDate(""); }}
-                onClose={() => setShowApptDatePopup(false)}
-                dataAttr="appt"
-              />
+              <DateRangePopup isOpen={showApptDatePopup} position={apptPopupPos} fromDate={apptFromDate} toDate={apptToDate} onFromChange={setApptFromDate} onToChange={setApptToDate} onClear={() => { setApptFromDate(""); setApptToDate(""); }} onClose={() => setShowApptDatePopup(false)} dataAttr="appt" />
             </div>
 
-            <input
-              type="month"
-              value={selectedMonth}
-              onChange={handleMonthChange}
-              className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0 w-[110px]"
-              title="Appointment month"
-            />
+            <input type="month" value={selectedMonth} onChange={handleMonthChange} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0 w-[110px]" title="Appointment month" />
 
             {timeFilter !== "All" && revenueCategoryFilter !== "All" && calculationData && (
-              <button
-                onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }}
-                className="flex items-center gap-1 h-9 px-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex-shrink-0"
-                title="Show Calculation"
-              >
+              <button onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }} className="flex items-center gap-1 h-9 px-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex-shrink-0" title="Show Calculation">
                 <FaCalculator className="w-3.5 h-3.5" /> Calc
               </button>
             )}
 
             {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 h-9 px-2.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex-shrink-0"
-              >
+              <button onClick={clearFilters} className="flex items-center gap-1 h-9 px-2.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex-shrink-0">
                 <FiTrash2 className="w-3 h-3 text-red-500" /> Clear
               </button>
             )}
           </div>
         )}
 
-        {/* Header Mobile */}
+        {/* Mobile Header */}
         <div className="lg:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
           <div className="flex items-baseline gap-2">
             <h1 className="text-base font-bold whitespace-nowrap">OP <span className="text-indigo-600">Management</span></h1>
             <div className="emp-dash__date-pill text-[10px] px-2 py-1"><FaUserInjured className="w-3 h-3 text-blue-600" /><span>{patients.length} Patients</span></div>
           </div>
           <div className="flex items-center gap-1 flex-wrap justify-end">
-            <button onClick={handleAddNewPatient} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg">
-              <FiPlus className="w-3 h-3" /> Add
-            </button>
-            <button onClick={() => handleRoleBasedNavigate("/inactive-patients")} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
-              <FiClock className="w-3 h-3 text-amber-600" /> Inactive
-            </button>
-            <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
-              <FiFilter className="w-3 h-3" /> Filters
-            </button>
+            <button onClick={handleAddNewPatient} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-blue-600 rounded-lg"><FiPlus className="w-3 h-3" /> Add</button>
+            <button onClick={() => handleRoleBasedNavigate("/inactive-patients")} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg"><FiClock className="w-3 h-3 text-amber-600" /> Inactive</button>
+            <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg"><FiFilter className="w-3 h-3" /> Filters</button>
           </div>
         </div>
 
         <div className="lg:hidden mb-3">
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
             {TIME_FILTER_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => handleTimeFilterChange(opt.value)}
-                className={`px-4 py-2.5 text-xs font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${timeFilter === opt.value
-                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                  : "bg-white text-gray-600 border-gray-300"
-                  }`}
-              >
-                {opt.label}
-              </button>
+              <button key={opt.value} onClick={() => handleTimeFilterChange(opt.value)} className={`px-4 py-2.5 text-xs font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${timeFilter === opt.value ? "bg-blue-600 text-white border-blue-600 shadow-sm" : "bg-white text-gray-600 border-gray-300"}`}>{opt.label}</button>
             ))}
           </div>
           {timeFilter !== "All" && revenueCategoryFilter !== "All" && calculationData && (
-            <button
-              onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }}
-              className="mt-2 flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
-            >
-              <FaCalculator className="w-3 h-3" /> Show Calculation
-            </button>
+            <button onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }} className="mt-2 flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"><FaCalculator className="w-3 h-3" /> Show Calculation</button>
           )}
         </div>
 
@@ -3146,26 +3379,10 @@ export default function OpManagement() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Referred By</label>
-                <select
-                  value={referredByFilter}
-                  onChange={(e) => setReferredByFilter(e.target.value)}
-                  className={`w-full px-3 py-2.5 text-sm border rounded-lg ${referredByFilter !== "All" ? "border-indigo-500 text-indigo-700 bg-indigo-50" : "border-gray-300"}`}
-                >
+                <select value={referredByFilter} onChange={(e) => setReferredByFilter(e.target.value)} className={`w-full px-3 py-2.5 text-sm border rounded-lg ${referredByFilter !== "All" ? "border-indigo-500 text-indigo-700 bg-indigo-50" : "border-gray-300"}`}>
                   <option value="All">All Referrers</option>
-                  {getUniqueReferrers().customers.length > 0 && (
-                    <optgroup label="Customers">
-                      {getUniqueReferrers().customers.map((c) => (
-                        <option key={`c-${c}`} value={`customer::${c}`}>{c}</option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {getUniqueReferrers().doctors.length > 0 && (
-                    <optgroup label="Doctors">
-                      {getUniqueReferrers().doctors.map((d) => (
-                        <option key={`d-${d}`} value={`doctor::${d}`}>{d}</option>
-                      ))}
-                    </optgroup>
-                  )}
+                  {getUniqueReferrers().customers.length > 0 && (<optgroup label="Customers">{getUniqueReferrers().customers.map((c) => (<option key={`c-${c}`} value={`customer::${c}`}>{c}</option>))}</optgroup>)}
+                  {getUniqueReferrers().doctors.length > 0 && (<optgroup label="Doctors">{getUniqueReferrers().doctors.map((d) => (<option key={`d-${d}`} value={`doctor::${d}`}>{d}</option>))}</optgroup>)}
                 </select>
               </div>
               <div>
@@ -3185,22 +3402,14 @@ export default function OpManagement() {
               <div className="flex items-center gap-1.5 h-9 px-2 border border-gray-300 bg-white rounded-lg flex-shrink-0">
                 <FaCalendarAlt className="w-3 h-3 text-gray-500" />
                 <span className="text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Month Wise:</span>
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={handleMonthChange}
-                  className="text-[11px] border-0 bg-transparent text-gray-900 focus:outline-none w-[110px]"
-                  title="Filter by appointment month"
-                />
+                <input type="month" value={selectedMonth} onChange={handleMonthChange} className="text-[11px] border-0 bg-transparent text-gray-900 focus:outline-none w-[110px]" title="Filter by appointment month" />
               </div>
               <div className="pt-3 border-t border-gray-200 flex gap-2">
                 <button onClick={handleAddNewPatient} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg"><FiPlus className="w-4 h-4" /> Add Patient</button>
                 <button onClick={downloadCSV} disabled={!filteredPatients.length} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg disabled:opacity-50"><FiDownload className="w-4 h-4" /> Export</button>
               </div>
               {hasActiveFilters && (
-                <button onClick={clearFilters} className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
-                  <FiTrash2 className="w-4 h-4 text-red-500" /> Clear All Filters
-                </button>
+                <button onClick={clearFilters} className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg"><FiTrash2 className="w-4 h-4 text-red-500" /> Clear All Filters</button>
               )}
             </div>
           )}
@@ -3214,21 +3423,11 @@ export default function OpManagement() {
               <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Revenue Breakdown</h3>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-indigo-700 bg-white px-3 py-1 rounded-full border border-indigo-200">
-                {filteredPatients.length} patients
-              </span>
+              <span className="text-xs font-bold text-indigo-700 bg-white px-3 py-1 rounded-full border border-indigo-200">{filteredPatients.length} patients</span>
               {timeFilter !== "All" && revenueCategoryFilter !== "All" && calculationData && (
-                <button
-                  onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 shadow-sm transition-colors"
-                >
-                  <FaCalculator className="w-3.5 h-3.5" /> Calculation
-                </button>
+                <button onClick={() => { setUserClosedCalcPopup(false); setShowCalculationPopup(true); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 shadow-sm transition-colors"><FaCalculator className="w-3.5 h-3.5" /> Calculation</button>
               )}
-              <button
-                onClick={() => setShowRevenueBreakdown(!showRevenueBreakdown)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 shadow-sm transition-colors"
-              >
+              <button onClick={() => setShowRevenueBreakdown(!showRevenueBreakdown)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 shadow-sm transition-colors">
                 {showRevenueBreakdown ? <FiChevronUp className="w-3.5 h-3.5" /> : <FiChevronDown className="w-3.5 h-3.5" />}
                 {showRevenueBreakdown ? "Hide" : "Show"}
               </button>
@@ -3239,9 +3438,7 @@ export default function OpManagement() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3">
               <div className="rounded-lg p-4 border border-blue-200 bg-blue-50 min-h-[115px] flex flex-col justify-between">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase">
-                    <FaClinicMedical className="text-xs" /> Clinic Revenue
-                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase"><FaClinicMedical className="text-xs" /> Clinic Revenue</div>
                   <div className="flex flex-col items-end">
                     <span className="text-[11px] font-bold text-blue-600 leading-tight">FootFall: {categoryRevenue.clinic.footFall}</span>
                     <span className="text-xl font-extrabold text-blue-800">{fmt(categoryRevenue.clinic.total)}</span>
@@ -3256,9 +3453,7 @@ export default function OpManagement() {
 
               <div className="rounded-lg p-4 border border-purple-200 bg-purple-50 min-h-[115px] flex flex-col justify-between">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-purple-700 uppercase">
-                    <FaFlask className="text-xs" /> Lab Revenue
-                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-purple-700 uppercase"><FaFlask className="text-xs" /> Lab Revenue</div>
                   <div className="flex flex-col items-end">
                     <span className="text-[11px] font-bold text-purple-600 leading-tight">FootFall: {categoryRevenue.lab.footFall}</span>
                     <span className="text-xl font-extrabold text-purple-800">{fmt(categoryRevenue.lab.total)}</span>
@@ -3273,9 +3468,7 @@ export default function OpManagement() {
 
               <div className="rounded-lg p-4 border border-green-200 bg-green-50 min-h-[115px] flex flex-col justify-between">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-green-700 uppercase">
-                    <FaPills className="text-xs" /> Pharmacy Revenue
-                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-green-700 uppercase"><FaPills className="text-xs" /> Pharmacy Revenue</div>
                   <div className="flex flex-col items-end">
                     <span className="text-[11px] font-bold text-green-600 leading-tight">FootFall: {categoryRevenue.pharmacy.footFall}</span>
                     <span className="text-xl font-extrabold text-green-800">{fmt(categoryRevenue.pharmacy.total)}</span>
@@ -3290,9 +3483,7 @@ export default function OpManagement() {
 
               <div className="rounded-lg p-4 border border-slate-300 bg-slate-50 min-h-[115px] flex flex-col justify-between">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase">
-                    <FaRupeeSign className="text-xs" /> Total Collected
-                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase"><FaRupeeSign className="text-xs" /> Total Collected</div>
                   <div className="flex flex-col items-end">
                     <span className="text-[11px] font-bold text-slate-600 leading-tight">FootFall: {categoryRevenue.grandFootFall}</span>
                     <span className="text-xl font-extrabold text-slate-900">{fmt(categoryRevenue.grandTotal)}</span>
@@ -3330,7 +3521,6 @@ export default function OpManagement() {
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Due</span><div className="emp-dash__stat-icon emp-dash__stat-icon--late"><FiXCircle /></div></div>
             <div className="emp-dash__stat-value text-red-500">{stats.due}</div><div className="emp-dash__stat-meta">overdue payments</div>
           </div>
-
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Collected</span>
@@ -3386,7 +3576,8 @@ export default function OpManagement() {
                   </label>
                   <div className="relative">
                     <FaPhoneAlt className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className="w-full border rounded-xl pl-10 pr-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />                  </div>
+                    <input ref={phoneInputRef} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" className="w-full border rounded-xl pl-10 pr-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
@@ -3407,19 +3598,15 @@ export default function OpManagement() {
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">DOB</label>
                     <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className={`w-full border rounded-xl px-3 py-3.5 text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
                   </div>
-
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Age</label>
                     <input type="number" name="age" value={formData.age} onChange={(e) => setFormData((prev) => ({ ...prev, age: e.target.value }))} placeholder="Enter age" min="0" max="120" className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
                   </div>
-
                   <div className="col-span-2 sm:col-span-1">
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Gender</label>
                     <select name="gender" value={formData.gender} onChange={handleInputChange} className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode}>
                       <option value="">Select Gender</option>
-                      {GENDER_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
+                      {GENDER_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                     </select>
                   </div>
                 </div>
@@ -3439,13 +3626,10 @@ export default function OpManagement() {
                     </label>
                     <input type="text" name="pincode" value={formData.pincode} onChange={handlePincodeChange} onFocus={() => { if (citySuggestions.length > 0) setShowCitySuggestions(true); }} placeholder="Enter 6-digit pincode" maxLength="6" inputMode="numeric" className={`w-full border rounded-xl px-3 py-3.5 text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
                   </div>
-
                   <div className="relative city-dropdown-add-patient">
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                       City
-                      {formData.city && !isEditMode && (
-                        <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">✓ Auto</span>
-                      )}
+                      {formData.city && !isEditMode && (<span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">✓ Auto</span>)}
                     </label>
                     <input type="text" name="city" value={formData.city} onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))} onFocus={() => { if (!isEditMode && citySuggestions.length > 0) setShowCitySuggestions(true); }} placeholder="Auto-filled from pincode" autoComplete="off" className={`w-full border rounded-xl px-3 py-3.5 text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`} disabled={isEditMode} />
                     {!isEditMode && showCitySuggestions && citySuggestions.length > 0 && (
@@ -3486,9 +3670,7 @@ export default function OpManagement() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-2">
-                      Appointment Date
-                    </label>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-2">Appointment Date</label>
                     <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
                   </div>
                 </div>
@@ -3501,12 +3683,7 @@ export default function OpManagement() {
                     ) : availableSlots.length === 0 ? (
                       <div className="text-xs text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200 flex items-center justify-between gap-3 flex-wrap">
                         <span className="font-semibold">No slots available for this doctor on this date.</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRoleBasedNavigate("/appointment-slots")}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
-                          title="Manage Appointment Slots"
-                        >
+                        <button type="button" onClick={() => handleRoleBasedNavigate("/appointment-slots")} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors" title="Manage Appointment Slots">
                           <FaPlus className="w-3 h-3" /> Add Slots for this Doctor
                         </button>
                       </div>
@@ -3740,17 +3917,13 @@ export default function OpManagement() {
                             )}
                             {labTotal > 0 && (
                               <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                                <span className="text-purple-700 text-[11px] font-semibold flex items-center gap-1">
-                                  <FaFlask className="text-[9px]" /> Lab Total
-                                </span>
+                                <span className="text-purple-700 text-[11px] font-semibold flex items-center gap-1"><FaFlask className="text-[9px]" /> Lab Total</span>
                                 <span className="font-bold text-purple-700">₹{labTotal}</span>
                               </div>
                             )}
                             {medicineTotal > 0 && (
                               <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                                <span className="text-green-700 text-[11px] font-semibold flex items-center gap-1">
-                                  <FaPills className="text-[9px]" /> Pharmacy Total
-                                </span>
+                                <span className="text-green-700 text-[11px] font-semibold flex items-center gap-1"><FaPills className="text-[9px]" /> Pharmacy Total</span>
                                 <span className="font-bold text-green-700">₹{medicineTotal}</span>
                               </div>
                             )}
@@ -3760,17 +3933,13 @@ export default function OpManagement() {
                             </div>
                             {fin.discountAmount > 0 && (
                               <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                                <span className="text-red-600 text-[11px] font-semibold flex items-center gap-1">
-                                  <FaPercent className="text-[9px]" /> Discount {formData.discountType === "%" ? `(${formData.discount}%)` : ""}
-                                </span>
+                                <span className="text-red-600 text-[11px] font-semibold flex items-center gap-1"><FaPercent className="text-[9px]" /> Discount {formData.discountType === "%" ? `(${formData.discount}%)` : ""}</span>
                                 <span className="font-bold text-red-600">− ₹{Math.round(fin.discountAmount)}</span>
                               </div>
                             )}
                             {fin.offerDeduction > 0 && (
                               <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                                <span className="text-amber-700 text-[11px] font-semibold flex items-center gap-1">
-                                  <FaGift className="text-[9px]" /> Offer ({appliedOffer?.offerName})
-                                </span>
+                                <span className="text-amber-700 text-[11px] font-semibold flex items-center gap-1"><FaGift className="text-[9px]" /> Offer ({appliedOffer?.offerName})</span>
                                 <span className="font-bold text-amber-700">− ₹{Math.round(fin.offerDeduction)}</span>
                               </div>
                             )}
@@ -3783,9 +3952,7 @@ export default function OpManagement() {
 
                         <div className="grid grid-cols-2 md:grid-cols-12 gap-2 sm:gap-3 mb-3">
                           <div className="col-span-1 md:col-span-2">
-                            <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1 flex items-center gap-1.5">
-                              <FaPercent className="text-[10px]" /> Type
-                            </label>
+                            <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1 flex items-center gap-1.5"><FaPercent className="text-[10px]" /> Type</label>
                             <select name="discountType" value={formData.discountType} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-xl px-2 py-3.5 text-base sm:text-sm font-medium focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none">
                               {DISCOUNT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                             </select>
@@ -3807,14 +3974,8 @@ export default function OpManagement() {
                         </div>
                         <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
                           <div className="space-y-1 text-[10px]">
-                            <div className="flex justify-between text-amber-800">
-                              <span>Total Payable:</span>
-                              <span className="font-bold">₹{Math.round(fin.finalPayable)}</span>
-                            </div>
-                            <div className="flex justify-between text-emerald-700">
-                              <span>Amount Receiving:</span>
-                              <span className="font-bold">₹{Math.round(fin.parsedPartial)}</span>
-                            </div>
+                            <div className="flex justify-between text-amber-800"><span>Total Payable:</span><span className="font-bold">₹{Math.round(fin.finalPayable)}</span></div>
+                            <div className="flex justify-between text-emerald-700"><span>Amount Receiving:</span><span className="font-bold">₹{Math.round(fin.parsedPartial)}</span></div>
                             <div className={`flex justify-between border-t border-amber-300 pt-1 mt-1 ${fin.balanceAmount > 0 ? "text-red-700" : "text-emerald-700"}`}>
                               <span>{fin.balanceAmount > 0 ? "Balance Remaining:" : "Status:"}</span>
                               <span className="font-bold">{fin.balanceAmount > 0 ? `₹${Math.round(fin.balanceAmount)}` : "✓ Fully Paid"}</span>
@@ -3892,7 +4053,7 @@ export default function OpManagement() {
                       const createdAt = matchingBooking?.createdAt || matchingBooking?.bookedAt || patient.createdAt;
                       const paidInfo = getBookingPaidInfo(matchingBooking);
                       const amountBreakdown = getAmountBreakdown(matchingBooking);
-                      const catStatuses = getCategoryStatuses(amountBreakdown, paidInfo.paid);
+                      const catStatuses = getCategoryStatuses(matchingBooking);
                       const isActive = getPatientActiveStatus(patient);
                       const isToggling = togglingStatus === patient._id;
                       const discountAmount = Number(matchingBooking?.discount) || 0;
@@ -3932,26 +4093,13 @@ export default function OpManagement() {
                                 <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${bookingTypeInfo.color}`}>
                                   <BookingTypeIcon className="w-2.5 h-2.5" /> {bookingTypeInfo.label}
                                 </span>
-
                                 {bookingStatus !== "No Booking" ? (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setStatusModalBooking(matchingBooking);
-                                      setShowStatusModal(true);
-                                    }}
-                                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border} hover:opacity-80 transition-all cursor-pointer shadow-sm`}
-                                    title="Change Booking Status"
-                                  >
+                                  <button onClick={(e) => { e.stopPropagation(); setStatusModalBooking(matchingBooking); setShowStatusModal(true); }} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${statusColors.bg} ${statusColors.text} ${statusColors.border} hover:opacity-80 transition-all cursor-pointer shadow-sm`} title="Change Booking Status">
                                     <FaCheckCircle className="w-2.5 h-2.5" /> {bookingStatus} <FiChevronDown className="w-3 h-3" />
                                   </button>
-                                ) : (
-                                  <span className="text-[10px] text-gray-400 italic">No Booking</span>
-                                )}
+                                ) : (<span className="text-[10px] text-gray-400 italic">No Booking</span>)}
                               </div>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic">N/A</span>
-                            )}
+                            ) : (<span className="text-[10px] text-gray-400 italic">N/A</span>)}
                           </td>
 
                           {/* AMOUNT COLUMN — 3 Row */}
@@ -3970,7 +4118,7 @@ export default function OpManagement() {
                                 <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaFlask className="text-[9px]" /> Lab:</span>
                                 <span className="font-bold whitespace-nowrap flex items-center gap-1">
                                   ₹{Math.round(Number(amountBreakdown?.lab) || 0)}
-                                  <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openLabTotalModal(matchingBooking); }} className="p-0.5 rounded hover:bg-purple-100" title="Edit Lab Total">
+                                  <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openLabItemsModal(matchingBooking); }} className="p-0.5 rounded hover:bg-purple-100" title="Add / Edit Lab Items">
                                     <FaPlus className="w-2.5 h-2.5 text-purple-600" />
                                   </button>
                                 </span>
@@ -3979,7 +4127,7 @@ export default function OpManagement() {
                                 <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaPills className="text-[9px]" /> Pharmacy:</span>
                                 <span className="font-bold whitespace-nowrap flex items-center gap-1">
                                   ₹{Math.round(Number(amountBreakdown?.pharmacy) || 0)}
-                                  <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openMedicineTotalModal(matchingBooking); }} className="p-0.5 rounded hover:bg-green-100" title="Edit Medicine Total">
+                                  <button onClick={(e) => { e.stopPropagation(); if (matchingBooking) openPharmacyItemsModal(matchingBooking); }} className="p-0.5 rounded hover:bg-green-100" title="Add / Edit Pharmacy Items">
                                     <FaPlus className="w-2.5 h-2.5 text-green-600" />
                                   </button>
                                 </span>
@@ -3994,44 +4142,30 @@ export default function OpManagement() {
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span></td>
 
-                          {/* ✅ PAYMENT TYPE — 3 Row (no labels) */}
+                          {/* PAYMENT TYPE — 3 Row */}
                           <td className="px-3 py-3" style={{ minWidth: "110px" }}>
                             {matchingBooking ? (
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center justify-center gap-1 px-2 py-1 rounded border border-blue-200 bg-blue-50 text-[10px]">
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }}
-                                    className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
-                                    title="Change Payment Type"
-                                  >
+                                  <button onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer" title="Change Payment Type">
                                     {matchingBooking.paymentType || "cash"} <FiChevronDown className="w-2.5 h-2.5" />
                                   </button>
                                 </div>
                                 <div className="flex items-center justify-center gap-1 px-2 py-1 rounded border border-purple-200 bg-purple-50 text-[10px]">
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }}
-                                    className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
-                                    title="Change Payment Type"
-                                  >
+                                  <button onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer" title="Change Payment Type">
                                     {matchingBooking.paymentType || "cash"} <FiChevronDown className="w-2.5 h-2.5" />
                                   </button>
                                 </div>
                                 <div className="flex items-center justify-center gap-1 px-2 py-1 rounded border border-green-200 bg-green-50 text-[10px]">
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }}
-                                    className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
-                                    title="Change Payment Type"
-                                  >
+                                  <button onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer" title="Change Payment Type">
                                     {matchingBooking.paymentType || "cash"} <FiChevronDown className="w-2.5 h-2.5" />
                                   </button>
                                 </div>
                               </div>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic block text-center">N/A</span>
-                            )}
+                            ) : (<span className="text-[10px] text-gray-400 italic block text-center">N/A</span>)}
                           </td>
 
-                          {/* ✅ PAYMENT STATUS — Per-category (Clinic → Lab → Pharmacy order) */}
+                          {/* PAYMENT STATUS — Per-category */}
                           <td className="px-3 py-3" style={{ minWidth: "130px" }}>
                             {matchingBooking ? (
                               <div className="flex flex-col gap-1">
@@ -4042,15 +4176,16 @@ export default function OpManagement() {
                                   const borderColor = cat === "clinic" ? "border-blue-200 bg-blue-50" : cat === "lab" ? "border-purple-200 bg-purple-50" : "border-green-200 bg-green-50";
                                   return (
                                     <div key={cat} className={`flex items-center justify-center gap-1 px-2 py-1 rounded border ${borderColor} text-[10px]`}>
-                                      {catStatus === "Paid" ? (
+                                      {catStatus === "Empty" ? (
+                                        <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border bg-gray-50 text-gray-400 border-gray-200 cursor-default">
+                                          — N/A
+                                        </span>
+                                      ) : catStatus === "Paid" ? (
                                         <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default">
                                           <FaCheckCircle className="w-2 h-2 text-emerald-600" /> Paid
                                         </span>
                                       ) : (
-                                        <button
-                                          onClick={(e) => { e.stopPropagation(); openPartialModal(matchingBooking); }}
-                                          className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border ${catColors.bg} ${catColors.text} ${catColors.border} hover:opacity-80`}
-                                        >
+                                        <button onClick={(e) => { e.stopPropagation(); openPartialModal(matchingBooking, cat); }} className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border ${catColors.bg} ${catColors.text} ${catColors.border} hover:opacity-80`}>
                                           <CatIcon className={`w-2 h-2 ${catColors.iconColor}`} /> {catStatus}
                                         </button>
                                       )}
@@ -4058,35 +4193,19 @@ export default function OpManagement() {
                                   );
                                 })}
                               </div>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic block text-center">N/A</span>
-                            )}
+                            ) : (<span className="text-[10px] text-gray-400 italic block text-center">N/A</span>)}
                           </td>
 
                           <td className="px-3 py-3">
                             <div className="flex flex-col gap-1 min-w-[120px]">
                               {referredByCustomer ? (
-                                <div
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRoleBasedNavigate("/referral-management");
-                                  }}
-                                  className="flex items-center gap-1 text-[10px] font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors"
-                                  title="Go to Referral Management"
-                                >
+                                <div onClick={(e) => { e.stopPropagation(); handleRoleBasedNavigate("/referral-management"); }} className="flex items-center gap-1 text-[10px] font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors" title="Go to Referral Management">
                                   <FaUserFriends className="text-[8px] flex-shrink-0" />
                                   <span className="truncate max-w-[90px]">{referredByCustomer}</span>
                                 </div>
                               ) : (<span className="text-[9px] text-gray-400 italic">No Customer</span>)}
                               {referredByDoctor ? (
-                                <div
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRoleBasedNavigate("/referral-management");
-                                  }}
-                                  className="flex items-center gap-1 text-[10px] font-medium text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-full border border-indigo-100 cursor-pointer hover:bg-indigo-100 transition-colors"
-                                  title="Go to Referral Management"
-                                >
+                                <div onClick={(e) => { e.stopPropagation(); handleRoleBasedNavigate("/referral-management"); }} className="flex items-center gap-1 text-[10px] font-medium text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-full border border-indigo-100 cursor-pointer hover:bg-indigo-100 transition-colors" title="Go to Referral Management">
                                   <FaUserMdIcon className="text-[8px] flex-shrink-0" />
                                   <span className="truncate max-w-[90px]">{referredByDoctor}</span>
                                 </div>
@@ -4162,11 +4281,9 @@ export default function OpManagement() {
               <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
                 {currentPatients.map((patient, idx) => {
                   const matchingBooking = getMatchingBooking(patient);
-                  const consultationPaymentStatus = getConsultationPaymentStatus(patient);
                   const bookingStatus = getBookingStatus(patient);
                   const appointmentDate = getAppointmentDate(patient);
                   const slotTiming = getSlotTiming(patient);
-                  const statusColors = getStatusColors(bookingStatus);
                   const paidInfo = getBookingPaidInfo(matchingBooking);
                   const amountBreakdown = getAmountBreakdown(matchingBooking);
                   const isActive = getPatientActiveStatus(patient);
@@ -4317,36 +4434,19 @@ export default function OpManagement() {
             <div className="bg-white rounded-2xl w-full max-w-5xl shadow-2xl border border-gray-200 max-h-[92vh] overflow-hidden flex flex-col">
               <div className="flex items-center justify-between px-5 py-4 border-b bg-gradient-to-r from-indigo-50 to-blue-50">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
-                    <FaRupeeSign className="w-5 h-5" />
-                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center"><FaRupeeSign className="w-5 h-5" /></div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base flex items-center gap-2 flex-wrap">
                       Filter Calculation Details
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">
-                        {timeFilter}
-                      </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${revenueCategoryFilter === "clinic" ? "bg-blue-100 text-blue-700 border-blue-200" :
-                        revenueCategoryFilter === "lab" ? "bg-purple-100 text-purple-700 border-purple-200" :
-                          "bg-green-100 text-green-700 border-green-200"
-                        }`}>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">{timeFilter}</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${revenueCategoryFilter === "clinic" ? "bg-blue-100 text-blue-700 border-blue-200" : revenueCategoryFilter === "lab" ? "bg-purple-100 text-purple-700 border-purple-200" : "bg-green-100 text-green-700 border-green-200"}`}>
                         {revenueCategoryFilter} Only
                       </span>
                     </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {calculationData.bookings.length} bookings with {revenueCategoryFilter} revenue — verification purposes
-                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">{calculationData.bookings.length} bookings with {revenueCategoryFilter} revenue — verification purposes</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setShowCalculationPopup(false);
-                    setUserClosedCalcPopup(true);
-                  }}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
-                >
-                  <FaTimes className="w-4 h-4" />
-                </button>
+                <button onClick={() => { setShowCalculationPopup(false); setUserClosedCalcPopup(true); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border-b bg-gray-50">
@@ -4403,18 +4503,8 @@ export default function OpManagement() {
               </div>
 
               <div className="flex justify-between items-center gap-3 px-5 py-3 border-t bg-gray-50">
-                <div className="text-[11px] text-gray-500">
-                  💡 This popup shows the manual calculation breakdown. Use it to verify against backend response.
-                </div>
-                <button
-                  onClick={() => {
-                    setShowCalculationPopup(false);
-                    setUserClosedCalcPopup(true);
-                  }}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  Got it, Close
-                </button>
+                <div className="text-[11px] text-gray-500">💡 This popup shows the manual calculation breakdown. Use it to verify against backend response.</div>
+                <button onClick={() => { setShowCalculationPopup(false); setUserClosedCalcPopup(true); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white">Got it, Close</button>
               </div>
             </div>
           </div>
@@ -4496,22 +4586,63 @@ export default function OpManagement() {
           </div>
         )}
 
-        {/* PARTIAL PAYMENT MODAL */}
+        {/* PARTIAL PAYMENT MODAL — Category-specific */}
         {showPartialModal && partialBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border relative">
               <div className="flex items-center justify-between px-6 py-4 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center"><FaClock className="w-5 h-5" /></div>
+                  <div className={`w-10 h-10 rounded-xl text-white flex items-center justify-center ${partialCategory === "clinic" ? "bg-blue-500" : partialCategory === "lab" ? "bg-purple-500" : partialCategory === "pharmacy" ? "bg-green-500" : "bg-amber-500"}`}>
+                    {partialCategory === "clinic" ? <FaClinicMedical className="w-5 h-5" /> : partialCategory === "lab" ? <FaFlask className="w-5 h-5" /> : partialCategory === "pharmacy" ? <FaPills className="w-5 h-5" /> : <FaClock className="w-5 h-5" />}
+                  </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-base">Update Payment</h3>
+                    <h3 className="font-bold text-gray-900 text-base">
+                      {partialCategory ? `${partialCategory.charAt(0).toUpperCase() + partialCategory.slice(1)} Payment` : "Update Payment"}
+                    </h3>
                     <p className="text-xs text-gray-500">{partialBooking.patientName} • {partialBooking.patientPhone}</p>
                   </div>
                 </div>
-                <button onClick={() => { setShowPartialModal(false); setPartialBooking(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
+                <button onClick={() => { setShowPartialModal(false); setPartialBooking(null); setPartialCategory(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
               </div>
 
               {(() => {
+                const bd = getAmountBreakdown(partialBooking);
+                const existing = partialBooking.categoryPayment || {};
+                const wasPaid = partialBooking.paymentStatus === "Paid";
+
+                if (partialCategory) {
+                  const catAmt = Number(bd[partialCategory]) || 0;
+                  const catPaid = existing?.[partialCategory]?.paidAmount !== undefined
+                    ? Number(existing[partialCategory].paidAmount) || 0
+                    : wasPaid ? catAmt : 0;
+                  const catDue = Math.max(0, catAmt - catPaid);
+                  return (
+                    <div className="p-6 space-y-4">
+                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <div className="text-[10px] font-bold uppercase text-gray-400 mb-3">{partialCategory} Summary</div>
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between items-center"><span className="text-gray-600">Category Amount</span><span className="font-bold text-gray-900 text-sm">₹{Math.round(catAmt)}</span></div>
+                          <div className="flex justify-between items-center"><span className="text-gray-600">Already Paid</span><span className="font-bold text-emerald-700">₹{Math.round(catPaid)}</span></div>
+                          <div className="flex justify-between items-center pt-2 border-t-2 border-gray-800"><span className="font-bold text-gray-800">Due Amount</span><span className="font-bold text-red-600 text-lg">₹{Math.round(catDue)}</span></div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><FaMoneyBillWave className="text-purple-600" /> Payment Type</label>
+                        <select value={partialPaymentType} onChange={(e) => setPartialPaymentType(e.target.value)} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800">
+                          {PAYMENT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                        </select>
+                      </div>
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-[11px] text-blue-800">
+                          <b>{partialCategory.charAt(0).toUpperCase() + partialCategory.slice(1)}</b> will be marked as Fully Paid (<b>₹{Math.round(catDue)}</b>).
+                          <br />
+                          <span className="text-emerald-700 font-semibold">✅ Other categories will remain UNCHANGED.</span>
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+
                 const finalPayable = getBookingFinalPayable(partialBooking);
                 const paidInfo = getBookingPaidInfo(partialBooking);
                 return (
@@ -4530,18 +4661,15 @@ export default function OpManagement() {
                         {PAYMENT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                       </select>
                     </div>
-                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-[11px] text-blue-800">Clicking <b>"Mark as Fully Paid"</b> will clear the entire due amount of <b>₹{Math.round(paidInfo.balance)}</b>.</p>
-                    </div>
                   </div>
                 );
               })()}
 
               <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50/50">
-                <button onClick={() => { setShowPartialModal(false); setPartialBooking(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
+                <button onClick={() => { setShowPartialModal(false); setPartialBooking(null); setPartialCategory(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
                 <button onClick={handleMarkFullPaid} disabled={savingPartial} className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
                   {savingPartial ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaCheckCircle className="w-3.5 h-3.5" />}
-                  {savingPartial ? "Saving..." : "Mark as Fully Paid"}
+                  {savingPartial ? "Saving..." : partialCategory ? `Mark ${partialCategory.charAt(0).toUpperCase() + partialCategory.slice(1)} Paid` : "Mark as Fully Paid"}
                 </button>
               </div>
             </div>
@@ -4608,7 +4736,7 @@ export default function OpManagement() {
           </div>
         )}
 
-        {/* LAB TOTAL MODAL */}
+        {/* LAB TOTAL MODAL (legacy) */}
         {showLabTotalModal && labTotalBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border">
@@ -4631,6 +4759,114 @@ export default function OpManagement() {
                 <button onClick={handleSaveLabTotal} disabled={savingLabTotal} className="px-5 py-2 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
                   {savingLabTotal ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
                   {savingLabTotal ? "Saving..." : "Update"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LAB ITEMS MODAL */}
+        {showLabItemsModal && labItemsBooking && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-5 py-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center"><FaFlask className="w-4 h-4" /></div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Lab Items</h3>
+                    <p className="text-[10px] text-gray-500">{labItemsBooking.patientTitle} {labItemsBooking.patientName}</p>
+                  </div>
+                </div>
+                <button onClick={() => { setShowLabItemsModal(false); setLabItemsBooking(null); setLabItemsList([]); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Lab Amounts ({labItemsList.length})</label>
+                    {labItemsList.length > 0 && (<span className="text-[11px] font-extrabold text-purple-700">Total: ₹{labItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span>)}
+                  </div>
+                  {labItemsList.length === 0 ? (
+                    <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">No amounts added yet</div>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {labItemsList.map((item, i) => (
+                        <div key={`${item.serviceId}-${i}`} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-purple-50 border border-purple-200">
+                          <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
+                          <span className="text-gray-500 font-semibold text-[10px] whitespace-nowrap">Amount (₹):</span>
+                          <input type="number" value={item.price} onChange={(e) => handleUpdateLabItemPrice(i, e.target.value)} className="flex-1 px-2 py-1 text-xs font-bold text-purple-700 border border-gray-300 rounded" min="0" />
+                          <button type="button" onClick={() => handleRemoveLabItem(i)} className="text-red-400 hover:text-red-600 p-1"><FaMinusCircle className="w-3.5 h-3.5" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="border rounded-xl p-3 bg-gray-50 border-gray-200">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Add New Amount</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input type="number" value={labItemPrice} onChange={(e) => setLabItemPrice(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddLabItem(); } }} placeholder="Enter amount (₹)" className="flex-1 min-w-[180px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm" min="0" />
+                    <button type="button" onClick={handleAddLabItem} disabled={!labItemPrice.trim()} className="px-4 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-1 disabled:opacity-50"><FaPlus className="w-3 h-3" /> Add</button>
+                  </div>
+                </div>
+              </div>
+              <div className="sticky bottom-0 flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur rounded-b-2xl">
+                <button onClick={() => { setShowLabItemsModal(false); setLabItemsBooking(null); setLabItemsList([]); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
+                <button onClick={handleSaveLabItems} disabled={savingLabItems} className="px-5 py-2 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
+                  {savingLabItems ? (<FiRefreshCw className="w-3.5 h-3.5 animate-spin" />) : (<FiCheckCircle className="w-3.5 h-3.5" />)}
+                  {savingLabItems ? "Saving..." : `Save Lab (${labItemsList.length})`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PHARMACY ITEMS MODAL */}
+        {showPharmacyItemsModal && pharmacyItemsBooking && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-5 py-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-green-500 text-white flex items-center justify-center"><FaPills className="w-4 h-4" /></div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Pharmacy Items</h3>
+                    <p className="text-[10px] text-gray-500">{pharmacyItemsBooking.patientTitle} {pharmacyItemsBooking.patientName}</p>
+                  </div>
+                </div>
+                <button onClick={() => { setShowPharmacyItemsModal(false); setPharmacyItemsBooking(null); setPharmacyItemsList([]); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Medicine Amounts ({pharmacyItemsList.length})</label>
+                    {pharmacyItemsList.length > 0 && (<span className="text-[11px] font-extrabold text-green-700">Total: ₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span>)}
+                  </div>
+                  {pharmacyItemsList.length === 0 ? (
+                    <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">No amounts added yet</div>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {pharmacyItemsList.map((item, i) => (
+                        <div key={`${item.serviceId}-${i}`} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-green-50 border border-green-200">
+                          <span className="w-5 h-5 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
+                          <span className="text-gray-500 font-semibold text-[10px] whitespace-nowrap">Amount (₹):</span>
+                          <input type="number" value={item.price} onChange={(e) => handleUpdatePharmacyItemPrice(i, e.target.value)} className="flex-1 px-2 py-1 text-xs font-bold text-green-700 border border-gray-300 rounded" min="0" />
+                          <button type="button" onClick={() => handleRemovePharmacyItem(i)} className="text-red-400 hover:text-red-600 p-1"><FaMinusCircle className="w-3.5 h-3.5" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="border rounded-xl p-3 bg-gray-50 border-gray-200">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Add New Amount</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input type="number" value={pharmacyItemPrice} onChange={(e) => setPharmacyItemPrice(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddPharmacyItem(); } }} placeholder="Enter amount (₹)" className="flex-1 min-w-[180px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm" min="0" />
+                    <button type="button" onClick={handleAddPharmacyItem} disabled={!pharmacyItemPrice.trim()} className="px-4 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg flex items-center gap-1 disabled:opacity-50"><FaPlus className="w-3 h-3" /> Add</button>
+                  </div>
+                </div>
+              </div>
+              <div className="sticky bottom-0 flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur rounded-b-2xl">
+                <button onClick={() => { setShowPharmacyItemsModal(false); setPharmacyItemsBooking(null); setPharmacyItemsList([]); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
+                <button onClick={handleSavePharmacyItems} disabled={savingPharmacyItems} className="px-5 py-2 rounded-lg text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
+                  {savingPharmacyItems ? (<FiRefreshCw className="w-3.5 h-3.5 animate-spin" />) : (<FiCheckCircle className="w-3.5 h-3.5" />)}
+                  {savingPharmacyItems ? "Saving..." : `Save Pharmacy (${pharmacyItemsList.length})`}
                 </button>
               </div>
             </div>
@@ -4759,35 +4995,22 @@ export default function OpManagement() {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => { setShowStatusModal(false); setStatusModalBooking(null); }}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/50 transition-colors"
-                >
+                <button onClick={() => { setShowStatusModal(false); setStatusModalBooking(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/50 transition-colors">
                   <FaTimes className="w-4 h-4" />
                 </button>
               </div>
-
               <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
-                <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-2">
-                  Select New Status
-                </label>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-2">Select New Status</label>
                 {BOOKING_STATUS_OPTIONS.map((st) => {
                   const isActive_ = st.value === statusModalBooking.status;
                   const colors = getStatusColors(st.value);
                   return (
-                    <button
-                      key={st.value}
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        await handleStatusSelect(statusModalBooking, st.value, e);
-                        setShowStatusModal(false);
-                        setStatusModalBooking(null);
-                      }}
-                      className={`w-full px-4 py-3 rounded-xl text-left text-sm font-bold flex items-center justify-between border transition-all ${isActive_
-                        ? `${colors.bg} ${colors.text} ${colors.border} ring-2 ring-blue-500/20`
-                        : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
-                        }`}
-                    >
+                    <button key={st.value} onClick={async (e) => {
+                      e.stopPropagation();
+                      await handleStatusSelect(statusModalBooking, st.value, e);
+                      setShowStatusModal(false);
+                      setStatusModalBooking(null);
+                    }} className={`w-full px-4 py-3 rounded-xl text-left text-sm font-bold flex items-center justify-between border transition-all ${isActive_ ? `${colors.bg} ${colors.text} ${colors.border} ring-2 ring-blue-500/20` : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300"}`}>
                       <div className="flex items-center gap-2.5">
                         <span className={`w-2.5 h-2.5 rounded-full ${colors.bg} border ${colors.border}`}></span>
                         {st.label}
@@ -4797,14 +5020,8 @@ export default function OpManagement() {
                   );
                 })}
               </div>
-
               <div className="flex justify-end px-5 py-3 border-t bg-gray-50/50">
-                <button
-                  onClick={() => { setShowStatusModal(false); setStatusModalBooking(null); }}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
-                >
-                  Cancel
-                </button>
+                <button onClick={() => { setShowStatusModal(false); setStatusModalBooking(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors">Cancel</button>
               </div>
             </div>
           </div>
