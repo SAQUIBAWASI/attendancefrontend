@@ -240,6 +240,7 @@ import DigitalLeads from "./Pages/DigitalLeads.js";
 import TimelyPlanBookings from './Pages/TimelyPlanBookings.js';
 import TimelyClients from "./Pages/TimelyClients.js";
 import TimelyPlans from "./Pages/TimelyPlans.js";
+import PrivacyPolicy from "./Pages/PrivacyPolicy.js";
 
 
 
@@ -256,6 +257,7 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/admin-login" element={<Login />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/employee-login" element={<Login />} />
       <Route path="/candidate-login" element={<CandidateLogin />} />
       <Route path="/candidate-register" element={<CandidateRegister />} />
