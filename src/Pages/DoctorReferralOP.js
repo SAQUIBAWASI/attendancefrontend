@@ -1,10 +1,13 @@
 // ReferralBookings.js — Combined Doctor + Customer Referred OP Bookings
 // ✅ Only referrals WITH bookings shown
-// ✅ Total Payable card removed (4 stat cards)
-// ✅ Edit button opens Payment Modal (uses updatedoctorpayment / updatecustomerpayment APIs)
-// ✅ Fees badge + Referral % badges
-// ✅ All "Pending" → "Due"
-// ✅ Stats & Revenue Breakdown computed from filteredRows (respects ALL filters)
+// ✅ Customer tab first, then Doctor tab
+// ✅ "To Pay" column added (net payable after paid amount)
+// ✅ Payment modal has payment mode dropdown + payment status
+// ✅ Backend-driven calculations (no frontend calculation)
+// ✅ "Mode" column removed
+// ✅ "To Pay" shows "1st Clear Payment" when booking payment is Due/Partial
+// ✅ Customer Payable column shows category-wise amount breakdown list
+// ✅ Paid At properly shows from backend response
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import {
@@ -12,8 +15,9 @@ import {
   FaTimes, FaPhoneAlt, FaRupeeSign, FaCheckCircle,
   FaTimesCircle, FaEye, FaEdit, FaHandHoldingUsd,
   FaBuilding,
-  FaPills, FaFlask, FaClinicMedical, FaUser,
-  FaChevronLeft, FaChevronRight,
+  FaPills, FaFlask, FaClinicMedical, FaUser, FaServicestack,
+  FaChevronLeft, FaChevronRight, FaMoneyBillWave, FaCreditCard,
+  FaMobileAlt, FaUniversity, FaWallet,
 } from "react-icons/fa";
 import {
   FiUsers, FiUserCheck, FiClock, FiFilter, FiDownload, FiTrash2,
@@ -55,10 +59,26 @@ const BOOKING_TYPE_OPTIONS = [
 
 const REVENUE_CATEGORY_OPTIONS = [
   { value: "All", label: "All Revenue Types" },
-  { value: "clinic", label: "Clinic Only" },
+  { value: "service", label: "Service Only" },
   { value: "lab", label: "Lab Only" },
   { value: "pharmacy", label: "Pharmacy Only" },
+  { value: "fees", label: "Fees Only" },
 ];
+
+const PAYMENT_MODE_OPTIONS = [
+  { value: "cash", label: "Cash", icon: FaMoneyBillWave, color: "emerald" },
+  { value: "online", label: "Online", icon: FaMobileAlt, color: "cyan" },
+  { value: "card", label: "Card", icon: FaCreditCard, color: "blue" },
+  { value: "insurance", label: "Insurance", icon: FaUniversity, color: "purple" },
+  { value: "upi", label: "UPI", icon: FaWallet, color: "amber" },
+];
+
+const CATEGORY_META = {
+  service:  { label: "Service",  icon: FaServicestack,  bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200" },
+  pharmacy: { label: "Pharmacy", icon: FaPills,         bg: "bg-green-50",  text: "text-green-700",  border: "border-green-200" },
+  lab:      { label: "Lab",      icon: FaFlask,         bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
+  fees:     { label: "Fees",     icon: FaMoneyBillWave, bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200" },
+};
 
 // ==================== HELPERS ====================
 const extractId = (val) => {
@@ -124,17 +144,9 @@ const getBookingServices = (booking) => {
       description: s.description || "",
       paymentStatus: raw === "Pending" ? "Due" : raw,
       category: s.category || s.serviceCategory || s.type || "",
+      serviceCategory: s.serviceCategory || "",
     };
   });
-};
-
-const classifyService = (svc) => {
-  if (!svc) return "clinic";
-  const cat = (svc.category || svc.serviceCategory || svc.type || "").toString().toLowerCase();
-  const name = (svc.name || "").toString().toLowerCase();
-  if (cat.includes("pharm") || cat.includes("medic") || name.includes("pharm") || name.includes("medic")) return "pharmacy";
-  if (cat.includes("lab") || cat.includes("test") || cat.includes("diagnos") || name.includes("lab") || name.includes("test")) return "lab";
-  return "clinic";
 };
 
 const getBookingFinalPayable = (booking) => {
@@ -163,70 +175,124 @@ const getBookingPaidInfo = (booking) => {
 };
 
 const getBookingCategoryAmounts = (booking) => {
-  if (!booking) return { clinicAmount: 0, labAmount: 0, pharmacyAmount: 0 };
-  const services = getBookingServices(booking);
-  let clinicAmount = 0, labAmount = 0, pharmacyAmount = 0;
-  services.forEach((s) => {
-    const cat = classifyService(s);
-    const price = Number(s.price) || 0;
-    if (cat === "lab") labAmount += price;
-    else if (cat === "pharmacy") pharmacyAmount += price;
-    else clinicAmount += price;
-  });
-  pharmacyAmount += Number(booking.medicineTotal) || 0;
-  labAmount += Number(booking.labTotal) || 0;
-  return { clinicAmount, labAmount, pharmacyAmount };
+  if (!booking) return { serviceAmount: 0, labAmount: 0, pharmacyAmount: 0, feesAmount: 0 };
+  return {
+    serviceAmount:  Number(booking.serviceAmount)  || 0,
+    labAmount:      Number(booking.labAmount)      || 0,
+    pharmacyAmount: Number(booking.pharmacyAmount) || 0,
+    feesAmount:     Number(booking.feesAmount)     || 0,
+  };
 };
 
 const getReferralPayable = (referrer, booking) => {
-  if (!referrer || !booking) return 0;
-  const { clinicAmount, labAmount, pharmacyAmount } = getBookingCategoryAmounts(booking);
-  const clinicP = parseFloat(referrer.clinicCommission) || 0;
-  const pharmacyP = parseFloat(referrer.pharmacyCommission) || 0;
-  const labP = parseFloat(referrer.labCommission) || 0;
-  const total =
-    (clinicAmount * clinicP) / 100 +
-    (pharmacyAmount * pharmacyP) / 100 +
-    (labAmount * labP) / 100;
-  return Math.round(total);
+  if (!booking) return 0;
+  return Number(booking.partnerPayable) || 0;
+};
+
+const getCategoryWisePayable = (booking) => {
+  if (!booking) return { service: 0, pharmacy: 0, lab: 0, fees: 0 };
+  return {
+    service:  Number(booking.servicePayable)  || 0,
+    pharmacy: Number(booking.pharmacyPayable) || 0,
+    lab:      Number(booking.labPayable)      || 0,
+    fees:     Number(booking.feesPayable)     || 0,
+  };
+};
+
+const getReferralToPay = (referrer, booking) => {
+  if (!booking) return 0;
+  const bookingStatus = (booking.paymentStatus || "Due") === "Pending" ? "Due" : (booking.paymentStatus || "Due");
+  if (bookingStatus !== "Paid") return null;
+
+  const totalPayable = Number(booking.partnerPayable) || 0;
+  const statusKey = referrer?.referralType === "doctor" ? "doctorPaymentStatus" : "customerPaymentStatus";
+  const status = booking[statusKey] === "Pending" ? "Due" : (booking[statusKey] || "Due");
+  if (status === "Paid") return 0;
+  const paidKey = referrer?.referralType === "doctor" ? "doctorReferralPaidAmount" : "customerReferralPaidAmount";
+  const paidAmount = Number(booking[paidKey]) || 0;
+  return Math.max(0, Math.round(totalPayable - paidAmount));
+};
+
+const getCategoryRateMap = (booking) => {
+  return {
+    service:  { value: Number(booking.serviceCommissionPct) || 0, type: booking.serviceCommissionType || "%" },
+    pharmacy: { value: Number(booking.pharmacyCommissionPct) || 0, type: booking.pharmacyCommissionType || "%" },
+    lab:      { value: Number(booking.labCommissionPct) || 0, type: booking.labCommissionType || "%" },
+    fees:     { value: Number(booking.feesCommissionPct) || 0, type: booking.feesCommissionType || "%" },
+  };
 };
 
 const getReferralPayableBreakdown = (referrer, booking) => {
-  if (!referrer || !booking) return { total: 0, items: [] };
+  if (!booking) return { total: 0, items: [] };
+
   const services = getBookingServices(booking);
-  const clinicP = parseFloat(referrer.clinicCommission) || 0;
-  const pharmacyP = parseFloat(referrer.pharmacyCommission) || 0;
-  const labP = parseFloat(referrer.labCommission) || 0;
+  const pctMap = getCategoryRateMap(booking);
+
   const items = [];
   let total = 0;
+
   services.forEach((svc) => {
     const price = Number(svc.price) || 0;
-    const cat = classifyService(svc);
-    let pct = clinicP;
-    if (cat === "pharmacy") pct = pharmacyP;
-    else if (cat === "lab") pct = labP;
-    const payable = (price * pct) / 100;
+    const cat = svc.serviceCategory || "service";
+    const meta = pctMap[cat] || { value: 0, type: "%" };
+    const payable = meta.type === "₹"
+      ? (price > 0 ? meta.value : 0)
+      : Math.round((price * meta.value) / 100);
     total += payable;
-    items.push({ name: svc.name, price, category: cat, percent: pct, payable: Math.round(payable) });
+    items.push({
+      name: svc.name,
+      price,
+      category: cat,
+      percent: meta.value,
+      percentType: meta.type,
+      payable: Math.round(payable),
+    });
   });
+
   const medicineTotal = Number(booking.medicineTotal) || 0;
   if (medicineTotal > 0) {
-    const payable = (medicineTotal * pharmacyP) / 100;
+    const meta = pctMap.pharmacy;
+    const payable = meta.type === "₹" ? meta.value : Math.round((medicineTotal * meta.value) / 100);
     total += payable;
-    items.push({ name: "Medicines (Manual)", price: medicineTotal, category: "pharmacy", percent: pharmacyP, payable: Math.round(payable) });
+    items.push({
+      name: "Medicines (Manual)",
+      price: medicineTotal,
+      category: "pharmacy",
+      percent: meta.value,
+      percentType: meta.type,
+      payable: Math.round(payable),
+    });
   }
+
   const labTotal = Number(booking.labTotal) || 0;
   if (labTotal > 0) {
-    const payable = (labTotal * labP) / 100;
+    const meta = pctMap.lab;
+    const payable = meta.type === "₹" ? meta.value : Math.round((labTotal * meta.value) / 100);
     total += payable;
-    items.push({ name: "Lab Tests (Manual)", price: labTotal, category: "lab", percent: labP, payable: Math.round(payable) });
+    items.push({
+      name: "Lab Tests (Manual)",
+      price: labTotal,
+      category: "lab",
+      percent: meta.value,
+      percentType: meta.type,
+      payable: Math.round(payable),
+    });
   }
+
   return { total: Math.round(total), items };
 };
 
 const formatCommission = (referrer, key, typeKey) => {
-  const val = referrer?.[key] || 0;
-  const type = referrer?.[typeKey] || "%";
+  let val = referrer?.[key];
+  let type = referrer?.[typeKey];
+
+  if ((val === undefined || val === null) && key === "serviceCommission") {
+    val = referrer?.clinicCommission;
+    type = referrer?.clinicCommissionType;
+  }
+
+  val = val || 0;
+  type = type || "%";
   return type === "₹" ? `₹${val}` : `${val}%`;
 };
 
@@ -381,7 +447,7 @@ const DateRangePopup = ({
 export default function ReferralBookings() {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("doctor");
+  const [activeTab, setActiveTab] = useState("customer");
 
   // DATA
   const [doctorReferrals, setDoctorReferrals] = useState([]);
@@ -402,7 +468,7 @@ export default function ReferralBookings() {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [apptFromDate, setApptFromDate] = useState("");
   const [apptToDate, setApptToDate] = useState("");
-  const [timeFilter, setTimeFilter] = useState("All");
+  const [timeFilter, setTimeFilter] = useState("today");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeCardFilter, setActiveCardFilter] = useState("all");
   const [showRevenueBreakdown, setShowRevenueBreakdown] = useState(false);
@@ -430,6 +496,8 @@ export default function ReferralBookings() {
   const [selectedBookingForPayment, setSelectedBookingForPayment] = useState(null);
   const [selectedReferrerForPayment, setSelectedReferrerForPayment] = useState(null);
   const [newPaymentStatus, setNewPaymentStatus] = useState("Due");
+  const [newPaymentMode, setNewPaymentMode] = useState("cash");
+  const [newPaidAmount, setNewPaidAmount] = useState("");
   const [savingPayment, setSavingPayment] = useState(false);
 
   const showToast = (message, type = "success") => {
@@ -513,7 +581,6 @@ export default function ReferralBookings() {
   const activeReferrals = activeTab === "doctor" ? doctorReferrals : customerReferrals;
   const isDoctorTab = activeTab === "doctor";
 
-  // ============ GET BOOKINGS FOR REFERRAL ============
   const getBookingsForReferral = (referral) => {
     if (!referral) return [];
     const refId = String(referral._id || "");
@@ -537,7 +604,6 @@ export default function ReferralBookings() {
     });
   };
 
-  // ✅ Only referrals WITH bookings
   const buildFlatRows = () => {
     const rows = [];
     activeReferrals.forEach((ref) => {
@@ -613,7 +679,6 @@ export default function ReferralBookings() {
     timeFilter, doctorFilter, bookingTypeFilter, revenueCategoryFilter, paymentTypeFilter,
   ]);
 
-  // ✅ STATS — Computed from filteredRows
   const stats = useMemo(() => {
     const bookingRows = filteredRows.filter((r) => r.booking);
     const totalBookings = bookingRows.length;
@@ -638,60 +703,76 @@ export default function ReferralBookings() {
     };
   }, [filteredRows]);
 
-  // ✅ CATEGORY REVENUE — Computed from filteredRows
   const categoryRevenue = useMemo(() => {
     const bookingRows = filteredRows.filter((r) => r.booking);
 
-    const clinic   = { total: 0, cash: 0, online: 0, due: 0, footFall: 0, referralPayable: 0 };
+    const service  = { total: 0, cash: 0, online: 0, due: 0, footFall: 0, referralPayable: 0 };
     const lab      = { total: 0, cash: 0, online: 0, due: 0, footFall: 0, referralPayable: 0 };
     const pharmacy = { total: 0, cash: 0, online: 0, due: 0, footFall: 0, referralPayable: 0 };
+    const fees     = { total: 0, cash: 0, online: 0, due: 0, footFall: 0, referralPayable: 0 };
 
-    bookingRows.forEach(({ referrer, booking }) => {
-      const cats = getBookingCategoryAmounts(booking);
+    bookingRows.forEach(({ booking }) => {
+      const serviceAmt  = Number(booking.serviceAmount)  || 0;
+      const labAmt      = Number(booking.labAmount)      || 0;
+      const pharmacyAmt = Number(booking.pharmacyAmount) || 0;
+      const feesAmt     = Number(booking.feesAmount)     || 0;
+      const servicePay  = Number(booking.servicePayable) || 0;
+      const labPay      = Number(booking.labPayable)     || 0;
+      const pharmacyPay = Number(booking.pharmacyPayable)|| 0;
+      const feesPay     = Number(booking.feesPayable)    || 0;
+
       const paid = Number(booking.amountPaid) || 0;
       const due  = Number(booking.balanceAmount) || Math.max(0, getBookingFinalPayable(booking) - paid);
       const pt   = (booking.paymentType || "").toString().toLowerCase();
 
-      const catTotal = cats.clinicAmount + cats.labAmount + cats.pharmacyAmount;
+      const catTotal = serviceAmt + labAmt + pharmacyAmt + feesAmt;
       if (catTotal <= 0) return;
 
-      const cShare = cats.clinicAmount / catTotal;
-      const lShare = cats.labAmount / catTotal;
-      const pShare = cats.pharmacyAmount / catTotal;
+      const sShare = serviceAmt / catTotal;
+      const lShare = labAmt / catTotal;
+      const pShare = pharmacyAmt / catTotal;
+      const fShare = feesAmt / catTotal;
 
-      if (cats.clinicAmount > 0)   clinic.footFall += 1;
-      if (cats.labAmount > 0)      lab.footFall += 1;
-      if (cats.pharmacyAmount > 0) pharmacy.footFall += 1;
+      if (serviceAmt > 0)  service.footFall  += 1;
+      if (labAmt > 0)      lab.footFall      += 1;
+      if (pharmacyAmt > 0) pharmacy.footFall += 1;
+      if (feesAmt > 0)     fees.footFall     += 1;
 
-      clinic.total += cats.clinicAmount;
-      clinic.due   += due * cShare;
-      if (pt === "cash")           clinic.cash      += paid * cShare;
-      else if (pt === "online")    clinic.online    += paid * cShare;
-      else if (pt === "card")      clinic.cash      += paid * cShare;
-      else if (pt === "insurance") clinic.online    += paid * cShare;
+      service.total += serviceAmt;
+      service.due   += due * sShare;
+      if (pt === "cash")           service.cash   += paid * sShare;
+      else if (pt === "online")    service.online += paid * sShare;
+      else if (pt === "card")      service.cash   += paid * sShare;
+      else if (pt === "insurance") service.online += paid * sShare;
 
-      lab.total += cats.labAmount;
+      lab.total += labAmt;
       lab.due   += due * lShare;
-      if (pt === "cash")           lab.cash      += paid * lShare;
-      else if (pt === "online")    lab.online    += paid * lShare;
-      else if (pt === "card")      lab.cash      += paid * lShare;
-      else if (pt === "insurance") lab.online    += paid * lShare;
+      if (pt === "cash")           lab.cash   += paid * lShare;
+      else if (pt === "online")    lab.online += paid * lShare;
+      else if (pt === "card")      lab.cash   += paid * lShare;
+      else if (pt === "insurance") lab.online += paid * lShare;
 
-      pharmacy.total += cats.pharmacyAmount;
+      pharmacy.total += pharmacyAmt;
       pharmacy.due   += due * pShare;
-      if (pt === "cash")           pharmacy.cash      += paid * pShare;
-      else if (pt === "online")    pharmacy.online    += paid * pShare;
-      else if (pt === "card")      pharmacy.cash      += paid * pShare;
-      else if (pt === "insurance") pharmacy.online    += paid * pShare;
+      if (pt === "cash")           pharmacy.cash   += paid * pShare;
+      else if (pt === "online")    pharmacy.online += paid * pShare;
+      else if (pt === "card")      pharmacy.cash   += paid * pShare;
+      else if (pt === "insurance") pharmacy.online += paid * pShare;
 
-      if (referrer) {
-        clinic.referralPayable   += (cats.clinicAmount   * (parseFloat(referrer.clinicCommission)   || 0)) / 100;
-        lab.referralPayable      += (cats.labAmount      * (parseFloat(referrer.labCommission)      || 0)) / 100;
-        pharmacy.referralPayable += (cats.pharmacyAmount * (parseFloat(referrer.pharmacyCommission) || 0)) / 100;
-      }
+      fees.total += feesAmt;
+      fees.due   += due * fShare;
+      if (pt === "cash")           fees.cash   += paid * fShare;
+      else if (pt === "online")    fees.online += paid * fShare;
+      else if (pt === "card")      fees.cash   += paid * fShare;
+      else if (pt === "insurance") fees.online += paid * fShare;
+
+      service.referralPayable  += servicePay;
+      lab.referralPayable      += labPay;
+      pharmacy.referralPayable += pharmacyPay;
+      fees.referralPayable     += feesPay;
     });
 
-    [clinic, lab, pharmacy].forEach((obj) => {
+    [service, lab, pharmacy, fees].forEach((obj) => {
       Object.keys(obj).forEach((k) => {
         if (k === "footFall") obj[k] = Number(obj[k]) || 0;
         else obj[k] = Math.round(obj[k]);
@@ -699,10 +780,10 @@ export default function ReferralBookings() {
     });
 
     return {
-      clinic, lab, pharmacy,
-      grandTotal: clinic.total + lab.total + pharmacy.total,
-      grandFootFall: clinic.footFall + lab.footFall + pharmacy.footFall,
-      grandReferralPayable: clinic.referralPayable + lab.referralPayable + pharmacy.referralPayable,
+      service, lab, pharmacy, fees,
+      grandTotal: service.total + lab.total + pharmacy.total + fees.total,
+      grandFootFall: service.footFall + lab.footFall + pharmacy.footFall + fees.footFall,
+      grandReferralPayable: service.referralPayable + lab.referralPayable + pharmacy.referralPayable + fees.referralPayable,
     };
   }, [filteredRows]);
 
@@ -737,7 +818,6 @@ export default function ReferralBookings() {
     revenueCategoryFilter !== "All" || paymentTypeFilter !== "All" ||
     apptFromDate !== "" || apptToDate !== "" || timeFilter !== "All";
 
-  // Pagination
   const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -759,16 +839,16 @@ export default function ReferralBookings() {
     return pages;
   };
 
-  // CSV
   const downloadCSV = () => {
     if (!filteredRows.length) { alert("No records available to export!"); return; }
     const referrerLabel = isDoctorTab ? "Doctor" : "Customer";
     const headers = ["#", `${referrerLabel} Name`, `${referrerLabel} Phone`,
       isDoctorTab ? "Organization" : "Address",
-      "Clinic %", "Pharmacy %", "Lab %", "Fees %", "Patient", "Appt. Date",
-      "Clinic Amount", "Pharmacy Amount", "Lab Amount", "Total",
-      "Payment Status", `${referrerLabel} Payable`, `${referrerLabel} Payment Status`,
-      "Paid At", "Payment Mode", "Created At"];
+      "Service %", "Pharmacy %", "Lab %", "Fees %", "Patient", "Appt. Date",
+      "Service Amount", "Pharmacy Amount", "Lab Amount", "Fees Amount", "Total",
+      "Payment Status", "Payment Mode",
+      `${referrerLabel} Payable`, "Referral Paid", "To Pay",
+      `${referrerLabel} Payment Status`, "Paid At", "Created At"];
     const csvRows = [headers.join(","), ...filteredRows.map((row, idx) => {
       const { referrer, booking } = row;
       const name = isDoctorTab ? (referrer.doctorName || "") : (referrer.customerName || "");
@@ -776,8 +856,11 @@ export default function ReferralBookings() {
       const extra = isDoctorTab ? (referrer.doctorOrganization || "") : (referrer.customerAddress || "");
       const payStatus = isDoctorTab ? (booking?.doctorPaymentStatus || "Due") : (booking?.customerPaymentStatus || "Due");
       const payAt = isDoctorTab ? booking?.doctorPaymentUpdatedAt : booking?.customerPaymentUpdatedAt;
+      const paidAmount = isDoctorTab
+        ? (booking?.doctorReferralPaidAmount || 0)
+        : (booking?.customerReferralPaidAmount || 0);
 
-      const clinicCom = formatCommission(referrer, "clinicCommission", "clinicCommissionType");
+      const serviceCom = formatCommission(referrer, "serviceCommission", "serviceCommissionType");
       const pharmacyCom = formatCommission(referrer, "pharmacyCommission", "pharmacyCommissionType");
       const labCom = formatCommission(referrer, "labCommission", "labCommissionType");
       const feesCom = formatCommission(referrer, "feesCommission", "feesCommissionType");
@@ -785,16 +868,18 @@ export default function ReferralBookings() {
       if (!booking) return [];
       const info = getBookingPaidInfo(booking);
       const payable = getReferralPayable(referrer, booking);
+      const toPayRaw = getReferralToPay(referrer, booking);
+      const toPay = toPayRaw === null ? "1st Clear Payment" : toPayRaw;
       const cats = getBookingCategoryAmounts(booking);
       return [
         idx + 1, `"${name.replace(/"/g, '""')}"`, `"${phone}"`, `"${extra.replace(/"/g, '""')}"`,
-        `"${clinicCom}"`, `"${pharmacyCom}"`, `"${labCom}"`, `"${feesCom}"`,
+        `"${serviceCom}"`, `"${pharmacyCom}"`, `"${labCom}"`, `"${feesCom}"`,
         `"${(booking.patientTitle || "")} ${(booking.patientName || "").replace(/"/g, '""')}"`,
         `"${formatDateToDDMMYYYY(booking.appointmentDate || booking.date)}"`,
-        cats.clinicAmount, cats.pharmacyAmount, cats.labAmount, info.final,
-        `"${booking.paymentStatus || "Due"}"`, payable, `"${payStatus}"`,
+        cats.serviceAmount, cats.pharmacyAmount, cats.labAmount, cats.feesAmount, info.final,
+        `"${booking.paymentStatus || "Due"}"`, `"${booking.paymentType || "cash"}"`,
+        payable, paidAmount, `"${toPay}"`, `"${payStatus}"`,
         `"${payAt ? formatDateTimeToDDMMYYYY(payAt) : "-"}"`,
-        `"${booking.paymentType || "cash"}"`,
         `"${formatDateTimeToDDMMYYYY(booking.createdAt)}"`
       ].join(",");
     })];
@@ -816,8 +901,12 @@ export default function ReferralBookings() {
     const current = isDoctorTab
       ? (booking?.doctorPaymentStatus || "Due")
       : (booking?.customerPaymentStatus || "Due");
-    // Normalize "Pending" → "Due"
     setNewPaymentStatus(current === "Pending" ? "Due" : current);
+    setNewPaymentMode(booking?.paymentType || "cash");
+    const totalPayable = getReferralPayable(referrer, booking);
+    const paidKey = isDoctorTab ? "doctorReferralPaidAmount" : "customerReferralPaidAmount";
+    const paidVal = Number(booking?.[paidKey]) || 0;
+    setNewPaidAmount(paidVal > 0 ? String(paidVal) : (current === "Paid" ? String(totalPayable) : ""));
     setShowPaymentModal(true);
   };
 
@@ -828,35 +917,63 @@ export default function ReferralBookings() {
       const endpoint = isDoctorTab
         ? `${BOOKINGS_API}/updatedoctorpayment/${selectedBookingForPayment._id}`
         : `${BOOKINGS_API}/updatecustomerpayment/${selectedBookingForPayment._id}`;
-      const payload = isDoctorTab
-        ? { doctorPaymentStatus: newPaymentStatus }
-        : { customerPaymentStatus: newPaymentStatus };
 
-      console.log(`📤 Sending ${isDoctorTab ? "doctor" : "customer"} payment update:`, endpoint, payload);
+      const paidAmount = Number(newPaidAmount) || 0;
+      const payload = isDoctorTab
+        ? {
+            doctorPaymentStatus: newPaymentStatus,
+            doctorReferralPaidAmount: paidAmount,
+            paymentType: newPaymentMode,
+          }
+        : {
+            customerPaymentStatus: newPaymentStatus,
+            customerReferralPaidAmount: paidAmount,
+            paymentType: newPaymentMode,
+          };
 
       const res = await axios.put(endpoint, payload);
       if (res.data?.success || res.status === 200) {
-        setBookings((prev) => prev.map((b) =>
-          b._id === selectedBookingForPayment._id
-            ? {
-                ...b,
-                ...(isDoctorTab
-                  ? { doctorPaymentStatus: newPaymentStatus, doctorPaymentUpdatedAt: new Date().toISOString() }
-                  : { customerPaymentStatus: newPaymentStatus, customerPaymentUpdatedAt: new Date().toISOString() }),
-              }
-            : b
-        ));
+        // ✅ USE BACKEND RESPONSE — jisme updatedAt already aata hai
+        const updatedBooking = res.data?.data;
+
+        setBookings((prev) => prev.map((b) => {
+          if (b._id !== selectedBookingForPayment._id) return b;
+
+          if (updatedBooking && updatedBooking._id) {
+            // ✅ Merge entire updated booking from server (preserves all fields + updatedAt timestamps)
+            return { ...b, ...updatedBooking };
+          }
+
+          // Fallback: manual state update (agar backend response data nahi bhejta)
+          return {
+            ...b,
+            paymentType: newPaymentMode,
+            ...(isDoctorTab
+              ? {
+                  doctorPaymentStatus: newPaymentStatus,
+                  doctorReferralPaidAmount: paidAmount,
+                  doctorPaymentUpdatedAt: new Date().toISOString(),
+                }
+              : {
+                  customerPaymentStatus: newPaymentStatus,
+                  customerReferralPaidAmount: paidAmount,
+                  customerPaymentUpdatedAt: new Date().toISOString(),
+                }),
+          };
+        }));
+
         const label = isDoctorTab ? "Doctor" : "Customer";
-        showToast(`✅ ${label} payment status updated to ${newPaymentStatus}!`, "success");
+        showToast(`✅ ${label} payment updated (${newPaymentStatus} • ${newPaymentMode})!`, "success");
         setShowPaymentModal(false);
         setSelectedReferrerForPayment(null);
         setSelectedBookingForPayment(null);
+        setNewPaidAmount("");
       } else {
         showToast(res.data?.message || "Failed to update", "error");
       }
     } catch (err) {
       console.error("❌ Payment update error:", err);
-      showToast(err.response?.data?.message || "Failed to update payment status", "error");
+      showToast(err.response?.data?.message || "Failed to update payment", "error");
     } finally {
       setSavingPayment(false);
     }
@@ -870,7 +987,6 @@ export default function ReferralBookings() {
     setStatusFilter("All");
   };
 
-  // Labels
   const referrerLabel = isDoctorTab ? "Doctor" : "Customer";
   const referrerLabelPlural = isDoctorTab ? "Doctors" : "Customers";
   const avatarBg = isDoctorTab ? "bg-purple-500" : "bg-indigo-500";
@@ -882,6 +998,142 @@ export default function ReferralBookings() {
   const headerAccent = isDoctorTab ? "text-purple-600" : "text-indigo-600";
 
   const fmt = (n) => `₹${Math.round(Number(n) || 0).toLocaleString("en-IN")}`;
+
+  // ✅ Reusable: category-wise payable list
+  const CategoryPayableList = ({ booking }) => {
+    const payable = getCategoryWisePayable(booking);
+    const rateMap = getCategoryRateMap(booking);
+    const categories = ["service", "pharmacy", "lab", "fees"];
+
+    const activeCategories = categories.filter((c) => payable[c] > 0);
+    if (activeCategories.length === 0) {
+      return <span className="text-[10px] text-gray-400 italic">—</span>;
+    }
+
+    return (
+      <div className="flex flex-col gap-1">
+        {activeCategories.map((cat) => {
+          const meta = CATEGORY_META[cat];
+          const Icon = meta.icon;
+          const rate = rateMap[cat];
+          return (
+            <div
+              key={cat}
+              className={`flex items-center justify-between gap-2 px-2 py-0.5 rounded border ${meta.bg} ${meta.border} text-[10px] ${meta.text}`}
+            >
+              <span className="font-semibold whitespace-nowrap flex items-center gap-1">
+                <Icon className="text-[9px]" /> {meta.label}:
+                <span className="text-[9px] opacity-75 font-normal">
+                  ({rate.type === "₹" ? `₹${rate.value}` : `${rate.value}%`})
+                </span>
+              </span>
+              <span className="font-bold whitespace-nowrap">₹{payable[cat]}</span>
+            </div>
+          );
+        })}
+        <div className={`flex items-center justify-between gap-2 px-2 py-0.5 rounded border-2 ${payableBorderColor} ${payableBgColor}`}>
+          <span className={`text-[10px] font-bold uppercase ${payableTextColor}`}>Total:</span>
+          <span className={`text-[11px] font-extrabold ${statPayableColor}`}>
+            ₹{Number(booking.partnerPayable) || 0}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // ✅ Reusable: Referrer-wise totals
+  const ReferrerTotalBreakdown = ({ referrer }) => {
+    const refBookings = getBookingsForReferral(referrer);
+    let totalService = 0, totalPharmacy = 0, totalLab = 0, totalFees = 0;
+    refBookings.forEach((b) => {
+      totalService  += Number(b.servicePayable)  || 0;
+      totalPharmacy += Number(b.pharmacyPayable) || 0;
+      totalLab      += Number(b.labPayable)      || 0;
+      totalFees     += Number(b.feesPayable)     || 0;
+    });
+    const grand = totalService + totalPharmacy + totalLab + totalFees;
+
+    const rateMap = {
+      service:  { value: Number(referrer.serviceCommission ?? referrer.clinicCommission) || 0, type: referrer.serviceCommissionType || referrer.clinicCommissionType || "%" },
+      pharmacy: { value: Number(referrer.pharmacyCommission) || 0, type: referrer.pharmacyCommissionType || "%" },
+      lab:      { value: Number(referrer.labCommission) || 0, type: referrer.labCommissionType || "%" },
+      fees:     { value: Number(referrer.feesCommission) || 0, type: referrer.feesCommissionType || "%" },
+    };
+
+    const values = {
+      service: totalService,
+      pharmacy: totalPharmacy,
+      lab: totalLab,
+      fees: totalFees,
+    };
+
+    return (
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          {["service", "pharmacy", "lab", "fees"].map((cat) => {
+            const meta = CATEGORY_META[cat];
+            const Icon = meta.icon;
+            const rate = rateMap[cat];
+            return (
+              <div key={cat} className={`${meta.bg} p-3 rounded-lg border ${meta.border}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-[10px] font-bold ${meta.text} uppercase flex items-center gap-1`}>
+                    <Icon className="text-[10px]" /> {meta.label}
+                  </span>
+                  <span className={`text-[9px] font-bold ${meta.text} bg-white px-1.5 py-0.5 rounded border ${meta.border}`}>
+                    {rate.type === "₹" ? `₹${rate.value}` : `${rate.value}%`}
+                  </span>
+                </div>
+                <div className={`text-lg font-extrabold ${meta.text}`}>
+                  ₹{Math.round(values[cat]).toLocaleString("en-IN")}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className={`p-3 rounded-lg border-2 ${payableBorderColor} ${payableBgColor} flex items-center justify-between`}>
+          <div className="flex items-center gap-2">
+            <FiAward className={`w-4 h-4 ${statPayableColor}`} />
+            <span className={`text-xs font-bold uppercase ${payableTextColor}`}>
+              Total {referrerLabel} Payable
+            </span>
+          </div>
+          <span className={`text-2xl font-extrabold ${statPayableColor}`}>
+            ₹{Math.round(grand).toLocaleString("en-IN")}
+          </span>
+        </div>
+
+        {(() => {
+          let totalPaid = 0;
+          refBookings.forEach((b) => {
+            totalPaid += isDoctorTab
+              ? Number(b.doctorReferralPaidAmount) || 0
+              : Number(b.customerReferralPaidAmount) || 0;
+          });
+          const totalToPay = Math.max(0, grand - totalPaid);
+          return (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-200 text-center">
+                <div className="text-[9px] font-bold text-emerald-600 uppercase">Already Paid</div>
+                <div className="text-base font-extrabold text-emerald-800">
+                  ₹{Math.round(totalPaid).toLocaleString("en-IN")}
+                </div>
+              </div>
+              <div className={`p-2 rounded-lg border text-center ${totalToPay > 0 ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}>
+                <div className={`text-[9px] font-bold uppercase ${totalToPay > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                  Remaining To Pay
+                </div>
+                <div className={`text-base font-extrabold ${totalToPay > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                  {totalToPay > 0 ? `₹${Math.round(totalToPay).toLocaleString("en-IN")}` : "✓ Settled"}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    );
+  };
 
   return (
     <div className="emp-dash">
@@ -895,13 +1147,13 @@ export default function ReferralBookings() {
 
         {/* TABS */}
         <div className="flex items-center gap-2 mb-4 border-b-2 border-gray-200 overflow-x-auto">
-          <button onClick={() => handleTabChange("doctor")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${activeTab === "doctor" ? "border-purple-600 text-purple-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
-            <FaUserMd className="w-4 h-4" /> Doctor Referred Bookings
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "doctor" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>{doctorReferrals.length}</span>
-          </button>
           <button onClick={() => handleTabChange("customer")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${activeTab === "customer" ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
             <FaUser className="w-4 h-4" /> Customer Referred Bookings
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "customer" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-500"}`}>{customerReferrals.length}</span>
+          </button>
+          <button onClick={() => handleTabChange("doctor")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${activeTab === "doctor" ? "border-purple-600 text-purple-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+            <FaUserMd className="w-4 h-4" /> Doctor Referred Bookings
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "doctor" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>{doctorReferrals.length}</span>
           </button>
         </div>
 
@@ -1148,21 +1400,21 @@ export default function ReferralBookings() {
           </div>
 
           {showRevenueBreakdown && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 p-3">
               <div className="rounded-lg p-4 border border-blue-200 bg-blue-50 min-h-[120px] flex flex-col justify-between">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase">
-                    <FaClinicMedical className="text-xs" /> Clinic Revenue
+                    <FaServicestack className="text-xs" /> Service Revenue
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className="text-[11px] font-bold text-blue-600 leading-tight">FootFall: {categoryRevenue.clinic.footFall}</span>
-                    <span className="text-xl font-extrabold text-blue-800">{fmt(categoryRevenue.clinic.total)}</span>
+                    <span className="text-[11px] font-bold text-blue-600 leading-tight">FootFall: {categoryRevenue.service.footFall}</span>
+                    <span className="text-xl font-extrabold text-blue-800">{fmt(categoryRevenue.service.total)}</span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
-                  <span className="text-emerald-700 whitespace-nowrap">Cash: {fmt(categoryRevenue.clinic.cash)}</span>
-                  <span className="text-cyan-700 whitespace-nowrap">Online: {fmt(categoryRevenue.clinic.online)}</span>
-                  <span className="text-red-600 whitespace-nowrap">Due: {fmt(categoryRevenue.clinic.due)}</span>
+                  <span className="text-emerald-700 whitespace-nowrap">Cash: {fmt(categoryRevenue.service.cash)}</span>
+                  <span className="text-cyan-700 whitespace-nowrap">Online: {fmt(categoryRevenue.service.online)}</span>
+                  <span className="text-red-600 whitespace-nowrap">Due: {fmt(categoryRevenue.service.due)}</span>
                 </div>
               </div>
 
@@ -1181,7 +1433,6 @@ export default function ReferralBookings() {
                   <span className="text-cyan-700 whitespace-nowrap">Online: {fmt(categoryRevenue.lab.online)}</span>
                   <span className="text-red-600 whitespace-nowrap">Due: {fmt(categoryRevenue.lab.due)}</span>
                 </div>
-               
               </div>
 
               <div className="rounded-lg p-4 border border-green-200 bg-green-50 min-h-[120px] flex flex-col justify-between">
@@ -1199,7 +1450,23 @@ export default function ReferralBookings() {
                   <span className="text-cyan-700 whitespace-nowrap">Online: {fmt(categoryRevenue.pharmacy.online)}</span>
                   <span className="text-red-600 whitespace-nowrap">Due: {fmt(categoryRevenue.pharmacy.due)}</span>
                 </div>
-               
+              </div>
+
+              <div className="rounded-lg p-4 border border-amber-200 bg-amber-50 min-h-[120px] flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700 uppercase">
+                    <FaMoneyBillWave className="text-xs" /> Fees Revenue
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] font-bold text-amber-600 leading-tight">FootFall: {categoryRevenue.fees.footFall}</span>
+                    <span className="text-xl font-extrabold text-amber-800">{fmt(categoryRevenue.fees.total)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
+                  <span className="text-emerald-700 whitespace-nowrap">Cash: {fmt(categoryRevenue.fees.cash)}</span>
+                  <span className="text-cyan-700 whitespace-nowrap">Online: {fmt(categoryRevenue.fees.online)}</span>
+                  <span className="text-red-600 whitespace-nowrap">Due: {fmt(categoryRevenue.fees.due)}</span>
+                </div>
               </div>
 
               <div className="rounded-lg p-4 border border-slate-300 bg-slate-50 min-h-[120px] flex flex-col justify-between">
@@ -1213,16 +1480,17 @@ export default function ReferralBookings() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold">
-                  <span className="text-blue-700 whitespace-nowrap">Clinic: {fmt(categoryRevenue.clinic.total)}</span>
+                  <span className="text-blue-700 whitespace-nowrap">Svc: {fmt(categoryRevenue.service.total)}</span>
                   <span className="text-purple-700 whitespace-nowrap">Lab: {fmt(categoryRevenue.lab.total)}</span>
-                  <span className="text-green-700 whitespace-nowrap">Pharmacy: {fmt(categoryRevenue.pharmacy.total)}</span>
+                  <span className="text-green-700 whitespace-nowrap">Pharm: {fmt(categoryRevenue.pharmacy.total)}</span>
+                  <span className="text-amber-700 whitespace-nowrap">Fees: {fmt(categoryRevenue.fees.total)}</span>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* STATS — 4 cards */}
+        {/* STATS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           <div className={`emp-dash__stat cursor-pointer hover:scale-105 transition-transform ${activeCardFilter === "all" ? "ring-2 ring-blue-500/20 border-blue-400" : ""}`} onClick={() => handleCardClick("all")}>
             <div className="emp-dash__stat-top"><span className="emp-dash__stat-label">Total {referrerLabelPlural}</span><div className="emp-dash__stat-icon emp-dash__stat-icon--rate"><FiUsers /></div></div>
@@ -1274,6 +1542,8 @@ export default function ReferralBookings() {
                       <th style={{ textAlign: "center", minWidth: "130px" }}>Amount</th>
                       <th style={{ textAlign: "center" }}>Total</th>
                       <th style={{ textAlign: "center" }}>Payment Status</th>
+                      <th style={{ textAlign: "center", minWidth: "180px" }}>{referrerLabel} Payable</th>
+                      <th style={{ textAlign: "center" }}>To Pay</th>
                       <th style={{ textAlign: "center" }}>{referrerLabel} Pay Status</th>
                       <th style={{ textAlign: "center", minWidth: "110px" }}>Paid At</th>
                       <th style={{ textAlign: "center", minWidth: "140px" }}>Referral %</th>
@@ -1296,6 +1566,8 @@ export default function ReferralBookings() {
                       const cats = getBookingCategoryAmounts(booking);
                       const payAt = isDoctorTab ? booking.doctorPaymentUpdatedAt : booking.customerPaymentUpdatedAt;
 
+                      const toPay = getReferralToPay(referrer, booking);
+
                       return (
                         <tr key={booking._id} className={`hover:${isDoctorTab ? "bg-purple-50/30" : "bg-indigo-50/30"}`}>
                           <td className="px-2 py-3 text-center text-slate-500 text-[11px]">{indexOfFirstItem + idx + 1}</td>
@@ -1316,8 +1588,8 @@ export default function ReferralBookings() {
                           <td className="px-3 py-3" style={{ minWidth: "130px" }}>
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center justify-between gap-1 px-2 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 text-[10px]">
-                                <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaClinicMedical className="text-[9px]" /> Clinic:</span>
-                                <span className="font-bold whitespace-nowrap">₹{Math.round(cats.clinicAmount)}</span>
+                                <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaServicestack className="text-[9px]" /> Service:</span>
+                                <span className="font-bold whitespace-nowrap">₹{Math.round(cats.serviceAmount)}</span>
                               </div>
                               <div className="flex items-center justify-between gap-1 px-2 py-0.5 rounded border border-green-200 bg-green-50 text-green-700 text-[10px]">
                                 <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaPills className="text-[9px]" /> Pharmacy:</span>
@@ -1327,6 +1599,10 @@ export default function ReferralBookings() {
                                 <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaFlask className="text-[9px]" /> Lab:</span>
                                 <span className="font-bold whitespace-nowrap">₹{Math.round(cats.labAmount)}</span>
                               </div>
+                              <div className="flex items-center justify-between gap-1 px-2 py-0.5 rounded border border-amber-200 bg-amber-50 text-amber-700 text-[10px]">
+                                <span className="font-semibold whitespace-nowrap flex items-center gap-1"><FaMoneyBillWave className="text-[9px]" /> Fees:</span>
+                                <span className="font-bold whitespace-nowrap">₹{Math.round(cats.feesAmount)}</span>
+                              </div>
                             </div>
                           </td>
 
@@ -1335,6 +1611,26 @@ export default function ReferralBookings() {
                             <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${paymentColors.bg} ${paymentColors.text} ${paymentColors.border}`}>
                               <paymentColors.icon className={`w-2.5 h-2.5 ${paymentColors.iconColor}`} /> {booking.paymentStatus || "Due"}
                             </span>
+                          </td>
+
+                          <td className="px-3 py-3 text-center">
+                            <CategoryPayableList booking={booking} />
+                          </td>
+
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {toPay === null ? (
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                1st Clear Payment
+                              </span>
+                            ) : toPay > 0 ? (
+                              <span className="text-xs font-extrabold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                                ₹{toPay}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                ✓ Settled
+                              </span>
+                            )}
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
@@ -1357,7 +1653,7 @@ export default function ReferralBookings() {
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <div className="flex flex-col gap-0.5 items-center">
                               <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                                Clinic: {formatCommission(referrer, "clinicCommission", "clinicCommissionType")}
+                                Service: {formatCommission(referrer, "serviceCommission", "serviceCommissionType")}
                               </span>
                               <span className="text-[9px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">
                                 Pharmacy: {formatCommission(referrer, "pharmacyCommission", "pharmacyCommissionType")}
@@ -1411,6 +1707,8 @@ export default function ReferralBookings() {
                   const cats = getBookingCategoryAmounts(booking);
                   const payAt = isDoctorTab ? booking.doctorPaymentUpdatedAt : booking.customerPaymentUpdatedAt;
 
+                  const toPay = getReferralToPay(referrer, booking);
+
                   return (
                     <div key={booking._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                       <div className="flex items-center justify-between gap-2 p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/60">
@@ -1433,18 +1731,22 @@ export default function ReferralBookings() {
                           <span className="text-[9px] text-gray-400">({booking.patientAge || "?"} yrs • {booking.patientGender || "-"})</span>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-gray-100">
+                        <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-gray-100">
                           <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200">
-                            <div className="text-[8px] font-bold text-blue-600 uppercase">Clinic</div>
-                            <div className="text-xs font-extrabold text-blue-800">₹{Math.round(cats.clinicAmount)}</div>
+                            <div className="text-[8px] font-bold text-blue-600 uppercase">Service</div>
+                            <div className="text-[11px] font-extrabold text-blue-800">₹{Math.round(cats.serviceAmount)}</div>
                           </div>
                           <div className="text-center p-1.5 rounded-lg bg-green-50 border border-green-200">
-                            <div className="text-[8px] font-bold text-green-600 uppercase">Pharmacy</div>
-                            <div className="text-xs font-extrabold text-green-800">₹{Math.round(cats.pharmacyAmount)}</div>
+                            <div className="text-[8px] font-bold text-green-600 uppercase">Pharm</div>
+                            <div className="text-[11px] font-extrabold text-green-800">₹{Math.round(cats.pharmacyAmount)}</div>
                           </div>
                           <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200">
                             <div className="text-[8px] font-bold text-purple-600 uppercase">Lab</div>
-                            <div className="text-xs font-extrabold text-purple-800">₹{Math.round(cats.labAmount)}</div>
+                            <div className="text-[11px] font-extrabold text-purple-800">₹{Math.round(cats.labAmount)}</div>
+                          </div>
+                          <div className="text-center p-1.5 rounded-lg bg-amber-50 border border-amber-200">
+                            <div className="text-[8px] font-bold text-amber-600 uppercase">Fees</div>
+                            <div className="text-[11px] font-extrabold text-amber-800">₹{Math.round(cats.feesAmount)}</div>
                           </div>
                         </div>
 
@@ -1452,6 +1754,18 @@ export default function ReferralBookings() {
                           <div className="text-center p-2 rounded-lg bg-gray-50 border border-gray-200">
                             <div className="text-[9px] font-bold text-gray-500 uppercase">Total Amount</div>
                             <div className="text-base font-extrabold text-slate-800">₹{Math.round(info.final)}</div>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-gray-100">
+                          <div className="text-[9px] font-bold text-gray-500 uppercase mb-1.5">{referrerLabel} Payable</div>
+                          <CategoryPayableList booking={booking} />
+                        </div>
+
+                        <div className={`text-center p-2 rounded-lg border ${toPay === null ? "bg-amber-50 border-amber-200" : toPay > 0 ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}>
+                          <div className={`text-[8px] font-bold uppercase ${toPay === null ? "text-amber-600" : toPay > 0 ? "text-red-600" : "text-emerald-600"}`}>To Pay</div>
+                          <div className={`text-sm font-extrabold ${toPay === null ? "text-amber-700" : toPay > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                            {toPay === null ? "1st Clear Payment" : toPay > 0 ? `₹${toPay}` : "✓ Settled"}
                           </div>
                         </div>
 
@@ -1464,21 +1778,6 @@ export default function ReferralBookings() {
                             </button>
                           </div>
                           <div className="text-[10px] text-slate-600 font-medium">{payAt ? formatDateToDDMMYYYY(payAt) : "-"}</div>
-                        </div>
-
-                        <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
-                          <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                            Clinic: {formatCommission(referrer, "clinicCommission", "clinicCommissionType")}
-                          </span>
-                          <span className="text-[9px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">
-                            Pharmacy: {formatCommission(referrer, "pharmacyCommission", "pharmacyCommissionType")}
-                          </span>
-                          <span className="text-[9px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100">
-                            Lab: {formatCommission(referrer, "labCommission", "labCommissionType")}
-                          </span>
-                          <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
-                            Fees: {formatCommission(referrer, "feesCommission", "feesCommissionType")}
-                          </span>
                         </div>
 
                         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
@@ -1564,44 +1863,9 @@ export default function ReferralBookings() {
 
                 <div className="pt-3 border-t">
                   <div className="text-[10px] font-bold uppercase text-gray-400 mb-2 flex items-center gap-1">
-                    <FiAward className={headerAccent} /> Referral % Breakdown
+                    <FaRupeeSign className="w-3 h-3" /> {referrerLabel} Wise Total Amount Received
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    <div className="bg-blue-50 p-2.5 rounded-lg text-center border border-blue-100">
-                      <div className="text-[9px] text-blue-600 font-bold">Clinic</div>
-                      <div className="text-sm font-extrabold text-blue-900">{formatCommission(selectedReferrer, "clinicCommission", "clinicCommissionType")}</div>
-                    </div>
-                    <div className="bg-green-50 p-2.5 rounded-lg text-center border border-green-100">
-                      <div className="text-[9px] text-green-600 font-bold">Pharmacy</div>
-                      <div className="text-sm font-extrabold text-green-900">{formatCommission(selectedReferrer, "pharmacyCommission", "pharmacyCommissionType")}</div>
-                    </div>
-                    <div className="bg-purple-50 p-2.5 rounded-lg text-center border border-purple-100">
-                      <div className="text-[9px] text-purple-600 font-bold">Lab</div>
-                      <div className="text-sm font-extrabold text-purple-900">{formatCommission(selectedReferrer, "labCommission", "labCommissionType")}</div>
-                    </div>
-                    <div className="bg-amber-50 p-2.5 rounded-lg text-center border border-amber-100">
-                      <div className="text-[9px] text-amber-600 font-bold">Fees</div>
-                      <div className="text-sm font-extrabold text-amber-900">{formatCommission(selectedReferrer, "feesCommission", "feesCommissionType")}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 mb-2">Referral Metrics</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-blue-50 p-2 rounded-lg text-center border border-blue-100">
-                      <div className="text-[9px] text-blue-600 font-bold">Total OPs</div>
-                      <div className="text-base font-extrabold text-blue-900">{getBookingsForReferral(selectedReferrer).length}</div>
-                    </div>
-                    <div className="bg-emerald-50 p-2 rounded-lg text-center border border-emerald-100">
-                      <div className="text-[9px] text-emerald-600 font-bold">Patient Total</div>
-                      <div className="text-base font-extrabold text-emerald-900">₹{getBookingsForReferral(selectedReferrer).reduce((sum, b) => sum + getBookingFinalPayable(b), 0).toLocaleString()}</div>
-                    </div>
-                    <div className={`${payableBgColor} p-2 rounded-lg text-center border ${payableBorderColor}`}>
-                      <div className={`text-[9px] ${payableTextColor} font-bold`}>{referrerLabel} Payable</div>
-                      <div className={`text-base font-extrabold ${statPayableColor}`}>₹{getBookingsForReferral(selectedReferrer).reduce((sum, b) => sum + getReferralPayable(selectedReferrer, b), 0).toLocaleString()}</div>
-                    </div>
-                  </div>
+                  <ReferrerTotalBreakdown referrer={selectedReferrer} />
                 </div>
 
                 {selectedBookingForModal && (() => {
@@ -1609,12 +1873,18 @@ export default function ReferralBookings() {
                   const payStatusRaw = isDoctorTab ? (selectedBookingForModal.doctorPaymentStatus || "Due") : (selectedBookingForModal.customerPaymentStatus || "Due");
                   const payStatus = payStatusRaw === "Pending" ? "Due" : payStatusRaw;
                   const payAt = isDoctorTab ? selectedBookingForModal.doctorPaymentUpdatedAt : selectedBookingForModal.customerPaymentUpdatedAt;
+                  const toPay = getReferralToPay(selectedReferrer, selectedBookingForModal);
                   return (
                     <div className="pt-3 border-t">
                       <div className="text-[10px] font-bold uppercase text-gray-400 mb-2">Selected Booking Details</div>
                       <div className="bg-white p-3 rounded-lg border border-gray-200 space-y-1.5 text-xs">
                         <div className="flex justify-between"><span className="text-gray-500">Patient:</span><span className="font-semibold">{selectedBookingForModal.patientTitle} {selectedBookingForModal.patientName}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Total Amount:</span><span className="font-semibold">₹{Math.round(getBookingFinalPayable(selectedBookingForModal))}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">To Pay:</span>
+                          <span className={`font-bold ${toPay === null ? "text-amber-600" : toPay > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                            {toPay === null ? "1st Clear Payment" : toPay > 0 ? `₹${toPay}` : "✓ Settled"}
+                          </span>
+                        </div>
                         <div className="flex justify-between"><span className="text-gray-500">{referrerLabel} Payment:</span>
                           <span className={`font-semibold text-[10px] px-2 py-0.5 rounded-full uppercase ${getPaymentStatusColors(payStatus).bg} ${getPaymentStatusColors(payStatus).text}`}>{payStatus}</span>
                         </div>
@@ -1630,7 +1900,7 @@ export default function ReferralBookings() {
                                 <th className="text-left px-2 py-1.5 text-[9px] font-bold text-gray-500 uppercase">Service</th>
                                 <th className="text-center px-2 py-1.5 text-[9px] font-bold text-gray-500 uppercase">Category</th>
                                 <th className="text-right px-2 py-1.5 text-[9px] font-bold text-gray-500 uppercase">Price</th>
-                                <th className="text-center px-2 py-1.5 text-[9px] font-bold text-gray-500 uppercase">%</th>
+                                <th className="text-center px-2 py-1.5 text-[9px] font-bold text-gray-500 uppercase">Rate</th>
                                 <th className="text-right px-2 py-1.5 text-[9px] font-bold text-gray-500 uppercase">Payable</th>
                               </tr>
                             </thead>
@@ -1639,10 +1909,17 @@ export default function ReferralBookings() {
                                 <tr key={i} className="border-t border-gray-100">
                                   <td className="px-2 py-1.5 font-medium text-gray-700">{it.name}</td>
                                   <td className="px-2 py-1.5 text-center">
-                                    <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${it.category === "clinic" ? "bg-blue-50 text-blue-700" : it.category === "pharmacy" ? "bg-green-50 text-green-700" : "bg-purple-50 text-purple-700"}`}>{it.category}</span>
+                                    <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                                      it.category === "service" ? "bg-blue-50 text-blue-700" :
+                                      it.category === "pharmacy" ? "bg-green-50 text-green-700" :
+                                      it.category === "fees" ? "bg-amber-50 text-amber-700" :
+                                      "bg-purple-50 text-purple-700"
+                                    }`}>{it.category}</span>
                                   </td>
                                   <td className="px-2 py-1.5 text-right font-semibold text-gray-700">₹{it.price}</td>
-                                  <td className="px-2 py-1.5 text-center font-semibold text-gray-600">{it.percent}%</td>
+                                  <td className="px-2 py-1.5 text-center font-semibold text-gray-600">
+                                    {it.percentType === "₹" ? `₹${it.percent}` : `${it.percent}%`}
+                                  </td>
                                   <td className={`px-2 py-1.5 text-right font-bold ${payableTextColor}`}>₹{it.payable}</td>
                                 </tr>
                               ))}
@@ -1673,73 +1950,159 @@ export default function ReferralBookings() {
           </div>
         )}
 
-        {/* PAYMENT MODAL — for doctor/customer referral payment status */}
+        {/* PAYMENT MODAL — compact with dropdowns */}
         {showPaymentModal && selectedReferrerForPayment && selectedBookingForPayment && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border">
-              <div className="flex items-center justify-between pb-4 border-b">
+            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl ${isDoctorTab ? "bg-purple-600" : "bg-indigo-600"} text-white flex items-center justify-center`}>
-                    <FaHandHoldingUsd />
+                  <div className={`w-9 h-9 rounded-xl ${isDoctorTab ? "bg-purple-600" : "bg-indigo-600"} text-white flex items-center justify-center`}>
+                    <FaHandHoldingUsd className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-base">Update {referrerLabel} Payment</h3>
-                    <p className="text-xs text-gray-500">{isDoctorTab ? selectedReferrerForPayment.doctorName : selectedReferrerForPayment.customerName}</p>
+                    <h3 className="font-bold text-gray-900 text-sm">Update {referrerLabel} Payment</h3>
+                    <p className="text-[11px] text-gray-500">{isDoctorTab ? selectedReferrerForPayment.doctorName : selectedReferrerForPayment.customerName}</p>
                   </div>
                 </div>
-                <button onClick={() => { setShowPaymentModal(false); setSelectedReferrerForPayment(null); setSelectedBookingForPayment(null); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100">
-                  <FaTimes className="w-4 h-4" />
+                <button
+                  onClick={() => { setShowPaymentModal(false); setSelectedReferrerForPayment(null); setSelectedBookingForPayment(null); }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+                >
+                  <FaTimes className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Payable Info */}
-              <div className={`mt-4 p-3 ${payableBgColor} rounded-lg border ${payableBorderColor}`}>
-                <div className={`text-xs ${payableTextColor} font-bold uppercase`}>{referrerLabel} Payable For This Booking</div>
-                <div className={`text-lg font-extrabold ${statPayableColor} mt-0.5`}>₹{getReferralPayable(selectedReferrerForPayment, selectedBookingForPayment)}</div>
-                <div className={`text-[10px] ${payableTextColor} mt-0.5`}>
-                  Patient: {selectedBookingForPayment.patientTitle} {selectedBookingForPayment.patientName} • Total: ₹{Math.round(getBookingFinalPayable(selectedBookingForPayment))}
+              <div className="p-5 space-y-4">
+                <div className={`p-3 ${payableBgColor} rounded-lg border ${payableBorderColor}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <div className={`text-[10px] ${payableTextColor} font-bold uppercase`}>{referrerLabel} Payable</div>
+                      <div className={`text-lg font-extrabold ${statPayableColor}`}>
+                        ₹{getReferralPayable(selectedReferrerForPayment, selectedBookingForPayment)}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] text-gray-500">Patient</div>
+                      <div className="text-[11px] font-semibold text-slate-700 truncate max-w-[140px]">
+                        {selectedBookingForPayment.patientTitle} {selectedBookingForPayment.patientName}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-white/60">
+                    <CategoryPayableList booking={selectedBookingForPayment} />
+                  </div>
                 </div>
-              </div>
 
-              {/* Current Status */}
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-[10px] font-bold uppercase text-gray-400 mb-1">Current Status</div>
-                {(() => {
-                  const currentRaw = isDoctorTab ? (selectedBookingForPayment.doctorPaymentStatus || "Due") : (selectedBookingForPayment.customerPaymentStatus || "Due");
-                  const current = currentRaw === "Pending" ? "Due" : currentRaw;
-                  const colors = getPaymentStatusColors(current);
-                  return (
-                    <span className={`inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full uppercase border ${colors.bg} ${colors.text} ${colors.border}`}>
-                      <colors.icon className={`w-3 h-3 ${colors.iconColor}`} /> {current}
-                    </span>
-                  );
-                })()}
-              </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Payment Mode
+                    </label>
+                    <select
+                      value={newPaymentMode}
+                      onChange={(e) => setNewPaymentMode(e.target.value)}
+                      className="w-full h-10 bg-white border border-gray-300 rounded-lg px-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 capitalize"
+                    >
+                      {PAYMENT_MODE_OPTIONS.map((m) => (
+                        <option key={m.value} value={m.value} className="capitalize">
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* New Status Selection */}
-              <div className="mt-5">
-                <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-2">Update {referrerLabel} Payment Status To:</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {["Due", "Partial", "Paid"].map((st) => {
-                    const isSelected = newPaymentStatus === st;
-                    const colors = getPaymentStatusColors(st);
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Payment Status
+                    </label>
+                    <select
+                      value={newPaymentStatus}
+                      onChange={(e) => setNewPaymentStatus(e.target.value)}
+                      className="w-full h-10 bg-white border border-gray-300 rounded-lg px-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    >
+                      <option value="Due">Due</option>
+                      <option value="Partial">Partial</option>
+                      <option value="Paid">Paid</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                    {referrerLabel} Paid Amount (₹)
+                  </label>
+                  <div className="relative">
+                    <FaRupeeSign className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="number"
+                      value={newPaidAmount}
+                      onChange={(e) => setNewPaidAmount(e.target.value)}
+                      placeholder="0"
+                      min="0"
+                      className="w-full h-10 bg-white border border-gray-300 rounded-lg pl-9 pr-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+                  {(() => {
+                    const totalPayable = getReferralPayable(selectedReferrerForPayment, selectedBookingForPayment);
+                    const paidAmt = Number(newPaidAmount) || 0;
+                    const pending = Math.max(0, totalPayable - paidAmt);
                     return (
-                      <button key={st} type="button" onClick={() => setNewPaymentStatus(st)}
-                        className={`px-2 py-2.5 rounded-lg text-xs font-bold border flex flex-col items-center justify-center gap-1 transition-all ${isSelected ? `${colors.bg} ${colors.text} ${colors.border} ring-2 ring-blue-400/30` : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}>
-                        <colors.icon className={`w-4 h-4 ${colors.iconColor}`} />
-                        <span>{st}</span>
-                      </button>
+                      <div className="flex items-center justify-between mt-1.5 px-1">
+                        <span className="text-[10px] font-semibold text-gray-500">
+                          Pending:{" "}
+                          <span className={pending > 0 ? "text-red-600 font-bold" : "text-emerald-600 font-bold"}>
+                            ₹{pending}
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setNewPaidAmount(String(totalPayable))}
+                          className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline"
+                        >
+                          Set Full (₹{totalPayable})
+                        </button>
+                      </div>
                     );
-                  })}
+                  })()}
+                </div>
+
+                <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[9px] font-bold uppercase text-gray-400">Current:</span>
+                    {(() => {
+                      const currentRaw = isDoctorTab
+                        ? (selectedBookingForPayment.doctorPaymentStatus || "Due")
+                        : (selectedBookingForPayment.customerPaymentStatus || "Due");
+                      const current = currentRaw === "Pending" ? "Due" : currentRaw;
+                      const colors = getPaymentStatusColors(current);
+                      return (
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${colors.bg} ${colors.text} ${colors.border}`}>
+                          <colors.icon className={`w-2.5 h-2.5 ${colors.iconColor}`} /> {current}
+                        </span>
+                      );
+                    })()}
+                    <span className="text-[10px] text-gray-400">→</span>
+                    <span className="text-[10px] font-bold text-slate-700 capitalize">
+                      {newPaymentStatus} • {newPaymentMode}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-5 border-t mt-5">
-                <button onClick={() => { setShowPaymentModal(false); setSelectedReferrerForPayment(null); setSelectedBookingForPayment(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200">Cancel</button>
-                <button onClick={handleSavePaymentStatus} disabled={savingPayment}
-                  className={`px-5 py-2 rounded-lg text-xs font-bold ${isDoctorTab ? "bg-purple-600 hover:bg-purple-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white flex items-center gap-1.5 disabled:opacity-50`}>
+              <div className="flex justify-end gap-2.5 px-5 py-3.5 border-t bg-gray-50/50">
+                <button
+                  onClick={() => { setShowPaymentModal(false); setSelectedReferrerForPayment(null); setSelectedBookingForPayment(null); }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-white border border-gray-300 hover:bg-gray-100 text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSavePaymentStatus}
+                  disabled={savingPayment}
+                  className={`px-5 py-2 rounded-lg text-xs font-bold ${isDoctorTab ? "bg-purple-600 hover:bg-purple-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white flex items-center gap-1.5 disabled:opacity-50`}
+                >
                   {savingPayment ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
-                  {savingPayment ? "Saving..." : "Save Status"}
+                  {savingPayment ? "Saving..." : "Save Payment"}
                 </button>
               </div>
             </div>

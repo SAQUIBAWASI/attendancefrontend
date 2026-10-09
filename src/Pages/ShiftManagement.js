@@ -89,6 +89,59 @@ const ShiftManagement = () => {
   // Generate A-Z array for shift names
   const shiftLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+  // ✅ Get all used shift types
+  const getUsedShiftTypes = () => {
+    return masterShifts.map(s => (s.shiftType || '').toUpperCase()).filter(Boolean);
+  };
+
+  // ✅ Get next available shift type (A-Z)
+  const getNextAvailableShiftType = () => {
+    const usedTypes = getUsedShiftTypes();
+    for (let letter of shiftLetters) {
+      if (!usedTypes.includes(letter)) {
+        return letter;
+      }
+    }
+    return '';
+  };
+
+  // ✅ Get all available shift types
+  const getAvailableShiftTypes = () => {
+    const usedTypes = getUsedShiftTypes();
+    return shiftLetters.filter(letter => !usedTypes.includes(letter));
+  };
+
+  // ✅ Open Regular (Custom) Create Modal with auto-filled next type
+  const openCreateRegularModal = () => {
+    setCreateForm({
+      shiftType: getNextAvailableShiftType(),
+      shiftName: '',
+      shiftCategory: 'Regular',
+      timeSlots: [{ slotId: `${Date.now()}_1`, startTime: '', endTime: '', timeRange: '', description: '' }],
+      isBrakeShift: false
+    });
+    setError('');
+    setSuccess('');
+    setShowCustomCreateModal(true);
+  };
+
+  // ✅ Open Brake Shift Modal with auto-filled next type
+  const openCreateBrakeModal = () => {
+    setCreateForm({
+      shiftType: getNextAvailableShiftType(),
+      shiftName: '',
+      shiftCategory: 'Brake',
+      timeSlots: [
+        { slotId: `${Date.now()}_1`, startTime: '', endTime: '', timeRange: '', description: 'Morning Slot' },
+        { slotId: `${Date.now()}_2`, startTime: '', endTime: '', timeRange: '', description: 'Evening Slot' }
+      ],
+      isBrakeShift: true
+    });
+    setError('');
+    setSuccess('');
+    setShowBrakeShiftModal(true);
+  };
+
   // ✅ Convert 24-hour to 12-hour format (AM/PM)
   const convertTo12Hour = (time24) => {
     if (!time24) return '';
@@ -115,9 +168,7 @@ const ShiftManagement = () => {
   // ✅ Format time for display in 12-hour format
   const formatTimeDisplay = (time) => {
     if (!time) return 'Not set';
-    // If already in 12-hour format with AM/PM, return as is
     if (/[AP]M/i.test(time)) return time;
-    // Otherwise convert from 24-hour
     return convertTo12Hour(time);
   };
 
@@ -290,7 +341,6 @@ const ShiftManagement = () => {
       timeSlots: shift.timeSlots.map((slot, idx) => ({
         ...slot,
         slotId: `${Date.now()}_${idx}`,
-        // Convert to 24-hour for form inputs
         startTime: slot.startTime ? convertTo24Hour(slot.startTime) : '',
         endTime: slot.endTime ? convertTo24Hour(slot.endTime) : '',
         timeRange: slot.timeRange || ''
@@ -311,7 +361,6 @@ const ShiftManagement = () => {
         return;
       }
 
-      // Format time slots with 12-hour display
       const formattedTimeSlots = createForm.timeSlots.map(slot => {
         const formattedSlot = { ...slot };
         if (slot.startTime && slot.endTime) {
@@ -365,7 +414,6 @@ const ShiftManagement = () => {
         setError('Please fill time slot details');
         return;
       }
-      // Format with 12-hour display
       slot.timeRange = formatTimeRange(slot.startTime, slot.endTime);
 
       const response = await axios.post(`${API_BASE_URL}/shifts/create`, {
@@ -415,7 +463,6 @@ const ShiftManagement = () => {
         return;
       }
 
-      // Format with 12-hour display
       slot1.timeRange = formatTimeRange(slot1.startTime, slot1.endTime);
       slot1.description = "Morning Slot";
       slot2.timeRange = formatTimeRange(slot2.startTime, slot2.endTime);
@@ -546,7 +593,6 @@ const ShiftManagement = () => {
     if (assignment.employeeAssignment?.selectedTimeRange) {
       return assignment.employeeAssignment.selectedTimeRange;
     } else if (assignment.startTime && assignment.endTime) {
-      // Format in 12-hour
       return formatTimeRange(assignment.startTime, assignment.endTime);
     }
     return "Not specified";
@@ -785,7 +831,6 @@ const ShiftManagement = () => {
     return assignment.employeeAssignment?.employeeId || assignment.employeeId || "Unknown";
   };
 
-  // Function to format shift display text with time in 12-hour format
   const getShiftDisplayText = (shift) => {
     const timeSlot = shift.timeSlots?.[0];
     const timeStr = timeSlot?.timeRange || 'No time set';
@@ -840,6 +885,80 @@ const ShiftManagement = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentAssignments = filteredAssignments.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredAssignments.length / itemsPerPage);
+
+  // ✅ Reusable Shift Type Picker (Badges + Dropdown + Manual Input)
+  const ShiftTypePicker = ({ currentValue, onChange }) => {
+    const usedTypes = getUsedShiftTypes();
+    const availableTypes = getAvailableShiftTypes();
+    const nextType = getNextAvailableShiftType();
+
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Shift Type (A-Z)
+        </label>
+
+        {/* A-Z Badges preview */}
+        <div className="mb-2 flex flex-wrap gap-1">
+          {shiftLetters.map(letter => {
+            const isUsed = usedTypes.includes(letter);
+            const isSelected = currentValue === letter;
+            return (
+              <span
+                key={letter}
+                onClick={() => !isUsed && onChange(letter)}
+                className={`px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-all ${
+                  isSelected
+                    ? 'bg-blue-600 text-white ring-2 ring-blue-300'
+                    : isUsed
+                    ? 'bg-gray-200 text-gray-400 line-through cursor-not-allowed'
+                    : 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-200'
+                }`}
+                title={isUsed ? `${letter} - Already used` : `${letter} - Available`}
+              >
+                {letter}
+              </span>
+            );
+          })}
+        </div>
+
+        {/* Dropdown + Manual Input */}
+        <div className="flex gap-2">
+          <select
+            className="w-1/3 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            value={availableTypes.includes(currentValue) ? currentValue : ''}
+            onChange={(e) => e.target.value && onChange(e.target.value)}
+          >
+            <option value="">Select</option>
+            {availableTypes.map(letter => (
+              <option key={letter} value={letter}>
+                Shift {letter} {letter === nextType ? '⭐ (Next)' : ''}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            maxLength="1"
+            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            value={currentValue}
+            onChange={(e) => onChange(e.target.value.toUpperCase())}
+            placeholder="or type custom letter"
+            required
+          />
+        </div>
+
+        {/* Helper text */}
+        <p className="mt-1 text-[10px] text-gray-500">
+          ✅ Available: <strong>{availableTypes.join(', ') || 'None'}</strong>
+          {nextType && (
+            <>
+              {' · '}⭐ Next suggested: <strong className="text-blue-600">{nextType}</strong>
+            </>
+          )}
+        </p>
+      </div>
+    );
+  };
 
   if (loading)
     return (
@@ -1043,7 +1162,7 @@ const ShiftManagement = () => {
 
             {/* Regular Button */}
             <button
-              onClick={() => setShowCustomCreateModal(true)}
+              onClick={openCreateRegularModal}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
             >
               <FaPlus className="w-3 h-3" />
@@ -1052,7 +1171,7 @@ const ShiftManagement = () => {
 
             {/* Brake Button */}
             <button
-              onClick={() => setShowBrakeShiftModal(true)}
+              onClick={openCreateBrakeModal}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all shadow-sm whitespace-nowrap"
             >
               <FaPlus className="w-3 h-3" />
@@ -1269,14 +1388,14 @@ const ShiftManagement = () => {
                 )}
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => setShowCustomCreateModal(true)}
+                    onClick={openCreateRegularModal}
                     className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
                   >
                     <FaPlus className="w-4 h-4" />
                     Regular
                   </button>
                   <button
-                    onClick={() => setShowBrakeShiftModal(true)}
+                    onClick={openCreateBrakeModal}
                     className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all shadow-sm"
                   >
                     <FaPlus className="w-4 h-4" />
@@ -1379,13 +1498,13 @@ const ShiftManagement = () => {
                     <p className="mb-4 text-xs text-gray-500">Create your first shift to get started</p>
                     <div className="flex justify-center gap-3">
                       <button
-                        onClick={() => setShowCustomCreateModal(true)}
+                        onClick={openCreateRegularModal}
                         className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                       >
                         + Regular Shift
                       </button>
                       <button
-                        onClick={() => setShowBrakeShiftModal(true)}
+                        onClick={openCreateBrakeModal}
                         className="px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-colors shadow-sm"
                       >
                         + Brake Shift
@@ -1402,7 +1521,6 @@ const ShiftManagement = () => {
                       const borderColor = getShiftBorderColor(shift.shiftType);
                       const isBrakeShift = shift.isBrakeShift;
 
-                      // Get display times in 12-hour format
                       let timeDisplay = 'Not set';
                       if (isBrakeShift) {
                         timeDisplay = getBrakeShiftTimeDisplay(shift);
@@ -1480,7 +1598,9 @@ const ShiftManagement = () => {
                                 setAssignForm({
                                   employeeId: '',
                                   employeeName: '',
-                                  shiftType: shift.shiftType
+                                  shiftType: shift.shiftType,
+                                  effectiveFromMonth: '',
+                                  effectiveFromDate: ''
                                 });
                                 setEditingAssignment(null);
                                 setShowAssignModal(true);
@@ -1556,7 +1676,6 @@ const ShiftManagement = () => {
                             const isBrakeShift = shift?.isBrakeShift || false;
                             const scheduled = assignment.employeeAssignment?.scheduledChange;
 
-                            // Get time display in 12-hour format
                             let timeDisplay = 'Not set';
                             if (isBrakeShift && shift) {
                               timeDisplay = getBrakeShiftTimeDisplay(shift);
@@ -1710,18 +1829,11 @@ const ShiftManagement = () => {
               
               <form onSubmit={handleCreateCustomShift}>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Shift Type (A-Z)</label>
-                    <input
-                      type="text"
-                      maxLength="1"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      value={createForm.shiftType}
-                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))}
-                      placeholder="e.g. A"
-                      required
-                    />
-                  </div>
+                  {/* ✅ NEW: Shift Type Picker with badges + dropdown */}
+                  <ShiftTypePicker
+                    currentValue={createForm.shiftType}
+                    onChange={(val) => setCreateForm(prev => ({ ...prev, shiftType: val }))}
+                  />
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Shift Name</label>
@@ -1818,18 +1930,11 @@ const ShiftManagement = () => {
               
               <form onSubmit={handleCreateBrakeShift}>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Shift Type (A-Z)</label>
-                    <input
-                      type="text"
-                      maxLength="1"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      value={createForm.shiftType}
-                      onChange={(e) => setCreateForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))}
-                      placeholder="e.g. A"
-                      required
-                    />
-                  </div>
+                  {/* ✅ NEW: Shift Type Picker with badges + dropdown */}
+                  <ShiftTypePicker
+                    currentValue={createForm.shiftType}
+                    onChange={(val) => setCreateForm(prev => ({ ...prev, shiftType: val }))}
+                  />
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Shift Name</label>

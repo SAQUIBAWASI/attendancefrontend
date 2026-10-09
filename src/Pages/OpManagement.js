@@ -1,4 +1,5 @@
 // OpManagement.js — COMPLETE (Per-Category Independent Payment + Per-Item Status Sync)
+// ✅ FIX: getCategoryPaymentModeDisplay wapas add kiya (per-category mode display + booking.paymentType fallback)
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -104,7 +105,6 @@ const DISCOUNT_TYPE_OPTIONS = [
   { value: "%", label: "% (Percent)" }
 ];
 
-// ✅ Per-item payment options for lab & pharmacy items
 const ITEM_PAYMENT_MODE_OPTIONS = [
   { value: "Cash", label: "Cash" },
   { value: "Online", label: "Online" },
@@ -134,6 +134,17 @@ const CLINIC_INFO = {
 };
 
 const REVIEW_WINDOW_DAYS = 3;
+
+const modeToDisplay = (mode) => {
+  if (!mode) return "Cash";
+  const s = String(mode).trim().toLowerCase();
+  if (s === "cash") return "Cash";
+  if (s === "online") return "Online";
+  if (s === "card") return "Card";
+  if (s === "insurance") return "Insurance";
+  if (s === "due") return "Due";
+  return mode.charAt(0).toUpperCase() + mode.slice(1);
+};
 
 const calculateAgeFromDOB = (dob) => {
   if (!dob) return "";
@@ -267,6 +278,7 @@ const getBookingServices = (booking) => {
       description: s.description || "",
       category: s.category || s.serviceCategory || s.type || "",
       paymentStatus: normalizedStatus,
+      paymentMode: s.paymentMode || "",
       isReviewService: false,
     };
   });
@@ -283,6 +295,7 @@ const getBookingServices = (booking) => {
         description: r.description || "",
         category: "clinic",
         paymentStatus: normalizedStatus,
+        paymentMode: r.paymentMode || "",
         isReviewService: true,
         addedAt: r.addedAt || null,
       };
@@ -385,7 +398,22 @@ const getCategoryStatuses = (booking) => {
 
     // ✅ Prefer per-item statuses when items exist
     let paidAmt;
-    if (cat === "lab" && Array.isArray(booking?.labItems) && booking.labItems.length > 0) {
+    if (cat === "clinic") {
+      const rawSvcList = Array.isArray(booking?.serviceItems) && booking.serviceItems.length > 0
+        ? booking.serviceItems
+        : (Array.isArray(booking?.services) ? booking.services : []);
+      const clinicItems = rawSvcList.filter((s) => !s.isReviewService && classifyService(s) === "clinic");
+      const hasPerItem = clinicItems.some((s) => s.paymentStatus && s.paymentMode);
+      if (hasPerItem && clinicItems.length > 0) {
+        paidAmt = clinicItems.reduce(
+          (sum, item) =>
+            sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
+          0
+        );
+      } else {
+        paidAmt = Number(stored?.clinic?.paidAmount) || 0;
+      }
+    } else if (cat === "lab" && Array.isArray(booking?.labItems) && booking.labItems.length > 0) {
       paidAmt = booking.labItems.reduce(
         (sum, item) =>
           sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
@@ -415,6 +443,40 @@ const getCategoryStatuses = (booking) => {
   });
 
   return result;
+};
+
+// ✅ NEW: Per-category payment mode display — shows per-item mode, falls back to booking.paymentType
+// This is READ-ONLY and does NOT disturb existing bookings
+const getCategoryPaymentModeDisplay = (booking, category) => {
+  if (!booking) return "";
+
+  let items = [];
+  if (category === "clinic") {
+    const svcList = Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0
+      ? booking.serviceItems
+      : (Array.isArray(booking.services) ? booking.services : []);
+    items = svcList.filter((s) => classifyService(s) === "clinic");
+  } else if (category === "lab") {
+    items = Array.isArray(booking.labItems) ? booking.labItems : [];
+  } else if (category === "pharmacy") {
+    items = Array.isArray(booking.medicineItems) ? booking.medicineItems : [];
+  }
+
+  if (items.length === 0) return "";
+
+  const modes = [];
+  items.forEach((it) => {
+    const m = (it.paymentMode || "").toString().trim().toLowerCase();
+    if (m && !modes.includes(m)) modes.push(m);
+  });
+
+  // ✅ FALLBACK: agar per-item paymentMode nahi hai, toh booking-level paymentType use karo
+  if (modes.length === 0) {
+    const fallback = (booking.paymentType || "").toString().trim().toLowerCase();
+    return fallback ? modeToDisplay(fallback) : "";
+  }
+
+  return modes.map((m) => modeToDisplay(m)).join("/");
 };
 
 const getReviewWindowStatus = (booking) => {
@@ -673,7 +735,7 @@ export default function OpManagement() {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [apptFromDate, setApptFromDate] = useState("");
   const [apptToDate, setApptToDate] = useState("");
-  const [timeFilter, setTimeFilter] = useState("All");
+  const [timeFilter, setTimeFilter] = useState("today");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeCardFilter, setActiveCardFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -817,15 +879,31 @@ export default function OpManagement() {
       ? overrides.medicineItems
       : (Array.isArray(booking.medicineItems) ? booking.medicineItems : []);
 
-    // ---- Clinic ----
+    const svcList = overrides.serviceItems !== undefined
+      ? overrides.serviceItems
+      : (Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0
+        ? booking.serviceItems
+        : (Array.isArray(booking.services) ? booking.services : []));
+
+    const clinicItems = svcList.filter(
+      (s) => !s.isReviewService && classifyService(s) === "clinic"
+    );
+    const hasExplicitClinicPerItem = clinicItems.some(
+      (s) => s.paymentMode && String(s.paymentMode).trim() !== ""
+    );
     let clinicPaid = 0;
-    if (existing?.clinic?.paidAmount !== undefined) {
+    if (hasExplicitClinicPerItem && clinicItems.length > 0) {
+      clinicPaid = clinicItems.reduce(
+        (sum, item) =>
+          sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
+        0
+      );
+    } else if (existing?.clinic?.paidAmount !== undefined) {
       clinicPaid = Number(existing.clinic.paidAmount) || 0;
     } else if (wasPaid && labList.length === 0 && medList.length === 0 && Number(bd.clinic) > 0) {
       clinicPaid = Number(bd.clinic) || 0;
     }
 
-    // ---- Lab ----
     let labPaid = 0;
     if (labList.length > 0) {
       labPaid = labList.reduce(
@@ -839,7 +917,6 @@ export default function OpManagement() {
       labPaid = Number(bd.lab) || 0;
     }
 
-    // ---- Pharmacy ----
     let pharmacyPaid = 0;
     if (medList.length > 0) {
       pharmacyPaid = medList.reduce(
@@ -860,7 +937,6 @@ export default function OpManagement() {
     };
   };
 
-  // ✅ Preserve existing paid amount — now uses per-item statuses when present
   const computeExistingPaidTotal = (booking, overrides = {}) => {
     if (!booking) return 0;
     const snap = computeCategoryPaymentFromBooking(booking, overrides);
@@ -871,7 +947,6 @@ export default function OpManagement() {
     );
   };
 
-  // ✅ Category payment snapshot builder — now uses per-item statuses
   const buildCategoryPaymentSnapshot = (booking, overrides = {}) => {
     return computeCategoryPaymentFromBooking(booking, overrides);
   };
@@ -905,11 +980,14 @@ export default function OpManagement() {
       if (s.isReviewService) return false;
       return classifyService(s) === "clinic";
     });
+    const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
     setClinicServicesList(clinicOnly.map((s) => ({
       serviceId: s.serviceId || s._id || "",
       name: s.name,
       price: Number(s.price) || 0,
       description: s.description || "",
+      paymentMode: s.paymentMode || fallbackModeDisplay,
+      paymentStatus: s.paymentStatus || "Due",
     })));
     setClinicServicesBooking(booking);
     setClinicServiceInput("");
@@ -921,11 +999,14 @@ export default function OpManagement() {
 
   const handleAddClinicServiceItem = (service) => {
     if (!service) return;
+    const fallbackModeDisplay = modeToDisplay(clinicServicesBooking?.paymentType || "cash");
     setClinicServicesList((prev) => [...prev, {
       serviceId: service._id || "",
       name: service.name,
       price: Number(service.price) || 0,
       description: service.description || "",
+      paymentMode: fallbackModeDisplay,
+      paymentStatus: "Due",
     }]);
     setClinicServiceInput("");
     setClinicServicePrice("");
@@ -946,11 +1027,14 @@ export default function OpManagement() {
       if (res?.data?.success) {
         const newService = res.data.data;
         await fetchServices();
+        const fallbackModeDisplay = modeToDisplay(clinicServicesBooking?.paymentType || "cash");
         setClinicServicesList((prev) => [...prev, {
           serviceId: newService._id || "",
           name: newService.name,
           price: Number(newService.price) || 0,
           description: "",
+          paymentMode: fallbackModeDisplay,
+          paymentStatus: "Due",
         }]);
         setClinicServiceInput("");
         setClinicServicePrice("");
@@ -969,6 +1053,18 @@ export default function OpManagement() {
     setClinicServicesList((prev) => prev.map((s, i) => (i === index ? { ...s, price: Number(newPrice) || 0 } : s)));
   };
 
+  const handleUpdateClinicServicePaymentMode = (index, mode) => {
+    setClinicServicesList((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, paymentMode: mode } : s))
+    );
+  };
+
+  const handleUpdateClinicServicePaymentStatus = (index, status) => {
+    setClinicServicesList((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, paymentStatus: status, paymentMode: s.paymentMode || modeToDisplay(clinicServicesBooking?.paymentType || "cash") } : s))
+    );
+  };
+
   const handleSaveClinicServices = async () => {
     if (!clinicServicesBooking) return;
     setSavingClinicServices(true);
@@ -979,18 +1075,25 @@ export default function OpManagement() {
         if (s.isReviewService) return false;
         return classifyService(s) !== "clinic";
       });
+      const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
+
       const mergedServices = [
         ...clinicServicesList.map((s) => ({
           serviceId: s.serviceId || "", name: s.name, price: Number(s.price) || 0,
           description: s.description || "", category: "clinic",
+          paymentMode: s.paymentMode || fallbackModeDisplay,
+          paymentStatus: s.paymentStatus || "Due",
         })),
         ...nonClinic.map((s) => ({
           serviceId: s.serviceId || s._id || "", name: s.name, price: Number(s.price) || 0,
           description: s.description || "", category: s.category || "",
+          paymentMode: s.paymentMode || fallbackModeDisplay,
+          paymentStatus: s.paymentStatus || "Due",
         })),
       ];
 
-      const categoryPayment = buildCategoryPaymentSnapshot(booking);
+      const categoryPayment = computeCategoryPaymentFromBooking(booking, { serviceItems: mergedServices });
+
       const totalPaidFromCategories =
         (categoryPayment.clinic?.paidAmount || 0) +
         (categoryPayment.lab?.paidAmount || 0) +
@@ -1059,12 +1162,13 @@ export default function OpManagement() {
         category: "lab", paymentMode: "Cash", paymentStatus: "Due",
       }];
     }
+    const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
     setLabItemsList(items.map((s) => ({
       serviceId: s.serviceId || s._id || "",
       name: s.name || "Lab Test",
       price: Number(s.price) || 0,
       description: s.description || "",
-      paymentMode: s.paymentMode || "Cash",
+      paymentMode: s.paymentMode || fallbackModeDisplay,
       paymentStatus: s.paymentStatus || "Due",
     })));
     setLabItemsBooking(booking);
@@ -1076,12 +1180,13 @@ export default function OpManagement() {
     const price = labItemPrice.trim();
     if (!price) { showToast("Please enter lab amount", "error"); return; }
     if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
+    const fallbackModeDisplay = modeToDisplay(labItemsBooking?.paymentType || "cash");
     setLabItemsList((prev) => [...prev, {
       serviceId: "",
       name: `Lab Test ${prev.length + 1}`,
       price: Number(price) || 0,
       description: "",
-      paymentMode: "Cash",
+      paymentMode: fallbackModeDisplay,
       paymentStatus: "Due",
     }]);
     setLabItemPrice("");
@@ -1113,6 +1218,7 @@ export default function OpManagement() {
       const booking = labItemsBooking;
       const allServices = getBookingServices(booking);
       const nonReviewServices = allServices.filter((s) => !s.isReviewService);
+      const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
 
       const mergedServices = nonReviewServices.map((s) => ({
         serviceId: s.serviceId || s._id || "",
@@ -1120,21 +1226,21 @@ export default function OpManagement() {
         price: Number(s.price) || 0,
         description: s.description || "",
         category: s.category || "",
+        paymentMode: s.paymentMode || fallbackModeDisplay,
+        paymentStatus: s.paymentStatus || "Due",
       }));
 
-      // ✅ Build labItems with paymentMode + paymentStatus
       const labItems = labItemsList.map((s) => ({
         serviceId: s.serviceId || "",
         name: s.name,
         price: Number(s.price) || 0,
         description: s.description || "",
         category: "lab",
-        paymentMode: s.paymentMode || "Cash",
+        paymentMode: s.paymentMode || fallbackModeDisplay,
         paymentStatus: s.paymentStatus || "Due",
       }));
       const labTotal = labItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
 
-      // ✅ Compute paid amount from per-item statuses (uses NEW labItems)
       const categoryPayment = computeCategoryPaymentFromBooking(booking, { labItems });
 
       const totalPaidFromCategories =
@@ -1210,12 +1316,13 @@ export default function OpManagement() {
         category: "pharmacy", paymentMode: "Cash", paymentStatus: "Due",
       }];
     }
+    const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
     setPharmacyItemsList(items.map((s) => ({
       serviceId: s.serviceId || s._id || "",
       name: s.name || "Medicine",
       price: Number(s.price) || 0,
       description: s.description || "",
-      paymentMode: s.paymentMode || "Cash",
+      paymentMode: s.paymentMode || fallbackModeDisplay,
       paymentStatus: s.paymentStatus || "Due",
     })));
     setPharmacyItemsBooking(booking);
@@ -1227,12 +1334,13 @@ export default function OpManagement() {
     const price = pharmacyItemPrice.trim();
     if (!price) { showToast("Please enter medicine amount", "error"); return; }
     if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
+    const fallbackModeDisplay = modeToDisplay(pharmacyItemsBooking?.paymentType || "cash");
     setPharmacyItemsList((prev) => [...prev, {
       serviceId: "",
       name: `Medicine ${prev.length + 1}`,
       price: Number(price) || 0,
       description: "",
-      paymentMode: "Cash",
+      paymentMode: fallbackModeDisplay,
       paymentStatus: "Due",
     }]);
     setPharmacyItemPrice("");
@@ -1264,6 +1372,7 @@ export default function OpManagement() {
       const booking = pharmacyItemsBooking;
       const allServices = getBookingServices(booking);
       const nonReviewServices = allServices.filter((s) => !s.isReviewService);
+      const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
 
       const mergedServices = nonReviewServices.map((s) => ({
         serviceId: s.serviceId || s._id || "",
@@ -1271,21 +1380,21 @@ export default function OpManagement() {
         price: Number(s.price) || 0,
         description: s.description || "",
         category: s.category || "",
+        paymentMode: s.paymentMode || fallbackModeDisplay,
+        paymentStatus: s.paymentStatus || "Due",
       }));
 
-      // ✅ Build medicineItems with paymentMode + paymentStatus
       const medicineItems = pharmacyItemsList.map((s) => ({
         serviceId: s.serviceId || "",
         name: s.name,
         price: Number(s.price) || 0,
         description: s.description || "",
         category: "pharmacy",
-        paymentMode: s.paymentMode || "Cash",
+        paymentMode: s.paymentMode || fallbackModeDisplay,
         paymentStatus: s.paymentStatus || "Due",
       }));
       const medicineTotal = medicineItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
 
-      // ✅ Compute paid amount from per-item statuses (uses NEW medicineItems)
       const categoryPayment = computeCategoryPaymentFromBooking(booking, { medicineItems });
 
       const totalPaidFromCategories =
@@ -1577,6 +1686,7 @@ export default function OpManagement() {
             description: s.description || "",
             category: s.category || s.serviceCategory || s.type || "",
             paymentStatus: fallback,
+            paymentMode: s.paymentMode || "",
             addedAt: s.addedAt || b.createdAt || new Date().toISOString(),
           };
         });
@@ -3039,7 +3149,7 @@ export default function OpManagement() {
     setBookingTypeFilter("All");
     setFromDate(""); setToDate(""); setSelectedMonth("");
     setApptFromDate(""); setApptToDate("");
-    setTimeFilter("All");
+    setTimeFilter("today");
     setRevenueCategoryFilter("All"); setPaymentTypeFilter("All");
     setReferredByFilter("All");
     setActiveCardFilter("all"); setCurrentPage(1);
@@ -3126,155 +3236,168 @@ export default function OpManagement() {
   }, [backendStats]);
 
   const categoryRevenue = useMemo(() => {
-  // Default structure
-  const empty = () => ({ total: 0, cash: 0, online: 0, card: 0, insurance: 0, due: 0, footFall: 0 });
-  const result = {
-    clinic: empty(),
-    lab: empty(),
-    pharmacy: empty(),
-  };
+    const empty = () => ({ total: 0, cash: 0, online: 0, card: 0, insurance: 0, due: 0, footFall: 0 });
+    const result = { clinic: empty(), lab: empty(), pharmacy: empty() };
 
-  // Har booking pe iterate karo
-  bookings.forEach((booking) => {
-    const bd = getAmountBreakdown(booking);
+    bookings.forEach((booking) => {
+      const bd = getAmountBreakdown(booking);
 
-    // ---------- CLINIC ----------
-    if (bd.clinic > 0) {
-      result.clinic.total += bd.clinic;
-      result.clinic.footFall += 1;
+      // ---------- CLINIC ----------
+      if (bd.clinic > 0) {
+        result.clinic.total += bd.clinic;
+        result.clinic.footFall += 1;
 
-      // Clinic ka payment status categoryPayment se lo
-      const catStatuses = getCategoryStatuses(booking);
-      const clinicStatus = catStatuses.clinic; // Paid / Partial / Due / Empty
-
-      // Clinic ka payment mode booking-level paymentType se lo
-      const mode = (booking.paymentType || "cash").toLowerCase();
-
-      if (clinicStatus === "Paid") {
-        if (mode === "cash") result.clinic.cash += bd.clinic;
-        else if (mode === "online") result.clinic.online += bd.clinic;
-        else if (mode === "card") result.clinic.card += bd.clinic;
-        else if (mode === "insurance") result.clinic.insurance += bd.clinic;
-      } else if (clinicStatus === "Partial") {
-        const paid = Number(booking?.categoryPayment?.clinic?.paidAmount) || 0;
-        const due = Math.max(0, bd.clinic - paid);
-        if (mode === "cash") result.clinic.cash += paid;
-        else if (mode === "online") result.clinic.online += paid;
-        else if (mode === "card") result.clinic.card += paid;
-        else if (mode === "insurance") result.clinic.insurance += paid;
-        result.clinic.due += due;
-      } else {
-        result.clinic.due += bd.clinic;
-      }
-    }
-
-    // ---------- LAB (per-item) ----------
-    if (bd.lab > 0) {
-      result.lab.total += bd.lab;
-      result.lab.footFall += 1;
-
-      const labItems = Array.isArray(booking.labItems) ? booking.labItems : [];
-
-      if (labItems.length > 0) {
-        // ✅ Per-item paymentMode + paymentStatus use karo
-        labItems.forEach((item) => {
-          const amt = Number(item.price) || 0;
-          if (amt <= 0) return;
-          const status = (item.paymentStatus || "Due").toLowerCase();
-          const mode = (item.paymentMode || "Cash").toLowerCase();
-
-          if (status === "paid") {
-            if (mode === "cash") result.lab.cash += amt;
-            else if (mode === "online") result.lab.online += amt;
-            else if (mode === "card") result.lab.card += amt;
-            else if (mode === "insurance") result.lab.insurance += amt;
-          } else if (status === "pending" || status === "due") {
-            result.lab.due += amt;
-          }
-        });
-      } else {
-        // Fallback: no items — use categoryPayment
         const catStatuses = getCategoryStatuses(booking);
-        const labStatus = catStatuses.lab;
-        const mode = (booking.paymentType || "cash").toLowerCase();
+        const clinicStatus = catStatuses.clinic;
+        const fallbackMode = (booking.paymentType || "cash").toLowerCase();
 
-        if (labStatus === "Paid") {
-          if (mode === "cash") result.lab.cash += bd.lab;
-          else if (mode === "online") result.lab.online += bd.lab;
-          else if (mode === "card") result.lab.card += bd.lab;
-          else if (mode === "insurance") result.lab.insurance += bd.lab;
-        } else if (labStatus === "Partial") {
-          const paid = Number(booking?.categoryPayment?.lab?.paidAmount) || 0;
-          const due = Math.max(0, bd.lab - paid);
-          if (mode === "cash") result.lab.cash += paid;
-          else if (mode === "online") result.lab.online += paid;
-          else if (mode === "card") result.lab.card += paid;
-          else if (mode === "insurance") result.lab.insurance += paid;
-          result.lab.due += due;
+        const rawSvcList = Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0
+          ? booking.serviceItems
+          : (Array.isArray(booking.services) ? booking.services : []);
+        const clinicItems = rawSvcList.filter((s) => classifyService(s) === "clinic");
+        const hasPerItemMode = clinicItems.some(
+          (s) => s.paymentMode && String(s.paymentMode).trim() !== ""
+        );
+
+        if (clinicStatus === "Paid" || clinicStatus === "Partial") {
+          let clinicPaidDistributed = 0;
+          const clinicPaidTotal = clinicStatus === "Paid"
+            ? bd.clinic
+            : (Number(booking?.categoryPayment?.clinic?.paidAmount) || 0);
+
+          if (hasPerItemMode && clinicItems.length > 0) {
+            clinicItems.forEach((item) => {
+              const isPaid = (item.paymentStatus || "").toLowerCase() === "paid";
+              if (!isPaid) return;
+              const amt = Number(item.price) || 0;
+              const mode = (item.paymentMode || "").toString().trim().toLowerCase();
+              if (mode === "cash") result.clinic.cash += amt;
+              else if (mode === "online") result.clinic.online += amt;
+              else if (mode === "card") result.clinic.card += amt;
+              else if (mode === "insurance") result.clinic.insurance += amt;
+              clinicPaidDistributed += amt;
+            });
+          }
+
+          const remaining = Math.max(0, clinicPaidTotal - clinicPaidDistributed);
+          if (remaining > 0) {
+            if (fallbackMode === "cash") result.clinic.cash += remaining;
+            else if (fallbackMode === "online") result.clinic.online += remaining;
+            else if (fallbackMode === "card") result.clinic.card += remaining;
+            else if (fallbackMode === "insurance") result.clinic.insurance += remaining;
+          }
+
+          const due = Math.max(0, bd.clinic - clinicPaidTotal);
+          result.clinic.due += due;
         } else {
-          result.lab.due += bd.lab;
+          result.clinic.due += bd.clinic;
         }
       }
-    }
 
-    // ---------- PHARMACY (per-item) ----------
-    if (bd.pharmacy > 0) {
-      result.pharmacy.total += bd.pharmacy;
-      result.pharmacy.footFall += 1;
+      // ---------- LAB ----------
+      if (bd.lab > 0) {
+        result.lab.total += bd.lab;
+        result.lab.footFall += 1;
 
-      const medItems = Array.isArray(booking.medicineItems) ? booking.medicineItems : [];
+        const labItems = Array.isArray(booking.labItems) ? booking.labItems : [];
 
-      if (medItems.length > 0) {
-        // ✅ Per-item paymentMode + paymentStatus use karo
-        medItems.forEach((item) => {
-          const amt = Number(item.price) || 0;
-          if (amt <= 0) return;
-          const status = (item.paymentStatus || "Due").toLowerCase();
-          const mode = (item.paymentMode || "Cash").toLowerCase();
+        if (labItems.length > 0) {
+          labItems.forEach((item) => {
+            const amt = Number(item.price) || 0;
+            if (amt <= 0) return;
+            const status = (item.paymentStatus || "Due").toLowerCase();
+            const mode = (item.paymentMode || "Cash").toLowerCase();
 
-          if (status === "paid") {
-            if (mode === "cash") result.pharmacy.cash += amt;
-            else if (mode === "online") result.pharmacy.online += amt;
-            else if (mode === "card") result.pharmacy.card += amt;
-            else if (mode === "insurance") result.pharmacy.insurance += amt;
-          } else if (status === "pending" || status === "due") {
-            result.pharmacy.due += amt;
-          }
-        });
-      } else {
-        // Fallback
-        const catStatuses = getCategoryStatuses(booking);
-        const phStatus = catStatuses.pharmacy;
-        const mode = (booking.paymentType || "cash").toLowerCase();
-
-        if (phStatus === "Paid") {
-          if (mode === "cash") result.pharmacy.cash += bd.pharmacy;
-          else if (mode === "online") result.pharmacy.online += bd.pharmacy;
-          else if (mode === "card") result.pharmacy.card += bd.pharmacy;
-          else if (mode === "insurance") result.pharmacy.insurance += bd.pharmacy;
-        } else if (phStatus === "Partial") {
-          const paid = Number(booking?.categoryPayment?.pharmacy?.paidAmount) || 0;
-          const due = Math.max(0, bd.pharmacy - paid);
-          if (mode === "cash") result.pharmacy.cash += paid;
-          else if (mode === "online") result.pharmacy.online += paid;
-          else if (mode === "card") result.pharmacy.card += paid;
-          else if (mode === "insurance") result.pharmacy.insurance += paid;
-          result.pharmacy.due += due;
+            if (status === "paid") {
+              if (mode === "cash") result.lab.cash += amt;
+              else if (mode === "online") result.lab.online += amt;
+              else if (mode === "card") result.lab.card += amt;
+              else if (mode === "insurance") result.lab.insurance += amt;
+            } else if (status === "pending" || status === "due") {
+              result.lab.due += amt;
+            }
+          });
         } else {
-          result.pharmacy.due += bd.pharmacy;
+          const catStatuses = getCategoryStatuses(booking);
+          const labStatus = catStatuses.lab;
+          const mode = (booking.paymentType || "cash").toLowerCase();
+
+          if (labStatus === "Paid") {
+            if (mode === "cash") result.lab.cash += bd.lab;
+            else if (mode === "online") result.lab.online += bd.lab;
+            else if (mode === "card") result.lab.card += bd.lab;
+            else if (mode === "insurance") result.lab.insurance += bd.lab;
+          } else if (labStatus === "Partial") {
+            const paid = Number(booking?.categoryPayment?.lab?.paidAmount) || 0;
+            const due = Math.max(0, bd.lab - paid);
+            if (mode === "cash") result.lab.cash += paid;
+            else if (mode === "online") result.lab.online += paid;
+            else if (mode === "card") result.lab.card += paid;
+            else if (mode === "insurance") result.lab.insurance += paid;
+            result.lab.due += due;
+          } else {
+            result.lab.due += bd.lab;
+          }
         }
       }
-    }
-  });
 
-  return {
-    clinic: result.clinic,
-    lab: result.lab,
-    pharmacy: result.pharmacy,
-    grandTotal: result.clinic.total + result.lab.total + result.pharmacy.total,
-    grandFootFall: result.clinic.footFall + result.lab.footFall + result.pharmacy.footFall,
-  };
-}, [bookings]);
+      // ---------- PHARMACY ----------
+      if (bd.pharmacy > 0) {
+        result.pharmacy.total += bd.pharmacy;
+        result.pharmacy.footFall += 1;
+
+        const medItems = Array.isArray(booking.medicineItems) ? booking.medicineItems : [];
+
+        if (medItems.length > 0) {
+          medItems.forEach((item) => {
+            const amt = Number(item.price) || 0;
+            if (amt <= 0) return;
+            const status = (item.paymentStatus || "Due").toLowerCase();
+            const mode = (item.paymentMode || "Cash").toLowerCase();
+
+            if (status === "paid") {
+              if (mode === "cash") result.pharmacy.cash += amt;
+              else if (mode === "online") result.pharmacy.online += amt;
+              else if (mode === "card") result.pharmacy.card += amt;
+              else if (mode === "insurance") result.pharmacy.insurance += amt;
+            } else if (status === "pending" || status === "due") {
+              result.pharmacy.due += amt;
+            }
+          });
+        } else {
+          const catStatuses = getCategoryStatuses(booking);
+          const phStatus = catStatuses.pharmacy;
+          const mode = (booking.paymentType || "cash").toLowerCase();
+
+          if (phStatus === "Paid") {
+            if (mode === "cash") result.pharmacy.cash += bd.pharmacy;
+            else if (mode === "online") result.pharmacy.online += bd.pharmacy;
+            else if (mode === "card") result.pharmacy.card += bd.pharmacy;
+            else if (mode === "insurance") result.pharmacy.insurance += bd.pharmacy;
+          } else if (phStatus === "Partial") {
+            const paid = Number(booking?.categoryPayment?.pharmacy?.paidAmount) || 0;
+            const due = Math.max(0, bd.pharmacy - paid);
+            if (mode === "cash") result.pharmacy.cash += paid;
+            else if (mode === "online") result.pharmacy.online += paid;
+            else if (mode === "card") result.pharmacy.card += paid;
+            else if (mode === "insurance") result.pharmacy.insurance += paid;
+            result.pharmacy.due += due;
+          } else {
+            result.pharmacy.due += bd.pharmacy;
+          }
+        }
+      }
+    });
+
+    return {
+      clinic: result.clinic,
+      lab: result.lab,
+      pharmacy: result.pharmacy,
+      grandTotal: result.clinic.total + result.lab.total + result.pharmacy.total,
+      grandFootFall: result.clinic.footFall + result.lab.footFall + result.pharmacy.footFall,
+    };
+  }, [bookings]);
+
   const formatTime = (dateStr) => !dateStr ? "" : new Date(dateStr).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 
   const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
@@ -4276,6 +4399,11 @@ export default function OpManagement() {
                       const bookingTypeInfo = getBookingType(matchingBooking);
                       const BookingTypeIcon = bookingTypeInfo.icon;
 
+                      // ✅ Per-category payment mode display (per-item mode, fallback to booking.paymentType)
+                      const clinicModeDisplay = matchingBooking ? getCategoryPaymentModeDisplay(matchingBooking, "clinic") : "";
+                      const labModeDisplay = matchingBooking ? getCategoryPaymentModeDisplay(matchingBooking, "lab") : "";
+                      const pharmacyModeDisplay = matchingBooking ? getCategoryPaymentModeDisplay(matchingBooking, "pharmacy") : "";
+
                       return (
                         <tr key={patient._id} className="hover:bg-blue-50/40">
                           <td className="px-2 py-3 text-center text-slate-500 text-[11px]">{indexOfFirstItem + idx + 1}</td>
@@ -4357,23 +4485,42 @@ export default function OpManagement() {
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</span></td>
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span></td>
 
+                          {/* ✅ FIXED: Per-category payment mode display — existing bookings ko disturb nahi karega */}
                           <td className="px-3 py-3" style={{ minWidth: "110px" }}>
                             {matchingBooking ? (
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center justify-center gap-1 px-2 py-1 rounded border border-blue-200 bg-blue-50 text-[10px]">
-                                  <button onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer" title="Change Payment Type">
-                                    {matchingBooking.paymentType || "cash"} <FiChevronDown className="w-2.5 h-2.5" />
-                                  </button>
+                                  {clinicModeDisplay ? (
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200">
+                                      {clinicModeDisplay}
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border bg-gray-50 text-gray-400 border-gray-200">
+                                      — N/A
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="flex items-center justify-center gap-1 px-2 py-1 rounded border border-purple-200 bg-purple-50 text-[10px]">
-                                  <button onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer" title="Change Payment Type">
-                                    {matchingBooking.paymentType || "cash"} <FiChevronDown className="w-2.5 h-2.5" />
-                                  </button>
+                                  {labModeDisplay ? (
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200">
+                                      {labModeDisplay}
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border bg-gray-50 text-gray-400 border-gray-200">
+                                      — N/A
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="flex items-center justify-center gap-1 px-2 py-1 rounded border border-green-200 bg-green-50 text-[10px]">
-                                  <button onClick={(e) => { e.stopPropagation(); openPaymentTypeEditModal(matchingBooking); }} className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer" title="Change Payment Type">
-                                    {matchingBooking.paymentType || "cash"} <FiChevronDown className="w-2.5 h-2.5" />
-                                  </button>
+                                  {pharmacyModeDisplay ? (
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase border bg-white text-slate-700 border-slate-200">
+                                      {pharmacyModeDisplay}
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border bg-gray-50 text-gray-400 border-gray-200">
+                                      — N/A
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             ) : (<span className="text-[10px] text-gray-400 italic block text-center">N/A</span>)}
@@ -5129,13 +5276,23 @@ export default function OpManagement() {
                   {clinicServicesList.length === 0 ? (
                     <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">No services yet</div>
                   ) : (
-                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                       {clinicServicesList.map((svc, i) => (
-                        <div key={`${svc.serviceId}-${i}`} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-blue-50 border border-blue-200">
-                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
-                          <div className="flex-1 min-w-0"><div className="font-semibold text-gray-800 truncate">{svc.name}</div></div>
-                          <input type="number" value={svc.price} onChange={(e) => handleUpdateClinicServicePrice(i, e.target.value)} className="w-20 px-2 py-1 text-xs font-bold text-emerald-700 border border-gray-300 rounded" min="0" />
-                          <button type="button" onClick={() => handleRemoveClinicServiceItem(i)} className="text-red-400 hover:text-red-600 p-1"><FaMinusCircle className="w-3.5 h-3.5" /></button>
+                        <div key={`${svc.serviceId}-${i}`} className="px-3 py-2 rounded-lg text-xs bg-blue-50 border border-blue-200 space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
+                            <div className="flex-1 min-w-0"><div className="font-semibold text-gray-800 truncate">{svc.name}</div></div>
+                            <input type="number" value={svc.price} onChange={(e) => handleUpdateClinicServicePrice(i, e.target.value)} className="w-20 px-2 py-1 text-xs font-bold text-emerald-700 border border-gray-300 rounded" min="0" />
+                            <button type="button" onClick={() => handleRemoveClinicServiceItem(i)} className="text-red-400 hover:text-red-600 p-1"><FaMinusCircle className="w-3.5 h-3.5" /></button>
+                          </div>
+                          <div className="flex items-center gap-2 pl-7">
+                            <select value={svc.paymentMode || "Cash"} onChange={(e) => handleUpdateClinicServicePaymentMode(i, e.target.value)} className="flex-1 px-2 py-1 text-[10px] font-semibold border border-gray-300 rounded bg-white" title="Payment Mode">
+                              {ITEM_PAYMENT_MODE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                            </select>
+                            <select value={svc.paymentStatus || "Due"} onChange={(e) => handleUpdateClinicServicePaymentStatus(i, e.target.value)} className="flex-1 px-2 py-1 text-[10px] font-semibold border border-gray-300 rounded bg-white" title="Payment Status">
+                              {ITEM_PAYMENT_STATUS_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                            </select>
+                          </div>
                         </div>
                       ))}
                     </div>

@@ -241,6 +241,7 @@ import TimelyPlanBookings from './Pages/TimelyPlanBookings.js';
 import TimelyClients from "./Pages/TimelyClients.js";
 import TimelyPlans from "./Pages/TimelyPlans.js";
 import PrivacyPolicy from "./Pages/PrivacyPolicy.js";
+import RevenueAnalytics from "./Pages/RevenueAnalytics";
 
 
 
@@ -550,6 +551,7 @@ function App() {
               <Route path="/timely-plan-bookings" element={<TimelyPlanBookings />} />
               <Route path="/timely-clients" element={<TimelyClients />} />
               <Route path="/timely-plans" element={<TimelyPlans />} />
+              <Route path="/revenue-analytics" element={<RevenueAnalytics />} />
             </Routes>
           </AdminLayout>
         }

@@ -2565,13 +2565,129 @@ const PayRoll = () => {
           </div>
         </div>
 
+        {/* ==================== MOBILE VIEW ==================== */}
         <div className="sm:hidden flex items-center justify-between gap-2 flex-wrap mb-3">
           <h1 className="text-base font-bold whitespace-nowrap">Employee <span className="text-indigo-600">Payroll</span></h1>
-          <div className="emp-dash__date-pill">
+          <button
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className={`emp-dash__date-pill flex items-center gap-2 cursor-pointer transition-all ${showMobileFilters ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
+          >
             <FaCalendarAlt />
             <span>{formatMonthDisplay(selectedMonth)}</span>
-          </div>
+            {showMobileFilters ? <FiChevronUp className="text-xs" /> : <FiChevronDown className="text-xs" />}
+          </button>
         </div>
+
+        {/* ✅ MOBILE FILTERS & ACTIONS PANEL (opens on pill click) */}
+        {showMobileFilters && (
+          <div className="sm:hidden mb-4 p-4 bg-white rounded-xl border border-gray-200 shadow-lg space-y-3">
+            {/* Status Filter Row */}
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Status</label>
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => { setFilterStatus('all'); setCurrentPage(1); }} className={`flex-1 px-2 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${filterStatus === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600'}`}>
+                  All ({records.length})
+                </button>
+                <button onClick={() => { setFilterStatus('active'); setCurrentPage(1); }} className={`flex-1 px-2 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${filterStatus === 'active' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-600'}`}>
+                  Active ({activeCount})
+                </button>
+                <button onClick={() => { setFilterStatus('inactive'); setCurrentPage(1); }} className={`flex-1 px-2 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${filterStatus === 'inactive' ? 'bg-red-600 text-white shadow-md' : 'bg-gray-100 text-gray-600'}`}>
+                  Inactive ({inactiveCount})
+                </button>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Search</label>
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                <input type="text" placeholder="Search ID or Name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" />
+              </div>
+            </div>
+
+            {/* Department */}
+            <div className="relative" ref={departmentFilterRef}>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Department</label>
+              <button onClick={() => { setShowDepartmentFilter(!showDepartmentFilter); setShowDesignationFilter(false); }} className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg border transition-all bg-white ${filterDepartment ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50" : "border-gray-300 text-gray-700"}`}>
+                <span className="flex items-center gap-2">
+                  <FaBuilding className="text-gray-400" />
+                  {filterDepartment || "All Departments"}
+                </span>
+                <span className="text-gray-400">▾</span>
+              </button>
+              {showDepartmentFilter && (
+                <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div onClick={() => { setFilterDepartment(""); setShowDepartmentFilter(false); }} className="px-3 py-2 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Departments</div>
+                  {uniqueDepartments.map((dept) => (
+                    <div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"}`}>{dept}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Designation */}
+            <div className="relative" ref={designationFilterRef}>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Designation</label>
+              <button onClick={() => { setShowDesignationFilter(!showDesignationFilter); setShowDepartmentFilter(false); }} className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg border transition-all bg-white ${filterDesignation ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50" : "border-gray-300 text-gray-700"}`}>
+                <span className="flex items-center gap-2">
+                  <FaUserTag className="text-gray-400" />
+                  {filterDesignation || "All Designations"}
+                </span>
+                <span className="text-gray-400">▾</span>
+              </button>
+              {showDesignationFilter && (
+                <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div onClick={() => { setFilterDesignation(""); setShowDesignationFilter(false); }} className="px-3 py-2 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Designations</div>
+                  {uniqueDesignations.map((des) => (
+                    <div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"}`}>{des}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* From / To Date */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">From Date</label>
+                <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full h-9 px-2 text-xs border border-gray-300 rounded-lg bg-white" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">To Date</label>
+                <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full h-9 px-2 text-xs border border-gray-300 rounded-lg bg-white" />
+              </div>
+            </div>
+
+            {/* Month */}
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Month</label>
+              <input type="month" value={selectedMonth} onChange={handleMonthChange} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full h-9 px-2 text-xs border border-gray-300 rounded-lg bg-white font-semibold" />
+            </div>
+
+            {/* Apply Date Range */}
+            <button onClick={handleDateRangeFilter} disabled={!fromDate || !toDate} className="w-full flex items-center justify-center gap-1 px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50">
+              <FaSearch className="w-3 h-3" /> Apply Date Range
+            </button>
+
+            {/* Action Buttons Grid */}
+            <div className="pt-3 border-t border-gray-200 space-y-2">
+              <div className="grid grid-cols-3 gap-2">
+                <button onClick={() => setShowTemplateModal(true)} className="flex items-center justify-center px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all">⚙️ Settings</button>
+                <button onClick={() => { const currentMonth = new Date().toISOString().slice(0, 7); setSelectedMonth(currentMonth); fetchData(currentMonth); }} className="flex items-center justify-center px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all">Current</button>
+                <button onClick={() => fetchData(selectedMonth)} className="flex items-center justify-center px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all">⟳ Refresh</button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => navigate("/bank-reports")} className="flex items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm">Bank Reports</button>
+                <button onClick={() => setShowOTModal(true)} className="flex items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all shadow-sm">OT ({selectedOTEmployees.size})</button>
+              </div>
+              {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7) || filterStatus !== 'all') && (
+                <button onClick={clearFilters} className="w-full flex items-center justify-center gap-1 px-3 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                  <FiX className="w-3 h-3" /> Clear All Filters
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
           <div className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${filterStatus === 'all' ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`} onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}>

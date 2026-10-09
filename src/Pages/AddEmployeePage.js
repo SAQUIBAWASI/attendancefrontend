@@ -61,6 +61,9 @@ const formatFullAddress = (addressData) => {
   return address;
 };
 
+// ✅ A-Z letters constant
+const SHIFT_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
 const AddEmployeePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -191,6 +194,37 @@ const AddEmployeePage = () => {
   const [deptForm, setDeptForm] = useState({ name: '', description: '' });
   const [roleForm, setRoleForm] = useState({ name: '', description: '' });
   const [locationForm, setLocationForm] = useState({ name: '', latitude: '', longitude: '', fullAddress: '' });
+
+  // ✅ Get used shift types from shiftList
+  const getUsedShiftTypes = () => {
+    return shiftList.map(s => (s.shiftType || '').toUpperCase()).filter(Boolean);
+  };
+
+  // ✅ Get next available shift type (A-Z)
+  const getNextAvailableShiftType = () => {
+    const usedTypes = getUsedShiftTypes();
+    for (let letter of SHIFT_LETTERS) {
+      if (!usedTypes.includes(letter)) return letter;
+    }
+    return '';
+  };
+
+  // ✅ Get all available shift types
+  const getAvailableShiftTypes = () => {
+    const usedTypes = getUsedShiftTypes();
+    return SHIFT_LETTERS.filter(letter => !usedTypes.includes(letter));
+  };
+
+  // ✅ Open Create Shift Modal with auto-filled next type
+  const openCreateShiftModal = () => {
+    setCreateShiftForm({
+      shiftType: getNextAvailableShiftType(),
+      shiftName: '',
+      timeRange: '',
+      description: ''
+    });
+    setShowShiftModal(true);
+  };
 
   // Auto-calc salary
   useEffect(() => {
@@ -372,7 +406,6 @@ const AddEmployeePage = () => {
     setPfNumber(employee.pfNumber || "");
     setEsicNumber(employee.esicNumber || "");
 
-    // ✅ Load existing document info
     setPanDocumentUrl(employee.panDocumentUrl || "");
     setPanDocumentFileName(employee.panDocumentFileName || "");
     setPanDocumentFileType(employee.panDocumentFileType || "");
@@ -478,7 +511,6 @@ const AddEmployeePage = () => {
       setPanNumber(""); setAadharNumber("");
       setUanNumber(""); setPfNumber(""); setEsicNumber("");
 
-      // ✅ Reset documents
       setPanDocument(null); setPanDocumentUrl(""); setPanDocumentFileName("");
       setPanDocumentFileType(""); setPanDocumentFileSize(0);
       setAadharDocument(null); setAadharDocumentUrl(""); setAadharDocumentFileName("");
@@ -647,7 +679,7 @@ const AddEmployeePage = () => {
   };
 
   const handleShiftChange = (selectedShiftType) => {
-    if (selectedShiftType === "ADD_NEW") setShowShiftModal(true);
+    if (selectedShiftType === "ADD_NEW") openCreateShiftModal();
     else {
       const selectedShiftData = shiftList.find(shift => shift.shiftType === selectedShiftType);
       if (selectedShiftData) {
@@ -798,7 +830,6 @@ const AddEmployeePage = () => {
 
       const fullAddress = formatFullAddress({ addressLine1, addressLine2, city, state, pinCode, country });
 
-      // ✅ Upload PAN document if new file selected
       let finalPanDocUrl = panDocumentUrl;
       let finalPanDocName = panDocumentFileName;
       let finalPanDocType = panDocumentFileType;
@@ -818,7 +849,6 @@ const AddEmployeePage = () => {
         setUploadingPanDoc(false);
       }
 
-      // ✅ Upload Aadhaar document if new file selected
       let finalAadharDocUrl = aadharDocumentUrl;
       let finalAadharDocName = aadharDocumentFileName;
       let finalAadharDocType = aadharDocumentFileType;
@@ -856,7 +886,6 @@ const AddEmployeePage = () => {
         aadharNumber: aadharNumber ? String(aadharNumber).replace(/\D/g, '').slice(0, 12) : "",
         uanNumber, pfNumber, esicNumber,
 
-        // ✅ NEW: Documents
         panDocumentUrl: finalPanDocUrl || "",
         panDocumentFileName: finalPanDocName || "",
         panDocumentFileType: finalPanDocType || "",
@@ -927,6 +956,80 @@ const AddEmployeePage = () => {
   };
 
   const getCurrentDate = () => new Date().toISOString().split('T')[0];
+
+  // ✅ Reusable Shift Type Picker (Badges + Dropdown + Manual Input)
+  const ShiftTypePicker = ({ currentValue, onChange }) => {
+    const usedTypes = getUsedShiftTypes();
+    const availableTypes = getAvailableShiftTypes();
+    const nextType = getNextAvailableShiftType();
+
+    return (
+      <div className="md:col-span-2">
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Shift Type (A-Z) *
+        </label>
+
+        {/* A-Z Badges preview */}
+        <div className="mb-2 flex flex-wrap gap-1">
+          {SHIFT_LETTERS.map(letter => {
+            const isUsed = usedTypes.includes(letter);
+            const isSelected = currentValue === letter;
+            return (
+              <span
+                key={letter}
+                onClick={() => !isUsed && onChange(letter)}
+                className={`px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-all ${
+                  isSelected
+                    ? 'bg-blue-600 text-white ring-2 ring-blue-300'
+                    : isUsed
+                    ? 'bg-gray-200 text-gray-400 line-through cursor-not-allowed'
+                    : 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-200'
+                }`}
+                title={isUsed ? `${letter} - Already used` : `${letter} - Available`}
+              >
+                {letter}
+              </span>
+            );
+          })}
+        </div>
+
+        {/* Dropdown + Manual Input */}
+        <div className="flex gap-2">
+          <select
+            className="w-1/3 p-2 border rounded text-gray-900"
+            value={availableTypes.includes(currentValue) ? currentValue : ''}
+            onChange={(e) => e.target.value && onChange(e.target.value)}
+          >
+            <option value="">Select</option>
+            {availableTypes.map(letter => (
+              <option key={letter} value={letter}>
+                Shift {letter} {letter === nextType ? '⭐ (Next)' : ''}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            maxLength="1"
+            placeholder="or type custom letter"
+            value={currentValue}
+            onChange={(e) => onChange(e.target.value.toUpperCase())}
+            className="flex-1 p-2 border rounded text-gray-900"
+            required
+          />
+        </div>
+
+        {/* Helper text */}
+        <p className="mt-1 text-[10px] text-gray-500">
+          ✅ Available: <strong>{availableTypes.join(', ') || 'None'}</strong>
+          {nextType && (
+            <>
+              {' · '}⭐ Next suggested: <strong className="text-blue-600">{nextType}</strong>
+            </>
+          )}
+        </p>
+      </div>
+    );
+  };
 
   return (
     <div className="max-w-7xl p-4 mx-auto">
@@ -1094,7 +1197,7 @@ const AddEmployeePage = () => {
             </div>
           </div>
 
-          {/* SECTION 3: BANK & DOCUMENTS — with file uploads */}
+          {/* SECTION 3: BANK & DOCUMENTS */}
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-purple-50 px-4 py-3 border-b">
               <h3 className="text-lg font-semibold text-purple-800"><FaUniversity className="inline mr-2" /> 3. Bank & Documents</h3>
@@ -1113,7 +1216,6 @@ const AddEmployeePage = () => {
                 </div>
               </div>
 
-              {/* ✅ PAN Document Upload */}
               <div className="bg-purple-50/40 border border-purple-200 rounded-lg p-3">
                 <label className="block mb-2 text-xs font-semibold text-purple-800 uppercase tracking-wide">
                   Upload PAN Card Document (PDF / Image)
@@ -1157,7 +1259,6 @@ const AddEmployeePage = () => {
                 )}
               </div>
 
-              {/* ✅ Aadhaar Number */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="block mb-1 text-sm text-gray-700"><FaIdCard className="inline mr-1 text-purple-600" /> Aadhaar Card Number</label>
@@ -1166,7 +1267,6 @@ const AddEmployeePage = () => {
                 </div>
               </div>
 
-              {/* ✅ Aadhaar Document Upload */}
               <div className="bg-purple-50/40 border border-purple-200 rounded-lg p-3">
                 <label className="block mb-2 text-xs font-semibold text-purple-800 uppercase tracking-wide">
                   Upload Aadhaar Card Document (PDF / Image)
@@ -1353,16 +1453,45 @@ const AddEmployeePage = () => {
       {/* MODALS */}
       {showShiftModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
-            <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-900">Create New Shift</h3><button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-500">&times;</button></div>
+          <div className="w-full max-w-md bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Create New Shift</h3>
+              <button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-500">&times;</button>
+            </div>
             <form onSubmit={handleCreateCustomShift} className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <input type="text" placeholder="Shift Type (A-Z)" value={createShiftForm.shiftType} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))} className="p-2 border rounded text-gray-900" required />
-                <input type="text" placeholder="Shift Name" value={createShiftForm.shiftName} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))} className="p-2 border rounded text-gray-900" required />
+              {/* ✅ NEW: Shift Type Picker with badges + dropdown */}
+              <ShiftTypePicker
+                currentValue={createShiftForm.shiftType}
+                onChange={(val) => setCreateShiftForm(prev => ({ ...prev, shiftType: val }))}
+              />
+
+              <div>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Shift Name *</label>
+                <input type="text" placeholder="e.g. Morning Shift" value={createShiftForm.shiftName}
+                  onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))}
+                  className="w-full p-2 border rounded text-gray-900" required />
               </div>
-              <input type="text" placeholder="Time Range (e.g., 09:00 - 18:00)" value={createShiftForm.timeRange} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, timeRange: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
-              <input type="text" placeholder="Description" value={createShiftForm.description} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, description: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
-              <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Create</button></div>
+
+              <div>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Time Range *</label>
+                <input type="text" placeholder="e.g., 09:00 - 18:00" value={createShiftForm.timeRange}
+                  onChange={(e) => setCreateShiftForm(prev => ({ ...prev, timeRange: e.target.value }))}
+                  className="w-full p-2 border rounded text-gray-900" required />
+              </div>
+
+              <div>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Description *</label>
+                <input type="text" placeholder="e.g. Full day shift" value={createShiftForm.description}
+                  onChange={(e) => setCreateShiftForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full p-2 border rounded text-gray-900" required />
+              </div>
+
+              {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button>
+                <button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Create</button>
+              </div>
             </form>
           </div>
         </div>

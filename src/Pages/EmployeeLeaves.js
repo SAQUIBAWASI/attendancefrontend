@@ -1426,11 +1426,21 @@ const EmployeeLeaves = () => {
     }
   };
 
+  // ✅ Fetch extra worked days (week-off / holiday work)
   const fetchExtraWorkedDays = async (empId) => {
     try {
       if (!empId) return;
       setLoadingExtraWorkedDays(true);
-      const res = await axios.get(`${API_BASE_URL}/leaves/extra-worked-days/${empId}`);
+      let res;
+      try {
+        res = await axios.get(`${API_BASE_URL}/leaves/extra-worked-days/${empId}`);
+      } catch (errFirst) {
+        if (errFirst.response && errFirst.response.status === 404) {
+          res = await axios.get(`${API_BASE_URL}/extra-worked-days/${empId}`);
+        } else {
+          throw errFirst;
+        }
+      }
       if (res.data && res.data.success) {
         const days = res.data.extraDays || [];
         setExtraWorkedDays(days);
@@ -1459,11 +1469,21 @@ const EmployeeLeaves = () => {
     }
   };
 
+  // ✅ Fetch comp-off requests
   const fetchCompOffRequests = async (empId) => {
     try {
       if (!empId) return;
       setLoadingMyCompOffRequests(true);
-      const response = await axios.get(`${API_BASE_URL}/leaves/comp-off-requests/employee/${empId}`);
+      let response;
+      try {
+        response = await axios.get(`${API_BASE_URL}/leaves/comp-off-requests/employee/${empId}`);
+      } catch (errFirst) {
+        if (errFirst.response && errFirst.response.status === 404) {
+          response = await axios.get(`${API_BASE_URL}/comp-off-requests/employee/${empId}`);
+        } else {
+          throw errFirst;
+        }
+      }
       const data = response.data;
       const records = data.records || data.requests || (Array.isArray(data) ? data : []);
       setMyCompOffRequests(records);
@@ -1541,6 +1561,7 @@ const EmployeeLeaves = () => {
       totalHours: extraDay.totalHours || 8,
       extraHours: extraDay.extraHours || 0,
       leave, leaveId: leave._id,
+      originalLeaveId: leave._id,
       leaveType: leave.leaveType,
       leaveStartDate: leave.startDate,
       leaveEndDate: leave.endDate,
@@ -1583,11 +1604,13 @@ const EmployeeLeaves = () => {
       const payload = {
         employeeId, employeeName,
         extraDayDate: selectedExtraDay.date,
+        workDate: selectedExtraDay.date,
         extraDayDetails: {
           date: selectedExtraDay.date,
           day: selectedExtraDay.day || formatDateDisplay(selectedExtraDay.date),
           totalHours: selectedExtraDay.totalHours || 8,
-          extraHours: selectedExtraDay.extraHours || 0
+          extraHours: selectedExtraDay.extraHours || 0,
+          workType: "Week-off Work"
         },
         reason: extraDayCompOffData.reason,
         leaveId: selectedExtraDay.leaveId,
@@ -1600,7 +1623,16 @@ const EmployeeLeaves = () => {
           status: selectedExtraDay.leaveStatus
         }
       };
-      const response = await axios.post(`${API_BASE_URL}/leaves/requestforcompoffs`, payload);
+      let response;
+      try {
+        response = await axios.post(`${API_BASE_URL}/leaves/comp-off-requests`, payload);
+      } catch (errPost) {
+        if (errPost.response && errPost.response.status === 404) {
+          response = await axios.post(`${API_BASE_URL}/comp-off-requests`, payload);
+        } else {
+          throw errPost;
+        }
+      }
       if (response.status === 201 || response.data.success) {
         alert("✅ Comp-off request submitted successfully!");
         setIsExtraDayCompOffModalOpen(false);
@@ -1647,12 +1679,17 @@ const EmployeeLeaves = () => {
   const handleOpenLeaveModal = () => {
     setIsLeaveModalOpen(true);
     const rawData = localStorage.getItem("employeeData");
+    let idToFetch = null;
     if (rawData) {
       try {
         const emp = JSON.parse(rawData);
-        if (emp?.employeeId) fetchExtraWorkedDays(emp.employeeId);
+        idToFetch = emp?.employeeId || emp?.empId;
       } catch (e) {}
     }
+    if (!idToFetch) {
+      idToFetch = leaveFormData.employeeId || localStorage.getItem("employeeId");
+    }
+    if (idToFetch) fetchExtraWorkedDays(idToFetch);
   };
 
   const handleLeaveSubmit = async (e) => {
@@ -1666,6 +1703,7 @@ const EmployeeLeaves = () => {
     const name = leaveFormData.employeeName || employeeData?.name || localStorage.getItem("employeeName") || employeeData?.employeeName;
     if (!id) { alert("Employee details missing."); setSubmittingLeave(false); return; }
 
+    // ==================== COMP-OFF SUBMISSION ====================
     if (leaveFormData.leaveType === "compoff") {
       const workDateToUse = selectedExtraWorkDay?.date || manualCompOffWorkDate;
       if (!workDateToUse) { alert("Please select the extra day worked (on week-off or holiday) for comp-off."); setSubmittingLeave(false); return; }
@@ -1683,19 +1721,35 @@ const EmployeeLeaves = () => {
 
       try {
         const compOffPayload = {
-          employeeId: id, employeeName: name,
+          employeeId: id,
+          employeeName: name,
           workDate: workDateToUse,
-          leaveDate: leaveFormData.startDate || workDateToUse,
-          reason: leaveFormData.reason,
-          count: leaveFormData.days || 1,
+          extraDayDate: workDateToUse,
           extraDayDetails: selectedExtraWorkDay || {
             date: workDateToUse,
-            day: new Date(workDateToUse).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }),
+            day: new Date(workDateToUse).toLocaleDateString('en-US', {
+              weekday: 'long', day: 'numeric', month: 'short', year: 'numeric'
+            }),
             totalHours: 8,
+            extraHours: 0,
             workType: "Week-off Work"
-          }
+          },
+          leaveId: null,
+          leaveDetails: null,
+          reason: leaveFormData.reason
         };
-        const res = await axios.post(`${API_BASE_URL}/leaves/comp-off-requests`, compOffPayload);
+
+        let res;
+        try {
+          res = await axios.post(`${API_BASE_URL}/leaves/comp-off-requests`, compOffPayload);
+        } catch (errPost) {
+          if (errPost.response && errPost.response.status === 404) {
+            res = await axios.post(`${API_BASE_URL}/comp-off-requests`, compOffPayload);
+          } else {
+            throw errPost;
+          }
+        }
+
         if (res.status === 201 || res.data.success) {
           alert("✅ Comp-off request submitted successfully! Admin has been notified.");
           setIsLeaveModalOpen(false);
@@ -1718,6 +1772,7 @@ const EmployeeLeaves = () => {
       }
       return;
     }
+    // ================================================================
 
     const payload = { ...leaveFormData, employeeId: id, employeeName: name };
     try {
@@ -1776,10 +1831,15 @@ const EmployeeLeaves = () => {
       if (name === "leaveType" && value === "compoff") {
         updated.days = 1;
         const rawData = localStorage.getItem("employeeData");
+        let idToFetch = null;
         try {
           const emp = rawData ? JSON.parse(rawData) : null;
-          if (emp?.employeeId) fetchExtraWorkedDays(emp.employeeId);
+          idToFetch = emp?.employeeId || emp?.empId;
         } catch (err) {}
+        if (!idToFetch) {
+          idToFetch = prev.employeeId || localStorage.getItem("employeeId");
+        }
+        if (idToFetch) fetchExtraWorkedDays(idToFetch);
       }
       if (name === "startDate" || name === "endDate") {
         if (updated.startDate && updated.endDate) {
@@ -2657,10 +2717,15 @@ const EmployeeLeaves = () => {
                           type="button"
                           onClick={() => {
                             const raw = localStorage.getItem("employeeData");
+                            let idToFetch = null;
                             try {
                               const emp = raw ? JSON.parse(raw) : null;
-                              if (emp?.employeeId) fetchExtraWorkedDays(emp.employeeId);
+                              idToFetch = emp?.employeeId || emp?.empId;
                             } catch (e) {}
+                            if (!idToFetch) {
+                              idToFetch = leaveFormData.employeeId || localStorage.getItem("employeeId");
+                            }
+                            if (idToFetch) fetchExtraWorkedDays(idToFetch);
                           }}
                           className="text-xs text-purple-600 hover:text-purple-800 font-medium hover:underline flex items-center gap-0.5"
                         >

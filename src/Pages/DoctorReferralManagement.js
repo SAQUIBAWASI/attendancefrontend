@@ -40,8 +40,8 @@ const EMPTY_DOCTOR_FORM = {
   doctorPhone: "",
   doctorSpecialization: "",
   doctorAddress: "",
-  clinicCommission: "",
-  clinicCommissionType: "%",
+  serviceCommission: "",
+  serviceCommissionType: "%",
   pharmacyCommission: "",
   pharmacyCommissionType: "%",
   labCommission: "",
@@ -65,8 +65,8 @@ const EMPTY_CUSTOMER_FORM = {
   customerOrganization: "",
   customerPhone: "",
   customerAddress: "",
-  clinicCommission: "",
-  clinicCommissionType: "%",
+  serviceCommission: "",
+  serviceCommissionType: "%",
   pharmacyCommission: "",
   pharmacyCommissionType: "%",
   labCommission: "",
@@ -85,7 +85,7 @@ const EMPTY_CUSTOMER_FORM = {
 };
 
 const COMMISSION_FIELDS = [
-  { key: "clinicCommission", typeKey: "clinicCommissionType", label: "Clinic", icon: FaClinicMedical, color: "blue" },
+  { key: "serviceCommission", typeKey: "serviceCommissionType", label: "Service", icon: FaServicestack, color: "blue" },
   { key: "pharmacyCommission", typeKey: "pharmacyCommissionType", label: "Pharmacy", icon: FaPills, color: "green" },
   { key: "labCommission", typeKey: "labCommissionType", label: "Lab", icon: FaFlask, color: "purple" },
   { key: "feesCommission", typeKey: "feesCommissionType", label: "Fees", icon: FaMoneyBillWave, color: "amber" }
@@ -109,14 +109,14 @@ const extractName = (val) => {
 };
 
 const detectCategory = (svc) => {
-  if (!svc) return "clinic";
+  if (!svc) return "service";
   const raw = (
     svc.category || svc.serviceCategory || svc.type || svc.serviceType ||
     svc.department || ""
   ).toString().toLowerCase();
   if (raw.includes("pharm") || raw.includes("medic")) return "pharmacy";
   if (raw.includes("lab") || raw.includes("test") || raw.includes("diagnos")) return "lab";
-  return "clinic";
+  return "service";
 };
 
 const getCommissionValue = (referrer, category) => {
@@ -134,8 +134,8 @@ const getCommissionValue = (referrer, category) => {
     };
   }
   return {
-    value: parseFloat(referrer.clinicCommission) || 0,
-    type: referrer.clinicCommissionType || "%"
+    value: parseFloat(referrer.serviceCommission) || 0,
+    type: referrer.serviceCommissionType || "%"
   };
 };
 
@@ -161,7 +161,7 @@ const getServiceReferrerPayable = (referrer, booking) => {
 
   const totalAmount = Number(booking.finalPayable) || Number(booking.totalAmount) || 0;
   if (totalAmount > 0) {
-    const { value, type } = getCommissionValue(referrer, "clinic");
+    const { value, type } = getCommissionValue(referrer, "service");
     return Math.round(type === "₹" ? value : (totalAmount * value) / 100);
   }
   return 0;
@@ -182,7 +182,7 @@ const formatCommission = (value, type) => {
 export default function ReferralManagement() {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("doctor");
+  const [activeTab, setActiveTab] = useState("customer");
   const isDoctorTab = activeTab === "doctor";
 
   const [doctorReferrals, setDoctorReferrals] = useState([]);
@@ -192,13 +192,11 @@ export default function ReferralManagement() {
   const [error, setError] = useState("");
   const [apiConnected, setApiConnected] = useState(true);
 
-  const [formData, setFormData] = useState({ ...EMPTY_DOCTOR_FORM });
+  const [formData, setFormData] = useState({ ...EMPTY_CUSTOMER_FORM });
   const [editingId, setEditingId] = useState(null);
   const [editingType, setEditingType] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  const [formService, setFormService] = useState({ name: "", price: "" });
 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -321,7 +319,7 @@ export default function ReferralManagement() {
         setApiConnected(false);
         showToast("No referral records found.", "info");
       } else {
-        showToast(`Loaded ${doctors.length} doctors & ${customers.length} customers!`, "success");
+        showToast(`Loaded ${customers.length} customers & ${doctors.length} doctors!`, "success");
       }
     } catch (err) {
       console.error("=== ERROR FETCHING REFERRALS ===", err);
@@ -395,53 +393,20 @@ export default function ReferralManagement() {
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (
-      name === "clinicCommission" || name === "pharmacyCommission" ||
+      name === "serviceCommission" || name === "pharmacyCommission" ||
       name === "labCommission" || name === "feesCommission" ||
-      name === "clinicCommissionType" || name === "pharmacyCommissionType" ||
+      name === "serviceCommissionType" || name === "pharmacyCommissionType" ||
       name === "labCommissionType" || name === "feesCommissionType"
     ) {
-      const clinicVal = parseFloat(name === "clinicCommission" ? value : formData.clinicCommission) || 0;
+      const serviceVal = parseFloat(name === "serviceCommission" ? value : formData.serviceCommission) || 0;
       const pharmacyVal = parseFloat(name === "pharmacyCommission" ? value : formData.pharmacyCommission) || 0;
       const labVal = parseFloat(name === "labCommission" ? value : formData.labCommission) || 0;
       const feesVal = parseFloat(name === "feesCommission" ? value : formData.feesCommission) || 0;
       setFormData((prev) => ({
         ...prev,
-        totalCommission: (clinicVal + pharmacyVal + labVal + feesVal).toString()
+        totalCommission: (serviceVal + pharmacyVal + labVal + feesVal).toString()
       }));
     }
-  };
-
-  // ─── SERVICES handlers (form) ───
-  const handleAddService = () => {
-    const name = formService.name?.trim();
-    const price = formService.price?.toString().trim();
-    if (!name) { showToast("Please enter service name", "error"); return; }
-    if (!price || isNaN(Number(price))) { showToast("Please enter valid service price", "error"); return; }
-    setFormData((prev) => ({
-      ...prev,
-      services: [...(prev.services || []), { name, price: Number(price) }],
-    }));
-    setFormService({ name: "", price: "" });
-  };
-
-  const handleRemoveService = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      services: (prev.services || []).filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleUpdateServicePrice = (index, newPrice) => {
-    setFormData((prev) => ({
-      ...prev,
-      services: (prev.services || []).map((s, i) =>
-        i === index ? { ...s, price: Number(newPrice) || 0 } : s
-      ),
-    }));
-  };
-
-  const getServicesTotal = () => {
-    return (formData.services || []).reduce((sum, s) => sum + (Number(s.price) || 0), 0);
   };
 
   const handleSubmit = async (e) => {
@@ -464,18 +429,12 @@ export default function ReferralManagement() {
       const payload = {
         ...formData,
         referralType: isDoctorTab ? "doctor" : "customer",
-        services: (formData.services || []).filter((s) => s.name && s.price >= 0),
       };
 
       if (editingId) {
         const res = await updateReferral(editingId, payload);
         if (res.data.success) {
           const updatedData = res.data.data || { _id: editingId, ...payload };
-          const savedReferral = {
-            ...updatedData,
-            offers: updatedData.offers || [],
-            services: updatedData.services || payload.services || []
-          };
           setActiveReferrals((prev) =>
             prev.map((r) => (r._id === editingId ? { ...r, ...updatedData, offers: r.offers || [] } : r))
           );
@@ -491,7 +450,6 @@ export default function ReferralManagement() {
           const savedReferral = {
             ...newData,
             offers: newData.offers || [],
-            services: newData.services || payload.services || []
           };
           setActiveReferrals((prev) => [savedReferral, ...prev]);
           showToast(`${referrerLabel} referral added successfully!`);
@@ -502,7 +460,6 @@ export default function ReferralManagement() {
       setEditingId(null);
       setEditingType(null);
       setShowForm(false);
-      setFormService({ name: "", price: "" });
     } catch (err) {
       console.error(`Error saving ${referrerLabel.toLowerCase()} referral:`, err);
       showToast(err.response?.data?.message || `Failed to save referral`, "error");
@@ -513,8 +470,8 @@ export default function ReferralManagement() {
 
   const handleEdit = (referral) => {
     const common = {
-      clinicCommission: referral.clinicCommission || "",
-      clinicCommissionType: referral.clinicCommissionType || "%",
+      serviceCommission: referral.serviceCommission || referral.clinicCommission || "",
+      serviceCommissionType: referral.serviceCommissionType || referral.clinicCommissionType || "%",
       pharmacyCommission: referral.pharmacyCommission || "",
       pharmacyCommissionType: referral.pharmacyCommissionType || "%",
       labCommission: referral.labCommission || "",
@@ -522,7 +479,6 @@ export default function ReferralManagement() {
       feesCommission: referral.feesCommission || "",
       feesCommissionType: referral.feesCommissionType || "%",
       totalCommission: referral.totalCommission || "",
-      services: Array.isArray(referral.services) ? [...referral.services] : [],
       onboardDate: referral.onboardDate || referral.referralDate || "",
       referralNotes: referral.referralNotes || "",
       status: referral.status || "active",
@@ -555,7 +511,6 @@ export default function ReferralManagement() {
       setEditingType("customer");
     }
     setEditingId(referral._id);
-    setFormService({ name: "", price: "" });
     setShowForm(true);
   };
 
@@ -673,7 +628,6 @@ export default function ReferralManagement() {
     setEditingId(null);
     setEditingType(null);
     setShowForm(false);
-    setFormService({ name: "", price: "" });
   };
 
   const clearFilters = () => {
@@ -761,16 +715,15 @@ export default function ReferralManagement() {
       return;
     }
     const headers = isDoctorTab
-      ? ["Sl No", "Name", "Organisation", "Phone", "Specialization", "Address", "Clinic", "Pharmacy", "Lab", "Fees", "Services", "Discount Fees", "Discount Lab", "Status", "Onboard Date"]
-      : ["Sl No", "Name", "Phone", "Address", "Clinic", "Pharmacy", "Lab", "Fees", "Services", "Discount Fees", "Discount Lab", "Status", "Onboard Date"];
+      ? ["Sl No", "Name", "Organisation", "Phone", "Specialization", "Address", "Service", "Pharmacy", "Lab", "Fees", "Discount Fees", "Discount Lab", "Status", "Onboard Date"]
+      : ["Sl No", "Name", "Phone", "Address", "Service", "Pharmacy", "Lab", "Fees", "Discount Fees", "Discount Lab", "Status", "Onboard Date"];
 
     const csvRows = [
       headers.join(","),
       ...filteredReferrals.map((r, idx) => {
         const discountFeesStr = r.discountFees ? `${r.discountFees}${r.discountFeesType || "%"}` : "";
         const discountLabStr = r.discountLab ? `${r.discountLab}${r.discountLabType || "%"}` : "";
-        const servicesStr = (r.services || []).map((s) => `${s.name} (₹${s.price})`).join("; ");
-        const clinicStr = formatCommission(r.clinicCommission, r.clinicCommissionType);
+        const serviceStr = formatCommission(r.serviceCommission || r.clinicCommission, r.serviceCommissionType || r.clinicCommissionType);
         const pharmacyStr = formatCommission(r.pharmacyCommission, r.pharmacyCommissionType);
         const labStr = formatCommission(r.labCommission, r.labCommissionType);
         const feesStr = formatCommission(r.feesCommission, r.feesCommissionType);
@@ -782,8 +735,7 @@ export default function ReferralManagement() {
             `"${r.doctorPhone || ""}"`,
             `"${(r.doctorSpecialization || "").replace(/"/g, '""')}"`,
             `"${(r.doctorAddress || "").replace(/"/g, '""')}"`,
-            `"${clinicStr}"`, `"${pharmacyStr}"`, `"${labStr}"`, `"${feesStr}"`,
-            `"${servicesStr}"`,
+            `"${serviceStr}"`, `"${pharmacyStr}"`, `"${labStr}"`, `"${feesStr}"`,
             `"${discountFeesStr}"`, `"${discountLabStr}"`,
             `"${r.status || "active"}"`,
             `"${formatDate(r.onboardDate || r.referralDate || r.createdAt)}"`
@@ -794,8 +746,7 @@ export default function ReferralManagement() {
             `"${(r.customerName || "").replace(/"/g, '""')}"`,
             `"${r.customerPhone || ""}"`,
             `"${(r.customerAddress || "").replace(/"/g, '""')}"`,
-            `"${clinicStr}"`, `"${pharmacyStr}"`, `"${labStr}"`, `"${feesStr}"`,
-            `"${servicesStr}"`,
+            `"${serviceStr}"`, `"${pharmacyStr}"`, `"${labStr}"`, `"${feesStr}"`,
             `"${discountFeesStr}"`, `"${discountLabStr}"`,
             `"${r.status || "active"}"`,
             `"${formatDate(r.onboardDate || r.referralDate || r.createdAt)}"`
@@ -847,7 +798,6 @@ export default function ReferralManagement() {
     setEditingId(null);
     setEditingType(null);
     setFormData(tab === "doctor" ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM });
-    setFormService({ name: "", price: "" });
   };
 
   if (loading) {
@@ -871,15 +821,15 @@ export default function ReferralManagement() {
           </div>
         )}
 
-        {/* TABS */}
+        {/* TABS — Customer first, then Doctor */}
         <div className="flex items-center gap-2 mb-4 border-b-2 border-gray-200 overflow-x-auto">
-          <button onClick={() => handleTabChange("doctor")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${activeTab === "doctor" ? "border-purple-600 text-purple-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
-            <FaUserMd className="w-4 h-4" /> Doctor Referrals
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "doctor" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>{doctorReferrals.length}</span>
-          </button>
           <button onClick={() => handleTabChange("customer")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${activeTab === "customer" ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
             <FaUser className="w-4 h-4" /> Customer Referrals
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "customer" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-500"}`}>{customerReferrals.length}</span>
+          </button>
+          <button onClick={() => handleTabChange("doctor")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${activeTab === "doctor" ? "border-purple-600 text-purple-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+            <FaUserMd className="w-4 h-4" /> Doctor Referrals
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "doctor" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>{doctorReferrals.length}</span>
           </button>
         </div>
 
@@ -922,7 +872,7 @@ export default function ReferralManagement() {
             <button onClick={fetchReferrals} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"><FiRefreshCw className="w-3.5 h-3.5" /><span className="hidden sm:inline">Refresh</span></button>
             <button onClick={downloadCSV} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700"><FiDownload className="w-3.5 h-3.5" /><span className="hidden sm:inline">Export CSV</span></button>
             <button onClick={() => navigate("/referral-bookings")} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"><FaUsers className="w-3.5 h-3.5" /><span>{referrerLabel} Referred OP</span></button>
-            <button onClick={() => { setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM }); setEditingId(null); setEditingType(null); setFormService({ name: "", price: "" }); setShowForm(true); }} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white ${addButtonBg} rounded-lg shadow-sm`}>
+            <button onClick={() => { setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM }); setEditingId(null); setEditingType(null); setShowForm(true); }} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white ${addButtonBg} rounded-lg shadow-sm`}>
               {isDoctorTab ? <FaUserMd className="w-3.5 h-3.5" /> : <FaUserPlus className="w-3.5 h-3.5" />}<span>Add {referrerLabel}</span>
             </button>
           </div>
@@ -944,7 +894,7 @@ export default function ReferralManagement() {
             </button>
             {hasActiveFilters && (<button onClick={clearFilters} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"><FiTrash2 className="w-3 h-3 text-red-500" />Clear</button>)}
             <button onClick={() => navigate("/referral-bookings")} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"><FaUsers className="w-3.5 h-3.5" /><span>Referred OP</span></button>
-            <button onClick={() => { setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM }); setEditingId(null); setEditingType(null); setFormService({ name: "", price: "" }); setShowForm(true); }} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white ${addButtonBg} rounded-lg`}>
+            <button onClick={() => { setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM }); setEditingId(null); setEditingType(null); setShowForm(true); }} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white ${addButtonBg} rounded-lg`}>
               {isDoctorTab ? <FaUserMd className="w-3.5 h-3.5" /> : <FaUserPlus className="w-3.5 h-3.5" />}<span>{referrerLabel}</span>
             </button>
           </div>
@@ -995,7 +945,7 @@ export default function ReferralManagement() {
             <div className="emp-dash__card-body py-12 text-center text-gray-500">
               <div className="mb-3 text-4xl text-gray-300">{isDoctorTab ? <FaUserMd className="w-12 h-12 text-gray-300 mx-auto" /> : <FaUser className="w-12 h-12 text-gray-300 mx-auto" />}</div>
               <p className="mb-1 text-sm font-semibold text-gray-800">No {referrerLabel.toLowerCase()} referrals found</p>
-              <button onClick={() => { setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM }); setEditingId(null); setEditingType(null); setFormService({ name: "", price: "" }); setShowForm(true); }} className={`px-4 py-2 text-xs font-semibold text-white ${addButtonBg} rounded-lg inline-flex items-center gap-1.5`}>
+              <button onClick={() => { setFormData(isDoctorTab ? { ...EMPTY_DOCTOR_FORM } : { ...EMPTY_CUSTOMER_FORM }); setEditingId(null); setEditingType(null); setShowForm(true); }} className={`px-4 py-2 text-xs font-semibold text-white ${addButtonBg} rounded-lg inline-flex items-center gap-1.5`}>
                 {isDoctorTab ? <FaUserMd className="w-3.5 h-3.5" /> : <FaUserPlus className="w-3.5 h-3.5" />}Add {referrerLabel}
               </button>
             </div>
@@ -1016,11 +966,10 @@ export default function ReferralManagement() {
                       <th>Organisation</th>
                       <th>Phone</th>
                       <th>{isDoctorTab ? "Specialization" : "Address"}</th>
-                      <th style={{ textAlign: "center" }}>Clinic</th>
+                      <th style={{ textAlign: "center" }}>Service</th>
                       <th style={{ textAlign: "center" }}>Pharmacy</th>
                       <th style={{ textAlign: "center" }}>Lab</th>
                       <th style={{ textAlign: "center" }}>Fees</th>
-                      <th style={{ textAlign: "center" }}>Services</th>
                       <th style={{ textAlign: "center" }}>Discount</th>
                       <th style={{ textAlign: "center" }}>Status</th>
                       <th style={{ textAlign: "center" }}>Onboard Date</th>
@@ -1030,7 +979,6 @@ export default function ReferralManagement() {
                   <tbody>
                     {currentReferrals.map((referral, idx) => {
                       const offers = referral.offers || [];
-                      const services = referral.services || [];
                       const name = isDoctorTab ? (referral.doctorName || "N/A") : (referral.customerName || "N/A");
 
                       return (
@@ -1058,7 +1006,7 @@ export default function ReferralManagement() {
                           )}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
-                              {formatCommission(referral.clinicCommission, referral.clinicCommissionType)}
+                              {formatCommission(referral.serviceCommission || referral.clinicCommission, referral.serviceCommissionType || referral.clinicCommissionType)}
                             </span>
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap">
@@ -1075,21 +1023,6 @@ export default function ReferralManagement() {
                             <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
                               {formatCommission(referral.feesCommission, referral.feesCommissionType)}
                             </span>
-                          </td>
-                          <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {services.length > 0 ? (
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                  <FaServicestack className="w-2.5 h-2.5" />
-                                  {services.length} service{services.length > 1 ? "s" : ""}
-                                </span>
-                                <span className="text-[9px] text-gray-500">
-                                  ₹{services.reduce((s, x) => s + (Number(x.price) || 0), 0)}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic">—</span>
-                            )}
                           </td>
                           <td className="px-3 py-3 text-center">
                             {(referral.discountFees || referral.discountLab) ? (
@@ -1133,7 +1066,6 @@ export default function ReferralManagement() {
               {/* MOBILE CARD VIEW */}
               <div className="lg:hidden p-3 space-y-3 bg-gray-50/50">
                 {currentReferrals.map((referral) => {
-                  const services = referral.services || [];
                   const name = isDoctorTab ? (referral.doctorName || "N/A") : (referral.customerName || "N/A");
 
                   return (
@@ -1175,34 +1107,11 @@ export default function ReferralManagement() {
                           </div>
                         )}
 
-                        {services.length > 0 && (
-                          <div className="pt-2 border-t border-gray-100">
-                            <div className="bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200">
-                              <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-[10px] font-bold text-emerald-700 uppercase flex items-center gap-1">
-                                  <FaServicestack className="text-[10px]" /> Services ({services.length})
-                                </span>
-                                <span className="text-xs font-extrabold text-emerald-900">
-                                  ₹{services.reduce((s, x) => s + (Number(x.price) || 0), 0)}
-                                </span>
-                              </div>
-                              <div className="space-y-0.5">
-                                {services.map((svc, i) => (
-                                  <div key={i} className="flex items-center justify-between text-[10px] text-emerald-800">
-                                    <span className="truncate max-w-[120px]">• {svc.name}</span>
-                                    <span className="font-bold">₹{svc.price}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 4 column grid for Clinic, Pharmacy, Lab, Fees */}
+                        {/* 4 column grid for Service, Pharmacy, Lab, Fees */}
                         <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-gray-100">
                           <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200">
-                            <div className="text-[8px] font-bold text-blue-600 uppercase">Clinic</div>
-                            <div className="text-[10px] font-extrabold text-blue-800">{formatCommission(referral.clinicCommission, referral.clinicCommissionType)}</div>
+                            <div className="text-[8px] font-bold text-blue-600 uppercase">Service</div>
+                            <div className="text-[10px] font-extrabold text-blue-800">{formatCommission(referral.serviceCommission || referral.clinicCommission, referral.serviceCommissionType || referral.clinicCommissionType)}</div>
                           </div>
                           <div className="text-center p-1.5 rounded-lg bg-green-50 border border-green-200">
                             <div className="text-[8px] font-bold text-green-600 uppercase">Pharm</div>
@@ -1359,7 +1268,7 @@ export default function ReferralManagement() {
                     )}
                   </div>
 
-                  {/* ✅ Consultant Fee — 4 fields in one row (Clinic, Pharmacy, Lab, Fees) */}
+                  {/* Consultant Fee — 4 fields in one row (Service, Pharmacy, Lab, Fees) */}
                   <div>
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-100">
                       Consultant Fee
@@ -1421,91 +1330,6 @@ export default function ReferralManagement() {
                         );
                       })}
                     </div>
-                   
-                  </div>
-
-                  {/* Services Section */}
-                  <div className="border rounded-xl p-5 bg-emerald-50/40 border-emerald-200">
-                    <div className="flex items-center justify-between mb-4 pb-2 border-b border-emerald-200">
-                      <label className="text-xs font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-2">
-                        <FaServicestack className="text-emerald-600 w-4 h-4" /> Services
-                      </label>
-                      {formData.services?.length > 0 && (
-                        <span className="text-xs font-extrabold text-emerald-800">
-                          Total: ₹{getServicesTotal()}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap mb-3">
-                      <div className="flex-1 min-w-[160px]">
-                        <input
-                          type="text"
-                          value={formService.name}
-                          onChange={(e) => setFormService((p) => ({ ...p, name: e.target.value }))}
-                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddService(); } }}
-                          placeholder="Service name (e.g. Consultation)"
-                          className="w-full bg-white border border-emerald-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-medium"
-                        />
-                      </div>
-                      <div className="w-28 relative">
-                        <FaRupeeSign className="w-3.5 h-3.5 text-emerald-500 absolute left-3 top-3" />
-                        <input
-                          type="number"
-                          value={formService.price}
-                          onChange={(e) => setFormService((p) => ({ ...p, price: e.target.value }))}
-                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddService(); } }}
-                          placeholder="0"
-                          min="0"
-                          className="w-full bg-white border border-emerald-300 rounded-lg pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-semibold"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleAddService}
-                        disabled={!formService.name.trim() || !formService.price}
-                        className="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center gap-1.5 shadow-sm disabled:opacity-50"
-                      >
-                        <FaPlusCircle className="w-3 h-3" /> Add
-                      </button>
-                    </div>
-
-                    {formData.services?.length > 0 ? (
-                      <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                        {formData.services.map((svc, i) => (
-                          <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-white border border-emerald-200">
-                            <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                              {i + 1}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-gray-800 truncate">{svc.name}</div>
-                            </div>
-                            <div className="w-24 relative">
-                              <FaRupeeSign className="w-3 h-3 text-emerald-500 absolute left-2.5 top-2" />
-                              <input
-                                type="number"
-                                value={svc.price}
-                                onChange={(e) => handleUpdateServicePrice(i, e.target.value)}
-                                className="w-full px-2 pl-7 py-1 text-xs font-bold text-emerald-700 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                min="0"
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveService(i)}
-                              className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded"
-                              title="Remove"
-                            >
-                              <FaMinusCircle className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-4 text-[11px] text-emerald-600 bg-white/50 rounded-lg border border-dashed border-emerald-300">
-                        No services added yet — add service name & price above
-                      </div>
-                    )}
                   </div>
 
                   {/* Additional Details */}
@@ -1669,8 +1493,8 @@ export default function ReferralManagement() {
                   <div className="text-[10px] font-bold uppercase text-gray-400">Consultant Fee</div>
                   <div className="grid grid-cols-4 gap-2 mt-1">
                     <div className="bg-blue-50 p-2 rounded-lg text-center border border-blue-100">
-                      <div className="text-[9px] text-blue-600 font-bold">Clinic</div>
-                      <div className="text-xs font-extrabold text-blue-900">{formatCommission(selectedReferral.clinicCommission, selectedReferral.clinicCommissionType)}</div>
+                      <div className="text-[9px] text-blue-600 font-bold">Service</div>
+                      <div className="text-xs font-extrabold text-blue-900">{formatCommission(selectedReferral.serviceCommission || selectedReferral.clinicCommission, selectedReferral.serviceCommissionType || selectedReferral.clinicCommissionType)}</div>
                     </div>
                     <div className="bg-green-50 p-2 rounded-lg text-center border border-green-100">
                       <div className="text-[9px] text-green-600 font-bold">Pharmacy</div>
@@ -1686,26 +1510,6 @@ export default function ReferralManagement() {
                     </div>
                   </div>
                 </div>
-
-                {selectedReferral.services?.length > 0 && (
-                  <div className="pt-2 border-t border-gray-200">
-                    <div className="text-[10px] font-bold uppercase text-gray-400">Services ({selectedReferral.services.length})</div>
-                    <div className="mt-1 space-y-1">
-                      {selectedReferral.services.map((s, i) => (
-                        <div key={i} className="flex items-center justify-between bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-                          <span className="text-xs font-semibold text-emerald-800 truncate max-w-[200px]">• {s.name}</span>
-                          <span className="text-xs font-extrabold text-emerald-900">₹{s.price}</span>
-                        </div>
-                      ))}
-                      <div className="flex items-center justify-between pt-1 px-3">
-                        <span className="text-[10px] font-bold text-emerald-700 uppercase">Total</span>
-                        <span className="text-sm font-extrabold text-emerald-900">
-                          ₹{selectedReferral.services.reduce((s, x) => s + (Number(x.price) || 0), 0)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {(selectedReferral.discountFees || selectedReferral.discountLab) && (
                   <div className="pt-2 border-t border-gray-200">
