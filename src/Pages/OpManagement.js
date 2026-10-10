@@ -1,5 +1,5 @@
 // OpManagement.js — COMPLETE (Per-Category Independent Payment + Per-Item Status Sync)
-// ✅ FIX: getCategoryPaymentModeDisplay wapas add kiya (per-category mode display + booking.paymentType fallback)
+// ✅ FIX: Table columns properly ordered — PID → Created At → Patient → ... → Referred By → BILL → Actions
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -106,8 +106,11 @@ const DISCOUNT_TYPE_OPTIONS = [
 ];
 
 const ITEM_PAYMENT_MODE_OPTIONS = [
+  { value: "N/A", label: "N/A" },
   { value: "Cash", label: "Cash" },
   { value: "Online", label: "Online" },
+  { value: "Wallet", label: "Wallet" },
+  { value: "Credit Card", label: "Credit Card" },
 ];
 
 const ITEM_PAYMENT_STATUS_OPTIONS = [
@@ -140,7 +143,8 @@ const modeToDisplay = (mode) => {
   const s = String(mode).trim().toLowerCase();
   if (s === "cash") return "Cash";
   if (s === "online") return "Online";
-  if (s === "card") return "Card";
+  if (s === "card" || s === "credit card") return "Credit Card";
+  if (s === "wallet") return "Wallet";
   if (s === "insurance") return "Insurance";
   if (s === "due") return "Due";
   return mode.charAt(0).toUpperCase() + mode.slice(1);
@@ -242,6 +246,12 @@ const getPaymentStatusColors = (status) => {
 
 const getBookingType = (booking) => {
   if (!booking) return { label: "Walk-In", icon: FaWalking, color: "bg-amber-50 text-amber-700 border-amber-200" };
+  if (booking.bookingType === "N-Walkin") {
+    return { label: "N-Walkin", icon: FaWalking, color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  }
+  if (booking.bookingType === "R-Walkin") {
+    return { label: "R-Walkin", icon: FaWalking, color: "bg-blue-50 text-blue-700 border-blue-200" };
+  }
   if (booking.isOP === true) return { label: "Walk-In", icon: FaWalking, color: "bg-amber-50 text-amber-700 border-amber-200" };
   return { label: "Online", icon: FaGlobe, color: "bg-cyan-50 text-cyan-700 border-cyan-200" };
 };
@@ -278,7 +288,7 @@ const getBookingServices = (booking) => {
       description: s.description || "",
       category: s.category || s.serviceCategory || s.type || "",
       paymentStatus: normalizedStatus,
-      paymentMode: s.paymentMode || "",
+      paymentMode: s.paymentMode || "N/A",
       isReviewService: false,
     };
   });
@@ -379,15 +389,12 @@ const getBookingPaidInfo = (booking) => {
   return { final, paid, balance, status };
 };
 
-// ✅ Per-category independent payment status — prefers per-item statuses
 const getCategoryStatuses = (booking) => {
   const breakdown = getAmountBreakdown(booking);
   const categories = ["clinic", "lab", "pharmacy"];
   const stored = booking?.categoryPayment || {};
   const result = {};
-
-  const legacyFullyPaid = !booking?.categoryPayment && booking?.paymentStatus === "Paid";
-  const legacyPartial = !booking?.categoryPayment && booking?.paymentStatus === "Partial";
+  const bookingPaid = booking?.paymentStatus === "Paid";
 
   categories.forEach((cat) => {
     const amt = Number(breakdown?.[cat]) || 0;
@@ -396,57 +403,68 @@ const getCategoryStatuses = (booking) => {
       return;
     }
 
-    // ✅ Prefer per-item statuses when items exist
-    let paidAmt;
+    let paidAmt = 0;
+    let hasExplicit = false;
+
     if (cat === "clinic") {
       const rawSvcList = Array.isArray(booking?.serviceItems) && booking.serviceItems.length > 0
         ? booking.serviceItems
         : (Array.isArray(booking?.services) ? booking.services : []);
       const clinicItems = rawSvcList.filter((s) => !s.isReviewService && classifyService(s) === "clinic");
-      const hasPerItem = clinicItems.some((s) => s.paymentStatus && s.paymentMode);
-      if (hasPerItem && clinicItems.length > 0) {
+      hasExplicit = clinicItems.some((s) => {
+        const m = (s.paymentMode || "").toString().trim().toLowerCase();
+        return m && m !== "n/a";
+      });
+      if (hasExplicit && clinicItems.length > 0) {
         paidAmt = clinicItems.reduce(
-          (sum, item) =>
-            sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
+          (sum, item) => sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
           0
         );
       } else {
         paidAmt = Number(stored?.clinic?.paidAmount) || 0;
       }
     } else if (cat === "lab" && Array.isArray(booking?.labItems) && booking.labItems.length > 0) {
-      paidAmt = booking.labItems.reduce(
-        (sum, item) =>
-          sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
-        0
-      );
+      hasExplicit = booking.labItems.some((item) => {
+        const m = (item.paymentMode || "").toString().trim().toLowerCase();
+        return m && m !== "n/a";
+      });
+      if (hasExplicit) {
+        paidAmt = booking.labItems.reduce(
+          (sum, item) => sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
+          0
+        );
+      } else {
+        paidAmt = Number(stored?.lab?.paidAmount) || 0;
+      }
     } else if (cat === "pharmacy" && Array.isArray(booking?.medicineItems) && booking.medicineItems.length > 0) {
-      paidAmt = booking.medicineItems.reduce(
-        (sum, item) =>
-          sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
-        0
-      );
+      hasExplicit = booking.medicineItems.some((item) => {
+        const m = (item.paymentMode || "").toString().trim().toLowerCase();
+        return m && m !== "n/a";
+      });
+      if (hasExplicit) {
+        paidAmt = booking.medicineItems.reduce(
+          (sum, item) => sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
+          0
+        );
+      } else {
+        paidAmt = Number(stored?.pharmacy?.paidAmount) || 0;
+      }
     } else {
       paidAmt = Number(stored?.[cat]?.paidAmount) || 0;
     }
 
-    if (paidAmt >= amt - 0.5) {
-      result[cat] = "Paid";
-    } else if (paidAmt > 0) {
-      result[cat] = "Partial";
-    } else if (legacyFullyPaid) {
-      result[cat] = "Paid";
-    } else if (legacyPartial) {
-      result[cat] = "Due";
-    } else {
-      result[cat] = "Due";
+    if (!hasExplicit && bookingPaid && paidAmt <= 0 && amt > 0) {
+      paidAmt = amt;
     }
+
+    if (paidAmt >= amt - 0.5) result[cat] = "Paid";
+    else if (paidAmt > 0) result[cat] = "Partial";
+    else result[cat] = "Due";
   });
 
   return result;
 };
 
-// ✅ NEW: Per-category payment mode display — shows per-item mode, falls back to booking.paymentType
-// This is READ-ONLY and does NOT disturb existing bookings
 const getCategoryPaymentModeDisplay = (booking, category) => {
   if (!booking) return "";
 
@@ -467,10 +485,8 @@ const getCategoryPaymentModeDisplay = (booking, category) => {
   const modes = [];
   items.forEach((it) => {
     const m = (it.paymentMode || "").toString().trim().toLowerCase();
-    if (m && !modes.includes(m)) modes.push(m);
+    if (m && m !== "n/a" && !modes.includes(m)) modes.push(m);
   });
-
-  // ✅ FALLBACK: agar per-item paymentMode nahi hai, toh booking-level paymentType use karo
   if (modes.length === 0) {
     const fallback = (booking.paymentType || "").toString().trim().toLowerCase();
     return fallback ? modeToDisplay(fallback) : "";
@@ -541,9 +557,6 @@ const computeFinancials = (serviceItems, { labTotal = 0, medicineTotal = 0, refe
   return { servicesSubtotal, subtotal, commissionPercent, commissionAmount, discountAmount, offerDeduction, finalPayable, parsedPartial, paymentStatus, amountPaid, balanceAmount };
 };
 
-/* ============================================================ */
-/* DateRangePopup                                               */
-/* ============================================================ */
 const DateRangePopup = ({
   isOpen, position, fromDate, toDate, onFromChange, onToChange, onClear, onClose, dataAttr,
 }) => {
@@ -853,11 +866,6 @@ export default function OpManagement() {
 
   const API_BASE_INVURL = 'https://api.timelyhealth.in';
 
-  /* ============================================================
-     ✅ Helper Functions
-     ============================================================ */
-
-  // ✅ NEW: Compute categoryPayment considering per-item statuses
   const computeCategoryPaymentFromBooking = (booking, overrides = {}) => {
     if (!booking) {
       return {
@@ -889,7 +897,10 @@ export default function OpManagement() {
       (s) => !s.isReviewService && classifyService(s) === "clinic"
     );
     const hasExplicitClinicPerItem = clinicItems.some(
-      (s) => s.paymentMode && String(s.paymentMode).trim() !== ""
+      (s) => {
+        const m = (s.paymentMode || "").toString().trim().toLowerCase();
+        return m && m !== "n/a";
+      }
     );
     let clinicPaid = 0;
     if (hasExplicitClinicPerItem && clinicItems.length > 0) {
@@ -905,26 +916,34 @@ export default function OpManagement() {
     }
 
     let labPaid = 0;
-    if (labList.length > 0) {
+    const hasExplicitLab = labList.some((item) => {
+      const m = (item.paymentMode || "").toString().trim().toLowerCase();
+      return m && m !== "n/a";
+    });
+    if (hasExplicitLab && labList.length > 0) {
       labPaid = labList.reduce(
         (sum, item) =>
           sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
         0
       );
-    } else if (existing?.lab?.paidAmount !== undefined) {
+    } else if (existing?.lab?.paidAmount !== undefined && existing.lab.paidAmount > 0) {
       labPaid = Number(existing.lab.paidAmount) || 0;
     } else if (wasPaid && Number(bd.lab) > 0) {
       labPaid = Number(bd.lab) || 0;
     }
 
     let pharmacyPaid = 0;
-    if (medList.length > 0) {
+    const hasExplicitPharmacy = medList.some((item) => {
+      const m = (item.paymentMode || "").toString().trim().toLowerCase();
+      return m && m !== "n/a";
+    });
+    if (hasExplicitPharmacy && medList.length > 0) {
       pharmacyPaid = medList.reduce(
         (sum, item) =>
           sum + ((item.paymentStatus || "").toLowerCase() === "paid" ? (Number(item.price) || 0) : 0),
         0
       );
-    } else if (existing?.pharmacy?.paidAmount !== undefined) {
+    } else if (existing?.pharmacy?.paidAmount !== undefined && existing.pharmacy.paidAmount > 0) {
       pharmacyPaid = Number(existing.pharmacy.paidAmount) || 0;
     } else if (wasPaid && Number(bd.pharmacy) > 0) {
       pharmacyPaid = Number(bd.pharmacy) || 0;
@@ -970,9 +989,6 @@ export default function OpManagement() {
     if (choice === "register") setTimeout(() => { handleAddNewPatient(); }, 200);
   };
 
-  /* ============================================================
-     CLINIC SERVICES MODAL HANDLERS
-     ============================================================ */
   const openClinicServicesModal = (booking) => {
     if (!booking) return;
     const allServices = getBookingServices(booking);
@@ -980,14 +996,14 @@ export default function OpManagement() {
       if (s.isReviewService) return false;
       return classifyService(s) === "clinic";
     });
-    const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
     setClinicServicesList(clinicOnly.map((s) => ({
       serviceId: s.serviceId || s._id || "",
       name: s.name,
       price: Number(s.price) || 0,
       description: s.description || "",
-      paymentMode: s.paymentMode || fallbackModeDisplay,
-      paymentStatus: s.paymentStatus || "Due",
+      paymentMode: s.paymentMode || "N/A",
+      paymentStatus: s.paymentStatus || "",
+      _wasPaid: (s.paymentStatus || "").toLowerCase() === "paid",
     })));
     setClinicServicesBooking(booking);
     setClinicServiceInput("");
@@ -999,14 +1015,14 @@ export default function OpManagement() {
 
   const handleAddClinicServiceItem = (service) => {
     if (!service) return;
-    const fallbackModeDisplay = modeToDisplay(clinicServicesBooking?.paymentType || "cash");
     setClinicServicesList((prev) => [...prev, {
       serviceId: service._id || "",
       name: service.name,
       price: Number(service.price) || 0,
       description: service.description || "",
-      paymentMode: fallbackModeDisplay,
-      paymentStatus: "Due",
+      paymentMode: "N/A",
+      paymentStatus: "",
+      _wasPaid: false,
     }]);
     setClinicServiceInput("");
     setClinicServicePrice("");
@@ -1027,14 +1043,14 @@ export default function OpManagement() {
       if (res?.data?.success) {
         const newService = res.data.data;
         await fetchServices();
-        const fallbackModeDisplay = modeToDisplay(clinicServicesBooking?.paymentType || "cash");
         setClinicServicesList((prev) => [...prev, {
           serviceId: newService._id || "",
           name: newService.name,
           price: Number(newService.price) || 0,
-          description: "",
-          paymentMode: fallbackModeDisplay,
-          paymentStatus: "Due",
+          description: newService.description || "",
+          paymentMode: "N/A",
+          paymentStatus: "",
+          _wasPaid: false,
         }]);
         setClinicServiceInput("");
         setClinicServicePrice("");
@@ -1149,9 +1165,6 @@ export default function OpManagement() {
     } finally { setSavingClinicServices(false); }
   };
 
-  /* ============================================================
-     LAB ITEMS MULTI-ITEM HANDLERS
-     ============================================================ */
   const openLabItemsModal = (booking) => {
     if (!booking) return;
     let items = Array.isArray(booking.labItems) ? booking.labItems : [];
@@ -1159,17 +1172,17 @@ export default function OpManagement() {
       items = [{
         serviceId: "", name: "Lab Test",
         price: Number(booking.labTotal) || 0, description: "",
-        category: "lab", paymentMode: "Cash", paymentStatus: "Due",
+        category: "lab", paymentMode: "N/A", paymentStatus: "",
       }];
     }
-    const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
     setLabItemsList(items.map((s) => ({
       serviceId: s.serviceId || s._id || "",
       name: s.name || "Lab Test",
       price: Number(s.price) || 0,
       description: s.description || "",
-      paymentMode: s.paymentMode || fallbackModeDisplay,
-      paymentStatus: s.paymentStatus || "Due",
+      paymentMode: s.paymentMode || "N/A",
+      paymentStatus: s.paymentStatus || "",
+      _wasPaid: (s.paymentStatus || "").toLowerCase() === "paid",
     })));
     setLabItemsBooking(booking);
     setLabItemPrice("");
@@ -1180,14 +1193,14 @@ export default function OpManagement() {
     const price = labItemPrice.trim();
     if (!price) { showToast("Please enter lab amount", "error"); return; }
     if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
-    const fallbackModeDisplay = modeToDisplay(labItemsBooking?.paymentType || "cash");
     setLabItemsList((prev) => [...prev, {
       serviceId: "",
       name: `Lab Test ${prev.length + 1}`,
       price: Number(price) || 0,
       description: "",
-      paymentMode: fallbackModeDisplay,
-      paymentStatus: "Due",
+      paymentMode: "N/A",
+      paymentStatus: "",
+      _wasPaid: false,
     }]);
     setLabItemPrice("");
   };
@@ -1303,9 +1316,6 @@ export default function OpManagement() {
     }
   };
 
-  /* ============================================================
-     PHARMACY ITEMS MULTI-ITEM HANDLERS
-     ============================================================ */
   const openPharmacyItemsModal = (booking) => {
     if (!booking) return;
     let items = Array.isArray(booking.medicineItems) ? booking.medicineItems : [];
@@ -1313,17 +1323,17 @@ export default function OpManagement() {
       items = [{
         serviceId: "", name: "Medicine",
         price: Number(booking.medicineTotal) || 0, description: "",
-        category: "pharmacy", paymentMode: "Cash", paymentStatus: "Due",
+        category: "pharmacy", paymentMode: "N/A", paymentStatus: "",
       }];
     }
-    const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
     setPharmacyItemsList(items.map((s) => ({
       serviceId: s.serviceId || s._id || "",
       name: s.name || "Medicine",
       price: Number(s.price) || 0,
       description: s.description || "",
-      paymentMode: s.paymentMode || fallbackModeDisplay,
-      paymentStatus: s.paymentStatus || "Due",
+      paymentMode: s.paymentMode || "N/A",
+      paymentStatus: s.paymentStatus || "",
+      _wasPaid: (s.paymentStatus || "").toLowerCase() === "paid",
     })));
     setPharmacyItemsBooking(booking);
     setPharmacyItemPrice("");
@@ -1334,14 +1344,14 @@ export default function OpManagement() {
     const price = pharmacyItemPrice.trim();
     if (!price) { showToast("Please enter medicine amount", "error"); return; }
     if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
-    const fallbackModeDisplay = modeToDisplay(pharmacyItemsBooking?.paymentType || "cash");
     setPharmacyItemsList((prev) => [...prev, {
       serviceId: "",
       name: `Medicine ${prev.length + 1}`,
       price: Number(price) || 0,
       description: "",
-      paymentMode: fallbackModeDisplay,
-      paymentStatus: "Due",
+      paymentMode: "N/A",
+      paymentStatus: "",
+      _wasPaid: false,
     }]);
     setPharmacyItemPrice("");
   };
@@ -1686,7 +1696,7 @@ export default function OpManagement() {
             description: s.description || "",
             category: s.category || s.serviceCategory || s.type || "",
             paymentStatus: fallback,
-            paymentMode: s.paymentMode || "",
+            paymentMode: s.paymentMode || "N/A",
             addedAt: s.addedAt || b.createdAt || new Date().toISOString(),
           };
         });
@@ -1730,6 +1740,8 @@ export default function OpManagement() {
 
         return {
           _id: b._id || b.id,
+          customPID: b.customPID || "",
+          bookingType: b.bookingType || "",
           slotId: b.slotId || b._id,
           patientId: b.patientId || "",
           patientName: b.patientName || "",
@@ -1920,6 +1932,7 @@ export default function OpManagement() {
         const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
         const derived = patients.find((p) => p.phone === value) || {
           _id: latest.patientId || latest._id,
+          customPID: latest.customPID || "",   // ✅ NEW
           title: latest.patientTitle || "Mr.",
           name: latest.patientName || "",
           dob: latest.patientDob || "", age: latest.patientAge || "",
@@ -1935,6 +1948,10 @@ export default function OpManagement() {
           referralDoctorId: latest.referralDoctorId || "",
           referralCommission: latest.referralCommission || "",
           referralCommissionType: latest.referralCommissionType || "",
+          lastDoctorName: latest.doctorName || "",
+          lastAppointmentDate: latest.appointmentDate || latest.date || "",
+          lastStartTime: latest.startTime || "",
+          lastEndTime: latest.endTime || "",
         };
         setExistingPatient(derived);
         setShowExistingPatientPopup(true);
@@ -2306,6 +2323,11 @@ export default function OpManagement() {
           lab: { paidAmount: Number(bd.lab) || 0 },
           pharmacy: { paidAmount: Number(bd.pharmacy) || 0 },
         };
+        const markPaid = (arr) => Array.isArray(arr) ? arr.map((x) => ({ ...x, paymentStatus: "Paid" })) : [];
+        payload.serviceItems = markPaid(booking.serviceItems);
+        payload.services = payload.serviceItems;
+        payload.labItems = markPaid(booking.labItems);
+        payload.medicineItems = markPaid(booking.medicineItems);
       }
       const res = await axios.put(`${API_BASE_URL}/appointment-slots/${booking._id}`, payload);
       if (res?.data?.success) {
@@ -3066,9 +3088,13 @@ export default function OpManagement() {
 
     const finalBreakdown = { clinic: 0, lab: 0, pharmacy: 0 };
     items.forEach((it) => {
-      if (it.category === "lab") finalBreakdown.lab += it.amount;
-      else if (it.category === "pharmacy") finalBreakdown.pharmacy += it.amount;
-      else finalBreakdown.clinic += it.amount;
+      const cat = it.category || "clinic";
+      const amt = Number(it.amount) || 0;
+      if (finalBreakdown[cat] !== undefined) {
+        finalBreakdown[cat] += amt;
+      } else {
+        finalBreakdown.clinic += amt;
+      }
     });
 
     const grossAmount = items.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
@@ -3242,7 +3268,6 @@ export default function OpManagement() {
     bookings.forEach((booking) => {
       const bd = getAmountBreakdown(booking);
 
-      // ---------- CLINIC ----------
       if (bd.clinic > 0) {
         result.clinic.total += bd.clinic;
         result.clinic.footFall += 1;
@@ -3256,9 +3281,11 @@ export default function OpManagement() {
           : (Array.isArray(booking.services) ? booking.services : []);
         const clinicItems = rawSvcList.filter((s) => classifyService(s) === "clinic");
         const hasPerItemMode = clinicItems.some(
-          (s) => s.paymentMode && String(s.paymentMode).trim() !== ""
+          (s) => {
+            const m = (s.paymentMode || "").toString().trim().toLowerCase();
+            return m && m !== "n/a";
+          }
         );
-
         if (clinicStatus === "Paid" || clinicStatus === "Partial") {
           let clinicPaidDistributed = 0;
           const clinicPaidTotal = clinicStatus === "Paid"
@@ -3271,14 +3298,12 @@ export default function OpManagement() {
               if (!isPaid) return;
               const amt = Number(item.price) || 0;
               const mode = (item.paymentMode || "").toString().trim().toLowerCase();
-              if (mode === "cash") result.clinic.cash += amt;
-              else if (mode === "online") result.clinic.online += amt;
-              else if (mode === "card") result.clinic.card += amt;
-              else if (mode === "insurance") result.clinic.insurance += amt;
-              clinicPaidDistributed += amt;
+              if (mode === "cash") { result.clinic.cash += amt; clinicPaidDistributed += amt; }
+              else if (mode === "online") { result.clinic.online += amt; clinicPaidDistributed += amt; }
+              else if (mode === "card") { result.clinic.card += amt; clinicPaidDistributed += amt; }
+              else if (mode === "insurance") { result.clinic.insurance += amt; clinicPaidDistributed += amt; }
             });
           }
-
           const remaining = Math.max(0, clinicPaidTotal - clinicPaidDistributed);
           if (remaining > 0) {
             if (fallbackMode === "cash") result.clinic.cash += remaining;
@@ -3294,7 +3319,6 @@ export default function OpManagement() {
         }
       }
 
-      // ---------- LAB ----------
       if (bd.lab > 0) {
         result.lab.total += bd.lab;
         result.lab.footFall += 1;
@@ -3309,10 +3333,17 @@ export default function OpManagement() {
             const mode = (item.paymentMode || "Cash").toLowerCase();
 
             if (status === "paid") {
+              const fallbackLab = (booking.paymentType || "cash").toLowerCase();
               if (mode === "cash") result.lab.cash += amt;
               else if (mode === "online") result.lab.online += amt;
               else if (mode === "card") result.lab.card += amt;
               else if (mode === "insurance") result.lab.insurance += amt;
+              else if (mode === "n/a" || mode === "" || mode === "wallet" || mode === "credit card") {
+                if (fallbackLab === "cash") result.lab.cash += amt;
+                else if (fallbackLab === "online") result.lab.online += amt;
+                else if (fallbackLab === "card") result.lab.card += amt;
+                else if (fallbackLab === "insurance") result.lab.insurance += amt;
+              }
             } else if (status === "pending" || status === "due") {
               result.lab.due += amt;
             }
@@ -3341,7 +3372,6 @@ export default function OpManagement() {
         }
       }
 
-      // ---------- PHARMACY ----------
       if (bd.pharmacy > 0) {
         result.pharmacy.total += bd.pharmacy;
         result.pharmacy.footFall += 1;
@@ -3356,10 +3386,17 @@ export default function OpManagement() {
             const mode = (item.paymentMode || "Cash").toLowerCase();
 
             if (status === "paid") {
+              const fallbackPh = (booking.paymentType || "cash").toLowerCase();
               if (mode === "cash") result.pharmacy.cash += amt;
               else if (mode === "online") result.pharmacy.online += amt;
               else if (mode === "card") result.pharmacy.card += amt;
               else if (mode === "insurance") result.pharmacy.insurance += amt;
+              else if (mode === "n/a" || mode === "" || mode === "wallet" || mode === "credit card") {
+                if (fallbackPh === "cash") result.pharmacy.cash += amt;
+                else if (fallbackPh === "online") result.pharmacy.online += amt;
+                else if (fallbackPh === "card") result.pharmacy.card += amt;
+                else if (fallbackPh === "insurance") result.pharmacy.insurance += amt;
+              }
             } else if (status === "pending" || status === "due") {
               result.pharmacy.due += amt;
             }
@@ -3876,11 +3913,16 @@ export default function OpManagement() {
 
         {/* ADD/EDIT MODAL */}
         {showForm && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-            <button onClick={cancelForm} className="absolute top-4 right-4 sm:top-6 sm:right-24 z-[60] w-10 h-10 rounded-full bg-white text-gray-700 hover:bg-red-500 hover:text-white shadow-2xl border-2 border-gray-200 hover:border-red-500 flex items-center justify-center transition-all" title="Close">
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-start justify-center pt-12 sm:pt-16 px-2 sm:px-4 pb-4">
+            <button
+              onClick={cancelForm}
+              className="absolute top-4 right-4 sm:top-6 sm:right-72 z-[60] w-10 h-10 rounded-full bg-black text-white hover:bg-black hover:text-white shadow-2xl border-2 border-gray-700 hover:border-black flex items-center justify-center transition-all"
+              title="Close"
+            >
               <FaTimes className="w-5 h-5" />
             </button>
-            <div className="bg-white rounded-2xl w-full max-w-[1200px] p-4 sm:p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[96vh] overflow-y-auto">
+
+            <div className="bg-white rounded-2xl w-full max-w-[1200px] p-4 sm:p-6 md:p-8 shadow-2xl border border-gray-200 relative max-h-[calc(100vh-7rem)] sm:max-h-[calc(100vh-8rem)] overflow-y-auto">
               <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-gray-100">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold flex-shrink-0"><FaUserInjured className="w-4 h-4 sm:w-5 sm:h-5" /></div>
@@ -3891,23 +3933,90 @@ export default function OpManagement() {
                 </div>
               </div>
 
-              {showExistingPatientPopup && existingPatient && !editingId && (
-                <div className="mt-4 p-3.5 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <FiAlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-blue-900">Existing Patient Record Found!</p>
-                      <div className="mt-1 text-xs text-blue-800 space-y-0.5">
-                        <p><span className="font-semibold">Name:</span> {existingPatient.title} {existingPatient.name} | <span className="font-semibold">Phone:</span> {existingPatient.phone}</p>
-                        <p><span className="font-semibold">Age:</span> {existingPatient.age} yrs | <span className="font-semibold">Gender:</span> {existingPatient.gender}</p>
-                      </div>
-                      <button type="button" onClick={autoFillPatientDetails} className="mt-2 px-3.5 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg inline-flex items-center gap-1.5"><FaCheck className="text-[10px]" /> Auto-Fill Details</button>
-                    </div>
-                    <button type="button" onClick={() => setShowExistingPatientPopup(false)} className="text-gray-400 hover:text-gray-600"><FaTimes className="w-3.5 h-3.5" /></button>
-                  </div>
-                </div>
-              )}
+             {showExistingPatientPopup && existingPatient && !editingId && (() => {
+  const lastBooking = getMatchingBooking({ phone: existingPatient.phone, name: existingPatient.name });
+  const lastDoctor = existingPatient.lastDoctorName || lastBooking?.doctorName || "";
+  const lastDate = existingPatient.lastAppointmentDate || lastBooking?.appointmentDate || lastBooking?.date || "";
+  const lastStart = existingPatient.lastStartTime || lastBooking?.startTime || "";
+  const lastEnd = existingPatient.lastEndTime || lastBooking?.endTime || "";
+  const existingPID = lastBooking?.customPID || existingPatient.customPID || "";
+  return (
+    <div className="mt-2 px-2.5 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="flex items-center gap-2 flex-wrap">
+        <FiAlertCircle className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+        <span className="text-[11px] font-bold text-blue-900 whitespace-nowrap">Existing Patient:</span>
 
+      {/* ✅ NEW — PID badge with label */}
+{existingPID && (
+  <span className="text-[11px] font-semibold text-slate-600 bg-white border border-slate-300 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
+    <span className="text-[10px] font-bold text-slate-500 uppercase">Patient ID:</span>
+    <span className="font-mono font-bold text-slate-800">{existingPID}</span>
+  </span>
+)}
+
+        <span className="text-[11px] text-blue-800 whitespace-nowrap">
+          {existingPatient.title} {existingPatient.name} • {existingPatient.phone} • {existingPatient.age}y / {existingPatient.gender}
+        </span>
+
+        {lastDoctor && (
+          <span className="text-[11px] text-purple-800 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
+            <FaUserMdIcon className="text-[9px] text-purple-600" /> {lastDoctor}
+          </span>
+        )}
+        {lastDate && (
+          <span className="text-[11px] text-indigo-800 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
+            <FaCalendarAlt className="text-[9px] text-indigo-600" /> {formatDateToDDMMYYYY(lastDate)}
+          </span>
+        )}
+        {(lastStart || lastEnd) && (
+          <span className="text-[11px] text-blue-800 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
+            <FaClock className="text-[9px] text-blue-600" /> {lastStart}{lastEnd ? ` – ${lastEnd}` : ""}
+          </span>
+        )}
+
+        {lastDate && (() => {
+          const apptDay = new Date(lastDate);
+          if (isNaN(apptDay.getTime())) return null;
+          apptDay.setHours(0, 0, 0, 0);
+
+          const todayDay = new Date();
+          todayDay.setHours(0, 0, 0, 0);
+
+          const diffDays = Math.floor((todayDay - apptDay) / (1000 * 60 * 60 * 24));
+
+          if (diffDays < 0) {
+            return (
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1 border text-emerald-800 bg-emerald-50 border-emerald-200">
+                <FaStar className="text-[9px]" /> Review: Yes ({REVIEW_WINDOW_DAYS}d left)
+              </span>
+            );
+          }
+
+          const daysLeft = Math.max(0, REVIEW_WINDOW_DAYS - diffDays);
+          const isValid = diffDays <= REVIEW_WINDOW_DAYS;
+
+          return (
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1 border ${isValid
+              ? "text-emerald-800 bg-emerald-50 border-emerald-200"
+              : "text-red-800 bg-red-50 border-red-200"
+              }`}>
+              <FaStar className="text-[9px]" />
+              Review: {isValid ? `Yes (${daysLeft}d left)` : "No"}
+            </span>
+          );
+        })()}
+
+        <span className="flex-1 min-w-[20px]"></span>
+        <button type="button" onClick={autoFillPatientDetails} className="px-2.5 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md inline-flex items-center gap-1 flex-shrink-0">
+          <FaCheck className="text-[9px]" /> Auto-Fill
+        </button>
+        <button type="button" onClick={() => setShowExistingPatientPopup(false)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+          <FaTimes className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  );
+})()}
               <form onSubmit={isEditMode ? handleUpdateNow : handleBookNow} className="mt-4 sm:mt-5 space-y-4" noValidate>
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-2">
@@ -3990,7 +4099,7 @@ export default function OpManagement() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider flex items-center gap-2">
@@ -4008,47 +4117,51 @@ export default function OpManagement() {
                       {doctors.map((d) => <option key={d._id || d.id} value={d._id || d.id}>{d.name || "Doctor"}</option>)}
                     </select>
                   </div>
+
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-2">Appointment Date</label>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Appointment Date</label>
                     <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
                   </div>
-                </div>
 
-                {formData.doctorId && formData.appointmentDate && !isEditMode && (
-                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">Available Slots ({getDayNameFromDate(formData.appointmentDate)})</label>
-                    {slotsLoading ? (
-                      <div className="text-xs text-gray-500 py-3 text-center"><FiRefreshCw className="w-4 h-4 animate-spin inline" /> Loading...</div>
-                    ) : availableSlots.length === 0 ? (
-                      <div className="text-xs text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200 flex items-center justify-between gap-3 flex-wrap">
-                        <span className="font-semibold">No slots available for this doctor on this date.</span>
-                        <button type="button" onClick={() => handleRoleBasedNavigate("/appointment-slots")} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors" title="Manage Appointment Slots">
-                          <FaPlus className="w-3 h-3" /> Add Slots for this Doctor
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto p-1">
-                        {availableSlots.map((slot) => {
-                          const isSelected = formData.slotId === slot._id;
-                          const isBooked = slot.status === "booked";
-                          if (formData.slotId && !isSelected) return null;
-                          return (
-                            <button key={slot._id} type="button" onClick={() => !isBooked && handleSlotSelect(slot._id)} className={`p-2 text-xs font-semibold rounded-lg border text-left ${isSelected ? "border-blue-500 bg-blue-50 text-blue-700" : isBooked ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} disabled={isBooked}>
-                              <div className="font-bold text-xs">{slot.startTime} – {slot.endTime}</div>
-                              <div className="text-[10px] text-gray-500">₹{slot.consultationFee || 0}</div>
-                              {isBooked && <span className="text-[9px] font-bold text-red-500 block">Booked</span>}
-                              {isSelected && <span className="text-[9px] font-bold text-emerald-600 block">✓ Selected</span>}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {formData.slotId && (
-                      <button type="button" onClick={() => { setFormData((p) => ({ ...p, slotId: "" })); filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate); }} className="mt-2 text-[10px] text-blue-600 underline">Change Slot</button>
-                    )}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Slot {formData.doctorId && formData.appointmentDate && !isEditMode && <span className="text-gray-400 font-normal">({getDayNameFromDate(formData.appointmentDate)})</span>}
+                    </label>
+                    {!formData.doctorId || !formData.appointmentDate ? (
+                      <div className="w-full border rounded-xl px-3 py-3.5 text-sm bg-gray-50 text-gray-400 border-gray-200">Select doctor & date first</div>
+                    ) : slotsLoading ? (
+                      <div className="w-full border rounded-xl px-3 py-3.5 text-sm bg-gray-50 text-gray-500 border-gray-200 flex items-center gap-2"><FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> Loading...</div>
+                    ) : (() => {
+                      const todayStr = new Date().toISOString().split("T")[0];
+                      const isToday = formData.appointmentDate === todayStr;
+                      const now = new Date();
+                      const nowMins = now.getHours() * 60 + now.getMinutes();
+                      const futureSlots = availableSlots.filter((s) => {
+                        if (s.status === "booked") return false;
+                        if (!isToday) return true;
+                        return parseSlotTimeToMinutes(s.startTime) > nowMins;
+                      });
+                      if (futureSlots.length === 0) {
+                        return (
+                          <div className="w-full border rounded-xl px-3 py-2.5 text-xs bg-amber-50 text-amber-700 border-amber-200 flex items-center justify-between gap-2">
+                            <span className="font-semibold">No slots available</span>
+                            <button type="button" onClick={() => handleRoleBasedNavigate("/appointment-slots")} className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md"><FaPlus className="w-2.5 h-2.5" /> Add</button>
+                          </div>
+                        );
+                      }
+                      return (
+                        <select value={formData.slotId} onChange={(e) => handleSlotSelect(e.target.value)} className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none">
+                          <option value="">-- Select Slot --</option>
+                          {futureSlots.map((slot) => (
+                            <option key={slot._id} value={slot._id}>
+                              {slot.startTime} – {slot.endTime}{slot.consultationFee ? ` (₹${slot.consultationFee})` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      );
+                    })()}
                   </div>
-                )}
-
+                </div>
                 <div className="border rounded-xl p-3 sm:p-4 bg-blue-50/30 border-gray-200">
                   <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
                     <FaShareAlt className="text-blue-600" /> Referred By
@@ -4217,11 +4330,13 @@ export default function OpManagement() {
                   <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows={2} className="w-full border rounded-xl px-3 py-3 text-base sm:text-sm font-medium resize-none bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" placeholder="Enter reason or symptoms" />
                 </div>
 
-                <div className={`border rounded-xl p-3 sm:p-4 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-purple-50/30 border-gray-200"}`}>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
-                    <FaMoneyBillWave className="text-purple-600" /> Payment Details
-                    {isEditMode && <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200"><FaLock /> Amount Locked</span>}
-                  </label>
+                <div className={`border rounded-xl p-2.5 sm:p-3 ${isEditMode ? "bg-gray-100 border-gray-300" : "bg-purple-50/30 border-gray-200"}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[11px] font-bold text-gray-600 uppercase flex items-center gap-2">
+                      <FaMoneyBillWave className="text-purple-600" /> Payment Details
+                      {isEditMode && <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200"><FaLock /> Amount Locked</span>}
+                    </label>
+                  </div>
 
                   {(() => {
                     const matchB = getMatchingBooking({ phone: formData.phone, name: formData.name, _id: formData.bookingId });
@@ -4237,99 +4352,103 @@ export default function OpManagement() {
                     });
 
                     return (
-                      <>
-                        <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
-                          <div className="space-y-1.5 text-xs">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+                        <div className="bg-white rounded-lg border border-gray-200 p-2.5">
+                          <div className="space-y-1 text-xs">
                             {formData.serviceItems.length > 0 && (
                               <>
-                                <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                                <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                                   <span className="text-gray-700 font-medium flex items-center gap-1.5"><FaClinicMedical className="text-[10px] text-blue-600" /> Clinic Services</span>
                                   <span className="text-gray-500 text-[10px]">{formData.serviceItems.length} service{formData.serviceItems.length > 1 ? "s" : ""}</span>
                                 </div>
                                 {formData.serviceItems.map((svc, idx) => (
-                                  <div key={idx} className="flex justify-between items-center py-1 border-b border-gray-100 pl-4">
-                                    <span className="text-gray-600 text-[10px]">• {svc.name}</span>
-                                    <span className="font-medium text-gray-800">₹{svc.price || 0}</span>
+                                  <div key={idx} className="flex justify-between items-center py-0.5 border-b border-gray-100 pl-3">
+                                    <span className="text-gray-600 text-[10px] truncate">• {svc.name}</span>
+                                    <span className="font-medium text-gray-800 text-[11px]">₹{svc.price || 0}</span>
                                   </div>
                                 ))}
                               </>
                             )}
                             {labTotal > 0 && (
-                              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                              <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                                 <span className="text-purple-700 text-[11px] font-semibold flex items-center gap-1"><FaFlask className="text-[9px]" /> Lab Total</span>
-                                <span className="font-bold text-purple-700">₹{labTotal}</span>
+                                <span className="font-bold text-purple-700 text-[11px]">₹{labTotal}</span>
                               </div>
                             )}
                             {medicineTotal > 0 && (
-                              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                              <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                                 <span className="text-green-700 text-[11px] font-semibold flex items-center gap-1"><FaPills className="text-[9px]" /> Pharmacy Total</span>
-                                <span className="font-bold text-green-700">₹{medicineTotal}</span>
+                                <span className="font-bold text-green-700 text-[11px]">₹{medicineTotal}</span>
                               </div>
                             )}
-                            <div className="flex justify-between items-center py-1.5 border-b border-t-2 border-gray-800 bg-gray-50 px-2 -mx-2 mt-1">
+                            <div className="flex justify-between items-center py-1 border-b border-t-2 border-gray-800 bg-gray-50 px-2 -mx-2">
                               <span className="text-gray-900 text-[11px] font-bold">SUBTOTAL</span>
-                              <span className="font-extrabold text-gray-900">₹{fin.subtotal}</span>
+                              <span className="font-extrabold text-gray-900 text-[12px]">₹{fin.subtotal}</span>
                             </div>
                             {fin.discountAmount > 0 && (
-                              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                              <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                                 <span className="text-red-600 text-[11px] font-semibold flex items-center gap-1"><FaPercent className="text-[9px]" /> Discount {formData.discountType === "%" ? `(${formData.discount}%)` : ""}</span>
-                                <span className="font-bold text-red-600">− ₹{Math.round(fin.discountAmount)}</span>
+                                <span className="font-bold text-red-600 text-[11px]">− ₹{Math.round(fin.discountAmount)}</span>
                               </div>
                             )}
                             {fin.offerDeduction > 0 && (
-                              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                              <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                                 <span className="text-amber-700 text-[11px] font-semibold flex items-center gap-1"><FaGift className="text-[9px]" /> Offer ({appliedOffer?.offerName})</span>
-                                <span className="font-bold text-amber-700">− ₹{Math.round(fin.offerDeduction)}</span>
+                                <span className="font-bold text-amber-700 text-[11px]">− ₹{Math.round(fin.offerDeduction)}</span>
                               </div>
                             )}
-                            <div className="flex justify-between items-center py-2 border-t-2 border-gray-800">
-                              <span className="font-bold text-gray-800">Payable Amount</span>
+                            <div className="flex justify-between items-center py-1 border-t-2 border-gray-800">
+                              <span className="font-bold text-gray-800 text-[11px]">Payable Amount</span>
                               <span className="font-bold text-emerald-700 text-sm">₹{Math.round(fin.finalPayable)}</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-12 gap-2 sm:gap-3 mb-3">
-                          <div className="col-span-1 md:col-span-2">
-                            <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1 flex items-center gap-1.5"><FaPercent className="text-[10px]" /> Type</label>
-                            <select name="discountType" value={formData.discountType} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-xl px-2 py-3.5 text-base sm:text-sm font-medium focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none">
-                              {DISCOUNT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                            </select>
-                          </div>
-                          <div className="col-span-1 md:col-span-3">
-                            <label className="block text-[11px] font-bold text-purple-700 uppercase mb-1">Discount</label>
-                            <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} placeholder={formData.discountType === "%" ? "Enter %" : "Enter amount"} min="0" max={formData.discountType === "%" ? "100" : undefined} className="w-full bg-white border border-gray-300 rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none" />
-                          </div>
-                          <div className="col-span-2 md:col-span-3">
-                            <label className="block text-[11px] font-bold text-amber-700 uppercase mb-1">Amount Received (₹)</label>
-                            <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="0 for Due" min="0" className="w-full bg-white border border-gray-300 rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none" />
-                          </div>
-                          <div className="col-span-2 md:col-span-4">
-                            <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Payment Mode</label>
-                            <select name="paymentType" value={formData.paymentType} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}>
-                              {PAYMENT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                            </select>
-                          </div>
-                        </div>
-                        <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                          <div className="space-y-1 text-[10px]">
-                            <div className="flex justify-between text-amber-800"><span>Total Payable:</span><span className="font-bold">₹{Math.round(fin.finalPayable)}</span></div>
-                            <div className="flex justify-between text-emerald-700"><span>Amount Receiving:</span><span className="font-bold">₹{Math.round(fin.parsedPartial)}</span></div>
-                            <div className={`flex justify-between border-t border-amber-300 pt-1 mt-1 ${fin.balanceAmount > 0 ? "text-red-700" : "text-emerald-700"}`}>
-                              <span>{fin.balanceAmount > 0 ? "Balance Remaining:" : "Status:"}</span>
-                              <span className="font-bold">{fin.balanceAmount > 0 ? `₹${Math.round(fin.balanceAmount)}` : "✓ Fully Paid"}</span>
+                        <div className="flex flex-col gap-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <div>
+                              <label className="block text-[10px] font-bold text-amber-700 uppercase mb-1">Amount Received</label>
+                              <input type="number" name="partialAmount" value={formData.partialAmount} onChange={handleInputChange} placeholder="0 for Due" min="0" className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 text-sm font-medium focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none" />
                             </div>
-                            <div className={`flex items-center justify-between border rounded-md px-2 py-1 mt-1 ${fin.paymentStatus === "Paid" ? "text-emerald-700 bg-emerald-50 border-emerald-200" : fin.paymentStatus === "Partial" ? "text-amber-700 bg-amber-50 border-amber-200" : "text-red-700 bg-red-50 border-red-200"}`}>
-                              <span className="font-semibold">Payment Status:</span>
-                              <span className="font-extrabold uppercase tracking-wide">{fin.paymentStatus}</span>
+
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Payment Mode</label>
+                              <select name="paymentType" value={formData.paymentType} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-lg px-2.5 py-2 text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}>
+                                {PAYMENT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-bold text-purple-700 uppercase mb-1">Discount</label>
+                              <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} placeholder={formData.discountType === "%" ? "Enter %" : "Enter amt"} min="0" max={formData.discountType === "%" ? "100" : undefined} className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 text-sm font-medium focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none" />
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-bold text-purple-700 uppercase mb-1 flex items-center gap-1"><FaPercent className="text-[9px]" /> Type</label>
+                              <select name="discountType" value={formData.discountType} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 text-sm font-medium focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none">
+                                {DISCOUNT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                              </select>
                             </div>
                           </div>
+                          <div className="flex-1 p-2.5 bg-amber-50 rounded-lg border border-amber-200">
+                            <div className="space-y-0.5 text-[10px]">
+                              <div className="flex justify-between text-amber-800"><span>Total Payable:</span><span className="font-bold">₹{Math.round(fin.finalPayable)}</span></div>
+                              <div className="flex justify-between text-emerald-700"><span>Amount Receiving:</span><span className="font-bold">₹{Math.round(fin.parsedPartial)}</span></div>
+                              <div className={`flex justify-between border-t border-amber-300 pt-0.5 mt-0.5 ${fin.balanceAmount > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                                <span>{fin.balanceAmount > 0 ? "Balance Remaining:" : "Status:"}</span>
+                                <span className="font-bold">{fin.balanceAmount > 0 ? `₹${Math.round(fin.balanceAmount)}` : "✓ Fully Paid"}</span>
+                              </div>
+                              <div className={`flex items-center justify-between border rounded-md px-2 py-0.5 mt-1 ${fin.paymentStatus === "Paid" ? "text-emerald-700 bg-emerald-50 border-emerald-200" : fin.paymentStatus === "Partial" ? "text-amber-700 bg-amber-50 border-amber-200" : "text-red-700 bg-red-50 border-red-200"}`}>
+                                <span className="font-semibold">Payment Status:</span>
+                                <span className="font-extrabold uppercase tracking-wide">{fin.paymentStatus}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </>
+                      </div>
                     );
                   })()}
                 </div>
-
                 <div className="flex justify-end gap-3 pt-4 border-t">
                   <button type="button" onClick={cancelForm} className="px-4 py-3 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200">Cancel</button>
                   <button type="submit" className={`px-5 py-3 rounded-xl text-xs font-bold text-white shadow-sm flex items-center gap-1.5 ${isEditMode ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}`}>
@@ -4364,18 +4483,20 @@ export default function OpManagement() {
                   <thead>
                     <tr>
                       <th style={{ width: "35px", textAlign: "center" }}>#</th>
+                      <th style={{ minWidth: "110px", textAlign: "center" }}>PID</th>
+                      <th style={{ minWidth: "90px", textAlign: "center" }}>Created At</th>
                       <th style={{ minWidth: "180px" }}>Patient</th>
                       <th style={{ minWidth: "170px" }}>Doctor / Date</th>
-                      <th style={{ textAlign: "center", minWidth: "140px" }}>Booking Type / Status</th>
+                      <th style={{ textAlign: "center", minWidth: "140px" }}>B Type / Status</th>
                       <th style={{ textAlign: "center", minWidth: "150px" }}>Amount</th>
                       <th style={{ textAlign: "center" }}>Total</th>
                       <th style={{ textAlign: "center" }}>Disc.</th>
                       <th style={{ textAlign: "center" }}>DUE</th>
                       <th style={{ textAlign: "center" }}>Paid</th>
-                      <th style={{ textAlign: "center", minWidth: "110px" }}>Pment Type</th>
-                      <th style={{ textAlign: "center", minWidth: "130px" }}>Pment Status</th>
+                      <th style={{ textAlign: "center", minWidth: "110px" }}>P Type</th>
+                      <th style={{ textAlign: "center", minWidth: "130px" }}>P Status</th>
                       <th style={{ textAlign: "center", minWidth: "150px" }}>Referred By</th>
-                      <th style={{ textAlign: "center" }}>Created At</th>
+                      <th style={{ textAlign: "center", minWidth: "70px" }}>BILL</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
                     </tr>
                   </thead>
@@ -4399,7 +4520,6 @@ export default function OpManagement() {
                       const bookingTypeInfo = getBookingType(matchingBooking);
                       const BookingTypeIcon = bookingTypeInfo.icon;
 
-                      // ✅ Per-category payment mode display (per-item mode, fallback to booking.paymentType)
                       const clinicModeDisplay = matchingBooking ? getCategoryPaymentModeDisplay(matchingBooking, "clinic") : "";
                       const labModeDisplay = matchingBooking ? getCategoryPaymentModeDisplay(matchingBooking, "lab") : "";
                       const pharmacyModeDisplay = matchingBooking ? getCategoryPaymentModeDisplay(matchingBooking, "pharmacy") : "";
@@ -4408,6 +4528,24 @@ export default function OpManagement() {
                         <tr key={patient._id} className="hover:bg-blue-50/40">
                           <td className="px-2 py-3 text-center text-slate-500 text-[11px]">{indexOfFirstItem + idx + 1}</td>
 
+                          {/* ✅ PID */}
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {matchingBooking?.customPID ? (
+                              <span className="inline-block text-[10px] font-bold font-mono text-slate-700 bg-slate-100 border border-slate-300 px-2 py-1 rounded">
+                                {matchingBooking.customPID}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">—</span>
+                            )}
+                          </td>
+
+                          {/* ✅ Created At — PID ke baad */}
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            <div className="text-[10px] font-semibold text-slate-700">{formatDateToDDMMYYYY(createdAt)}</div>
+                            <div className="text-[9px] text-gray-400 mt-0.5">{createdAt ? new Date(createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "N/A"}</div>
+                          </td>
+
+                          {/* ✅ Patient */}
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] flex-shrink-0">
@@ -4423,6 +4561,7 @@ export default function OpManagement() {
                             </div>
                           </td>
 
+                          {/* Doctor / Date */}
                           <td className="px-3 py-3">
                             <div className="flex flex-col gap-0.5 min-w-[150px]">
                               <div className="text-xs font-semibold text-purple-800 truncate max-w-[140px]">{matchingBooking?.doctorName || "N/A"}</div>
@@ -4431,6 +4570,7 @@ export default function OpManagement() {
                             </div>
                           </td>
 
+                          {/* B Type / Status */}
                           <td className="px-3 py-3 text-center" style={{ minWidth: "140px" }}>
                             {matchingBooking ? (
                               <div className="flex flex-col items-center gap-1">
@@ -4446,6 +4586,7 @@ export default function OpManagement() {
                             ) : (<span className="text-[10px] text-gray-400 italic">N/A</span>)}
                           </td>
 
+                          {/* Amount */}
                           <td className="px-3 py-3" style={{ minWidth: "150px" }}>
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center justify-between gap-1 px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 text-[10px]">
@@ -4478,14 +4619,21 @@ export default function OpManagement() {
                             </div>
                           </td>
 
+                          {/* Total */}
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-slate-800">₹{Math.round(paidInfo.final)}</span></td>
+
+                          {/* Disc */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {discountAmount > 0 ? (<span className="text-xs font-bold text-red-600">− ₹{Math.round(discountAmount)}</span>) : <span className="text-xs text-gray-400">—</span>}
                           </td>
+
+                          {/* DUE */}
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs font-bold ${paidInfo.balance > 0 ? "text-red-600" : "text-gray-400"}`}>₹{Math.round(paidInfo.balance)}</span></td>
+
+                          {/* Paid */}
                           <td className="px-3 py-3 text-center whitespace-nowrap"><span className="text-xs font-bold text-emerald-700">₹{Math.round(paidInfo.paid)}</span></td>
 
-                          {/* ✅ FIXED: Per-category payment mode display — existing bookings ko disturb nahi karega */}
+                          {/* P Type (payment mode per category) */}
                           <td className="px-3 py-3" style={{ minWidth: "110px" }}>
                             {matchingBooking ? (
                               <div className="flex flex-col gap-1">
@@ -4526,6 +4674,7 @@ export default function OpManagement() {
                             ) : (<span className="text-[10px] text-gray-400 italic block text-center">N/A</span>)}
                           </td>
 
+                          {/* P Status (category-wise payment status) */}
                           <td className="px-3 py-3" style={{ minWidth: "130px" }}>
                             {matchingBooking ? (
                               <div className="flex flex-col gap-1">
@@ -4556,6 +4705,7 @@ export default function OpManagement() {
                             ) : (<span className="text-[10px] text-gray-400 italic block text-center">N/A</span>)}
                           </td>
 
+                          {/* Referred By */}
                           <td className="px-3 py-3">
                             <div className="flex flex-col gap-1 min-w-[120px]">
                               {referredByCustomer ? (
@@ -4573,11 +4723,23 @@ export default function OpManagement() {
                             </div>
                           </td>
 
+                          {/* ✅ BILL — printer icon */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            <div className="text-[10px] font-semibold text-slate-700">{formatDateToDDMMYYYY(createdAt)}</div>
-                            <div className="text-[9px] text-gray-400 mt-0.5">{createdAt ? new Date(createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "N/A"}</div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); if (matchingBooking) openBillingModal(matchingBooking); }}
+                              disabled={invoiceLoading === matchingBooking?._id}
+                              title={matchingBooking?.invoiceUrl ? "View Invoice" : "Generate Bill"}
+                              className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-all disabled:opacity-50 ${matchingBooking?.invoiceUrl ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}`}
+                            >
+                              {invoiceLoading === matchingBooking?._id ? (
+                                <FiRefreshCw className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <FaPrint className="w-3.5 h-3.5" />
+                              )}
+                            </button>
                           </td>
 
+                          {/* Actions */}
                           <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="relative inline-block action-dropdown">
                               <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(openActionDropdown === patient._id ? null : patient._id); }} className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors" title="Actions">
@@ -4662,7 +4824,19 @@ export default function OpManagement() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="font-bold text-slate-800 text-sm truncate">{patient.title || ""} {patient.name || "N/A"}</div>
-                            <div className="text-[11px] text-gray-500 flex items-center gap-1"><FaPhoneAlt className="text-[9px]" /> {patient.phone || "N/A"}</div>
+                            <div className="text-[11px] text-gray-500 flex items-center gap-1 flex-wrap">
+                              <FaPhoneAlt className="text-[9px]" /> {patient.phone || "N/A"}
+                              {matchingBooking?.customPID && (
+                                <span className="text-[9px] font-bold font-mono text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded ml-1">
+                                  {matchingBooking.customPID}
+                                </span>
+                              )}
+                              {matchingBooking?.createdAt && (
+                                <span className="text-[9px] text-slate-500 ml-1">
+                                  {formatDateToDDMMYYYY(matchingBooking.createdAt)}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <button onClick={(e) => { e.stopPropagation(); handleToggleActiveStatus(patient); }} disabled={isToggling} className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase border-2 flex-shrink-0 ${isActive ? "bg-emerald-50 text-emerald-700 border-emerald-400" : "bg-gray-100 text-gray-600 border-gray-400"} disabled:opacity-50`}>
@@ -5125,10 +5299,10 @@ export default function OpManagement() {
           </div>
         )}
 
-        {/* LAB ITEMS MODAL — WITH PAYMENT MODE + STATUS */}
+        {/* LAB ITEMS MODAL */}
         {showLabItemsModal && labItemsBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-5 py-4 border-b">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center"><FaFlask className="w-4 h-4" /></div>
@@ -5149,24 +5323,54 @@ export default function OpManagement() {
                     <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">No amounts added yet</div>
                   ) : (
                     <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                      {labItemsList.map((item, i) => (
-                        <div key={`${item.serviceId}-${i}`} className="px-3 py-2 rounded-lg text-xs bg-purple-50 border border-purple-200 space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
-                            <span className="text-gray-500 font-semibold text-[10px] whitespace-nowrap">Amount (₹):</span>
-                            <input type="number" value={item.price} onChange={(e) => handleUpdateLabItemPrice(i, e.target.value)} className="flex-1 px-2 py-1 text-xs font-bold text-purple-700 border border-gray-300 rounded" min="0" />
-                            <button type="button" onClick={() => handleRemoveLabItem(i)} className="text-red-400 hover:text-red-600 p-1"><FaMinusCircle className="w-3.5 h-3.5" /></button>
+                      {labItemsList.map((item, i) => {
+                        const isPaid = item._wasPaid === true;
+                        return (
+                          <div key={`${item.serviceId}-${i}`} className="px-3 py-2 rounded-lg text-xs bg-purple-50 border border-purple-200">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
+                              <span className="text-gray-500 font-semibold text-[10px] whitespace-nowrap">Amount (₹):</span>
+                              <input
+                                type="number"
+                                value={item.price}
+                                onChange={(e) => handleUpdateLabItemPrice(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`w-24 px-2 py-1 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-purple-700 border-gray-300"}`}
+                                min="0"
+                              />
+                              <select
+                                value={item.paymentMode || ""}
+                                onChange={(e) => handleUpdateLabItemPaymentMode(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
+                                title={isPaid ? "Already Paid — Locked" : "Payment Mode"}
+                              >
+                                <option value="">Select Payment Mode</option>
+                                {ITEM_PAYMENT_MODE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                              </select>
+                              <select
+                                value={item.paymentStatus || ""}
+                                onChange={(e) => handleUpdateLabItemPaymentStatus(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
+                                title={isPaid ? "Already Paid — Locked" : "Payment Status"}
+                              >
+                                <option value="">Select Payment Status</option>
+                                {ITEM_PAYMENT_STATUS_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                              </select>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveLabItem(i)}
+                                disabled={isPaid}
+                                className={`p-1 flex-shrink-0 ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600"}`}
+                                title={isPaid ? "Already Paid — Locked" : "Remove"}
+                              >
+                                {isPaid ? <FaLock className="w-3.5 h-3.5" /> : <FaMinusCircle className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 pl-7">
-                            <select value={item.paymentMode || "Cash"} onChange={(e) => handleUpdateLabItemPaymentMode(i, e.target.value)} className="flex-1 px-2 py-1 text-[10px] font-semibold border border-gray-300 rounded bg-white" title="Payment Mode">
-                              {ITEM_PAYMENT_MODE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                            </select>
-                            <select value={item.paymentStatus || "Due"} onChange={(e) => handleUpdateLabItemPaymentStatus(i, e.target.value)} className="flex-1 px-2 py-1 text-[10px] font-semibold border border-gray-300 rounded bg-white" title="Payment Status">
-                              {ITEM_PAYMENT_STATUS_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                            </select>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -5189,10 +5393,10 @@ export default function OpManagement() {
           </div>
         )}
 
-        {/* PHARMACY ITEMS MODAL — WITH PAYMENT MODE + STATUS */}
+        {/* PHARMACY ITEMS MODAL */}
         {showPharmacyItemsModal && pharmacyItemsBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-5 py-4 border-b">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-green-500 text-white flex items-center justify-center"><FaPills className="w-4 h-4" /></div>
@@ -5213,24 +5417,54 @@ export default function OpManagement() {
                     <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">No amounts added yet</div>
                   ) : (
                     <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                      {pharmacyItemsList.map((item, i) => (
-                        <div key={`${item.serviceId}-${i}`} className="px-3 py-2 rounded-lg text-xs bg-green-50 border border-green-200 space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
-                            <span className="text-gray-500 font-semibold text-[10px] whitespace-nowrap">Amount (₹):</span>
-                            <input type="number" value={item.price} onChange={(e) => handleUpdatePharmacyItemPrice(i, e.target.value)} className="flex-1 px-2 py-1 text-xs font-bold text-green-700 border border-gray-300 rounded" min="0" />
-                            <button type="button" onClick={() => handleRemovePharmacyItem(i)} className="text-red-400 hover:text-red-600 p-1"><FaMinusCircle className="w-3.5 h-3.5" /></button>
+                      {pharmacyItemsList.map((item, i) => {
+                        const isPaid = item._wasPaid === true;
+                        return (
+                          <div key={`${item.serviceId}-${i}`} className="px-3 py-2 rounded-lg text-xs bg-green-50 border border-green-200">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
+                              <span className="text-gray-500 font-semibold text-[10px] whitespace-nowrap">Amount (₹):</span>
+                              <input
+                                type="number"
+                                value={item.price}
+                                onChange={(e) => handleUpdatePharmacyItemPrice(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`w-24 px-2 py-1 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-green-700 border-gray-300"}`}
+                                min="0"
+                              />
+                              <select
+                                value={item.paymentMode || ""}
+                                onChange={(e) => handleUpdatePharmacyItemPaymentMode(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
+                                title={isPaid ? "Already Paid — Locked" : "Payment Mode"}
+                              >
+                                <option value="">Select Payment Mode</option>
+                                {ITEM_PAYMENT_MODE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                              </select>
+                              <select
+                                value={item.paymentStatus || ""}
+                                onChange={(e) => handleUpdatePharmacyItemPaymentStatus(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
+                                title={isPaid ? "Already Paid — Locked" : "Payment Status"}
+                              >
+                                <option value="">Select Payment Status</option>
+                                {ITEM_PAYMENT_STATUS_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                              </select>
+                              <button
+                                type="button"
+                                onClick={() => handleRemovePharmacyItem(i)}
+                                disabled={isPaid}
+                                className={`p-1 flex-shrink-0 ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600"}`}
+                                title={isPaid ? "Already Paid — Locked" : "Remove"}
+                              >
+                                {isPaid ? <FaLock className="w-3.5 h-3.5" /> : <FaMinusCircle className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 pl-7">
-                            <select value={item.paymentMode || "Cash"} onChange={(e) => handleUpdatePharmacyItemPaymentMode(i, e.target.value)} className="flex-1 px-2 py-1 text-[10px] font-semibold border border-gray-300 rounded bg-white" title="Payment Mode">
-                              {ITEM_PAYMENT_MODE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                            </select>
-                            <select value={item.paymentStatus || "Due"} onChange={(e) => handleUpdatePharmacyItemPaymentStatus(i, e.target.value)} className="flex-1 px-2 py-1 text-[10px] font-semibold border border-gray-300 rounded bg-white" title="Payment Status">
-                              {ITEM_PAYMENT_STATUS_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                            </select>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -5253,10 +5487,10 @@ export default function OpManagement() {
           </div>
         )}
 
-        {/* CLINIC SERVICES POPUP */}
+        {/* CLINIC SERVICES MODAL */}
         {showClinicServicesModal && clinicServicesBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-5 py-4 border-b">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center"><FaClinicMedical className="w-4 h-4" /></div>
@@ -5277,24 +5511,56 @@ export default function OpManagement() {
                     <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">No services yet</div>
                   ) : (
                     <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                      {clinicServicesList.map((svc, i) => (
-                        <div key={`${svc.serviceId}-${i}`} className="px-3 py-2 rounded-lg text-xs bg-blue-50 border border-blue-200 space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
-                            <div className="flex-1 min-w-0"><div className="font-semibold text-gray-800 truncate">{svc.name}</div></div>
-                            <input type="number" value={svc.price} onChange={(e) => handleUpdateClinicServicePrice(i, e.target.value)} className="w-20 px-2 py-1 text-xs font-bold text-emerald-700 border border-gray-300 rounded" min="0" />
-                            <button type="button" onClick={() => handleRemoveClinicServiceItem(i)} className="text-red-400 hover:text-red-600 p-1"><FaMinusCircle className="w-3.5 h-3.5" /></button>
+                      {clinicServicesList.map((svc, i) => {
+                        const isPaid = (svc.paymentStatus || "").toLowerCase() === "paid";
+                        return (
+                          <div key={`${svc.serviceId}-${i}`} className="px-3 py-2 rounded-lg text-xs bg-blue-50 border border-blue-200">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
+                              <div className="w-[130px] flex-shrink-0">
+                                <div className="font-semibold text-gray-800 truncate text-[11px]" title={svc.name}>{svc.name}</div>
+                              </div>
+                              <input
+                                type="number"
+                                value={svc.price}
+                                onChange={(e) => handleUpdateClinicServicePrice(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`w-20 px-2 py-1 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-emerald-700 border-gray-300"}`}
+                                min="0"
+                              />
+                              <select
+                                value={svc.paymentMode || ""}
+                                onChange={(e) => handleUpdateClinicServicePaymentMode(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
+                                title={isPaid ? "Already Paid — Locked" : "Payment Mode"}
+                              >
+                                <option value="">Select Payment Mode</option>
+                                {ITEM_PAYMENT_MODE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                              </select>
+                              <select
+                                value={svc.paymentStatus || ""}
+                                onChange={(e) => handleUpdateClinicServicePaymentStatus(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
+                                title={isPaid ? "Already Paid — Locked" : "Payment Status"}
+                              >
+                                <option value="">Select Payment Status</option>
+                                {ITEM_PAYMENT_STATUS_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                              </select>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveClinicServiceItem(i)}
+                                disabled={isPaid}
+                                className={`p-1 flex-shrink-0 ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600"}`}
+                                title={isPaid ? "Already Paid — Locked" : "Remove"}
+                              >
+                                {isPaid ? <FaLock className="w-3.5 h-3.5" /> : <FaMinusCircle className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 pl-7">
-                            <select value={svc.paymentMode || "Cash"} onChange={(e) => handleUpdateClinicServicePaymentMode(i, e.target.value)} className="flex-1 px-2 py-1 text-[10px] font-semibold border border-gray-300 rounded bg-white" title="Payment Mode">
-                              {ITEM_PAYMENT_MODE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                            </select>
-                            <select value={svc.paymentStatus || "Due"} onChange={(e) => handleUpdateClinicServicePaymentStatus(i, e.target.value)} className="flex-1 px-2 py-1 text-[10px] font-semibold border border-gray-300 rounded bg-white" title="Payment Status">
-                              {ITEM_PAYMENT_STATUS_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                            </select>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

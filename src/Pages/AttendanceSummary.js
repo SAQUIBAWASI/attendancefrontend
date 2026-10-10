@@ -103,26 +103,25 @@ export default function AttendanceSummary() {
 
   // ✅ HARDCODED SHIFT TIMES — yeh master source hai
   const HARDCODED_SHIFT_TIMES = {
-    "A":  { start: "07:00", end: "17:00" },  // 10 hrs
-    "B":  { start: "10:00", end: "19:00" },  // 9 hrs
-    "C":  { start: "11:00", end: "20:00" },  // 9 hrs
-    "D":  { start: "09:00", end: "21:00" },  // 12 hrs
-    "E":  { start: "07:00", end: "21:30" },  // 14.5 hrs
-    "F":  { start: "06:30", end: "22:00" },  // 15.5 hrs
-    "G":  { start: "16:00", end: "23:00" },  // 7 hrs
-    "H":  { start: "17:00", end: "22:00" },  // 5 hrs
-    "I":  { start: "18:00", end: "22:00" },  // 4 hrs
-    "J":  { start: "10:00", end: "22:00" },  // 12 hrs
-    "K":  { start: "10:00", end: "21:30" },  // 11.5 hrs
-    "L":  { start: "01:00", end: "12:00" },  // 11 hrs
-    "M":  { start: "08:00", end: "14:00" },  // 6 hrs
-    "N":  { start: "18:00", end: "23:00" },  // 5 hrs
-    "O":  { start: "17:00", end: "23:00" },  // 6 hrs
-    "P":  { start: "06:30", end: "17:00" },  // 10.5 hrs
-    "BR": { start: "07:00", end: "21:30" },  // 14.5 hrs
+    "A":  { start: "07:00", end: "17:00" },
+    "B":  { start: "10:00", end: "19:00" },
+    "C":  { start: "11:00", end: "20:00" },
+    "D":  { start: "09:00", end: "21:00" },
+    "E":  { start: "07:00", end: "21:30" },
+    "F":  { start: "06:30", end: "22:00" },
+    "G":  { start: "16:00", end: "23:00" },
+    "H":  { start: "17:00", end: "22:00" },
+    "I":  { start: "18:00", end: "22:00" },
+    "J":  { start: "10:00", end: "22:00" },
+    "K":  { start: "10:00", end: "21:30" },
+    "L":  { start: "01:00", end: "12:00" },
+    "M":  { start: "08:00", end: "14:00" },
+    "N":  { start: "18:00", end: "23:00" },
+    "O":  { start: "17:00", end: "23:00" },
+    "P":  { start: "06:30", end: "17:00" },
+    "BR": { start: "07:00", end: "21:30" },
   };
 
-  // ✅ getEmployeeShiftTimings — DIRECT backend fields use karo
   const getEmployeeShiftTimings = (employeeId) => {
     const emp = employees.find(e => e.employeeId === employeeId);
 
@@ -150,7 +149,6 @@ export default function AttendanceSummary() {
       }
     }
 
-    // Last fallback
     if (!start) start = "09:00";
     if (!end) end = "18:00";
 
@@ -172,7 +170,6 @@ export default function AttendanceSummary() {
     };
   };
 
-  // ✅ getEmployeeShiftHours — timings se
   const getEmployeeShiftHours = (employeeId) => {
     if (!employeeId) return 9;
     const timings = getEmployeeShiftTimings(employeeId);
@@ -1224,11 +1221,46 @@ export default function AttendanceSummary() {
     return summary;
   };
 
+  // ✅ FIXED: fetchAllData with shift fetch
   const fetchAllData = async () => {
     try {
       setLoading(true);
       setError("");
 
+      // ✅ STEP 1: Employees fetch karo
+      const empRes = await fetch(`${BASE_URL}/employees/get-employees`);
+      if (!empRes.ok) throw new Error("Failed to fetch employees");
+      const empData = await empRes.json();
+      const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
+      const activeEmployees = empData.filter(emp => {
+        if (emp.status === 'inactive') return false;
+        if (emp.status === 'active') return true;
+        return !INACTIVE_EMPLOYEE_IDS.includes(emp.employeeId);
+      });
+      setEmployees(activeEmployees);
+      extractUniqueValues(activeEmployees);
+
+      // ✅ STEP 2: SHIFT DATA FETCH (yeh missing tha — ab add kar diya)
+      try {
+        const shiftsRes = await fetch(`${BASE_URL}/shifts/master`);
+        if (shiftsRes.ok) {
+          const shiftsResult = await shiftsRes.json();
+          if (shiftsResult.success) {
+            setMasterShifts(shiftsResult.data || []);
+          }
+        }
+        const assignmentsRes = await fetch(`${BASE_URL}/shifts/assignments`);
+        if (assignmentsRes.ok) {
+          const assignmentsResult = await assignmentsRes.json();
+          if (assignmentsResult.success) {
+            setShiftsData(assignmentsResult.data || []);
+          }
+        }
+      } catch (shiftError) {
+        console.error("Error fetching shift data:", shiftError);
+      }
+
+      // ✅ STEP 3: Page data fetch
       const params = new URLSearchParams();
       if (selectedMonth) params.append("month", selectedMonth);
       if (fromDate && toDate) {
@@ -1633,7 +1665,7 @@ export default function AttendanceSummary() {
                 totalAdded++;
               } else {
                 totalErrors++;
-                errors.push(`❌ ${emp.employeeId} - Failed for ${dateKey}`);
+                errors.push(`❌ ${emp.employeeId} - Failed for ${dateKey}: ${updateResult.message || "Unknown"}`);
               }
             } catch (err) {
               totalErrors++;
@@ -1654,7 +1686,7 @@ export default function AttendanceSummary() {
           await handleViewDetails(selectedEmployee);
         }
       } else {
-        showSaveStatus(`❌ No records added. ${errors.length > 0 ? errors.join('\n') : 'Unknown error'}`, "error");
+        showSaveStatus(`❌ No records added. ${errors.length > 0 ? errors.slice(0, 3).join(' | ') : 'Unknown error'}`, "error");
       }
       
       if (errors.length > 0) {
@@ -2178,10 +2210,14 @@ export default function AttendanceSummary() {
       );
     }
     if (filterDepartment) {
-      filtered = filtered.filter(emp => emp.department === filterDepartment);
+      filtered = filtered.filter(emp =>
+        emp.department === filterDepartment
+      );
     }
     if (filterDesignation) {
-      filtered = filtered.filter(emp => emp.designation === filterDesignation);
+      filtered = filtered.filter(emp =>
+        emp.designation === filterDesignation
+      );
     }
     setFilteredSummary(filtered);
     setCurrentPage(1);
@@ -3674,7 +3710,6 @@ export default function AttendanceSummary() {
         const monthDates = getAllDatesOfMonth(selectedMonth);
         const empDetailsRecord = employees.find(e => e.employeeId === selectedEmployee);
         const empName = empDetailsRecord?.name || selectedEmployee;
-        const empTimings = getEmployeeShiftTimings(selectedEmployee);
 
         return (
           <div className="emp-dash-modal fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
@@ -3685,7 +3720,7 @@ export default function AttendanceSummary() {
                     Attendance Details - {empName}
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    Employee ID: {selectedEmployee} | Shift: {empTimings.start} - {empTimings.end} ({empTimings.shiftHours.toFixed(1)} hrs/day)
+                    Employee ID: {selectedEmployee} | Shift Hours: {getEmployeeShiftHours(selectedEmployee)} hrs/day
                   </p>
                 </div>
 
@@ -3796,7 +3831,7 @@ export default function AttendanceSummary() {
                           );
                           const regReq = regularizationRequests.find(r => 
                             r.employeeId === selectedEmployee && 
-                            r.selectedDates?.some(d => new Date(d).toLocaleDateString('en-CA') === dateKey)
+                            r.selectedDates.some(d => new Date(d).toLocaleDateString('en-CA') === dateKey)
                           );
                           const edited = editedRows[dateKey] || {};
                           const currentReason = edited.reason !== undefined ? edited.reason : (rec?.reason || "");
