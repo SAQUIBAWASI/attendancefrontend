@@ -1609,11 +1609,15 @@ export default function OpManagement() {
     }
   }, [location.state]);
 
-  useEffect(() => {
-    if (formData.doctorId && formData.appointmentDate) {
-      filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
-    }
-  }, [formData.doctorId, formData.appointmentDate]);
+useEffect(() => {
+  if (!formData.doctorId || !formData.appointmentDate) {
+    setAvailableSlots([]);
+    return;
+  }
+  if (allSlots.length === 0) return; // wait karo jab tak slots load na ho
+  filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [formData.doctorId, formData.appointmentDate, allSlots]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -1647,191 +1651,194 @@ export default function OpManagement() {
   };
 
   const fetchBookings = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (timeFilter && timeFilter !== "All") params.append("timeFilter", timeFilter);
-      if (apptFromDate) params.append("apptFrom", apptFromDate);
-      if (apptToDate) params.append("apptTo", apptToDate);
-      if (fromDate) params.append("regFrom", fromDate);
-      if (toDate) params.append("regTo", toDate);
-      if (selectedMonth) params.append("month", selectedMonth);
-      if (doctorFilter !== "All") params.append("doctor", doctorFilter);
-      if (paymentTypeFilter !== "All") params.append("paymentType", paymentTypeFilter);
-      if (statusFilter !== "All") params.append("paymentStatus", statusFilter);
-      if (bookingTypeFilter !== "All") params.append("bookingType", bookingTypeFilter);
-      if (revenueCategoryFilter !== "All") params.append("revenueCategory", revenueCategoryFilter);
-      if (searchQuery.trim()) params.append("search", searchQuery.trim());
+  setLoading(true);
+  try {
+    const params = new URLSearchParams();
+    if (timeFilter && timeFilter !== "All") params.append("timeFilter", timeFilter);
+    if (apptFromDate) params.append("apptFrom", apptFromDate);
+    if (apptToDate) params.append("apptTo", apptToDate);
+    if (fromDate) params.append("regFrom", fromDate);
+    if (toDate) params.append("regTo", toDate);
+    if (selectedMonth) params.append("month", selectedMonth);
+    if (doctorFilter !== "All") params.append("doctor", doctorFilter);
+    if (paymentTypeFilter !== "All") params.append("paymentType", paymentTypeFilter);
+    if (statusFilter !== "All") params.append("paymentStatus", statusFilter);
+    if (bookingTypeFilter !== "All") params.append("bookingType", bookingTypeFilter);
+    if (revenueCategoryFilter !== "All") params.append("revenueCategory", revenueCategoryFilter);
+    if (searchQuery.trim()) params.append("search", searchQuery.trim());
 
-      const url = `${API_BASE_URL}/appointment-slots/getallbookings${params.toString() ? "?" + params.toString() : ""}`;
-      const res = await axios.get(url);
+    const url = `${API_BASE_URL}/appointment-slots/getallbookings${params.toString() ? "?" + params.toString() : ""}`;
+    const res = await axios.get(url);
 
-      let bookingsData = [];
-      if (res.data?.success) {
-        bookingsData = res.data.bookings || res.data.data || [];
-        if (res.data.stats) setBackendStats(res.data.stats);
-        if (res.data.categoryBreakdown) setCategoryBreakdown(res.data.categoryBreakdown);
-      } else if (Array.isArray(res.data)) {
-        bookingsData = res.data;
-      }
+    let bookingsData = [];
+    if (res.data?.success) {
+      bookingsData = res.data.bookings || res.data.data || [];
+      if (res.data.stats) setBackendStats(res.data.stats);
+      if (res.data.categoryBreakdown) setCategoryBreakdown(res.data.categoryBreakdown);
+    } else if (Array.isArray(res.data)) {
+      bookingsData = res.data;
+    }
 
-      const transformedBookings = bookingsData.map((b) => {
-        const slotDetails = b.slotDetails || {};
-        const rawServices =
-          (Array.isArray(b.services) && b.services.length > 0 && b.services) ||
-          (Array.isArray(b.serviceItems) && b.serviceItems.length > 0 && b.serviceItems) ||
-          [];
+    const transformedBookings = bookingsData.map((b) => {
+      const slotDetails = b.slotDetails || {};
 
-        const normalizedServices = rawServices.map((s) => {
-          const rawSvcPS = s.paymentStatus;
-          const rawBookPS = b.paymentStatus;
-          const fallback = rawSvcPS
-            ? (rawSvcPS === "Pending" ? "Due" : rawSvcPS)
-            : (rawBookPS ? (rawBookPS === "Pending" ? "Due" : rawBookPS) : "Due");
-          return {
-            serviceId: s.serviceId || s._id || "",
-            _id: s.serviceId || s._id || "",
-            name: s.name || "Service",
-            price: Number(s.price) || 0,
-            description: s.description || "",
-            category: s.category || s.serviceCategory || s.type || "",
-            paymentStatus: fallback,
-            paymentMode: s.paymentMode || "N/A",
-            addedAt: s.addedAt || b.createdAt || new Date().toISOString(),
-          };
-        });
+      // ✅ NEW: Populated slotId object ko safely extract karo
+      const slotObj = (b.slotId && typeof b.slotId === "object") ? b.slotId : {};
 
-        const normalizedLabItems = Array.isArray(b.labItems)
-          ? b.labItems.map((item) => ({
-            serviceId: item.serviceId || item._id || "",
-            name: item.name || "Lab Test",
-            price: Number(item.price) || 0,
-            description: item.description || "",
-            category: "lab",
-            paymentMode: item.paymentMode || "Cash",
-            paymentStatus: item.paymentStatus || "Due",
-          }))
-          : [];
+      const rawServices =
+        (Array.isArray(b.services) && b.services.length > 0 && b.services) ||
+        (Array.isArray(b.serviceItems) && b.serviceItems.length > 0 && b.serviceItems) ||
+        [];
 
-        const normalizedMedicineItems = Array.isArray(b.medicineItems)
-          ? b.medicineItems.map((item) => ({
-            serviceId: item.serviceId || item._id || "",
-            name: item.name || "Medicine",
-            price: Number(item.price) || 0,
-            description: item.description || "",
-            category: "pharmacy",
-            paymentMode: item.paymentMode || "Cash",
-            paymentStatus: item.paymentStatus || "Due",
-          }))
-          : [];
-
-        const servicesTotal = normalizedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
-        const subtotal = Number(b.subtotal) || servicesTotal;
-        const commissionAmount = Number(b.commissionAmount) || 0;
-        const discount = Number(b.discount) || 0;
-        const finalPayable =
-          Number(b.finalPayable) || Number(b.finalPayableAmount) || Number(b.grandTotal) ||
-          Number(b.totalAmount) || (subtotal - commissionAmount - discount) || 0;
-        const totalAmount = Number(b.totalAmount) || Number(b.grandTotal) || finalPayable;
-        const amountPaid = Number(b.amountPaid) || 0;
-        const balanceAmount = Number(b.balanceAmount) || Math.max(0, finalPayable - amountPaid);
-        const rawBookingPS = b.paymentStatus || "Due";
-        const normalizedBookingPS = rawBookingPS === "Pending" ? "Due" : rawBookingPS;
-
+      const normalizedServices = rawServices.map((s) => {
+        const rawSvcPS = s.paymentStatus;
+        const rawBookPS = b.paymentStatus;
+        const fallback = rawSvcPS
+          ? (rawSvcPS === "Pending" ? "Due" : rawSvcPS)
+          : (rawBookPS ? (rawBookPS === "Pending" ? "Due" : rawBookPS) : "Due");
         return {
-          _id: b._id || b.id,
-          customPID: b.customPID || "",
-          bookingType: b.bookingType || "",
-          slotId: b.slotId || b._id,
-          patientId: b.patientId || "",
-          patientName: b.patientName || "",
-          patientAge: b.patientAge || "",
-          patientGender: b.patientGender || "",
-          patientPhone: b.patientPhone || "",
-          patientEmail: b.patientEmail || "",
-          patientAddress: b.patientAddress || "",
-          patientCity: b.patientCity || "",
-          patientPincode: b.patientPincode || "",
-          patientTitle: b.patientTitle || "Mr.",
-          patientDob: b.patientDob || "",
-          patientBloodGroup: b.patientBloodGroup || "",
-          patientMedicalHistory: b.patientMedicalHistory || "",
-          patientAllergies: b.patientAllergies || "",
-          patientMedications: b.patientMedications || "",
-          dayOfWeek: slotDetails.dayOfWeek || b.dayOfWeek || "",
-          date: slotDetails.date || b.appointmentDate || b.date || "",
-          startTime: slotDetails.startTime || b.startTime || "",
-          endTime: slotDetails.endTime || b.endTime || "",
-          doctorId: slotDetails.doctorId || b.doctorId || "",
-          doctorName: slotDetails.doctorName || b.doctorName || "",
-          doctorSpecialization: slotDetails.doctorSpecialization || b.doctorSpecialization || "",
-          purpose: b.purpose || "",
-          symptoms: b.symptoms || "",
-          appointmentType: b.appointmentType || "Consultation",
-          priority: b.priority || "Normal",
-          paymentType: b.paymentType || "cash",
-          paymentStatus: normalizedBookingPS,
-          partialAmount: Number(b.partialAmount) || 0,
-          subtotal, commissionAmount, discount, finalPayable, finalPayableAmount: finalPayable,
-          totalAmount, grandTotal: totalAmount, amountPaid, balanceAmount,
-          tax: Number(b.tax) || 0,
-          status: b.status || "confirmed",
-          services: normalizedServices,
-          serviceItems: normalizedServices,
-          labItems: normalizedLabItems,
-          medicineItems: normalizedMedicineItems,
-          categoryPayment: b.categoryPayment || null,
-          createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
-          bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
-          appointmentDate: b.appointmentDate || slotDetails.date || "",
-          isOP: b.isOP || false,
-          isActive: b.isActive !== undefined ? b.isActive : true,
-          referredBy: b.referredBy || "",
-          referralContactId: b.referralContactId || "",
-          referredByCustomer: b.referredByCustomer || "",
-          referredByDoctor: b.referredByDoctor || "",
-          referralCustomerId: b.referralCustomerId || "",
-          referralDoctorId: b.referralDoctorId || "",
-          referralCommission: b.referralCommission || "",
-          referralCommissionType: b.referralCommissionType || "",
-          clinicalNotes: b.clinicalNotes || "",
-          diagnosis: b.diagnosis || "",
-          prescription: b.prescription || "",
-          medicines: Array.isArray(b.medicines) ? b.medicines : [],
-          medicineTotal: Number(b.medicineTotal) || 0,
-          labTotal: Number(b.labTotal) || 0,
-          vitalsTemp: b.vitalsTemp || "",
-          vitalsBp: b.vitalsBp || "",
-          vitalsPr: b.vitalsPr || "",
-          vitalsWeight: b.vitalsWeight || "",
-          followUpRequired: b.followUpRequired || false,
-          followUpDate: b.followUpDate || "",
-          followUpNotes: b.followUpNotes || "",
-          checkInTime: b.checkInTime || null,
-          checkOutTime: b.checkOutTime || null,
-          waitingTime: Number(b.waitingTime) || 0,
-          notes: b.notes || "",
-          patientRating: b.patientRating ?? null,
-          patientFeedback: b.patientFeedback || "",
-          isReviewed: b.isReviewed === true,
-          reviewDate: b.reviewDate || null,
-          reviews: Array.isArray(b.reviews) ? b.reviews : [],
-          reviewServicesTotal: Number(b.reviewServicesTotal) || 0,
-          invoiceUrl: b.invoiceUrl || null,
-          offerApplied: b.offerApplied || null,
+          serviceId: s.serviceId || s._id || "",
+          _id: s.serviceId || s._id || "",
+          name: s.name || "Service",
+          price: Number(s.price) || 0,
+          description: s.description || "",
+          category: s.category || s.serviceCategory || s.type || "",
+          paymentStatus: fallback,
+          paymentMode: s.paymentMode || "N/A",
+          addedAt: s.addedAt || b.createdAt || new Date().toISOString(),
         };
       });
-      setBookings(transformedBookings);
-    } catch (error) {
-      console.error("Error fetching bookings:", error);
-      setBookings([]);
-      setBackendStats(null);
-      setCategoryBreakdown(null);
-    } finally {
-      setLoading(false);
-    }
-  };
 
+      const normalizedLabItems = Array.isArray(b.labItems)
+        ? b.labItems.map((item) => ({
+          serviceId: item.serviceId || item._id || "",
+          name: item.name || "Lab Test",
+          price: Number(item.price) || 0,
+          description: item.description || "",
+          category: "lab",
+          paymentMode: item.paymentMode || "Cash",
+          paymentStatus: item.paymentStatus || "Due",
+        }))
+        : [];
+
+      const normalizedMedicineItems = Array.isArray(b.medicineItems)
+        ? b.medicineItems.map((item) => ({
+          serviceId: item.serviceId || item._id || "",
+          name: item.name || "Medicine",
+          price: Number(item.price) || 0,
+          description: item.description || "",
+          category: "pharmacy",
+          paymentMode: item.paymentMode || "Cash",
+          paymentStatus: item.paymentStatus || "Due",
+        }))
+        : [];
+
+      const servicesTotal = normalizedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+      const subtotal = Number(b.subtotal) || servicesTotal;
+      const commissionAmount = Number(b.commissionAmount) || 0;
+      const discount = Number(b.discount) || 0;
+      const finalPayable =
+        Number(b.finalPayable) || Number(b.finalPayableAmount) || Number(b.grandTotal) ||
+        Number(b.totalAmount) || (subtotal - commissionAmount - discount) || 0;
+      const totalAmount = Number(b.totalAmount) || Number(b.grandTotal) || finalPayable;
+      const amountPaid = Number(b.amountPaid) || 0;
+      const balanceAmount = Number(b.balanceAmount) || Math.max(0, finalPayable - amountPaid);
+      const rawBookingPS = b.paymentStatus || "Due";
+      const normalizedBookingPS = rawBookingPS === "Pending" ? "Due" : rawBookingPS;
+
+      return {
+        _id: b._id || b.id,
+        customPID: b.customPID || "",
+        bookingType: b.bookingType || "",
+        slotId: slotObj._id || (typeof b.slotId === "string" ? b.slotId : b._id),
+        patientId: b.patientId || "",
+        patientName: b.patientName || "",
+        patientAge: b.patientAge || "",
+        patientGender: b.patientGender || "",
+        patientPhone: b.patientPhone || "",
+        patientEmail: b.patientEmail || "",
+        patientAddress: b.patientAddress || "",
+        patientCity: b.patientCity || "",
+        patientPincode: b.patientPincode || "",
+        patientTitle: b.patientTitle || "Mr.",
+        patientDob: b.patientDob || "",
+        patientBloodGroup: b.patientBloodGroup || "",
+        patientMedicalHistory: b.patientMedicalHistory || "",
+        patientAllergies: b.patientAllergies || "",
+        patientMedications: b.patientMedications || "",
+        dayOfWeek: slotDetails.dayOfWeek || b.dayOfWeek || slotObj.dayOfWeek || "",
+        date: slotDetails.date || b.appointmentDate || b.date || slotObj.date || "",
+        startTime: slotDetails.startTime || b.startTime || slotObj.startTime || "",
+        endTime: slotDetails.endTime || b.endTime || slotObj.endTime || "",
+        doctorId: slotDetails.doctorId || b.doctorId || slotObj.doctorId || "",
+        doctorName: slotDetails.doctorName || b.doctorName || slotObj.doctorName || "",
+        doctorSpecialization: slotDetails.doctorSpecialization || b.doctorSpecialization || slotObj.doctorSpecialization || "",
+        purpose: b.purpose || "",
+        symptoms: b.symptoms || "",
+        appointmentType: b.appointmentType || "Consultation",
+        priority: b.priority || "Normal",
+        paymentType: b.paymentType || "cash",
+        paymentStatus: normalizedBookingPS,
+        partialAmount: Number(b.partialAmount) || 0,
+        subtotal, commissionAmount, discount, finalPayable, finalPayableAmount: finalPayable,
+        totalAmount, grandTotal: totalAmount, amountPaid, balanceAmount,
+        tax: Number(b.tax) || 0,
+        status: b.status || "confirmed",
+        services: normalizedServices,
+        serviceItems: normalizedServices,
+        labItems: normalizedLabItems,
+        medicineItems: normalizedMedicineItems,
+        categoryPayment: b.categoryPayment || null,
+        createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
+        bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
+        appointmentDate: b.appointmentDate || slotDetails.date || slotObj.date || "",
+        isOP: b.isOP || false,
+        isActive: b.isActive !== undefined ? b.isActive : true,
+        referredBy: b.referredBy || "",
+        referralContactId: b.referralContactId || "",
+        referredByCustomer: b.referredByCustomer || "",
+        referredByDoctor: b.referredByDoctor || "",
+        referralCustomerId: b.referralCustomerId || "",
+        referralDoctorId: b.referralDoctorId || "",
+        referralCommission: b.referralCommission || "",
+        referralCommissionType: b.referralCommissionType || "",
+        clinicalNotes: b.clinicalNotes || "",
+        diagnosis: b.diagnosis || "",
+        prescription: b.prescription || "",
+        medicines: Array.isArray(b.medicines) ? b.medicines : [],
+        medicineTotal: Number(b.medicineTotal) || 0,
+        labTotal: Number(b.labTotal) || 0,
+        vitalsTemp: b.vitalsTemp || "",
+        vitalsBp: b.vitalsBp || "",
+        vitalsPr: b.vitalsPr || "",
+        vitalsWeight: b.vitalsWeight || "",
+        followUpRequired: b.followUpRequired || false,
+        followUpDate: b.followUpDate || "",
+        followUpNotes: b.followUpNotes || "",
+        checkInTime: b.checkInTime || null,
+        checkOutTime: b.checkOutTime || null,
+        waitingTime: Number(b.waitingTime) || 0,
+        notes: b.notes || "",
+        patientRating: b.patientRating ?? null,
+        patientFeedback: b.patientFeedback || "",
+        isReviewed: b.isReviewed === true,
+        reviewDate: b.reviewDate || null,
+        reviews: Array.isArray(b.reviews) ? b.reviews : [],
+        reviewServicesTotal: Number(b.reviewServicesTotal) || 0,
+        invoiceUrl: b.invoiceUrl || null,
+        offerApplied: b.offerApplied || null,
+      };
+    });
+    setBookings(transformedBookings);
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    setBookings([]);
+    setBackendStats(null);
+    setCategoryBreakdown(null);
+  } finally {
+    setLoading(false);
+  }
+};
   const fetchDoctors = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/doctors/getalldoctors`);
@@ -1839,13 +1846,33 @@ export default function OpManagement() {
     } catch (error) { console.error("Error fetching doctors:", error); setDoctors([]); }
   };
 
-  const fetchAllSlots = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/appointment-slots`);
-      if (res.data?.success) setAllSlots(res.data.slots || []);
-    } catch (error) { console.error("Error fetching all slots:", error); }
-  };
+const fetchAllSlots = async () => {
+  // ✅ Pehle cache se dikhao (instant UI)
+  try {
+    const cached = localStorage.getItem("op_allSlots_cache");
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setAllSlots(parsed);
+      }
+    }
+  } catch { /* ignore */ }
 
+  // ✅ Phir background me fresh fetch karo
+  try {
+    const res = await axios.get(`${API_BASE_URL}/appointment-slots`);
+    if (res.data?.success) {
+      const fresh = res.data.slots || [];
+      setAllSlots(fresh);
+      // Save to cache for next time
+      try {
+        localStorage.setItem("op_allSlots_cache", JSON.stringify(fresh));
+      } catch { /* storage full ignore */ }
+    }
+  } catch (error) {
+    console.error("Error fetching all slots:", error);
+  }
+};
   const fetchServices = async () => {
     setServicesLoading(true);
     try {
@@ -1885,38 +1912,55 @@ export default function OpManagement() {
     } catch { return 0; }
   };
 
-  const filterSlotsByDoctorAndDate = (doctorId, date) => {
-    if (!doctorId || !date) { setAvailableSlots([]); return; }
-    setSlotsLoading(true);
+ const filterSlotsByDoctorAndDate = (doctorId, date) => {
+  if (!doctorId || !date) {
     setAvailableSlots([]);
-    setFormData((prev) => ({ ...prev, slotId: "" }));
-    try {
-      const selectedDay = getDayNameFromDate(date);
-      let filtered = allSlots.filter((slot) => {
-        if (slot.doctorId !== doctorId) return false;
-        if (slot.type === "break") return false;
-        if (slot.date && slot.date.trim() !== "") return slot.date === date;
-        return slot.dayOfWeek === selectedDay;
-      });
-      const seen = new Set();
-      filtered = filtered.filter((slot) => {
-        if (seen.has(slot.startTime)) return false;
-        seen.add(slot.startTime);
-        return true;
-      });
-      filtered.sort((a, b) => {
-        const aMins = parseSlotTimeToMinutes(a.startTime);
-        const bMins = parseSlotTimeToMinutes(b.startTime);
-        return aMins - bMins;
-      });
-      setAvailableSlots(filtered);
-    } catch (error) {
-      console.error("Error filtering slots:", error);
-      setAvailableSlots([]);
-      showToast("Failed to filter slots", "error");
-    } finally { setSlotsLoading(false); }
-  };
+    setSlotsLoading(false);
+    return;
+  }
+  // ✅ Agar slots abhi load nahi hue, loading stuck mat rakho
+  if (allSlots.length === 0) {
+    setAvailableSlots([]);
+    setSlotsLoading(false);
+    return;
+  }
+  setSlotsLoading(true);
+  try {
+    const selectedDay = getDayNameFromDate(date);
+    let filtered = allSlots.filter((slot) => {
+      if (slot.doctorId !== doctorId) return false;
+      if (slot.type === "break") return false;
+      if (slot.date && slot.date.trim() !== "") return slot.date === date;
+      return slot.dayOfWeek === selectedDay;
+    });
 
+    const seen = new Set();
+    filtered = filtered.filter((slot) => {
+      if (seen.has(slot.startTime)) return false;
+      seen.add(slot.startTime);
+      return true;
+    });
+
+    filtered.sort((a, b) =>
+      parseSlotTimeToMinutes(a.startTime) - parseSlotTimeToMinutes(b.startTime)
+    );
+
+    setAvailableSlots(filtered);
+
+    // ✅ slotId sirf tab clear karo jab list me nahi hai (edit-safe)
+    setFormData((prev) => {
+      if (!prev.slotId) return prev;
+      const stillExists = filtered.some((s) => s._id === prev.slotId);
+      return stillExists ? prev : { ...prev, slotId: "" };
+    });
+  } catch (error) {
+    console.error("Error filtering slots:", error);
+    setAvailableSlots([]);
+    showToast("Failed to filter slots", "error");
+  } finally {
+    setSlotsLoading(false);
+  }
+};
   const checkExistingPatient = (value) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     if (editingId) { setExistingPatient(null); setShowExistingPatientPopup(false); return; }
@@ -2191,9 +2235,9 @@ export default function OpManagement() {
     setCitySuggestions([]);
     setShowCitySuggestions(false);
 
-    if (doctorId && appointmentDate) {
-      setTimeout(() => filterSlotsByDoctorAndDate(doctorId, appointmentDate), 200);
-    }
+if (doctorId && appointmentDate) {
+  filterSlotsByDoctorAndDate(doctorId, appointmentDate);
+}
   };
 
   const handleAddNewPatient = () => {
@@ -2717,78 +2761,87 @@ export default function OpManagement() {
     } finally { setSubmitting(false); }
   };
 
-  const handleUpdateNow = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const matchBForUpdate = getMatchingBooking({ phone: formData.phone, name: formData.name, _id: formData.bookingId });
-      const labTotalForUpdate = Number(matchBForUpdate?.labTotal) || 0;
-      const medicineTotalForUpdate = Number(matchBForUpdate?.medicineTotal) || 0;
+ const handleUpdateNow = async (e) => {
+  e.preventDefault();
+  setSubmitting(true);
+  try {
+    const matchBForUpdate = getMatchingBooking({ phone: formData.phone, name: formData.name, _id: formData.bookingId });
+    const labTotalForUpdate = Number(matchBForUpdate?.labTotal) || 0;
+    const medicineTotalForUpdate = Number(matchBForUpdate?.medicineTotal) || 0;
 
-      const fin = computeFinancials(formData.serviceItems, {
-        labTotal: labTotalForUpdate, medicineTotal: medicineTotalForUpdate,
-        referralCommission: formData.referralCommission,
-        discount: formData.discount, discountType: formData.discountType,
-        partialAmount: formData.partialAmount,
-        offerAmount: appliedOffer?.offerAmount || 0,
-      });
+    const fin = computeFinancials(formData.serviceItems, {
+      labTotal: labTotalForUpdate, medicineTotal: medicineTotalForUpdate,
+      referralCommission: formData.referralCommission,
+      discount: formData.discount, discountType: formData.discountType,
+      partialAmount: formData.partialAmount,
+      offerAmount: appliedOffer?.offerAmount || 0,
+    });
 
-      const bookingPayload = {
-        patientTitle: formData.title, patientName: formData.name,
-        patientPhone: formData.phone, patientAge: formData.age,
-        patientDob: formData.dob, patientGender: formData.gender,
-        patientAddress: formData.address, patientCity: formData.city,
-        patientPincode: formData.pincode, purpose: formData.reason,
-        paymentType: formData.paymentType, paymentStatus: fin.paymentStatus,
-        partialAmount: fin.parsedPartial, amountPaid: fin.amountPaid,
-        balanceAmount: fin.balanceAmount, subtotal: fin.subtotal,
-        commissionAmount: fin.commissionAmount, discount: fin.discountAmount,
-        discountType: formData.discountType, offerDeduction: fin.offerDeduction,
-        finalPayable: fin.finalPayable, finalPayableAmount: fin.finalPayable,
-        grandTotal: fin.finalPayable, totalAmount: fin.finalPayable,
-        doctorId: formData.doctorId, appointmentDate: formData.appointmentDate,
-        isOP: true, status: formData.status || "confirmed",
-        serviceItems: formData.serviceItems.map((s) => ({
-          serviceId: s._id || s.serviceId, name: s.name, price: Number(s.price) || 0, description: s.description || "",
-        })),
-        services: formData.serviceItems.map((s) => ({
-          serviceId: s._id || s.serviceId, name: s.name, price: Number(s.price) || 0, description: s.description || "",
-        })),
-        labItems: Array.isArray(matchBForUpdate?.labItems) ? matchBForUpdate.labItems : [],
-        medicineItems: Array.isArray(matchBForUpdate?.medicineItems) ? matchBForUpdate.medicineItems : [],
-        referredByCustomer: formData.referredByCustomer,
-        referredByDoctor: formData.referredByDoctor,
-        referralCustomerId: formData.referralCustomerId,
-        referralDoctorId: formData.referralDoctorId,
-        referralCommission: formData.referralCommission,
-        referralCommissionType: formData.referralCommissionType,
-        offerApplied: formData.offerApplied || null,
-      };
+    const bookingPayload = {
+      patientTitle: formData.title, patientName: formData.name,
+      patientPhone: formData.phone, patientAge: formData.age,
+      patientDob: formData.dob, patientGender: formData.gender,
+      patientAddress: formData.address, patientCity: formData.city,
+      patientPincode: formData.pincode, purpose: formData.reason,
+      paymentType: formData.paymentType, paymentStatus: fin.paymentStatus,
+      partialAmount: fin.parsedPartial, amountPaid: fin.amountPaid,
+      balanceAmount: fin.balanceAmount, subtotal: fin.subtotal,
+      commissionAmount: fin.commissionAmount, discount: fin.discountAmount,
+      discountType: formData.discountType, offerDeduction: fin.offerDeduction,
+      finalPayable: fin.finalPayable, finalPayableAmount: fin.finalPayable,
+      grandTotal: fin.finalPayable, totalAmount: fin.finalPayable,
 
-      if (formData.slotId) bookingPayload.slotId = formData.slotId;
+      // ✅ CRITICAL — doctorId bhej (warna backend me update nahi hoga)
+      doctorId: formData.doctorId || "",
+      slotId: formData.slotId || "",
+      appointmentDate: formData.appointmentDate || "",
 
-      const slotRes = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${formData.bookingId}`, bookingPayload);
-      if (slotRes.data.success) {
-        showToast(`✅ Appointment updated successfully for ${formData.title} ${formData.name}!`, "success");
-        await fetchBookings();
-        fetchAllSlots();
-        if (formData.doctorId && formData.appointmentDate) {
-          filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
-        }
-        const today = new Date().toISOString().split("T")[0];
-        setFormData({ ...EMPTY_FORM, appointmentDate: today });
-        setEditingId(null); setShowForm(false); setAvailableSlots([]);
-        setExistingPatient(null); setShowExistingPatientPopup(false);
-        setFilteredServices([]); setShowServiceSuggestions(false);
-        setCitySuggestions([]); setShowCitySuggestions(false);
-        setSelectedCustomerOffers([]); setSelectedOfferId(""); setAppliedOffer(null);
-      } else { showToast(slotRes.data.message || "Failed to update appointment", "error"); }
-    } catch (err) {
-      console.error("❌ API Error:", err);
-      showToast(err.response?.data?.message || "Failed to update appointment", "error");
-    } finally { setSubmitting(false); }
-  };
+      isOP: true, status: formData.status || "confirmed",
+      serviceItems: formData.serviceItems.map((s) => ({
+        serviceId: s._id || s.serviceId, name: s.name,
+        price: Number(s.price) || 0, description: s.description || "",
+      })),
+      services: formData.serviceItems.map((s) => ({
+        serviceId: s._id || s.serviceId, name: s.name,
+        price: Number(s.price) || 0, description: s.description || "",
+      })),
+      labItems: Array.isArray(matchBForUpdate?.labItems) ? matchBForUpdate.labItems : [],
+      medicineItems: Array.isArray(matchBForUpdate?.medicineItems) ? matchBForUpdate.medicineItems : [],
+      referredByCustomer: formData.referredByCustomer,
+      referredByDoctor: formData.referredByDoctor,
+      referralCustomerId: formData.referralCustomerId,
+      referralDoctorId: formData.referralDoctorId,
+      referralCommission: formData.referralCommission,
+      referralCommissionType: formData.referralCommissionType,
+      offerApplied: formData.offerApplied || null,
+    };
 
+    const slotRes = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${formData.bookingId}`, bookingPayload);
+
+    if (slotRes.data.success) {
+      showToast(`✅ Appointment updated successfully for ${formData.title} ${formData.name}!`, "success");
+      await fetchBookings();
+      fetchAllSlots();
+      if (formData.doctorId && formData.appointmentDate) {
+        filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
+      }
+      const today = new Date().toISOString().split("T")[0];
+      setFormData({ ...EMPTY_FORM, appointmentDate: today });
+      setEditingId(null); setShowForm(false); setAvailableSlots([]);
+      setExistingPatient(null); setShowExistingPatientPopup(false);
+      setFilteredServices([]); setShowServiceSuggestions(false);
+      setCitySuggestions([]); setShowCitySuggestions(false);
+      setSelectedCustomerOffers([]); setSelectedOfferId(""); setAppliedOffer(null);
+    } else {
+      showToast(slotRes.data.message || "Failed to update appointment", "error");
+    }
+  } catch (err) {
+    console.error("❌ API Error:", err);
+    showToast(err.response?.data?.message || "Failed to update appointment", "error");
+  } finally {
+    setSubmitting(false);
+  }
+};
   const openPrescriptionModal = (booking) => {
     if (!booking) { showToast("No booking data found", "error"); return; }
     handlePrintPrescription(booking);
@@ -4099,69 +4152,92 @@ export default function OpManagement() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider flex items-center gap-2">
-                        Select Doctor
-                        {isEditMode && <FaLock className="text-amber-500 text-[10px]" />}
-                      </label>
-                      {!isEditMode && (
-                        <button type="button" onClick={() => handleRoleBasedNavigate("/doctor-management")} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5" title="Add New Doctor">
-                          <FaPlus className="w-2.5 h-2.5" /> Add
-                        </button>
-                      )}
-                    </div>
-                    <select name="doctorId" value={formData.doctorId} onChange={handleInputChange} disabled={isEditMode} className={`w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}>
-                      <option value="">Select Doctor</option>
-                      {doctors.map((d) => <option key={d._id || d.id} value={d._id || d.id}>{d.name || "Doctor"}</option>)}
-                    </select>
-                  </div>
+             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+  <div>
+    <div className="flex items-center justify-between mb-1.5">
+      <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider flex items-center gap-2">
+        Select Doctor
+        {/* ✅ Lock icon hata diya — edit me bhi allowed */}
+      </label>
+      {/* ✅ Add button ab edit mode me bhi dikhega */}
+      <button
+        type="button"
+        onClick={() => handleRoleBasedNavigate("/doctor-management")}
+        className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5"
+        title="Add New Doctor"
+      >
+        <FaPlus className="w-2.5 h-2.5" /> Add
+      </button>
+    </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Appointment Date</label>
-                    <input type="date" name="appointmentDate" value={formData.appointmentDate} onChange={handleInputChange} className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
-                  </div>
+    {/* ✅ disabled={isEditMode} hata diya — ab editable rahega */}
+    <select
+      name="doctorId"
+      value={formData.doctorId}
+      onChange={handleInputChange}
+      className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+    >
+      <option value="">Select Doctor</option>
+      {doctors.map((d) => (
+        <option key={d._id || d.id} value={d._id || d.id}>
+          {d.name || "Doctor"}
+        </option>
+      ))}
+    </select>
+  </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                      Slot {formData.doctorId && formData.appointmentDate && !isEditMode && <span className="text-gray-400 font-normal">({getDayNameFromDate(formData.appointmentDate)})</span>}
-                    </label>
-                    {!formData.doctorId || !formData.appointmentDate ? (
-                      <div className="w-full border rounded-xl px-3 py-3.5 text-sm bg-gray-50 text-gray-400 border-gray-200">Select doctor & date first</div>
-                    ) : slotsLoading ? (
-                      <div className="w-full border rounded-xl px-3 py-3.5 text-sm bg-gray-50 text-gray-500 border-gray-200 flex items-center gap-2"><FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> Loading...</div>
-                    ) : (() => {
-                      const todayStr = new Date().toISOString().split("T")[0];
-                      const isToday = formData.appointmentDate === todayStr;
-                      const now = new Date();
-                      const nowMins = now.getHours() * 60 + now.getMinutes();
-                      const futureSlots = availableSlots.filter((s) => {
-                        if (s.status === "booked") return false;
-                        if (!isToday) return true;
-                        return parseSlotTimeToMinutes(s.startTime) > nowMins;
-                      });
-                      if (futureSlots.length === 0) {
-                        return (
-                          <div className="w-full border rounded-xl px-3 py-2.5 text-xs bg-amber-50 text-amber-700 border-amber-200 flex items-center justify-between gap-2">
-                            <span className="font-semibold">No slots available</span>
-                            <button type="button" onClick={() => handleRoleBasedNavigate("/appointment-slots")} className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md"><FaPlus className="w-2.5 h-2.5" /> Add</button>
-                          </div>
-                        );
-                      }
-                      return (
-                        <select value={formData.slotId} onChange={(e) => handleSlotSelect(e.target.value)} className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none">
-                          <option value="">-- Select Slot --</option>
-                          {futureSlots.map((slot) => (
-                            <option key={slot._id} value={slot._id}>
-                              {slot.startTime} – {slot.endTime}{slot.consultationFee ? ` (₹${slot.consultationFee})` : ""}
-                            </option>
-                          ))}
-                        </select>
-                      );
-                    })()}
-                  </div>
-                </div>
+  <div>
+    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Appointment Date</label>
+    <input
+      type="date"
+      name="appointmentDate"
+      value={formData.appointmentDate}
+      onChange={handleInputChange}
+      className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+    />
+  </div>
+
+  <div>
+    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+      Slot {formData.doctorId && formData.appointmentDate && <span className="text-gray-400 font-normal">({getDayNameFromDate(formData.appointmentDate)})</span>}
+    </label>
+    {!formData.doctorId || !formData.appointmentDate ? (
+      <div className="w-full border rounded-xl px-3 py-3.5 text-sm bg-gray-50 text-gray-400 border-gray-200">
+        Select doctor & date first
+      </div>
+) : slotsLoading ? (
+  <div className="w-full border rounded-xl px-3 py-3.5 text-sm bg-gray-50 text-gray-500 border-gray-200 flex items-center gap-2">
+    <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> Loading...
+  </div>
+) : availableSlots.length === 0 ? (
+  <div className="w-full border rounded-xl px-3 py-2.5 text-xs bg-amber-50 text-amber-700 border-amber-200 flex items-center justify-between gap-2">
+    <span className="font-semibold">No slots available</span>
+    <button
+      type="button"
+      onClick={() => handleRoleBasedNavigate("/appointment-slots")}
+      className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+    >
+      <FaPlus className="w-2.5 h-2.5" /> Add
+    </button>
+  </div>
+) : (
+  <select
+    value={formData.slotId}
+    onChange={(e) => handleSlotSelect(e.target.value)}
+    className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+  >
+    <option value="">-- Select Slot --</option>
+    {availableSlots.map((slot) => (
+      <option key={slot._id} value={slot._id}>
+        {slot.startTime} – {slot.endTime}{slot.consultationFee ? ` (₹${slot.consultationFee})` : ""}
+        {slot.status === "booked" ? " (Booked)" : ""}
+      </option>
+    ))}
+  </select>
+)}
+  
+  </div>
+</div>
                 <div className="border rounded-xl p-3 sm:p-4 bg-blue-50/30 border-gray-200">
                   <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
                     <FaShareAlt className="text-blue-600" /> Referred By
