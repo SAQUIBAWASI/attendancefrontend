@@ -144,6 +144,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       "/referral-management": "",
       "/referral-bookings": "",
       "/letterhead": "",
+      "/revenue-analytics": "",
     };
 
     return routes[location.pathname] || "";
@@ -204,6 +205,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
 
   // ===== OP MANAGEMENT TABS =====
   const opTabs = [
+    { path: "/revenue-analytics", label: "Revenue Analytics", isNew: true },  // ✅ NEW TAB
     { path: "/op-dashboard", label: "OP Dashboard" },
     { path: "/op-management", label: "WalkIn OP" },
     { path: "/bookings", label: "Online Bookings" },
@@ -481,13 +483,23 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
                 <button
                   key={tab.path}
                   onClick={() => handleOPTabClick(tab.path)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap ${
+                  className={`relative px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap ${
                     isActive
                       ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
                       : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
                   }`}
                 >
                   {tab.label}
+                  {/* ✅ NEW blinking badge — small, pink, transparent */}
+                {/* ✅ NEW blinking badge — small, pink, transparent, LEFT side */}
+{tab.isNew && (
+  <span className="absolute -top-2 -left-2 flex items-center justify-center">
+    <span className="absolute inline-flex h-3 w-3 rounded-full bg-pink-400 opacity-75 animate-ping"></span>
+    <span className="relative inline-flex items-center justify-center rounded-full bg-pink-500/80 backdrop-blur-sm border border-pink-300 px-1 py-[0.5px] text-[7px] font-bold text-white tracking-tight shadow-sm">
+      NEW
+    </span>
+  </span>
+)}
                 </button>
               );
             })}

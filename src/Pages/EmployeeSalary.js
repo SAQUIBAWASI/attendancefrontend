@@ -6,14 +6,14 @@ import { FaCalendarAlt, FaTimes } from "react-icons/fa";
 import { FiDollarSign, FiDownloadCloud, FiFileText, FiPieChart } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 import logo from "../Images/Timely-Health-Logo.png";
-import timelyHealthLogo from "../Images/Timelyhealth logo.png"; // ✅ ADDED: New logo for payslip
+import timelyHealthLogo from "../Images/Timelyhealth logo.png";
 import companyStamp from "../Images/company-stamp-1780465131172.png";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 import "./AttendanceSummary.css";
 
 // ============================================
-// 📅 HELPER: Date formatter
+// 📅 HELPERS
 // ============================================
 const formatDateLocal = (date) => {
   if (!date) return "";
@@ -40,38 +40,86 @@ const getDaysInMonth = (monthStr) => {
   return new Date(year, month, 0).getDate();
 };
 
-// ============================================
-// 📅 HELPER: Calculate earned weekoffs
-// ============================================
-const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, employeeLeavesData, weekOffDay, shiftHours = 8, holidayDaysInMonth = 0) => {
-  const weekOffDayNum = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(weekOffDay);
+const holidayAppliesToDepartment = (holiday, employeeDepartment) => {
+  if (!holiday) return false;
+  let depts = [];
+  if (Array.isArray(holiday.departments) && holiday.departments.length > 0) {
+    depts = holiday.departments.filter(d => d && typeof d === 'string');
+  }
+  if (depts.length === 0 && holiday.department && typeof holiday.department === 'string') {
+    const depStr = holiday.department.trim();
+    if (depStr.toLowerCase() !== "all" && depStr.toLowerCase() !== "all departments") {
+      depts = depStr.split(",").map(d => d.trim()).filter(Boolean);
+    }
+  }
+  if (depts.length === 0) return true;
+  if (depts.some(d => d.toLowerCase() === "all" || d.toLowerCase() === "all departments")) return true;
+  if (!employeeDepartment) return true;
+  const empDept = employeeDepartment.toLowerCase().trim();
+  return depts.some(d => d.toLowerCase().trim() === empDept);
+};
+
+const calculateHolidayCountForDepartment = (holidaysData, targetMonth, employeeDepartment, attendanceMap = null, weekOffDatesSet = null, leaveDatesSet = null) => {
+  if (!Array.isArray(holidaysData)) return 0;
+  let count = 0;
+  const [sYear, sMonth] = targetMonth.split('-').map(Number);
+  const monthPrefix = `${sYear}-${String(sMonth).padStart(2, '0')}`;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  holidaysData.forEach(h => {
+    if (h.isActive === false) return;
+    if (!holidayAppliesToDepartment(h, employeeDepartment)) return;
+    const hStartStr = h.fromDate;
+    const hEndStr = h.toDate;
+    if (!hStartStr || !hEndStr) return;
+    const hStart = new Date(hStartStr + 'T00:00:00');
+    const hEnd = new Date(hEndStr + 'T00:00:00');
+
+    for (let d = new Date(hStart); d <= hEnd; d.setDate(d.getDate() + 1)) {
+      const dateKey = formatDateLocal(d);
+      if (!dateKey.startsWith(monthPrefix)) continue;
+      const checkDate = new Date(dateKey + 'T00:00:00');
+      if (checkDate > today) continue;
+      if (attendanceMap && attendanceMap.has(dateKey) && attendanceMap.get(dateKey) > 0) continue;
+      if (weekOffDatesSet && weekOffDatesSet.has(dateKey)) continue;
+      if (leaveDatesSet && leaveDatesSet.has(dateKey)) continue;
+      count++;
+    }
+  });
+  return count;
+};
+
+// ✅ EXACT PAYROLL calculateWeekOffData
+const calculateWeekOffData = (employeeId, year, monthNum, dailyAttendance, employeeLeavesData, weekOffDates, shiftHours = 8, holidayDaysInMonth = 0, weekOffPerMonth = 4) => {
   const firstDay = new Date(year, monthNum - 1, 1);
   const lastDay = new Date(year, monthNum, 0);
-  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const weekOffDateSet = new Set(weekOffDates || []);
+  const totalWeekOffDaysInMonth = weekOffDateSet.size;
+
   const attendanceMap = new Map();
   (dailyAttendance || []).forEach(record => {
     if (record.date || record.checkInTime) {
       const dateKey = formatDateLocal(record.date || record.checkInTime);
       let hours = 0;
-      if (record.totalHours) {
-        hours = parseFloat(record.totalHours);
-      } else if (record.workingHours) {
-        hours = parseFloat(record.workingHours);
-      } else if (record.hours) {
-        hours = parseFloat(record.hours);
-      } else if (record.checkInTime && record.checkOutTime) {
-        const cin = new Date(record.checkInTime);
-        const cout = new Date(record.checkOutTime);
-        hours = (cout - cin) / (1000 * 60 * 60);
+      if (record.totalHours && parseFloat(record.totalHours) > 0) hours = parseFloat(record.totalHours);
+      else if (record.workingHours && parseFloat(record.workingHours) > 0) hours = parseFloat(record.workingHours);
+      else if (record.checkInTime && record.checkOutTime) {
+        hours = (new Date(record.checkOutTime) - new Date(record.checkInTime)) / (1000 * 60 * 60);
       }
-      const existing = attendanceMap.get(dateKey) || 0;
-      attendanceMap.set(dateKey, existing + hours);
+      if (hours > 0) {
+        const existing = attendanceMap.get(dateKey) || 0;
+        attendanceMap.set(dateKey, existing + hours);
+      }
     }
   });
 
   const isLeaveDay = (date) => {
     if (!date || !employeeId) return false;
-    const leaves = employeeLeavesData?.[employeeId];
+    const leaves = employeeLeavesData[employeeId];
     if (!leaves || !leaves.leaveDetails) return false;
     const dateStr = formatDateLocal(date);
     return leaves.leaveDetails.some(leave => {
@@ -81,113 +129,112 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
     });
   };
 
-  const weeklyBreakdown = [];
-  let currentWeekStart = new Date(firstDay);
-  while (currentWeekStart.getDay() !== 1) {
-    currentWeekStart.setDate(currentWeekStart.getDate() - 1);
+  const allWeekOffDates = [];
+  for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+    const dateKey = formatDateLocal(d);
+    if (weekOffDateSet.has(dateKey)) allWeekOffDates.push(dateKey);
   }
 
-  let weekNumber = 1;
-  let eligibleWeeks = 0;
-  let totalWorkingDays = 0;
-  let totalLeaves = 0;
-  let totalPresentDaysCount = 0;
-  let totalHalfDaysCount = 0;
+  const usedWeekOffDates = [];
+  const workedOnWeekOffDates = [];
 
+  allWeekOffDates.forEach(dateKey => {
+    const hoursWorked = attendanceMap.get(dateKey);
+    const isLeave = isLeaveDay(new Date(dateKey + 'T00:00:00'));
+    if (isLeave) {
+      usedWeekOffDates.push(dateKey);
+    } else if (hoursWorked !== undefined && hoursWorked > 0) {
+      workedOnWeekOffDates.push(dateKey);
+    } else {
+      usedWeekOffDates.push(dateKey);
+    }
+  });
+
+  let presentDays = 0, halfDays = 0, leavesCount = 0, totalWorkingDays = 0;
+  const presentDates = [], halfDayDates = [], leaveDates = [];
+
+  for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+    const dateKey = formatDateLocal(d);
+    const checkDate = new Date(d);
+    checkDate.setHours(0, 0, 0, 0);
+    if (checkDate > today) continue;
+
+    if (isLeaveDay(d)) {
+      leavesCount++;
+      leaveDates.push(dateKey);
+      continue;
+    }
+
+    const hoursWorked = attendanceMap.get(dateKey);
+    if (hoursWorked !== undefined && hoursWorked > 0) {
+      if (hoursWorked >= shiftHours * 0.8) {
+        presentDays++;
+        presentDates.push(dateKey);
+        totalWorkingDays += 1;
+      } else if (hoursWorked >= shiftHours * 0.4) {
+        halfDays += 0.5;
+        halfDayDates.push(dateKey);
+        totalWorkingDays += 0.5;
+      }
+    }
+  }
+
+  let earnedWeekOffs = Math.floor(totalWorkingDays / 5);
+  const effectiveCap = weekOffPerMonth || 4;
+  earnedWeekOffs = Math.min(earnedWeekOffs, effectiveCap);
+
+  const workedOnWeekOff = workedOnWeekOffDates.length;
+  const carryForwardWeekOffs = workedOnWeekOff;
+  const rawUsedWeekOffs = usedWeekOffDates.length;
+  const usedWeekOffs = Math.min(rawUsedWeekOffs, earnedWeekOffs);
+  const unearnedAbsentDays = Math.max(0, rawUsedWeekOffs - earnedWeekOffs);
+
+  const weeklyBreakdown = [];
+  let currentWeekStart = new Date(firstDay);
+  while (currentWeekStart.getDay() !== 1) currentWeekStart.setDate(currentWeekStart.getDate() - 1);
+
+  let weekNumber = 1;
   while (currentWeekStart <= lastDay) {
     const weekEnd = new Date(currentWeekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
-    
-    let presentDays = 0;
-    let halfDays = 0;
-    let leavesCount = 0;
-    let weekOffDays = 0;
-    let totalDays = 0;
-    let actualWorkingDaysInWeek = 0;
+    let weekPresent = 0, weekHalf = 0, weekLeaves = 0, weekOffsUsed = 0, weekOffsWorked = 0, daysInMonthInThisWeek = 0;
 
     for (let d = new Date(currentWeekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
       if (d < firstDay || d > lastDay) continue;
-      
+      daysInMonthInThisWeek++;
       const dateKey = formatDateLocal(d);
-      const dayOfWeek = d.getDay();
-      const isWeekOff = (dayOfWeek === weekOffDayNum);
-      
-      totalDays++;
-
-      if (isWeekOff) {
-        weekOffDays++;
+      if (weekOffDateSet.has(dateKey)) {
+        if (workedOnWeekOffDates.includes(dateKey)) weekOffsWorked++;
+        else weekOffsUsed++;
         continue;
       }
-      
-      actualWorkingDaysInWeek++;
-
-      if (isLeaveDay(d)) {
-        leavesCount++;
-        totalLeaves++;
-        continue;
-      }
-
+      if (isLeaveDay(d)) { weekLeaves++; continue; }
       const hoursWorked = attendanceMap.get(dateKey);
-      if (hoursWorked !== undefined) {
-        if (hoursWorked >= shiftHours * 0.8) {
-          presentDays++;
-          totalPresentDaysCount += 1;
-          totalWorkingDays += 1;
-        } else {
-          halfDays += 0.5;
-          totalHalfDaysCount += 1;
-          totalWorkingDays += 0.5;
-        }
+      if (hoursWorked !== undefined && hoursWorked > 0) {
+        if (hoursWorked >= shiftHours * 0.8) weekPresent++;
+        else if (hoursWorked >= shiftHours * 0.4) weekHalf += 0.5;
       }
-    }
-
-    const effectiveWorkingDays = presentDays + halfDays + leavesCount;
-    
-    let isEligibleForWeekoff = false;
-    if (totalDays === 7) {
-      isEligibleForWeekoff = effectiveWorkingDays >= 5;
-    } else {
-      const employeeAttendedDays = presentDays + halfDays;
-      isEligibleForWeekoff = (employeeAttendedDays >= actualWorkingDaysInWeek) && (actualWorkingDaysInWeek >= 3);
     }
 
     weeklyBreakdown.push({
-      weekNumber: weekNumber,
-      daysInMonth: totalDays,
-      presentDays: presentDays,
-      halfDays: halfDays,
-      leaves: leavesCount,
-      weekOffDays: weekOffDays,
-      effectiveWorkingDays: Math.round(effectiveWorkingDays * 10) / 10,
-      isEligibleForWeekoff: isEligibleForWeekoff
+      weekNumber, daysInMonth: daysInMonthInThisWeek,
+      presentDays: weekPresent, halfDays: weekHalf, leaves: weekLeaves,
+      weekOffsUsed, weekOffsWorked,
+      effectiveWorkingDays: Math.round((weekPresent + weekHalf + weekLeaves) * 10) / 10
     });
-
-    if (isEligibleForWeekoff) {
-      eligibleWeeks++;
-    }
 
     currentWeekStart.setDate(currentWeekStart.getDate() + 7);
     weekNumber++;
   }
 
-  let totalWeekOffDays = 0;
-  for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
-    if (d.getDay() === weekOffDayNum) {
-      totalWeekOffDays++;
-    }
-  }
-
-  const totalActiveDays = totalWorkingDays + totalLeaves + holidayDaysInMonth;
-  let earnedWeekOffs = Math.max(eligibleWeeks, Math.floor(totalActiveDays / 5));
-  earnedWeekOffs = Math.min(earnedWeekOffs, totalWeekOffDays);
-
   return {
-    weeklyBreakdown: weeklyBreakdown,
-    earnedWeekOffs: earnedWeekOffs,
-    totalWeekOffDays: totalWeekOffDays,
-    totalWorkingDays: totalWorkingDays,
-    totalPresentDays: totalPresentDaysCount,
-    totalHalfDays: totalHalfDaysCount
+    weeklyBreakdown, earnedWeekOffs, usedWeekOffs, unearnedAbsentDays,
+    workedOnWeekOff, carryForwardWeekOffs, totalWeekOffDays: totalWeekOffDaysInMonth,
+    maxAllowedWeekOffs: effectiveCap, weekOffDates: Array.from(weekOffDateSet).sort(),
+    usedWeekOffDates: usedWeekOffDates.sort(),
+    workedOnWeekOffDates: workedOnWeekOffDates.sort(),
+    presentDates, halfDayDates, leaveDates,
+    presentDays, halfDays, leavesCount, totalWorkingDaysInMonth: totalWorkingDays
   };
 };
 
@@ -202,17 +249,8 @@ export default function EmployeeSalary() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [isLoadingMonth, setIsLoadingMonth] = useState(false);
-  const [employeeLeaves, setEmployeeLeaves] = useState({});
-  const [employeesMasterData, setEmployeesMasterData] = useState({});
-  const [monthDays, setMonthDays] = useState(30);
-  const [employeeCompOffs, setEmployeeCompOffs] = useState({});
-  const [compOffDetails, setCompOffDetails] = useState({});
-  const [attendanceData, setAttendanceData] = useState({});
   const [monthInfo, setMonthInfo] = useState({
-    isHistorical: false,
-    isCurrent: false,
-    includeWeekOff: false,
-    canDownload: false
+    isHistorical: false, isCurrent: false, includeWeekOff: false, canDownload: false
   });
   const [templateConfig, setTemplateConfig] = useState({
     companyName: "Timely Health Tech Pvt Ltd",
@@ -221,19 +259,11 @@ export default function EmployeeSalary() {
   });
 
   const recordsPerPage = 10;
-  const BASE_URL = "https://api.timelyhealth.in";
-  const ATTENDANCE_SUMMARY_API_URL = `${BASE_URL}/api/attendancesummary/get`;
-  const ATTENDANCE_DETAILS_API_URL = `${BASE_URL}/api/attendance/allattendance`;
-  const LEAVES_API_URL = `${BASE_URL}/api/leaves/leaves?status=approved`;
-  const COMPOFF_API_URL = `${BASE_URL}/api/leaves/comp-offs`;
-  const EMPLOYEES_API_URL = `${BASE_URL}/api/employees/get-employees`;
 
   useEffect(() => {
     const savedTemplate = localStorage.getItem("payrollTemplateConfig");
     if (savedTemplate) {
-      try {
-        setTemplateConfig(JSON.parse(savedTemplate));
-      } catch (e) {}
+      try { setTemplateConfig(JSON.parse(savedTemplate)); } catch (e) {}
     }
   }, []);
 
@@ -245,48 +275,38 @@ export default function EmployeeSalary() {
       const employeeEmail = localStorage.getItem("employeeEmail") || employeeData?.email || userData?.email || localStorage.getItem("adminEmail") || "";
       const employeeName = localStorage.getItem("employeeName") || employeeData?.name || userData?.name || localStorage.getItem("adminName") || "";
       return {
-        ...userData,
-        ...employeeData,
+        ...userData, ...employeeData,
         employeeId: String(employeeId).trim(),
         email: employeeEmail,
         name: employeeName
       };
-    } catch (e) {
-      return {};
-    }
+    } catch (e) { return {}; }
   };
 
   const isHistoricalMonth = (month) => {
     if (!month) return false;
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1;
     const [year, monthNum] = month.split('-').map(Number);
-    if (year < currentYear) return true;
-    if (year === currentYear && monthNum < currentMonth) return true;
+    if (year < today.getFullYear()) return true;
+    if (year === today.getFullYear() && monthNum < today.getMonth() + 1) return true;
     return false;
   };
 
   const isCurrentMonth = (month) => {
     if (!month) return true;
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1;
     const [year, monthNum] = month.split('-').map(Number);
-    return year === currentYear && monthNum === currentMonth;
+    return year === today.getFullYear() && monthNum === today.getMonth() + 1;
   };
 
   const shouldIncludeWeekOffInSalary = (month) => {
     if (!month) return false;
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1;
-    const currentDay = today.getDate();
     const [year, monthNum] = month.split('-').map(Number);
-    if (year < currentYear) return true;
-    if (year === currentYear && monthNum < currentMonth) return true;
-    if (year === currentYear && monthNum === currentMonth) {
-      return currentDay >= 26;
+    if (year < today.getFullYear()) return true;
+    if (year === today.getFullYear() && monthNum < today.getMonth() + 1) return true;
+    if (year === today.getFullYear() && monthNum === today.getMonth() + 1) {
+      return today.getDate() >= 26;
     }
     return false;
   };
@@ -295,19 +315,14 @@ export default function EmployeeSalary() {
     if (!month) return false;
     if (isHistoricalMonth(month)) return true;
     if (isCurrentMonth(month)) {
-      const today = new Date();
-      const currentDay = today.getDate();
-      const daysInMonth = getDaysInMonth(month);
-      return currentDay >= daysInMonth;
+      return new Date().getDate() >= getDaysInMonth(month);
     }
     return true;
   };
 
   const getCurrentMonth = () => {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`;
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   };
 
   const formatMonthDisplay = (monthStr) => {
@@ -321,25 +336,21 @@ export default function EmployeeSalary() {
     if (!decimalHours && decimalHours !== 0) return "0h 0m";
     const hours = Math.floor(decimalHours);
     const minutes = Math.round((decimalHours - hours) * 60);
-    if (minutes === 60) {
-      return `${hours + 1}h 0m`;
-    }
+    if (minutes === 60) return `${hours + 1}h 0m`;
     return `${hours}h ${minutes}m`;
   };
 
-  const processLeavesDataForMonth = (leavesData, targetMonth) => {
+  const processLeavesData = (leavesData, selectedMonthStr) => {
     const leavesMap = {};
-    const [year, monthNum] = targetMonth.split('-').map(Number);
+    const [year, monthNum] = (selectedMonthStr || getCurrentMonth()).split('-').map(Number);
     const startOfMonth = new Date(year, monthNum - 1, 1);
     const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59);
 
     (leavesData || []).forEach(leave => {
       const employeeId = leave.employeeId;
       if (!employeeId) return;
-
       const leaveStart = new Date(leave.startDate);
       const leaveEnd = new Date(leave.endDate);
-
       const overlapStart = new Date(Math.max(leaveStart, startOfMonth));
       const overlapEnd = new Date(Math.min(leaveEnd, endOfMonth));
       const currentMonthDays = overlapStart <= overlapEnd ? Math.ceil(Math.abs(overlapEnd - overlapStart) / (1000 * 60 * 60 * 24)) + 1 : 0;
@@ -350,22 +361,19 @@ export default function EmployeeSalary() {
       const inExtendedMonth = overlapSafeStart <= overlapEnd;
 
       if (!leavesMap[employeeId]) {
-        leavesMap[employeeId] = {
-          CL: 0, SL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0, leaveDetails: []
-        };
+        leavesMap[employeeId] = { CL: 0, SL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0, leaveDetails: [] };
       }
-
       const leaveType = leave.leaveType || 'Other';
 
       if (currentMonthDays > 0) {
         if (leavesMap[employeeId][leaveType] !== undefined) {
           leavesMap[employeeId][leaveType] += currentMonthDays;
         } else if (["Casual Leave", "Casual", "casual", "Earned Leave", "Earned", "earned", "Sick Leave", "Sick", "sick", "Comp Off", "comp off"].includes(leaveType)) {
-          const typeMap = { 
-            "Casual Leave": "CL", "Casual": "CL", "casual": "CL", 
-            "Earned Leave": "EL", "Earned": "EL", "earned": "EL", 
-            "Sick Leave": "SL", "Sick": "SL", "sick": "SL", 
-            "Comp Off": "COFF", "comp off": "COFF" 
+          const typeMap = {
+            "Casual Leave": "CL", "Casual": "CL", "casual": "CL",
+            "Earned Leave": "EL", "Earned": "EL", "earned": "EL",
+            "Sick Leave": "SL", "Sick": "SL", "sick": "SL",
+            "Comp Off": "COFF", "comp off": "COFF"
           };
           leavesMap[employeeId][typeMap[leaveType]] += currentMonthDays;
         } else {
@@ -384,398 +392,32 @@ export default function EmployeeSalary() {
         });
       }
     });
-
     return leavesMap;
   };
 
-  // ✅ FIXED: Consultant = 2 week off + holiday 0
-  const computeSalaryForEmployeeAndMonth = async (emp, targetMonth, allLeaves, allHolidays, allCompOffs, allOTClaims, summaryData, allAttendanceRecords) => {
-    const [year, monthNum] = targetMonth.split('-').map(Number);
-    const daysInMonthValue = getDaysInMonth(targetMonth);
-    const includeWeekOffInSalary = shouldIncludeWeekOffInSalary(targetMonth);
-    const isHistorical = isHistoricalMonth(targetMonth);
-    const isCurrent = isCurrentMonth(targetMonth);
-    const canDownload = isPayslipDownloadAllowed(targetMonth);
-
-    const currentLeavesMap = processLeavesDataForMonth(allLeaves, targetMonth);
-
-    let holidayCount = 0;
-    if (Array.isArray(allHolidays)) {
-      allHolidays.forEach(h => {
-        if (h.isActive !== false) {
-          const hStartStr = h.fromDate;
-          const hEndStr = h.toDate;
-          if (hStartStr && hStartStr.startsWith(`${year}-${String(monthNum).padStart(2, '0')}`) &&
-              hEndStr && hEndStr.startsWith(`${year}-${String(monthNum).padStart(2, '0')}`)) {
-            holidayCount += h.totalDays || 1;
-          } else if (hStartStr && hEndStr) {
-            const hStart = new Date(hStartStr);
-            const hEnd = new Date(hEndStr);
-            const startOfMonth = new Date(year, monthNum - 1, 1);
-            const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59);
-            const overlapStart = new Date(Math.max(hStart.getTime(), startOfMonth.getTime()));
-            const overlapEnd = new Date(Math.min(hEnd.getTime(), endOfMonth.getTime()));
-            if (overlapStart <= overlapEnd) {
-              const days = Math.round((overlapEnd - overlapStart) / (1000 * 60 * 60 * 24));
-              holidayCount += Math.max(1, days);
-            }
-          }
-        }
-      });
-    }
-
-    const startOfMonth = new Date(year, monthNum - 1, 1);
-    const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59);
-    let compOffEarned = 0;
-    if (Array.isArray(allCompOffs)) {
-      allCompOffs.forEach(co => {
-        if (co.status === "approved" && String(co.employeeId).trim() === String(emp.employeeId).trim()) {
-          const workDate = new Date(co.workDate);
-          if (workDate >= startOfMonth && workDate <= endOfMonth) {
-            compOffEarned += 1;
-          }
-        }
-      });
-    }
-    const leavesObj = currentLeavesMap[emp.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-    const totalLeavesCount = (leavesObj.CL || 0) + (leavesObj.EL || 0) + (leavesObj.COFF || 0) + (leavesObj.Other || 0);
-    const compOffUsed = Math.min(compOffEarned, totalLeavesCount);
-    const compOffBalance = compOffEarned - compOffUsed;
-
-    const summary = (summaryData || []).find(x => String(x.employeeId).trim() === String(emp.employeeId).trim()) || {};
-    const attendanceForEmployee = (allAttendanceRecords || []).filter(r => String(r.employeeId).trim() === String(emp.employeeId).trim());
-
-    const weekOffDay = emp.weekOffDay || 'Sunday';
-    const weekOffData = calculateEarnedWeekOffs(
-      emp.employeeId,
-      year,
-      monthNum,
-      attendanceForEmployee,
-      currentLeavesMap,
-      weekOffDay,
-      emp.shiftHours || 8,
-      holidayCount
-    );
-
-    // ✅✅✅ CONSULTANT FIX
-    const deptLower = (emp.department || '').toLowerCase().trim();
-    const isDevOrMarketing = deptLower.includes("developer") || deptLower.includes("digital marketing") || deptLower.includes("development");
-    const isConsultant = deptLower.includes("consultant");
-    const isSpecialDept = ["laboratory medicine", "nursing", "medical"].includes(deptLower) || deptLower.includes("laboratory") || deptLower.includes("nursing") || deptLower.includes("medical") || isConsultant;
-
-    let earnedWeekOffs = weekOffData.earnedWeekOffs;
-    let defaultWeekOffs = isConsultant ? 2 : (emp.weekOffPerMonth || 4);
-    if (isDevOrMarketing) {
-      defaultWeekOffs = weekOffData.totalWeekOffDays || 5;
-      earnedWeekOffs = defaultWeekOffs;
-    }
-    const finalWeekOffs = Math.min(earnedWeekOffs, defaultWeekOffs);
-
-    let salaryForMonth = emp.salaryPerMonth || emp.salary || 0;
-    let originalSalary = emp.originalSalary || emp.salaryPerMonth || salaryForMonth;
-    let incrementDetails = null;
-
-    if (emp._id) {
-      try {
-        const targetDate = new Date(year, monthNum - 1, 15);
-        const formattedDate = targetDate.toISOString().split('T')[0];
-        const salaryRes = await fetch(`${API_BASE_URL}/employees/${emp._id}/salary-for-date?date=${formattedDate}`);
-        if (salaryRes.ok) {
-          const sData = await salaryRes.json();
-          if (sData.success && sData.data) {
-            salaryForMonth = sData.data.salaryPerMonth || salaryForMonth;
-            originalSalary = sData.data.originalSalary || emp.originalSalary || emp.salaryPerMonth || salaryForMonth;
-            incrementDetails = sData.data.incrementDetails;
-          }
-        }
-      } catch (err) {
-        console.warn(`Failed to fetch salary for ${emp.name}:`, err.message);
-      }
-    }
-
-    const dailyRate = salaryForMonth > 0 ? salaryForMonth / daysInMonthValue : 0;
-    
-    let presentDaysCount = summary.presentDays;
-    if (presentDaysCount === undefined || presentDaysCount === null || (presentDaysCount === 0 && weekOffData.totalPresentDays > 0)) {
-      presentDaysCount = weekOffData.totalPresentDays || 0;
-    }
-    
-    let halfDaysCount = summary.halfDayWorking;
-    if (halfDaysCount === undefined || halfDaysCount === null) {
-      halfDaysCount = weekOffData.totalHalfDays || 0;
-    }
-    
-    let totalWorkingDays = summary.totalWorkingDays;
-    if (totalWorkingDays === undefined || totalWorkingDays === null) {
-      totalWorkingDays = presentDaysCount + (halfDaysCount * 0.5);
-    }
-    
-    const fullDayNotWorking = summary.fullDayNotWorking ?? 0;
-    const overTimeHours = summary.overTimeHours ?? 0;
-
-    const expectedWorkingDays = daysInMonthValue - finalWeekOffs;
-    const actualDaysWorked = presentDaysCount + (halfDaysCount * 0.5);
-
-    const prevMonth = getPreviousMonth(targetMonth);
-    const prevCarryForward = prevMonth
-      ? parseFloat(localStorage.getItem(getCarryForwardKey(emp.employeeId, prevMonth)) || '0')
-      : 0;
-
-    const adjustedActualDays = actualDaysWorked + prevCarryForward;
-
-    let payablePresentDays, carryForwardDays;
-    if (adjustedActualDays > expectedWorkingDays) {
-      payablePresentDays = expectedWorkingDays;
-      carryForwardDays = Math.round((adjustedActualDays - expectedWorkingDays) * 100) / 100;
-    } else {
-      payablePresentDays = adjustedActualDays;
-      carryForwardDays = 0;
-    }
-
-    if (isSpecialDept) {
-      carryForwardDays = Math.round((carryForwardDays + holidayCount) * 100) / 100;
-    }
-
-    localStorage.setItem(getCarryForwardKey(emp.employeeId, targetMonth), String(carryForwardDays));
-
-    let calculatedSalary = 0;
-    if (salaryForMonth > 0 && daysInMonthValue > 0) {
-      // ✅ Consultant = 0 holiday
-      const holidayAddition = isSpecialDept ? 0 : holidayCount;
-      const effectivePaidDays = payablePresentDays + (includeWeekOffInSalary ? finalWeekOffs : 0) + holidayAddition + compOffBalance;
-      calculatedSalary = effectivePaidDays * dailyRate;
-    }
-
-    let totalOTHours = overTimeHours || 0;
-    let calculatedOTHours = 0;
-    attendanceForEmployee.forEach(record => {
-      if (record.checkInTime) {
-        const recordMonth = new Date(record.checkInTime).toISOString().slice(0, 7);
-        if (recordMonth !== targetMonth) return;
-      }
-      let hoursWorked = 0;
-      if (record.hours) {
-        hoursWorked = parseFloat(record.hours);
-      } else if (record.totalHours) {
-        hoursWorked = parseFloat(record.totalHours);
-      } else if (record.checkInTime && record.checkOutTime) {
-        const checkIn = new Date(record.checkInTime);
-        const checkOut = new Date(record.checkOutTime);
-        hoursWorked = (checkOut - checkIn) / (1000 * 60 * 60);
-      }
-      const shiftHrs = emp.shiftHours || 8;
-      if (hoursWorked > shiftHrs) {
-        calculatedOTHours += (hoursWorked - shiftHrs);
-      }
-    });
-
-    if (totalOTHours === 0 && calculatedOTHours > 0) {
-      totalOTHours = calculatedOTHours;
-    }
-    totalOTHours = Number(totalOTHours.toFixed(2));
-    const formattedOTHours = formatDecimalHours(totalOTHours);
-
-    const [startYear, startMonth] = targetMonth.split('-').map(Number);
-    const mStart = new Date(startYear, startMonth - 1, 1);
-    const mEnd = new Date(startYear, startMonth, 0);
-
-    const empOTClaims = (allOTClaims || []).filter(c => {
-      if (String(c.employeeId).trim() !== String(emp.employeeId).trim()) return false;
-      const cDate = new Date(c.date);
-      return cDate >= mStart && cDate <= mEnd;
-    });
-
-    let approvedOTAmount = 0;
-    let approvedOTHours = 0;
-    empOTClaims.forEach(claim => {
-      approvedOTAmount += claim.otAmount || 0;
-      approvedOTHours += claim.otHours || 0;
-    });
-
-    const baseCalculatedSalary = Math.round(calculatedSalary);
-    let finalOTAmount = 0;
-    let finalPay = baseCalculatedSalary;
-
-    if (approvedOTAmount > 0) {
-      finalOTAmount = approvedOTAmount;
-      finalPay = Math.round(baseCalculatedSalary + approvedOTAmount);
-    } else {
-      const savedOTEmpsString = localStorage.getItem("payrollSelectedOTEmployees");
-      const savedOTEmps = savedOTEmpsString ? new Set(JSON.parse(savedOTEmpsString)) : new Set();
-      const isApprovedInOTPage = localStorage.getItem(`otStatus_${emp.employeeId}_${targetMonth}`) === "approved";
-      
-      if (totalOTHours > 0 && (savedOTEmps.has(emp.employeeId) || isApprovedInOTPage)) {
-        const multiplier = Number(localStorage.getItem(`otMultiplier_${emp.employeeId}_${targetMonth}`)) || 2;
-        const otRatePerHour = dailyRate / (emp.shiftHours || 8);
-        const otAmount = totalOTHours * otRatePerHour * multiplier;
-        finalOTAmount = otAmount;
-        finalPay = Math.round(baseCalculatedSalary + otAmount);
-      }
-    }
-
-    let extraWork = summary.extraWork || null;
-    if (summary.calculatedSalary !== undefined && summary.calculatedSalary !== null && summary.extraWork) {
-      calculatedSalary = summary.calculatedSalary;
-      finalPay = summary.calculatedSalary;
-    }
-
-    const empData = {
-      employeeId: emp.employeeId,
-      name: emp.name,
-      department: emp.department || 'N/A',
-      designation: emp.designation || emp.role || 'N/A',
-      role: emp.role || emp.designation || 'N/A',
-      month: targetMonth,
-      monthFormatted: formatMonthDisplay(targetMonth),
-      
-      presentDays: presentDaysCount,
-      halfDays: halfDaysCount,
-      halfDayWorking: halfDaysCount,
-      totalWorkingDays: totalWorkingDays,
-      workingDays: totalWorkingDays,
-      fullDayNotWorking: fullDayNotWorking,
-      overTimeHours: totalOTHours,
-      overTimeHoursFormatted: formattedOTHours,
-      
-      weekOffs: finalWeekOffs,
-      earnedWeekOffs: earnedWeekOffs,
-      defaultWeekOffs: defaultWeekOffs,
-      targetWeekOffCount: defaultWeekOffs,
-      weekOffDay: weekOffDay,
-      weeklyBreakdown: weekOffData.weeklyBreakdown,
-      
-      salaryPerMonth: salaryForMonth,
-      currentSalary: emp.salaryPerMonth,
-      originalSalary: originalSalary,
-      salaryPerDay: dailyRate.toFixed(2),
-      dailyRate: dailyRate.toFixed(2),
-      calculatedSalary: Math.round(calculatedSalary),
-      baseCalculatedSalary: baseCalculatedSalary,
-      
-      shiftHours: emp.shiftHours || 8,
-      finalOTAmount: Math.round(finalOTAmount),
-      otAmount: Math.round(finalOTAmount),
-      finalPay: finalPay,
-      hasApprovedOT: approvedOTAmount > 0,
-      approvedOTAmount: approvedOTAmount,
-      approvedOTHours: approvedOTHours,
-      
-      // ✅ Consultant = 0 holiday
-      holidayCount: isConsultant ? 0 : holidayCount,
-      monthDays: daysInMonthValue,
-      includeWeekOffInSalary: includeWeekOffInSalary,
-      isHistoricalMonth: isHistorical,
-      isCurrentMonth: isCurrent,
-      canDownload: canDownload,
-      incrementDetails: incrementDetails,
-      
-      _id: emp._id,
-      
-      basicPay: emp.basicPay,
-      hra: emp.hra,
-      conveyanceAllowance: emp.conveyanceAllowance,
-      medicalAllowance: emp.medicalAllowance,
-      performanceAllowance: emp.performanceAllowance,
-      specialAllowance: emp.specialAllowance,
-      gmcAmount: emp.gmc || emp.gmcAmount,
-      ptax: emp.profTax || emp.ptax,
-      otherDeductions: emp.otherDeductions,
-      bankAccount: emp.bankAccount || emp.bankAccountNo || '',
-      bankName: emp.bankName || '',
-      panNo: emp.panCard || emp.panNumber || '',
-      pfNo: emp.pfNumber || emp.pfNo || '',
-      uanNo: emp.uanNumber || emp.uanNo || '',
-      esicNo: emp.esicNumber || emp.esicNo || '',
-      branch: emp.branch || '',
-      joiningDate: emp.joinDate || emp.joiningDate || '',
-      location: emp.location || 'HYDERABAD',
-      
-      compOffEarned: compOffEarned,
-      compOffUsed: compOffUsed,
-      compOffBalance: compOffBalance,
-      totalLeaves: totalLeavesCount,
-      leavesBreakdown: leavesObj,
-      
-      expectedWorkingDays: expectedWorkingDays,
-      payablePresentDays: payablePresentDays,
-      carryForwardDays: carryForwardDays,
-      carryForwardFromPrev: prevCarryForward,
-      extraWork: extraWork
-    };
-
-    return empData;
+  const wasEmployeeEmployedInMonth = (employee, monthStr) => {
+    if (!monthStr || !employee.joinDate) return true;
+    const [year, month] = monthStr.split('-').map(Number);
+    const joiningDate = new Date(employee.joinDate);
+    if (joiningDate.getFullYear() > year) return false;
+    if (joiningDate.getFullYear() === year && joiningDate.getMonth() + 1 > month) return false;
+    return true;
   };
 
-  const processCompOffData = useCallback(async (selectedMonthStr, leavesData) => {
-    try {
-      const currentEmployee = getCurrentEmployee();
-      const currentEmployeeId = currentEmployee?.employeeId;
-      
-      if (!currentEmployeeId) {
-        return {};
-      }
-
-      const [year, monthNum] = (selectedMonthStr || new Date().toISOString().slice(0, 7)).split('-').map(Number);
-      const startOfMonth = new Date(year, monthNum - 1, 1);
-      const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59);
-
-      const response = await axios.get(COMPOFF_API_URL);
-      const compOffs = response.data || [];
-
-      const compOffMap = {};
-      const compOffDetailsMap = {};
-
-      for (const co of compOffs) {
-        if (co.status === "approved" && co.employeeId === currentEmployeeId) {
-          const workDate = new Date(co.workDate);
-          if (workDate >= startOfMonth && workDate <= endOfMonth) {
-            if (!compOffMap[currentEmployeeId]) {
-              compOffMap[currentEmployeeId] = { earned: 0, used: 0, balance: 0 };
-              compOffDetailsMap[currentEmployeeId] = [];
-            }
-            compOffMap[currentEmployeeId].earned += 1;
-            compOffDetailsMap[currentEmployeeId].push({
-              type: 'earned',
-              date: co.workDate,
-              reason: co.reason || 'Comp-off earned'
-            });
-          }
-        }
-      }
-
-      const leaves = leavesData?.[currentEmployeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-      const totalLeaves = (leaves.CL || 0) + (leaves.EL || 0) + (leaves.COFF || 0) + (leaves.Other || 0);
-      const earned = compOffMap[currentEmployeeId]?.earned || 0;
-      const used = Math.min(earned, totalLeaves);
-      const balance = earned - used;
-      
-      if (compOffMap[currentEmployeeId]) {
-        compOffMap[currentEmployeeId].used = used;
-        compOffMap[currentEmployeeId].balance = balance;
-      }
-
-      setEmployeeCompOffs(compOffMap);
-      setCompOffDetails(compOffDetailsMap);
-      return compOffMap;
-      
-    } catch (error) {
-      console.error("Error fetching comp-offs:", error);
-      return {};
-    }
-  }, []);
-
-  const getLeaveTypes = (employee) => {
-    const leaves = employee.leavesBreakdown || { CL: 0, SL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-    const leaveStrings = [];
-    if (leaves.CL > 0) leaveStrings.push(`CL: ${leaves.CL}`);
-    if (leaves.SL > 0) leaveStrings.push(`SL: ${leaves.SL}`);
-    if (leaves.EL > 0) leaveStrings.push(`EL: ${leaves.EL}`);
-    if (leaves.COFF > 0) leaveStrings.push(`COFF: ${leaves.COFF}`);
-    if (leaves.LOP > 0) leaveStrings.push(`LOP: ${leaves.LOP}`);
-    if (leaves.Other > 0) leaveStrings.push(`Other: ${leaves.Other}`);
-    return leaveStrings.length > 0 ? leaveStrings.join(', ') : 'No Leaves';
+  const medicalRoles = [
+    "Phlebotomist", "Staff Nurse", "Consultant", "Pharmacist",
+    "Nurse", "Doctor", "Lab Technician", "Medical Officer",
+    "Physician", "Surgeon", "Radiologist", "Pathologist",
+    "Therapist", "Healthcare", "Medical", "Clinical"
+  ];
+  const isMedicalRole = (role) => {
+    if (!role) return false;
+    return medicalRoles.some(medRole => role.toLowerCase().includes(medRole.toLowerCase()));
   };
 
+  // ============================================
+  // 🚀 SAME BULK API AS PAYROLL — SINGLE EMPLOYEE
+  // ============================================
   const fetchSalaryData = useCallback(async (month = "") => {
     let isMounted = true;
 
@@ -786,43 +428,6 @@ export default function EmployeeSalary() {
       const loggedEmployee = getCurrentEmployee();
       const currentEmployeeId = loggedEmployee?.employeeId;
 
-      const [empRes, leavesRes, holidaysRes, compOffRes, otClaimsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/employees/get-employees`),
-        fetch(`${API_BASE_URL}/leaves/leaves?status=approved`),
-        fetch(`${API_BASE_URL}/holidays/all`),
-        fetch(`${API_BASE_URL}/leaves/comp-offs`),
-        fetch(`${API_BASE_URL}/employees/allotclaimed?status=approved`)
-      ]);
-
-      let employeesData = [];
-      if (empRes.ok) {
-        const raw = await empRes.json();
-        employeesData = Array.isArray(raw) ? raw : (raw.data || []);
-      }
-
-      const allLeaves = leavesRes.ok ? await leavesRes.json() : [];
-      const allHolidays = holidaysRes.ok ? await holidaysRes.json() : [];
-      const allCompOffs = compOffRes.ok ? await compOffRes.json() : [];
-      
-      let allOTClaims = [];
-      if (otClaimsRes.ok) {
-        const otJson = await otClaimsRes.json();
-        allOTClaims = otJson.claims || [];
-      }
-
-      let fullEmp = employeesData.find(e => 
-        String(e.employeeId).trim().toLowerCase() === String(currentEmployeeId).trim().toLowerCase() ||
-        (loggedEmployee.email && e.email && e.email.toLowerCase() === loggedEmployee.email.toLowerCase())
-      );
-
-      if (!fullEmp) {
-        if (employeesData.length > 0) {
-          fullEmp = employeesData[0];
-        } else {
-          fullEmp = loggedEmployee;
-        }
-      }
-
       let monthsToCompute = [];
       if (month) {
         monthsToCompute = [month];
@@ -831,56 +436,373 @@ export default function EmployeeSalary() {
         for (let i = 0; i < 12; i++) {
           const d = new Date(cur.getFullYear(), cur.getMonth() - i, 1);
           const mStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-          
-          if (fullEmp.joinDate || fullEmp.joiningDate) {
-            const jDate = new Date(fullEmp.joinDate || fullEmp.joiningDate);
-            const jYear = jDate.getFullYear();
-            const jMonth = jDate.getMonth() + 1;
-            const [cYear, cMonth] = mStr.split('-').map(Number);
-            if (cYear < jYear || (cYear === jYear && cMonth < jMonth)) {
-              continue;
-            }
-          }
           monthsToCompute.push(mStr);
         }
       }
 
-      if (monthsToCompute.length === 0) {
-        monthsToCompute = [getCurrentMonth()];
-      }
-
       const recordsPromises = monthsToCompute.map(async (m) => {
-        let summaryData = [];
         try {
-          const sumRes = await fetch(`${API_BASE_URL}/attendancesummary/get?month=${m}`);
-          if (sumRes.ok) {
-            const sumJson = await sumRes.json();
-            summaryData = sumJson.summary || [];
-          }
-        } catch (e) {}
+          // 🚀 SAME BULK API AS PAYROLL
+          const res = await fetch(`${API_BASE_URL}/attendancesummary/bulk-payroll?month=${m}`);
+          if (!res.ok) throw new Error(`API error: ${res.status}`);
+          const json = await res.json();
+          if (!json.success) throw new Error(json.message || "Failed to fetch");
 
-        let allAttendanceRecords = [];
-        try {
-          const attRes = await fetch(`${API_BASE_URL}/attendance/allattendance?month=${m}&employeeId=${fullEmp.employeeId}`);
-          if (attRes.ok) {
-            const attJson = await attRes.json();
-            allAttendanceRecords = attJson.records || [];
-          }
-        } catch (e) {}
+          const {
+            employees: employeesData,
+            attendanceByEmployee,
+            leavesByEmployee,
+            compOffsByEmployee,
+            weekOffDatesMap: weekOffMap,
+            summaryMap,
+            holidays: holidaysData
+          } = json.data;
 
-        return computeSalaryForEmployeeAndMonth(
-          fullEmp,
-          m,
-          allLeaves,
-          allHolidays,
-          allCompOffs,
-          allOTClaims,
-          summaryData,
-          allAttendanceRecords
-        );
+          const daysInMonthValue = json.daysInMonth;
+
+          // Find logged-in employee
+          let fullEmp = employeesData.find(e =>
+            String(e.employeeId).trim().toLowerCase() === String(currentEmployeeId).trim().toLowerCase() ||
+            (loggedEmployee.email && e.email && e.email.toLowerCase() === loggedEmployee.email.toLowerCase())
+          );
+
+          if (!fullEmp && employeesData.length > 0) {
+            fullEmp = employeesData[0];
+          }
+          if (!fullEmp) return null;
+
+          // Filter by joining date
+          if (!wasEmployeeEmployedInMonth(fullEmp, m)) return null;
+
+          // Leaves data
+          const allLeavesArray = [];
+          Object.keys(leavesByEmployee).forEach(empId => {
+            leavesByEmployee[empId].forEach(l => allLeavesArray.push(l));
+          });
+          const currentLeavesMap = processLeavesData(allLeavesArray, m);
+
+          // Comp-offs
+          const compOffMap = {};
+          Object.keys(compOffsByEmployee).forEach(empId => {
+            compOffMap[empId] = compOffsByEmployee[empId].map(co => ({
+              date: co.workDate,
+              count: co.count || 1,
+              reason: co.reason || '',
+              workDate: co.workDate,
+              _id: co._id
+            }));
+          });
+
+          // Summary
+          const summaryData = Object.values(summaryMap);
+          const summary = summaryData.find(x => x.employeeId === fullEmp.employeeId) || {};
+
+          const [year, monthNum] = m.split('-').map(Number);
+          const deptLower = (fullEmp.department || '').toLowerCase().trim();
+          const isConsultant = deptLower.includes("consultant");
+          const employeeRole = summary.role || fullEmp.role || fullEmp.designation || '';
+          const isMedicalStaff = isMedicalRole(employeeRole);
+
+          const attendanceForEmployee = attendanceByEmployee[fullEmp.employeeId] || [];
+          const weekOffDates = weekOffMap[fullEmp.employeeId] || [];
+
+          // Attendance map for holiday calc
+          const attendanceMapForHoliday = new Map();
+          attendanceForEmployee.forEach(record => {
+            const dateKey = formatDateLocal(record.date || record.checkInTime);
+            let hours = 0;
+            if (record.totalHours && parseFloat(record.totalHours) > 0) hours = parseFloat(record.totalHours);
+            else if (record.workingHours && parseFloat(record.workingHours) > 0) hours = parseFloat(record.workingHours);
+            else if (record.checkInTime && record.checkOutTime) {
+              hours = (new Date(record.checkOutTime) - new Date(record.checkInTime)) / (1000 * 60 * 60);
+            }
+            if (hours > 0) attendanceMapForHoliday.set(dateKey, hours);
+          });
+
+          const weekOffDatesSetForHoliday = new Set(weekOffDates || []);
+          const leaveDatesSetForHoliday = new Set();
+          const empLeaveDetails = currentLeavesMap[fullEmp.employeeId]?.leaveDetails || [];
+          empLeaveDetails.forEach(leave => {
+            const s = new Date(leave.startDate);
+            const e = new Date(leave.endDate);
+            for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+              leaveDatesSetForHoliday.add(formatDateLocal(d));
+            }
+          });
+
+          const employeeHolidayCount = calculateHolidayCountForDepartment(
+            holidaysData, m, fullEmp.department || '',
+            attendanceMapForHoliday, weekOffDatesSetForHoliday, leaveDatesSetForHoliday
+          );
+
+          const weekOffData = calculateWeekOffData(
+            fullEmp.employeeId, year, monthNum,
+            attendanceForEmployee, currentLeavesMap, weekOffDates,
+            fullEmp.shiftHours || 8, employeeHolidayCount,
+            fullEmp.weekOffPerMonth || 4
+          );
+
+          const earnedWeekOffs = weekOffData.earnedWeekOffs;
+          const usedWeekOffs = weekOffData.usedWeekOffs;
+          const unearnedAbsentDays = weekOffData.unearnedAbsentDays || 0;
+          const workedOnWeekOff = weekOffData.workedOnWeekOff;
+          const carryForwardWeekOffs = weekOffData.carryForwardWeekOffs;
+          const totalWeekOffDaysInMonth = weekOffData.totalWeekOffDays;
+
+          let defaultWeekOffs = weekOffDates.length || (isConsultant ? 2 : (fullEmp.weekOffPerMonth || 4));
+
+          let salaryForMonth = fullEmp.salaryPerMonth || 0;
+          let originalSalary = fullEmp.originalSalary || fullEmp.salaryPerMonth;
+          let incrementDetails = null;
+
+          if (fullEmp.salaryIncrements && fullEmp.salaryIncrements.length > 0) {
+            const targetDate = new Date(year, monthNum - 1, 15);
+            let applicableSalary = fullEmp.originalSalary || fullEmp.salaryPerMonth;
+            fullEmp.salaryIncrements.forEach(inc => {
+              const effDate = new Date(inc.effectiveFrom);
+              if (effDate <= targetDate && inc.newSalary) applicableSalary = inc.newSalary;
+            });
+            salaryForMonth = applicableSalary;
+          }
+
+          const dailyRate = salaryForMonth > 0 ? salaryForMonth / daysInMonthValue : 0;
+
+          let presentDaysCount = weekOffData.presentDays ?? summary.presentDays ?? 0;
+          let halfDaysCount = weekOffData.halfDays ?? summary.halfDayWorking ?? 0;
+          let totalWorkingDays = summary.totalWorkingDays ?? (presentDaysCount + (halfDaysCount * 0.5));
+
+          const fullDayNotWorking = summary.fullDayNotWorking ?? 0;
+          const overTimeHours = summary.overTimeHours ?? 0;
+
+          const employeeCompOffDates = compOffMap[fullEmp.employeeId] || [];
+          const totalCompOffDays = employeeCompOffDates.reduce((sum, co) => sum + (co.count || 1), 0);
+          const compOffAmount = totalCompOffDays * dailyRate;
+
+          const payablePresentDays = presentDaysCount + (halfDaysCount * 0.5);
+          const weekOffsForSalary = usedWeekOffs;
+
+          let calculatedSalary = 0;
+          if (salaryForMonth > 0 && daysInMonthValue > 0) {
+            if (presentDaysCount === 0 && halfDaysCount === 0 && usedWeekOffs === 0 && totalCompOffDays === 0 && employeeHolidayCount === 0) {
+              calculatedSalary = 0;
+            } else {
+              const effectivePaidDaysRaw = payablePresentDays + weekOffsForSalary + totalCompOffDays + employeeHolidayCount;
+              const effectivePaidDays = Math.min(effectivePaidDaysRaw, daysInMonthValue);
+              calculatedSalary = effectivePaidDays * dailyRate;
+            }
+          }
+
+          const expectedWorkingDays = Math.max(0, daysInMonthValue - usedWeekOffs);
+          const prevMonth = getPreviousMonth(m);
+          const prevCarryForwardRaw = prevMonth
+            ? parseFloat(localStorage.getItem(getCarryForwardKey(fullEmp.employeeId, prevMonth)) || '0')
+            : 0;
+          const prevCarryForward = Math.max(0, prevCarryForwardRaw || 0);
+
+          let carryForwardDays = Math.max(0, carryForwardWeekOffs || 0);
+          localStorage.setItem(getCarryForwardKey(fullEmp.employeeId, m), String(carryForwardDays));
+
+          // OT
+          let totalOTHours = overTimeHours || 0;
+          let calculatedOTHours = 0;
+          attendanceForEmployee.forEach(record => {
+            let hoursWorked = 0;
+            if (record.hours) hoursWorked = parseFloat(record.hours);
+            else if (record.totalHours) hoursWorked = parseFloat(record.totalHours);
+            else if (record.checkInTime && record.checkOutTime) {
+              hoursWorked = (new Date(record.checkOutTime) - new Date(record.checkInTime)) / (1000 * 60 * 60);
+            }
+            const shiftHrs = fullEmp.shiftHours || 8;
+            if (hoursWorked > shiftHrs) calculatedOTHours += (hoursWorked - shiftHrs);
+          });
+          if (totalOTHours === 0 && calculatedOTHours > 0) totalOTHours = calculatedOTHours;
+          totalOTHours = Number(totalOTHours.toFixed(2));
+          const formattedOTHours = formatDecimalHours(totalOTHours);
+
+          // Approved OT
+          let approvedOTAmount = 0, approvedOTHours = 0;
+          try {
+            const otRes = await fetch(`${API_BASE_URL}/employees/allotclaimed?status=approved`);
+            if (otRes.ok) {
+              const otJson = await otRes.json();
+              if (otJson.success) {
+                const [sY, sM] = m.split('-').map(Number);
+                const mStart = new Date(sY, sM - 1, 1);
+                const mEnd = new Date(sY, sM, 0);
+                const empClaims = (otJson.claims || []).filter(c => {
+                  if (String(c.employeeId).trim() !== String(fullEmp.employeeId).trim()) return false;
+                  const cDate = new Date(c.date);
+                  return cDate >= mStart && cDate <= mEnd;
+                });
+                empClaims.forEach(claim => {
+                  approvedOTAmount += claim.otAmount || 0;
+                  approvedOTHours += claim.otHours || 0;
+                });
+              }
+            }
+          } catch (e) {}
+
+          const savedOTMap = (() => {
+            try {
+              const saved = localStorage.getItem(`otApplied_${m}`);
+              return saved ? JSON.parse(saved) : {};
+            } catch { return {}; }
+          })();
+
+          const savedManualDeductionMap = (() => {
+            try {
+              const saved = localStorage.getItem(`manualDeduction_${m}`);
+              return saved ? JSON.parse(saved) : {};
+            } catch { return {}; }
+          })();
+
+          const baseCalculatedSalary = Math.round(calculatedSalary);
+          const dashboardOTHours = savedOTMap[fullEmp.employeeId] !== undefined ? savedOTMap[fullEmp.employeeId] : null;
+
+          let finalOTAmount = 0;
+          let otSource = 'none';
+
+          if (approvedOTAmount > 0) {
+            finalOTAmount = approvedOTAmount;
+            otSource = 'approved';
+          } else if (dashboardOTHours !== null && dashboardOTHours > 0) {
+            const shiftHours = fullEmp.shiftHours || 8;
+            const otRatePerHour = shiftHours > 0 ? dailyRate / shiftHours : 0;
+            finalOTAmount = dashboardOTHours * otRatePerHour * 2;
+            otSource = 'dashboard';
+          } else {
+            const savedOTEmpsString = localStorage.getItem("payrollSelectedOTEmployees");
+            const savedOTEmps = savedOTEmpsString ? new Set(JSON.parse(savedOTEmpsString)) : new Set();
+            const isApprovedInOTPage = localStorage.getItem(`otStatus_${fullEmp.employeeId}_${m}`) === "approved";
+            if (totalOTHours > 0 && (savedOTEmps.has(fullEmp.employeeId) || isApprovedInOTPage)) {
+              const multiplier = Number(localStorage.getItem(`otMultiplier_${fullEmp.employeeId}_${m}`)) || 2;
+              const shiftHours = fullEmp.shiftHours || 8;
+              const otRatePerHour = shiftHours > 0 ? dailyRate / shiftHours : 0;
+              finalOTAmount = totalOTHours * otRatePerHour * multiplier;
+              otSource = 'manual';
+            }
+          }
+
+          const manualEntry = savedManualDeductionMap[fullEmp.employeeId] || { amount: 0, reason: '' };
+          const manualDeductionAmount = manualEntry.amount || 0;
+          const manualDeductionReason = manualEntry.reason || '';
+
+          const finalPay = Math.max(0, Math.round(baseCalculatedSalary + finalOTAmount - manualDeductionAmount));
+          const holidayAmount = Math.round(employeeHolidayCount * dailyRate);
+
+          const isHistorical = isHistoricalMonth(m);
+          const isCurrent = isCurrentMonth(m);
+          const includeWeekOffInSalary = shouldIncludeWeekOffInSalary(m);
+          const canDownload = isPayslipDownloadAllowed(m);
+
+          return {
+            employeeId: fullEmp.employeeId,
+            name: fullEmp.name,
+            department: fullEmp.department || 'N/A',
+            designation: employeeRole,
+            role: employeeRole,
+            month: m,
+            monthFormatted: formatMonthDisplay(m),
+
+            presentDays: presentDaysCount,
+            halfDays: halfDaysCount,
+            halfDayWorking: halfDaysCount,
+            totalWorkingDays: totalWorkingDays,
+            workingDays: totalWorkingDays,
+            fullDayNotWorking: fullDayNotWorking,
+            overTimeHours: totalOTHours,
+            overTimeHoursFormatted: formattedOTHours,
+
+            earnedWeekOffs: earnedWeekOffs,
+            usedWeekOffs: usedWeekOffs,
+            unearnedAbsentDays: unearnedAbsentDays,
+            workedOnWeekOff: workedOnWeekOff,
+            carryForwardWeekOffs: carryForwardWeekOffs,
+            weekOffs: weekOffsForSalary,
+            defaultWeekOffs: defaultWeekOffs,
+            totalWeekOffDays: totalWeekOffDaysInMonth,
+            maxAllowedWeekOffs: weekOffData.maxAllowedWeekOffs,
+
+            weekOffDay: fullEmp.weekOffDay,
+            weekOffDates: weekOffDates,
+            usedWeekOffDates: weekOffData.usedWeekOffDates || [],
+            workedOnWeekOffDates: weekOffData.workedOnWeekOffDates || [],
+            weeklyBreakdown: weekOffData.weeklyBreakdown,
+
+            compOffDates: employeeCompOffDates,
+            compOffDays: totalCompOffDays,
+            compOffAmount: Math.round(compOffAmount),
+            compOffEarned: totalCompOffDays,
+            compOffUsed: 0,
+            compOffBalance: totalCompOffDays,
+
+            salaryPerMonth: salaryForMonth,
+            currentSalary: fullEmp.salaryPerMonth,
+            originalSalary: originalSalary,
+            salaryPerDay: dailyRate.toFixed(2),
+            dailyRate: dailyRate.toFixed(2),
+            calculatedSalary: baseCalculatedSalary,
+            baseCalculatedSalary: baseCalculatedSalary,
+
+            shiftHours: fullEmp.shiftHours || 8,
+            finalOTAmount: Math.round(finalOTAmount),
+            otAmount: Math.round(finalOTAmount),
+            finalPay: finalPay,
+            hasApprovedOT: approvedOTAmount > 0,
+            approvedOTAmount: approvedOTAmount,
+            approvedOTHours: approvedOTHours,
+            dashboardOTHours: dashboardOTHours,
+            otSource: otSource,
+
+            manualDeduction: manualDeductionAmount,
+            manualDeductionReason: manualDeductionReason,
+
+            holidayCount: employeeHolidayCount,
+            holidayAmount: holidayAmount,
+            monthDays: daysInMonthValue,
+            includeWeekOffInSalary: includeWeekOffInSalary,
+            isHistoricalMonth: isHistorical,
+            isCurrentMonth: isCurrent,
+            canDownload: canDownload,
+            role: employeeRole,
+            isMedicalStaff: isMedicalStaff,
+            incrementDetails: incrementDetails,
+
+            _id: fullEmp._id,
+            basicPay: fullEmp.basicPay,
+            hra: fullEmp.hra,
+            conveyanceAllowance: fullEmp.conveyanceAllowance,
+            medicalAllowance: fullEmp.medicalAllowance,
+            performanceAllowance: fullEmp.performanceAllowance,
+            specialAllowance: fullEmp.specialAllowance,
+            gmcAmount: fullEmp.gmc,
+            ptax: fullEmp.profTax,
+            otherDeductions: fullEmp.otherDeductions,
+            bankAccount: fullEmp.bankAccount || '',
+            bankName: fullEmp.bankName || '',
+            panNo: fullEmp.panCard || '',
+            pfNo: fullEmp.pfNo || '',
+            uanNo: fullEmp.uanNo || '',
+            esicNo: fullEmp.esicNo || '',
+            branch: fullEmp.branch || '',
+            joiningDate: fullEmp.joinDate || fullEmp.joiningDate || '',
+            location: fullEmp.location || 'HYDERABAD',
+
+            totalLeaves: 0,
+            leavesBreakdown: currentLeavesMap[fullEmp.employeeId] || { CL: 0, SL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 },
+
+            expectedWorkingDays: expectedWorkingDays,
+            payablePresentDays: payablePresentDays,
+            carryForwardDays: carryForwardDays,
+            carryForwardFromPrev: prevCarryForward
+          };
+        } catch (err) {
+          console.error(`Error for month ${m}:`, err);
+          return null;
+        }
       });
 
-      const recordsList = await Promise.all(recordsPromises);
+      const recordsList = (await Promise.all(recordsPromises)).filter(Boolean);
       recordsList.sort((a, b) => b.month.localeCompare(a.month));
 
       if (isMounted) {
@@ -931,7 +853,7 @@ export default function EmployeeSalary() {
     let filtered = [...records];
     if (searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(record => 
+      filtered = filtered.filter(record =>
         (record.monthFormatted && record.monthFormatted.toLowerCase().includes(searchLower)) ||
         (record.month && record.month.toLowerCase().includes(searchLower))
       );
@@ -972,104 +894,98 @@ export default function EmployeeSalary() {
     setSelectedEmployee(null);
   };
 
+  const getLeaveTypes = (employee) => {
+    const leaves = employee.leavesBreakdown || { CL: 0, SL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
+    const arr = [];
+    if (leaves.CL > 0) arr.push(`CL: ${leaves.CL}`);
+    if (leaves.SL > 0) arr.push(`SL: ${leaves.SL}`);
+    if (leaves.EL > 0) arr.push(`EL: ${leaves.EL}`);
+    if (leaves.COFF > 0) arr.push(`COFF: ${leaves.COFF}`);
+    if (leaves.LOP > 0) arr.push(`LOP: ${leaves.LOP}`);
+    if (leaves.Other > 0) arr.push(`Other: ${leaves.Other}`);
+    return arr.length > 0 ? arr.join(', ') : 'No Leaves';
+  };
+
+  const extractDayNumbers = (datesArray, keyField = null) => {
+    if (!datesArray || datesArray.length === 0) return "";
+    return datesArray
+      .map(item => {
+        const dateStr = keyField ? item[keyField] : item;
+        if (!dateStr) return null;
+        const day = parseInt(String(dateStr).split("-")[2], 10);
+        return isNaN(day) ? null : day;
+      })
+      .filter(d => d !== null)
+      .sort((a, b) => a - b)
+      .join(", ");
+  };
+
+  // ============================================
+  // PAYSLIP GENERATION
+  // ============================================
   const generateInvoiceHTML = (employee) => {
     if (!employee.salaryPerMonth || employee.salaryPerMonth === 0) {
-      return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Payslip</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #000; text-align: center; }
-            .error { color: #000; font-size: 18px; margin-top: 100px; border: 1px solid #000; padding: 20px; display: inline-block; }
-          </style>
-        </head>
-        <body>
-          <div class="error">
-            <h2>Salary Data Not Available</h2>
-            <p>Salary information is not available for ${employee?.name || 'this employee'}.</p>
-            <p>Please contact HR department.</p>
-          </div>
-        </body>
-        </html>
-      `;
+      return `<!DOCTYPE html><html><head><title>Payslip</title></head><body style="font-family:Arial;text-align:center;padding:40px;"><h2>Salary Data Not Available</h2></body></html>`;
     }
 
     const daysInMonth = employee.monthDays || getDaysInMonth(employee.month);
     const dailyRate = parseFloat(employee.dailyRate) || 0;
     const presentDays = employee.presentDays ?? 0;
-    const halfDays = employee.halfDays || employee.halfDayWorking || 0;
+    const halfDays = employee.halfDays || 0;
     const holidays = employee.holidayCount || 0;
-    const actualWeekOffDaysNumeric = employee.weekOffs || 0;
-    const compOffBalance = employee.compOffBalance || 0;
+    const actualWeekOffDaysNumeric = employee.usedWeekOffs || 0;
+    const compOffDays = employee.compOffDays || 0;
 
-    const netPayFromPage = employee.finalPay || employee.calculatedSalary || employee.baseCalculatedSalary || 0;
-    const calculatedBaseFromPage = employee.calculatedSalary || employee.baseCalculatedSalary || 0;
-    const otAmountFromPage = employee.finalOTAmount || employee.otAmount || 0;
-    
-    let lopDays = Math.max(0, daysInMonth - (presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + holidays + compOffBalance));
+    const netPayFromPage = employee.finalPay || employee.calculatedSalary || 0;
+    const calculatedBaseFromPage = employee.calculatedSalary || 0;
+    const otAmountFromPage = employee.finalOTAmount || 0;
+
+    let lopDays = Math.max(0, daysInMonth - (presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + holidays + compOffDays));
     lopDays = Math.round(lopDays * 10) / 10;
     let lopAmount = Math.round(lopDays * dailyRate * 100) / 100;
 
     const earningsItems = [];
-    
-    if (calculatedBaseFromPage > 0) {
-      earningsItems.push({ label: 'Base Salary (Calculated)', amount: Math.round(calculatedBaseFromPage), isBase: true });
-    }
-    
-    if (otAmountFromPage > 0) {
-      earningsItems.push({ label: 'Overtime Pay', amount: Math.round(otAmountFromPage) });
-    }
-    
-    const compOffPay = compOffBalance * dailyRate;
-    if (compOffPay > 0 && compOffBalance > 0) {
-      earningsItems.push({ label: `Comp-off Pay (${compOffBalance} days)`, amount: Math.round(compOffPay) });
-    }
-    
-    const holidayPay = holidays * dailyRate;
-    if (holidayPay > 0 && holidays > 0) {
-      earningsItems.push({ label: `Holiday Pay (${holidays} days)`, amount: Math.round(holidayPay) });
-    }
+    if (calculatedBaseFromPage > 0) earningsItems.push({ label: 'Base Salary (Calculated)', amount: Math.round(calculatedBaseFromPage), isBase: true });
+    if (otAmountFromPage > 0) earningsItems.push({ label: 'Overtime Pay', amount: Math.round(otAmountFromPage) });
+    if (employee.holidayAmount > 0 && holidays > 0) earningsItems.push({ label: `Holiday Pay (${holidays} day${holidays > 1 ? 's' : ''})`, amount: employee.holidayAmount });
 
     earningsItems.push({ label: `Working Days (Full: ${presentDays})`, amount: 0, isInfo: true });
-    earningsItems.push({ label: `Half Days (${halfDays})`, amount: 0, isInfo: true });
     earningsItems.push({ label: `Week Off Days (${actualWeekOffDaysNumeric})`, amount: 0, isInfo: true });
     if (holidays > 0) earningsItems.push({ label: `Public Holidays (${holidays})`, amount: 0, isInfo: true });
-    if (compOffBalance > 0) earningsItems.push({ label: `Comp-off Balance (${compOffBalance})`, amount: 0, isInfo: true });
+    if (compOffDays > 0) earningsItems.push({ label: `Comp-off Days (${compOffDays})`, amount: 0, isInfo: true });
 
     const deductionsItems = [];
-    
-    if (lopDays > 0) {
-      deductionsItems.push({ label: `LOP / Absent (${lopDays} days)`, amount: Math.round(lopAmount) });
-    } else {
-      deductionsItems.push({ label: `LOP / Absent (0 days)`, amount: 0 });
-    }
-    
+    if (lopDays > 0) deductionsItems.push({ label: `LOP / Absent (${lopDays} days)`, amount: Math.round(lopAmount) });
+    else deductionsItems.push({ label: `LOP / Absent (0 days)`, amount: 0 });
+
     const halfDayDeductionAmount = (halfDays * 0.5) * dailyRate;
-    if (halfDays > 0) {
-      deductionsItems.push({ label: `Half Day Deductions (${halfDays} HD)`, amount: Math.round(halfDayDeductionAmount) });
-    } else {
-      deductionsItems.push({ label: `Half Day Deductions (0 HD)`, amount: 0 });
-    }
-    
+    if (halfDays > 0) deductionsItems.push({ label: `Half Day Deductions (${halfDays} HD)`, amount: Math.round(halfDayDeductionAmount) });
+    else deductionsItems.push({ label: `Half Day Deductions (0 HD)`, amount: 0 });
+
     const gmcAmt = employee.gmcAmount || 0;
     const ptaxAmt = employee.ptax || 0;
-    const extraDeductions = (employee.extraWork?.deductions || 0) + (employee.otherDeductions || 0);
-    let totalOtherDeductions = gmcAmt + ptaxAmt + extraDeductions;
-    
+    const extraDeductions = employee.otherDeductions || 0;
+    const manualDeductionAmount = employee.manualDeduction || 0;
+    const manualDeductionReason = employee.manualDeductionReason || '';
+    const totalOtherDeductions = gmcAmt + ptaxAmt + extraDeductions;
     deductionsItems.push({ label: `Other Deductions`, amount: Math.round(totalOtherDeductions) });
+
+    if (manualDeductionAmount > 0) {
+      deductionsItems.push({
+        label: `Manual Deduction${manualDeductionReason ? ` (${manualDeductionReason})` : ''}`,
+        amount: manualDeductionAmount
+      });
+    }
 
     let totalEarningsAmt = earningsItems.filter(item => !item.isInfo).reduce((sum, item) => sum + item.amount, 0);
     let totalDeductionsAmt = deductionsItems.reduce((sum, item) => sum + item.amount, 0);
-    
     const finalNetPay = Math.round(netPayFromPage);
-    
+
     const targetEarnings = finalNetPay + Math.round(totalDeductionsAmt);
     const baseIdx = earningsItems.findIndex(item => item.isBase);
     if (baseIdx !== -1) {
       const otherEarnings = earningsItems.filter((item, idx) => idx !== baseIdx && !item.isInfo).reduce((sum, item) => sum + item.amount, 0);
-      const adjustedBase = targetEarnings - otherEarnings;
-      earningsItems[baseIdx].amount = Math.max(0, adjustedBase);
+      earningsItems[baseIdx].amount = Math.max(0, targetEarnings - otherEarnings);
       totalEarningsAmt = earningsItems.filter(item => !item.isInfo).reduce((sum, item) => sum + item.amount, 0);
     }
 
@@ -1078,38 +994,26 @@ export default function EmployeeSalary() {
     for (let i = 0; i < maxRows; i++) {
       const earn = earningsItems[i];
       const ded = deductionsItems[i];
-      
-      let earnLabel = '', earnAmountStr = '';
-      if (earn) {
-        earnLabel = earn.label;
-        earnAmountStr = earn.isInfo ? '-' : `₹${Math.round(earn.amount).toFixed(2)}`;
-      }
-      
-      let dedLabel = '', dedAmountStr = '';
-      if (ded) {
-        dedLabel = ded.label;
-        dedAmountStr = `₹${Math.round(ded.amount).toFixed(2)}`;
-      }
-      
-      tableRowsHTML += `
-        <tr>
-          <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000; ${earn?.isInfo ? 'background: #fafafa;' : ''}">${earnLabel}</td>
-          <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000; ${earn?.isInfo ? 'background: #fafafa;' : ''}">${earnAmountStr}</td>
-          <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;">${ded ? dedLabel : ''}</td>
-          <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;">${ded ? dedAmountStr : ''}</td>
-        </tr>
-      `;
+      const earnLabel = earn ? earn.label : '';
+      const earnAmountStr = earn ? (earn.isInfo ? '-' : `₹${Math.round(earn.amount).toFixed(2)}`) : '';
+      const dedLabel = ded ? ded.label : '';
+      const dedAmountStr = ded ? `₹${Math.round(ded.amount).toFixed(2)}` : '';
+      tableRowsHTML += `<tr>
+        <td style="border:1px solid #000;padding:6px 8px;font-size:12px;${earn?.isInfo ? 'background:#fafafa;' : ''}">${earnLabel}</td>
+        <td style="border:1px solid #000;padding:6px 8px;text-align:right;font-size:12px;${earn?.isInfo ? 'background:#fafafa;' : ''}">${earnAmountStr}</td>
+        <td style="border:1px solid #000;padding:6px 8px;font-size:12px;">${dedLabel}</td>
+        <td style="border:1px solid #000;padding:6px 8px;text-align:right;font-size:12px;">${dedAmountStr}</td>
+      </tr>`;
     }
 
     const numberToWords = (num) => {
       if (num === 0) return 'Zero Rupees Only';
-      const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
-      const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+      const a = ['','One ','Two ','Three ','Four ','Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+      const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
       const numStr = Math.abs(Math.round(num)).toString();
       if (numStr.length > 9) return 'Amount too large';
       const n = ('000000000' + numStr).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
       if (!n) return '';
-      
       let str = '';
       str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
       str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
@@ -1120,166 +1024,34 @@ export default function EmployeeSalary() {
     };
 
     const amountInWords = numberToWords(finalNetPay);
-
-    const getImageSrc = (imgData) => {
-      if (!imgData) return '';
-      if (imgData.startsWith('data:image')) return imgData;
-      if (imgData.startsWith('http') || imgData.startsWith('https')) return imgData;
-      if (imgData.startsWith('/')) return window.location.origin + imgData;
-      if (imgData.startsWith('blob:')) return imgData;
-      if (imgData.length > 100 && !imgData.includes(' ')) {
-        if (imgData.startsWith('iVBOR')) return 'data:image/png;base64,' + imgData;
-        if (imgData.startsWith('/9j/')) return 'data:image/jpeg;base64,' + imgData;
-        return 'data:image/png;base64,' + imgData;
-      }
-      return imgData;
-    };
-
-    // ✅ FIXED: Use timelyHealthLogo for payslip
     const logoData = timelyHealthLogo || logo || '';
-    const logoImgSrc = getImageSrc(logoData);
-    const stampImgSrc = getImageSrc(companyStamp || '');
+    const stampData = companyStamp || '';
 
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Payslip - ${employee.name}</title>
-          <style>
-            @page { size: A4; margin: 0; }
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: white; }
-            .invoice-container { max-width: 210mm; margin: 0 auto; border: 1px solid #000; border-radius: 4px; padding: 0; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 6px 8px; border: 1px solid #000; font-size: 12px; vertical-align: top; color: #000; }
-            .header-cell { border: none !important; padding: 12px; border-bottom: 1px solid #000 !important; }
-            .section-header { text-align: center; padding: 8px; font-weight: bold; background: #f5f5f5; color: #000; }
-            .total-row { font-weight: bold; background: #f9f9f9; }
-            .gross-row { font-weight: bold; background: #f0f0f0; }
-            .logo-image { height: 80px; width: auto; max-width: 200px; object-fit: contain; display: block; }
-            .stamp-image { width: 90px; height: auto; opacity: 0.8; display: block; }
-            .company-info { flex: 1; text-align: center; padding: 0 10px; }
-            .company-name { margin: 0; font-size: 16px; font-weight: bold; color: #000; }
-            .company-address { margin: 2px 0 0; font-size: 7px; line-height: 1.4; color: #000; }
-            .header-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-            .logo-wrapper { width: 200px; flex-shrink: 0; display: flex; justify-content: flex-start; align-items: center; }
-            .stamp-wrapper { width: 200px; flex-shrink: 0; }
-            .stamp-bottom { display: flex; justify-content: flex-end; padding: 10px 20px; border-top: 1px solid #000; margin-top: 5px; }
-            .stamp-bottom-content { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-            .stamp-auth strong { font-size: 7px; color: #000; display: block; }
-            .stamp-auth span { font-size: 6px; color: #000; display: block; }
-            .amount-word { font-size: 11px; font-weight: bold; color: #000; padding: 8px 0; text-align: center; }
-            .employee-info-table td { padding: 4px 8px; font-size: 11px; border: 1px solid #000; color: #000; }
-            .employee-info-table .label { font-weight: bold; color: #000; background-color: #f9f9f9; width: 18%; }
-            .employee-info-table .value { color: #000; width: 32%; }
-            .employee-info-table .label-alt { font-weight: bold; color: #000; background-color: #f9f9f9; width: 18%; }
-            .employee-info-table .value-alt { color: #000; width: 32%; }
-            .net-pay-amount { font-size: 14px; color: #000; font-weight: bold; }
-            .page-match-info { font-size: 10px; color: #555; background: #f0f7ff; padding: 4px 8px; text-align: center; border-top: 1px solid #000; }
-            @media print {
-              body { padding: 10px; }
-              .invoice-container { border: 1px solid #000; }
-              .logo-image, .stamp-image { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="invoice-container">
-            <table>
-              <tr>
-                <td colspan="6" class="header-cell">
-                  <div class="header-wrapper">
-                    <div class="logo-wrapper">
-                      ${logoImgSrc ? `<img src="${logoImgSrc}" alt="Logo" class="logo-image" onerror="this.style.display='none';" crossorigin="anonymous" />` : ''}
-                    </div>
-                    <div class="company-info">
-                      <h2 class="company-name">Timely Healthtech Private Limited</h2>
-                      <p class="company-address">Reg. Address: Flat No:301, H.No:1-68/22, Plot No. 54 & 55, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad, Telangana-500081</p>
-                    </div>
-                    <div class="stamp-wrapper"></div>
-                  </div>
-                </td>
-              </tr>
-              <tr><td colspan="6" class="section-header">PAYSLIP FOR ${formatMonthDisplay(employee.month).toUpperCase()}</td></tr>
-            </table>
-
-            <table class="employee-info-table">
-              <tr>
-                <td class="label"><strong>Name:</strong></td>
-                <td class="value">${employee.name || '-'}</td>
-                <td class="label-alt"><strong>Employee No:</strong></td>
-                <td class="value-alt">${employee.employeeId || '-'}</td>
-              </tr>
-              <tr>
-                <td class="label"><strong>Joining Date:</strong></td>
-                <td class="value">${employee.joiningDate ? new Date(employee.joiningDate).toLocaleDateString('en-GB') : '-'}</td>
-                <td class="label-alt"><strong>Bank Name:</strong></td>
-                <td class="value-alt">${employee.bankName || '-'}</td>
-              </tr>
-              <tr>
-                <td class="label"><strong>Designation:</strong></td>
-                <td class="value">${employee.designation || employee.role || '-'}</td>
-                <td class="label-alt"><strong>Bank Account No:</strong></td>
-                <td class="value-alt">${employee.bankAccount || '-'}</td>
-              </tr>
-              <tr>
-                <td class="label"><strong>Department:</strong></td>
-                <td class="value">${employee.department || '-'}</td>
-                <td class="label-alt"><strong>PAN Number:</strong></td>
-                <td class="value-alt">${employee.panNo || '-'}</td>
-              </tr>
-              <tr>
-                <td class="label"><strong>Location:</strong></td>
-                <td class="value">${employee.location || 'HYDERABAD'}</td>
-                <td class="label-alt"><strong>EMP EFFECTIVE</strong></td>
-                <td class="value-alt">:30</td>
-              </tr>
-              <tr>
-                <td class="label"><strong>LOP:</strong></td>
-                <td class="value">${lopDays > 0 ? lopDays : '0'}</td>
-                <td class="label-alt"></td>
-                <td class="value-alt"></td>
-              </tr>
-            </table>
-
-            <table>
-              <tr style="background:#f0f0f0;">
-                <td style="width:30%; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Earnings</strong></td>
-                <td style="width:20%; text-align:center; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Amount</strong></td>
-                <td style="width:30%; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Deductions</strong></td>
-                <td style="width:20%; text-align:center; font-weight: bold; color: #000; border: 1px solid #000; padding: 6px 8px;"><strong>Amount</strong></td>
-              </tr>
-              ${tableRowsHTML}
-              <tr class="gross-row">
-                <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;"><strong>Total Earnings</strong></td>
-                <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;"><strong>₹${Math.round(totalEarningsAmt).toFixed(2)}</strong></td>
-                <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;"><strong>Total Deductions</strong></td>
-                <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;"><strong>₹${Math.round(totalDeductionsAmt).toFixed(2)}</strong></td>
-              </tr>
-              <tr class="total-row net-pay-row">
-                <td colspan="2" style="border: 1px solid #000; padding: 6px 8px;"></td>
-                <td style="border: 1px solid #000; padding: 6px 8px; font-size: 12px; color: #000;"><strong>Net Pay for the month</strong></td>
-                <td style="border: 1px solid #000; padding: 6px 8px; text-align: right; font-size: 12px; color: #000;"><strong class="net-pay-amount">₹${finalNetPay.toFixed(2)}</strong></td>
-              </tr>
-              <tr>
-                <td colspan="4" class="amount-word" style="border: 1px solid #000; padding: 8px; color: #000;">(${amountInWords})</td>
-              </tr>
-            </table>
-
-            <div class="stamp-bottom">
-              <div class="stamp-bottom-content">
-                ${stampImgSrc ? `<img src="${stampImgSrc}" alt="Company Stamp" class="stamp-image" onerror="this.style.display='none';" crossorigin="anonymous" />` : ''}
-                <div class="stamp-auth">
-                  <strong>Authorized Signatory</strong>
-                  <span>Timely Healthtech Private Limited</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payslip - ${employee.name}</title>
+    <style>@page{size:A4;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;padding:20px;background:#fff}.invoice-container{max-width:210mm;margin:0 auto;border:1px solid #000;border-radius:4px}table{width:100%;border-collapse:collapse}th,td{padding:6px 8px;border:1px solid #000;font-size:12px;color:#000}.header-cell{border:none!important;padding:12px;border-bottom:1px solid #000!important}.section-header{text-align:center;padding:8px;font-weight:bold;background:#f5f5f5}.total-row{font-weight:bold;background:#f9f9f9}.gross-row{font-weight:bold;background:#f0f0f0}.logo-image{height:80px;width:auto;max-width:200px;object-fit:contain}.stamp-image{width:90px;height:auto;opacity:.8}.header-wrapper{display:flex;align-items:center;justify-content:space-between}.logo-wrapper{width:200px;flex-shrink:0}.company-info{flex:1;text-align:center}.company-name{margin:0;font-size:16px;font-weight:bold}.company-address{margin:2px 0 0;font-size:7px;line-height:1.4}.stamp-bottom{display:flex;justify-content:flex-end;padding:10px 20px;border-top:1px solid #000;margin-top:5px}.stamp-bottom-content{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.amount-word{font-size:11px;font-weight:bold;padding:8px 0;text-align:center}</style>
+    </head><body><div class="invoice-container"><table>
+    <tr><td colspan="6" class="header-cell"><div class="header-wrapper">
+    <div class="logo-wrapper">${logoData ? `<img src="${logoData}" class="logo-image" onerror="this.style.display='none'"/>` : ''}</div>
+    <div class="company-info"><h2 class="company-name">Timely Healthtech Private Limited</h2>
+    <p class="company-address">Reg. Address: Flat No:301, H.No:1-68/22, Plot No. 54 & 55, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad, Telangana-500081</p></div>
+    <div style="width:200px"></div></div></td></tr>
+    <tr><td colspan="6" class="section-header">PAYSLIP FOR ${formatMonthDisplay(employee.month).toUpperCase()}</td></tr></table>
+    <table>
+    <tr><td><strong>Name:</strong></td><td>${employee.name || '-'}</td><td><strong>Employee No:</strong></td><td>${employee.employeeId || '-'}</td></tr>
+    <tr><td><strong>Joining Date:</strong></td><td>${employee.joiningDate ? new Date(employee.joiningDate).toLocaleDateString('en-GB') : '-'}</td><td><strong>Bank Name:</strong></td><td>${employee.bankName || '-'}</td></tr>
+    <tr><td><strong>Designation:</strong></td><td>${employee.designation || employee.role || '-'}</td><td><strong>Bank Account No:</strong></td><td>${employee.bankAccount || '-'}</td></tr>
+    <tr><td><strong>Department:</strong></td><td>${employee.department || '-'}</td><td><strong>PAN Number:</strong></td><td>${employee.panNo || '-'}</td></tr>
+    <tr><td><strong>Location:</strong></td><td>${employee.location || 'HYDERABAD'}</td><td><strong>EMP EFFECTIVE</strong></td><td>:30</td></tr>
+    <tr><td><strong>LOP:</strong></td><td>${lopDays > 0 ? lopDays : '0'}</td><td></td><td></td></tr></table>
+    <table><tr style="background:#f0f0f0"><td><strong>Earnings</strong></td><td style="text-align:center"><strong>Amount</strong></td><td><strong>Deductions</strong></td><td style="text-align:center"><strong>Amount</strong></td></tr>
+    ${tableRowsHTML}
+    <tr class="gross-row"><td><strong>Total Earnings</strong></td><td style="text-align:right"><strong>₹${Math.round(totalEarningsAmt).toFixed(2)}</strong></td><td><strong>Total Deductions</strong></td><td style="text-align:right"><strong>₹${Math.round(totalDeductionsAmt).toFixed(2)}</strong></td></tr>
+    <tr class="total-row"><td colspan="2"></td><td><strong>Net Pay for the month</strong></td><td style="text-align:right"><strong>₹${finalNetPay.toFixed(2)}</strong></td></tr>
+    <tr><td colspan="4" class="amount-word">(${amountInWords})</td></tr></table>
+    <div class="stamp-bottom"><div class="stamp-bottom-content">
+    ${stampData ? `<img src="${stampData}" class="stamp-image" onerror="this.style.display='none'"/>` : ''}
+    <div><strong style="font-size:7px">Authorized Signatory</strong><br/><span style="font-size:6px">Timely Healthtech Private Limited</span></div>
+    </div></div></div></body></html>`;
   };
 
   const downloadSalarySlip = async (employee) => {
@@ -1326,8 +1098,7 @@ export default function EmployeeSalary() {
   }
 
   const totalSalary = filteredRecords.reduce((sum, emp) => {
-    const pay = emp.calculatedSalary || emp.baseCalculatedSalary || 0;
-    return sum + (typeof pay === 'number' ? pay : 0);
+    return sum + (typeof emp.calculatedSalary === 'number' ? emp.calculatedSalary : 0);
   }, 0);
 
   const avgSalary = filteredRecords.length > 0 ? Math.round(totalSalary / filteredRecords.length) : 0;
@@ -1446,10 +1217,10 @@ export default function EmployeeSalary() {
                       <th>Working</th>
                       <th>Half</th>
                       <th>Carry Fwd</th>
-                      <th>Earned WO</th>
-                      <th>Default WO</th>
-                      <th>Leaves</th>
+                      <th>Used WO</th>
+                      <th>Week Off Dates</th>
                       <th>Comp-off</th>
+                      <th>Holiday</th>
                       <th>OT</th>
                       <th>Monthly Salary</th>
                       <th style={{ textAlign: "center" }}>Calculated</th>
@@ -1466,40 +1237,51 @@ export default function EmployeeSalary() {
                           <td>
                             <div style={{ fontWeight: 700 }}>{emp.monthFormatted || formatMonthDisplay(emp.month)}</div>
                             <div style={{ fontSize: "0.6875rem", color: "var(--ed-text-muted)" }}>
-                              {emp.monthDays} days | WO: {emp.defaultWeekOffs || 4}
+                              {emp.monthDays} days
                             </div>
                           </td>
                           <td><span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">{emp.presentDays || 0}</span></td>
-                          <td><span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">{emp.workingDays || emp.totalWorkingDays || 0}</span></td>
+                          <td><span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">{emp.workingDays || 0}</span></td>
                           <td><span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">{emp.halfDays || 0}</span></td>
                           <td>
                             {(emp.carryForwardDays > 0 || emp.carryForwardFromPrev > 0) ? (
                               <div className="flex flex-col items-center gap-0.5">
                                 {emp.carryForwardDays > 0 && (
-                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-300" title={`+${emp.carryForwardDays} extra day(s) carried forward`}>+{emp.carryForwardDays}→</span>
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-300" title="Worked on week off - carried forward">+{emp.carryForwardDays}→</span>
                                 )}
                                 {emp.carryForwardFromPrev > 0 && (
-                                  <span className="px-1 py-0.5 rounded text-[9px] font-semibold bg-blue-50 text-blue-600 border border-blue-200" title={`←${emp.carryForwardFromPrev} day(s) carried from previous month`}>←{emp.carryForwardFromPrev}</span>
+                                  <span className="px-1 py-0.5 rounded text-[9px] font-semibold bg-blue-50 text-blue-600 border border-blue-200" title="Carried from previous month">←{emp.carryForwardFromPrev}</span>
                                 )}
                               </div>
                             ) : (<span className="text-gray-300 text-xs">—</span>)}
                           </td>
-                          {/* ✅ FIXED: Earned WO now shows the actual paid weekoffs (finalWeekOffs) */}
-                          <td><span className="px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">{emp.weekOffs || 0}</span></td>
-                          <td><span className="px-2 py-0.5 rounded text-xs font-bold bg-gray-50 text-gray-600 border border-gray-200">{emp.defaultWeekOffs || 4}</span></td>
-                          <td>{emp.totalLeaves || 0}</td>
+                          <td><span className="px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">{emp.usedWeekOffs || 0}</span></td>
                           <td>
-                            {emp.compOffBalance > 0 ? (
-                              <span className="px-1.5 py-0.5 text-xs font-medium text-purple-700 bg-purple-100 rounded-full">+{emp.compOffEarned} / -{emp.compOffUsed} = {emp.compOffBalance}</span>
-                            ) : (<span className="text-xs text-gray-500">{emp.compOffBalance || 0}</span>)}
+                            {emp.weekOffDates && emp.weekOffDates.length > 0 ? (
+                              <span className="font-mono text-[11px] font-bold text-orange-700" title={emp.weekOffDates.join(", ")}>
+                                {extractDayNumbers(emp.weekOffDates)}
+                              </span>
+                            ) : (<span className="text-gray-300 text-[10px]">—</span>)}
+                          </td>
+                          <td>
+                            {emp.compOffDates && emp.compOffDates.length > 0 ? (
+                              <span className="font-mono text-[11px] font-bold text-teal-700" title={emp.compOffDates.map(co => co.date).join(", ")}>
+                                {extractDayNumbers(emp.compOffDates, 'date')}
+                              </span>
+                            ) : (<span className="text-gray-300 text-[10px]">—</span>)}
+                          </td>
+                          <td>
+                            {emp.holidayCount > 0 ? (
+                              <span className="px-2 py-0.5 rounded text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">{emp.holidayCount}</span>
+                            ) : (<span className="text-gray-300 text-[10px]">—</span>)}
                           </td>
                           <td>{emp.finalOTAmount > 0 ? (<span className="font-bold text-green-600">₹{emp.finalOTAmount}</span>) : (<span className="text-gray-400">-</span>)}</td>
                           <td>
                             <div className="font-semibold text-slate-700">₹{(emp.salaryPerMonth || 0).toLocaleString()}</div>
                             <div style={{ fontSize: "0.6875rem", color: "var(--ed-text-muted)" }}>₹{emp.salaryPerDay}/day</div>
                           </td>
-                          <td style={{ textAlign: "center" }}><span className="font-bold text-blue-700" style={{ fontSize: "0.95rem" }}>₹{Math.round(emp.calculatedSalary || emp.baseCalculatedSalary || 0).toLocaleString()}</span></td>
-                          <td style={{ textAlign: "center" }}><div style={{ fontWeight: 800, color: "var(--ed-success)", fontSize: "1rem" }}>₹{Math.round(emp.finalPay || emp.calculatedSalary || 0).toLocaleString()}</div></td>
+                          <td style={{ textAlign: "center" }}><span className="font-bold text-blue-700" style={{ fontSize: "0.95rem" }}>₹{Math.round(emp.calculatedSalary || 0).toLocaleString()}</span></td>
+                          <td style={{ textAlign: "center" }}><div style={{ fontWeight: 800, color: "var(--ed-success)", fontSize: "1rem" }}>₹{Math.round(emp.finalPay || 0).toLocaleString()}</div></td>
                           <td><span className={`emp-dash__table-status ${emp.canDownload ? "emp-dash__table-status--present" : "emp-dash__table-status--other"}`}>{statusText}</span></td>
                           <td style={{ textAlign: "right" }}>
                             <div className="flex justify-end space-x-1.5">
@@ -1512,30 +1294,6 @@ export default function EmployeeSalary() {
                     })}
                   </tbody>
                 </table>
-              </div>
-
-              <div className="emp-dash__mobile-list">
-                {currentRecords.map((emp, idx) => {
-                  const statusText = emp.canDownload ? "Available" : "From Last Day";
-                  return (
-                    <div key={idx} className="emp-dash__mobile-item">
-                      <div className="emp-dash__mobile-item-top">
-                        <div className="emp-dash__mobile-date">{emp.monthFormatted || formatMonthDisplay(emp.month)}</div>
-                        <span className={`emp-dash__table-status ${emp.canDownload ? "emp-dash__table-status--present" : "emp-dash__table-status--other"}`}>{statusText}</span>
-                      </div>
-                      <div className="emp-dash__mobile-grid">
-                        <div className="emp-dash__mobile-field"><span>Final Pay</span><span style={{ fontWeight: 800, color: "var(--ed-success)" }}>₹{Math.round(emp.finalPay || emp.calculatedSalary || 0).toLocaleString()}</span></div>
-                        <div className="emp-dash__mobile-field"><span>Calculated Base</span><span style={{ fontWeight: 700, color: "var(--ed-primary)" }}>₹{Math.round(emp.calculatedSalary || emp.baseCalculatedSalary || 0).toLocaleString()}</span></div>
-                        <div className="emp-dash__mobile-field"><span>Monthly Base</span><span>₹{(emp.salaryPerMonth || 0).toLocaleString()}</span></div>
-                        <div className="emp-dash__mobile-field"><span>Days (P/W/H/WO)</span><span>{emp.presentDays || 0}/{emp.workingDays || 0}/{emp.halfDays || 0}/{emp.weekOffs || 0}</span></div>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.75rem", borderTop: "1px solid var(--ed-border-light)", paddingTop: "0.5rem" }}>
-                        <button onClick={() => handleViewDetails(emp)} className="emp-leaves__btn emp-leaves__btn--ghost" style={{ height: "2rem", padding: "0 0.75rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}><Eye size={12} /> View</button>
-                        <button onClick={() => downloadSalarySlip(emp)} disabled={!emp.canDownload} className={`emp-leaves__btn ${emp.canDownload ? 'emp-leaves__btn--primary' : 'emp-leaves__btn--ghost'}`} style={{ height: "2rem", padding: "0 0.75rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.25rem", opacity: emp.canDownload ? 1 : 0.5 }}><Download size={12} /> Slip</button>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
 
               {filteredRecords.length > 0 && (
@@ -1579,7 +1337,7 @@ export default function EmployeeSalary() {
                     <p><span className="font-medium text-gray-700">Emp ID:</span> {selectedEmployee.employeeId}</p>
                     <p><span className="font-medium text-gray-700">Department:</span> {selectedEmployee.department || 'N/A'}</p>
                     <p><span className="font-medium text-gray-700">Role:</span> {selectedEmployee.designation || selectedEmployee.role || 'N/A'}</p>
-                    <p><span className="font-medium text-gray-700">Month Days:</span> {selectedEmployee.monthDays} | WO: {selectedEmployee.defaultWeekOffs || 4}</p>
+                    <p><span className="font-medium text-gray-700">Month Days:</span> {selectedEmployee.monthDays}</p>
                   </div>
                 </div>
               </div>
@@ -1588,51 +1346,74 @@ export default function EmployeeSalary() {
                 <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Present Days</span><span className="font-bold text-emerald-700">{selectedEmployee.presentDays || 0}</span></div>
                 <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Working Days</span><span className="font-bold text-blue-700">{selectedEmployee.totalWorkingDays || 0}</span></div>
                 <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Half Days</span><span className="font-bold text-amber-700">{selectedEmployee.halfDays || 0}</span></div>
-                <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Earned Weekoffs</span><span className="font-bold text-green-700">{selectedEmployee.earnedWeekOffs || 0}</span></div>
-                <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Default Weekoffs</span><span className="font-bold text-gray-600">{selectedEmployee.defaultWeekOffs || 0}</span></div>
-                <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">WeekOff Days Paid</span><span className="font-bold text-purple-700">{selectedEmployee.weekOffs || 0}</span></div>
-                <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Expected Working Days</span><span className="font-bold text-slate-600">{selectedEmployee.expectedWorkingDays}</span></div>
-                <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Payable Present Days</span><span className="font-bold text-blue-700">{selectedEmployee.payablePresentDays}</span></div>
+
+                {/* ONLY USED WEEK OFF SHOWN HERE */}
+                <div className="flex justify-between py-1 border-b border-green-100 bg-green-50 rounded px-1"><span className="text-green-600 font-semibold">Used Week Offs (Paid)</span><span className="font-bold text-green-700">{selectedEmployee.usedWeekOffs || 0}</span></div>
                 
+                <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Total Week Off Days</span><span className="font-bold text-gray-600">{selectedEmployee.totalWeekOffDays || 0}</span></div>
+
+                {selectedEmployee.holidayCount > 0 && (
+                  <div className="flex justify-between py-1 border-b border-purple-100 bg-purple-50 rounded px-1 sm:col-span-2">
+                    <span className="text-purple-600 font-semibold">Holiday Pay ({selectedEmployee.holidayCount} day{selectedEmployee.holidayCount > 1 ? 's' : ''})</span>
+                    <span className="font-bold text-purple-700">₹{(selectedEmployee.holidayAmount || 0).toLocaleString()}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Month Days</span><span className="font-bold text-slate-700">{selectedEmployee.monthDays}</span></div>
+                <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Payable Present Days</span><span className="font-bold text-blue-700">{selectedEmployee.payablePresentDays}</span></div>
+
+                {selectedEmployee.unearnedAbsentDays > 0 && (
+                  <div className="flex justify-between py-1 border-b border-red-100 bg-red-50 rounded px-1 sm:col-span-2">
+                    <span className="text-red-600 font-semibold">Unearned Absent Days (LOP)</span>
+                    <span className="font-bold text-red-700">{selectedEmployee.unearnedAbsentDays}</span>
+                  </div>
+                )}
+
+                {selectedEmployee.compOffDays > 0 && (
+                  <div className="flex justify-between py-1 border-b border-teal-100 bg-teal-50 rounded px-1 sm:col-span-2">
+                    <span className="text-teal-600 font-semibold">Comp-off Days ({selectedEmployee.compOffDays})</span>
+                    <span className="font-bold text-teal-700">₹{selectedEmployee.compOffAmount?.toLocaleString() || 0}</span>
+                  </div>
+                )}
+
+                {selectedEmployee.weekOffDates && selectedEmployee.weekOffDates.length > 0 && (
+                  <div className="flex flex-col py-1 border-b border-orange-100 bg-orange-50 rounded px-1 sm:col-span-2">
+                    <span className="text-orange-600 font-semibold mb-1">Week Off Dates ({selectedEmployee.weekOffDates.length})</span>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedEmployee.weekOffDates.map((d) => (
+                        <span key={d} className={`px-2 py-0.5 border rounded text-[10px] font-semibold ${
+                          selectedEmployee.usedWeekOffDates?.includes(d)
+                            ? 'bg-orange-100 text-orange-700 border-orange-300'
+                            : 'bg-purple-100 text-purple-700 border-purple-300'
+                        }`}>
+                          {new Date(d + "T00:00:00").toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                          {selectedEmployee.workedOnWeekOffDates?.includes(d) && ' (W)'}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Monthly Assigned Salary</span><span className="font-bold text-slate-800">₹{(selectedEmployee.salaryPerMonth || 0).toLocaleString()}</span></div>
                 <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">Daily Rate</span><span className="font-bold text-slate-700">₹{selectedEmployee.dailyRate}/day</span></div>
                 <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500">OT Amount</span><span className="font-bold text-emerald-600">₹{selectedEmployee.finalOTAmount || 0}</span></div>
-                <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500 font-medium text-blue-600">Calculated Base Salary</span><span className="font-bold text-blue-600">₹{Math.round(selectedEmployee.calculatedSalary || selectedEmployee.baseCalculatedSalary || 0).toLocaleString()}</span></div>
-                <div className="flex justify-between py-1 border-b border-gray-100 sm:col-span-2 bg-green-50/60 px-2 rounded"><span className="text-gray-800 font-bold text-sm">Final Net Payout</span><span className="font-extrabold text-emerald-700 text-sm">₹{Math.round(selectedEmployee.finalPay || selectedEmployee.calculatedSalary || 0).toLocaleString()}</span></div>
-                
+                <div className="flex justify-between py-1 border-b border-gray-100"><span className="text-gray-500 font-medium text-blue-600">Calculated Base Salary</span><span className="font-bold text-blue-600">₹{Math.round(selectedEmployee.calculatedSalary || 0).toLocaleString()}</span></div>
+
+                {selectedEmployee.manualDeduction > 0 && (
+                  <div className="flex justify-between py-1 border-b border-rose-100 bg-rose-50 rounded px-1 sm:col-span-2">
+                    <span className="text-rose-600 font-semibold">Manual Deduction{selectedEmployee.manualDeductionReason ? ` (${selectedEmployee.manualDeductionReason})` : ''}</span>
+                    <span className="font-bold text-rose-700">- ₹{selectedEmployee.manualDeduction.toLocaleString()}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between py-1 border-b border-gray-100 sm:col-span-2 bg-green-50/60 px-2 rounded"><span className="text-gray-800 font-bold text-sm">Final Net Payout</span><span className="font-extrabold text-emerald-700 text-sm">₹{Math.round(selectedEmployee.finalPay || 0).toLocaleString()}</span></div>
+
                 <div className="flex flex-col py-1 border-b border-gray-100 sm:col-span-2">
                   <div className="flex justify-between"><span className="text-gray-500">Approved Leaves</span><span className="font-bold text-rose-600">{getLeaveTypes(selectedEmployee)}</span></div>
                 </div>
               </div>
 
-              {selectedEmployee.weeklyBreakdown && selectedEmployee.weeklyBreakdown.length > 0 && (
-                <div className="mt-3 p-2.5 bg-slate-50 rounded-lg border border-slate-100 mb-4">
-                  <h4 className="text-xs font-bold text-gray-600 mb-2">📊 Weekly Attendance Breakdown</h4>
-                  <div className="grid grid-cols-1 gap-1 max-h-[140px] overflow-y-auto">
-                    {selectedEmployee.weeklyBreakdown.map((week, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-[10px] bg-white p-1 rounded border border-gray-100">
-                        <span className="font-medium text-gray-500">Week {week.weekNumber}</span>
-                        <span className="text-gray-600">P:{week.presentDays || 0} H:{week.halfDays || 0} L:{week.leaves || 0}</span>
-                        <span className="text-gray-600">Total: {week.effectiveWorkingDays || 0}d</span>
-                        <span className={`font-bold ${week.isEligibleForWeekoff ? 'text-green-600' : 'text-red-500'}`}>{week.isEligibleForWeekoff ? '✅ Earned' : '❌ No WO'}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {(selectedEmployee.compOffBalance > 0 || selectedEmployee.compOffEarned > 0) && (
-                <div className="p-3 mt-4 rounded-lg bg-purple-50">
-                  <p className="text-sm font-medium text-purple-800">Comp-off Summary - {formatMonthDisplay(selectedEmployee.month || selectedMonth)}</p>
-                  <div className="flex items-center justify-center gap-2 mt-2">
-                    <div className="text-center"><span className="text-xs text-gray-500">Leave Taken</span><p className="text-2xl font-bold text-blue-600">{(selectedEmployee.leavesBreakdown?.CL || 0) + (selectedEmployee.leavesBreakdown?.EL || 0) + (selectedEmployee.leavesBreakdown?.COFF || 0) + (selectedEmployee.leavesBreakdown?.Other || 0)}</p></div>
-                    <span className="text-2xl font-bold text-gray-500">-</span>
-                    <div className="text-center"><span className="text-xs text-gray-500">Comp-off Used</span><p className="text-2xl font-bold text-purple-600">{selectedEmployee.compOffUsed || 0}</p></div>
-                    <span className="text-2xl font-bold text-gray-500">=</span>
-                    <div className="text-center"><span className="text-xs text-gray-500">Balance</span><p className="text-2xl font-bold text-blue-700">{selectedEmployee.compOffBalance || 0}</p></div>
-                  </div>
-                </div>
-              )}
+              {/* 📊 WEEKLY BREAKDOWN REMOVED AS PER REQUEST */}
 
               <div className="flex justify-end space-x-2 pt-3 border-t border-gray-100">
                 <button onClick={() => downloadSalarySlip(selectedEmployee)} disabled={!selectedEmployee.canDownload} className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition duration-200 ${selectedEmployee.canDownload ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}>Download Payslip</button>

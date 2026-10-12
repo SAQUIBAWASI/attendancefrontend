@@ -1918,6 +1918,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Doctors", path: "/doctor-management" },
         { name: "Services", path: "/services" },
         { name: "Letter Head", path: "/letterhead" },
+        { name: "Revenue Analytics", path: "/revenue-analytics" },
       ],
     },
 
@@ -1930,6 +1931,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         // { name: "Experience Letters", path: "/experience-letters" },
         // { name: "Relieving Letters", path: "/relieving-letters" },
       ],
+    },
+
+
+    {
+      icon: <i className="ri-file-list-fill"></i>,
+      name: "Sheets",
+      path: "/sheets",
+      permission: "google_sheets_view",
     },
 
     {
