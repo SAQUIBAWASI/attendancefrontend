@@ -2737,7 +2737,6 @@
 //     </div>
 //   );
 // }
-
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -2950,6 +2949,7 @@ export default function AttendanceCapture() {
   const [checkedIn, setCheckedIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reason, setReason] = useState("");
+  const [checkoutReason, setCheckoutReason] = useState("");   // ✅ separate checkout reason
   const [isImageCaptureAllowed, setIsImageCaptureAllowed] = useState(false);
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -3230,9 +3230,14 @@ export default function AttendanceCapture() {
     
     if (imageData) {
       setTimeout(() => {
+        // CHECK-IN flow — reason check
         if (cameraMode === "checkin") {
-          const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
-          if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
+          if (reason.trim()) {
+            handleSubmitCheckIn(imageData);
+            return;
+          }
+
+          if (distance > ONSITE_RADIUS_M) {
             if (!isReasonProcessing && !showReasonPopup) {
               setPendingAction("submit");
               setTempReason("");
@@ -3241,9 +3246,22 @@ export default function AttendanceCapture() {
             }
             return;
           }
+
           handleSubmitCheckIn(imageData);
-        } else {
-          handleSubmitCheckOut(imageData);
+        } 
+        // CHECK-OUT flow — reason always required
+        else {
+          if (checkoutReason.trim()) {
+            handleSubmitCheckOut(imageData);
+            return;
+          }
+
+          if (!isReasonProcessing && !showReasonPopup) {
+            setPendingAction("submit_checkout");
+            setTempReason("");
+            setShowReasonPopup(true);
+            setIsCapturing(false);
+          }
         }
       }, 300);
     } else {
@@ -3276,15 +3294,7 @@ export default function AttendanceCapture() {
       return;
     }
 
-    const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
-
-    if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
-      alert(`Outside office range (${distance}m). Must be within ${ONSITE_RADIUS_M}m.`);
-      setIsCapturing(false);
-      return;
-    }
-
-    if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
+    if (distance > ONSITE_RADIUS_M && !reason.trim()) {
       if (!isReasonProcessing && !showReasonPopup) {
         setPendingAction("submit");
         setTempReason("");
@@ -3308,7 +3318,7 @@ export default function AttendanceCapture() {
       formData.append("employeeEmail", employeeEmail);
       formData.append("latitude", position.lat.toString());
       formData.append("longitude", position.lng.toString());
-      formData.append("reason", isOnsiteOnlyDepartment ? "Onsite" : reason || "Onsite");
+      formData.append("reason", reason || "Onsite");
       formData.append("image", imageFile);
 
       await axios.post(`${cleanBaseUrl}/api/attendance/checkin`, formData, {
@@ -3321,7 +3331,6 @@ export default function AttendanceCapture() {
       setShowSuccessPopup(true);
       setCheckedIn(true);
       
-      // Play success sound and speak
       playSuccessSound();
       setTimeout(async () => {
         setIsSpeaking(true);
@@ -3341,6 +3350,15 @@ export default function AttendanceCapture() {
     if (!employeeId) {
       alert("Employee data missing.");
       setIsCapturing(false);
+      return;
+    }
+
+    if (!checkoutReason.trim()) {
+      if (!isReasonProcessing && !showReasonPopup) {
+        setPendingAction("submit_checkout");
+        setTempReason("");
+        setShowReasonPopup(true);
+      }
       return;
     }
 
@@ -3368,6 +3386,7 @@ export default function AttendanceCapture() {
         formData.append("latitude", lat.toString());
         formData.append("longitude", lng.toString());
       }
+      formData.append("reason", checkoutReason);
       formData.append("image", imageFile);
 
       await axios.post(`${cleanBaseUrl}/api/attendance/checkout`, formData, {
@@ -3380,7 +3399,6 @@ export default function AttendanceCapture() {
       setShowSuccessPopup(true);
       setCheckedIn(false);
       
-      // Play success sound and speak
       playSuccessSound();
       setTimeout(async () => {
         setIsSpeaking(true);
@@ -3407,13 +3425,7 @@ export default function AttendanceCapture() {
       return;
     }
 
-    const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
-
-    if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
-      alert(`Outside office range (${distance}m). Must be within ${ONSITE_RADIUS_M}m.`);
-      return;
-    }
-    if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
+    if (distance > ONSITE_RADIUS_M && !reason.trim()) {
       alert("Outside office range. Please select a reason.");
       return;
     }
@@ -3425,7 +3437,7 @@ export default function AttendanceCapture() {
         employeeEmail,
         latitude: position.lat,
         longitude: position.lng,
-        reason: isOnsiteOnlyDepartment ? "Onsite" : reason || "Onsite",
+        reason: reason || "Onsite",
       });
 
       setSuccessMessage("✅ Check-in Successful!");
@@ -3450,6 +3462,11 @@ export default function AttendanceCapture() {
   const handleNormalCheckOut = async () => {
     if (!employeeId) return alert("Employee data missing.");
 
+    if (!checkoutReason.trim()) {
+      alert("Please select a reason for check-out.");
+      return;
+    }
+
     let lat = null;
     let lng = null;
     if (position) {
@@ -3470,7 +3487,10 @@ export default function AttendanceCapture() {
 
     setSubmitting(true);
     try {
-      const payload = { employeeId };
+      const payload = { 
+        employeeId,
+        reason: checkoutReason,
+      };
       if (lat && lng) {
         payload.latitude = lat;
         payload.longitude = lng;
@@ -3509,14 +3529,7 @@ export default function AttendanceCapture() {
       return;
     }
 
-    const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
-
-    if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
-      alert(`Department must be within ${ONSITE_RADIUS_M}m. Current distance: ${distance}m`);
-      return;
-    }
-
-    if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
+    if (distance > ONSITE_RADIUS_M && !reason.trim()) {
       setPendingAction("camera");
       setTempReason("");
       setShowReasonPopup(true);
@@ -3538,6 +3551,13 @@ export default function AttendanceCapture() {
       await getCurrentLocation();
     } catch (err) {}
 
+    if (!checkoutReason.trim()) {
+      setPendingAction("camera_checkout");
+      setTempReason("");
+      setShowReasonPopup(true);
+      return;
+    }
+
     setCameraMode("checkout");
     setShowCameraModal(true);
     setTimeout(() => startCamera(), 300);
@@ -3550,7 +3570,13 @@ export default function AttendanceCapture() {
       return;
     }
     setIsReasonProcessing(true);
-    setReason(tempReason);
+
+    if (pendingAction === "camera_checkout" || pendingAction === "submit_checkout") {
+      setCheckoutReason(tempReason);
+    } else {
+      setReason(tempReason);
+    }
+
     setShowReasonPopup(false);
 
     setTimeout(() => {
@@ -3558,12 +3584,16 @@ export default function AttendanceCapture() {
         setCameraMode("checkin");
         setShowCameraModal(true);
         setTimeout(() => startCamera(), 300);
+      } else if (pendingAction === "camera_checkout") {
+        setCameraMode("checkout");
+        setShowCameraModal(true);
+        setTimeout(() => startCamera(), 300);
       } else if (pendingAction === "submit") {
         if (cameraMode === "checkin") {
           handleSubmitCheckIn(capturedImage);
-        } else {
-          handleSubmitCheckOut(capturedImage);
         }
+      } else if (pendingAction === "submit_checkout") {
+        handleSubmitCheckOut(capturedImage);
       }
       setPendingAction(null);
       setIsReasonProcessing(false);
@@ -3681,11 +3711,21 @@ export default function AttendanceCapture() {
                   </div>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Outside Office Range</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                {pendingAction === "camera_checkout" || pendingAction === "submit_checkout"
+                  ? "Reason for Check-Out"
+                  : "Outside Office Range"}
+              </h3>
               <p className="text-sm text-gray-600 mt-1">
-                You are <span className="font-bold text-red-500">{distance}m</span> away from the office.
-                <br />
-                <span className="text-xs text-gray-500">Please select a reason for check-in.</span>
+                {pendingAction === "camera_checkout" || pendingAction === "submit_checkout" ? (
+                  <span className="text-xs text-gray-500">Please select a reason for check-out.</span>
+                ) : (
+                  <>
+                    You are <span className="font-bold text-red-500">{distance}m</span> away from the office.
+                    <br />
+                    <span className="text-xs text-gray-500">Please select a reason for check-in.</span>
+                  </>
+                )}
               </p>
               <div className="mt-4">
                 <select
@@ -3802,8 +3842,11 @@ export default function AttendanceCapture() {
                       onClick={() => {
                         if (capturedImage) {
                           if (cameraMode === "checkin") {
-                            const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
-                            if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
+                            if (reason.trim()) {
+                              handleSubmitCheckIn(capturedImage);
+                              return;
+                            }
+                            if (distance > ONSITE_RADIUS_M) {
                               if (!isReasonProcessing && !showReasonPopup) {
                                 setPendingAction("submit");
                                 setTempReason("");
@@ -3814,7 +3857,16 @@ export default function AttendanceCapture() {
                             }
                             handleSubmitCheckIn(capturedImage);
                           } else {
-                            handleSubmitCheckOut(capturedImage);
+                            if (checkoutReason.trim()) {
+                              handleSubmitCheckOut(capturedImage);
+                              return;
+                            }
+                            if (!isReasonProcessing && !showReasonPopup) {
+                              setPendingAction("submit_checkout");
+                              setTempReason("");
+                              setShowReasonPopup(true);
+                              setIsCapturing(false);
+                            }
                           }
                         }
                       }}
@@ -3960,7 +4012,7 @@ export default function AttendanceCapture() {
                       style={{ width: `${Math.min((distance / ONSITE_RADIUS_M) * 100, 100)}%` }}
                     ></div>
                   </div>
-                  {distance > ONSITE_RADIUS_M && !isOnsiteOnlyDepartment && (
+                  {distance > ONSITE_RADIUS_M && (
                     <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
                       <span>⚠️</span> Outside office radius - Reason required
                     </p>
@@ -4027,20 +4079,43 @@ export default function AttendanceCapture() {
               </div>
             )}
 
-            {/* Reason selector for swipe mode */}
-            {!checkedIn && !isImageCaptureAllowed && !isOnsiteOnlyDepartment && distance !== null && distance > ONSITE_RADIUS_M && (
+            {/* CHECK-IN reason selector */}
+            {!checkedIn && !isImageCaptureAllowed && distance !== null && distance > ONSITE_RADIUS_M && (
               <div className="bg-yellow-50/80 rounded-xl border border-yellow-200/50 p-3 mb-3">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 bg-yellow-100 rounded-lg flex items-center justify-center">
                     <span className="text-xs">⚠️</span>
                   </div>
-                  <span className="text-xs font-medium text-gray-900">Reason Required</span>
+                  <span className="text-xs font-medium text-gray-900">Check-In Reason Required</span>
                   <span className="ml-auto text-[10px] text-red-500 font-medium">Outside: {distance}m</span>
                 </div>
                 <select
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   className="w-full p-2 text-xs border border-gray-200 rounded-lg bg-white/50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                >
+                  <option value="">-- Select Reason --</option>
+                  <option value="Field Work">📋 Field Work</option>
+                  <option value="Work From Home">🏠 Work From Home</option>
+                  <option value="Client Meeting">🤝 Client Meeting</option>
+                  <option value="Other">📝 Other</option>
+                </select>
+              </div>
+            )}
+
+            {/* CHECK-OUT reason selector — always required for checkout */}
+            {checkedIn && (
+              <div className="bg-orange-50/80 rounded-xl border border-orange-200/50 p-3 mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <span className="text-xs">📝</span>
+                  </div>
+                  <span className="text-xs font-medium text-gray-900">Check-Out Reason Required</span>
+                </div>
+                <select
+                  value={checkoutReason}
+                  onChange={(e) => setCheckoutReason(e.target.value)}
+                  className="w-full p-2 text-xs border border-gray-200 rounded-lg bg-white/50 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 >
                   <option value="">-- Select Reason --</option>
                   <option value="Field Work">📋 Field Work</option>
