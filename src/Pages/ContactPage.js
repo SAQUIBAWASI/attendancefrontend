@@ -25,7 +25,7 @@ const ContactPage = () => {
   }
 
   const handleEmail = () => {
-    window.location.href = 'mailto:hello@timelyhealth.com'
+    window.location.href = 'mailto:hello@timelyhealth.in'
   }
 
   const handleInputChange = (e) => {
@@ -89,7 +89,7 @@ Please get back to me within 24 hours as mentioned on your website.`
     {
       icon: <Mail className="w-6 h-6 text-red-600" />,
       title: "Email Us",
-      info: "hello@timelyhealth.com",
+      info: "hello@timelyhealth.in",
       action: handleEmail,
       description: "Detailed inquiries and partnerships",
       color: "from-red-50 to-rose-100",

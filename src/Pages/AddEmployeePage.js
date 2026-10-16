@@ -775,11 +775,19 @@ const AddEmployeePage = () => {
   const assignShiftToEmployee = async (empId, empName, shift, startTime, endTime) => {
     try {
       if (!empId || empId.trim() === '') return { success: false, error: "Employee ID required" };
+      let selectedTimeRange = undefined;
+      if (startTime && endTime) {
+        selectedTimeRange = `${startTime} - ${endTime}`;
+      }
       const response = await axios.post(`${API_BASE_URL}/shifts/assign`, {
-        employeeId: empId, employeeName: empName,
-        shiftType: shift.toUpperCase(), startTime: startTime || "09:00", endTime: endTime || "18:00"
+        employeeId: empId,
+        employeeName: empName,
+        shiftType: shift.toUpperCase(),
+        startTime: startTime || "09:00",
+        endTime: endTime || "18:00",
+        selectedTimeRange
       });
-      return response;
+      return response.data || response;
     } catch (error) {
       return { success: false, error: error.response?.data?.message || error.message };
     }
@@ -920,9 +928,9 @@ const AddEmployeePage = () => {
         const existingEmpId = editingEmployee?.employeeId || employeeFound?.employeeId || employeeId;
         finalEmployeeId = existingEmpId;
 
-        if (showShiftDetails && shiftType) {
+        if (shiftType) {
           const result = await assignShiftToEmployee(finalEmployeeId, `${firstName} ${lastName}`, shiftType, shiftStartTime, shiftEndTime);
-          if (!result.success) setSuccessMessage(`⚠️ Shift assignment failed: ${result.error}`);
+          if (result && !result.success) console.warn("Shift assignment warning:", result.error);
         }
         await axios.put(`${API_BASE_URL}/salary/update-salary/${finalEmployeeId}`, {
           employeeId: finalEmployeeId, salaryPerMonth: parseFloat(netSalary) || 0,
@@ -937,9 +945,9 @@ const AddEmployeePage = () => {
 
         if (!finalEmployeeId || finalEmployeeId.trim() === '') throw new Error("Employee ID required");
 
-        if (showShiftDetails && shiftType) {
+        if (shiftType) {
           const result = await assignShiftToEmployee(finalEmployeeId, `${firstName} ${lastName}`, shiftType, shiftStartTime, shiftEndTime);
-          if (!result.success) setSuccessMessage(`⚠️ Shift failed: ${result.error}`);
+          if (result && !result.success) console.warn("Shift assignment warning:", result.error);
         }
         await axios.post(`${API_BASE_URL}/salary/set-salary`, {
           employeeId: finalEmployeeId, name: `${firstName} ${lastName}`,

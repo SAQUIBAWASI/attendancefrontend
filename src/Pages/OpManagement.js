@@ -561,6 +561,7 @@ const DateRangePopup = ({
   isOpen, position, fromDate, toDate, onFromChange, onToChange, onClear, onClose, dataAttr,
 }) => {
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [hoverDate, setHoverDate] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -571,6 +572,7 @@ const DateRangePopup = ({
       } else {
         setCalendarMonth(new Date());
       }
+      setHoverDate(null);
     }
   }, [isOpen, fromDate]);
 
@@ -608,21 +610,52 @@ const DateRangePopup = ({
   const weekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const todayStr = toYMD(new Date());
 
+  // Step indicator
+  const currentStep = !fromDate ? 1 : (!toDate ? 2 : 3);
+
   const handleDayClick = (dateStr, isCurrentMonth) => {
     if (!isCurrentMonth) return;
+
+    // Step 1: no from yet OR both are set → start fresh
     if (!fromDate || (fromDate && toDate)) {
       onFromChange(dateStr);
       onToChange("");
-    } else if (fromDate && !toDate) {
-      if (dateStr >= fromDate) onToChange(dateStr);
-      else onFromChange(dateStr);
+      setHoverDate(null);
+    }
+    // Step 2: from is set, to is not → set to
+    else if (fromDate && !toDate) {
+      if (dateStr >= fromDate) {
+        onToChange(dateStr);
+      } else {
+        // User clicked earlier date → treat it as new FROM
+        onFromChange(dateStr);
+      }
+      setHoverDate(null);
     }
   };
 
-  const isInRange = (d) => {
-    if (!fromDate || !toDate) return false;
-    return d >= fromDate && d <= toDate;
+  const handleDayHover = (dateStr, isCurrentMonth) => {
+    if (!isCurrentMonth) { setHoverDate(null); return; }
+    // Only show hover preview in step 2
+    if (fromDate && !toDate) setHoverDate(dateStr);
   };
+
+  const isInRange = (d) => {
+    if (!fromDate) return false;
+    // Step 2: show preview from → hoverDate
+    if (fromDate && !toDate && hoverDate) {
+      const start = fromDate < hoverDate ? fromDate : hoverDate;
+      const end = fromDate < hoverDate ? hoverDate : fromDate;
+      return d > start && d < end;
+    }
+    // Step 3: both set
+    if (!fromDate || !toDate) return false;
+    return d > fromDate && d < toDate;
+  };
+
+  const isStart = (d) => d === fromDate;
+  const isEnd = (d) => d === toDate;
+  const isHoverEnd = (d) => fromDate && !toDate && hoverDate === d;
 
   const fmtDisplay = (ymd) => {
     if (!ymd) return "";
@@ -630,79 +663,191 @@ const DateRangePopup = ({
     return `${d}/${m}/${y}`;
   };
 
+  const isConfirmEnabled = !!(fromDate && toDate);
+
+  const handleConfirm = () => {
+    if (!isConfirmEnabled) return;
+    onClose();
+  };
+
   return (
     <div
       data-attr={dataAttr}
-      className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl"
+      className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden"
       style={{ top: position.top, left: position.left, zIndex: 999999, width: 340 }}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <h3 className="text-base font-bold text-gray-900">Date Range</h3>
-        <button type="button" onClick={onClear} className="text-[11px] font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md border border-red-200 transition-colors">Reset</button>
+      {/* ─── HEADER ─── */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center gap-2">
+          <FaCalendarAlt className="w-3.5 h-3.5 text-blue-600" />
+          <h3 className="text-xs font-bold text-gray-900">Select Date Range</h3>
+        </div>
+        <button
+          type="button"
+          onClick={() => { onClear(); setHoverDate(null); }}
+          className="text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-md border border-rose-200 transition-colors flex items-center gap-1"
+        >
+          <FaTimes className="w-2.5 h-2.5" /> Clear
+        </button>
       </div>
 
-      <div className="px-3 py-3 bg-gray-50 flex items-center gap-2">
-        <div className="flex-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">From</label>
-          <div className="px-2 py-1.5 text-[11px] border border-gray-300 rounded-md bg-white text-gray-800 font-semibold">
-            {fmtDisplay(fromDate) || <span className="text-gray-400 font-normal">dd/mm/yyyy</span>}
+      {/* ─── STEP INDICATOR ─── */}
+      <div className="px-4 pt-2.5 pb-1.5">
+        <div className="flex items-center gap-2">
+          <div className={`flex-1 flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${
+            currentStep === 1 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+              : fromDate ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-gray-50 text-gray-400 border-gray-200"
+          }`}>
+            {fromDate ? <FaCheckCircle className="w-2.5 h-2.5" /> : <span className="w-3.5 h-3.5 rounded-full bg-white/30 text-[8px] font-bold flex items-center justify-center">1</span>}
+            <span className="text-[9px] font-bold uppercase tracking-wide">From</span>
+          </div>
+          <div className={`w-5 h-0.5 rounded ${fromDate ? "bg-emerald-400" : "bg-gray-200"}`}></div>
+          <div className={`flex-1 flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${
+            currentStep === 2 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+              : toDate ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-gray-50 text-gray-400 border-gray-200"
+          }`}>
+            {toDate ? <FaCheckCircle className="w-2.5 h-2.5" /> : <span className="w-3.5 h-3.5 rounded-full bg-white/30 text-[8px] font-bold flex items-center justify-center">2</span>}
+            <span className="text-[9px] font-bold uppercase tracking-wide">To</span>
           </div>
         </div>
-        <div className="flex-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">To</label>
-          <div className="px-2 py-1.5 text-[11px] border border-gray-300 rounded-md bg-white text-gray-800 font-semibold">
-            {fmtDisplay(toDate) || <span className="text-gray-400 font-normal">dd/mm/yyyy</span>}
+        <p className="text-[9px] text-gray-500 mt-1.5 text-center font-medium">
+          {currentStep === 1 && "👆 Select the FROM date"}
+          {currentStep === 2 && "👆 Now select the TO date"}
+          {currentStep === 3 && "✅ Both dates selected — click Confirm"}
+        </p>
+      </div>
+
+      {/* ─── FROM / TO DISPLAY BOXES ─── */}
+      <div className="px-3 pb-2">
+        <div className="grid grid-cols-2 gap-2">
+          <div className={`px-2.5 py-1.5 rounded-lg border-2 transition-all ${
+            fromDate ? "border-emerald-400 bg-emerald-50"
+              : currentStep === 1 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-500/20"
+              : "border-dashed border-gray-300 bg-gray-50"
+          }`}>
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">From</span>
+              {fromDate && <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" />}
+            </div>
+            <div className={`text-[11px] font-bold ${fromDate ? "text-emerald-800" : "text-gray-400 italic"}`}>
+              {fmtDisplay(fromDate) || "Not selected"}
+            </div>
+          </div>
+          <div className={`px-2.5 py-1.5 rounded-lg border-2 transition-all ${
+            toDate ? "border-emerald-400 bg-emerald-50"
+              : currentStep === 2 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-500/20"
+              : "border-dashed border-gray-300 bg-gray-50"
+          }`}>
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">To</span>
+              {toDate && <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" />}
+            </div>
+            <div className={`text-[11px] font-bold ${toDate ? "text-emerald-800" : "text-gray-400 italic"}`}>
+              {fmtDisplay(toDate) || "Not selected"}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="px-3 py-3">
-        <div className="flex items-center justify-between mb-2">
-          <button type="button" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600"><FaChevronLeft className="w-3 h-3" /></button>
-          <div className="text-xs font-bold text-gray-800">{monthLabel}</div>
-          <button type="button" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600"><FaChevronRight className="w-3 h-3" /></button>
+      {/* ─── CALENDAR ─── */}
+      <div className="px-3 pb-2 pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between mb-1.5">
+          <button
+            type="button"
+            onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
+            className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors"
+          >
+            <FaChevronLeft className="w-3 h-3" />
+          </button>
+          <div className="text-[11px] font-bold text-gray-800">{monthLabel}</div>
+          <button
+            type="button"
+            onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
+            className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors"
+          >
+            <FaChevronRight className="w-3 h-3" />
+          </button>
         </div>
 
         <div className="grid grid-cols-7 gap-0.5 mb-1">
           {weekdays.map((wd, i) => (
-            <div key={wd} className={`text-[9px] font-bold text-center py-1 ${i === 0 ? "text-red-500" : "text-gray-500"}`}>{wd}</div>
+            <div key={wd} className={`text-[8px] font-bold text-center py-0.5 ${i === 0 ? "text-red-500" : "text-gray-500"}`}>{wd}</div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-0.5">
+        <div className="grid grid-cols-7 gap-0.5" onMouseLeave={() => setHoverDate(null)}>
           {days.map(({ date, currentMonth }, idx) => {
             const ymd = toYMD(date);
             const inRange = isInRange(ymd);
-            const isFromDay = ymd === fromDate;
-            const isToDay = ymd === toDate;
+            const start = isStart(ymd);
+            const end = isEnd(ymd);
+            const hoverEnd = isHoverEnd(ymd);
             const isToday = ymd === todayStr;
             const isWeekend = date.getDay() === 0;
 
-            let cls = "text-[11px] font-semibold py-1.5 rounded-md text-center transition-colors ";
-            if (!currentMonth) cls += "text-gray-300 cursor-default ";
-            else if (isFromDay || isToDay) cls += "bg-orange-500 text-white cursor-pointer ";
-            else if (inRange) cls += "bg-orange-100 text-orange-700 cursor-pointer ";
-            else if (isToday) cls += "bg-blue-50 text-blue-700 ring-1 ring-blue-300 cursor-pointer ";
-            else if (isWeekend) cls += "text-red-500 hover:bg-orange-50 cursor-pointer ";
-            else cls += "text-gray-800 hover:bg-orange-50 cursor-pointer ";
+            let cls = "text-[10px] font-semibold py-1.5 rounded-md text-center transition-all relative ";
+
+            if (!currentMonth) {
+              cls += "text-gray-300 cursor-default ";
+            } else if (start || end) {
+              cls += "bg-blue-600 text-white cursor-pointer shadow-sm ";
+            } else if (hoverEnd) {
+              cls += "bg-blue-400 text-white cursor-pointer shadow-sm ";
+            } else if (inRange) {
+              cls += "bg-blue-100 text-blue-700 cursor-pointer ";
+            } else if (isToday) {
+              cls += "bg-amber-50 text-amber-700 ring-1 ring-amber-300 cursor-pointer hover:bg-amber-100 ";
+            } else if (isWeekend) {
+              cls += "text-red-500 hover:bg-blue-50 cursor-pointer ";
+            } else {
+              cls += "text-gray-800 hover:bg-blue-50 cursor-pointer ";
+            }
 
             return (
-              <button key={idx} type="button" onClick={() => handleDayClick(ymd, currentMonth)} className={cls}>
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleDayClick(ymd, currentMonth)}
+                onMouseEnter={() => handleDayHover(ymd, currentMonth)}
+                className={cls}
+              >
                 {String(date.getDate()).padStart(2, "0")}
+                {(start || end) && (
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 border border-white"></span>
+                )}
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-        <button type="button" onClick={onClose} className="text-xs font-bold text-gray-600 hover:text-gray-900">Close</button>
-        <button type="button" onClick={onClose} className="text-xs font-bold text-orange-600 hover:text-orange-700">Confirm</button>
+      {/* ─── FOOTER ─── */}
+      <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100 bg-gray-50">
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-[11px] font-bold text-gray-600 hover:text-gray-900 px-2.5 py-1 rounded-md hover:bg-gray-100 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleConfirm}
+          disabled={!isConfirmEnabled}
+          className={`text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+            isConfirmEnabled
+              ? "text-white bg-blue-600 hover:bg-blue-700 shadow-sm"
+              : "text-gray-400 bg-gray-200 cursor-not-allowed"
+          }`}
+        >
+          <FaCheckCircle className="w-2.5 h-2.5" /> Confirm
+        </button>
       </div>
     </div>
   );
 };
-
 export default function OpManagement() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1528,14 +1673,20 @@ export default function OpManagement() {
     setFormData((prev) => ({ ...prev, appointmentDate: today }));
   }, []);
 
-  useEffect(() => {
-    fetchBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    timeFilter, fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
-    doctorFilter, paymentTypeFilter, statusFilter,
-    bookingTypeFilter, revenueCategoryFilter, searchQuery
-  ]);
+useEffect(() => {
+  // 🆕 Agar Reg date me sirf EK date select hui hai (from set, to empty)
+  // to fetch mat karo — user abhi dusri date select karega
+  const regDateIncomplete = !!fromDate && !toDate;
+  const apptDateIncomplete = !!apptFromDate && !apptToDate;
+  if (regDateIncomplete || apptDateIncomplete) return;
+
+  fetchBookings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [
+  timeFilter, fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
+  doctorFilter, paymentTypeFilter, statusFilter,
+  bookingTypeFilter, revenueCategoryFilter, searchQuery
+]);
 
   useEffect(() => {
     const isSpecificTimeFilter = timeFilter && timeFilter !== "All";
@@ -3202,18 +3353,40 @@ if (doctorId && appointmentDate) {
     } else { showToast("Invoice generation failed", "error"); }
   };
 
-  const handleFromDateChange = (e) => { setFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); };
-  const handleToDateChange = (e) => { setToDate(e.target.value); if (e.target.value) setSelectedMonth(""); };
-  const handleMonthChange = (e) => { setSelectedMonth(e.target.value); setFromDate(""); setToDate(""); setTimeFilter("All"); };
+const handleFromDateChange = (e) => {
+  setFromDate(e.target.value);
+  if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
+};
+const handleToDateChange = (e) => {
+  setToDate(e.target.value);
+  if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
+};
+const handleApptFromChange = (e) => {
+  setApptFromDate(e.target.value);
+  if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
+};
+const handleApptToChange = (e) => {
+  setApptToDate(e.target.value);
+  if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
+};
 
-  const handleApptFromChange = (e) => {
-    setApptFromDate(e.target.value);
-    if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
-  };
-  const handleApptToChange = (e) => {
-    setApptToDate(e.target.value);
-    if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
-  };
+
+
+// ✅ NEW — add this
+const handleMonthChange = (e) => {
+  const value = e.target.value;
+  setSelectedMonth(value);
+  if (value) {
+    setFromDate("");
+    setToDate("");
+    setApptFromDate("");
+    setApptToDate("");
+    setTimeFilter("All");
+  }
+};
+
+
+
   const handleTimeFilterChange = (value) => {
     setTimeFilter(value);
     if (value !== "All") {

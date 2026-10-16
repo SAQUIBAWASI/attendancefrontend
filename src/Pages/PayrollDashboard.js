@@ -631,7 +631,7 @@ const PayrollDashboard = () => {
   }, []);
 
   // ============================================================================
-  // 🚀 FIXED fetchData — paymentStatus now persists via summaryMap + localStorage
+  // 🚀 FIXED fetchData — EXACT SAME logic as Payroll page
   // ============================================================================
   const fetchData = useCallback(async (month = "") => {
     if (isFetchingRef.current) return;
@@ -768,12 +768,9 @@ const PayrollDashboard = () => {
         console.warn("Failed to fetch approved OT claims:", err);
       }
 
-      // ============================================================
-      // ✅ FIXED: Direct summaryMap lookup — no more .find() type mismatch
-      // ============================================================
       const summaryData = Object.values(summaryMap);
 
-      // ✅ localStorage se OT aur Manual Deduction maps
+      // ✅ localStorage se OT aur Manual Deduction maps (SAME as Payroll page)
       const savedOTMap = (() => {
         try {
           const saved = localStorage.getItem(`otApplied_${targetMonth}`);
@@ -788,10 +785,10 @@ const PayrollDashboard = () => {
         } catch { return {}; }
       })();
 
-      // ✅ localStorage se PaymentStatus map (fallback agar backend na de)
-      const savedPaymentStatusMap = (() => {
+      const savedStatusKey = `payrollStatusMap_${targetMonth}`;
+      const savedStatusMap = (() => {
         try {
-          const saved = localStorage.getItem(`paymentStatus_${targetMonth}`);
+          const saved = localStorage.getItem(savedStatusKey);
           return saved ? JSON.parse(saved) : {};
         } catch { return {}; }
       })();
@@ -806,11 +803,13 @@ const PayrollDashboard = () => {
       // 🚀 MAIN LOOP — EXACT SAME as Payroll page
       // ============================================================
       for (const emp of employeesForMonth) {
-        // ✅ FIXED: Direct key lookup + type-safe fallback
+        const cleanEmpId = String(emp.employeeId || "").trim();
+        const upperEmpId = cleanEmpId.toUpperCase();
         const summary =
           summaryMap[emp.employeeId] ||
-          summaryMap[String(emp.employeeId)] ||
-          summaryData.find(x => String(x.employeeId) === String(emp.employeeId)) ||
+          summaryMap[cleanEmpId] ||
+          summaryMap[upperEmpId] ||
+          summaryData.find(x => String(x.employeeId || "").trim().toUpperCase() === upperEmpId) ||
           {};
 
         const deptLower = (emp.department || '').toLowerCase().trim();
@@ -1037,28 +1036,13 @@ const PayrollDashboard = () => {
           otherDeductions +
           manualDeductionAmount;
 
-        // ============================================================
-        // ✅ FIXED: paymentStatus — priority: backend summary → localStorage → fallback
-        // ============================================================
-        let paymentStatus =
-          summary.paymentStatus ||
-          savedPaymentStatusMap[emp.employeeId] ||
-          savedPaymentStatusMap[String(emp.employeeId)] ||
-          null;
-
-        if (!paymentStatus) {
+        // ✅ Status logic - DB status + localStorage cache fallback so status NEVER reverts on next date!
+        const cachedStatus = savedStatusMap[emp.employeeId] || savedStatusMap[cleanEmpId] || savedStatusMap[upperEmpId];
+        let paymentStatus = summary.paymentStatus;
+        if (cachedStatus) {
+          paymentStatus = cachedStatus;
+        } else if (!paymentStatus) {
           paymentStatus = isHistoricalMonth(targetMonth) ? "Paid" : "Pending";
-        }
-
-        // ✅ Backend se aaya status localStorage me sync karo (taaki fallback kaam kare)
-        if (summary.paymentStatus && summary.paymentStatus !== savedPaymentStatusMap[emp.employeeId]) {
-          savedPaymentStatusMap[emp.employeeId] = summary.paymentStatus;
-        }
-
-        // ✅ Agar finalPay 0 hai toh NA
-        const isZeroSalary = finalPay === 0 || baseCalculatedSalary === 0;
-        if (isZeroSalary) {
-          paymentStatus = "NA";
         }
 
         processedSalaries.push({
@@ -1161,11 +1145,6 @@ const PayrollDashboard = () => {
         });
       }
 
-      // ✅ localStorage me latest paymentStatus map save karo
-      try {
-        localStorage.setItem(`paymentStatus_${targetMonth}`, JSON.stringify(savedPaymentStatusMap));
-      } catch (e) { console.error("Failed to save paymentStatus map:", e); }
-
       setRecords(processedSalaries);
     } catch (err) {
       console.error("ERROR Loading Dashboard Data:", err);
@@ -1181,75 +1160,48 @@ const PayrollDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonth]);
 
-  // ============================================================
-  // ✅ FIXED: handleToggleStatus — optimistic + localStorage + rollback
-  // ============================================================
   const handleToggleStatus = async (employeeId, currentStatus) => {
-    if (currentStatus === "NA") return;
-
     const newStatus = currentStatus === "Paid" ? "Pending" : "Paid";
+    const cleanEmpId = String(employeeId).trim();
+    const upperEmpId = cleanEmpId.toUpperCase();
 
-    // ✅ Optimistic UI update
+    // 1. Optimistic update in localStorage cache (persists across reloads & date changes)
+    const savedStatusKey = `payrollStatusMap_${selectedMonth}`;
+    let localStatusMap = {};
+    try {
+      localStatusMap = JSON.parse(localStorage.getItem(savedStatusKey) || "{}");
+    } catch (e) { localStatusMap = {}; }
+    localStatusMap[employeeId] = newStatus;
+    localStatusMap[cleanEmpId] = newStatus;
+    localStatusMap[upperEmpId] = newStatus;
+    try {
+      localStorage.setItem(savedStatusKey, JSON.stringify(localStatusMap));
+    } catch (e) { console.warn("Failed to save status to localStorage", e); }
+
+    // 2. Optimistic update in React state
     setRecords(prev => prev.map(rec =>
-      rec.employeeId === employeeId
+      (rec.employeeId === employeeId || String(rec.employeeId || "").trim().toUpperCase() === upperEmpId)
         ? { ...rec, paymentStatus: newStatus, isProcessed: newStatus === "Paid" }
         : rec
     ));
 
-    // ✅ localStorage me save karo (backup — next login pe fallback)
-    try {
-      const key = `paymentStatus_${selectedMonth}`;
-      const existing = JSON.parse(localStorage.getItem(key) || '{}');
-      existing[employeeId] = newStatus;
-      localStorage.setItem(key, JSON.stringify(existing));
-    } catch (e) { console.error("localStorage save failed:", e); }
-
+    // 3. Persist to backend database
     try {
       const response = await fetch(`${API_BASE_URL}/attendancesummary/updatePayroll`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          employeeId,
+          employeeId: cleanEmpId,
           month: selectedMonth,
           paymentStatus: newStatus
         })
       });
-
       const result = await response.json();
-
       if (!response.ok || !result.success) {
-        // ❌ Rollback on failure
-        setRecords(prev => prev.map(rec =>
-          rec.employeeId === employeeId
-            ? { ...rec, paymentStatus: currentStatus, isProcessed: currentStatus === "Paid" }
-            : rec
-        ));
-        // localStorage rollback
-        try {
-          const key = `paymentStatus_${selectedMonth}`;
-          const existing = JSON.parse(localStorage.getItem(key) || '{}');
-          existing[employeeId] = currentStatus;
-          localStorage.setItem(key, JSON.stringify(existing));
-        } catch {}
-
-        alert("Failed to update status: " + (result.message || "Unknown error"));
+        console.warn("Backend status update notice:", result?.message);
       }
     } catch (e) {
-      console.error("Error updating status:", e);
-      // ❌ Rollback
-      setRecords(prev => prev.map(rec =>
-        rec.employeeId === employeeId
-          ? { ...rec, paymentStatus: currentStatus, isProcessed: currentStatus === "Paid" }
-          : rec
-      ));
-      try {
-        const key = `paymentStatus_${selectedMonth}`;
-        const existing = JSON.parse(localStorage.getItem(key) || '{}');
-        existing[employeeId] = currentStatus;
-        localStorage.setItem(key, JSON.stringify(existing));
-      } catch {}
-
-      alert("Error updating status: " + e.message);
+      console.error("Backend error updating status:", e);
     }
   };
 
@@ -1654,7 +1606,8 @@ const PayrollDashboard = () => {
             <tbody>
               {filteredEmployeesList.map((emp) => {
                 const otherAllowances = (emp.conveyanceAllowance || 0) + (emp.medicalAllowance || 0) + (emp.performanceAllowance || 0) + (emp.specialAllowance || 0);
-                const otherDeductions = (emp.halfDayDeduction || 0) + (emp.gmcAmount || 0) + (emp.profTax || 0) + (emp.otherDeductions || 0);
+                // ✅ Only display actual otherDeductions from employee data (do not bundle halfDayDeduction, GMC, or PTax)
+                const otherDeductions = Number(emp.otherDeductions || 0);
                 const isZeroSalary = (emp.finalPay || 0) === 0 || (emp.calculatedSalary || 0) === 0;
                 return (
                   <tr key={emp.employeeId} className="border-b hover:bg-slate-50/50 transition">

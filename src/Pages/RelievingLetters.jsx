@@ -372,7 +372,7 @@ const RelievingLetters = () => {
             <h2 className="text-2xl font-bold text-gray-800 tracking-wide mb-1">{content.companyName}</h2>
             <p className="font-semibold text-gray-700 mb-2">Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad</p>
             <div className="flex justify-center items-center gap-4 text-xs font-medium text-gray-700">
-              <span>Email: {content.companyEmail || 'hello@timelyhealth.com'}</span>
+              <span>Email: {content.companyEmail || 'hello@timelyhealth.in'}</span>
               <span>|</span>
               <span>Mobile: {content.companyPhone || '+91 9010481048'}</span>
               <span>|</span>
@@ -453,7 +453,7 @@ const RelievingLetters = () => {
             <h2 className="text-2xl font-bold text-gray-800 tracking-wide mb-1">{content.companyName}</h2>
             <p className="font-semibold text-gray-700 mb-2">Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad</p>
             <div className="flex justify-center items-center gap-4 text-xs font-medium text-gray-700">
-              <span>Email: {content.companyEmail || 'hello@timelyhealth.com'}</span>
+              <span>Email: {content.companyEmail || 'hello@timelyhealth.in'}</span>
               <span>|</span>
               <span>Mobile: {content.companyPhone || '+91 9010481048'}</span>
               <span>|</span>

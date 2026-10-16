@@ -951,7 +951,7 @@ const PrivacyPolicy = () => {
                   </div>
                   <div>
                     <div className="text-[10px] font-bold uppercase text-gray-400">Email</div>
-                    <span className="text-xs text-slate-700">hello@timelyhealth.com</span>
+                    <span className="text-xs text-slate-700">hello@timelyhealth.in</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

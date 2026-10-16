@@ -492,14 +492,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
                   {tab.label}
                   {/* ✅ NEW blinking badge — small, pink, transparent */}
                 {/* ✅ NEW blinking badge — small, pink, transparent, LEFT side */}
-{tab.isNew && (
-  <span className="absolute -top-2 -left-2 flex items-center justify-center">
-    <span className="absolute inline-flex h-3 w-3 rounded-full bg-pink-400 opacity-75 animate-ping"></span>
-    <span className="relative inline-flex items-center justify-center rounded-full bg-pink-500/80 backdrop-blur-sm border border-pink-300 px-1 py-[0.5px] text-[7px] font-bold text-white tracking-tight shadow-sm">
-      NEW
-    </span>
-  </span>
-)}
+
                 </button>
               );
             })}

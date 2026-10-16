@@ -4832,7 +4832,7 @@ const EmployeeList = () => {
                           {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : "-"}
                         </td>
                         <td style={{ textAlign: "right" }} className="font-semibold text-green-600 whitespace-nowrap hidden md:table-cell text-[11px]">₹{emp.salaryPerMonth || 0}</td>
-                        <td style={{ textAlign: "center" }} className="font-medium text-purple-700 hidden lg:table-cell text-[11px]">{emp.shiftHours || 8}h</td>
+                        <td style={{ textAlign: "center" }} className="font-medium text-purple-700 hidden lg:table-cell text-[11px]">{emp.shiftType ? `Shift ${emp.shiftType} (${emp.shiftHours || 8}h)` : `${emp.shiftHours || 8}h`}</td>
                         <td style={{ textAlign: "center" }} className="font-medium text-gray-500 hidden lg:table-cell text-[11px]">{emp.weekOffPerMonth || 0}</td>
                         <td className="font-medium text-blue-600 whitespace-nowrap hidden xl:table-cell text-[11px]">{getLocationName(emp.location)}</td>
                         <td style={{ textAlign: "center" }}>
@@ -5177,8 +5177,8 @@ const EmployeeList = () => {
                       <span className="font-semibold text-green-600 text-sm">₹{selectedEmployee.ctc || '0'}</span>
                     </div>
                     <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                      <span className="text-gray-400 block mb-1">Shift Hours</span>
-                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.shiftHours || '8'} Hours</span>
+                      <span className="text-gray-400 block mb-1">Shift</span>
+                      <span className="font-semibold text-gray-800 text-sm">{selectedEmployee.shiftType ? `Shift ${selectedEmployee.shiftType} (${selectedEmployee.shiftHours || '8'}h)` : `${selectedEmployee.shiftHours || '8'} Hours`}</span>
                     </div>
                     <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100">
                       <span className="text-gray-400 block mb-1">Week Offs</span>

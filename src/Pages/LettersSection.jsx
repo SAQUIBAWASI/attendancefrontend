@@ -60,7 +60,7 @@ const LettersSection = () => {
         managerDesignation: 'General Manager',
         companyAddress: 'Madhapur, Hyderabad, India',
         companyPhone: '+91 9010481048',
-        companyEmail: 'hello@timelyhealth.com',
+        companyEmail: 'hello@timelyhealth.in',
         companyWebsite: 'www.timelyhealth.in',
         signature: '',
         employeeSignature: '',
@@ -286,7 +286,7 @@ const LettersSection = () => {
             managerDesignation: 'General Manager',
             companyAddress: 'Madhapur, Hyderabad, India',
             companyPhone: '+91 9010481048',
-            companyEmail: 'hello@timelyhealth.com',
+            companyEmail: 'hello@timelyhealth.in',
             companyWebsite: 'www.timelyhealth.in',
             signature: '',
             employeeSignature: '',
@@ -625,7 +625,7 @@ const LettersSection = () => {
                         <h2 className="text-2xl font-bold text-gray-800 tracking-wide mb-1">{data.companyName || 'Timely Healthtech Private Limited'}</h2>
                         <p className="font-semibold text-gray-700 mb-2">Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad</p>
                         <div className="flex justify-center items-center gap-4 text-xs font-medium text-gray-700">
-                            <span>Email: {data.companyEmail || 'hello@timelyhealth.com'}</span>
+                            <span>Email: {data.companyEmail || 'hello@timelyhealth.in'}</span>
                             <span>|</span>
                             <span>Mobile: {data.companyPhone || '+91 9010481048'}</span>
                             <span>|</span>
@@ -720,7 +720,7 @@ const LettersSection = () => {
                         <h2 className="text-2xl font-bold text-gray-800 tracking-wide mb-1">{data.companyName || 'Timely Healthtech Private Limited'}</h2>
                         <p className="font-semibold text-gray-700 mb-2">Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad</p>
                         <div className="flex justify-center items-center gap-4 text-xs font-medium text-gray-700">
-                            <span>Email: {data.companyEmail || 'hello@timelyhealth.com'}</span>
+                            <span>Email: {data.companyEmail || 'hello@timelyhealth.in'}</span>
                             <span>|</span>
                             <span>Mobile: {data.companyPhone || '+91 9010481048'}</span>
                             <span>|</span>

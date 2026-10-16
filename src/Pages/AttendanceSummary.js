@@ -101,7 +101,41 @@ export default function AttendanceSummary() {
   const [performerDetails, setPerformerDetails] = useState(null);
   const [showPerformerDetailModal, setShowPerformerDetailModal] = useState(false);
 
-  // ✅ HARDCODED SHIFT TIMES — yeh master source hai
+  // 🚀 Attendance Details Modal Selection & Bulk Edit State
+  const [selectedModalDates, setSelectedModalDates] = useState([]);
+  const [modalBulkCheckIn, setModalBulkCheckIn] = useState("");
+  const [modalBulkCheckOut, setModalBulkCheckOut] = useState("");
+  const [modalBulkHours, setModalBulkHours] = useState("");
+  const [isBulkSavingModal, setIsBulkSavingModal] = useState(false);
+
+  // ✅ Parse time helper (handles "05:00 PM", "6:30 AM", "17:00", etc.)
+  const parseHM = (t) => {
+    if (!t) return null;
+    const m = String(t).trim().match(/(\d{1,2})[:.](\d{2})\s*(AM|PM|am|pm)?/i);
+    if (!m) return null;
+    let h = parseInt(m[1], 10);
+    const mn = parseInt(m[2], 10);
+    const ampm = m[3] ? m[3].toUpperCase() : null;
+    if (ampm === 'PM' && h < 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    const formatted24 = `${String(h).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
+    return { h, m: mn, formatted24 };
+  };
+
+  // ✅ Auto calculate hours between check-in and check-out (supports overnight)
+  const calculateHoursBetween = (startStr, endStr) => {
+    if (!startStr || !endStr) return 0;
+    const st = parseHM(startStr);
+    const en = parseHM(endStr);
+    if (!st || !en) return 0;
+    let sm = st.h * 60 + st.m;
+    let em = en.h * 60 + en.m;
+    if (em < sm) em += 24 * 60; // Handle overnight shift
+    const diff = (em - sm) / 60;
+    return parseFloat(diff.toFixed(2));
+  };
+
+  // ✅ HARDCODED SHIFT TIMES — master source
   const HARDCODED_SHIFT_TIMES = {
     "A":  { start: "07:00", end: "17:00" },
     "B":  { start: "10:00", end: "19:00" },
@@ -119,6 +153,7 @@ export default function AttendanceSummary() {
     "N":  { start: "18:00", end: "23:00" },
     "O":  { start: "17:00", end: "23:00" },
     "P":  { start: "06:30", end: "17:00" },
+    "S":  { start: "06:30", end: "13:00" },
     "BR": { start: "07:00", end: "21:30" },
   };
 
@@ -127,55 +162,62 @@ export default function AttendanceSummary() {
 
     let start = null;
     let end = null;
+    let shiftType = emp?.shiftType || null;
 
-    // Priority 1: Backend already resolved shiftStart/shiftEnd
+    // Priority 1: Backend already resolved shiftStart/shiftEnd on employee
     if (emp?.shiftStart && emp?.shiftEnd) {
       start = emp.shiftStart;
       end = emp.shiftEnd;
     }
 
-    // Priority 2: Backend shiftType → HARDCODED
-    if ((!start || !end) && emp?.shiftType && HARDCODED_SHIFT_TIMES[emp.shiftType]) {
-      start = HARDCODED_SHIFT_TIMES[emp.shiftType].start;
-      end = HARDCODED_SHIFT_TIMES[emp.shiftType].end;
-    }
-
-    // Priority 3: Old shift lookup
+    // Priority 2: Shift assignment lookup
     if (!start || !end) {
       const shift = getEmployeeShift(employeeId);
       if (shift?.start && shift?.end) {
         start = shift.start;
         end = shift.end;
       }
+      if (shift?.shiftType) {
+        shiftType = shift.shiftType;
+      }
+    }
+
+    // Priority 3: Backend shiftType → HARDCODED
+    if ((!start || !end) && shiftType && HARDCODED_SHIFT_TIMES[shiftType]) {
+      start = HARDCODED_SHIFT_TIMES[shiftType].start;
+      end = HARDCODED_SHIFT_TIMES[shiftType].end;
     }
 
     if (!start) start = "09:00";
     if (!end) end = "18:00";
 
-    const [sh, sm] = start.split(':').map(Number);
-    const [eh, em] = end.split(':').map(Number);
-    let sm2 = sh * 60 + sm;
-    let em2 = eh * 60 + em;
+    const st = parseHM(start) || { h: 9, m: 0, formatted24: "09:00" };
+    const en = parseHM(end) || { h: 18, m: 0, formatted24: "18:00" };
+
+    let sm2 = st.h * 60 + st.m;
+    let em2 = en.h * 60 + en.m;
     if (em2 <= sm2) em2 += 24 * 60;
+    const shiftHours = parseFloat(((em2 - sm2) / 60).toFixed(2));
 
     return {
-      start,
-      end,
-      shiftHours: (em2 - sm2) / 60,
-      startHour: sh,
-      startMinute: sm,
-      endHour: eh,
-      endMinute: em,
-      shiftType: emp?.shiftType || null,
+      start: st.formatted24,
+      end: en.formatted24,
+      rawStart: start,
+      rawEnd: end,
+      shiftHours: (shiftHours > 0 && shiftHours <= 24) ? shiftHours : 9,
+      startHour: st.h,
+      startMinute: st.m,
+      endHour: en.h,
+      endMinute: en.m,
+      shiftType: shiftType,
     };
   };
 
   const getEmployeeShiftHours = (employeeId) => {
     if (!employeeId) return 9;
     const timings = getEmployeeShiftTimings(employeeId);
-    return timings.shiftHours || 9;
+    return (timings?.shiftHours && !isNaN(timings.shiftHours) && timings.shiftHours > 0) ? timings.shiftHours : 9;
   };
-
   const calculateAttendanceStatus = (employeeId, checkInTime, checkOutTime, totalHours) => {
     if (!checkInTime) { 
       return { 
@@ -334,9 +376,10 @@ export default function AttendanceSummary() {
   };
 
   const formatDecimalHours = (decimalHours) => {
-    if (!decimalHours && decimalHours !== 0) return "0h 0m";
-    const hours = Math.floor(decimalHours);
-    const minutes = Math.round((decimalHours - hours) * 60);
+    if (decimalHours === undefined || decimalHours === null || isNaN(decimalHours)) return "0h 0m";
+    const num = Math.max(0, parseFloat(decimalHours) || 0);
+    const hours = Math.floor(num);
+    const minutes = Math.round((num - hours) * 60);
     if (minutes === 60) {
       return `${hours + 1}h 0m`;
     }
@@ -649,9 +692,9 @@ export default function AttendanceSummary() {
   const calculateDayType = (employeeId, hours) => {
     const numericHours = parseFloat(hours) || 0;
     const shiftHours = getEmployeeShiftHours(employeeId);
-    const effectiveShiftHours = (shiftHours && shiftHours > 0) ? shiftHours : 9;
-    const fullDayThreshold = effectiveShiftHours * 0.90;
-    const halfDayThreshold = effectiveShiftHours * 0.50;
+    const effectiveShiftHours = (shiftHours && shiftHours > 0 && !isNaN(shiftHours)) ? shiftHours : 9;
+    const fullDayThreshold = effectiveShiftHours * 0.85;
+    const halfDayThreshold = effectiveShiftHours * 0.45;
     
     if (numericHours >= fullDayThreshold) return "full";
     if (numericHours >= halfDayThreshold) return "half";
@@ -1164,6 +1207,7 @@ export default function AttendanceSummary() {
     setSelectedEmployee(null);
     setEmployeeDetails([]);
     setEditedRows({});
+    setSelectedModalDates([]);
   };
 
   const fixSummaryDataInFrontend = (summary, month) => {
@@ -1392,7 +1436,10 @@ export default function AttendanceSummary() {
 
   const handleSaveAttendance = async (rec, hours, region, comment, reason, index, dateKey, checkInTime, checkOutTime) => {
     try {
-      const hoursValue = hours !== undefined ? parseFloat(hours) : rec?.totalHours;
+      let hoursValue = hours !== undefined ? parseFloat(hours) : rec?.totalHours;
+      if ((isNaN(hoursValue) || hoursValue <= 0) && checkInTime && checkOutTime) {
+        hoursValue = calculateHoursBetween(checkInTime, checkOutTime);
+      }
       const commentValue = comment || rec?.comment || "Admin Update";
       const reasonValue = reason || rec?.reason || "Onsite";
       const payload = {
@@ -1795,8 +1842,7 @@ export default function AttendanceSummary() {
       }
       
       setLoading(true);
-      let successCount = 0;
-      const errors = [];
+      const updates = [];
       
       for (const item of recordsToUpdate) {
         const { dateKey, rec, updateData } = item;
@@ -1828,56 +1874,44 @@ export default function AttendanceSummary() {
         const finalCheckOut = updateData.checkOutTime !== undefined ? combineDateTime(updateData.checkOutTime) : 
                              (rec?.checkOutTime ? rec.checkOutTime : undefined);
         
-        if (!finalCheckIn && !rec) {
-          errors.push(`No check-in time for ${dateKey}`);
-          continue;
-        }
+        if (!finalCheckIn && !rec) continue;
         
-        const payload = {
-          attendanceId: rec?._id,
-          employeeId: selectedEmployee,
+        updates.push({
+          attendanceId: rec?._id || null,
           date: dateKey,
-          hours: currentHours,
-          region: null,
-          comment: currentComment || "Admin Bulk Update",
-          reason: currentReason || "Onsite",
           checkInTime: finalCheckIn,
-          checkOutTime: finalCheckOut
-        };
-        
-        try {
-          const res = await fetch(`${BASE_URL}/attendancesummary/update`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const result = await res.json();
-          if (result.success) {
-            successCount++;
-            setEditedRows(prev => {
-              const newRows = { ...prev };
-              if (newRows[dateKey]) {
-                newRows[dateKey].edited = false;
-              }
-              return newRows;
-            });
-          } else {
-            errors.push(`Failed to update ${dateKey}: ${result.message || "Unknown error"}`);
-          }
-        } catch (err) {
-          console.error(`Failed to update ${dateKey}:`, err);
-          errors.push(`Network error for ${dateKey}`);
-        }
+          checkOutTime: finalCheckOut,
+          hours: parseFloat(currentHours) || 0,
+          reason: currentReason || "Onsite",
+          comment: currentComment || "Admin Bulk Update"
+        });
       }
-      
-      if (successCount > 0) {
-        showSaveStatus(`✅ ${successCount}/${recordsToUpdate.length} records updated successfully!${errors.length > 0 ? ` (${errors.length} failed)` : ''}`);
+
+      if (updates.length === 0) {
+        showSaveStatus("❌ No valid records to update.", "error");
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch(`${BASE_URL}/attendancesummary/bulk-update-attendance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: selectedEmployee,
+          month: selectedMonth,
+          updates
+        })
+      });
+
+      const result = await res.json();
+      if (res.ok && result.success) {
+        showSaveStatus(`✅ ${result.count || updates.length} records updated successfully!`);
         if (selectedEmployee) {
           await handleViewDetails(selectedEmployee);
         }
         await fetchAllData();
       } else {
-        showSaveStatus(`❌ No records were updated successfully. ${errors.length > 0 ? errors.join('. ') : ''}`, "error");
+        throw new Error(result.message || "Failed to bulk update");
       }
       
     } catch (error) {
@@ -1972,9 +2006,162 @@ export default function AttendanceSummary() {
     }
   };
 
+  // 🚀 BULK ACTIONS FOR ATTENDANCE DETAILS MODAL
+  const handleApplyShiftToSelected = (shiftTimings) => {
+    if (!selectedModalDates.length) return;
+    const start = shiftTimings?.start || "09:00";
+    const end = shiftTimings?.end || "18:00";
+    const hrs = shiftTimings?.shiftHours || 9;
+
+    setEditedRows(prev => {
+      const next = { ...prev };
+      selectedModalDates.forEach(dateKey => {
+        next[dateKey] = {
+          ...next[dateKey],
+          checkInTime: start,
+          checkOutTime: end,
+          hours: hrs,
+          reason: next[dateKey]?.reason || "Onsite",
+          comment: next[dateKey]?.comment || "Shift timing applied by Admin",
+          edited: true,
+          timestamp: Date.now()
+        };
+      });
+      return next;
+    });
+    showSaveStatus(`⚡ Applied Shift ${shiftTimings?.shiftType || ''} (${start} - ${end}, ${hrs}h) to ${selectedModalDates.length} days! Click Save to update.`);
+  };
+
+  const handleApplyCustomToSelected = () => {
+    if (!selectedModalDates.length) return;
+    const start = modalBulkCheckIn;
+    const end = modalBulkCheckOut;
+    let hrs = parseFloat(modalBulkHours);
+
+    // If hours is empty or 0, but check-in and check-out are given, auto calculate:
+    if ((isNaN(hrs) || hrs <= 0) && start && end) {
+      hrs = calculateHoursBetween(start, end);
+      setModalBulkHours(hrs);
+    }
+
+    setEditedRows(prev => {
+      const next = { ...prev };
+      selectedModalDates.forEach(dateKey => {
+        const existing = next[dateKey] || {};
+        const effectiveCheckIn = start || existing.checkInTime;
+        const effectiveCheckOut = end || existing.checkOutTime;
+        let rowHours = (!isNaN(hrs) && hrs > 0) ? hrs : existing.hours;
+        if ((rowHours === undefined || rowHours === 0) && effectiveCheckIn && effectiveCheckOut) {
+          rowHours = calculateHoursBetween(effectiveCheckIn, effectiveCheckOut);
+        }
+
+        next[dateKey] = {
+          ...existing,
+          ...(start ? { checkInTime: start } : {}),
+          ...(end ? { checkOutTime: end } : {}),
+          ...(rowHours !== undefined ? { hours: rowHours } : {}),
+          reason: existing.reason || "Onsite",
+          comment: existing.comment || "Bulk updated by Admin",
+          edited: true,
+          timestamp: Date.now()
+        };
+      });
+      return next;
+    });
+    showSaveStatus(`✅ Applied timings to ${selectedModalDates.length} days! Click Save to update.`);
+  };
+
+  const handleSaveSelectedModalRecords = async () => {
+    if (!selectedModalDates.length) {
+      alert("Please select at least one date using the checkboxes.");
+      return;
+    }
+
+    try {
+      setIsBulkSavingModal(true);
+      showSaveStatus(`⏳ Updating ${selectedModalDates.length} attendance records in bulk...`);
+
+      const timings = getEmployeeShiftTimings(selectedEmployee);
+      const updates = [];
+
+      for (const dateKey of selectedModalDates) {
+        const rec = employeeDetails.find(r =>
+          r.checkInTime &&
+          new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey
+        );
+        const edited = editedRows[dateKey] || {};
+
+        const formatTime = (isoString) => {
+          if (!isoString) return "";
+          const d = new Date(isoString);
+          const h = String(d.getHours()).padStart(2, '0');
+          const m = String(d.getMinutes()).padStart(2, '0');
+          return `${h}:${m}`;
+        };
+
+        const checkIn = edited.checkInTime !== undefined ? edited.checkInTime : (rec?.checkInTime ? formatTime(rec.checkInTime) : timings.start);
+        const checkOut = edited.checkOutTime !== undefined ? edited.checkOutTime : (rec?.checkOutTime ? formatTime(rec.checkOutTime) : timings.end);
+        const hours = edited.hours !== undefined ? edited.hours : (rec ? (rec.totalHours || rec.hours) : timings.shiftHours);
+        const reason = edited.reason !== undefined ? edited.reason : (rec?.reason || "Onsite");
+        const comment = edited.comment !== undefined ? edited.comment : (rec?.comment || "Bulk updated by Admin");
+
+        const finalCheckIn = checkIn ? `${dateKey}T${checkIn}:00` : null;
+        const finalCheckOut = checkOut ? `${dateKey}T${checkOut}:00` : null;
+
+        if (!finalCheckIn) continue;
+
+        updates.push({
+          attendanceId: rec?._id || null,
+          date: dateKey,
+          checkInTime: finalCheckIn,
+          checkOutTime: finalCheckOut,
+          hours: parseFloat(hours) || 0,
+          reason,
+          comment
+        });
+      }
+
+      if (updates.length === 0) {
+        showSaveStatus("❌ No valid attendance records to update.", "error");
+        setIsBulkSavingModal(false);
+        return;
+      }
+
+      const res = await fetch(`${BASE_URL}/attendancesummary/bulk-update-attendance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: selectedEmployee,
+          month: selectedMonth,
+          updates
+        })
+      });
+
+      const json = await res.json();
+      if (res.ok && json.success) {
+        showSaveStatus(`✅ Successfully updated ${json.count || updates.length} records in 1 click!`);
+        await handleViewDetails(selectedEmployee);
+        await fetchAllData();
+        setSelectedModalDates([]);
+      } else {
+        throw new Error(json.message || "Failed to bulk update attendance");
+      }
+    } catch (err) {
+      console.error("Bulk save error:", err);
+      showSaveStatus("🚨 Error saving records: " + err.message, "error");
+    } finally {
+      setIsBulkSavingModal(false);
+    }
+  };
+
   const handleViewDetails = async (employeeId) => {
     try {
       setSelectedEmployee(employeeId);
+      setSelectedModalDates([]);
+      const initTimings = getEmployeeShiftTimings(employeeId);
+      setModalBulkCheckIn(initTimings?.start || "09:00");
+      setModalBulkCheckOut(initTimings?.end || "18:00");
+      setModalBulkHours(initTimings?.shiftHours || 9);
       setEditedRows({});
       
       const params = new URLSearchParams({
@@ -3710,92 +3897,73 @@ export default function AttendanceSummary() {
         const monthDates = getAllDatesOfMonth(selectedMonth);
         const empDetailsRecord = employees.find(e => e.employeeId === selectedEmployee);
         const empName = empDetailsRecord?.name || selectedEmployee;
+        const shiftTimings = getEmployeeShiftTimings(selectedEmployee);
+        const allDateKeys = monthDates.map(d => d.toLocaleDateString('en-CA'));
+        const allSelected = allDateKeys.length > 0 && allDateKeys.every(k => selectedModalDates.includes(k));
+
+        const missingDates = allDateKeys.filter(dateKey =>
+          !employeeDetails.some(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey)
+        );
+
+        const halfDayDates = allDateKeys.filter(dateKey => {
+          const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+          if (!rec) return false;
+          const hours = rec.totalHours || rec.hours || 0;
+          return calculateDayType(selectedEmployee, hours) === "half";
+        });
+
+        const singlePunchDates = allDateKeys.filter(dateKey => {
+          const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+          if (!rec) return false;
+          return !rec.checkOutTime || calculateDayType(selectedEmployee, rec.totalHours || rec.hours || 0) === "full_leave";
+        });
+
+        const toggleSelectAll = () => {
+          if (allSelected) {
+            setSelectedModalDates([]);
+          } else {
+            setSelectedModalDates(allDateKeys);
+          }
+        };
+
+        const toggleDateSelection = (dateKey) => {
+          setSelectedModalDates(prev =>
+            prev.includes(dateKey) ? prev.filter(k => k !== dateKey) : [...prev, dateKey]
+          );
+        };
 
         return (
           <div className="emp-dash-modal fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
-            <div className="emp-dash__modal-panel bg-white shadow-2xl rounded-2xl w-full flex flex-col max-h-[90vh]" style={{ maxWidth: 1280 }}>
-              <div className="flex flex-wrap items-center justify-between p-4 border-b gap-3" style={{ borderColor: "var(--ed-border-light)" }}>
-                <div>
-                  <h3 className="text-base font-bold text-slate-800">
-                    Attendance Details - {empName}
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    Employee ID: {selectedEmployee} | Shift Hours: {getEmployeeShiftHours(selectedEmployee)} hrs/day
-                  </p>
+            <div className="emp-dash__modal-panel bg-white shadow-2xl rounded-2xl w-full flex flex-col max-h-[92vh]" style={{ maxWidth: 1320 }}>
+              {/* Modal Top Bar */}
+              <div className="flex flex-wrap items-center justify-between px-5 py-3.5 border-b gap-3 bg-slate-50/80 rounded-t-2xl" style={{ borderColor: "var(--ed-border-light)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
+                    {empName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-slate-800">
+                        Attendance Details - {empName}
+                      </h3>
+                      <span className="px-2 py-0.5 text-[11px] font-bold rounded bg-slate-200/70 text-slate-700">
+                        ID: {selectedEmployee}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs">
+                      <span className="inline-flex items-center gap-1 font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                        ⏰ Shift {shiftTimings.shiftType ? `(${shiftTimings.shiftType})` : ''}: {shiftTimings.start} - {shiftTimings.end} ({shiftTimings.shiftHours} hrs/day)
+                      </span>
+                      <span className="text-slate-400">•</span>
+                      <span className="text-slate-600 font-medium">Month: {selectedMonth || "All"}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
-                    <span>Half Days ({
-                      monthDates.filter(date => {
-                        const dateKey = date.toLocaleDateString('en-CA');
-                        const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-                        const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
-                        return calculateDayType(selectedEmployee, originalHours) === "half";
-                      }).length
-                    }) ➔</span>
-                    <input 
-                      type="number" 
-                      id="bulkHalfDayHours"
-                      defaultValue="9" 
-                      className="w-12 px-1 py-0.5 text-gray-900 bg-white border border-gray-300 rounded text-center font-bold focus:outline-none"
-                      step="0.25"
-                    />
-                    <span className="text-gray-400">Hrs</span>
-                    <button
-                      onClick={() => handleBulkAction('halfDay', 'bulkHalfDayHours', 9)}
-                      className="px-2 py-0.5 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition"
-                    >
-                      Full Day
-                    </button>
-                  </div>
-
-                  <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
-                    <span>Single Punch ({
-                      monthDates.filter(date => {
-                        const dateKey = date.toLocaleDateString('en-CA');
-                        const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-                        const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
-                        return rec && calculateDayType(selectedEmployee, originalHours) === "full_leave";
-                      }).length
-                    }) ➔</span>
-                    <input 
-                      type="number" 
-                      id="bulkFullLeaveHours"
-                      defaultValue="9" 
-                      className="w-12 px-1 py-0.5 text-gray-900 bg-white border border-gray-300 rounded text-center font-bold focus:outline-none"
-                      step="0.25"
-                    />
-                    <span className="text-gray-400">Hrs</span>
-                    <button
-                      onClick={() => handleBulkAction('fullLeave', 'bulkFullLeaveHours', 9)}
-                      className="px-2 py-0.5 text-[10px] font-bold text-white bg-purple-600 hover:bg-purple-700 rounded transition"
-                    >
-                      Double Punch
-                    </button>
-                  </div>
-
-                  <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
-                    <span>
-                      Missing ({
-                        getMissingAttendanceDates(selectedEmployee, selectedMonth).length
-                      }) ➔
-                    </span>
-                    <span className="text-[10px] text-gray-400">
-                      ( {getWeekoffDatesForEmployee(selectedMonth).length} )
-                    </span>
-                    <button
-                      onClick={() => handleAddMissingPunchesWithWeekoff()}
-                      className="px-2 py-0.5 text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 rounded transition"
-                      disabled={getMissingAttendanceDates(selectedEmployee, selectedMonth).length === 0}
-                    >
-                      Add Punches
-                    </button>
-                  </div>
-
+                <div className="flex items-center gap-2">
                   <button
                     onClick={closeModal}
-                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition"
                     title="Close Modal"
                   >
                     <FaTimes className="w-5 h-5" />
@@ -3803,12 +3971,186 @@ export default function AttendanceSummary() {
                 </div>
               </div>
 
+              {/* Bulk Action Controls Bar */}
+              <div className="px-5 py-3 border-b bg-white flex flex-col gap-2.5" style={{ borderColor: "var(--ed-border-light)" }}>
+                {/* Row 1: Quick Selectors & Counters */}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/70 text-slate-700 font-bold cursor-pointer select-none border border-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer"
+                      />
+                      <span>Select All ({monthDates.length})</span>
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedModalDates(missingDates)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                        missingDates.length > 0
+                          ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                          : "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                      }`}
+                      disabled={missingDates.length === 0}
+                    >
+                      Missing ({missingDates.length})
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedModalDates(halfDayDates)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                        halfDayDates.length > 0
+                          ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                          : "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                      }`}
+                      disabled={halfDayDates.length === 0}
+                    >
+                      Half Days ({halfDayDates.length})
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedModalDates(singlePunchDates)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                        singlePunchDates.length > 0
+                          ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                          : "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                      }`}
+                      disabled={singlePunchDates.length === 0}
+                    >
+                      Single Punch ({singlePunchDates.length})
+                    </button>
+
+                    {selectedModalDates.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedModalDates([])}
+                        className="px-2 py-1 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg text-xs font-semibold transition"
+                      >
+                        ✕ Clear Selection
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                    <span>Selected:</span>
+                    <span className="px-2 py-0.5 rounded-full font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      {selectedModalDates.length} days
+                    </span>
+                  </div>
+                </div>
+
+                {/* Row 2: Apply Shift / Custom Timing & 1-Click Save */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-dashed border-slate-200">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Apply Shift Timing Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleApplyShiftToSelected(shiftTimings)}
+                      disabled={selectedModalDates.length === 0}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-sm transition"
+                      title="Apply shift start, end, and hours to selected dates"
+                    >
+                      <span>⚡ Apply Shift Time ({shiftTimings.start} - {shiftTimings.end} | {shiftTimings.shiftHours}h)</span>
+                    </button>
+
+                    <span className="text-slate-300">|</span>
+
+                    {/* Custom Timings inputs */}
+                    <div className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg p-1 text-xs">
+                      <span className="text-slate-500 text-[11px] font-medium ml-1">Custom:</span>
+                      <input
+                        type="time"
+                        value={modalBulkCheckIn}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setModalBulkCheckIn(val);
+                          if (val && modalBulkCheckOut) {
+                            setModalBulkHours(calculateHoursBetween(val, modalBulkCheckOut));
+                          }
+                        }}
+                        className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500"
+                        title="Bulk Check-In"
+                      />
+                      <span className="text-slate-400">to</span>
+                      <input
+                        type="time"
+                        value={modalBulkCheckOut}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setModalBulkCheckOut(val);
+                          if (modalBulkCheckIn && val) {
+                            setModalBulkHours(calculateHoursBetween(modalBulkCheckIn, val));
+                          }
+                        }}
+                        className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500"
+                        title="Bulk Check-Out"
+                      />
+                      <input
+                        type="number"
+                        step="0.25"
+                        min="0"
+                        max="24"
+                        value={modalBulkHours}
+                        onChange={(e) => setModalBulkHours(e.target.value)}
+                        className="w-14 px-1.5 py-0.5 bg-white border border-slate-300 rounded text-xs text-center font-bold outline-none focus:ring-1 focus:ring-blue-500"
+                        title="Bulk Hours"
+                      />
+                      <span className="text-slate-500 text-[11px]">hrs</span>
+                      <button
+                        type="button"
+                        onClick={handleApplyCustomToSelected}
+                        disabled={selectedModalDates.length === 0}
+                        className="px-2 py-0.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed border border-slate-300 rounded transition"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 1-Click Bulk Save Button */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleSaveSelectedModalRecords}
+                      disabled={selectedModalDates.length === 0 || isBulkSavingModal}
+                      className="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow transition"
+                    >
+                      {isBulkSavingModal ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Saving Records...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>💾 Save / Update Selected ({selectedModalDates.length})</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Body with Table */}
               <div className="emp-dash__modal-body flex-1 overflow-y-auto p-4 bg-slate-50/50">
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                   <div className="overflow-x-auto">
                     <table className="emp-dash__table">
                       <thead>
                         <tr>
+                          <th style={{ width: 40, textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              checked={allSelected}
+                              onChange={toggleSelectAll}
+                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer"
+                              title="Select/Deselect All"
+                            />
+                          </th>
                           <th>Date</th>
                           <th style={{ textAlign: "center" }}>Check-In</th>
                           <th style={{ textAlign: "center" }}>Check-Out</th>
@@ -3825,6 +4167,7 @@ export default function AttendanceSummary() {
                       <tbody>
                         {monthDates.map((date, index) => {
                           const dateKey = date.toLocaleDateString('en-CA');
+                          const isSelected = selectedModalDates.includes(dateKey);
                           const rec = employeeDetails.find(r =>
                             r.checkInTime &&
                             new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey
@@ -3857,17 +4200,34 @@ export default function AttendanceSummary() {
                             return `${dateKey}T${timeStr}:00`;
                           };
 
+                          const effCheckInDate = currentCheckIn ? combineDateTime(currentCheckIn) : rec?.checkInTime;
+                          const effCheckOutDate = currentCheckOut ? combineDateTime(currentCheckOut) : rec?.checkOutTime;
+
                           const otHours = calculateOTForRecord(selectedEmployee, currentHours);
                           
-                          const attendanceStatus = rec ? calculateAttendanceStatus(
+                          const attendanceStatus = (effCheckInDate || rec) ? calculateAttendanceStatus(
                             selectedEmployee,
-                            rec.checkInTime,
-                            rec.checkOutTime,
-                            rec.totalHours || rec.hours || 0
+                            effCheckInDate,
+                            effCheckOutDate,
+                            currentHours
                           ) : null;
 
                           return (
-                            <tr key={dateKey} className="transition-colors hover:bg-slate-50/50">
+                            <tr
+                              key={dateKey}
+                              className={`transition-colors ${
+                                isSelected ? "bg-indigo-50/60 font-medium" : "hover:bg-slate-50/50"
+                              }`}
+                            >
+                              <td className="text-center" style={{ width: 40 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleDateSelection(dateKey)}
+                                  className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer"
+                                />
+                              </td>
+
                               <td className="font-semibold text-slate-800 text-[11px]">
                                 {date.toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}
                                 {regReq && (
@@ -3889,17 +4249,16 @@ export default function AttendanceSummary() {
                                     const newval = e.target.value;
                                     setEditedRows(prev => {
                                       const newRows = { ...prev };
-                                      const currentRow = { ...newRows[dateKey], checkInTime: newval };
-                                      const checkOut = currentRow.checkOutTime !== undefined ? currentRow.checkOutTime : baseCheckOut;
+                                      const checkOut = newRows[dateKey]?.checkOutTime !== undefined ? newRows[dateKey].checkOutTime : baseCheckOut;
+                                      let hrs = newRows[dateKey]?.hours;
                                       if (newval && checkOut) {
-                                        const start = new Date(`2000-01-01T${newval}:00`);
-                                        const end = new Date(`2000-01-01T${checkOut}:00`);
-                                        if (end >= start) {
-                                          const diffHours = (end - start) / (1000 * 60 * 60);
-                                          currentRow.hours = parseFloat(diffHours.toFixed(2));
-                                        }
+                                        hrs = calculateHoursBetween(newval, checkOut);
                                       }
-                                      newRows[dateKey] = currentRow;
+                                      newRows[dateKey] = {
+                                        ...newRows[dateKey],
+                                        checkInTime: newval,
+                                        ...(hrs !== undefined ? { hours: hrs } : {})
+                                      };
                                       return newRows;
                                     });
                                   }}
@@ -3915,17 +4274,16 @@ export default function AttendanceSummary() {
                                     const newval = e.target.value;
                                     setEditedRows(prev => {
                                       const newRows = { ...prev };
-                                      const currentRow = { ...newRows[dateKey], checkOutTime: newval };
-                                      const checkIn = currentRow.checkInTime !== undefined ? currentRow.checkInTime : baseCheckIn;
-                                      if (newval && checkIn) {
-                                        const start = new Date(`2000-01-01T${checkIn}:00`);
-                                        const end = new Date(`2000-01-01T${newval}:00`);
-                                        if (end >= start) {
-                                          const diffHours = (end - start) / (1000 * 60 * 60);
-                                          currentRow.hours = parseFloat(diffHours.toFixed(2));
-                                        }
+                                      const checkIn = newRows[dateKey]?.checkInTime !== undefined ? newRows[dateKey].checkInTime : baseCheckIn;
+                                      let hrs = newRows[dateKey]?.hours;
+                                      if (checkIn && newval) {
+                                        hrs = calculateHoursBetween(checkIn, newval);
                                       }
-                                      newRows[dateKey] = currentRow;
+                                      newRows[dateKey] = {
+                                        ...newRows[dateKey],
+                                        checkOutTime: newval,
+                                        ...(hrs !== undefined ? { hours: hrs } : {})
+                                      };
                                       return newRows;
                                     });
                                   }}
@@ -3973,19 +4331,23 @@ export default function AttendanceSummary() {
                               </td>
 
                               <td className="font-semibold text-center text-indigo-700 text-xs">
-                                {rec ? formatOTHours(otHours) : "-"}
+                                {(currentHours > 0 || rec) ? formatOTHours(otHours) : "-"}
                               </td>
 
                               <td className="text-center">
                                 {attendanceStatus ? (
                                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${attendanceStatus.color}`}>
-                                    {attendanceStatus.icon} {attendanceStatus.shortMessage}
+                                    {attendanceStatus.icon} {attendanceStatus.shortMessage || attendanceStatus.message}
                                   </span>
-                                ) : '-'}
+                                ) : (
+                                  <span className="text-slate-300 text-xs">-</span>
+                                )}
                               </td>
                               
                               <td className="text-center">
-                                {rec ? getDayTypeBadge(currentHours) : "-"}
+                                {(currentHours > 0 || rec) ? getDayTypeBadge(currentHours) : (
+                                  <span className="text-slate-300 text-xs">-</span>
+                                )}
                               </td>
 
                               <td className="text-right">
@@ -4027,7 +4389,6 @@ export default function AttendanceSummary() {
           </div>
         );
       })()}
-
       <style jsx>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(-10px); }

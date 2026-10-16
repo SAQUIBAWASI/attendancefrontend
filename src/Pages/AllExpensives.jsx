@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL } from '../config';
+import * as XLSX from 'xlsx';
 import {
   FaMoneyBillWave,
   FaCalendarAlt,
@@ -20,7 +21,8 @@ import {
   FaCheckCircle,
   FaChevronUp,
   FaEdit,
-  FaTrash
+  FaTrash,
+  FaDownload
 } from 'react-icons/fa';
 import { FiFilter, FiCalendar, FiActivity, FiMapPin, FiTrendingUp, FiTrash2 } from 'react-icons/fi';
 import '../index.css';
@@ -32,6 +34,8 @@ const AllExpensives = () => {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState("");
+  const [monthFilter, setMonthFilter] = useState("");
+  const [quickFilter, setQuickFilter] = useState("all");
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -100,13 +104,11 @@ const AllExpensives = () => {
     }
   };
 
-  // Handle Edit - Open Edit Modal
   const handleEditExpense = (expense) => {
     setEditingExpense({ ...expense });
     setIsEditModalOpen(true);
   };
 
-  // ✅ FINAL FIXED: Handle Edit Submit - Force refresh from server
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setIsUpdating(true);
@@ -126,29 +128,20 @@ const AllExpensives = () => {
         stops: editingExpense.stops || []
       };
 
-      console.log("📤 Sending update data:", updateData);
-
       const res = await axios.put(
         `${API_BASE_URL}/expense/edit/${editingExpense._id}`,
         updateData
       );
 
-      console.log("📥 Update response:", res.data);
-
       if (res.data.success) {
         alert('✅ Expense updated successfully!');
         setIsEditModalOpen(false);
         setEditingExpense(null);
-        
-        // ✅ FORCE REFRESH FROM SERVER
         await fetchAllExpenses();
-        
-        // Close modal if open
         if (isModalOpen) {
           setIsModalOpen(false);
           setSelectedGroup(null);
         }
-        
       } else {
         alert('❌ Update failed!');
       }
@@ -160,7 +153,6 @@ const AllExpensives = () => {
     }
   };
 
-  // Handle Delete
   const handleDeleteExpense = async (expenseId, employeeName) => {
     if (window.confirm(`Are you sure you want to delete this expense record for ${employeeName || 'Employee'}?`)) {
       setIsDeleting(true);
@@ -183,14 +175,12 @@ const AllExpensives = () => {
     }
   };
 
-  // Handle Edit from Modal
   const handleEditFromModal = (record) => {
     setIsModalOpen(false);
     setSelectedGroup(null);
     handleEditExpense(record);
   };
 
-  // Handle Delete from Modal
   const handleDeleteFromModal = async (record) => {
     await handleDeleteExpense(record._id, selectedGroup?.employeeDetails?.name || 'Employee');
   };
@@ -200,7 +190,7 @@ const AllExpensives = () => {
     setIsModalOpen(true);
   };
 
-  // 1. Filter original records
+  // Filter records
   const filteredRecords = expenses.filter(exp => {
     const query = searchQuery.toLowerCase();
     const empName = (exp.employeeDetails?.name || '').toLowerCase();
@@ -209,16 +199,36 @@ const AllExpensives = () => {
 
     const matchesSearch = empName.includes(query) || empId.includes(query) || purpose.includes(query);
 
-    let matchesDate = true;
-    if (dateFilter) {
-      const expDate = new Date(exp.date).toISOString().split('T')[0];
-      matchesDate = expDate === dateFilter;
+    const expDate = new Date(exp.date);
+    const today = new Date();
+    let matchesFilter = true;
+
+    if (quickFilter === 'today') {
+      const todayStr = today.toISOString().split('T')[0];
+      matchesFilter = expDate.toISOString().split('T')[0] === todayStr;
+    } else if (quickFilter === 'month') {
+      matchesFilter =
+        expDate.getMonth() === today.getMonth() &&
+        expDate.getFullYear() === today.getFullYear();
+    } else if (quickFilter === 'year') {
+      matchesFilter = expDate.getFullYear() === today.getFullYear();
     }
 
-    return matchesSearch && matchesDate;
+    if (monthFilter) {
+      const expYear = expDate.getFullYear();
+      const expMonth = String(expDate.getMonth() + 1).padStart(2, '0');
+      const expYearMonth = `${expYear}-${expMonth}`;
+      matchesFilter = matchesFilter && (expYearMonth === monthFilter);
+    }
+
+    if (dateFilter) {
+      const expDateStr = expDate.toISOString().split('T')[0];
+      matchesFilter = matchesFilter && (expDateStr === dateFilter);
+    }
+
+    return matchesSearch && matchesFilter;
   });
 
-  // 2. Group filtered records by EmployeeId
   const groupedData = filteredRecords.reduce((acc, current) => {
     const empId = current.employeeId;
     if (!acc[empId]) {
@@ -242,18 +252,198 @@ const AllExpensives = () => {
 
   const totalGlobalSum = filteredRecords.reduce((sum, exp) => sum + (exp.totalAmount || 0), 0);
 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayTotal = expenses
+    .filter(exp => new Date(exp.date).toISOString().split('T')[0] === todayStr)
+    .reduce((sum, exp) => sum + (exp.totalAmount || 0), 0);
+
   const clearFilters = () => {
     setSearchQuery('');
     setDateFilter('');
+    setMonthFilter('');
+    setQuickFilter('all');
     if (window.innerWidth < 640) {
       setShowMobileFilters(false);
     }
   };
 
+  // ✅ MAIN PAGE EXPORT - Saare filtered employees ka data
+  const handleExportAllToExcel = () => {
+    if (!filteredRecords || filteredRecords.length === 0) {
+      alert('No data to export!');
+      return;
+    }
+
+    const excelData = [];
+
+    groupedExpenses.forEach((group) => {
+      excelData.push({
+        Employee: group.employeeDetails?.name || 'UNKNOWN',
+        EmployeeID: group.employeeId,
+        Designation: group.employeeDetails?.role || 'Employee',
+        Date: '',
+        Purpose: '--- EMPLOYEE SUMMARY ---',
+        KM: group.totalKm,
+        Rate: '',
+        Outcome: '',
+        Order: '',
+        Upsell: '',
+        Amount: group.totalAmount,
+        Remark: `${group.visitCount} visits`,
+        Type: 'Summary'
+      });
+
+      group.records.forEach((rec) => {
+        excelData.push({
+          Employee: group.employeeDetails?.name || 'UNKNOWN',
+          EmployeeID: group.employeeId,
+          Designation: group.employeeDetails?.role || 'Employee',
+          Date: new Date(rec.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          Purpose: rec.purpose || '',
+          KM: rec.km || 0,
+          Rate: rec.rateApplied || 0,
+          Outcome: rec.stops && rec.stops.length > 0 ? 'Multiple Stops' : (rec.outcome || ''),
+          Order: rec.orderValue || 0,
+          Upsell: rec.upsellValue || 0,
+          Amount: rec.totalAmount || 0,
+          Remark: rec.remark || '',
+          Type: 'Record'
+        });
+
+        if (rec.stops && rec.stops.length > 0) {
+          rec.stops.forEach((stop) => {
+            excelData.push({
+              Employee: group.employeeDetails?.name || 'UNKNOWN',
+              EmployeeID: group.employeeId,
+              Designation: group.employeeDetails?.role || 'Employee',
+              Date: '',
+              Purpose: `  ↳ ${stop.locationName || ''}`,
+              KM: stop.km || 0,
+              Rate: '',
+              Outcome: stop.outcome || '',
+              Order: stop.orderValue || 0,
+              Upsell: stop.upsellValue || 0,
+              Amount: '',
+              Remark: '',
+              Type: 'Stop'
+            });
+          });
+        }
+      });
+    });
+
+    excelData.push({
+      Employee: 'GRAND TOTAL',
+      EmployeeID: '',
+      Designation: '',
+      Date: '',
+      Purpose: '',
+      KM: filteredRecords.reduce((s, e) => s + (e.km || 0), 0),
+      Rate: '',
+      Outcome: '',
+      Order: '',
+      Upsell: '',
+      Amount: totalGlobalSum,
+      Remark: `${groupedExpenses.length} employees`,
+      Type: 'Total'
+    });
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'All Expenses');
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `All_Expenses_${dateStr}.xlsx`;
+
+    XLSX.writeFile(wb, fileName);
+  };
+
+  // ✅ MODAL EXPORT - Sirf ek employee ka individual data
+  const handleExportSingleEmployee = () => {
+    if (!selectedGroup || !selectedGroup.records || selectedGroup.records.length === 0) {
+      alert('No data to export!');
+      return;
+    }
+
+    const excelData = [];
+
+    // Employee header row
+    excelData.push({
+      Date: '',
+      Purpose: `--- ${selectedGroup.employeeDetails?.name || 'Employee'} (ID: ${selectedGroup.employeeId}) ---`,
+      KM: selectedGroup.totalKm,
+      Rate: '',
+      Outcome: '',
+      Order: '',
+      Upsell: '',
+      Amount: selectedGroup.totalAmount,
+      Remark: `${selectedGroup.visitCount} visits`,
+      Type: 'Summary'
+    });
+
+    // Records
+    selectedGroup.records.forEach((rec) => {
+      excelData.push({
+        Date: new Date(rec.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        Purpose: rec.purpose || '',
+        KM: rec.km || 0,
+        Rate: rec.rateApplied || 0,
+        Outcome: rec.stops && rec.stops.length > 0 ? 'Multiple Stops' : (rec.outcome || ''),
+        Order: rec.orderValue || 0,
+        Upsell: rec.upsellValue || 0,
+        Amount: rec.totalAmount || 0,
+        Remark: rec.remark || '',
+        Type: 'Record'
+      });
+
+      if (rec.stops && rec.stops.length > 0) {
+        rec.stops.forEach((stop) => {
+          excelData.push({
+            Date: '',
+            Purpose: `  ↳ ${stop.locationName || ''}`,
+            KM: stop.km || 0,
+            Rate: '',
+            Outcome: stop.outcome || '',
+            Order: stop.orderValue || 0,
+            Upsell: stop.upsellValue || 0,
+            Amount: '',
+            Remark: '',
+            Type: 'Stop'
+          });
+        });
+      }
+    });
+
+    // Total
+    excelData.push({
+      Date: '',
+      Purpose: 'TOTAL',
+      KM: selectedGroup.totalKm,
+      Rate: '',
+      Outcome: '',
+      Order: '',
+      Upsell: '',
+      Amount: selectedGroup.totalAmount,
+      Remark: '',
+      Type: 'Total'
+    });
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Employee Expenses');
+
+    const empName = (selectedGroup.employeeDetails?.name || 'Employee').replace(/\s+/g, '_');
+    const empId = selectedGroup.employeeId || '';
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `${empName}_${empId}_Expenses_${dateStr}.xlsx`;
+
+    XLSX.writeFile(wb, fileName);
+  };
+
   return (
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
-        {/* Dashboard Header - Title on Left, Date and Filters on Right */}
+        {/* Desktop Header */}
         <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap mb-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
@@ -261,7 +451,6 @@ const AllExpensives = () => {
             </h1>
           </div>
 
-          {/* Right side: Date + All Filters */}
           <div className="flex items-center gap-2 flex-wrap">
             {/* Search */}
             <div className="relative min-w-[140px]">
@@ -286,12 +475,29 @@ const AllExpensives = () => {
               )}
             </div>
 
+            {/* Quick Filters */}
+            <div className="flex items-center gap-1 border border-gray-300 rounded-lg px-1 py-1 bg-white">
+              {['today', 'month', 'year', 'all'].map(type => (
+                <button
+                  key={type}
+                  onClick={() => { setQuickFilter(type); setDateFilter(''); setMonthFilter(''); }}
+                  className={`px-2 py-1 text-[10px] font-bold rounded transition-colors ${
+                    quickFilter === type
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              ))}
+            </div>
+
             {/* Date Filter */}
             <div className="relative">
               <input
                 type="date"
                 value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
+                onChange={(e) => { setDateFilter(e.target.value); setQuickFilter('all'); setMonthFilter(''); }}
                 className="w-[130px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
               {dateFilter && (
@@ -299,6 +505,25 @@ const AllExpensives = () => {
                   onClick={() => setDateFilter("")}
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
                   title="Clear date filter"
+                >
+                  <FaTimes className="text-[10px]" />
+                </button>
+              )}
+            </div>
+
+            {/* Month Filter */}
+            <div className="relative">
+              <input
+                type="month"
+                value={monthFilter}
+                onChange={(e) => { setMonthFilter(e.target.value); setQuickFilter('all'); setDateFilter(''); }}
+                className="w-[150px] h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+              {monthFilter && (
+                <button
+                  onClick={() => setMonthFilter("")}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                  title="Clear month filter"
                 >
                   <FaTimes className="text-[10px]" />
                 </button>
@@ -333,11 +558,23 @@ const AllExpensives = () => {
               )}
             </div>
 
-            {/* Refresh Button */}
+            {/* Export Button (Main Page) */}
+            <button
+              onClick={handleExportAllToExcel}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
+              title="Export all filtered data to Excel"
+            >
+              <FaDownload className="w-3 h-3" />
+              Export
+            </button>
+
+            {/* Refresh */}
             <button
               onClick={() => {
                 setSearchQuery('');
                 setDateFilter('');
+                setMonthFilter('');
+                setQuickFilter('all');
                 fetchAllExpenses();
               }}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
@@ -346,8 +583,8 @@ const AllExpensives = () => {
               Refresh
             </button>
 
-            {/* Clear Filters Button */}
-            {(searchQuery || dateFilter) && (
+            {/* Clear */}
+            {(searchQuery || dateFilter || monthFilter || quickFilter !== 'all') && (
               <button
                 onClick={clearFilters}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
@@ -366,7 +603,7 @@ const AllExpensives = () => {
           </h1>
         </div>
 
-        {/* Mobile Filters Toggle */}
+        {/* Mobile Filters */}
         <div className="lg:hidden mb-3">
           <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-200">
             <button
@@ -409,11 +646,40 @@ const AllExpensives = () => {
               </div>
 
               <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Quick Filter</label>
+                <div className="flex gap-2">
+                  {['today', 'month', 'year', 'all'].map(type => (
+                    <button
+                      key={type}
+                      onClick={() => { setQuickFilter(type); setDateFilter(''); setMonthFilter(''); }}
+                      className={`flex-1 px-2 py-1.5 text-xs font-bold rounded-lg border transition-colors ${
+                        quickFilter === type
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-600 border-gray-300'
+                      }`}
+                    >
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
                 <input
                   type="date"
                   value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
+                  onChange={(e) => { setDateFilter(e.target.value); setQuickFilter('all'); setMonthFilter(''); }}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={monthFilter}
+                  onChange={(e) => { setMonthFilter(e.target.value); setQuickFilter('all'); setDateFilter(''); }}
                   className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
               </div>
@@ -450,6 +716,8 @@ const AllExpensives = () => {
                     onClick={() => {
                       setSearchQuery('');
                       setDateFilter('');
+                      setMonthFilter('');
+                      setQuickFilter('all');
                       fetchAllExpenses();
                     }}
                     className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
@@ -457,7 +725,7 @@ const AllExpensives = () => {
                     <FaSync className="w-4 h-4" />
                     Refresh
                   </button>
-                  {(searchQuery || dateFilter) && (
+                  {(searchQuery || dateFilter || monthFilter || quickFilter !== 'all') && (
                     <button
                       onClick={clearFilters}
                       className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
@@ -467,14 +735,21 @@ const AllExpensives = () => {
                     </button>
                   )}
                 </div>
+                <button
+                  onClick={handleExportAllToExcel}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                >
+                  <FaDownload className="w-4 h-4" />
+                  Export to Excel
+                </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Top KPI Stats Grid */}
+        {/* KPI Stats */}
         {!loading && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mb-6">
             <div className="emp-dash__stat">
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Total Employees</span>
@@ -482,9 +757,7 @@ const AllExpensives = () => {
                   <FiActivity className="text-blue-500" />
                 </div>
               </div>
-              <div className="emp-dash__stat-value">
-                {groupedExpenses.length}
-              </div>
+              <div className="emp-dash__stat-value">{groupedExpenses.length}</div>
               <div className="emp-dash__stat-meta">with expenses</div>
             </div>
 
@@ -495,9 +768,7 @@ const AllExpensives = () => {
                   <FiMapPin className="text-green-500" />
                 </div>
               </div>
-              <div className="emp-dash__stat-value">
-                {filteredRecords.length}
-              </div>
+              <div className="emp-dash__stat-value">{filteredRecords.length}</div>
               <div className="emp-dash__stat-meta">business visits</div>
             </div>
 
@@ -521,10 +792,19 @@ const AllExpensives = () => {
                   <FaMoneyBillWave className="text-rose-500" />
                 </div>
               </div>
-              <div className="emp-dash__stat-value">
-                ₹{totalGlobalSum.toLocaleString()}
-              </div>
+              <div className="emp-dash__stat-value">₹{totalGlobalSum.toLocaleString()}</div>
               <div className="emp-dash__stat-meta">total amount</div>
+            </div>
+
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Today's Amount</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                  <FaCalendarAlt className="text-green-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">₹{todayTotal.toLocaleString()}</div>
+              <div className="emp-dash__stat-meta">added today</div>
             </div>
           </div>
         )}
@@ -533,7 +813,7 @@ const AllExpensives = () => {
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 text-xs font-bold">{error}</div>
         )}
 
-        {/* Table Card */}
+        {/* Table */}
         <div className="emp-dash__card">
           <div className="overflow-x-auto">
             <table className="emp-dash__table min-w-[800px]">
@@ -575,7 +855,8 @@ const AllExpensives = () => {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(idx * 0.03, 0.5) }}
-                        className="hover:bg-gray-50/60 transition-all group"
+                        onClick={() => handleOpenModal(group)}
+                        className="hover:bg-gray-50/60 transition-all group cursor-pointer"
                       >
                         <td>
                           <div className="flex items-center gap-3">
@@ -613,7 +894,7 @@ const AllExpensives = () => {
                           </span>
                         </td>
                         <td className="text-right">
-                          <div className="flex items-center justify-end gap-1">
+                          <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => handleOpenModal(group)}
                               className="p-2 rounded-lg transition-all transform hover:scale-110 shadow-sm border border-gray-200 bg-white text-blue-600 hover:bg-blue-50"
@@ -671,7 +952,7 @@ const AllExpensives = () => {
         </div>
       </main>
 
-      {/* Detail Modal - With Edit and Delete options for individual records */}
+      {/* Detail Modal */}
       {isModalOpen && selectedGroup && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 emp-dash-modal animate-in fade-in duration-200">
           <div className="emp-dash__modal-panel bg-white w-full max-w-5xl max-h-[90vh] rounded-2xl shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-4 duration-300 border border-gray-200">
@@ -690,7 +971,7 @@ const AllExpensives = () => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <div className="text-right">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Visits</p>
                   <p className="text-sm font-bold text-gray-900">{selectedGroup.visitCount}</p>
@@ -699,6 +980,17 @@ const AllExpensives = () => {
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Reimbursement</p>
                   <p className="text-lg font-black text-blue-700 tabular-nums">₹{selectedGroup.totalAmount.toLocaleString()}</p>
                 </div>
+
+                {/* ✅ MODAL EXPORT BUTTON - Individual Employee */}
+                <button
+                  onClick={handleExportSingleEmployee}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
+                  title="Download this employee's data"
+                >
+                  <FaDownload className="w-3 h-3" />
+                  Export
+                </button>
+
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all"
@@ -712,25 +1004,25 @@ const AllExpensives = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse min-w-[900px]">
                   <thead className="sticky top-0 z-10">
-                    <tr className="bg-gray-100 text-[10px] font-bold uppercase tracking-wider">
-                      <th className="px-3 py-3 text-left border-r border-gray-200 whitespace-nowrap">Date</th>
-                      <th className="px-3 py-3 text-left border-r border-gray-200 whitespace-nowrap">Purpose</th>
-                      <th className="px-3 py-3 text-center border-r border-gray-200 whitespace-nowrap">KM</th>
-                      <th className="px-3 py-3 text-right border-r border-gray-200 whitespace-nowrap hidden sm:table-cell">Rate</th>
-                      <th className="px-3 py-3 text-center border-r border-gray-200 whitespace-nowrap hidden md:table-cell">Outcome</th>
-                      <th className="px-3 py-3 text-right border-r border-gray-200 whitespace-nowrap hidden lg:table-cell">Order</th>
-                      <th className="px-3 py-3 text-right border-r border-gray-200 whitespace-nowrap hidden lg:table-cell">Upsell</th>
+                    <tr className="bg-gray-200 text-[10px] font-bold uppercase tracking-wider text-gray-700">
+                      <th className="px-3 py-3 text-left border-r border-gray-300 whitespace-nowrap">Date</th>
+                      <th className="px-3 py-3 text-left border-r border-gray-300 whitespace-nowrap">Purpose</th>
+                      <th className="px-3 py-3 text-center border-r border-gray-300 whitespace-nowrap">KM</th>
+                      <th className="px-3 py-3 text-right border-r border-gray-300 whitespace-nowrap hidden sm:table-cell">Rate</th>
+                      <th className="px-3 py-3 text-center border-r border-gray-300 whitespace-nowrap hidden md:table-cell">Outcome</th>
+                      <th className="px-3 py-3 text-right border-r border-gray-300 whitespace-nowrap hidden lg:table-cell">Order</th>
+                      <th className="px-3 py-3 text-right border-r border-gray-300 whitespace-nowrap hidden lg:table-cell">Upsell</th>
                       <th className="px-3 py-3 text-right whitespace-nowrap">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 font-medium">
                     {selectedGroup.records.map((rec, i) => (
                       <React.Fragment key={i}>
-                        <tr className="hover:bg-gray-50 transition-colors">
-                          <td className="px-3 py-3 whitespace-nowrap text-gray-500 text-xs border-r border-gray-100">
+                        <tr className="bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <td className="px-3 py-3 whitespace-nowrap text-gray-600 text-xs border-r border-gray-200">
                             {new Date(rec.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
-                          <td className="px-3 py-3 text-gray-900 border-r border-gray-100">
+                          <td className="px-3 py-3 text-gray-900 border-r border-gray-200">
                             <div className="flex flex-col">
                               <span className="font-semibold text-xs">{rec.purpose}</span>
                               {rec.remark && <span className="text-[10px] text-gray-500 mt-1 italic">{rec.remark}</span>}
@@ -741,29 +1033,29 @@ const AllExpensives = () => {
                               )}
                             </div>
                           </td>
-                          <td className="px-3 py-3 text-center border-r border-gray-100 text-blue-600 font-semibold tabular-nums text-xs">
+                          <td className="px-3 py-3 text-center border-r border-gray-200 text-blue-600 font-semibold tabular-nums text-xs">
                             {rec.km}
                           </td>
-                          <td className="px-3 py-3 text-right border-r border-gray-100 text-gray-500 text-[10px] font-bold whitespace-nowrap hidden sm:table-cell">
+                          <td className="px-3 py-3 text-right border-r border-gray-200 text-gray-500 text-[10px] font-bold whitespace-nowrap hidden sm:table-cell">
                             ₹{rec.rateApplied}/km
                           </td>
-                          <td className="px-3 py-3 text-center border-r border-gray-100 hidden md:table-cell">
+                          <td className="px-3 py-3 text-center border-r border-gray-200 hidden md:table-cell">
                             <span className="text-[10px] font-medium italic text-gray-500 max-w-[120px] truncate block mx-auto" title={rec.outcome}>
                               {rec.stops && rec.stops.length > 0 ? "Multiple Stops" : (rec.outcome ? `"${rec.outcome}"` : '-')}
                             </span>
                           </td>
-                          <td className="px-3 py-3 text-right border-r border-gray-100 text-blue-700 tabular-nums font-bold text-xs hidden lg:table-cell">
+                          <td className="px-3 py-3 text-right border-r border-gray-200 text-blue-700 tabular-nums font-bold text-xs hidden lg:table-cell">
                             {rec.orderValue > 0 ? `₹${rec.orderValue.toLocaleString()}` : '-'}
                           </td>
-                          <td className="px-3 py-3 text-right border-r border-gray-100 text-purple-600 tabular-nums font-bold text-xs hidden lg:table-cell">
+                          <td className="px-3 py-3 text-right border-r border-gray-200 text-purple-600 tabular-nums font-bold text-xs hidden lg:table-cell">
                             {rec.upsellValue > 0 ? `₹${rec.upsellValue.toLocaleString()}` : '-'}
                           </td>
-                          <td className="px-3 py-3 text-right bg-blue-50/30 text-blue-900 font-semibold tabular-nums text-xs flex items-center justify-end gap-2">
+                          <td className="px-3 py-3 text-right bg-blue-100/50 text-blue-900 font-semibold tabular-nums text-xs flex items-center justify-end gap-2">
                             <span>₹{rec.totalAmount.toLocaleString()}</span>
                             <div className="flex items-center gap-1 ml-2">
                               <button
                                 onClick={() => handleEditFromModal(rec)}
-                                className="p-1 rounded hover:bg-green-100 text-green-600 transition-colors"
+                                className="p-1 rounded hover:bg-green-200 text-green-700 transition-colors"
                                 title="Edit this record"
                               >
                                 <FaEdit size={12} />
@@ -771,7 +1063,7 @@ const AllExpensives = () => {
                               <button
                                 onClick={() => handleDeleteFromModal(rec)}
                                 disabled={isDeleting}
-                                className="p-1 rounded hover:bg-red-100 text-red-600 transition-colors disabled:opacity-50"
+                                className="p-1 rounded hover:bg-red-200 text-red-700 transition-colors disabled:opacity-50"
                                 title="Delete this record"
                               >
                                 <FaTrash size={12} />
@@ -780,9 +1072,8 @@ const AllExpensives = () => {
                           </td>
                         </tr>
                         
-                        {/* Render Stop Sub-rows if they exist */}
                         {rec.stops && rec.stops.length > 0 && rec.stops.map((stop, sIndex) => (
-                          <tr key={`stop-${i}-${sIndex}`} className="bg-gray-50/50 text-[10px] border-b border-gray-100 last:border-b-0">
+                          <tr key={`stop-${i}-${sIndex}`} className="bg-gray-100 text-[10px] border-b border-gray-200 last:border-b-0 hover:bg-gray-200 transition-colors">
                              <td className="px-3 py-2 border-r border-gray-200"></td>
                              <td className="px-3 py-2 border-r border-gray-200">
                                <div className="flex items-center gap-2">
@@ -803,7 +1094,7 @@ const AllExpensives = () => {
                              <td className="px-3 py-2 text-right border-r border-gray-200 text-purple-600 tabular-nums hidden lg:table-cell">
                                {stop.upsellValue > 0 ? `₹${stop.upsellValue.toLocaleString()}` : '-'}
                              </td>
-                             <td className="px-3 py-2 bg-blue-50/10"></td>
+                             <td className="px-3 py-2 bg-blue-100/30"></td>
                           </tr>
                         ))}
                       </React.Fragment>
@@ -817,7 +1108,14 @@ const AllExpensives = () => {
               )}
             </div>
 
-            <div className="px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end flex-shrink-0">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center flex-shrink-0">
+              <button
+                onClick={handleExportSingleEmployee}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+              >
+                <FaDownload className="w-3 h-3" />
+                Download Excel
+              </button>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="emp-dash__btn-outline w-auto px-4 py-2 mt-0 text-xs"

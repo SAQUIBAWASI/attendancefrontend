@@ -524,20 +524,38 @@ const EmployeeShift = () => {
   const [error, setError] = useState("");
   const [statusUpdates, setStatusUpdates] = useState({});
 
-  const employeeDataRaw = localStorage.getItem("employeeData");
-  let employeeId = null;
-  if (employeeDataRaw) {
-    try {
-      const employeeData = JSON.parse(employeeDataRaw);
-      employeeId = employeeData.employeeId;
-    } catch (err) {
-      console.error("Invalid employee data in localStorage.");
+  const getStoredEmployeeId = () => {
+    const directId = localStorage.getItem("employeeId");
+    if (directId) return directId.trim();
+    const employeeDataRaw = localStorage.getItem("employeeData");
+    if (employeeDataRaw) {
+      try {
+        const employeeData = JSON.parse(employeeDataRaw);
+        const id = employeeData.employeeId || employeeData.id || employeeData._id;
+        if (id) return String(id).trim();
+      } catch (err) {
+        console.error("Invalid employee data in localStorage.", err);
+      }
     }
-  }
+    const userDataRaw = localStorage.getItem("userData");
+    if (userDataRaw) {
+      try {
+        const userData = JSON.parse(userDataRaw);
+        const id = userData.employeeId || userData.id || userData._id;
+        if (id) return String(id).trim();
+      } catch (err) {
+        console.error("Invalid user data in localStorage.", err);
+      }
+    }
+    return null;
+  };
+
+  const employeeId = getStoredEmployeeId();
 
   useEffect(() => {
     const fetchShifts = async () => {
-      if (!employeeId) {
+      const currentEmpId = getStoredEmployeeId();
+      if (!currentEmpId) {
         setError("❌ Employee not logged in. Please login first.");
         setLoading(false);
         return;
@@ -546,11 +564,17 @@ const EmployeeShift = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${API_BASE_URL}/shifts/employee/${employeeId}`
+          `${API_BASE_URL}/shifts/employee/${currentEmpId}`
         );
 
-        if (res.data?.success && res.data.data) {
-          setShifts(buildShiftList(res.data.data));
+        const shiftPayload = res.data?.data || (res.data?.shiftType ? res.data : null);
+
+        if (res.data?.success && shiftPayload) {
+          setShifts(buildShiftList(shiftPayload));
+          setError("");
+        } else if (shiftPayload) {
+          setShifts(buildShiftList(shiftPayload));
+          setError("");
         } else if (res.data?.success === false) {
           setError(res.data.message || "❌ No shifts assigned yet.");
         } else {
@@ -569,21 +593,17 @@ const EmployeeShift = () => {
 
   const determineShiftStatus = (shift) => {
     if (!shift) return "Not Available";
-    if (shift.isScheduled) return "Scheduled";
+    if (shift.isScheduled || shift.shiftPeriod === "Upcoming") return "Scheduled";
 
     const now = new Date();
-    const today = now.toISOString().split("T")[0];
-    const shiftDate = shift.date
-      ? new Date(shift.date).toISOString().split("T")[0]
-      : today;
-
     const [startH, startM] = parseTimeParts(shift.startTime);
     const [endH, endM] = parseTimeParts(shift.endTime);
 
-    let startTime = new Date(shiftDate);
+    // Current shift status is evaluated against today's clock time
+    let startTime = new Date();
     startTime.setHours(startH, startM, 0, 0);
 
-    let endTime = new Date(shiftDate);
+    let endTime = new Date();
     endTime.setHours(endH, endM, 0, 0);
 
     if (endTime <= startTime) {

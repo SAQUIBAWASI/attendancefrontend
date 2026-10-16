@@ -17,7 +17,7 @@ const TimelyFooter = () => {
   }
 
   const handleEmail = () => {
-    window.location.href = 'mailto:hello@timelyhealth.com'
+    window.location.href = 'mailto:hello@timelyhealth.in'
   }
 
   return (
@@ -92,7 +92,7 @@ const TimelyFooter = () => {
               <div className="flex items-center space-x-3 group">
                 <Mail size={18} className="text-blue-400 group-hover:text-blue-300 transition-colors" />
                 <button onClick={handleEmail} className="text-gray-300 hover:text-white transition-colors duration-200 no-underline text-base">
-                  hello@timelyhealth.com
+                  hello@timelyhealth.in
                 </button>
               </div>
               <div className="flex items-center space-x-3">
