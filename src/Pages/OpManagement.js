@@ -379,13 +379,51 @@ const getBookingFinalPayable = (booking) => {
 
 const getBookingPaidInfo = (booking) => {
   if (!booking) return { final: 0, paid: 0, balance: 0, status: "Due" };
+  
   const final = getBookingFinalPayable(booking);
-  const rawStatus = booking.paymentStatus || "Due";
-  const status = rawStatus === "Pending" ? "Due" : rawStatus;
-  let paid = Number(booking.amountPaid) || 0;
-  if (status === "Paid") paid = final;
-  else if (status === "Due") paid = 0;
-  const balance = Math.max(0, final - paid);
+  
+  let totalDueFromItems = 0;
+  let hasExplicitDue = false;
+
+  // ✅ Lab Due sum karo
+  if (Array.isArray(booking.labItems) && booking.labItems.length > 0) {
+    const labDueSum = booking.labItems.reduce((sum, item) => sum + (Number(item.dueAmount) || 0), 0);
+    totalDueFromItems += labDueSum;
+    hasExplicitDue = true;
+  }
+
+  // ✅ Pharmacy Due sum karo
+  if (Array.isArray(booking.medicineItems) && booking.medicineItems.length > 0) {
+    const medDueSum = booking.medicineItems.reduce((sum, item) => sum + (Number(item.dueAmount) || 0), 0);
+    totalDueFromItems += medDueSum;
+    hasExplicitDue = true;
+  }
+
+  const rawSvcList = Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0
+    ? booking.serviceItems
+    : (Array.isArray(booking.services) ? booking.services : []);
+  const clinicTotal = Number(getAmountBreakdown(booking).clinic) || 0;
+  const clinicPaid = rawSvcList.reduce((sum, item) => sum + (Number(item.paidAmount) || (item.paymentStatus === "Paid" ? Number(item.price) || 0 : 0)), 0);
+  const clinicDue = Math.max(0, clinicTotal - clinicPaid);
+
+  let balance;
+  let paid;
+  if (hasExplicitDue) {
+    balance = totalDueFromItems + clinicDue;
+    paid = Math.max(0, final - balance);
+  } else {
+    const rawStatus = booking.paymentStatus || "Due";
+    const status = rawStatus === "Pending" ? "Due" : rawStatus;
+    paid = Number(booking.amountPaid) || 0;
+    if (status === "Paid") paid = final;
+    else if (status === "Due") paid = 0;
+    balance = Math.max(0, final - paid);
+  }
+
+  let status = "Due";
+  if (paid >= final - 0.5 && paid > 0) status = "Paid";
+  else if (paid > 0) status = "Partial";
+
   return { final, paid, balance, status };
 };
 
@@ -694,20 +732,18 @@ const DateRangePopup = ({
       {/* ─── STEP INDICATOR ─── */}
       <div className="px-4 pt-2.5 pb-1.5">
         <div className="flex items-center gap-2">
-          <div className={`flex-1 flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${
-            currentStep === 1 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+          <div className={`flex-1 flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${currentStep === 1 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
               : fromDate ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-              : "bg-gray-50 text-gray-400 border-gray-200"
-          }`}>
+                : "bg-gray-50 text-gray-400 border-gray-200"
+            }`}>
             {fromDate ? <FaCheckCircle className="w-2.5 h-2.5" /> : <span className="w-3.5 h-3.5 rounded-full bg-white/30 text-[8px] font-bold flex items-center justify-center">1</span>}
             <span className="text-[9px] font-bold uppercase tracking-wide">From</span>
           </div>
           <div className={`w-5 h-0.5 rounded ${fromDate ? "bg-emerald-400" : "bg-gray-200"}`}></div>
-          <div className={`flex-1 flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${
-            currentStep === 2 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+          <div className={`flex-1 flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${currentStep === 2 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
               : toDate ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-              : "bg-gray-50 text-gray-400 border-gray-200"
-          }`}>
+                : "bg-gray-50 text-gray-400 border-gray-200"
+            }`}>
             {toDate ? <FaCheckCircle className="w-2.5 h-2.5" /> : <span className="w-3.5 h-3.5 rounded-full bg-white/30 text-[8px] font-bold flex items-center justify-center">2</span>}
             <span className="text-[9px] font-bold uppercase tracking-wide">To</span>
           </div>
@@ -722,11 +758,10 @@ const DateRangePopup = ({
       {/* ─── FROM / TO DISPLAY BOXES ─── */}
       <div className="px-3 pb-2">
         <div className="grid grid-cols-2 gap-2">
-          <div className={`px-2.5 py-1.5 rounded-lg border-2 transition-all ${
-            fromDate ? "border-emerald-400 bg-emerald-50"
+          <div className={`px-2.5 py-1.5 rounded-lg border-2 transition-all ${fromDate ? "border-emerald-400 bg-emerald-50"
               : currentStep === 1 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-500/20"
-              : "border-dashed border-gray-300 bg-gray-50"
-          }`}>
+                : "border-dashed border-gray-300 bg-gray-50"
+            }`}>
             <div className="flex items-center justify-between mb-0.5">
               <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">From</span>
               {fromDate && <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" />}
@@ -735,11 +770,10 @@ const DateRangePopup = ({
               {fmtDisplay(fromDate) || "Not selected"}
             </div>
           </div>
-          <div className={`px-2.5 py-1.5 rounded-lg border-2 transition-all ${
-            toDate ? "border-emerald-400 bg-emerald-50"
+          <div className={`px-2.5 py-1.5 rounded-lg border-2 transition-all ${toDate ? "border-emerald-400 bg-emerald-50"
               : currentStep === 2 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-500/20"
-              : "border-dashed border-gray-300 bg-gray-50"
-          }`}>
+                : "border-dashed border-gray-300 bg-gray-50"
+            }`}>
             <div className="flex items-center justify-between mb-0.5">
               <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">To</span>
               {toDate && <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" />}
@@ -836,11 +870,10 @@ const DateRangePopup = ({
           type="button"
           onClick={handleConfirm}
           disabled={!isConfirmEnabled}
-          className={`text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
-            isConfirmEnabled
+          className={`text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${isConfirmEnabled
               ? "text-white bg-blue-600 hover:bg-blue-700 shadow-sm"
               : "text-gray-400 bg-gray-200 cursor-not-allowed"
-          }`}
+            }`}
         >
           <FaCheckCircle className="w-2.5 h-2.5" /> Confirm
         </button>
@@ -1004,6 +1037,13 @@ export default function OpManagement() {
   const [savingClinicServices, setSavingClinicServices] = useState(false);
 
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
+
+
+    // ✅ Naye States Clear Due ke liye
+  const [showClearDueModal, setShowClearDueModal] = useState(false);
+  const [clearDuePaymentType, setClearDuePaymentType] = useState("Cash");
+  const [clearDueCategory, setClearDueCategory] = useState("lab"); // "lab" ya "pharmacy"
+  const [clearDueTransactionId, setClearDueTransactionId] = useState("");
 
   const phoneInputRef = useRef(null);
   const nameInputRef = useRef(null);
@@ -1320,15 +1360,22 @@ export default function OpManagement() {
         category: "lab", paymentMode: "N/A", paymentStatus: "",
       }];
     }
-    setLabItemsList(items.map((s) => ({
+    setLabItemsList(items.map((s, idx) => ({
       serviceId: s.serviceId || s._id || "",
-      name: s.name || "Lab Test",
+      name: s.name || `Lab Test ${idx + 1}`,
       price: Number(s.price) || 0,
+      discount: Number(s.discount) || 0,
+      paidAmount: Number(s.paidAmount) || 0,
+      dueAmount: Number(s.dueAmount) || 0, // ✅ ADD THIS (Ye missing tha)
       description: s.description || "",
-      paymentMode: s.paymentMode || "N/A",
-      paymentStatus: s.paymentStatus || "",
+      paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""),
+      paymentStatus: s.paymentStatus || "Due",
+      transactionId: s.transactionId || "",
       _wasPaid: (s.paymentStatus || "").toLowerCase() === "paid",
     })));
+
+
+
     setLabItemsBooking(booking);
     setLabItemPrice("");
     setShowLabItemsModal(true);
@@ -1338,13 +1385,17 @@ export default function OpManagement() {
     const price = labItemPrice.trim();
     if (!price) { showToast("Please enter lab amount", "error"); return; }
     if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
+
     setLabItemsList((prev) => [...prev, {
       serviceId: "",
       name: `Lab Test ${prev.length + 1}`,
       price: Number(price) || 0,
+      discount: 0,
+      paidAmount: 0,
       description: "",
-      paymentMode: "N/A",
-      paymentStatus: "",
+      paymentMode: "",
+      paymentStatus: "Due",
+      transactionId: "",
       _wasPaid: false,
     }]);
     setLabItemPrice("");
@@ -1353,9 +1404,64 @@ export default function OpManagement() {
   const handleRemoveLabItem = (index) => {
     setLabItemsList((prev) => prev.filter((_, i) => i !== index));
   };
-
+  // ✅ NEW: Update Price with Auto Status Recalculation
   const handleUpdateLabItemPrice = (index, newPrice) => {
-    setLabItemsList((prev) => prev.map((s, i) => (i === index ? { ...s, price: Number(newPrice) || 0 } : s)));
+    setLabItemsList((prev) =>
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(newPrice) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(s.paidAmount) || 0;
+
+        let newStatus = "Due";
+        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+
+        return { ...s, price, paymentStatus: newStatus };
+      })
+    );
+  };
+
+ const handleUpdateLabItemPaidAmount = (index, newPaid) => {
+  setLabItemsList((prev) =>
+    prev.map((s, i) => {
+      if (i !== index) return s;
+      const price = Number(s.price) || 0;
+      const discount = Number(s.discount) || 0;
+      const netPrice = Math.max(0, price - discount);
+      const paid = Number(newPaid) || 0;
+      const due = Math.max(0, netPrice - paid); // ✅ Due calculate karo
+
+      let newStatus = "Due";
+      if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+      else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+
+      return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
+    })
+  );
+};
+  // ✅ NEW: Update Transaction ID
+  const handleUpdateLabItemTransactionId = (index, txnId) => {
+    setLabItemsList((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, transactionId: txnId } : s))
+    );
+  };
+
+
+
+  // ✅ NEW: Update Lab Item Discount
+  const handleUpdateLabItemDiscount = (index, newDiscount) => {
+    setLabItemsList((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, discount: Number(newDiscount) || 0 } : s))
+    );
+  };
+
+  // ✅ NEW: Update Pharmacy Item Discount
+  const handleUpdatePharmacyItemDiscount = (index, newDiscount) => {
+    setPharmacyItemsList((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, discount: Number(newDiscount) || 0 } : s))
+    );
   };
 
   const handleUpdateLabItemPaymentMode = (index, mode) => {
@@ -1390,12 +1496,14 @@ export default function OpManagement() {
 
       const labItems = labItemsList.map((s) => ({
         serviceId: s.serviceId || "",
-        name: s.name,
+        name: s.name || `Lab Test ${labItemsList.indexOf(s) + 1}`,
         price: Number(s.price) || 0,
+        paidAmount: Number(s.paidAmount) || 0, // ✅ Added
         description: s.description || "",
         category: "lab",
-        paymentMode: s.paymentMode || fallbackModeDisplay,
+        paymentMode: s.paymentMode || "",
         paymentStatus: s.paymentStatus || "Due",
+        transactionId: s.transactionId || "", // ✅ Added
       }));
       const labTotal = labItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
 
@@ -1471,13 +1579,17 @@ export default function OpManagement() {
         category: "pharmacy", paymentMode: "N/A", paymentStatus: "",
       }];
     }
-    setPharmacyItemsList(items.map((s) => ({
+    setPharmacyItemsList(items.map((s, idx) => ({
       serviceId: s.serviceId || s._id || "",
-      name: s.name || "Medicine",
+      name: s.name || `Medicine ${idx + 1}`,
       price: Number(s.price) || 0,
+      discount: Number(s.discount) || 0,
+      paidAmount: Number(s.paidAmount) || 0,
+      dueAmount: Number(s.dueAmount) || 0, // ✅ ADD THIS (Ye missing tha)
       description: s.description || "",
-      paymentMode: s.paymentMode || "N/A",
-      paymentStatus: s.paymentStatus || "",
+      paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""),
+      paymentStatus: s.paymentStatus || "Due",
+      transactionId: s.transactionId || "",
       _wasPaid: (s.paymentStatus || "").toLowerCase() === "paid",
     })));
     setPharmacyItemsBooking(booking);
@@ -1489,13 +1601,17 @@ export default function OpManagement() {
     const price = pharmacyItemPrice.trim();
     if (!price) { showToast("Please enter medicine amount", "error"); return; }
     if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
+
     setPharmacyItemsList((prev) => [...prev, {
       serviceId: "",
       name: `Medicine ${prev.length + 1}`,
       price: Number(price) || 0,
+      discount: 0,
+      paidAmount: 0,
       description: "",
-      paymentMode: "N/A",
-      paymentStatus: "",
+      paymentMode: "",
+      paymentStatus: "Due",
+      transactionId: "",
       _wasPaid: false,
     }]);
     setPharmacyItemPrice("");
@@ -1505,9 +1621,53 @@ export default function OpManagement() {
     setPharmacyItemsList((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // ✅ UPDATE: Auto status recalculate jab price change ho
   const handleUpdatePharmacyItemPrice = (index, newPrice) => {
-    setPharmacyItemsList((prev) => prev.map((s, i) => (i === index ? { ...s, price: Number(newPrice) || 0 } : s)));
+    setPharmacyItemsList((prev) =>
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(newPrice) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(s.paidAmount) || 0;
+
+        let newStatus = "Due";
+        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+
+        return { ...s, price, paymentStatus: newStatus };
+      })
+    );
   };
+
+
+  // ✅ NEW: Update Pharmacy Paid Amount with Auto Status
+const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
+  setPharmacyItemsList((prev) =>
+    prev.map((s, i) => {
+      if (i !== index) return s;
+      const price = Number(s.price) || 0;
+      const discount = Number(s.discount) || 0;
+      const netPrice = Math.max(0, price - discount);
+      const paid = Number(newPaid) || 0;
+      const due = Math.max(0, netPrice - paid); // ✅ Due calculate karo
+
+      let newStatus = "Due";
+      if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+      else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+
+      return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
+    })
+  );
+};
+
+  // ✅ NEW: Update Pharmacy Transaction ID
+  const handleUpdatePharmacyItemTransactionId = (index, txnId) => {
+    setPharmacyItemsList((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, transactionId: txnId } : s))
+    );
+  };
+
 
   const handleUpdatePharmacyItemPaymentMode = (index, mode) => {
     setPharmacyItemsList((prev) =>
@@ -1539,14 +1699,16 @@ export default function OpManagement() {
         paymentStatus: s.paymentStatus || "Due",
       }));
 
-      const medicineItems = pharmacyItemsList.map((s) => ({
+      const medicineItems = pharmacyItemsList.map((s, idx) => ({
         serviceId: s.serviceId || "",
-        name: s.name,
+        name: s.name || `Medicine ${idx + 1}`,
         price: Number(s.price) || 0,
+        paidAmount: Number(s.paidAmount) || 0, // ✅ Added
         description: s.description || "",
         category: "pharmacy",
-        paymentMode: s.paymentMode || fallbackModeDisplay,
+        paymentMode: s.paymentMode || "",
         paymentStatus: s.paymentStatus || "Due",
+        transactionId: s.transactionId || "", // ✅ Added
       }));
       const medicineTotal = medicineItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
 
@@ -1673,20 +1835,20 @@ export default function OpManagement() {
     setFormData((prev) => ({ ...prev, appointmentDate: today }));
   }, []);
 
-useEffect(() => {
-  // 🆕 Agar Reg date me sirf EK date select hui hai (from set, to empty)
-  // to fetch mat karo — user abhi dusri date select karega
-  const regDateIncomplete = !!fromDate && !toDate;
-  const apptDateIncomplete = !!apptFromDate && !apptToDate;
-  if (regDateIncomplete || apptDateIncomplete) return;
+  useEffect(() => {
+    // 🆕 Agar Reg date me sirf EK date select hui hai (from set, to empty)
+    // to fetch mat karo — user abhi dusri date select karega
+    const regDateIncomplete = !!fromDate && !toDate;
+    const apptDateIncomplete = !!apptFromDate && !apptToDate;
+    if (regDateIncomplete || apptDateIncomplete) return;
 
-  fetchBookings();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [
-  timeFilter, fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
-  doctorFilter, paymentTypeFilter, statusFilter,
-  bookingTypeFilter, revenueCategoryFilter, searchQuery
-]);
+    fetchBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    timeFilter, fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
+    doctorFilter, paymentTypeFilter, statusFilter,
+    bookingTypeFilter, revenueCategoryFilter, searchQuery
+  ]);
 
   useEffect(() => {
     const isSpecificTimeFilter = timeFilter && timeFilter !== "All";
@@ -1760,15 +1922,15 @@ useEffect(() => {
     }
   }, [location.state]);
 
-useEffect(() => {
-  if (!formData.doctorId || !formData.appointmentDate) {
-    setAvailableSlots([]);
-    return;
-  }
-  if (allSlots.length === 0) return; // wait karo jab tak slots load na ho
-  filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [formData.doctorId, formData.appointmentDate, allSlots]);
+  useEffect(() => {
+    if (!formData.doctorId || !formData.appointmentDate) {
+      setAvailableSlots([]);
+      return;
+    }
+    if (allSlots.length === 0) return; // wait karo jab tak slots load na ho
+    filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.doctorId, formData.appointmentDate, allSlots]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -1802,194 +1964,202 @@ useEffect(() => {
   };
 
   const fetchBookings = async () => {
-  setLoading(true);
-  try {
-    const params = new URLSearchParams();
-    if (timeFilter && timeFilter !== "All") params.append("timeFilter", timeFilter);
-    if (apptFromDate) params.append("apptFrom", apptFromDate);
-    if (apptToDate) params.append("apptTo", apptToDate);
-    if (fromDate) params.append("regFrom", fromDate);
-    if (toDate) params.append("regTo", toDate);
-    if (selectedMonth) params.append("month", selectedMonth);
-    if (doctorFilter !== "All") params.append("doctor", doctorFilter);
-    if (paymentTypeFilter !== "All") params.append("paymentType", paymentTypeFilter);
-    if (statusFilter !== "All") params.append("paymentStatus", statusFilter);
-    if (bookingTypeFilter !== "All") params.append("bookingType", bookingTypeFilter);
-    if (revenueCategoryFilter !== "All") params.append("revenueCategory", revenueCategoryFilter);
-    if (searchQuery.trim()) params.append("search", searchQuery.trim());
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (timeFilter && timeFilter !== "All") params.append("timeFilter", timeFilter);
+      if (apptFromDate) params.append("apptFrom", apptFromDate);
+      if (apptToDate) params.append("apptTo", apptToDate);
+      if (fromDate) params.append("regFrom", fromDate);
+      if (toDate) params.append("regTo", toDate);
+      if (selectedMonth) params.append("month", selectedMonth);
+      if (doctorFilter !== "All") params.append("doctor", doctorFilter);
+      if (paymentTypeFilter !== "All") params.append("paymentType", paymentTypeFilter);
+      if (statusFilter !== "All") params.append("paymentStatus", statusFilter);
+      if (bookingTypeFilter !== "All") params.append("bookingType", bookingTypeFilter);
+      if (revenueCategoryFilter !== "All") params.append("revenueCategory", revenueCategoryFilter);
+      if (searchQuery.trim()) params.append("search", searchQuery.trim());
 
-    const url = `${API_BASE_URL}/appointment-slots/getallbookings${params.toString() ? "?" + params.toString() : ""}`;
-    const res = await axios.get(url);
+      const url = `${API_BASE_URL}/appointment-slots/getallbookings${params.toString() ? "?" + params.toString() : ""}`;
+      const res = await axios.get(url);
 
-    let bookingsData = [];
-    if (res.data?.success) {
-      bookingsData = res.data.bookings || res.data.data || [];
-      if (res.data.stats) setBackendStats(res.data.stats);
-      if (res.data.categoryBreakdown) setCategoryBreakdown(res.data.categoryBreakdown);
-    } else if (Array.isArray(res.data)) {
-      bookingsData = res.data;
-    }
+      let bookingsData = [];
+      if (res.data?.success) {
+        bookingsData = res.data.bookings || res.data.data || [];
+        if (res.data.stats) setBackendStats(res.data.stats);
+        if (res.data.categoryBreakdown) setCategoryBreakdown(res.data.categoryBreakdown);
+      } else if (Array.isArray(res.data)) {
+        bookingsData = res.data;
+      }
 
-    const transformedBookings = bookingsData.map((b) => {
-      const slotDetails = b.slotDetails || {};
+      const transformedBookings = bookingsData.map((b) => {
+        const slotDetails = b.slotDetails || {};
 
-      // ✅ NEW: Populated slotId object ko safely extract karo
-      const slotObj = (b.slotId && typeof b.slotId === "object") ? b.slotId : {};
+        // ✅ NEW: Populated slotId object ko safely extract karo
+        const slotObj = (b.slotId && typeof b.slotId === "object") ? b.slotId : {};
 
-      const rawServices =
-        (Array.isArray(b.services) && b.services.length > 0 && b.services) ||
-        (Array.isArray(b.serviceItems) && b.serviceItems.length > 0 && b.serviceItems) ||
-        [];
+        const rawServices =
+          (Array.isArray(b.services) && b.services.length > 0 && b.services) ||
+          (Array.isArray(b.serviceItems) && b.serviceItems.length > 0 && b.serviceItems) ||
+          [];
 
-      const normalizedServices = rawServices.map((s) => {
-        const rawSvcPS = s.paymentStatus;
-        const rawBookPS = b.paymentStatus;
-        const fallback = rawSvcPS
-          ? (rawSvcPS === "Pending" ? "Due" : rawSvcPS)
-          : (rawBookPS ? (rawBookPS === "Pending" ? "Due" : rawBookPS) : "Due");
-        return {
-          serviceId: s.serviceId || s._id || "",
-          _id: s.serviceId || s._id || "",
-          name: s.name || "Service",
-          price: Number(s.price) || 0,
-          description: s.description || "",
-          category: s.category || s.serviceCategory || s.type || "",
-          paymentStatus: fallback,
-          paymentMode: s.paymentMode || "N/A",
-          addedAt: s.addedAt || b.createdAt || new Date().toISOString(),
-        };
-      });
-
-      const normalizedLabItems = Array.isArray(b.labItems)
-        ? b.labItems.map((item) => ({
-          serviceId: item.serviceId || item._id || "",
-          name: item.name || "Lab Test",
-          price: Number(item.price) || 0,
-          description: item.description || "",
-          category: "lab",
-          paymentMode: item.paymentMode || "Cash",
-          paymentStatus: item.paymentStatus || "Due",
-        }))
-        : [];
+        const normalizedServices = rawServices.map((s) => {
+          const rawSvcPS = s.paymentStatus;
+          const rawBookPS = b.paymentStatus;
+          const fallback = rawSvcPS
+            ? (rawSvcPS === "Pending" ? "Due" : rawSvcPS)
+            : (rawBookPS ? (rawBookPS === "Pending" ? "Due" : rawBookPS) : "Due");
+          return {
+            serviceId: s.serviceId || s._id || "",
+            _id: s.serviceId || s._id || "",
+            name: s.name || "Service",
+            price: Number(s.price) || 0,
+            description: s.description || "",
+            category: s.category || s.serviceCategory || s.type || "",
+            paymentStatus: fallback,
+            paymentMode: s.paymentMode || "N/A",
+            addedAt: s.addedAt || b.createdAt || new Date().toISOString(),
+          };
+        });
+const normalizedLabItems = Array.isArray(b.labItems)
+  ? b.labItems.map((item) => ({
+    serviceId: item.serviceId || item._id || "",
+    name: item.name || "Lab Test",
+    price: Number(item.price) || 0,
+    discount: Number(item.discount) || 0,
+    paidAmount: Number(item.paidAmount) || 0,
+    dueAmount: Number(item.dueAmount) || 0, // ✅ ADD THIS
+    transactionId: item.transactionId || "",
+    description: item.description || "",
+    category: "lab",
+    paymentMode: item.paymentMode || "",
+    paymentStatus: item.paymentStatus || "Due",
+  }))
+  : [];
 
       const normalizedMedicineItems = Array.isArray(b.medicineItems)
-        ? b.medicineItems.map((item) => ({
-          serviceId: item.serviceId || item._id || "",
-          name: item.name || "Medicine",
-          price: Number(item.price) || 0,
-          description: item.description || "",
-          category: "pharmacy",
-          paymentMode: item.paymentMode || "Cash",
-          paymentStatus: item.paymentStatus || "Due",
-        }))
-        : [];
+  ? b.medicineItems.map((item) => ({
+    serviceId: item.serviceId || item._id || "",
+    name: item.name || "Medicine",
+    price: Number(item.price) || 0,
+    discount: Number(item.discount) || 0,
+    paidAmount: Number(item.paidAmount) || 0,
+    dueAmount: Number(item.dueAmount) || 0, // ✅ ADD THIS
+    transactionId: item.transactionId || "",
+    description: item.description || "",
+    category: "pharmacy",
+    paymentMode: item.paymentMode || "",
+    paymentStatus: item.paymentStatus || "Due",
+  }))
+  : [];
+        const servicesTotal = normalizedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+        const subtotal = Number(b.subtotal) || servicesTotal;
+        const commissionAmount = Number(b.commissionAmount) || 0;
+        const discount = Number(b.discount) || 0;
+        const finalPayable =
+          Number(b.finalPayable) || Number(b.finalPayableAmount) || Number(b.grandTotal) ||
+          Number(b.totalAmount) || (subtotal - commissionAmount - discount) || 0;
+        const totalAmount = Number(b.totalAmount) || Number(b.grandTotal) || finalPayable;
+        const amountPaid = Number(b.amountPaid) || 0;
+        const balanceAmount = Number(b.balanceAmount) || Math.max(0, finalPayable - amountPaid);
+        const rawBookingPS = b.paymentStatus || "Due";
+        const normalizedBookingPS = rawBookingPS === "Pending" ? "Due" : rawBookingPS;
 
-      const servicesTotal = normalizedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
-      const subtotal = Number(b.subtotal) || servicesTotal;
-      const commissionAmount = Number(b.commissionAmount) || 0;
-      const discount = Number(b.discount) || 0;
-      const finalPayable =
-        Number(b.finalPayable) || Number(b.finalPayableAmount) || Number(b.grandTotal) ||
-        Number(b.totalAmount) || (subtotal - commissionAmount - discount) || 0;
-      const totalAmount = Number(b.totalAmount) || Number(b.grandTotal) || finalPayable;
-      const amountPaid = Number(b.amountPaid) || 0;
-      const balanceAmount = Number(b.balanceAmount) || Math.max(0, finalPayable - amountPaid);
-      const rawBookingPS = b.paymentStatus || "Due";
-      const normalizedBookingPS = rawBookingPS === "Pending" ? "Due" : rawBookingPS;
-
-      return {
-        _id: b._id || b.id,
-        customPID: b.customPID || "",
-        bookingType: b.bookingType || "",
-        slotId: slotObj._id || (typeof b.slotId === "string" ? b.slotId : b._id),
-        patientId: b.patientId || "",
-        patientName: b.patientName || "",
-        patientAge: b.patientAge || "",
-        patientGender: b.patientGender || "",
-        patientPhone: b.patientPhone || "",
-        patientEmail: b.patientEmail || "",
-        patientAddress: b.patientAddress || "",
-        patientCity: b.patientCity || "",
-        patientPincode: b.patientPincode || "",
-        patientTitle: b.patientTitle || "Mr.",
-        patientDob: b.patientDob || "",
-        patientBloodGroup: b.patientBloodGroup || "",
-        patientMedicalHistory: b.patientMedicalHistory || "",
-        patientAllergies: b.patientAllergies || "",
-        patientMedications: b.patientMedications || "",
-        dayOfWeek: slotDetails.dayOfWeek || b.dayOfWeek || slotObj.dayOfWeek || "",
-        date: slotDetails.date || b.appointmentDate || b.date || slotObj.date || "",
-        startTime: slotDetails.startTime || b.startTime || slotObj.startTime || "",
-        endTime: slotDetails.endTime || b.endTime || slotObj.endTime || "",
-        doctorId: slotDetails.doctorId || b.doctorId || slotObj.doctorId || "",
-        doctorName: slotDetails.doctorName || b.doctorName || slotObj.doctorName || "",
-        doctorSpecialization: slotDetails.doctorSpecialization || b.doctorSpecialization || slotObj.doctorSpecialization || "",
-        purpose: b.purpose || "",
-        symptoms: b.symptoms || "",
-        appointmentType: b.appointmentType || "Consultation",
-        priority: b.priority || "Normal",
-        paymentType: b.paymentType || "cash",
-        paymentStatus: normalizedBookingPS,
-        partialAmount: Number(b.partialAmount) || 0,
-        subtotal, commissionAmount, discount, finalPayable, finalPayableAmount: finalPayable,
-        totalAmount, grandTotal: totalAmount, amountPaid, balanceAmount,
-        tax: Number(b.tax) || 0,
-        status: b.status || "confirmed",
-        services: normalizedServices,
-        serviceItems: normalizedServices,
-        labItems: normalizedLabItems,
-        medicineItems: normalizedMedicineItems,
-        categoryPayment: b.categoryPayment || null,
-        createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
-        bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
-        appointmentDate: b.appointmentDate || slotDetails.date || slotObj.date || "",
-        isOP: b.isOP || false,
-        isActive: b.isActive !== undefined ? b.isActive : true,
-        referredBy: b.referredBy || "",
-        referralContactId: b.referralContactId || "",
-        referredByCustomer: b.referredByCustomer || "",
-        referredByDoctor: b.referredByDoctor || "",
-        referralCustomerId: b.referralCustomerId || "",
-        referralDoctorId: b.referralDoctorId || "",
-        referralCommission: b.referralCommission || "",
-        referralCommissionType: b.referralCommissionType || "",
-        clinicalNotes: b.clinicalNotes || "",
-        diagnosis: b.diagnosis || "",
-        prescription: b.prescription || "",
-        medicines: Array.isArray(b.medicines) ? b.medicines : [],
-        medicineTotal: Number(b.medicineTotal) || 0,
-        labTotal: Number(b.labTotal) || 0,
-        vitalsTemp: b.vitalsTemp || "",
-        vitalsBp: b.vitalsBp || "",
-        vitalsPr: b.vitalsPr || "",
-        vitalsWeight: b.vitalsWeight || "",
-        followUpRequired: b.followUpRequired || false,
-        followUpDate: b.followUpDate || "",
-        followUpNotes: b.followUpNotes || "",
-        checkInTime: b.checkInTime || null,
-        checkOutTime: b.checkOutTime || null,
-        waitingTime: Number(b.waitingTime) || 0,
-        notes: b.notes || "",
-        patientRating: b.patientRating ?? null,
-        patientFeedback: b.patientFeedback || "",
-        isReviewed: b.isReviewed === true,
-        reviewDate: b.reviewDate || null,
-        reviews: Array.isArray(b.reviews) ? b.reviews : [],
-        reviewServicesTotal: Number(b.reviewServicesTotal) || 0,
-        invoiceUrl: b.invoiceUrl || null,
-        offerApplied: b.offerApplied || null,
-      };
-    });
-    setBookings(transformedBookings);
-  } catch (error) {
-    console.error("Error fetching bookings:", error);
-    setBookings([]);
-    setBackendStats(null);
-    setCategoryBreakdown(null);
-  } finally {
-    setLoading(false);
-  }
-};
+        return {
+          _id: b._id || b.id,
+          customPID: b.customPID || "",
+          bookingType: b.bookingType || "",
+          slotId: slotObj._id || (typeof b.slotId === "string" ? b.slotId : b._id),
+          patientId: b.patientId || "",
+          patientName: b.patientName || "",
+          patientAge: b.patientAge || "",
+          patientGender: b.patientGender || "",
+          patientPhone: b.patientPhone || "",
+          patientEmail: b.patientEmail || "",
+          patientAddress: b.patientAddress || "",
+          patientCity: b.patientCity || "",
+          patientPincode: b.patientPincode || "",
+          patientTitle: b.patientTitle || "Mr.",
+          patientDob: b.patientDob || "",
+          patientBloodGroup: b.patientBloodGroup || "",
+          patientMedicalHistory: b.patientMedicalHistory || "",
+          patientAllergies: b.patientAllergies || "",
+          patientMedications: b.patientMedications || "",
+          dayOfWeek: slotDetails.dayOfWeek || b.dayOfWeek || slotObj.dayOfWeek || "",
+          date: slotDetails.date || b.appointmentDate || b.date || slotObj.date || "",
+          startTime: slotDetails.startTime || b.startTime || slotObj.startTime || "",
+          endTime: slotDetails.endTime || b.endTime || slotObj.endTime || "",
+          doctorId: slotDetails.doctorId || b.doctorId || slotObj.doctorId || "",
+          doctorName: slotDetails.doctorName || b.doctorName || slotObj.doctorName || "",
+          doctorSpecialization: slotDetails.doctorSpecialization || b.doctorSpecialization || slotObj.doctorSpecialization || "",
+          purpose: b.purpose || "",
+          symptoms: b.symptoms || "",
+          appointmentType: b.appointmentType || "Consultation",
+          priority: b.priority || "Normal",
+          paymentType: b.paymentType || "cash",
+          paymentStatus: normalizedBookingPS,
+          partialAmount: Number(b.partialAmount) || 0,
+          subtotal, commissionAmount, discount, finalPayable, finalPayableAmount: finalPayable,
+          totalAmount, grandTotal: totalAmount, amountPaid, balanceAmount,
+          tax: Number(b.tax) || 0,
+          status: b.status || "confirmed",
+          services: normalizedServices,
+          serviceItems: normalizedServices,
+          labItems: normalizedLabItems,
+          medicineItems: normalizedMedicineItems,
+          categoryPayment: b.categoryPayment || null,
+          createdAt: b.createdAt || b.bookedAt || new Date().toISOString(),
+          bookedAt: b.bookedAt || b.createdAt || new Date().toISOString(),
+          appointmentDate: b.appointmentDate || slotDetails.date || slotObj.date || "",
+          isOP: b.isOP || false,
+          isActive: b.isActive !== undefined ? b.isActive : true,
+          referredBy: b.referredBy || "",
+          referralContactId: b.referralContactId || "",
+          referredByCustomer: b.referredByCustomer || "",
+          referredByDoctor: b.referredByDoctor || "",
+          referralCustomerId: b.referralCustomerId || "",
+          referralDoctorId: b.referralDoctorId || "",
+          referralCommission: b.referralCommission || "",
+          referralCommissionType: b.referralCommissionType || "",
+          clinicalNotes: b.clinicalNotes || "",
+          diagnosis: b.diagnosis || "",
+          prescription: b.prescription || "",
+          medicines: Array.isArray(b.medicines) ? b.medicines : [],
+          medicineTotal: Number(b.medicineTotal) || 0,
+          labTotal: Number(b.labTotal) || 0,
+          vitalsTemp: b.vitalsTemp || "",
+          vitalsBp: b.vitalsBp || "",
+          vitalsPr: b.vitalsPr || "",
+          vitalsWeight: b.vitalsWeight || "",
+          followUpRequired: b.followUpRequired || false,
+          followUpDate: b.followUpDate || "",
+          followUpNotes: b.followUpNotes || "",
+          checkInTime: b.checkInTime || null,
+          checkOutTime: b.checkOutTime || null,
+          waitingTime: Number(b.waitingTime) || 0,
+          notes: b.notes || "",
+          patientRating: b.patientRating ?? null,
+          patientFeedback: b.patientFeedback || "",
+          isReviewed: b.isReviewed === true,
+          reviewDate: b.reviewDate || null,
+          reviews: Array.isArray(b.reviews) ? b.reviews : [],
+          reviewServicesTotal: Number(b.reviewServicesTotal) || 0,
+          invoiceUrl: b.invoiceUrl || null,
+          offerApplied: b.offerApplied || null,
+        };
+      });
+       transformedBookings.sort((a, b) => new Date(b.createdAt || b.bookedAt || 0) - new Date(a.createdAt || a.bookedAt || 0));
+      
+      setBookings(transformedBookings);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      setBookings([]);
+      setBackendStats(null);
+      setCategoryBreakdown(null);
+    } finally {
+      setLoading(false);
+    }
+  };
   const fetchDoctors = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/doctors/getalldoctors`);
@@ -1997,33 +2167,33 @@ useEffect(() => {
     } catch (error) { console.error("Error fetching doctors:", error); setDoctors([]); }
   };
 
-const fetchAllSlots = async () => {
-  // ✅ Pehle cache se dikhao (instant UI)
-  try {
-    const cached = localStorage.getItem("op_allSlots_cache");
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        setAllSlots(parsed);
+  const fetchAllSlots = async () => {
+    // ✅ Pehle cache se dikhao (instant UI)
+    try {
+      const cached = localStorage.getItem("op_allSlots_cache");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAllSlots(parsed);
+        }
       }
-    }
-  } catch { /* ignore */ }
+    } catch { /* ignore */ }
 
-  // ✅ Phir background me fresh fetch karo
-  try {
-    const res = await axios.get(`${API_BASE_URL}/appointment-slots`);
-    if (res.data?.success) {
-      const fresh = res.data.slots || [];
-      setAllSlots(fresh);
-      // Save to cache for next time
-      try {
-        localStorage.setItem("op_allSlots_cache", JSON.stringify(fresh));
-      } catch { /* storage full ignore */ }
+    // ✅ Phir background me fresh fetch karo
+    try {
+      const res = await axios.get(`${API_BASE_URL}/appointment-slots`);
+      if (res.data?.success) {
+        const fresh = res.data.slots || [];
+        setAllSlots(fresh);
+        // Save to cache for next time
+        try {
+          localStorage.setItem("op_allSlots_cache", JSON.stringify(fresh));
+        } catch { /* storage full ignore */ }
+      }
+    } catch (error) {
+      console.error("Error fetching all slots:", error);
     }
-  } catch (error) {
-    console.error("Error fetching all slots:", error);
-  }
-};
+  };
   const fetchServices = async () => {
     setServicesLoading(true);
     try {
@@ -2063,55 +2233,55 @@ const fetchAllSlots = async () => {
     } catch { return 0; }
   };
 
- const filterSlotsByDoctorAndDate = (doctorId, date) => {
-  if (!doctorId || !date) {
-    setAvailableSlots([]);
-    setSlotsLoading(false);
-    return;
-  }
-  // ✅ Agar slots abhi load nahi hue, loading stuck mat rakho
-  if (allSlots.length === 0) {
-    setAvailableSlots([]);
-    setSlotsLoading(false);
-    return;
-  }
-  setSlotsLoading(true);
-  try {
-    const selectedDay = getDayNameFromDate(date);
-    let filtered = allSlots.filter((slot) => {
-      if (slot.doctorId !== doctorId) return false;
-      if (slot.type === "break") return false;
-      if (slot.date && slot.date.trim() !== "") return slot.date === date;
-      return slot.dayOfWeek === selectedDay;
-    });
+  const filterSlotsByDoctorAndDate = (doctorId, date) => {
+    if (!doctorId || !date) {
+      setAvailableSlots([]);
+      setSlotsLoading(false);
+      return;
+    }
+    // ✅ Agar slots abhi load nahi hue, loading stuck mat rakho
+    if (allSlots.length === 0) {
+      setAvailableSlots([]);
+      setSlotsLoading(false);
+      return;
+    }
+    setSlotsLoading(true);
+    try {
+      const selectedDay = getDayNameFromDate(date);
+      let filtered = allSlots.filter((slot) => {
+        if (slot.doctorId !== doctorId) return false;
+        if (slot.type === "break") return false;
+        if (slot.date && slot.date.trim() !== "") return slot.date === date;
+        return slot.dayOfWeek === selectedDay;
+      });
 
-    const seen = new Set();
-    filtered = filtered.filter((slot) => {
-      if (seen.has(slot.startTime)) return false;
-      seen.add(slot.startTime);
-      return true;
-    });
+      const seen = new Set();
+      filtered = filtered.filter((slot) => {
+        if (seen.has(slot.startTime)) return false;
+        seen.add(slot.startTime);
+        return true;
+      });
 
-    filtered.sort((a, b) =>
-      parseSlotTimeToMinutes(a.startTime) - parseSlotTimeToMinutes(b.startTime)
-    );
+      filtered.sort((a, b) =>
+        parseSlotTimeToMinutes(a.startTime) - parseSlotTimeToMinutes(b.startTime)
+      );
 
-    setAvailableSlots(filtered);
+      setAvailableSlots(filtered);
 
-    // ✅ slotId sirf tab clear karo jab list me nahi hai (edit-safe)
-    setFormData((prev) => {
-      if (!prev.slotId) return prev;
-      const stillExists = filtered.some((s) => s._id === prev.slotId);
-      return stillExists ? prev : { ...prev, slotId: "" };
-    });
-  } catch (error) {
-    console.error("Error filtering slots:", error);
-    setAvailableSlots([]);
-    showToast("Failed to filter slots", "error");
-  } finally {
-    setSlotsLoading(false);
-  }
-};
+      // ✅ slotId sirf tab clear karo jab list me nahi hai (edit-safe)
+      setFormData((prev) => {
+        if (!prev.slotId) return prev;
+        const stillExists = filtered.some((s) => s._id === prev.slotId);
+        return stillExists ? prev : { ...prev, slotId: "" };
+      });
+    } catch (error) {
+      console.error("Error filtering slots:", error);
+      setAvailableSlots([]);
+      showToast("Failed to filter slots", "error");
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
   const checkExistingPatient = (value) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     if (editingId) { setExistingPatient(null); setShowExistingPatientPopup(false); return; }
@@ -2386,9 +2556,9 @@ const fetchAllSlots = async () => {
     setCitySuggestions([]);
     setShowCitySuggestions(false);
 
-if (doctorId && appointmentDate) {
-  filterSlotsByDoctorAndDate(doctorId, appointmentDate);
-}
+    if (doctorId && appointmentDate) {
+      filterSlotsByDoctorAndDate(doctorId, appointmentDate);
+    }
   };
 
   const handleAddNewPatient = () => {
@@ -2912,87 +3082,87 @@ if (doctorId && appointmentDate) {
     } finally { setSubmitting(false); }
   };
 
- const handleUpdateNow = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  try {
-    const matchBForUpdate = getMatchingBooking({ phone: formData.phone, name: formData.name, _id: formData.bookingId });
-    const labTotalForUpdate = Number(matchBForUpdate?.labTotal) || 0;
-    const medicineTotalForUpdate = Number(matchBForUpdate?.medicineTotal) || 0;
+  const handleUpdateNow = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const matchBForUpdate = getMatchingBooking({ phone: formData.phone, name: formData.name, _id: formData.bookingId });
+      const labTotalForUpdate = Number(matchBForUpdate?.labTotal) || 0;
+      const medicineTotalForUpdate = Number(matchBForUpdate?.medicineTotal) || 0;
 
-    const fin = computeFinancials(formData.serviceItems, {
-      labTotal: labTotalForUpdate, medicineTotal: medicineTotalForUpdate,
-      referralCommission: formData.referralCommission,
-      discount: formData.discount, discountType: formData.discountType,
-      partialAmount: formData.partialAmount,
-      offerAmount: appliedOffer?.offerAmount || 0,
-    });
+      const fin = computeFinancials(formData.serviceItems, {
+        labTotal: labTotalForUpdate, medicineTotal: medicineTotalForUpdate,
+        referralCommission: formData.referralCommission,
+        discount: formData.discount, discountType: formData.discountType,
+        partialAmount: formData.partialAmount,
+        offerAmount: appliedOffer?.offerAmount || 0,
+      });
 
-    const bookingPayload = {
-      patientTitle: formData.title, patientName: formData.name,
-      patientPhone: formData.phone, patientAge: formData.age,
-      patientDob: formData.dob, patientGender: formData.gender,
-      patientAddress: formData.address, patientCity: formData.city,
-      patientPincode: formData.pincode, purpose: formData.reason,
-      paymentType: formData.paymentType, paymentStatus: fin.paymentStatus,
-      partialAmount: fin.parsedPartial, amountPaid: fin.amountPaid,
-      balanceAmount: fin.balanceAmount, subtotal: fin.subtotal,
-      commissionAmount: fin.commissionAmount, discount: fin.discountAmount,
-      discountType: formData.discountType, offerDeduction: fin.offerDeduction,
-      finalPayable: fin.finalPayable, finalPayableAmount: fin.finalPayable,
-      grandTotal: fin.finalPayable, totalAmount: fin.finalPayable,
+      const bookingPayload = {
+        patientTitle: formData.title, patientName: formData.name,
+        patientPhone: formData.phone, patientAge: formData.age,
+        patientDob: formData.dob, patientGender: formData.gender,
+        patientAddress: formData.address, patientCity: formData.city,
+        patientPincode: formData.pincode, purpose: formData.reason,
+        paymentType: formData.paymentType, paymentStatus: fin.paymentStatus,
+        partialAmount: fin.parsedPartial, amountPaid: fin.amountPaid,
+        balanceAmount: fin.balanceAmount, subtotal: fin.subtotal,
+        commissionAmount: fin.commissionAmount, discount: fin.discountAmount,
+        discountType: formData.discountType, offerDeduction: fin.offerDeduction,
+        finalPayable: fin.finalPayable, finalPayableAmount: fin.finalPayable,
+        grandTotal: fin.finalPayable, totalAmount: fin.finalPayable,
 
-      // ✅ CRITICAL — doctorId bhej (warna backend me update nahi hoga)
-      doctorId: formData.doctorId || "",
-      slotId: formData.slotId || "",
-      appointmentDate: formData.appointmentDate || "",
+        // ✅ CRITICAL — doctorId bhej (warna backend me update nahi hoga)
+        doctorId: formData.doctorId || "",
+        slotId: formData.slotId || "",
+        appointmentDate: formData.appointmentDate || "",
 
-      isOP: true, status: formData.status || "confirmed",
-      serviceItems: formData.serviceItems.map((s) => ({
-        serviceId: s._id || s.serviceId, name: s.name,
-        price: Number(s.price) || 0, description: s.description || "",
-      })),
-      services: formData.serviceItems.map((s) => ({
-        serviceId: s._id || s.serviceId, name: s.name,
-        price: Number(s.price) || 0, description: s.description || "",
-      })),
-      labItems: Array.isArray(matchBForUpdate?.labItems) ? matchBForUpdate.labItems : [],
-      medicineItems: Array.isArray(matchBForUpdate?.medicineItems) ? matchBForUpdate.medicineItems : [],
-      referredByCustomer: formData.referredByCustomer,
-      referredByDoctor: formData.referredByDoctor,
-      referralCustomerId: formData.referralCustomerId,
-      referralDoctorId: formData.referralDoctorId,
-      referralCommission: formData.referralCommission,
-      referralCommissionType: formData.referralCommissionType,
-      offerApplied: formData.offerApplied || null,
-    };
+        isOP: true, status: formData.status || "confirmed",
+        serviceItems: formData.serviceItems.map((s) => ({
+          serviceId: s._id || s.serviceId, name: s.name,
+          price: Number(s.price) || 0, description: s.description || "",
+        })),
+        services: formData.serviceItems.map((s) => ({
+          serviceId: s._id || s.serviceId, name: s.name,
+          price: Number(s.price) || 0, description: s.description || "",
+        })),
+        labItems: Array.isArray(matchBForUpdate?.labItems) ? matchBForUpdate.labItems : [],
+        medicineItems: Array.isArray(matchBForUpdate?.medicineItems) ? matchBForUpdate.medicineItems : [],
+        referredByCustomer: formData.referredByCustomer,
+        referredByDoctor: formData.referredByDoctor,
+        referralCustomerId: formData.referralCustomerId,
+        referralDoctorId: formData.referralDoctorId,
+        referralCommission: formData.referralCommission,
+        referralCommissionType: formData.referralCommissionType,
+        offerApplied: formData.offerApplied || null,
+      };
 
-    const slotRes = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${formData.bookingId}`, bookingPayload);
+      const slotRes = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${formData.bookingId}`, bookingPayload);
 
-    if (slotRes.data.success) {
-      showToast(`✅ Appointment updated successfully for ${formData.title} ${formData.name}!`, "success");
-      await fetchBookings();
-      fetchAllSlots();
-      if (formData.doctorId && formData.appointmentDate) {
-        filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
+      if (slotRes.data.success) {
+        showToast(`✅ Appointment updated successfully for ${formData.title} ${formData.name}!`, "success");
+        await fetchBookings();
+        fetchAllSlots();
+        if (formData.doctorId && formData.appointmentDate) {
+          filterSlotsByDoctorAndDate(formData.doctorId, formData.appointmentDate);
+        }
+        const today = new Date().toISOString().split("T")[0];
+        setFormData({ ...EMPTY_FORM, appointmentDate: today });
+        setEditingId(null); setShowForm(false); setAvailableSlots([]);
+        setExistingPatient(null); setShowExistingPatientPopup(false);
+        setFilteredServices([]); setShowServiceSuggestions(false);
+        setCitySuggestions([]); setShowCitySuggestions(false);
+        setSelectedCustomerOffers([]); setSelectedOfferId(""); setAppliedOffer(null);
+      } else {
+        showToast(slotRes.data.message || "Failed to update appointment", "error");
       }
-      const today = new Date().toISOString().split("T")[0];
-      setFormData({ ...EMPTY_FORM, appointmentDate: today });
-      setEditingId(null); setShowForm(false); setAvailableSlots([]);
-      setExistingPatient(null); setShowExistingPatientPopup(false);
-      setFilteredServices([]); setShowServiceSuggestions(false);
-      setCitySuggestions([]); setShowCitySuggestions(false);
-      setSelectedCustomerOffers([]); setSelectedOfferId(""); setAppliedOffer(null);
-    } else {
-      showToast(slotRes.data.message || "Failed to update appointment", "error");
+    } catch (err) {
+      console.error("❌ API Error:", err);
+      showToast(err.response?.data?.message || "Failed to update appointment", "error");
+    } finally {
+      setSubmitting(false);
     }
-  } catch (err) {
-    console.error("❌ API Error:", err);
-    showToast(err.response?.data?.message || "Failed to update appointment", "error");
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
   const openPrescriptionModal = (booking) => {
     if (!booking) { showToast("No booking data found", "error"); return; }
     handlePrintPrescription(booking);
@@ -3353,37 +3523,37 @@ if (doctorId && appointmentDate) {
     } else { showToast("Invoice generation failed", "error"); }
   };
 
-const handleFromDateChange = (e) => {
-  setFromDate(e.target.value);
-  if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
-};
-const handleToDateChange = (e) => {
-  setToDate(e.target.value);
-  if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
-};
-const handleApptFromChange = (e) => {
-  setApptFromDate(e.target.value);
-  if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
-};
-const handleApptToChange = (e) => {
-  setApptToDate(e.target.value);
-  if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
-};
+  const handleFromDateChange = (e) => {
+    setFromDate(e.target.value);
+    if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
+  };
+  const handleToDateChange = (e) => {
+    setToDate(e.target.value);
+    if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
+  };
+  const handleApptFromChange = (e) => {
+    setApptFromDate(e.target.value);
+    if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
+  };
+  const handleApptToChange = (e) => {
+    setApptToDate(e.target.value);
+    if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); }
+  };
 
 
 
-// ✅ NEW — add this
-const handleMonthChange = (e) => {
-  const value = e.target.value;
-  setSelectedMonth(value);
-  if (value) {
-    setFromDate("");
-    setToDate("");
-    setApptFromDate("");
-    setApptToDate("");
-    setTimeFilter("All");
-  }
-};
+  // ✅ NEW — add this
+  const handleMonthChange = (e) => {
+    const value = e.target.value;
+    setSelectedMonth(value);
+    if (value) {
+      setFromDate("");
+      setToDate("");
+      setApptFromDate("");
+      setApptToDate("");
+      setTimeFilter("All");
+    }
+  };
 
 
 
@@ -3487,7 +3657,7 @@ const handleMonthChange = (e) => {
     return { total: 0, active: 0, inactive: 0, paid: 0, partial: 0, due: 0, pending: 0, totalRevenue: 0 };
   }, [backendStats]);
 
-  const categoryRevenue = useMemo(() => {
+    const categoryRevenue = useMemo(() => {
     const empty = () => ({ total: 0, cash: 0, online: 0, card: 0, insurance: 0, due: 0, footFall: 0 });
     const result = { clinic: empty(), lab: empty(), pharmacy: empty() };
 
@@ -3550,31 +3720,42 @@ const handleMonthChange = (e) => {
         result.lab.footFall += 1;
 
         const labItems = Array.isArray(booking.labItems) ? booking.labItems : [];
+        let hasExplicitLabDue = false;
 
         if (labItems.length > 0) {
           labItems.forEach((item) => {
-            const amt = Number(item.price) || 0;
-            if (amt <= 0) return;
-            const status = (item.paymentStatus || "Due").toLowerCase();
-            const mode = (item.paymentMode || "Cash").toLowerCase();
+            const netAmt = Math.max(0, (Number(item.price) || 0) - (Number(item.discount) || 0));
+            if (netAmt <= 0) return;
+            const paidAmt = Number(item.paidAmount) || 0;
+            const itemDue = Number(item.dueAmount) || 0;
 
-            if (status === "paid") {
-              const fallbackLab = (booking.paymentType || "cash").toLowerCase();
-              if (mode === "cash") result.lab.cash += amt;
-              else if (mode === "online") result.lab.online += amt;
-              else if (mode === "card") result.lab.card += amt;
-              else if (mode === "insurance") result.lab.insurance += amt;
-              else if (mode === "n/a" || mode === "" || mode === "wallet" || mode === "credit card") {
-                if (fallbackLab === "cash") result.lab.cash += amt;
-                else if (fallbackLab === "online") result.lab.online += amt;
-                else if (fallbackLab === "card") result.lab.card += amt;
-                else if (fallbackLab === "insurance") result.lab.insurance += amt;
+            if (item.dueAmount !== undefined) {
+              hasExplicitLabDue = true;
+            }
+
+            const mode = (item.paymentMode || "Cash").toLowerCase();
+            const fallbackLab = (booking.paymentType || "cash").toLowerCase();
+
+            if (paidAmt > 0) {
+              if (mode === "cash") result.lab.cash += paidAmt;
+              else if (mode === "online") result.lab.online += paidAmt;
+              else if (mode === "card") result.lab.card += paidAmt;
+              else if (mode === "insurance") result.lab.insurance += paidAmt;
+              else {
+                if (fallbackLab === "cash") result.lab.cash += paidAmt;
+                else if (fallbackLab === "online") result.lab.online += paidAmt;
+                else if (fallbackLab === "card") result.lab.card += paidAmt;
+                else if (fallbackLab === "insurance") result.lab.insurance += paidAmt;
               }
-            } else if (status === "pending" || status === "due") {
-              result.lab.due += amt;
+            }
+
+            if (itemDue > 0) {
+              result.lab.due += itemDue;
             }
           });
-        } else {
+        } 
+        
+        if (!hasExplicitLabDue) {
           const catStatuses = getCategoryStatuses(booking);
           const labStatus = catStatuses.lab;
           const mode = (booking.paymentType || "cash").toLowerCase();
@@ -3603,31 +3784,42 @@ const handleMonthChange = (e) => {
         result.pharmacy.footFall += 1;
 
         const medItems = Array.isArray(booking.medicineItems) ? booking.medicineItems : [];
+        let hasExplicitPharmacyDue = false;
 
         if (medItems.length > 0) {
           medItems.forEach((item) => {
-            const amt = Number(item.price) || 0;
-            if (amt <= 0) return;
-            const status = (item.paymentStatus || "Due").toLowerCase();
-            const mode = (item.paymentMode || "Cash").toLowerCase();
+            const netAmt = Math.max(0, (Number(item.price) || 0) - (Number(item.discount) || 0));
+            if (netAmt <= 0) return;
+            const paidAmt = Number(item.paidAmount) || 0;
+            const itemDue = Number(item.dueAmount) || 0;
 
-            if (status === "paid") {
-              const fallbackPh = (booking.paymentType || "cash").toLowerCase();
-              if (mode === "cash") result.pharmacy.cash += amt;
-              else if (mode === "online") result.pharmacy.online += amt;
-              else if (mode === "card") result.pharmacy.card += amt;
-              else if (mode === "insurance") result.pharmacy.insurance += amt;
-              else if (mode === "n/a" || mode === "" || mode === "wallet" || mode === "credit card") {
-                if (fallbackPh === "cash") result.pharmacy.cash += amt;
-                else if (fallbackPh === "online") result.pharmacy.online += amt;
-                else if (fallbackPh === "card") result.pharmacy.card += amt;
-                else if (fallbackPh === "insurance") result.pharmacy.insurance += amt;
+            if (item.dueAmount !== undefined) {
+              hasExplicitPharmacyDue = true;
+            }
+
+            const mode = (item.paymentMode || "Cash").toLowerCase();
+            const fallbackPh = (booking.paymentType || "cash").toLowerCase();
+
+            if (paidAmt > 0) {
+              if (mode === "cash") result.pharmacy.cash += paidAmt;
+              else if (mode === "online") result.pharmacy.online += paidAmt;
+              else if (mode === "card") result.pharmacy.card += paidAmt;
+              else if (mode === "insurance") result.pharmacy.insurance += paidAmt;
+              else {
+                if (fallbackPh === "cash") result.pharmacy.cash += paidAmt;
+                else if (fallbackPh === "online") result.pharmacy.online += paidAmt;
+                else if (fallbackPh === "card") result.pharmacy.card += paidAmt;
+                else if (fallbackPh === "insurance") result.pharmacy.insurance += paidAmt;
               }
-            } else if (status === "pending" || status === "due") {
-              result.pharmacy.due += amt;
+            }
+
+            if (itemDue > 0) {
+              result.pharmacy.due += itemDue;
             }
           });
-        } else {
+        } 
+        
+        if (!hasExplicitPharmacyDue) {
           const catStatuses = getCategoryStatuses(booking);
           const phStatus = catStatuses.pharmacy;
           const mode = (booking.paymentType || "cash").toLowerCase();
@@ -4159,90 +4351,90 @@ const handleMonthChange = (e) => {
                 </div>
               </div>
 
-             {showExistingPatientPopup && existingPatient && !editingId && (() => {
-  const lastBooking = getMatchingBooking({ phone: existingPatient.phone, name: existingPatient.name });
-  const lastDoctor = existingPatient.lastDoctorName || lastBooking?.doctorName || "";
-  const lastDate = existingPatient.lastAppointmentDate || lastBooking?.appointmentDate || lastBooking?.date || "";
-  const lastStart = existingPatient.lastStartTime || lastBooking?.startTime || "";
-  const lastEnd = existingPatient.lastEndTime || lastBooking?.endTime || "";
-  const existingPID = lastBooking?.customPID || existingPatient.customPID || "";
-  return (
-    <div className="mt-2 px-2.5 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
-      <div className="flex items-center gap-2 flex-wrap">
-        <FiAlertCircle className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-        <span className="text-[11px] font-bold text-blue-900 whitespace-nowrap">Existing Patient:</span>
+              {showExistingPatientPopup && existingPatient && !editingId && (() => {
+                const lastBooking = getMatchingBooking({ phone: existingPatient.phone, name: existingPatient.name });
+                const lastDoctor = existingPatient.lastDoctorName || lastBooking?.doctorName || "";
+                const lastDate = existingPatient.lastAppointmentDate || lastBooking?.appointmentDate || lastBooking?.date || "";
+                const lastStart = existingPatient.lastStartTime || lastBooking?.startTime || "";
+                const lastEnd = existingPatient.lastEndTime || lastBooking?.endTime || "";
+                const existingPID = lastBooking?.customPID || existingPatient.customPID || "";
+                return (
+                  <div className="mt-2 px-2.5 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <FiAlertCircle className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                      <span className="text-[11px] font-bold text-blue-900 whitespace-nowrap">Existing Patient:</span>
 
-      {/* ✅ NEW — PID badge with label */}
-{existingPID && (
-  <span className="text-[11px] font-semibold text-slate-600 bg-white border border-slate-300 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
-    <span className="text-[10px] font-bold text-slate-500 uppercase">Patient ID:</span>
-    <span className="font-mono font-bold text-slate-800">{existingPID}</span>
-  </span>
-)}
+                      {/* ✅ NEW — PID badge with label */}
+                      {existingPID && (
+                        <span className="text-[11px] font-semibold text-slate-600 bg-white border border-slate-300 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">Patient ID:</span>
+                          <span className="font-mono font-bold text-slate-800">{existingPID}</span>
+                        </span>
+                      )}
 
-        <span className="text-[11px] text-blue-800 whitespace-nowrap">
-          {existingPatient.title} {existingPatient.name} • {existingPatient.phone} • {existingPatient.age}y / {existingPatient.gender}
-        </span>
+                      <span className="text-[11px] text-blue-800 whitespace-nowrap">
+                        {existingPatient.title} {existingPatient.name} • {existingPatient.phone} • {existingPatient.age}y / {existingPatient.gender}
+                      </span>
 
-        {lastDoctor && (
-          <span className="text-[11px] text-purple-800 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
-            <FaUserMdIcon className="text-[9px] text-purple-600" /> {lastDoctor}
-          </span>
-        )}
-        {lastDate && (
-          <span className="text-[11px] text-indigo-800 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
-            <FaCalendarAlt className="text-[9px] text-indigo-600" /> {formatDateToDDMMYYYY(lastDate)}
-          </span>
-        )}
-        {(lastStart || lastEnd) && (
-          <span className="text-[11px] text-blue-800 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
-            <FaClock className="text-[9px] text-blue-600" /> {lastStart}{lastEnd ? ` – ${lastEnd}` : ""}
-          </span>
-        )}
+                      {lastDoctor && (
+                        <span className="text-[11px] text-purple-800 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
+                          <FaUserMdIcon className="text-[9px] text-purple-600" /> {lastDoctor}
+                        </span>
+                      )}
+                      {lastDate && (
+                        <span className="text-[11px] text-indigo-800 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
+                          <FaCalendarAlt className="text-[9px] text-indigo-600" /> {formatDateToDDMMYYYY(lastDate)}
+                        </span>
+                      )}
+                      {(lastStart || lastEnd) && (
+                        <span className="text-[11px] text-blue-800 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
+                          <FaClock className="text-[9px] text-blue-600" /> {lastStart}{lastEnd ? ` – ${lastEnd}` : ""}
+                        </span>
+                      )}
 
-        {lastDate && (() => {
-          const apptDay = new Date(lastDate);
-          if (isNaN(apptDay.getTime())) return null;
-          apptDay.setHours(0, 0, 0, 0);
+                      {lastDate && (() => {
+                        const apptDay = new Date(lastDate);
+                        if (isNaN(apptDay.getTime())) return null;
+                        apptDay.setHours(0, 0, 0, 0);
 
-          const todayDay = new Date();
-          todayDay.setHours(0, 0, 0, 0);
+                        const todayDay = new Date();
+                        todayDay.setHours(0, 0, 0, 0);
 
-          const diffDays = Math.floor((todayDay - apptDay) / (1000 * 60 * 60 * 24));
+                        const diffDays = Math.floor((todayDay - apptDay) / (1000 * 60 * 60 * 24));
 
-          if (diffDays < 0) {
-            return (
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1 border text-emerald-800 bg-emerald-50 border-emerald-200">
-                <FaStar className="text-[9px]" /> Review: Yes ({REVIEW_WINDOW_DAYS}d left)
-              </span>
-            );
-          }
+                        if (diffDays < 0) {
+                          return (
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1 border text-emerald-800 bg-emerald-50 border-emerald-200">
+                              <FaStar className="text-[9px]" /> Review: Yes ({REVIEW_WINDOW_DAYS}d left)
+                            </span>
+                          );
+                        }
 
-          const daysLeft = Math.max(0, REVIEW_WINDOW_DAYS - diffDays);
-          const isValid = diffDays <= REVIEW_WINDOW_DAYS;
+                        const daysLeft = Math.max(0, REVIEW_WINDOW_DAYS - diffDays);
+                        const isValid = diffDays <= REVIEW_WINDOW_DAYS;
 
-          return (
-            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1 border ${isValid
-              ? "text-emerald-800 bg-emerald-50 border-emerald-200"
-              : "text-red-800 bg-red-50 border-red-200"
-              }`}>
-              <FaStar className="text-[9px]" />
-              Review: {isValid ? `Yes (${daysLeft}d left)` : "No"}
-            </span>
-          );
-        })()}
+                        return (
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1 border ${isValid
+                            ? "text-emerald-800 bg-emerald-50 border-emerald-200"
+                            : "text-red-800 bg-red-50 border-red-200"
+                            }`}>
+                            <FaStar className="text-[9px]" />
+                            Review: {isValid ? `Yes (${daysLeft}d left)` : "No"}
+                          </span>
+                        );
+                      })()}
 
-        <span className="flex-1 min-w-[20px]"></span>
-        <button type="button" onClick={autoFillPatientDetails} className="px-2.5 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md inline-flex items-center gap-1 flex-shrink-0">
-          <FaCheck className="text-[9px]" /> Auto-Fill
-        </button>
-        <button type="button" onClick={() => setShowExistingPatientPopup(false)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
-          <FaTimes className="w-3 h-3" />
-        </button>
-      </div>
-    </div>
-  );
-})()}
+                      <span className="flex-1 min-w-[20px]"></span>
+                      <button type="button" onClick={autoFillPatientDetails} className="px-2.5 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md inline-flex items-center gap-1 flex-shrink-0">
+                        <FaCheck className="text-[9px]" /> Auto-Fill
+                      </button>
+                      <button type="button" onClick={() => setShowExistingPatientPopup(false)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+                        <FaTimes className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
               <form onSubmit={isEditMode ? handleUpdateNow : handleBookNow} className="mt-4 sm:mt-5 space-y-4" noValidate>
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-2">
@@ -4325,92 +4517,92 @@ const handleMonthChange = (e) => {
                   </div>
                 </div>
 
-             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-  <div>
-    <div className="flex items-center justify-between mb-1.5">
-      <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider flex items-center gap-2">
-        Select Doctor
-        {/* ✅ Lock icon hata diya — edit me bhi allowed */}
-      </label>
-      {/* ✅ Add button ab edit mode me bhi dikhega */}
-      <button
-        type="button"
-        onClick={() => handleRoleBasedNavigate("/doctor-management")}
-        className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5"
-        title="Add New Doctor"
-      >
-        <FaPlus className="w-2.5 h-2.5" /> Add
-      </button>
-    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider flex items-center gap-2">
+                        Select Doctor
+                        {/* ✅ Lock icon hata diya — edit me bhi allowed */}
+                      </label>
+                      {/* ✅ Add button ab edit mode me bhi dikhega */}
+                      <button
+                        type="button"
+                        onClick={() => handleRoleBasedNavigate("/doctor-management")}
+                        className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5"
+                        title="Add New Doctor"
+                      >
+                        <FaPlus className="w-2.5 h-2.5" /> Add
+                      </button>
+                    </div>
 
-    {/* ✅ disabled={isEditMode} hata diya — ab editable rahega */}
-    <select
-      name="doctorId"
-      value={formData.doctorId}
-      onChange={handleInputChange}
-      className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-    >
-      <option value="">Select Doctor</option>
-      {doctors.map((d) => (
-        <option key={d._id || d.id} value={d._id || d.id}>
-          {d.name || "Doctor"}
-        </option>
-      ))}
-    </select>
-  </div>
+                    {/* ✅ disabled={isEditMode} hata diya — ab editable rahega */}
+                    <select
+                      name="doctorId"
+                      value={formData.doctorId}
+                      onChange={handleInputChange}
+                      className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                    >
+                      <option value="">Select Doctor</option>
+                      {doctors.map((d) => (
+                        <option key={d._id || d.id} value={d._id || d.id}>
+                          {d.name || "Doctor"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-  <div>
-    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Appointment Date</label>
-    <input
-      type="date"
-      name="appointmentDate"
-      value={formData.appointmentDate}
-      onChange={handleInputChange}
-      className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-    />
-  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">Appointment Date</label>
+                    <input
+                      type="date"
+                      name="appointmentDate"
+                      value={formData.appointmentDate}
+                      onChange={handleInputChange}
+                      className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                    />
+                  </div>
 
-  <div>
-    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-      Slot {formData.doctorId && formData.appointmentDate && <span className="text-gray-400 font-normal">({getDayNameFromDate(formData.appointmentDate)})</span>}
-    </label>
-    {!formData.doctorId || !formData.appointmentDate ? (
-      <div className="w-full border rounded-xl px-3 py-3.5 text-sm bg-gray-50 text-gray-400 border-gray-200">
-        Select doctor & date first
-      </div>
-) : slotsLoading ? (
-  <div className="w-full border rounded-xl px-3 py-3.5 text-sm bg-gray-50 text-gray-500 border-gray-200 flex items-center gap-2">
-    <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> Loading...
-  </div>
-) : availableSlots.length === 0 ? (
-  <div className="w-full border rounded-xl px-3 py-2.5 text-xs bg-amber-50 text-amber-700 border-amber-200 flex items-center justify-between gap-2">
-    <span className="font-semibold">No slots available</span>
-    <button
-      type="button"
-      onClick={() => handleRoleBasedNavigate("/appointment-slots")}
-      className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md"
-    >
-      <FaPlus className="w-2.5 h-2.5" /> Add
-    </button>
-  </div>
-) : (
-  <select
-    value={formData.slotId}
-    onChange={(e) => handleSlotSelect(e.target.value)}
-    className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-  >
-    <option value="">-- Select Slot --</option>
-    {availableSlots.map((slot) => (
-      <option key={slot._id} value={slot._id}>
-        {slot.startTime} – {slot.endTime}{slot.consultationFee ? ` (₹${slot.consultationFee})` : ""}
-        {slot.status === "booked" ? " (Booked)" : ""}
-      </option>
-    ))}
-  </select>
-)}
-  
-  </div>
-</div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Slot {formData.doctorId && formData.appointmentDate && <span className="text-gray-400 font-normal">({getDayNameFromDate(formData.appointmentDate)})</span>}
+                    </label>
+                    {!formData.doctorId || !formData.appointmentDate ? (
+                      <div className="w-full border rounded-xl px-3 py-3.5 text-sm bg-gray-50 text-gray-400 border-gray-200">
+                        Select doctor & date first
+                      </div>
+                    ) : slotsLoading ? (
+                      <div className="w-full border rounded-xl px-3 py-3.5 text-sm bg-gray-50 text-gray-500 border-gray-200 flex items-center gap-2">
+                        <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> Loading...
+                      </div>
+                    ) : availableSlots.length === 0 ? (
+                      <div className="w-full border rounded-xl px-3 py-2.5 text-xs bg-amber-50 text-amber-700 border-amber-200 flex items-center justify-between gap-2">
+                        <span className="font-semibold">No slots available</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRoleBasedNavigate("/appointment-slots")}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+                        >
+                          <FaPlus className="w-2.5 h-2.5" /> Add
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value={formData.slotId}
+                        onChange={(e) => handleSlotSelect(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-3.5 text-base sm:text-sm font-medium bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                      >
+                        <option value="">-- Select Slot --</option>
+                        {availableSlots.map((slot) => (
+                          <option key={slot._id} value={slot._id}>
+                            {slot.startTime} – {slot.endTime}{slot.consultationFee ? ` (₹${slot.consultationFee})` : ""}
+                            {slot.status === "booked" ? " (Booked)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                  </div>
+                </div>
                 <div className="border rounded-xl p-3 sm:p-4 bg-blue-50/30 border-gray-200">
                   <label className="block text-[11px] font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
                     <FaShareAlt className="text-blue-600" /> Referred By
@@ -5548,187 +5740,486 @@ const handleMonthChange = (e) => {
           </div>
         )}
 
-        {/* LAB ITEMS MODAL */}
+        {/* LAB ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
         {showLabItemsModal && labItemsBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-5 py-4 border-b">
+            <div className="bg-white rounded-2xl max-w-6xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b bg-gradient-to-r from-purple-50 to-indigo-50">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center"><FaFlask className="w-4 h-4" /></div>
+                  <div className="w-9 h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center">
+                    <FaFlask className="w-4 h-4" />
+                  </div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-sm">Lab Items</h3>
-                    <p className="text-[10px] text-gray-500">{labItemsBooking.patientTitle} {labItemsBooking.patientName}</p>
+                    <p className="text-[10px] text-gray-500">
+                      {labItemsBooking.patientTitle} {labItemsBooking.patientName} • {labItemsBooking.patientPhone}
+                    </p>
                   </div>
                 </div>
-                <button onClick={() => { setShowLabItemsModal(false); setLabItemsBooking(null); setLabItemsList([]); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
+                <button
+                  onClick={() => {
+                    setShowLabItemsModal(false);
+                    setLabItemsBooking(null);
+                    setLabItemsList([]);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/60"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
               </div>
-              <div className="p-5 space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Lab Amounts ({labItemsList.length})</label>
-                    {labItemsList.length > 0 && (<span className="text-[11px] font-extrabold text-purple-700">Total: ₹{labItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span>)}
-                  </div>
-                  {labItemsList.length === 0 ? (
-                    <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">No amounts added yet</div>
-                  ) : (
-                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                      {labItemsList.map((item, i) => {
+
+              {/* Add New Row */}
+              <div className="px-5 py-3 border-b bg-gray-50">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    + Add New Lab Amount:
+                  </span>
+                  <input
+                    type="number"
+                    value={labItemPrice}
+                    onChange={(e) => setLabItemPrice(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddLabItem();
+                      }
+                    }}
+                    placeholder="Enter amount (₹)"
+                    className="flex-1 min-w-[160px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                    min="0"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddLabItem}
+                    disabled={!labItemPrice.trim()}
+                    className="px-4 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"
+                  >
+                    <FaPlus className="w-3 h-3" /> Add
+                  </button>
+                </div>
+              </div>
+
+              {/* TABLE AREA */}
+              <div className="flex-1 overflow-y-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-gray-100 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-10">#</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-32">Lab Name</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Amount</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Disc.</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Paid</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Payment Type</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Status</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Transaction ID</th>
+                      <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-12">Act</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {labItemsList.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="px-3 py-8 text-center text-gray-400 bg-gray-50 text-xs italic">
+                          No lab amounts added yet. Enter amount above and click Add.
+                        </td>
+                      </tr>
+                    ) : (
+                      labItemsList.map((item, i) => {
                         const isPaid = item._wasPaid === true;
                         return (
-                          <div key={`${item.serviceId}-${i}`} className="px-3 py-2 rounded-lg text-xs bg-purple-50 border border-purple-200">
-                            <div className="flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
-                              <span className="text-gray-500 font-semibold text-[10px] whitespace-nowrap">Amount (₹):</span>
+                          <tr key={`${item.serviceId}-${i}`} className={`border-b border-gray-100 ${isPaid ? "bg-gray-50" : "hover:bg-purple-50/40"}`}>
+                            <td className="px-3 py-2 text-center">
+                              <span className="w-6 h-6 inline-flex items-center justify-center rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold">{i + 1}</span>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="font-semibold text-slate-700 truncate text-[11px]" title={item.name}>{item.name || `Lab Test ${i + 1}`}</div>
+                            </td>
+                            <td className="px-3 py-2">
                               <input
                                 type="number"
                                 value={item.price}
                                 onChange={(e) => handleUpdateLabItemPrice(i, e.target.value)}
                                 disabled={isPaid}
-                                className={`w-24 px-2 py-1 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-purple-700 border-gray-300"}`}
+                                className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-purple-700 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none"}`}
                                 min="0"
                               />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={item.discount || ""}
+                                onChange={(e) => handleUpdateLabItemDiscount(i, e.target.value)}
+                                disabled={isPaid}
+                                placeholder="0"
+                                className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-rose-700 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none"}`}
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={item.paidAmount || ""}
+                                onChange={(e) => handleUpdateLabItemPaidAmount(i, e.target.value)}
+                                disabled={isPaid}
+                                placeholder="0"
+                                className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-emerald-700 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none"}`}
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
                               <select
                                 value={item.paymentMode || ""}
                                 onChange={(e) => handleUpdateLabItemPaymentMode(i, e.target.value)}
                                 disabled={isPaid}
-                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
-                                title={isPaid ? "Already Paid — Locked" : "Payment Mode"}
+                                className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none"}`}
                               >
-                                <option value="">Select Payment Mode</option>
-                                {ITEM_PAYMENT_MODE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                                <option value="">Choose Payment Type</option>
+                                {ITEM_PAYMENT_MODE_OPTIONS.filter(o => o.value !== "N/A").map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                               </select>
-                              <select
-                                value={item.paymentStatus || ""}
-                                onChange={(e) => handleUpdateLabItemPaymentStatus(i, e.target.value)}
-                                disabled={isPaid}
-                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
-                                title={isPaid ? "Already Paid — Locked" : "Payment Status"}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <span
+                                className={`inline-flex items-center justify-center w-full px-2 py-1.5 text-[10px] font-bold border rounded ${item.paymentStatus === "Paid"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : item.paymentStatus === "Partial"
+                                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                                      : "bg-red-50 text-red-700 border-red-200"
+                                  }`}
                               >
-                                <option value="">Select Payment Status</option>
-                                {ITEM_PAYMENT_STATUS_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                              </select>
+                                {item.paymentStatus || "Due"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2">
+                              {item.paymentMode === "Online" || item.paymentMode === "Credit Card" ? (
+                                <input
+                                  type="text"
+                                  value={item.transactionId || ""}
+                                  onChange={(e) => handleUpdateLabItemTransactionId(i, e.target.value)}
+                                  disabled={isPaid}
+                                  placeholder="Txn ID"
+                                  className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none"}`}
+                                />
+                              ) : (
+                                <span className="text-[10px] text-gray-400 italic block text-center">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-center">
                               <button
                                 type="button"
                                 onClick={() => handleRemoveLabItem(i)}
                                 disabled={isPaid}
-                                className={`p-1 flex-shrink-0 ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600"}`}
-                                title={isPaid ? "Already Paid — Locked" : "Remove"}
+                                className={`p-1.5 rounded-md ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600 hover:bg-red-50"}`}
                               >
                                 {isPaid ? <FaLock className="w-3.5 h-3.5" /> : <FaMinusCircle className="w-3.5 h-3.5" />}
                               </button>
-                            </div>
-                          </div>
+                            </td>
+                          </tr>
                         );
-                      })}
-                    </div>
+                      })
+                    )}
+                  </tbody>
+
+                  {/* Footer Totals */}
+                  {labItemsList.length > 0 && (
+                  <tfoot className="bg-purple-50 border-t-2 border-purple-300 sticky bottom-0">
+  <tr>
+    <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-purple-800 uppercase">Total:</td>
+    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-purple-800">₹{labItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
+    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{labItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
+    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{labItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
+    
+    {/* ✅ Yahan DUE: ₹XXX dikhega */}
+      {/* ✅ Yahan DUE aur Clear Due button dikhega */}
+    <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
+      <span className="text-sm font-extrabold text-red-600">
+        DUE: ₹{labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}
+      </span>
+      
+      {/* ✅ CLEAR DUE BUTTON */}
+      {labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
+      <button
+        type="button"
+        onClick={() => {
+          setClearDueCategory("lab");
+          setClearDuePaymentType("Cash"); // Default Cash
+          setShowClearDueModal(true);
+        }}
+        className="px-2 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded"
+      >
+        Clear Due
+      </button>
+      )}
+    </td>
+
+    <td colSpan={2} className="px-3 py-2.5 text-right text-[10px] text-purple-700 font-semibold">{labItemsList.length} item{labItemsList.length !== 1 ? "s" : ""}</td>
+  </tr>
+</tfoot>
                   )}
-                </div>
-                <div className="border rounded-xl p-3 bg-gray-50 border-gray-200">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Add New Amount</div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <input type="number" value={labItemPrice} onChange={(e) => setLabItemPrice(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddLabItem(); } }} placeholder="Enter amount (₹)" className="flex-1 min-w-[180px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm" min="0" />
-                    <button type="button" onClick={handleAddLabItem} disabled={!labItemPrice.trim()} className="px-4 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-1 disabled:opacity-50"><FaPlus className="w-3 h-3" /> Add</button>
-                  </div>
-                </div>
+                </table>
               </div>
-              <div className="sticky bottom-0 flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur rounded-b-2xl">
-                <button onClick={() => { setShowLabItemsModal(false); setLabItemsBooking(null); setLabItemsList([]); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
-                <button onClick={handleSaveLabItems} disabled={savingLabItems} className="px-5 py-2 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
-                  {savingLabItems ? (<FiRefreshCw className="w-3.5 h-3.5 animate-spin" />) : (<FiCheckCircle className="w-3.5 h-3.5" />)}
+
+              {/* Footer Buttons */}
+              <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur">
+                <button
+                  onClick={() => {
+                    setShowLabItemsModal(false);
+                    setLabItemsBooking(null);
+                    setLabItemsList([]);
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveLabItems}
+                  disabled={savingLabItems}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {savingLabItems ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
                   {savingLabItems ? "Saving..." : `Save Lab (${labItemsList.length})`}
                 </button>
               </div>
             </div>
           </div>
         )}
-
-        {/* PHARMACY ITEMS MODAL */}
+        {/* PHARMACY ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
         {showPharmacyItemsModal && pharmacyItemsBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-5 py-4 border-b">
+            <div className="bg-white rounded-2xl max-w-6xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b bg-gradient-to-r from-green-50 to-emerald-50">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-green-500 text-white flex items-center justify-center"><FaPills className="w-4 h-4" /></div>
+                  <div className="w-9 h-9 rounded-xl bg-green-500 text-white flex items-center justify-center">
+                    <FaPills className="w-4 h-4" />
+                  </div>
                   <div>
                     <h3 className="font-bold text-gray-900 text-sm">Pharmacy Items</h3>
-                    <p className="text-[10px] text-gray-500">{pharmacyItemsBooking.patientTitle} {pharmacyItemsBooking.patientName}</p>
+                    <p className="text-[10px] text-gray-500">
+                      {pharmacyItemsBooking.patientTitle} {pharmacyItemsBooking.patientName} • {pharmacyItemsBooking.patientPhone}
+                    </p>
                   </div>
                 </div>
-                <button onClick={() => { setShowPharmacyItemsModal(false); setPharmacyItemsBooking(null); setPharmacyItemsList([]); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
+                <button
+                  onClick={() => {
+                    setShowPharmacyItemsModal(false);
+                    setPharmacyItemsBooking(null);
+                    setPharmacyItemsList([]);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/60"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
               </div>
-              <div className="p-5 space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Medicine Amounts ({pharmacyItemsList.length})</label>
-                    {pharmacyItemsList.length > 0 && (<span className="text-[11px] font-extrabold text-green-700">Total: ₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span>)}
-                  </div>
-                  {pharmacyItemsList.length === 0 ? (
-                    <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">No amounts added yet</div>
-                  ) : (
-                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                      {pharmacyItemsList.map((item, i) => {
+
+              {/* Add New Row */}
+              <div className="px-5 py-3 border-b bg-gray-50">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    + Add New Medicine Amount:
+                  </span>
+                  <input
+                    type="number"
+                    value={pharmacyItemPrice}
+                    onChange={(e) => setPharmacyItemPrice(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddPharmacyItem();
+                      }
+                    }}
+                    placeholder="Enter amount (₹)"
+                    className="flex-1 min-w-[160px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
+                    min="0"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddPharmacyItem}
+                    disabled={!pharmacyItemPrice.trim()}
+                    className="px-4 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"
+                  >
+                    <FaPlus className="w-3 h-3" /> Add
+                  </button>
+                </div>
+              </div>
+
+              {/* TABLE AREA */}
+              <div className="flex-1 overflow-y-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-gray-100 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-10">#</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-32">Medicine Name</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Amount</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Disc.</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Paid</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Payment Type</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Status</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Transaction ID</th>
+                      <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-12">Act</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pharmacyItemsList.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="px-3 py-8 text-center text-gray-400 bg-gray-50 text-xs italic">
+                          No medicine amounts added yet. Enter amount above and click Add.
+                        </td>
+                      </tr>
+                    ) : (
+                      pharmacyItemsList.map((item, i) => {
                         const isPaid = item._wasPaid === true;
                         return (
-                          <div key={`${item.serviceId}-${i}`} className="px-3 py-2 rounded-lg text-xs bg-green-50 border border-green-200">
-                            <div className="flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
-                              <span className="text-gray-500 font-semibold text-[10px] whitespace-nowrap">Amount (₹):</span>
+                          <tr key={`${item.serviceId}-${i}`} className={`border-b border-gray-100 ${isPaid ? "bg-gray-50" : "hover:bg-green-50/40"}`}>
+                            <td className="px-3 py-2 text-center">
+                              <span className="w-6 h-6 inline-flex items-center justify-center rounded-full bg-green-100 text-green-700 text-[10px] font-bold">{i + 1}</span>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="font-semibold text-slate-700 truncate text-[11px]" title={item.name}>{item.name || `Medicine ${i + 1}`}</div>
+                            </td>
+                            <td className="px-3 py-2">
                               <input
                                 type="number"
                                 value={item.price}
                                 onChange={(e) => handleUpdatePharmacyItemPrice(i, e.target.value)}
                                 disabled={isPaid}
-                                className={`w-24 px-2 py-1 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-green-700 border-gray-300"}`}
+                                className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-green-700 border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"}`}
                                 min="0"
                               />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={item.discount || ""}
+                                onChange={(e) => handleUpdatePharmacyItemDiscount(i, e.target.value)}
+                                disabled={isPaid}
+                                placeholder="0"
+                                className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-rose-700 border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"}`}
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={item.paidAmount || ""}
+                                onChange={(e) => handleUpdatePharmacyItemPaidAmount(i, e.target.value)}
+                                disabled={isPaid}
+                                placeholder="0"
+                                className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-emerald-700 border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"}`}
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
                               <select
                                 value={item.paymentMode || ""}
                                 onChange={(e) => handleUpdatePharmacyItemPaymentMode(i, e.target.value)}
                                 disabled={isPaid}
-                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
-                                title={isPaid ? "Already Paid — Locked" : "Payment Mode"}
+                                className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"}`}
                               >
-                                <option value="">Select Payment Mode</option>
-                                {ITEM_PAYMENT_MODE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                                <option value="">Choose Payment Type</option>
+                                {ITEM_PAYMENT_MODE_OPTIONS.filter(o => o.value !== "N/A").map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                               </select>
-                              <select
-                                value={item.paymentStatus || ""}
-                                onChange={(e) => handleUpdatePharmacyItemPaymentStatus(i, e.target.value)}
-                                disabled={isPaid}
-                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
-                                title={isPaid ? "Already Paid — Locked" : "Payment Status"}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <span
+                                className={`inline-flex items-center justify-center w-full px-2 py-1.5 text-[10px] font-bold border rounded ${item.paymentStatus === "Paid"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : item.paymentStatus === "Partial"
+                                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                                      : "bg-red-50 text-red-700 border-red-200"
+                                  }`}
                               >
-                                <option value="">Select Payment Status</option>
-                                {ITEM_PAYMENT_STATUS_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                              </select>
+                                {item.paymentStatus || "Due"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2">
+                              {item.paymentMode === "Online" || item.paymentMode === "Credit Card" ? (
+                                <input
+                                  type="text"
+                                  value={item.transactionId || ""}
+                                  onChange={(e) => handleUpdatePharmacyItemTransactionId(i, e.target.value)}
+                                  disabled={isPaid}
+                                  placeholder="Txn ID"
+                                  className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"}`}
+                                />
+                              ) : (
+                                <span className="text-[10px] text-gray-400 italic block text-center">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-center">
                               <button
                                 type="button"
                                 onClick={() => handleRemovePharmacyItem(i)}
                                 disabled={isPaid}
-                                className={`p-1 flex-shrink-0 ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600"}`}
-                                title={isPaid ? "Already Paid — Locked" : "Remove"}
+                                className={`p-1.5 rounded-md ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600 hover:bg-red-50"}`}
                               >
                                 {isPaid ? <FaLock className="w-3.5 h-3.5" /> : <FaMinusCircle className="w-3.5 h-3.5" />}
                               </button>
-                            </div>
-                          </div>
+                            </td>
+                          </tr>
                         );
-                      })}
-                    </div>
+                      })
+                    )}
+                  </tbody>
+
+                  {/* Footer Totals */}
+                  {pharmacyItemsList.length > 0 && (
+                  <tfoot className="bg-green-50 border-t-2 border-green-300 sticky bottom-0">
+  <tr>
+    <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-green-800 uppercase">Total:</td>
+    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-green-800">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
+    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
+    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
+    
+    {/* ✅ Yahan DUE: ₹XXX dikhega */}
+      {/* ✅ Yahan DUE aur Clear Due button dikhega */}
+    <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
+      <span className="text-sm font-extrabold text-red-600">
+        DUE: ₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}
+      </span>
+      
+      {/* ✅ CLEAR DUE BUTTON */}
+         {pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
+      <button
+        type="button"
+        onClick={() => {
+          setClearDueCategory("pharmacy");
+          setClearDuePaymentType("Cash"); // Default Cash
+          setShowClearDueModal(true);
+        }}
+        className="px-2 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded"
+      >
+        Clear Due
+      </button>
+    )}
+    </td>
+
+    <td colSpan={2} className="px-3 py-2.5 text-right text-[10px] text-green-700 font-semibold">{pharmacyItemsList.length} item{pharmacyItemsList.length !== 1 ? "s" : ""}</td>
+  </tr>
+</tfoot>
                   )}
-                </div>
-                <div className="border rounded-xl p-3 bg-gray-50 border-gray-200">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Add New Amount</div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <input type="number" value={pharmacyItemPrice} onChange={(e) => setPharmacyItemPrice(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddPharmacyItem(); } }} placeholder="Enter amount (₹)" className="flex-1 min-w-[180px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm" min="0" />
-                    <button type="button" onClick={handleAddPharmacyItem} disabled={!pharmacyItemPrice.trim()} className="px-4 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg flex items-center gap-1 disabled:opacity-50"><FaPlus className="w-3 h-3" /> Add</button>
-                  </div>
-                </div>
+                </table>
               </div>
-              <div className="sticky bottom-0 flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur rounded-b-2xl">
-                <button onClick={() => { setShowPharmacyItemsModal(false); setPharmacyItemsBooking(null); setPharmacyItemsList([]); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
-                <button onClick={handleSavePharmacyItems} disabled={savingPharmacyItems} className="px-5 py-2 rounded-lg text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
-                  {savingPharmacyItems ? (<FiRefreshCw className="w-3.5 h-3.5 animate-spin" />) : (<FiCheckCircle className="w-3.5 h-3.5" />)}
+
+              {/* Footer Buttons */}
+              <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur">
+                <button
+                  onClick={() => {
+                    setShowPharmacyItemsModal(false);
+                    setPharmacyItemsBooking(null);
+                    setPharmacyItemsList([]);
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSavePharmacyItems}
+                  disabled={savingPharmacyItems}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {savingPharmacyItems ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
                   {savingPharmacyItems ? "Saving..." : `Save Pharmacy (${pharmacyItemsList.length})`}
                 </button>
               </div>
@@ -5736,6 +6227,108 @@ const handleMonthChange = (e) => {
           </div>
         )}
 
+
+
+                {/* ✅ CLEAR DUE PAYMENT TYPE MODAL */}
+        {showClearDueModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border relative">
+              <div className="flex items-center justify-between px-5 py-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-red-500 text-white flex items-center justify-center">
+                    <FaMoneyBillWave className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Clear Due Payment</h3>
+                    <p className="text-[10px] text-gray-500 capitalize">{clearDueCategory} Items</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowClearDueModal(false)} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100">
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-5 space-y-4">
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
+                  <span className="text-xs font-bold text-red-800">Total Due Amount:</span>
+                  <span className="text-lg font-extrabold text-red-600">
+                    ₹{clearDueCategory === "lab" 
+                      ? labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)
+                      : pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}
+                  </span>
+                </div>
+                
+                              <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">Select Payment Type</label>
+                  <select 
+                    value={clearDuePaymentType} 
+                    onChange={(e) => setClearDuePaymentType(e.target.value)} 
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800"
+                  >
+                    <option value="Cash">Cash</option>
+                    <option value="Online">Online</option>
+                    <option value="Card">Card</option>
+                    <option value="UPI">UPI</option>
+                  </select>
+                </div>
+
+                {/* ✅ Naya Field: Transaction ID (Only for Online/Card/UPI) */}
+                {(clearDuePaymentType === "Online" || clearDuePaymentType === "Card" || clearDuePaymentType === "UPI") && (
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">Transaction ID</label>
+                    <input
+                      type="text"
+                      value={clearDueTransactionId}
+                      onChange={(e) => setClearDueTransactionId(e.target.value)}
+                      placeholder="Enter Transaction ID"
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
+                <button onClick={() => setShowClearDueModal(false)} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
+                             <button 
+                  onClick={() => {
+                    const updateItems = (list) => list.map((item) => {
+                      const netAmount = Math.max(0, (Number(item.price) || 0) - (Number(item.discount) || 0));
+                      const paidAmount = Number(item.paidAmount) || 0;
+                      const dueAmount = Number(item.dueAmount) || 0;
+                      
+                      if (dueAmount <= 0) return item;
+
+                      const newPaidAmount = paidAmount + dueAmount;
+                      let newStatus = "Due";
+                      if (newPaidAmount >= netAmount) newStatus = "Paid";
+                      else if (newPaidAmount > 0) newStatus = "Partial";
+
+                      return { 
+                        ...item, 
+                        paidAmount: newPaidAmount, 
+                        dueAmount: 0, 
+                        paymentStatus: newStatus,
+                        paymentMode: clearDuePaymentType,
+                        transactionId: clearDueTransactionId // ✅ Txn ID save karo
+                      };
+                    });
+
+                    if (clearDueCategory === "lab") {
+                      setLabItemsList(updateItems);
+                    } else {
+                      setPharmacyItemsList(updateItems);
+                    }
+                    
+                    showToast(`✅ Due cleared via ${clearDuePaymentType}! Please click Save.`, "success");
+                    setShowClearDueModal(false);
+                    setClearDueTransactionId(""); // Reset Txn ID
+                  }} 
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5"
+                >
+                  <FaCheckCircle className="w-3.5 h-3.5" /> Confirm & Clear
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* CLINIC SERVICES MODAL */}
         {showClinicServicesModal && clinicServicesBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">

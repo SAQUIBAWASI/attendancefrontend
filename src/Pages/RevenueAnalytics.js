@@ -1,8 +1,4 @@
 // src/Pages/RevenueAnalytics.jsx
-// ✅ Revenue Analytics + Monthly Target Tracker
-// 🆕 Edit Target → opens same FY grid modal with prefilled values
-// 🆕 FY dropdown: 2020 se lo
-// 🆕 Category cards: TOTAL labels bold
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -68,7 +64,6 @@ const CAT_CELL_CLS = {
   amber: "bg-amber-50/30",
 };
 
-// 🆕 FY range start year — 2020 se
 const FY_START_FROM = 2020;
 
 const getCurrentFYStartYear = () => {
@@ -78,10 +73,6 @@ const getCurrentFYStartYear = () => {
 
 const formatFY = (startYear) => `${startYear}-${String(startYear + 1).slice(-2)}`;
 
-/**
- * Get FY start year given a calendar year and month.
- * Apr-Dec → year; Jan-Mar → year-1
- */
 const getFYStartForMonth = (calendarYear, calendarMonth) => {
   return calendarMonth >= 4 ? calendarYear : calendarYear - 1;
 };
@@ -311,7 +302,6 @@ const CategoryCard = ({
         <div className={`text-[12px] font-black uppercase tracking-wider leading-8 ${a.title}`}>{title}</div>
       </div>
       <div className="space-y-1 mb-2.5">
-        {/* 🆕 TOTAL labels bold (font-black already) */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-black text-slate-800 uppercase tracking-wide">{title.toUpperCase()} TOTAL:</span>
           <span className="text-[14px] font-black text-slate-900">{fmtAmt(total)}</span>
@@ -371,7 +361,6 @@ const GrandTotalCard = ({
         <div className="text-[12px] font-black uppercase tracking-wider leading-8 text-white">Grand Total</div>
       </div>
       <div className="space-y-1 mb-2.5">
-        {/* 🆕 TOTAL labels bold (font-black already) */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-black text-white uppercase tracking-wide">GRAND TOTAL:</span>
           <span className="text-[14px] font-black text-white">{fmtAmt(total)}</span>
@@ -418,8 +407,7 @@ const GrandTotalCard = ({
 };
 
 /* ============================================================ */
-/* Add/Edit Target Modal — FY grid (supports editTarget)        */
-/* 🆕 FY dropdown: 2020 → current + 2                            */
+/* Add/Edit Target Modal — Months as Rows, Categories as Columns */
 /* ============================================================ */
 const AddTargetModal = ({
   isOpen, onClose, onSave, saving,
@@ -432,17 +420,16 @@ const AddTargetModal = ({
     : getCurrentFYStartYear();
 
   const [fyStartYear, setFyStartYear] = useState(defaultFYStart);
+  // Grid structure: { [month]: { [catKey]: { amount: "", footFall: "" } } }
   const [grid, setGrid] = useState({});
   const [fyError, setFyError] = useState("");
 
   const currentFYStart = getCurrentFYStartYear();
 
-  // 🆕 FY options: 2020 → current + 2
   const fyOptions = useMemo(() => {
     const arr = [];
     const endYear = currentFYStart + 2;
     for (let y = FY_START_FROM; y <= endYear; y++) arr.push(y);
-    // Ensure edit target's FY is in the list
     if (isEditMode && !arr.includes(defaultFYStart)) {
       arr.push(defaultFYStart);
       arr.sort((a, b) => a - b);
@@ -450,15 +437,17 @@ const AddTargetModal = ({
     return arr;
   }, [currentFYStart, isEditMode, defaultFYStart]);
 
-  // Initialize grid on open
   useEffect(() => {
     if (isOpen) {
       setFyError("");
       setFyStartYear(defaultFYStart);
+      
       const emptyGrid = {};
-      TARGET_CATEGORIES.forEach((c) => {
-        emptyGrid[c.key] = {};
-        FY_MONTH_ORDER.forEach((m) => { emptyGrid[c.key][m] = ""; });
+      FY_MONTH_ORDER.forEach((m) => {
+        emptyGrid[m] = {};
+        TARGET_CATEGORIES.forEach((c) => {
+          emptyGrid[m][c.key] = { amount: "", footFall: "" };
+        });
       });
 
       if (isEditMode && editTarget) {
@@ -467,9 +456,10 @@ const AddTargetModal = ({
         const editFYStart = getFYStartForMonth(editYear, editMonth);
         if (editFYStart === defaultFYStart) {
           TARGET_CATEGORIES.forEach((cat) => {
-            const val = Number(editTarget.categories?.[cat.key]) || 0;
-            if (val > 0) {
-              emptyGrid[cat.key][editMonth] = String(Math.round(val));
+            const catData = editTarget.categories?.[cat.key];
+            if (catData) {
+              emptyGrid[editMonth][cat.key].amount = catData.amount > 0 ? String(Math.round(catData.amount)) : "";
+              emptyGrid[editMonth][cat.key].footFall = catData.footFall > 0 ? String(catData.footFall) : "";
             }
           });
         }
@@ -485,19 +475,33 @@ const AddTargetModal = ({
   const handleSubmit = () => {
     const entries = [];
     let totalAmt = 0;
-    TARGET_CATEGORIES.forEach((cat) => {
-      FY_MONTH_ORDER.forEach((m) => {
-        const raw = grid?.[cat.key]?.[m];
-        const val = Number(raw);
-        if (val > 0) {
-          const calendarYear = m >= 4 ? fyStartYear : fyStartYear + 1;
-          entries.push({ category: cat.key, month: m, year: calendarYear, amount: val });
-          totalAmt += val;
+    let totalFootFall = 0;
+
+    FY_MONTH_ORDER.forEach((m) => {
+      const calendarYear = m >= 4 ? fyStartYear : fyStartYear + 1;
+      TARGET_CATEGORIES.forEach((cat) => {
+        const amtRaw = grid?.[m]?.[cat.key]?.amount;
+        const ffRaw = grid?.[m]?.[cat.key]?.footFall;
+        
+        const amt = Number(amtRaw) || 0;
+        const ff = Number(ffRaw) || 0;
+
+        if (amt > 0 || ff > 0) {
+          entries.push({ 
+            category: cat.key, 
+            month: m, 
+            year: calendarYear, 
+            amount: amt,
+            footFall: ff
+          });
+          totalAmt += amt;
+          totalFootFall += ff;
         }
       });
     });
+
     if (entries.length === 0) {
-      setFyError("Please enter at least one amount in the grid");
+      setFyError("Please enter at least one amount or footfall in the grid");
       return;
     }
     setFyError("");
@@ -506,41 +510,56 @@ const AddTargetModal = ({
       fyStartYear,
       entries,
       totalAmount: totalAmt,
+      totalFootFall: totalFootFall,
       editTarget: isEditMode ? editTarget : null,
     });
   };
 
-  const handleGridChange = (catKey, month, value) => {
-    setGrid((prev) => ({ ...prev, [catKey]: { ...(prev[catKey] || {}), [month]: value } }));
+  const handleGridChange = (month, catKey, field, value) => {
+    setGrid((prev) => ({
+      ...prev,
+      [month]: {
+        ...(prev[month] || {}),
+        [catKey]: {
+          ...(prev[month]?.[catKey] || { amount: "", footFall: "" }),
+          [field]: value,
+        }
+      }
+    }));
   };
-  const getCategoryTotal = (catKey) => {
+
+  const getCategoryTotal = (catKey, field) => {
     let sum = 0;
-    FY_MONTH_ORDER.forEach((m) => { sum += Number(grid?.[catKey]?.[m]) || 0; });
+    FY_MONTH_ORDER.forEach((m) => { 
+      sum += Number(grid?.[m]?.[catKey]?.[field]) || 0; 
+    });
     return sum;
   };
-  const getMonthTotal = (month) => {
+
+  const getMonthTotal = (month, field) => {
     let sum = 0;
-    TARGET_CATEGORIES.forEach((c) => { sum += Number(grid?.[c.key]?.[month]) || 0; });
+    TARGET_CATEGORIES.forEach((c) => { 
+      sum += Number(grid?.[month]?.[c.key]?.[field]) || 0; 
+    });
     return sum;
   };
-  const getGrandTotal = () => {
+
+  const getGrandTotal = (field) => {
     let sum = 0;
-    TARGET_CATEGORIES.forEach((c) => { sum += getCategoryTotal(c.key); });
+    TARGET_CATEGORIES.forEach((c) => { 
+      sum += getCategoryTotal(c.key, field); 
+    });
     return sum;
-  };
-  const colorMap = {
-    blue: "text-blue-700 bg-blue-50 border-blue-200",
-    purple: "text-purple-700 bg-purple-50 border-purple-200",
-    emerald: "text-emerald-700 bg-emerald-50 border-emerald-200",
-    amber: "text-amber-700 bg-amber-50 border-amber-200",
   };
 
   const editMonth = isEditMode ? Number(editTarget.month) : null;
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-6xl shadow-2xl border border-purple-200 overflow-hidden">
-        <div className={`px-5 py-4 text-white flex items-center gap-3 ${isEditMode ? "bg-gradient-to-r from-blue-600 to-indigo-600" : "bg-gradient-to-r from-purple-600 to-indigo-600"}`}>
+      <div className="bg-white rounded-2xl w-full max-w-6xl shadow-2xl border border-purple-200 overflow-hidden flex flex-col max-h-[95vh]">
+        
+        {/* Header */}
+        <div className={`px-5 py-4 text-white flex items-center gap-3 flex-shrink-0 ${isEditMode ? "bg-gradient-to-r from-blue-600 to-indigo-600" : "bg-gradient-to-r from-purple-600 to-indigo-600"}`}>
           <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
             {isEditMode ? <FaEdit className="w-5 h-5" /> : <FiTarget className="w-5 h-5" />}
           </div>
@@ -562,7 +581,8 @@ const AddTargetModal = ({
           </button>
         </div>
 
-        <div className="p-5 space-y-3">
+        {/* Body */}
+        <div className="p-5 space-y-3 overflow-y-auto flex-1">
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <label className="text-[10px] font-bold text-purple-700 uppercase">Financial Year:</label>
@@ -586,74 +606,102 @@ const AddTargetModal = ({
             <div className="overflow-x-auto">
               <table className="w-full border-collapse" style={{ minWidth: "1100px" }}>
                 <thead>
+                  {/* Top Header: Category Names */}
                   <tr>
-                    <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-purple-700 bg-purple-700 sticky left-0 z-10 whitespace-nowrap">
-                      Category
+                    <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-purple-700 bg-purple-700 sticky left-0 z-20 whitespace-nowrap" rowSpan={2}>
+                      Month
                     </th>
-                    {FY_MONTH_ORDER.map((m) => {
-                      const yr = m >= 4 ? fyStartYear : fyStartYear + 1;
-                      const isEditCol = isEditMode && m === editMonth;
-                      return (
-                        <th key={m} className={`px-1.5 py-2 text-center font-bold uppercase tracking-wider text-[10px] border-r whitespace-nowrap ${
-                          isEditCol ? "text-white bg-blue-700 border-blue-800" : "text-purple-800 bg-purple-50 border-purple-200"
-                        }`}>
-                          {FY_MONTH_SHORT[m]}
-                          <div className={`text-[8px] font-semibold normal-case mt-0.5 ${isEditCol ? "text-white/90" : "text-purple-500"}`}>
-                            {String(yr).slice(-2)}
-                          </div>
-                        </th>
-                      );
-                    })}
-                    <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] bg-indigo-700 whitespace-nowrap">Total</th>
+                    {TARGET_CATEGORIES.map((cat) => (
+                      <th key={cat.key} colSpan={2}
+                        className={`px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b ${CAT_HEADER_CLS[cat.color]} whitespace-nowrap`}>
+                        {cat.label}
+                      </th>
+                    ))}
+                    <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] bg-indigo-700 border-b border-indigo-800 whitespace-nowrap" colSpan={2}>
+                      Total
+                    </th>
+                  </tr>
+                  {/* Sub Header: Amount & FootFall */}
+                  <tr>
+                    {TARGET_CATEGORIES.map((cat) => (
+                      <React.Fragment key={cat.key}>
+                        <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r border-b ${CAT_SUB_CLS[cat.color]} whitespace-nowrap w-[80px]`}>Amount</th>
+                        <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r border-b ${CAT_SUB_CLS[cat.color]} whitespace-nowrap w-[60px]`}>FootFall</th>
+                      </React.Fragment>
+                    ))}
+                    <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-100 bg-indigo-50 whitespace-nowrap w-[80px]">Amount</th>
+                    <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-b border-indigo-100 bg-indigo-50 whitespace-nowrap w-[60px]">FootFall</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {TARGET_CATEGORIES.map((cat) => {
-                    const catTotal = getCategoryTotal(cat.key);
-                    const cm = colorMap[cat.color] || colorMap.blue;
+                  {/* Rows: Months */}
+                  {FY_MONTH_ORDER.map((m) => {
+                    const yr = m >= 4 ? fyStartYear : fyStartYear + 1;
+                    const isEditRow = isEditMode && m === editMonth;
+                    const monthTotalAmount = getMonthTotal(m, "amount");
+                    const monthTotalFF = getMonthTotal(m, "footFall");
+
                     return (
-                      <tr key={cat.key} className="hover:bg-slate-50">
-                        <td className={`px-3 py-2 text-center font-bold text-[11px] border-r border-slate-200 border-b sticky left-0 z-10 whitespace-nowrap ${cm}`}>
-                          {cat.label}
+                      <tr key={m} className={`hover:bg-slate-50 ${isEditRow ? "bg-blue-50/50" : ""}`}>
+                        <td className={`px-3 py-2 text-center font-bold text-[11px] border-r border-b sticky left-0 z-10 whitespace-nowrap ${isEditRow ? "bg-blue-100 text-blue-800" : "bg-slate-50 text-slate-700"}`}>
+                          <div>{FY_MONTH_SHORT[m]}</div>
+                          <div className="text-[9px] font-semibold text-slate-400 mt-0.5">{String(yr).slice(-2)}</div>
                         </td>
-                        {FY_MONTH_ORDER.map((m) => {
-                          const isEditCol = isEditMode && m === editMonth;
+
+                        {TARGET_CATEGORIES.map((cat) => {
+                          const cellData = grid?.[m]?.[cat.key] || { amount: "", footFall: "" };
                           return (
-                            <td key={m} className={`px-1 py-1.5 border-r border-b text-center ${
-                              isEditCol ? "bg-blue-50" : "bg-white"
-                            }`}>
-                              <input type="number" min="0" placeholder="0"
-                                value={grid?.[cat.key]?.[m] ?? ""}
-                                onChange={(e) => handleGridChange(cat.key, m, e.target.value)}
-                                className={`w-[78px] text-center text-[11px] font-bold text-slate-800 bg-white border rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 ${
-                                  isEditCol ? "border-blue-400" : "border-slate-300"
-                                }`} />
-                            </td>
+                            <React.Fragment key={cat.key}>
+                              <td className={`px-1 py-1.5 border-r border-b text-center ${isEditRow ? "bg-blue-50" : "bg-white"}`}>
+                                <input type="number" min="0" placeholder="0"
+                                  value={cellData.amount}
+                                  onChange={(e) => handleGridChange(m, cat.key, "amount", e.target.value)}
+                                  className={`w-full text-center text-[11px] font-bold text-slate-800 bg-white border rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 ${isEditRow ? "border-blue-400" : "border-slate-300"}`} />
+                              </td>
+                              <td className={`px-1 py-1.5 border-r border-b text-center ${isEditRow ? "bg-blue-50" : "bg-white"}`}>
+                                <input type="number" min="0" placeholder="0"
+                                  value={cellData.footFall}
+                                  onChange={(e) => handleGridChange(m, cat.key, "footFall", e.target.value)}
+                                  className={`w-full text-center text-[11px] font-bold text-slate-800 bg-white border rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 ${isEditRow ? "border-blue-400" : "border-slate-300"}`} />
+                              </td>
+                            </React.Fragment>
                           );
                         })}
+
+                        {/* Month Total */}
+                        <td className="px-2 py-2 text-center font-black text-indigo-800 text-xs bg-indigo-50 border-r border-b whitespace-nowrap">
+                          {monthTotalAmount > 0 ? fmt(monthTotalAmount) : "—"}
+                        </td>
                         <td className="px-2 py-2 text-center font-black text-indigo-800 text-xs bg-indigo-50 border-b whitespace-nowrap">
-                          {catTotal > 0 ? fmtAmt(catTotal) : "—"}
+                          {monthTotalFF > 0 ? fmt(monthTotalFF) : "—"}
                         </td>
                       </tr>
                     );
                   })}
-                  <tr className="bg-gradient-to-r from-slate-100 to-slate-50">
+                  {/* Grand Total Row */}
+                  <tr className="bg-gradient-to-r from-slate-100 to-slate-50 border-t-2 border-slate-300">
                     <td className="px-3 py-2 text-center font-black text-slate-900 text-[10px] uppercase tracking-wider border-r border-slate-300 bg-slate-200 sticky left-0 z-10 whitespace-nowrap">
-                      Month Total
+                      Grand Total
                     </td>
-                    {FY_MONTH_ORDER.map((m) => {
-                      const mt = getMonthTotal(m);
-                      const isEditCol = isEditMode && m === editMonth;
+                    {TARGET_CATEGORIES.map((cat) => {
+                      const catTotalAmt = getCategoryTotal(cat.key, "amount");
+                      const catTotalFF = getCategoryTotal(cat.key, "footFall");
                       return (
-                        <td key={m} className={`px-1 py-2 text-center font-black text-slate-800 text-[10px] border-r border-slate-200 whitespace-nowrap ${
-                          isEditCol ? "bg-blue-100" : "bg-slate-100"
-                        }`}>
-                          {mt > 0 ? fmt(mt) : "—"}
-                        </td>
+                        <React.Fragment key={cat.key}>
+                          <td className="px-2 py-2 text-center font-black text-indigo-900 text-xs bg-indigo-100 border-r border-slate-200 whitespace-nowrap">
+                            {catTotalAmt > 0 ? fmt(catTotalAmt) : "—"}
+                          </td>
+                          <td className="px-2 py-2 text-center font-black text-indigo-900 text-xs bg-indigo-100 border-r border-slate-200 whitespace-nowrap">
+                            {catTotalFF > 0 ? fmt(catTotalFF) : "—"}
+                          </td>
+                        </React.Fragment>
                       );
                     })}
-                    <td className="px-2 py-2 text-center font-black text-indigo-900 text-xs bg-indigo-200 whitespace-nowrap">
-                      {getGrandTotal() > 0 ? fmtAmt(getGrandTotal()) : "—"}
+                    <td className="px-2 py-2 text-center font-black text-indigo-900 text-sm bg-indigo-200 border-r border-slate-200 whitespace-nowrap">
+                      {getGrandTotal("amount") > 0 ? fmt(getGrandTotal("amount")) : "—"}
+                    </td>
+                    <td className="px-2 py-2 text-center font-black text-indigo-900 text-sm bg-indigo-200 whitespace-nowrap">
+                      {getGrandTotal("footFall") > 0 ? fmt(getGrandTotal("footFall")) : "—"}
                     </td>
                   </tr>
                 </tbody>
@@ -671,11 +719,15 @@ const AddTargetModal = ({
             <span>
               <span className="font-bold">FY {formatFY(fyStartYear)}</span> — Total across all categories:
             </span>
-            <span className="font-extrabold text-sm">{fmtAmt(getGrandTotal())}</span>
+            <div className="flex gap-4">
+              <span className="font-extrabold text-sm">Amt: {fmtAmt(getGrandTotal("amount"))}</span>
+              <span className="font-extrabold text-sm">FF: {fmt(getGrandTotal("footFall"))}</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 py-3 bg-slate-50 border-t border-slate-200">
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 px-5 py-3 bg-slate-50 border-t border-slate-200 flex-shrink-0">
           <button type="button" onClick={onClose} disabled={saving}
             className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50">
             Cancel
@@ -718,15 +770,22 @@ const filterRowsByRange = (rows, fromDate, toDate) => {
 };
 
 const sumCategoryFromRows = (rows) => {
-  const acc = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0 };
+  const acc = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0,
+                clinicFF: 0, labFF: 0, clinicPharmacyFF: 0, retailPharmacyFF: 0, totalFF: 0 };
   if (!Array.isArray(rows)) return acc;
   rows.forEach((r) => {
     acc.clinic += Number(r.clinic?.total) || 0;
     acc.lab += Number(r.lab?.total) || 0;
     acc.clinicPharmacy += Number(r.pharmacy?.total) || 0;
     acc.retailPharmacy += Number(r.retailPharmacy?.total) || 0;
+    
+    acc.clinicFF += Number(r.clinic?.footFall) || 0;
+    acc.labFF += Number(r.lab?.footFall) || 0;
+    acc.clinicPharmacyFF += Number(r.pharmacy?.footFall) || 0;
+    acc.retailPharmacyFF += Number(r.retailPharmacy?.footFall) || 0;
   });
   acc.total = acc.clinic + acc.lab + acc.clinicPharmacy + acc.retailPharmacy;
+  acc.totalFF = acc.clinicFF + acc.labFF + acc.clinicPharmacyFF + acc.retailPharmacyFF;
   return acc;
 };
 
@@ -738,7 +797,7 @@ const TargetTracker = ({
   allTargets, loadingAllTargets, onEditRow, onDeleteRow,
   isHidden, onToggleHidden,
   fromDate, toDate, activePreset,
-  rangeAchieved = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasData: false },
+  rangeAchieved = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasData: false, totalFF: 0, clinicFF: 0, labFF: 0, clinicPharmacyFF: 0, retailPharmacyFF: 0 },
 }) => {
 
   const filteredTargets = useMemo(() => {
@@ -763,8 +822,9 @@ const TargetTracker = ({
       }
       const g = monthMap.get(key);
       if (t.category) {
-        if (!g.categories[t.category]) g.categories[t.category] = { amount: 0, ids: [] };
+        if (!g.categories[t.category]) g.categories[t.category] = { amount: 0, footFall: 0, ids: [] };
         g.categories[t.category].amount += Number(t.amount) || 0;
+        g.categories[t.category].footFall += Number(t.footFall) || 0;
         g.categories[t.category].ids.push(t._id);
       }
       if (t._id && !g.ids.includes(t._id)) g.ids.push(t._id);
@@ -781,10 +841,13 @@ const TargetTracker = ({
 
       const scaledCategories = {};
       let totalScaled = 0;
+      let totalFootFall = 0;
       Object.keys(g.categories).forEach((ck) => {
         const amt = g.categories[ck].amount * ratio;
-        scaledCategories[ck] = { amount: amt, ids: g.categories[ck].ids };
+        const ff = g.categories[ck].footFall * ratio;
+        scaledCategories[ck] = { amount: amt, footFall: ff, ids: g.categories[ck].ids };
         totalScaled += amt;
+        totalFootFall += ff;
       });
 
       out.push({
@@ -793,6 +856,7 @@ const TargetTracker = ({
         month: g.month,
         year: g.year,
         amount: totalScaled,
+        totalFootFall: totalFootFall,
         categories: scaledCategories,
         daysInRange,
         daysInMonth: dim,
@@ -875,152 +939,245 @@ const TargetTracker = ({
               )}
             </div>
           ) : (
-            <table className="w-full border-collapse text-xs" style={{ minWidth: "1700px" }}>
-              <thead>
-                <tr>
-                  <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-blue-800 bg-blue-900"
-                    rowSpan={2} style={{ minWidth: "130px" }}>
-                    {activePreset === "today" || activePreset === "yesterday" ? "Date" : "Month"}
-                  </th>
-                  {TARGET_CATEGORIES.map((cat) => (
-                    <th key={cat.key} colSpan={5}
-                      className={`px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r ${CAT_HEADER_CLS[cat.color]} whitespace-nowrap`}>
-                      {cat.label}
-                    </th>
-                  ))}
-                  <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] bg-indigo-700 border-r border-indigo-800 whitespace-nowrap"
-                    colSpan={4}>
-                    Summary
-                  </th>
-                  <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] bg-slate-800"
-                    rowSpan={2} style={{ minWidth: "80px" }}>
-                    Actions
-                  </th>
-                </tr>
-                <tr>
-                  {TARGET_CATEGORIES.map((cat) => (
-                    <React.Fragment key={cat.key}>
-                      <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Target</th>
-                      <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Achieved</th>
-                      <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Ach %</th>
-                      <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Per Day</th>
-                      <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Short/Surp</th>
-                    </React.Fragment>
-                  ))}
-                  <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Target</th>
-                  <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Achieved</th>
-                  <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Ach %</th>
-                  <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-200 bg-indigo-50 whitespace-nowrap">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTargets.map((t) => {
-                  const m = Number(t.month);
-                  const y = Number(t.year);
-                  const totalTarget = Number(t.amount) || 0;
-                  const catAchMap = {
-                    clinic: rangeAchieved.clinic || 0,
-                    lab: rangeAchieved.lab || 0,
-                    clinicPharmacy: rangeAchieved.clinicPharmacy || 0,
-                    retailPharmacy: rangeAchieved.retailPharmacy || 0,
-                  };
-                  const totalAch = rangeAchieved.total || 0;
-                  const hasAch = rangeAchieved.hasData === true;
+          <table className="w-full border-collapse text-xs" style={{ minWidth: "2200px" }}>
+  <thead>
+    <tr>
+      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-blue-800 bg-blue-900"
+        rowSpan={2} style={{ minWidth: "130px" }}>
+        {activePreset === "today" || activePreset === "yesterday" ? "Date" : "Month"}
+      </th>
+      {TARGET_CATEGORIES.map((cat) => (
+        <th key={cat.key} colSpan={6}
+          className={`px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r ${CAT_HEADER_CLS[cat.color]} whitespace-nowrap`}>
+          {cat.label}
+        </th>
+      ))}
+      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] bg-indigo-700 border-r border-indigo-800 whitespace-nowrap"
+        colSpan={6}>
+        Summary
+      </th>
+      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] bg-slate-800"
+        rowSpan={2} style={{ minWidth: "80px" }}>
+        Actions
+      </th>
+    </tr>
+    <tr>
+      {TARGET_CATEGORIES.map((cat) => (
+        <React.Fragment key={cat.key}>
+          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Target / Achieved</th>
+          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>100% / Ach %</th>
+          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Per Day</th>
+          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Short/Surp</th>
+          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>FootFall T/A</th>
+          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>FF Ach %</th>
+        </React.Fragment>
+      ))}
+      {/* Summary Headers (6 columns to match body) */}
+      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Target / Achieved</th>
+      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">100% / Ach %</th>
+      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Per Day</th>
+      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Short/Surp</th>
+      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">FootFall T/A</th>
+      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-200 bg-indigo-50 whitespace-nowrap">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {filteredTargets.map((t) => {
+      const m = Number(t.month);
+      const y = Number(t.year);
+      const totalTarget = Number(t.amount) || 0;
+      const totalTargetFF = Number(t.totalFootFall) || 0;
+      
+      const catAchMap = {
+        clinic: rangeAchieved.clinic || 0,
+        lab: rangeAchieved.lab || 0,
+        clinicPharmacy: rangeAchieved.clinicPharmacy || 0,
+        retailPharmacy: rangeAchieved.retailPharmacy || 0,
+      };
+      const catAchFFMap = {
+        clinic: rangeAchieved.clinicFF || 0,
+        lab: rangeAchieved.labFF || 0,
+        clinicPharmacy: rangeAchieved.clinicPharmacyFF || 0,
+        retailPharmacy: rangeAchieved.retailPharmacyFF || 0,
+      };
+      
+      const totalAch = rangeAchieved.total || 0;
+      const totalAchFF = rangeAchieved.totalFF || 0;
+      const hasAch = rangeAchieved.hasData === true;
 
-                  const rowDiff = totalAch - totalTarget;
-                  const rowDiffAbs = Math.abs(rowDiff);
-                  const rowPct = totalTarget > 0 ? (totalAch / totalTarget) * 100 : 0;
-                  const rowStatus = getRowStatus(hasAch, totalTarget, rowDiff, rowDiffAbs);
+      const rowDiff = totalAch - totalTarget;
+      const rowDiffAbs = Math.abs(rowDiff);
+      const rowPct = totalTarget > 0 ? (totalAch / totalTarget) * 100 : 0;
+      const rowStatus = getRowStatus(hasAch, totalTarget, rowDiff, rowDiffAbs);
 
-                  return (
-                    <tr key={`${y}-${m}`} className="hover:bg-slate-50/60 border-b border-slate-200">
-                      <td className="px-2 py-2.5 text-center font-bold text-slate-800 text-[11px] border-r border-slate-200 bg-slate-50 whitespace-nowrap">
-                        <div className="text-purple-700">{getDateLabelForRow(t)}</div>
-                        <div className="text-[9px] font-semibold text-slate-400 mt-0.5">
-                          ({t.daysInRange}/{t.daysInMonth} days)
+      // Summary Calculations
+      const totalPerDay = t.daysInRange > 0 ? totalTarget / t.daysInRange : 0;
+      const totalPerDayFF = t.daysInRange > 0 ? totalTargetFF / t.daysInRange : 0;
+
+      return (
+        <tr key={`${y}-${m}`} className="hover:bg-slate-50/60 border-b border-slate-200">
+          <td className="px-2 py-2.5 text-center font-bold text-slate-800 text-[11px] border-r border-slate-200 bg-slate-50 whitespace-nowrap">
+            <div className="text-purple-700">{getDateLabelForRow(t)}</div>
+            <div className="text-[9px] font-semibold text-slate-400 mt-0.5">
+              ({t.daysInRange}/{t.daysInMonth} days)
+            </div>
+          </td>
+
+          {TARGET_CATEGORIES.map((cat) => {
+            const catTarget = Number(t.categories?.[cat.key]?.amount) || 0;
+            const catTargetFF = Number(t.categories?.[cat.key]?.footFall) || 0;
+            const catAch = catAchMap[cat.key] || 0;
+            const catAchFF = catAchFFMap[cat.key] || 0;
+            const catDiff = catAch - catTarget;
+            const catDiffAbs = Math.abs(catDiff);
+            const catPct = catTarget > 0 ? (catAch / catTarget) * 100 : 0;
+            const catPerDay = t.daysInRange > 0 ? catTarget / t.daysInRange : 0;
+            
+            const achColor = !hasAch ? "text-slate-400" 
+              : (catAch < catTarget ? "text-rose-700" : "text-emerald-700");
+            const pctColor = !hasAch ? "text-slate-400" 
+              : (catPct < 100 ? "text-rose-700" : "text-emerald-700");
+            const ffColor = !hasAch ? "text-slate-400" 
+              : (catAchFF < catTargetFF ? "text-rose-700" : "text-emerald-700");
+
+            return (
+              <React.Fragment key={cat.key}>
+                {/* 1. Target / Achieved */}
+                <td className={`px-1.5 py-2.5 text-center font-bold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
+                  <div className="text-purple-800">{catTarget > 0 ? fmtAmt(Math.round(catTarget)) : "—"}</div>
+                  <div className="w-3/4 mx-auto border-t border-slate-300 my-1"></div>
+                  <div className={`${achColor}`}>
+                    {hasAch ? (catAch > 0 ? fmtAmt(Math.round(catAch)) : "—") : "—"}
+                  </div>
+                </td>
+                {/* 2. 100% / Ach % */}
+                <td className={`px-1.5 py-2.5 text-center font-bold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
+                  <div className="text-slate-500">100%</div>
+                  <div className="w-3/4 mx-auto border-t border-slate-300 my-1"></div>
+                  <div className={`${pctColor}`}>
+                    {hasAch && catTarget > 0 ? `${catPct.toFixed(1)}%` : "—"}
+                  </div>
+                </td>
+                {/* 3. Per Day */}
+                <td className={`px-1.5 py-2.5 text-center font-bold text-slate-700 text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
+                  {catPerDay > 0 ? fmtAmt(Math.round(catPerDay)) : "—"}
+                </td>
+                {/* 4. Short/Surp */}
+                <td className={`px-1.5 py-2.5 text-center font-extrabold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap ${
+                  !hasAch ? "text-slate-400"
+                    : catDiffAbs < 0.5 ? "text-emerald-700"
+                    : catDiff > 0 ? "text-blue-700" : "text-rose-700"
+                }`}>
+                  {hasAch ? (
+                    catDiffAbs < 0.5 ? "—" : (
+                      <>
+                        {catPct > 100 ? `+${(catPct - 100).toFixed(1)}%` : `-${(100 - catPct).toFixed(1)}%`}
+                        <div className="text-[8px] font-normal opacity-80 mt-0.5">
+                          {catDiff > 0 ? "Surplus" : "Short"}
                         </div>
-                      </td>
+                      </>
+                    )
+                  ) : "—"}
+                </td>
+                {/* 5. FootFall T/A */}
+                <td className={`px-1.5 py-2.5 text-center font-bold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
+                  <div className="text-purple-800">{catTargetFF > 0 ? Math.round(catTargetFF) : "—"}</div>
+                  <div className="w-3/4 mx-auto border-t border-slate-300 my-1"></div>
+                  <div className={`${ffColor}`}>
+                    {hasAch ? (catAchFF > 0 ? Math.round(catAchFF) : "—") : "—"}
+                  </div>
+                </td>
+                {/* 6. FF Ach % */}
+                <td className={`px-1.5 py-2.5 text-center font-bold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
+                  <div className={catAchFF >= catTargetFF && hasAch ? "text-emerald-700" : "text-rose-700"}>
+                    {hasAch && catTargetFF > 0 ? `${((catAchFF / catTargetFF) * 100).toFixed(1)}%` : "—"}
+                  </div>
+                  <div className="text-[8px] font-normal opacity-80 mt-0.5">
+                    {hasAch && catTargetFF > 0 ? (catAchFF >= catTargetFF ? "Surp" : "Short") : ""}
+                  </div>
+                </td>
+              </React.Fragment>
+            );
+          })}
 
-                      {TARGET_CATEGORIES.map((cat) => {
-                        const catTarget = Number(t.categories?.[cat.key]?.amount) || 0;
-                        const catAch = catAchMap[cat.key] || 0;
-                        const catDiff = catAch - catTarget;
-                        const catDiffAbs = Math.abs(catDiff);
-                        const catPct = catTarget > 0 ? (catAch / catTarget) * 100 : 0;
-                        const catPerDay = t.daysInRange > 0 ? catTarget / t.daysInRange : 0;
-                        const catDiffColor = !hasAch ? "text-slate-400"
-                          : catDiffAbs < 0.5 ? "text-emerald-700"
-                          : catDiff > 0 ? "text-blue-700" : "text-rose-700";
+          {/* Summary Columns (Now 6 columns to match Header) */}
+          {/* 1. Target / Achieved */}
+          <td className="px-2 py-2.5 text-center font-extrabold text-[11px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
+            <div className="text-purple-800">{fmtAmt(Math.round(totalTarget))}</div>
+            <div className="w-3/4 mx-auto border-t border-indigo-300 my-1"></div>
+            <div className={`${!hasAch ? "text-slate-400" : (totalAch < totalTarget ? "text-rose-700" : "text-emerald-700")}`}>
+              {hasAch ? fmtAmt(Math.round(totalAch)) : "—"}
+            </div>
+          </td>
+          {/* 2. 100% / Ach % */}
+          <td className="px-2 py-2.5 text-center font-bold text-[11px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
+            <div className="text-slate-500">100%</div>
+            <div className="w-3/4 mx-auto border-t border-indigo-300 my-1"></div>
+            <div className={`${!hasAch ? "text-slate-400" : (rowPct < 100 ? "text-rose-700" : "text-emerald-700")}`}>
+              {hasAch ? `${rowPct.toFixed(1)}%` : "—"}
+            </div>
+          </td>
+          {/* 3. Per Day (Amount) */}
+          <td className="px-2 py-2.5 text-center font-bold text-slate-700 text-[10px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
+            {totalPerDay > 0 ? fmtAmt(Math.round(totalPerDay)) : "—"}
+          </td>
+          {/* 4. Short/Surp (Amount) */}
+          <td className={`px-2 py-2.5 text-center font-extrabold text-[10px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap ${
+            !hasAch ? "text-slate-400"
+              : rowDiffAbs < 0.5 ? "text-emerald-700"
+              : rowDiff > 0 ? "text-blue-700" : "text-rose-700"
+          }`}>
+            {hasAch ? (
+              rowDiffAbs < 0.5 ? "—" : (
+                <>
+                  {rowPct > 100 ? `+${(rowPct - 100).toFixed(1)}%` : `-${(100 - rowPct).toFixed(1)}%`}
+                  <div className="text-[8px] font-normal opacity-80 mt-0.5">
+                    {rowDiff > 0 ? "Surplus" : "Short"}
+                  </div>
+                </>
+              )
+            ) : "—"}
+          </td>
+          {/* 5. FootFall T/A */}
+          <td className="px-2 py-2.5 text-center font-extrabold text-[11px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
+            <div className="text-purple-800">{totalTargetFF > 0 ? Math.round(totalTargetFF) : "—"}</div>
+            <div className="w-3/4 mx-auto border-t border-indigo-300 my-1"></div>
+            <div className={`${!hasAch ? "text-slate-400" : (totalAchFF < totalTargetFF ? "text-rose-700" : "text-emerald-700")}`}>
+              {hasAch ? (totalAchFF > 0 ? Math.round(totalAchFF) : "—") : "—"}
+            </div>
+          </td>
+          {/* 6. Status / FF Ach % */}
+          <td className={`px-2 py-2.5 text-center font-black text-[10px] uppercase tracking-wider border-r border-indigo-200 bg-indigo-50/50 whitespace-nowrap ${rowStatus.color}`}>
+            {hasAch ? (
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border ${rowStatus.bg} ${rowStatus.border}`}>
+                {React.createElement(rowStatus.icon, { className: "w-2.5 h-2.5" })}
+                {rowStatus.label}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border bg-slate-50 text-slate-400 border-slate-200">
+                <FiClock className="w-2.5 h-2.5" /> PENDING
+              </span>
+            )}
+          </td>
 
-                        return (
-                          <React.Fragment key={cat.key}>
-                            <td className={`px-1.5 py-2.5 text-center font-extrabold text-purple-800 text-[11px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
-                              {catTarget > 0 ? fmtAmt(Math.round(catTarget)) : "—"}
-                            </td>
-                            <td className={`px-1.5 py-2.5 text-center font-extrabold text-emerald-700 text-[11px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
-                              {hasAch ? (catAch > 0 ? fmtAmt(Math.round(catAch)) : "—") : "—"}
-                            </td>
-                            <td className={`px-1.5 py-2.5 text-center font-bold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap ${catDiffColor}`}>
-                              {hasAch && catTarget > 0 ? `${catPct.toFixed(1)}%` : "—"}
-                            </td>
-                            <td className={`px-1.5 py-2.5 text-center font-bold text-slate-700 text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
-                              {catPerDay > 0 ? fmtAmt(Math.round(catPerDay)) : "—"}
-                            </td>
-                            <td className={`px-1.5 py-2.5 text-center font-extrabold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap ${catDiffColor}`}>
-                              {hasAch ? (
-                                catDiffAbs < 0.5 ? "—" : (
-                                  <>
-                                    {fmtAmt(Math.round(catDiffAbs))}
-                                    <div className="text-[8px] font-normal opacity-80 mt-0.5">
-                                      {catDiff > 0 ? "Surplus" : "Short"}
-                                    </div>
-                                  </>
-                                )
-                              ) : "—"}
-                            </td>
-                          </React.Fragment>
-                        );
-                      })}
-
-                      <td className="px-2 py-2.5 text-center font-extrabold text-purple-800 text-xs border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
-                        {fmtAmt(Math.round(totalTarget))}
-                      </td>
-                      <td className="px-2 py-2.5 text-center font-extrabold text-emerald-700 text-xs border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
-                        {hasAch ? fmtAmt(Math.round(totalAch)) : "—"}
-                      </td>
-                      <td className={`px-2 py-2.5 text-center font-black text-xs border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap ${rowStatus.color}`}>
-                        {hasAch ? `${rowPct.toFixed(1)}%` : "—"}
-                      </td>
-                      <td className={`px-2 py-2.5 text-center font-black text-[10px] uppercase tracking-wider border-r border-indigo-200 bg-indigo-50/50 whitespace-nowrap ${rowStatus.color}`}>
-                        {hasAch ? (
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border ${rowStatus.bg} ${rowStatus.border}`}>
-                            {React.createElement(rowStatus.icon, { className: "w-2.5 h-2.5" })}
-                            {rowStatus.label}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border bg-slate-50 text-slate-400 border-slate-200">
-                            <FiClock className="w-2.5 h-2.5" /> PENDING
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="px-2 py-2 text-center border-slate-200 whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1">
-                          <button type="button" onClick={() => onEditRow(t)} title="Edit"
-                            className="w-7 h-7 rounded-md flex items-center justify-center text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100">
-                            <FaEdit className="w-3 h-3" />
-                          </button>
-                          <button type="button" onClick={() => onDeleteRow(t)} title="Delete"
-                            className="w-7 h-7 rounded-md flex items-center justify-center text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100">
-                            <FiTrash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          {/* Actions */}
+          <td className="px-2 py-2 text-center border-slate-200 whitespace-nowrap">
+            <div className="flex items-center justify-center gap-1">
+              <button type="button" onClick={() => onEditRow(t)} title="Edit"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100">
+                <FaEdit className="w-3 h-3" />
+              </button>
+              <button type="button" onClick={() => onDeleteRow(t)} title="Delete"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100">
+                <FiTrash2 className="w-3 h-3" />
+              </button>
+            </div>
+          </td>
+        </tr>
+      );
+    })}
+  </tbody>
+</table>
           )}
         </div>
       )}
@@ -1100,7 +1257,7 @@ export default function RevenueAnalytics() {
       for (const entry of entries) {
         try {
           const res = await axios.post(`${TARGET_API_BASE}/save-revenue-target`, {
-            month: entry.month, year: entry.year, amount: entry.amount, category: entry.category,
+            month: entry.month, year: entry.year, amount: entry.amount, category: entry.category, footFall: entry.footFall,
           });
           if (res.data?.success) {
             savedCount++;
@@ -1145,7 +1302,7 @@ export default function RevenueAnalytics() {
         try {
           if (existing && existing._id) {
             const res = await axios.put(`${TARGET_API_BASE}/update-revenue-target/${existing._id}`, {
-              amount: entry.amount,
+              amount: entry.amount, footFall: entry.footFall,
             });
             if (res.data?.success) updatedCount++;
             else {
@@ -1154,7 +1311,7 @@ export default function RevenueAnalytics() {
             }
           } else {
             const res = await axios.post(`${TARGET_API_BASE}/save-revenue-target`, {
-              month: entry.month, year: entry.year, amount: entry.amount, category: entry.category,
+              month: entry.month, year: entry.year, amount: entry.amount, category: entry.category, footFall: entry.footFall,
             });
             if (res.data?.success) updatedCount++;
             else {
@@ -1203,9 +1360,17 @@ export default function RevenueAnalytics() {
     const categories = {};
     TARGET_CATEGORIES.forEach((cat) => {
       const rawAmt = Number(row.categories?.[cat.key]?.amount) || 0;
+      const rawFF = Number(row.categories?.[cat.key]?.footFall) || 0;
       const ratio = row.ratio || 1;
       const originalAmt = ratio > 0 ? rawAmt / ratio : 0;
-      if (originalAmt > 0) categories[cat.key] = Math.round(originalAmt);
+      const originalFF = ratio > 0 ? rawFF / ratio : 0;
+      
+      if (originalAmt > 0 || originalFF > 0) {
+        categories[cat.key] = {
+          amount: Math.round(originalAmt),
+          footFall: Math.round(originalFF)
+        };
+      }
     });
 
     setEditTargetData({
@@ -1285,7 +1450,9 @@ export default function RevenueAnalytics() {
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Failed to fetch analytics");
       setData(null);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }, [fromDate, toDate]);
 
   useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
@@ -1407,7 +1574,8 @@ export default function RevenueAnalytics() {
 
   const rangeAchieved = useMemo(() => {
     if (!data || !data.rows || data.rows.length === 0) {
-      return { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasData: false };
+      return { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasData: false, 
+               clinicFF: 0, labFF: 0, clinicPharmacyFF: 0, retailPharmacyFF: 0, totalFF: 0 };
     }
     const filteredRows = filterRowsByRange(data.rows, fromDate, toDate);
     const sums = sumCategoryFromRows(filteredRows);

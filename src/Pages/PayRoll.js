@@ -1882,8 +1882,9 @@ const PayRoll = () => {
 
     const earningsItems = [];
 
-    const basicAmt = employeeData.basicPay || employeeData.salaryPerMonth || 0;
-    if (basicAmt > 0) earningsItems.push({ label: 'Basic DA', amount: basicAmt });
+    // ✅ Fixed Monthly Salary in Earnings
+    const fixedSalary = employeeData.salaryPerMonth || employeeData.basicPay || 0;
+    if (fixedSalary > 0) earningsItems.push({ label: 'Basic Salary', amount: fixedSalary });
 
     earningsItems.push({ label: `Working Days (Full: ${presentDays})`, amount: 0, isInfo: true });
     earningsItems.push({ label: `Week Off Days (${actualWeekOffDaysNumeric})`, amount: 0, isInfo: true });
@@ -1897,19 +1898,17 @@ const PayRoll = () => {
 
     const deductionsItems = [];
 
-    let totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + compOffData.balance + compOffDays;
+    // ✅ LOP Deduction calculation exactly based on the difference
+    const totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + compOffData.balance + compOffDays + holidays;
     let lopDays = Math.max(0, daysInMonth - totalPaidDays);
-    let lopAmount = lopDays * dailyRate;
-    lopDays = Math.round(lopDays * 10) / 10;
-    lopAmount = Math.round(lopAmount * 100) / 100;
+    
+    // Amount Deducted = Fixed Salary - Calculated Salary (This ensures Net Pay matches exactly)
+    let lopAmount = Math.max(0, fixedSalary - employee.calculatedSalary); 
 
-    deductionsItems.push({ label: `LOP / Absent (${lopDays > 0 ? lopDays : 0} days)`, amount: lopAmount });
-
-    const halfDayDeductionAmount = (halfDays * 0.5) * dailyRate;
-    if (halfDays > 0) {
-      deductionsItems.push({ label: `Half Day Deductions (${halfDays} HD)`, amount: halfDayDeductionAmount });
+    if (lopDays > 0 || lopAmount > 0) {
+       deductionsItems.push({ label: `LOP / Absent (${Math.round(lopDays * 10)/10} days)`, amount: lopAmount });
     } else {
-      deductionsItems.push({ label: `Half Day Deductions (0 HD)`, amount: 0 });
+       deductionsItems.push({ label: `LOP / Absent (0 days)`, amount: 0 });
     }
 
     const gmcAmt = employee.gmcAmount || employeeData.gmc || 0;
@@ -2071,7 +2070,7 @@ const PayRoll = () => {
               </tr>
               <tr>
                 <td><strong>LOP:</strong></td>
-                <td>${lopDays > 0 ? lopDays : '0'}</td>
+                <td>${lopDays > 0 ? (Math.round(lopDays * 10) / 10) : '0'}</td>
                 <td></td>
                 <td></td>
               </tr>
@@ -2298,7 +2297,9 @@ const PayRoll = () => {
           <div className="sticky top-0 flex items-center justify-between p-3 bg-white border-b rounded-t-lg">
             <div>
               <h2 className="text-lg font-bold text-gray-700">Attendance Records - {selectedEmployee?.name}</h2>
-              <p className="text-xs text-gray-500">ID: {selectedEmployee?.employeeId} | Shift: {shiftHours} hrs/day | Week-offs: {targetWeekOffCount} days | Comp-offs: {compOffDatesList.length}</p>
+              <p className="text-xs text-gray-500">
+                ID: {selectedEmployee?.employeeId} | Shift: {shiftHours} hrs/day
+              </p>
             </div>
             <button onClick={() => setShowAttendancePopup(false)} className="text-gray-500 hover:text-gray-700">
               <FaTimes className="w-5 h-5" />
@@ -2309,7 +2310,10 @@ const PayRoll = () => {
             <div className="flex gap-3 text-xs flex-wrap">
               <span className="font-medium">Total Days: <strong>{monthDates.length}</strong></span>
               <span className="text-purple-600">PH: <strong>{holidayCount}</strong></span>
-              <span className="text-orange-600">Week Off: <strong>{weekOffCount}</strong></span>
+              <span className="text-orange-600" title={`Earned: ${selectedEmployee?.earnedWeekOffs || 0}, Used: ${selectedEmployee?.usedWeekOffs || 0}, Carry Forward: ${selectedEmployee?.workedOnWeekOff || 0}`}>
+                Week Off: <strong>{selectedEmployee?.usedWeekOffs || 0}/{selectedEmployee?.earnedWeekOffs || 0}</strong>
+                {(selectedEmployee?.workedOnWeekOff > 0) && <span className="ml-1 text-[10px] text-purple-600 font-bold">(CF: {selectedEmployee?.workedOnWeekOff})</span>}
+              </span>
               <span className="text-teal-600">Comp-off: <strong>{compOffCount}</strong></span>
               <span className="text-red-600">Leaves: <strong>{leaveCount}</strong></span>
               <span className="text-gray-500">Absent: <strong>{absentCount}</strong></span>
@@ -2932,42 +2936,68 @@ const PayRoll = () => {
             </div>
 
             <div className="grid grid-cols-1 text-xs sm:grid-cols-2 gap-x-8 gap-y-2 mb-6">
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Present Days (AS IT IS)</span><span className="font-bold text-emerald-700">{selectedEmployee.presentDays || 0}</span></div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Working Days</span><span className="font-bold text-blue-700">{selectedEmployee.totalWorkingDays || 0}</span></div>
+              {/* 1. Days Present */}
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Days Present</span><span className="font-bold text-emerald-700">{selectedEmployee.presentDays || 0}</span></div>
+              {/* 2. Days Worked */}
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Days Worked</span><span className="font-bold text-blue-700">{selectedEmployee.totalWorkingDays || 0}</span></div>
+              
+              {/* 3. Half Days */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Half Days</span><span className="font-bold text-amber-700">{selectedEmployee.halfDayWorking || 0}</span></div>
+              
+              {/* 4. Week-Offs Earned */}
+              <div className="flex justify-between py-1.5 border-b border-green-100 bg-green-50 rounded px-1"><span className="text-green-600 font-semibold">Week-Offs Earned</span><span className="font-bold text-green-700">{selectedEmployee.earnedWeekOffs || 0}</span></div>
+              
+              {/* 5. Paid Week-Offs (Used / Total) */}
+              <div className="flex justify-between py-1.5 border-b border-orange-100 bg-orange-50 rounded px-1"><span className="text-orange-600 font-semibold">Paid Week-Offs</span><span className="font-bold text-orange-700">{selectedEmployee.usedWeekOffs || 0}/{selectedEmployee.earnedWeekOffs || 0}</span></div>
+              
+              {/* 6. Week-Offs Worked (Carry Forward) */}
+              <div className="flex justify-between py-1.5 border-b border-purple-100 bg-purple-50 rounded px-1"><span className="text-purple-600 font-semibold">Week-Offs Worked (Carry Forward)</span><span className="font-bold text-purple-700">{selectedEmployee.workedOnWeekOff || 0}</span></div>
+              
+              {/* 7. Total Week-Offs */}
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Total Week-Offs</span><span className="font-bold text-gray-600">{selectedEmployee.totalWeekOffDays || 0}</span></div>
 
-              <div className="flex justify-between py-1.5 border-b border-green-100 bg-green-50 rounded px-1"><span className="text-green-600 font-semibold">Earned Week Offs (5d = 1WO)</span><span className="font-bold text-green-700">{selectedEmployee.earnedWeekOffs || 0}</span></div>
-              <div className="flex justify-between py-1.5 border-b border-orange-100 bg-orange-50 rounded px-1"><span className="text-orange-600 font-semibold">Used Week Offs (Added to Salary)</span><span className="font-bold text-orange-700">{selectedEmployee.usedWeekOffs || 0}</span></div>
-              <div className="flex justify-between py-1.5 border-b border-purple-100 bg-purple-50 rounded px-1"><span className="text-purple-600 font-semibold">Worked on Week Off (Carry Forward)</span><span className="font-bold text-purple-700">{selectedEmployee.workedOnWeekOff || 0}</span></div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Total Week Off Days</span><span className="font-bold text-gray-600">{selectedEmployee.totalWeekOffDays || 0}</span></div>
+              {/* 8. Calendar Days */}
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Calendar Days</span><span className="font-bold text-slate-700">{selectedEmployee.monthDays || monthDays}</span></div>
+              
+              {/* 9. Payable Days */}
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Payable Days</span><span className="font-bold text-blue-700">{typeof selectedEmployee.payablePresentDays === 'number' ? selectedEmployee.payablePresentDays : (selectedEmployee.presentDays || 0)}</span></div>
+              
+              {/* 10. Unpaid Absence (LOP) */}
+              {(() => {
+                const dailyRate = parseFloat(calculateDailyRate(selectedEmployee)) || 0;
+                const salary = selectedEmployee.salaryPerMonth || 0;
+                const calcSalary = selectedEmployee.calculatedSalary || 0;
+                
+                // Calculate exact LOP amount based on salary cut
+                let lopAmount = 0;
+                let lopDays = 0;
+                
+                if (salary > 0 && calcSalary < salary && dailyRate > 0) {
+                  lopAmount = salary - calcSalary;
+                  lopDays = Math.round((lopAmount / dailyRate) * 10) / 10;
+                }
+                
+                if (lopDays > 0) {
+                  return (
+                    <div className="flex justify-between py-1.5 border-b border-red-100 bg-red-50 rounded px-1 sm:col-span-2">
+                      <span className="text-red-600 font-semibold">Unpaid Absence (LOP)</span>
+                      <span className="font-bold text-red-700">{lopDays} Days (₹{lopAmount.toLocaleString()})</span>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="flex justify-between py-1.5 border-b border-gray-100">
+                      <span className="text-gray-500 font-medium">Unpaid Absence (LOP)</span>
+                      <span className="font-bold text-gray-700">0 Days (₹0)</span>
+                    </div>
+                  );
+                }
+              })()}
 
-              {selectedEmployee.holidayCount > 0 && (
-                <div className="flex justify-between py-1.5 border-b border-purple-100 bg-purple-50 rounded px-1 sm:col-span-2">
-                  <span className="text-purple-600 font-semibold">Holiday Pay ({selectedEmployee.holidayCount} day{selectedEmployee.holidayCount > 1 ? 's' : ''})</span>
-                  <span className="font-bold text-purple-700">₹{(selectedEmployee.holidayAmount || 0).toLocaleString()}</span>
-                </div>
-              )}
-
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Month Days</span><span className="font-bold text-slate-700">{selectedEmployee.monthDays || monthDays}</span></div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Payable Present Days</span><span className="font-bold text-blue-700">{typeof selectedEmployee.payablePresentDays === 'number' ? selectedEmployee.payablePresentDays : (selectedEmployee.presentDays || 0)}</span></div>
-
-              {selectedEmployee.unearnedAbsentDays > 0 && (
-                <div className="flex justify-between py-1.5 border-b border-red-100 bg-red-50 rounded px-1 sm:col-span-2">
-                  <span className="text-red-600 font-semibold">Unearned Absent Days (LOP)</span>
-                  <span className="font-bold text-red-700">{selectedEmployee.unearnedAbsentDays}</span>
-                </div>
-              )}
-
-              {selectedEmployee.compOffDays > 0 && (
-                <div className="flex justify-between py-1.5 border-b border-teal-100 bg-teal-50 rounded px-1 sm:col-span-2">
-                  <span className="text-teal-600 font-semibold">Comp-off Days ({selectedEmployee.compOffDays})</span>
-                  <span className="font-bold text-teal-700">₹{selectedEmployee.compOffAmount?.toLocaleString() || 0}</span>
-                </div>
-              )}
-
+              {/* 11. Week-Off Dates */}
               {selectedEmployee.weekOffDates && selectedEmployee.weekOffDates.length > 0 && (
                 <div className="flex flex-col py-1.5 border-b border-orange-100 bg-orange-50 rounded px-1 sm:col-span-2">
-                  <span className="text-orange-600 font-semibold mb-1">Week Off Dates ({selectedEmployee.weekOffDates.length})</span>
+                  <span className="text-orange-600 font-semibold mb-1">Week-Off Dates ({selectedEmployee.weekOffDates.length})</span>
                   <div className="flex flex-wrap gap-1">
                     {selectedEmployee.weekOffDates.map((d) => (
                       <span key={d} className={`px-2 py-0.5 border rounded text-[10px] font-semibold ${
@@ -2983,6 +3013,7 @@ const PayRoll = () => {
                 </div>
               )}
 
+              {/* Comp-off Dates (Keeping original logic, not in the specific list but requested to keep other code same) */}
               {selectedEmployee.compOffDates && selectedEmployee.compOffDates.length > 0 && (
                 <div className="flex flex-col py-1.5 border-b border-teal-100 bg-teal-50 rounded px-1 sm:col-span-2">
                   <span className="text-teal-600 font-semibold mb-1">Comp-off Dates ({selectedEmployee.compOffDates.length})</span>
@@ -2996,16 +3027,24 @@ const PayRoll = () => {
                 </div>
               )}
 
+              {/* 12. Monthly Salary */}
               <div className="flex justify-between py-1.5 border-b border-gray-100">
                 <span className="text-gray-500 font-medium">Monthly Salary</span>
                 <div className="text-right">
                   <span className="font-bold text-slate-800">₹{selectedEmployee.salaryPerMonth || 0}</span>
                 </div>
               </div>
+              
+              {/* 13. Daily Rate */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Daily Rate</span><span className="font-bold text-slate-700">₹{calculateDailyRate(selectedEmployee)}/day</span></div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">OT Amount</span><span className="font-bold text-emerald-600">₹{(selectedEmployee.finalOTAmount || 0).toFixed(0)}</span></div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium text-blue-600">Calculated Base Salary</span><span className="font-bold text-blue-600">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
+              
+              {/* 14. Overtime Pay */}
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Overtime Pay</span><span className="font-bold text-emerald-600">₹{(selectedEmployee.finalOTAmount || 0).toFixed(0)}</span></div>
+              
+              {/* 15. Calculated Salary */}
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium text-blue-600">Calculated Salary</span><span className="font-bold text-blue-600">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
 
+              {/* Manual Deduction (Keeping original logic) */}
               {selectedEmployee.manualDeduction > 0 && (
                 <div className="flex justify-between py-1.5 border-b border-rose-100 bg-rose-50 rounded px-1 sm:col-span-2">
                   <span className="text-rose-600 font-semibold">Manual Deduction{selectedEmployee.manualDeductionReason ? ` (${selectedEmployee.manualDeductionReason})` : ''}</span>
@@ -3013,7 +3052,8 @@ const PayRoll = () => {
                 </div>
               )}
 
-              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-700 font-bold">Final Pay</span><span className="font-bold text-emerald-700">₹{Math.round(selectedEmployee.finalPay || selectedEmployee.calculatedSalary || 0)}</span></div>
+              {/* 16. Final Payable Salary */}
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-700 font-bold">Final Payable Salary</span><span className="font-bold text-emerald-700">₹{Math.round(selectedEmployee.finalPay || selectedEmployee.calculatedSalary || 0)}</span></div>
             </div>
 
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
