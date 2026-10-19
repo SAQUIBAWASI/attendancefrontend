@@ -385,31 +385,42 @@ const getBookingPaidInfo = (booking) => {
   let totalDueFromItems = 0;
   let hasExplicitDue = false;
 
-  // ✅ Lab Due sum karo
+  // ✅ Lab Due
   if (Array.isArray(booking.labItems) && booking.labItems.length > 0) {
-    const labDueSum = booking.labItems.reduce((sum, item) => sum + (Number(item.dueAmount) || 0), 0);
-    totalDueFromItems += labDueSum;
+    totalDueFromItems += booking.labItems.reduce((sum, item) => sum + (Number(item.dueAmount) || 0), 0);
     hasExplicitDue = true;
   }
 
-  // ✅ Pharmacy Due sum karo
+  // ✅ Pharmacy Due
   if (Array.isArray(booking.medicineItems) && booking.medicineItems.length > 0) {
-    const medDueSum = booking.medicineItems.reduce((sum, item) => sum + (Number(item.dueAmount) || 0), 0);
-    totalDueFromItems += medDueSum;
+    totalDueFromItems += booking.medicineItems.reduce((sum, item) => sum + (Number(item.dueAmount) || 0), 0);
     hasExplicitDue = true;
   }
 
+  // ✅ Clinic Due
   const rawSvcList = Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0
     ? booking.serviceItems
     : (Array.isArray(booking.services) ? booking.services : []);
-  const clinicTotal = Number(getAmountBreakdown(booking).clinic) || 0;
-  const clinicPaid = rawSvcList.reduce((sum, item) => sum + (Number(item.paidAmount) || (item.paymentStatus === "Paid" ? Number(item.price) || 0 : 0)), 0);
-  const clinicDue = Math.max(0, clinicTotal - clinicPaid);
+    
+  let clinicDueSum = 0;
+  let hasExplicitClinicDue = false;
+  rawSvcList.forEach(item => {
+    const netPrice = Math.max(0, (Number(item.price) || 0) - (Number(item.discount) || 0));
+    let paid = Number(item.paidAmount) || 0;
+    if (paid === 0 && item.paymentStatus === "Paid") paid = netPrice;
+    clinicDueSum += Math.max(0, netPrice - paid);
+    if (item.dueAmount !== undefined || item.paidAmount !== undefined || item.paymentStatus === "Paid") {
+      hasExplicitClinicDue = true;
+    }
+  });
+  if (hasExplicitClinicDue) {
+    totalDueFromItems += clinicDueSum;
+    hasExplicitDue = true;
+  }
 
-  let balance;
-  let paid;
+  let balance, paid;
   if (hasExplicitDue) {
-    balance = totalDueFromItems + clinicDue;
+    balance = totalDueFromItems;
     paid = Math.max(0, final - balance);
   } else {
     const rawStatus = booking.paymentStatus || "Due";
@@ -426,7 +437,6 @@ const getBookingPaidInfo = (booking) => {
 
   return { final, paid, balance, status };
 };
-
 const getCategoryStatuses = (booking) => {
   const breakdown = getAmountBreakdown(booking);
   const categories = ["clinic", "lab", "pharmacy"];
@@ -885,6 +895,12 @@ export default function OpManagement() {
   const navigate = useNavigate();
   const location = useLocation();
 
+   // 👇 YE LINES ADD KARO
+  const userRole = localStorage.getItem("userRole");
+  const isAdmin = userRole === "admin";
+  // 👆
+
+
   const [bookings, setBookings] = useState([]);
   const [backendStats, setBackendStats] = useState(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState(null);
@@ -1039,6 +1055,10 @@ export default function OpManagement() {
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
 
 
+    // ✅ Naya State Confirmation Modal ke liye
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, type: "", index: null });
+
+
     // ✅ Naye States Clear Due ke liye
   const [showClearDueModal, setShowClearDueModal] = useState(false);
   const [clearDuePaymentType, setClearDuePaymentType] = useState("Cash");
@@ -1050,6 +1070,8 @@ export default function OpManagement() {
   const searchTimeoutRef = useRef(null);
 
   const API_BASE_INVURL = 'https://api.timelyhealth.in';
+
+
 
   const computeCategoryPaymentFromBooking = (booking, overrides = {}) => {
     if (!booking) {
@@ -1174,46 +1196,70 @@ export default function OpManagement() {
     if (choice === "register") setTimeout(() => { handleAddNewPatient(); }, 200);
   };
 
-  const openClinicServicesModal = (booking) => {
-    if (!booking) return;
-    const allServices = getBookingServices(booking);
-    const clinicOnly = allServices.filter((s) => {
-      if (s.isReviewService) return false;
-      return classifyService(s) === "clinic";
-    });
-    setClinicServicesList(clinicOnly.map((s) => ({
+// ✅ FIXED: openClinicServicesModal
+const openClinicServicesModal = (booking) => {
+  if (!booking) return;
+  const allServices = getBookingServices(booking);
+  const clinicOnly = allServices.filter((s) => {
+    if (s.isReviewService) return false;
+    return classifyService(s) === "clinic";
+  });
+
+  setClinicServicesList(clinicOnly.map((s) => {
+    const price = Number(s.price) || 0;
+    const discount = Number(s.discount) || 0;
+    const netPrice = Math.max(0, price - discount);
+    const isPaid = (s.paymentStatus || "").toLowerCase() === "paid";
+
+    // ✅ FIX: Explicitly set paidAmount based on status
+    let paidAmount = Number(s.paidAmount) || 0;
+    if (isPaid && paidAmount === 0) paidAmount = netPrice;
+    const dueAmount = Math.max(0, netPrice - paidAmount);
+
+    return {
       serviceId: s.serviceId || s._id || "",
       name: s.name,
-      price: Number(s.price) || 0,
+      price,
+      discount,
+      paidAmount, 
+      dueAmount,  
       description: s.description || "",
       paymentMode: s.paymentMode || "N/A",
-      paymentStatus: s.paymentStatus || "",
-      _wasPaid: (s.paymentStatus || "").toLowerCase() === "paid",
-    })));
-    setClinicServicesBooking(booking);
-    setClinicServiceInput("");
-    setClinicServicePrice("");
-    setClinicServiceSuggestions([]);
-    setShowClinicServiceSuggestions(false);
-    setShowClinicServicesModal(true);
-  };
+      paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
+      transactionId: s.transactionId || "",
+      _wasPaid: isPaid, 
+    };
+  }));
+  
+  setClinicServicesBooking(booking);
+  setClinicServiceInput("");
+  setClinicServicePrice("");
+  setClinicServiceSuggestions([]);
+  setShowClinicServiceSuggestions(false);
+  setShowClinicServicesModal(true);
+};
 
-  const handleAddClinicServiceItem = (service) => {
-    if (!service) return;
-    setClinicServicesList((prev) => [...prev, {
-      serviceId: service._id || "",
-      name: service.name,
-      price: Number(service.price) || 0,
-      description: service.description || "",
-      paymentMode: "N/A",
-      paymentStatus: "",
-      _wasPaid: false,
-    }]);
-    setClinicServiceInput("");
-    setClinicServicePrice("");
-    setClinicServiceSuggestions([]);
-    setShowClinicServiceSuggestions(false);
-  };
+
+const handleAddClinicServiceItem = (service) => {
+  if (!service) return;
+  setClinicServicesList((prev) => [...prev, {
+    serviceId: service._id || "",
+    name: service.name,
+    price: Number(service.price) || 0,
+    discount: 0,
+    paidAmount: 0,
+    dueAmount: Number(service.price) || 0,
+    description: service.description || "",
+    paymentMode: "N/A",
+    paymentStatus: "",
+    transactionId: "",
+    _wasPaid: false,
+  }]);
+  setClinicServiceInput("");
+  setClinicServicePrice("");
+  setClinicServiceSuggestions([]);
+  setShowClinicServiceSuggestions(false);
+};
 
   const handleAddCustomClinicService = async () => {
     const name = clinicServiceInput.trim();
@@ -1247,18 +1293,97 @@ export default function OpManagement() {
   };
 
   const handleRemoveClinicServiceItem = (index) => {
-    setClinicServicesList((prev) => prev.filter((_, i) => i !== index));
+    setDeleteConfirm({ isOpen: true, type: "clinic", index });
   };
 
-  const handleUpdateClinicServicePrice = (index, newPrice) => {
-    setClinicServicesList((prev) => prev.map((s, i) => (i === index ? { ...s, price: Number(newPrice) || 0 } : s)));
+
+    const handleConfirmDeleteItem = () => {
+    const { type, index } = deleteConfirm;
+    if (type === "lab") {
+      setLabItemsList((prev) => prev.filter((_, i) => i !== index));
+    } else if (type === "pharmacy") {
+      setPharmacyItemsList((prev) => prev.filter((_, i) => i !== index));
+    } else if (type === "clinic") {
+      setClinicServicesList((prev) => prev.filter((_, i) => i !== index));
+    }
+    setDeleteConfirm({ isOpen: false, type: "", index: null });
   };
+
+// ✅ NEW: Update Clinic Item Price with Auto Status
+const handleUpdateClinicServicePrice = (index, newPrice) => {
+  setClinicServicesList((prev) =>
+    prev.map((s, i) => {
+      if (i !== index) return s;
+      const price = Number(newPrice) || 0;
+      const discount = Number(s.discount) || 0;
+      const netPrice = Math.max(0, price - discount);
+      const paid = Number(s.paidAmount) || 0;
+      const due = Math.max(0, netPrice - paid);
+
+      let newStatus = "Due";
+      if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+      else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+
+      return { ...s, price, dueAmount: due, paymentStatus: newStatus };
+    })
+  );
+};
 
   const handleUpdateClinicServicePaymentMode = (index, mode) => {
     setClinicServicesList((prev) =>
       prev.map((s, i) => (i === index ? { ...s, paymentMode: mode } : s))
     );
   };
+
+
+
+
+// ✅ NEW: Update Clinic Paid Amount with Auto Status
+const handleUpdateClinicServicePaidAmount = (index, newPaid) => {
+  setClinicServicesList((prev) =>
+    prev.map((s, i) => {
+      if (i !== index) return s;
+      const price = Number(s.price) || 0;
+      const discount = Number(s.discount) || 0;
+      const netPrice = Math.max(0, price - discount);
+      const paid = Number(newPaid) || 0;
+      const due = Math.max(0, netPrice - paid);
+
+      let newStatus = "Due";
+      if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+      else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+
+      return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
+    })
+  );
+};
+
+// ✅ NEW: Update Clinic Discount
+const handleUpdateClinicServiceDiscount = (index, newDiscount) => {
+  setClinicServicesList((prev) =>
+    prev.map((s, i) => {
+      if (i !== index) return s;
+      const price = Number(s.price) || 0;
+      const discount = Number(newDiscount) || 0;
+      const netPrice = Math.max(0, price - discount);
+      const paid = Number(s.paidAmount) || 0;
+      const due = Math.max(0, netPrice - paid);
+
+      let newStatus = "Due";
+      if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+      else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+
+      return { ...s, discount, dueAmount: due, paymentStatus: newStatus };
+    })
+  );
+};
+
+// ✅ NEW: Update Clinic Transaction ID
+const handleUpdateClinicServiceTransactionId = (index, txnId) => {
+  setClinicServicesList((prev) =>
+    prev.map((s, i) => (i === index ? { ...s, transactionId: txnId } : s))
+  );
+};
 
   const handleUpdateClinicServicePaymentStatus = (index, status) => {
     setClinicServicesList((prev) =>
@@ -1278,20 +1403,29 @@ export default function OpManagement() {
       });
       const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
 
-      const mergedServices = [
-        ...clinicServicesList.map((s) => ({
-          serviceId: s.serviceId || "", name: s.name, price: Number(s.price) || 0,
-          description: s.description || "", category: "clinic",
-          paymentMode: s.paymentMode || fallbackModeDisplay,
-          paymentStatus: s.paymentStatus || "Due",
-        })),
-        ...nonClinic.map((s) => ({
-          serviceId: s.serviceId || s._id || "", name: s.name, price: Number(s.price) || 0,
-          description: s.description || "", category: s.category || "",
-          paymentMode: s.paymentMode || fallbackModeDisplay,
-          paymentStatus: s.paymentStatus || "Due",
-        })),
-      ];
+const mergedServices = [
+  ...clinicServicesList.map((s) => ({
+    serviceId: s.serviceId || "",
+    name: s.name,
+    price: Number(s.price) || 0,
+    discount: Number(s.discount) || 0,
+    paidAmount: Number(s.paidAmount) || 0, // 👈 YE ADD KARO
+    description: s.description || "",
+    category: "clinic",
+    paymentMode: s.paymentMode || fallbackModeDisplay,
+    paymentStatus: s.paymentStatus || "Due",
+    transactionId: s.transactionId || "",
+  })),
+  ...nonClinic.map((s) => ({
+    serviceId: s.serviceId || s._id || "",
+    name: s.name,
+    price: Number(s.price) || 0,
+    description: s.description || "",
+    category: s.category || "",
+    paymentMode: s.paymentMode || fallbackModeDisplay,
+    paymentStatus: s.paymentStatus || "Due",
+  })),
+];
 
       const categoryPayment = computeCategoryPaymentFromBooking(booking, { serviceItems: mergedServices });
 
@@ -1350,37 +1484,43 @@ export default function OpManagement() {
     } finally { setSavingClinicServices(false); }
   };
 
-  const openLabItemsModal = (booking) => {
-    if (!booking) return;
-    let items = Array.isArray(booking.labItems) ? booking.labItems : [];
-    if (items.length === 0 && (Number(booking.labTotal) || 0) > 0) {
-      items = [{
-        serviceId: "", name: "Lab Test",
-        price: Number(booking.labTotal) || 0, description: "",
-        category: "lab", paymentMode: "N/A", paymentStatus: "",
-      }];
-    }
-    setLabItemsList(items.map((s, idx) => ({
+ // ✅ FIXED: openLabItemsModal
+const openLabItemsModal = (booking) => {
+  if (!booking) return;
+  let items = Array.isArray(booking.labItems) ? booking.labItems : [];
+  if (items.length === 0 && (Number(booking.labTotal) || 0) > 0) {
+    items = [{
+      serviceId: "", name: "Lab Test",
+      price: Number(booking.labTotal) || 0, description: "",
+      category: "lab", paymentMode: "N/A", paymentStatus: "",
+    }];
+  }
+  setLabItemsList(items.map((s, idx) => {
+    const price = Number(s.price) || 0;
+    const discount = Number(s.discount) || 0;
+    const netPrice = Math.max(0, price - discount);
+    const isPaid = (s.paymentStatus || "").toLowerCase() === "paid";
+
+    // ✅ FIX
+    let paidAmount = Number(s.paidAmount) || 0;
+    if (isPaid && paidAmount === 0) paidAmount = netPrice;
+    const dueAmount = Math.max(0, netPrice - paidAmount);
+
+    return {
       serviceId: s.serviceId || s._id || "",
       name: s.name || `Lab Test ${idx + 1}`,
-      price: Number(s.price) || 0,
-      discount: Number(s.discount) || 0,
-      paidAmount: Number(s.paidAmount) || 0,
-      dueAmount: Number(s.dueAmount) || 0, // ✅ ADD THIS (Ye missing tha)
+      price, discount, paidAmount, dueAmount,
       description: s.description || "",
       paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""),
-      paymentStatus: s.paymentStatus || "Due",
+      paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
       transactionId: s.transactionId || "",
-      _wasPaid: (s.paymentStatus || "").toLowerCase() === "paid",
-    })));
-
-
-
-    setLabItemsBooking(booking);
-    setLabItemPrice("");
-    setShowLabItemsModal(true);
-  };
-
+      _wasPaid: isPaid,
+    };
+  }));
+  setLabItemsBooking(booking);
+  setLabItemPrice("");
+  setShowLabItemsModal(true);
+};
   const handleAddLabItem = () => {
     const price = labItemPrice.trim();
     if (!price) { showToast("Please enter lab amount", "error"); return; }
@@ -1402,7 +1542,7 @@ export default function OpManagement() {
   };
 
   const handleRemoveLabItem = (index) => {
-    setLabItemsList((prev) => prev.filter((_, i) => i !== index));
+    setDeleteConfirm({ isOpen: true, type: "lab", index });
   };
   // ✅ NEW: Update Price with Auto Status Recalculation
   const handleUpdateLabItemPrice = (index, newPrice) => {
@@ -1475,7 +1615,7 @@ export default function OpManagement() {
     );
   };
 
-  const handleSaveLabItems = async () => {
+   const handleSaveLabItems = async () => {
     if (!labItemsBooking) return;
     setSavingLabItems(true);
     try {
@@ -1484,35 +1624,62 @@ export default function OpManagement() {
       const nonReviewServices = allServices.filter((s) => !s.isReviewService);
       const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
 
-      const mergedServices = nonReviewServices.map((s) => ({
-        serviceId: s.serviceId || s._id || "",
-        name: s.name,
-        price: Number(s.price) || 0,
-        description: s.description || "",
-        category: s.category || "",
-        paymentMode: s.paymentMode || fallbackModeDisplay,
-        paymentStatus: s.paymentStatus || "Due",
-      }));
+      const mergedServices = nonReviewServices.map((s) => {
+        const price = Number(s.price) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        let paidAmount = Number(s.paidAmount) || 0;
+        if (s.paymentStatus === "Paid" && paidAmount === 0) paidAmount = netPrice;
 
-      const labItems = labItemsList.map((s) => ({
-        serviceId: s.serviceId || "",
-        name: s.name || `Lab Test ${labItemsList.indexOf(s) + 1}`,
-        price: Number(s.price) || 0,
-        paidAmount: Number(s.paidAmount) || 0, // ✅ Added
-        description: s.description || "",
-        category: "lab",
-        paymentMode: s.paymentMode || "",
-        paymentStatus: s.paymentStatus || "Due",
-        transactionId: s.transactionId || "", // ✅ Added
-      }));
+        return {
+          serviceId: s.serviceId || s._id || "",
+          name: s.name,
+          price: price,
+          discount: discount,
+          paidAmount: paidAmount,
+          description: s.description || "",
+          category: s.category || "",
+          paymentMode: s.paymentMode || fallbackModeDisplay,
+          paymentStatus: s.paymentStatus || "Due",
+        };
+      });
+
+      const labItems = labItemsList.map((s) => {
+        const price = Number(s.price) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        let paidAmount = Number(s.paidAmount) || 0;
+        if (s.paymentStatus === "Paid" && paidAmount === 0) paidAmount = netPrice;
+
+        return {
+          serviceId: s.serviceId || "",
+          name: s.name || `Lab Test ${labItemsList.indexOf(s) + 1}`,
+          price: price,
+          discount: discount,
+          paidAmount: paidAmount, 
+          description: s.description || "",
+          category: "lab",
+          paymentMode: s.paymentMode || "",
+          paymentStatus: s.paymentStatus || "Due",
+          transactionId: s.transactionId || "", 
+        };
+      });
       const labTotal = labItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
 
-      const categoryPayment = computeCategoryPaymentFromBooking(booking, { labItems });
+      // ✅ EXPLICIT CATEGORY PAYMENT CALCULATION (Yahan fix hai)
+      const safeCategoryPayment = {
+        clinic: { paidAmount: Number(booking.categoryPayment?.clinic?.paidAmount) || 0 },
+        lab: { paidAmount: labItems.reduce((sum, item) => sum + (Number(item.paidAmount) || 0), 0) },
+        pharmacy: { paidAmount: Number(booking.categoryPayment?.pharmacy?.paidAmount) || 0 }
+      };
+
+      // Agar purane data me categoryPayment nahi tha, toh fallback logic use karo
+      const finalCategoryPayment = booking.categoryPayment ? safeCategoryPayment : computeCategoryPaymentFromBooking(booking, { labItems });
 
       const totalPaidFromCategories =
-        (categoryPayment.clinic?.paidAmount || 0) +
-        (categoryPayment.lab?.paidAmount || 0) +
-        (categoryPayment.pharmacy?.paidAmount || 0);
+        (finalCategoryPayment.clinic?.paidAmount || 0) +
+        (finalCategoryPayment.lab?.paidAmount || 0) +
+        (finalCategoryPayment.pharmacy?.paidAmount || 0);
 
       const fin = computeFinancials(mergedServices, {
         labTotal,
@@ -1547,7 +1714,7 @@ export default function OpManagement() {
         referralCustomerId: booking.referralCustomerId, referralDoctorId: booking.referralDoctorId,
         referralCommission: booking.referralCommission, referralCommissionType: booking.referralCommissionType,
         offerApplied: booking.offerApplied || null,
-        categoryPayment,
+        categoryPayment: finalCategoryPayment, // ✅ Safe payload
       };
 
       const res = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${booking._id}`, payload);
@@ -1569,34 +1736,42 @@ export default function OpManagement() {
     }
   };
 
-  const openPharmacyItemsModal = (booking) => {
-    if (!booking) return;
-    let items = Array.isArray(booking.medicineItems) ? booking.medicineItems : [];
-    if (items.length === 0 && (Number(booking.medicineTotal) || 0) > 0) {
-      items = [{
-        serviceId: "", name: "Medicine",
-        price: Number(booking.medicineTotal) || 0, description: "",
-        category: "pharmacy", paymentMode: "N/A", paymentStatus: "",
-      }];
-    }
-    setPharmacyItemsList(items.map((s, idx) => ({
+ const openPharmacyItemsModal = (booking) => {
+  if (!booking) return;
+  let items = Array.isArray(booking.medicineItems) ? booking.medicineItems : [];
+  if (items.length === 0 && (Number(booking.medicineTotal) || 0) > 0) {
+    items = [{
+      serviceId: "", name: "Medicine",
+      price: Number(booking.medicineTotal) || 0, description: "",
+      category: "pharmacy", paymentMode: "N/A", paymentStatus: "",
+    }];
+  }
+  setPharmacyItemsList(items.map((s, idx) => {
+    const price = Number(s.price) || 0;
+    const discount = Number(s.discount) || 0;
+    const netPrice = Math.max(0, price - discount);
+    const isPaid = (s.paymentStatus || "").toLowerCase() === "paid";
+
+    // ✅ FIX
+    let paidAmount = Number(s.paidAmount) || 0;
+    if (isPaid && paidAmount === 0) paidAmount = netPrice;
+    const dueAmount = Math.max(0, netPrice - paidAmount);
+
+    return {
       serviceId: s.serviceId || s._id || "",
       name: s.name || `Medicine ${idx + 1}`,
-      price: Number(s.price) || 0,
-      discount: Number(s.discount) || 0,
-      paidAmount: Number(s.paidAmount) || 0,
-      dueAmount: Number(s.dueAmount) || 0, // ✅ ADD THIS (Ye missing tha)
+      price, discount, paidAmount, dueAmount,
       description: s.description || "",
       paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""),
-      paymentStatus: s.paymentStatus || "Due",
+      paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
       transactionId: s.transactionId || "",
-      _wasPaid: (s.paymentStatus || "").toLowerCase() === "paid",
-    })));
-    setPharmacyItemsBooking(booking);
-    setPharmacyItemPrice("");
-    setShowPharmacyItemsModal(true);
-  };
-
+      _wasPaid: isPaid,
+    };
+  }));
+  setPharmacyItemsBooking(booking);
+  setPharmacyItemPrice("");
+  setShowPharmacyItemsModal(true);
+};
   const handleAddPharmacyItem = () => {
     const price = pharmacyItemPrice.trim();
     if (!price) { showToast("Please enter medicine amount", "error"); return; }
@@ -1618,7 +1793,7 @@ export default function OpManagement() {
   };
 
   const handleRemovePharmacyItem = (index) => {
-    setPharmacyItemsList((prev) => prev.filter((_, i) => i !== index));
+    setDeleteConfirm({ isOpen: true, type: "pharmacy", index });
   };
 
   // ✅ UPDATE: Auto status recalculate jab price change ho
@@ -1689,35 +1864,62 @@ const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
       const nonReviewServices = allServices.filter((s) => !s.isReviewService);
       const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
 
-      const mergedServices = nonReviewServices.map((s) => ({
-        serviceId: s.serviceId || s._id || "",
-        name: s.name,
-        price: Number(s.price) || 0,
-        description: s.description || "",
-        category: s.category || "",
-        paymentMode: s.paymentMode || fallbackModeDisplay,
-        paymentStatus: s.paymentStatus || "Due",
-      }));
+      const mergedServices = nonReviewServices.map((s) => {
+        const price = Number(s.price) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        let paidAmount = Number(s.paidAmount) || 0;
+        if (s.paymentStatus === "Paid" && paidAmount === 0) paidAmount = netPrice;
 
-      const medicineItems = pharmacyItemsList.map((s, idx) => ({
-        serviceId: s.serviceId || "",
-        name: s.name || `Medicine ${idx + 1}`,
-        price: Number(s.price) || 0,
-        paidAmount: Number(s.paidAmount) || 0, // ✅ Added
-        description: s.description || "",
-        category: "pharmacy",
-        paymentMode: s.paymentMode || "",
-        paymentStatus: s.paymentStatus || "Due",
-        transactionId: s.transactionId || "", // ✅ Added
-      }));
+        return {
+          serviceId: s.serviceId || s._id || "",
+          name: s.name,
+          price: price,
+          discount: discount,
+          paidAmount: paidAmount,
+          description: s.description || "",
+          category: s.category || "",
+          paymentMode: s.paymentMode || fallbackModeDisplay,
+          paymentStatus: s.paymentStatus || "Due",
+        };
+      });
+
+      const medicineItems = pharmacyItemsList.map((s, idx) => {
+        const price = Number(s.price) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        let paidAmount = Number(s.paidAmount) || 0;
+        if (s.paymentStatus === "Paid" && paidAmount === 0) paidAmount = netPrice;
+
+        return {
+          serviceId: s.serviceId || "",
+          name: s.name || `Medicine ${idx + 1}`,
+          price: price,
+          discount: discount,
+          paidAmount: paidAmount, 
+          description: s.description || "",
+          category: "pharmacy",
+          paymentMode: s.paymentMode || "",
+          paymentStatus: s.paymentStatus || "Due",
+          transactionId: s.transactionId || "", 
+        };
+      });
       const medicineTotal = medicineItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
 
-      const categoryPayment = computeCategoryPaymentFromBooking(booking, { medicineItems });
+      // ✅ EXPLICIT CATEGORY PAYMENT CALCULATION (Yahan fix hai)
+      const safeCategoryPayment = {
+        clinic: { paidAmount: Number(booking.categoryPayment?.clinic?.paidAmount) || 0 },
+        lab: { paidAmount: Number(booking.categoryPayment?.lab?.paidAmount) || 0 },
+        pharmacy: { paidAmount: medicineItems.reduce((sum, item) => sum + (Number(item.paidAmount) || 0), 0) }
+      };
+
+      // Agar purane data me categoryPayment nahi tha, toh fallback logic use karo
+      const finalCategoryPayment = booking.categoryPayment ? safeCategoryPayment : computeCategoryPaymentFromBooking(booking, { medicineItems });
 
       const totalPaidFromCategories =
-        (categoryPayment.clinic?.paidAmount || 0) +
-        (categoryPayment.lab?.paidAmount || 0) +
-        (categoryPayment.pharmacy?.paidAmount || 0);
+        (finalCategoryPayment.clinic?.paidAmount || 0) +
+        (finalCategoryPayment.lab?.paidAmount || 0) +
+        (finalCategoryPayment.pharmacy?.paidAmount || 0);
 
       const fin = computeFinancials(mergedServices, {
         labTotal: Number(booking.labTotal) || 0,
@@ -1752,7 +1954,7 @@ const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
         referralCustomerId: booking.referralCustomerId, referralDoctorId: booking.referralDoctorId,
         referralCommission: booking.referralCommission, referralCommissionType: booking.referralCommissionType,
         offerApplied: booking.offerApplied || null,
-        categoryPayment,
+        categoryPayment: finalCategoryPayment, // ✅ Safe payload
       };
 
       const res = await axios.put(`${API_BASE_URL}/appointment-slots/updateop/${booking._id}`, payload);
@@ -1773,7 +1975,6 @@ const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
       setSavingPharmacyItems(false);
     }
   };
-
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -2728,36 +2929,27 @@ const normalizedLabItems = Array.isArray(b.labItems)
     if (!partialBooking) return;
     const bd = getAmountBreakdown(partialBooking);
 
-    const existing = partialBooking.categoryPayment;
+    // ✅ Purana snapshot uthao
+    const existing = partialBooking.categoryPayment || {};
     const wasPaid = partialBooking.paymentStatus === "Paid";
+    
     const categoryPayment = {
-      clinic: {
-        paidAmount: existing?.clinic?.paidAmount !== undefined
-          ? Number(existing.clinic.paidAmount) || 0
-          : wasPaid ? (Number(bd.clinic) || 0) : 0,
-      },
-      lab: {
-        paidAmount: existing?.lab?.paidAmount !== undefined
-          ? Number(existing.lab.paidAmount) || 0
-          : wasPaid ? (Number(bd.lab) || 0) : 0,
-      },
-      pharmacy: {
-        paidAmount: existing?.pharmacy?.paidAmount !== undefined
-          ? Number(existing.pharmacy.paidAmount) || 0
-          : wasPaid ? (Number(bd.pharmacy) || 0) : 0,
-      },
+      clinic: { paidAmount: existing?.clinic?.paidAmount !== undefined ? Number(existing.clinic.paidAmount) : (wasPaid ? (Number(bd.clinic) || 0) : 0) },
+      lab: { paidAmount: existing?.lab?.paidAmount !== undefined ? Number(existing.lab.paidAmount) : (wasPaid ? (Number(bd.lab) || 0) : 0) },
+      pharmacy: { paidAmount: existing?.pharmacy?.paidAmount !== undefined ? Number(existing.pharmacy.paidAmount) : (wasPaid ? (Number(bd.pharmacy) || 0) : 0) },
     };
 
+    // ✅ Sirf selected category ko 100% Paid karo, baaki ko chhedo mat
     if (partialCategory) {
       categoryPayment[partialCategory] = {
         paidAmount: Number(bd[partialCategory]) || 0,
       };
     } else {
+      // Agar bina category ke mark kiya hai toh sabko paid karo
       categoryPayment.clinic = { paidAmount: Number(bd.clinic) || 0 };
       categoryPayment.lab = { paidAmount: Number(bd.lab) || 0 };
       categoryPayment.pharmacy = { paidAmount: Number(bd.pharmacy) || 0 };
     }
-
     const totalPaid =
       (categoryPayment.clinic.paidAmount || 0) +
       (categoryPayment.lab.paidAmount || 0) +
@@ -4329,6 +4521,53 @@ const normalizedLabItems = Array.isArray(b.labItems)
           </div>
         </div>
 
+
+              {/* ✅ CUSTOM DELETE CONFIRMATION MODAL */}
+      {deleteConfirm.isOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 overflow-hidden transform transition-all">
+            
+            {/* Header */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b bg-red-50">
+              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                <FiAlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-sm">Remove Item?</h3>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  Are you sure you want to remove this {deleteConfirm.type} item?
+                </p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-5">
+              <p className="text-xs text-gray-600 text-center">
+                This action cannot be undone. The item will be permanently removed from the list.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 px-5 py-3 border-t bg-gray-50">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirm({ isOpen: false, type: "", index: null })}
+                className="px-4 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                No, Keep it
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteItem}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-sm flex items-center gap-1.5 transition-colors"
+              >
+                <FiTrash2 className="w-3.5 h-3.5" /> Yes, Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
         {/* ADD/EDIT MODAL */}
         {showForm && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-start justify-center pt-12 sm:pt-16 px-2 sm:px-4 pb-4">
@@ -4775,7 +5014,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-[11px] font-bold text-gray-600 uppercase flex items-center gap-2">
                       <FaMoneyBillWave className="text-purple-600" /> Payment Details
-                      {isEditMode && <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200"><FaLock /> Amount Locked</span>}
+                      {isEditMode && !isAdmin && <span className="ml-2 inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200"><FaLock /> Amount Locked</span>}
                     </label>
                   </div>
 
@@ -5741,21 +5980,35 @@ const normalizedLabItems = Array.isArray(b.labItems)
         )}
 
         {/* LAB ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
+             {/* LAB ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
         {showLabItemsModal && labItemsBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-6xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-white rounded-2xl max-w-7xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
 
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b bg-gradient-to-r from-purple-50 to-indigo-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center">
-                    <FaFlask className="w-4 h-4" />
+              {/* Header with Patient Details */}
+              <div className="flex items-start justify-between px-5 py-4 border-b bg-gradient-to-r from-purple-50 to-indigo-50">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center flex-shrink-0 mt-1">
+                    <FaFlask className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-sm">Lab Items</h3>
-                    <p className="text-[10px] text-gray-500">
-                      {labItemsBooking.patientTitle} {labItemsBooking.patientName} • {labItemsBooking.patientPhone}
-                    </p>
+                    <h3 className="font-bold text-gray-900 text-lg">Lab Items</h3>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm font-bold text-purple-900">
+                      <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-purple-200">
+                        {labItemsBooking.patientTitle} {labItemsBooking.patientName}
+                      </span>
+                      <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-purple-200 flex items-center gap-1">
+                        <FaPhoneAlt className="text-[10px]" /> {labItemsBooking.patientPhone}
+                      </span>
+                      <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-purple-200">
+                        {labItemsBooking.patientAge} Yrs / {labItemsBooking.patientGender}
+                      </span>
+                    </div>
+                    {labItemsBooking.patientAddress && (
+                      <p className="text-xs font-semibold text-purple-700 mt-1.5 max-w-2xl truncate">
+                        📍 {labItemsBooking.patientAddress} {labItemsBooking.patientCity ? `, ${labItemsBooking.patientCity}` : ""} {labItemsBooking.patientPincode ? `- ${labItemsBooking.patientPincode}` : ""}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <button
@@ -5766,7 +6019,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
                   }}
                   className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/60"
                 >
-                  <FaTimes className="w-4 h-4" />
+                  <FaTimes className="w-5 h-5" />
                 </button>
               </div>
 
@@ -5810,6 +6063,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-32">Lab Name</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Amount</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Disc.</th>
+                      <th className="px-3 py-2.5 text-center font-bold text-red-600 w-20 bg-red-50">Due</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Paid</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Payment Type</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Status</th>
@@ -5820,13 +6074,13 @@ const normalizedLabItems = Array.isArray(b.labItems)
                   <tbody>
                     {labItemsList.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="px-3 py-8 text-center text-gray-400 bg-gray-50 text-xs italic">
+                        <td colSpan={10} className="px-3 py-8 text-center text-gray-400 bg-gray-50 text-xs italic">
                           No lab amounts added yet. Enter amount above and click Add.
                         </td>
                       </tr>
                     ) : (
                       labItemsList.map((item, i) => {
-                        const isPaid = item._wasPaid === true;
+                        const isPaid = item._wasPaid === true && !isAdmin;
                         return (
                           <tr key={`${item.serviceId}-${i}`} className={`border-b border-gray-100 ${isPaid ? "bg-gray-50" : "hover:bg-purple-50/40"}`}>
                             <td className="px-3 py-2 text-center">
@@ -5855,6 +6109,11 @@ const normalizedLabItems = Array.isArray(b.labItems)
                                 className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-rose-700 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none"}`}
                                 min="0"
                               />
+                            </td>
+                            <td className="px-3 py-2 text-center bg-red-50/50">
+                              <span className={`font-bold ${item.dueAmount > 0 ? "text-red-600" : "text-gray-400"}`}>
+                                ₹{item.dueAmount || 0}
+                              </span>
                             </td>
                             <td className="px-3 py-2">
                               <input
@@ -5923,38 +6182,30 @@ const normalizedLabItems = Array.isArray(b.labItems)
                   {/* Footer Totals */}
                   {labItemsList.length > 0 && (
                   <tfoot className="bg-purple-50 border-t-2 border-purple-300 sticky bottom-0">
-  <tr>
-    <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-purple-800 uppercase">Total:</td>
-    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-purple-800">₹{labItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
-    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{labItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
-    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{labItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
-    
-    {/* ✅ Yahan DUE: ₹XXX dikhega */}
-      {/* ✅ Yahan DUE aur Clear Due button dikhega */}
-    <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
-      <span className="text-sm font-extrabold text-red-600">
-        DUE: ₹{labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}
-      </span>
-      
-      {/* ✅ CLEAR DUE BUTTON */}
-      {labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
-      <button
-        type="button"
-        onClick={() => {
-          setClearDueCategory("lab");
-          setClearDuePaymentType("Cash"); // Default Cash
-          setShowClearDueModal(true);
-        }}
-        className="px-2 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded"
-      >
-        Clear Due
-      </button>
-      )}
-    </td>
-
-    <td colSpan={2} className="px-3 py-2.5 text-right text-[10px] text-purple-700 font-semibold">{labItemsList.length} item{labItemsList.length !== 1 ? "s" : ""}</td>
-  </tr>
-</tfoot>
+                    <tr>
+                      <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-purple-800 uppercase">Total:</td>
+                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-purple-800">₹{labItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
+                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{labItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
+                      <td className="px-3 py-2.5 text-center bg-red-100/50"><span className="text-sm font-extrabold text-red-600">₹{labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}</span></td>
+                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{labItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
+                      <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
+                        {labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setClearDueCategory("lab");
+                              setClearDuePaymentType("Cash");
+                              setShowClearDueModal(true);
+                            }}
+                            className="px-3 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm"
+                          >
+                            Clear Due
+                          </button>
+                        )}
+                      </td>
+                      <td colSpan={3} className="px-3 py-2.5 text-right text-[10px] text-purple-700 font-semibold">{labItemsList.length} item{labItemsList.length !== 1 ? "s" : ""}</td>
+                    </tr>
+                  </tfoot>
                   )}
                 </table>
               </div>
@@ -5983,22 +6234,39 @@ const normalizedLabItems = Array.isArray(b.labItems)
             </div>
           </div>
         )}
+
+
+
         {/* PHARMACY ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
+             {/* PHARMACY ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
         {showPharmacyItemsModal && pharmacyItemsBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-6xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-white rounded-2xl max-w-7xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
 
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b bg-gradient-to-r from-green-50 to-emerald-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-green-500 text-white flex items-center justify-center">
-                    <FaPills className="w-4 h-4" />
+              {/* Header with Patient Details */}
+              <div className="flex items-start justify-between px-5 py-4 border-b bg-gradient-to-r from-green-50 to-emerald-50">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-500 text-white flex items-center justify-center flex-shrink-0 mt-1">
+                    <FaPills className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-sm">Pharmacy Items</h3>
-                    <p className="text-[10px] text-gray-500">
-                      {pharmacyItemsBooking.patientTitle} {pharmacyItemsBooking.patientName} • {pharmacyItemsBooking.patientPhone}
-                    </p>
+                    <h3 className="font-bold text-gray-900 text-lg">Pharmacy Items</h3>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm font-bold text-green-900">
+                      <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-green-200">
+                        {pharmacyItemsBooking.patientTitle} {pharmacyItemsBooking.patientName}
+                      </span>
+                      <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-green-200 flex items-center gap-1">
+                        <FaPhoneAlt className="text-[10px]" /> {pharmacyItemsBooking.patientPhone}
+                      </span>
+                      <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-green-200">
+                        {pharmacyItemsBooking.patientAge} Yrs / {pharmacyItemsBooking.patientGender}
+                      </span>
+                    </div>
+                    {pharmacyItemsBooking.patientAddress && (
+                      <p className="text-xs font-semibold text-green-700 mt-1.5 max-w-2xl truncate">
+                        📍 {pharmacyItemsBooking.patientAddress} {pharmacyItemsBooking.patientCity ? `, ${pharmacyItemsBooking.patientCity}` : ""} {pharmacyItemsBooking.patientPincode ? `- ${pharmacyItemsBooking.patientPincode}` : ""}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <button
@@ -6009,7 +6277,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
                   }}
                   className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/60"
                 >
-                  <FaTimes className="w-4 h-4" />
+                  <FaTimes className="w-5 h-5" />
                 </button>
               </div>
 
@@ -6053,6 +6321,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-32">Medicine Name</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Amount</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Disc.</th>
+                      <th className="px-3 py-2.5 text-center font-bold text-red-600 w-20 bg-red-50">Due</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Paid</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Payment Type</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Status</th>
@@ -6063,13 +6332,13 @@ const normalizedLabItems = Array.isArray(b.labItems)
                   <tbody>
                     {pharmacyItemsList.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="px-3 py-8 text-center text-gray-400 bg-gray-50 text-xs italic">
+                        <td colSpan={10} className="px-3 py-8 text-center text-gray-400 bg-gray-50 text-xs italic">
                           No medicine amounts added yet. Enter amount above and click Add.
                         </td>
                       </tr>
                     ) : (
                       pharmacyItemsList.map((item, i) => {
-                        const isPaid = item._wasPaid === true;
+                        const isPaid = item._wasPaid === true && !isAdmin;
                         return (
                           <tr key={`${item.serviceId}-${i}`} className={`border-b border-gray-100 ${isPaid ? "bg-gray-50" : "hover:bg-green-50/40"}`}>
                             <td className="px-3 py-2 text-center">
@@ -6098,6 +6367,11 @@ const normalizedLabItems = Array.isArray(b.labItems)
                                 className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-rose-700 border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"}`}
                                 min="0"
                               />
+                            </td>
+                            <td className="px-3 py-2 text-center bg-red-50/50">
+                              <span className={`font-bold ${item.dueAmount > 0 ? "text-red-600" : "text-gray-400"}`}>
+                                ₹{item.dueAmount || 0}
+                              </span>
                             </td>
                             <td className="px-3 py-2">
                               <input
@@ -6166,38 +6440,30 @@ const normalizedLabItems = Array.isArray(b.labItems)
                   {/* Footer Totals */}
                   {pharmacyItemsList.length > 0 && (
                   <tfoot className="bg-green-50 border-t-2 border-green-300 sticky bottom-0">
-  <tr>
-    <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-green-800 uppercase">Total:</td>
-    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-green-800">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
-    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
-    <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
-    
-    {/* ✅ Yahan DUE: ₹XXX dikhega */}
-      {/* ✅ Yahan DUE aur Clear Due button dikhega */}
-    <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
-      <span className="text-sm font-extrabold text-red-600">
-        DUE: ₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}
-      </span>
-      
-      {/* ✅ CLEAR DUE BUTTON */}
-         {pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
-      <button
-        type="button"
-        onClick={() => {
-          setClearDueCategory("pharmacy");
-          setClearDuePaymentType("Cash"); // Default Cash
-          setShowClearDueModal(true);
-        }}
-        className="px-2 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded"
-      >
-        Clear Due
-      </button>
-    )}
-    </td>
-
-    <td colSpan={2} className="px-3 py-2.5 text-right text-[10px] text-green-700 font-semibold">{pharmacyItemsList.length} item{pharmacyItemsList.length !== 1 ? "s" : ""}</td>
-  </tr>
-</tfoot>
+                    <tr>
+                      <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-green-800 uppercase">Total:</td>
+                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-green-800">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
+                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
+                      <td className="px-3 py-2.5 text-center bg-red-100/50"><span className="text-sm font-extrabold text-red-600">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}</span></td>
+                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
+                      <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
+                        {pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setClearDueCategory("pharmacy");
+                              setClearDuePaymentType("Cash");
+                              setShowClearDueModal(true);
+                            }}
+                            className="px-3 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm"
+                          >
+                            Clear Due
+                          </button>
+                        )}
+                      </td>
+                      <td colSpan={3} className="px-3 py-2.5 text-right text-[10px] text-green-700 font-semibold">{pharmacyItemsList.length} item{pharmacyItemsList.length !== 1 ? "s" : ""}</td>
+                    </tr>
+                  </tfoot>
                   )}
                 </table>
               </div>
@@ -6227,224 +6493,442 @@ const normalizedLabItems = Array.isArray(b.labItems)
           </div>
         )}
 
+{/* ✅ CLEAR DUE PAYMENT TYPE MODAL — Lab / Pharmacy / Clinic */}
+{showClearDueModal && (
+  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border relative">
 
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-9 h-9 rounded-xl text-white flex items-center justify-center ${
+              clearDueCategory === "lab"
+                ? "bg-purple-500"
+                : clearDueCategory === "pharmacy"
+                  ? "bg-green-500"
+                  : "bg-blue-500"
+            }`}
+          >
+            <FaMoneyBillWave className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900 text-sm">Clear Due Payment</h3>
+            <p className="text-[10px] text-gray-500 capitalize">{clearDueCategory} Items</p>
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            setShowClearDueModal(false);
+            setClearDueTransactionId("");
+          }}
+          className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+        >
+          <FaTimes className="w-4 h-4" />
+        </button>
+      </div>
 
-                {/* ✅ CLEAR DUE PAYMENT TYPE MODAL */}
-        {showClearDueModal && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border relative">
-              <div className="flex items-center justify-between px-5 py-4 border-b">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-red-500 text-white flex items-center justify-center">
-                    <FaMoneyBillWave className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-sm">Clear Due Payment</h3>
-                    <p className="text-[10px] text-gray-500 capitalize">{clearDueCategory} Items</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowClearDueModal(false)} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100">
-                  <FaTimes className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="p-5 space-y-4">
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
-                  <span className="text-xs font-bold text-red-800">Total Due Amount:</span>
-                  <span className="text-lg font-extrabold text-red-600">
-                    ₹{clearDueCategory === "lab" 
-                      ? labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)
-                      : pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}
-                  </span>
-                </div>
-                
-                              <div>
-                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">Select Payment Type</label>
-                  <select 
-                    value={clearDuePaymentType} 
-                    onChange={(e) => setClearDuePaymentType(e.target.value)} 
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800"
-                  >
-                    <option value="Cash">Cash</option>
-                    <option value="Online">Online</option>
-                    <option value="Card">Card</option>
-                    <option value="UPI">UPI</option>
-                  </select>
-                </div>
+      {/* Body */}
+      <div className="p-5 space-y-4">
 
-                {/* ✅ Naya Field: Transaction ID (Only for Online/Card/UPI) */}
-                {(clearDuePaymentType === "Online" || clearDuePaymentType === "Card" || clearDuePaymentType === "UPI") && (
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">Transaction ID</label>
-                    <input
-                      type="text"
-                      value={clearDueTransactionId}
-                      onChange={(e) => setClearDueTransactionId(e.target.value)}
-                      placeholder="Enter Transaction ID"
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
-                <button onClick={() => setShowClearDueModal(false)} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
-                             <button 
-                  onClick={() => {
-                    const updateItems = (list) => list.map((item) => {
-                      const netAmount = Math.max(0, (Number(item.price) || 0) - (Number(item.discount) || 0));
-                      const paidAmount = Number(item.paidAmount) || 0;
-                      const dueAmount = Number(item.dueAmount) || 0;
-                      
-                      if (dueAmount <= 0) return item;
+        {/* Total Due Display */}
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
+          <span className="text-xs font-bold text-red-800">Total Due Amount:</span>
+          <span className="text-lg font-extrabold text-red-600">
+            ₹{clearDueCategory === "lab"
+              ? labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)
+              : clearDueCategory === "pharmacy"
+                ? pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)
+                : clinicServicesList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}
+          </span>
+        </div>
 
-                      const newPaidAmount = paidAmount + dueAmount;
-                      let newStatus = "Due";
-                      if (newPaidAmount >= netAmount) newStatus = "Paid";
-                      else if (newPaidAmount > 0) newStatus = "Partial";
+        {/* Payment Type Select */}
+        <div>
+          <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">
+            Select Payment Type
+          </label>
+          <select
+            value={clearDuePaymentType}
+            onChange={(e) => setClearDuePaymentType(e.target.value)}
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+          >
+            <option value="Cash">Cash</option>
+            <option value="Online">Online</option>
+            <option value="Card">Card</option>
+            <option value="UPI">UPI</option>
+          </select>
+        </div>
 
-                      return { 
-                        ...item, 
-                        paidAmount: newPaidAmount, 
-                        dueAmount: 0, 
-                        paymentStatus: newStatus,
-                        paymentMode: clearDuePaymentType,
-                        transactionId: clearDueTransactionId // ✅ Txn ID save karo
-                      };
-                    });
-
-                    if (clearDueCategory === "lab") {
-                      setLabItemsList(updateItems);
-                    } else {
-                      setPharmacyItemsList(updateItems);
-                    }
-                    
-                    showToast(`✅ Due cleared via ${clearDuePaymentType}! Please click Save.`, "success");
-                    setShowClearDueModal(false);
-                    setClearDueTransactionId(""); // Reset Txn ID
-                  }} 
-                  className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5"
-                >
-                  <FaCheckCircle className="w-3.5 h-3.5" /> Confirm & Clear
-                </button>
-              </div>
-            </div>
+        {/* Transaction ID — Only for Online / Card / UPI */}
+        {(clearDuePaymentType === "Online" ||
+          clearDuePaymentType === "Card" ||
+          clearDuePaymentType === "UPI") && (
+          <div>
+            <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">
+              Transaction ID
+            </label>
+            <input
+              type="text"
+              value={clearDueTransactionId}
+              onChange={(e) => setClearDueTransactionId(e.target.value)}
+              placeholder="Enter Transaction ID"
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+            />
           </div>
         )}
-        {/* CLINIC SERVICES MODAL */}
-        {showClinicServicesModal && clinicServicesBooking && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border relative max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-5 py-4 border-b">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center"><FaClinicMedical className="w-4 h-4" /></div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-sm">Clinic Services</h3>
-                    <p className="text-[10px] text-gray-500">{clinicServicesBooking.patientTitle} {clinicServicesBooking.patientName}</p>
-                  </div>
+      </div>
+
+      {/* Footer Buttons */}
+      <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
+        <button
+          onClick={() => {
+            setShowClearDueModal(false);
+            setClearDueTransactionId("");
+          }}
+          className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => {
+            const updateItems = (list) =>
+              list.map((item) => {
+                const netAmount = Math.max(
+                  0,
+                  (Number(item.price) || 0) - (Number(item.discount) || 0)
+                );
+                const paidAmount = Number(item.paidAmount) || 0;
+                const dueAmount = Number(item.dueAmount) || 0;
+
+                if (dueAmount <= 0) return item;
+
+                const newPaidAmount = paidAmount + dueAmount;
+                let newStatus = "Due";
+                if (newPaidAmount >= netAmount) newStatus = "Paid";
+                else if (newPaidAmount > 0) newStatus = "Partial";
+
+                return {
+                  ...item,
+                  paidAmount: newPaidAmount,
+                  dueAmount: 0,
+                  paymentStatus: newStatus,
+                  paymentMode: clearDuePaymentType,
+                  transactionId: clearDueTransactionId, // ✅ Txn ID save
+                };
+              });
+
+            // ✅ Route to correct category list
+            if (clearDueCategory === "lab") {
+              setLabItemsList(updateItems);
+            } else if (clearDueCategory === "pharmacy") {
+              setPharmacyItemsList(updateItems);
+            } else if (clearDueCategory === "clinic") {
+              setClinicServicesList(updateItems);
+            }
+
+            showToast(
+              `✅ Due cleared via ${clearDuePaymentType}! Please click Save.`,
+              "success"
+            );
+            setShowClearDueModal(false);
+            setClearDueTransactionId("");
+          }}
+          className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5"
+        >
+          <FaCheckCircle className="w-3.5 h-3.5" /> Confirm & Clear
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+      {/* CLINIC SERVICES MODAL — TABLE FORMAT */}
+      {showClinicServicesModal && clinicServicesBooking && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-7xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
+
+            {/* Header with Patient Details */}
+            <div className="flex items-start justify-between px-5 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center flex-shrink-0 mt-1">
+                  <FaClinicMedical className="w-5 h-5" />
                 </div>
-                <button onClick={() => { setShowClinicServicesModal(false); setClinicServicesBooking(null); setClinicServicesList([]); }} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
-              </div>
-              <div className="p-5 space-y-4">
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Services ({clinicServicesList.length})</label>
-                    {clinicServicesList.length > 0 && (<span className="text-[11px] font-extrabold text-blue-700">Total: ₹{clinicServicesList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span>)}
+                  <h3 className="font-bold text-gray-900 text-lg">Clinic Services</h3>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm font-bold text-blue-800">
+                    <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-blue-200">
+                      {clinicServicesBooking.patientTitle} {clinicServicesBooking.patientName}
+                    </span>
+                    <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-blue-200 flex items-center gap-1">
+                      <FaPhoneAlt className="text-[10px]" /> {clinicServicesBooking.patientPhone}
+                    </span>
+                    <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-blue-200">
+                      {clinicServicesBooking.patientAge} Yrs / {clinicServicesBooking.patientGender}
+                    </span>
                   </div>
-                  {clinicServicesList.length === 0 ? (
-                    <div className="text-center py-4 text-[11px] text-gray-400 bg-gray-50 rounded-lg border border-dashed">No services yet</div>
-                  ) : (
-                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                      {clinicServicesList.map((svc, i) => {
-                        const isPaid = (svc.paymentStatus || "").toLowerCase() === "paid";
-                        return (
-                          <div key={`${svc.serviceId}-${i}`} className="px-3 py-2 rounded-lg text-xs bg-blue-50 border border-blue-200">
-                            <div className="flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
-                              <div className="w-[130px] flex-shrink-0">
-                                <div className="font-semibold text-gray-800 truncate text-[11px]" title={svc.name}>{svc.name}</div>
-                              </div>
-                              <input
-                                type="number"
-                                value={svc.price}
-                                onChange={(e) => handleUpdateClinicServicePrice(i, e.target.value)}
-                                disabled={isPaid}
-                                className={`w-20 px-2 py-1 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-emerald-700 border-gray-300"}`}
-                                min="0"
-                              />
-                              <select
-                                value={svc.paymentMode || ""}
-                                onChange={(e) => handleUpdateClinicServicePaymentMode(i, e.target.value)}
-                                disabled={isPaid}
-                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
-                                title={isPaid ? "Already Paid — Locked" : "Payment Mode"}
-                              >
-                                <option value="">Select Payment Mode</option>
-                                {ITEM_PAYMENT_MODE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                              </select>
-                              <select
-                                value={svc.paymentStatus || ""}
-                                onChange={(e) => handleUpdateClinicServicePaymentStatus(i, e.target.value)}
-                                disabled={isPaid}
-                                className={`flex-1 min-w-[120px] px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300"}`}
-                                title={isPaid ? "Already Paid — Locked" : "Payment Status"}
-                              >
-                                <option value="">Select Payment Status</option>
-                                {ITEM_PAYMENT_STATUS_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                              </select>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveClinicServiceItem(i)}
-                                disabled={isPaid}
-                                className={`p-1 flex-shrink-0 ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600"}`}
-                                title={isPaid ? "Already Paid — Locked" : "Remove"}
-                              >
-                                {isPaid ? <FaLock className="w-3.5 h-3.5" /> : <FaMinusCircle className="w-3.5 h-3.5" />}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                  {clinicServicesBooking.patientAddress && (
+                    <p className="text-xs font-semibold text-blue-700 mt-1.5 max-w-2xl truncate">
+                      📍 {clinicServicesBooking.patientAddress} {clinicServicesBooking.patientCity ? `, ${clinicServicesBooking.patientCity}` : ""} {clinicServicesBooking.patientPincode ? `- ${clinicServicesBooking.patientPincode}` : ""}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowClinicServicesModal(false);
+                  setClinicServicesBooking(null);
+                  setClinicServicesList([]);
+                }}
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/60"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Add New Row */}
+            <div className="px-5 py-3 border-b bg-gray-50">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  + Add New Service:
+                </span>
+                <div className="flex-1 min-w-[180px] relative">
+                  <input
+                    type="text"
+                    value={clinicServiceInput}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setClinicServiceInput(v);
+                      if (v.trim()) {
+                        const filtered = services.filter((s) => s.name.toLowerCase().includes(v.toLowerCase()));
+                        setClinicServiceSuggestions(filtered);
+                        setShowClinicServiceSuggestions(true);
+                      } else {
+                        setClinicServiceSuggestions([]);
+                        setShowClinicServiceSuggestions(false);
+                      }
+                    }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCustomClinicService(); } }}
+                    placeholder="Search or type service name..."
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                  />
+                  {showClinicServiceSuggestions && clinicServiceSuggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-40 overflow-y-auto z-50">
+                      {clinicServiceSuggestions.map((svc) => (
+                        <button
+                          key={svc._id}
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); handleAddClinicServiceItem(svc); }}
+                          className="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0"
+                        >
+                          <span className="font-semibold text-gray-800">{svc.name}</span>
+                          <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">₹{svc.price}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
-                <div className="border rounded-xl p-3 bg-gray-50 border-gray-200">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Add New Service</div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex-1 min-w-[180px] relative">
-                      <input type="text" value={clinicServiceInput} onChange={(e) => {
-                        const v = e.target.value;
-                        setClinicServiceInput(v);
-                        if (v.trim()) {
-                          const filtered = services.filter((s) => s.name.toLowerCase().includes(v.toLowerCase()));
-                          setClinicServiceSuggestions(filtered);
-                          setShowClinicServiceSuggestions(true);
-                        } else { setClinicServiceSuggestions([]); setShowClinicServiceSuggestions(false); }
-                      }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCustomClinicService(); } }} placeholder="Search or type service name..." className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-                      {showClinicServiceSuggestions && clinicServiceSuggestions.length > 0 && (
-                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-40 overflow-y-auto z-50">
-                          {clinicServiceSuggestions.map((svc) => (
-                            <button key={svc._id} type="button" onMouseDown={(e) => { e.preventDefault(); handleAddClinicServiceItem(svc); }} className="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0">
-                              <span className="font-semibold text-gray-800">{svc.name}</span>
-                              <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">₹{svc.price}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <input type="number" value={clinicServicePrice} onChange={(e) => setClinicServicePrice(e.target.value)} placeholder="Price" className="w-24 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm" min="0" />
-                    <button type="button" onClick={handleAddCustomClinicService} disabled={!clinicServiceInput.trim()} className="px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center gap-1 disabled:opacity-50"><FaPlus className="w-3 h-3" /> Add</button>
-                  </div>
-                </div>
-              </div>
-              <div className="sticky bottom-0 flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur rounded-b-2xl">
-                <button onClick={() => { setShowClinicServicesModal(false); setClinicServicesBooking(null); setClinicServicesList([]); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700">Cancel</button>
-                <button onClick={handleSaveClinicServices} disabled={savingClinicServices} className="px-5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50">
-                  {savingClinicServices ? (<FiRefreshCw className="w-3.5 h-3.5 animate-spin" />) : (<FiCheckCircle className="w-3.5 h-3.5" />)}
-                  {savingClinicServices ? "Saving..." : `Save Services (${clinicServicesList.length})`}
+                <input
+                  type="number"
+                  value={clinicServicePrice}
+                  onChange={(e) => setClinicServicePrice(e.target.value)}
+                  placeholder="Price (₹)"
+                  className="w-28 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                  min="0"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCustomClinicService}
+                  disabled={!clinicServiceInput.trim()}
+                  className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"
+                >
+                  <FaPlus className="w-3 h-3" /> Add
                 </button>
               </div>
             </div>
+
+            {/* TABLE AREA */}
+            <div className="flex-1 overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-100 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-10">#</th>
+                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-32">Service Name</th>
+                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Amount</th>
+                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Disc.</th>
+                    <th className="px-3 py-2.5 text-center font-bold text-red-600 w-20 bg-red-50">Due</th>
+                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Paid</th>
+                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Payment Type</th>
+                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Status</th>
+                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Transaction ID</th>
+                    <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-12">Act</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clinicServicesList.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="px-3 py-8 text-center text-gray-400 bg-gray-50 text-xs italic">
+                        No clinic services added yet. Search above and click Add.
+                      </td>
+                    </tr>
+                  ) : (
+                    clinicServicesList.map((svc, i) => {
+                      const isPaid = svc._wasPaid === true && !isAdmin;
+                      return (
+                        <tr key={`${svc.serviceId}-${i}`} className={`border-b border-gray-100 ${isPaid ? "bg-gray-50" : "hover:bg-blue-50/40"}`}>
+                          <td className="px-3 py-2 text-center">
+                            <span className="w-6 h-6 inline-flex items-center justify-center rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">{i + 1}</span>
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="font-semibold text-slate-700 truncate text-[11px]" title={svc.name}>{svc.name || `Service ${i + 1}`}</div>
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              value={svc.price}
+                              onChange={(e) => handleUpdateClinicServicePrice(i, e.target.value)}
+                              disabled={isPaid}
+                              className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-blue-700 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                              min="0"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              value={svc.discount || ""}
+                              onChange={(e) => handleUpdateClinicServiceDiscount(i, e.target.value)}
+                              disabled={isPaid}
+                              placeholder="0"
+                              className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-rose-700 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                              min="0"
+                            />
+                          </td>
+                          <td className="px-3 py-2 text-center bg-red-50/50">
+                            <span className={`font-bold ${svc.dueAmount > 0 ? "text-red-600" : "text-gray-400"}`}>
+                              ₹{svc.dueAmount || 0}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              value={svc.paidAmount || ""}
+                              onChange={(e) => handleUpdateClinicServicePaidAmount(i, e.target.value)}
+                              disabled={isPaid}
+                              placeholder="0"
+                              className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-emerald-700 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                              min="0"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={svc.paymentMode || ""}
+                              onChange={(e) => handleUpdateClinicServicePaymentMode(i, e.target.value)}
+                              disabled={isPaid}
+                              className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                            >
+                              <option value="">Choose Payment Type</option>
+                              {ITEM_PAYMENT_MODE_OPTIONS.filter(o => o.value !== "N/A").map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <span
+                              className={`inline-flex items-center justify-center w-full px-2 py-1.5 text-[10px] font-bold border rounded ${
+                                svc.paymentStatus === "Paid"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : svc.paymentStatus === "Partial"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                    : "bg-red-50 text-red-700 border-red-200"
+                              }`}
+                            >
+                              {svc.paymentStatus || "Due"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2">
+                            {svc.paymentMode === "Online" || svc.paymentMode === "Credit Card" ? (
+                              <input
+                                type="text"
+                                value={svc.transactionId || ""}
+                                onChange={(e) => handleUpdateClinicServiceTransactionId(i, e.target.value)}
+                                disabled={isPaid}
+                                placeholder="Txn ID"
+                                className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                              />
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic block text-center">—</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveClinicServiceItem(i)}
+                              disabled={isPaid}
+                              className={`p-1.5 rounded-md ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600 hover:bg-red-50"}`}
+                            >
+                              {isPaid ? <FaLock className="w-3.5 h-3.5" /> : <FaMinusCircle className="w-3.5 h-3.5" />}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+
+                {/* Footer Totals */}
+                {clinicServicesList.length > 0 && (
+                  <tfoot className="bg-blue-50 border-t-2 border-blue-300 sticky bottom-0">
+                    <tr>
+                      <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-blue-800 uppercase">Total:</td>
+                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-blue-800">₹{clinicServicesList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
+                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{clinicServicesList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
+                      <td className="px-3 py-2.5 text-center bg-red-100/50"><span className="text-sm font-extrabold text-red-600">₹{clinicServicesList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}</span></td>
+                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{clinicServicesList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
+                      <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
+                        {clinicServicesList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setClearDueCategory("clinic");
+                              setClearDuePaymentType("Cash");
+                              setShowClearDueModal(true);
+                            }}
+                            className="px-3 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm"
+                          >
+                            Clear Due
+                          </button>
+                        )}
+                      </td>
+                      <td colSpan={3} className="px-3 py-2.5 text-right text-[10px] text-blue-700 font-semibold">{clinicServicesList.length} item{clinicServicesList.length !== 1 ? "s" : ""}</td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur">
+              <button
+                onClick={() => {
+                  setShowClinicServicesModal(false);
+                  setClinicServicesBooking(null);
+                  setClinicServicesList([]);
+                }}
+                className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveClinicServices}
+                disabled={savingClinicServices}
+                className="px-5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {savingClinicServices ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
+                {savingClinicServices ? "Saving..." : `Save Services (${clinicServicesList.length})`}
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+      )}
 
         {/* VITALS MODAL */}
         {showVitalsModal && vitalsBooking && (

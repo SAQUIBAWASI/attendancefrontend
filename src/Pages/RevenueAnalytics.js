@@ -7,7 +7,7 @@ import {
   FaMoneyBillWave, FaChevronLeft, FaChevronRight,
   FaRupeeSign, FaCheckCircle, FaTimesCircle,
   FaGlobe, FaArrowUp, FaArrowDown, FaEquals, FaSave,
-  FaBullseye, FaEdit,
+  FaBullseye, FaEdit, FaPlus, FaTrash, FaMinusCircle,
 } from "react-icons/fa";
 import {
   FiRefreshCw, FiTrendingUp, FiAlertCircle, FiClock, FiFilter,
@@ -38,30 +38,38 @@ const FY_MONTH_SHORT = {
   7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec",
 };
 
-const TARGET_CATEGORIES = [
-  { key: "clinic", label: "Clinic", color: "blue", short: "CL" },
-  { key: "lab", label: "Lab", color: "purple", short: "LB" },
-  { key: "clinicPharmacy", label: "Clinic Pharmacy", color: "emerald", short: "CP" },
-  { key: "retailPharmacy", label: "Retail Pharmacy", color: "amber", short: "RP" },
+// Default Categories
+const DEFAULT_CATEGORIES = [
+  { key: "clinic", label: "Clinic", color: "blue", short: "CL", col1: "Amount", col2: "FootFall" },
+  { key: "lab", label: "Lab", color: "purple", short: "LB", col1: "Amount", col2: "FootFall" },
+  { key: "clinicPharmacy", label: "Clinic Pharmacy", color: "emerald", short: "CP", col1: "Amount", col2: "FootFall" },
+  { key: "retailPharmacy", label: "Retail Pharmacy", color: "amber", short: "RP", col1: "Amount", col2: "FootFall" },
 ];
 
-const CAT_HEADER_CLS = {
-  blue: "bg-blue-700 border-blue-800",
-  purple: "bg-purple-700 border-purple-800",
-  emerald: "bg-emerald-700 border-emerald-800",
-  amber: "bg-amber-600 border-amber-700",
-};
-const CAT_SUB_CLS = {
-  blue: "bg-blue-50 text-blue-700 border-blue-100",
-  purple: "bg-purple-50 text-purple-700 border-purple-100",
-  emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  amber: "bg-amber-50 text-amber-700 border-amber-100",
-};
-const CAT_CELL_CLS = {
-  blue: "bg-blue-50/30",
-  purple: "bg-purple-50/30",
-  emerald: "bg-emerald-50/30",
-  amber: "bg-amber-50/30",
+const COLOR_PALETTE = [
+  { color: "blue", bg: "bg-blue-700", sub: "bg-blue-50 text-blue-700 border-blue-100", cell: "bg-blue-50/30", th: "bg-blue-800 border-blue-900" },
+  { color: "purple", bg: "bg-purple-700", sub: "bg-purple-50 text-purple-700 border-purple-100", cell: "bg-purple-50/30", th: "bg-purple-800 border-purple-900" },
+  { color: "emerald", bg: "bg-emerald-700", sub: "bg-emerald-50 text-emerald-700 border-emerald-100", cell: "bg-emerald-50/30", th: "bg-emerald-800 border-emerald-900" },
+  { color: "amber", bg: "bg-amber-600", sub: "bg-amber-50 text-amber-700 border-amber-100", cell: "bg-amber-50/30", th: "bg-amber-700 border-amber-800" },
+  { color: "rose", bg: "bg-rose-700", sub: "bg-rose-50 text-rose-700 border-rose-100", cell: "bg-rose-50/30", th: "bg-rose-800 border-rose-900" },
+  { color: "cyan", bg: "bg-cyan-700", sub: "bg-cyan-50 text-cyan-700 border-cyan-100", cell: "bg-cyan-50/30", th: "bg-cyan-800 border-cyan-900" },
+  { color: "indigo", bg: "bg-indigo-700", sub: "bg-indigo-50 text-indigo-700 border-indigo-100", cell: "bg-indigo-50/30", th: "bg-indigo-800 border-indigo-900" },
+  { color: "fuchsia", bg: "bg-fuchsia-700", sub: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100", cell: "bg-fuchsia-50/30", th: "bg-fuchsia-800 border-fuchsia-900" },
+];
+
+const getDynamicStyles = (categories) => {
+  const header = {};
+  const sub = {};
+  const cell = {};
+  const th = {};
+  categories.forEach((cat) => {
+    const c = COLOR_PALETTE.find((p) => p.color === cat.color) || COLOR_PALETTE[0];
+    header[cat.key] = c.bg;
+    sub[cat.key] = c.sub;
+    cell[cat.key] = c.cell;
+    th[cat.key] = c.th;
+  });
+  return { header, sub, cell, th };
 };
 
 const FY_START_FROM = 2020;
@@ -226,7 +234,7 @@ const MonthYearPickerPopup = ({
 /* ============================================================ */
 /* Target Progress Strip                                        */
 /* ============================================================ */
-const TargetProgressStrip = ({ rangeTarget, achieved, hasTarget, rangeLabel = "Target" }) => {
+const TargetProgressStrip = ({ rangeTarget, achieved, hasTarget, rangeLabel = "Target", targetFootFall = 0, achievedFootFall = 0 }) => {
   if (!hasTarget || rangeTarget <= 0) return null;
 
   const diff = achieved - rangeTarget;
@@ -260,7 +268,9 @@ const TargetProgressStrip = ({ rangeTarget, achieved, hasTarget, rangeLabel = "T
         <span className={statusColor}>{statusLabel}</span>
       </div>
       <div className="flex items-center justify-between gap-2 mb-1.5">
-        <span className="text-[11px] font-black text-slate-800">₹{fmt(Math.round(rangeTarget))}</span>
+        <span className="text-[11px] font-black text-slate-800">
+          {fmtAmt(Math.round(achieved))} / ₹{fmt(Math.round(rangeTarget))}
+        </span>
         <span className={`text-[10px] font-black ${statusColor}`}>{pct.toFixed(0)}%</span>
       </div>
       <div className="w-full h-1 rounded-full bg-slate-200 overflow-hidden">
@@ -281,6 +291,7 @@ const TargetProgressStrip = ({ rangeTarget, achieved, hasTarget, rangeLabel = "T
 const CategoryCard = ({
   title, icon, footfall, total, data, accent = "blue",
   rangeTarget = 0, hasTarget = false, rangeLabel = "Target",
+  isCustom = false, rangeTargetFF = 0,
 }) => {
   const metrics = [
     { label: "Cash", key: "cash", icon: FaMoneyBillWave, color: "text-emerald-600" },
@@ -292,8 +303,53 @@ const CategoryCard = ({
     purple: { box: "bg-purple-50 text-purple-600", border: "border-slate-200", title: "text-slate-700" },
     emerald: { box: "bg-emerald-50 text-emerald-600", border: "border-slate-200", title: "text-slate-700" },
     amber: { box: "bg-amber-50 text-amber-600", border: "border-amber-300", title: "text-slate-700" },
+    rose: { box: "bg-rose-50 text-rose-600", border: "border-rose-200", title: "text-slate-700" },
+    cyan: { box: "bg-cyan-50 text-cyan-600", border: "border-cyan-200", title: "text-slate-700" },
+    indigo: { box: "bg-indigo-50 text-indigo-600", border: "border-indigo-200", title: "text-slate-700" },
+    fuchsia: { box: "bg-fuchsia-50 text-fuchsia-600", border: "border-fuchsia-200", title: "text-slate-700" },
   };
   const a = accentMap[accent] || accentMap.blue;
+
+  // ✅ Smart Helper: Round decimals, check if >= 1 Lakh
+  const formatSmartAmt = (val) => {
+    // Pehle decimal ko round karo (9677.419 -> 9677)
+    const roundedNum = Math.round(Number(val) || 0); 
+    const isLakh = roundedNum >= 100000;
+    
+    let displayStr = "";
+    if (isLakh) {
+      let lVal = (roundedNum / 100000).toFixed(2).replace(/\.00$/, '');
+      displayStr = `₹${lVal} L`;
+    } else {
+      displayStr = fmtAmt(roundedNum);
+    }
+
+    return (
+      <span className="group relative inline-block cursor-help">
+        {displayStr}
+        {/* ✅ Popup Tooltip */}
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center z-[999] pointer-events-none">
+          <span className="bg-slate-800 text-white text-[11px] font-medium py-1.5 px-3 rounded-md shadow-2xl whitespace-nowrap tracking-wide">
+            Exact: <span className="font-bold text-emerald-300">{fmtAmt(roundedNum)}</span>
+          </span>
+          <span className="w-2.5 h-2.5 bg-slate-800 transform rotate-45 -mt-1.5"></span>
+        </span>
+      </span>
+    );
+  };
+
+  // ✅ Color and Icon logic for Achieved Values
+  const isAmountShort = hasTarget && rangeTarget > 0 && total < rangeTarget;
+  const amountColor = hasTarget && rangeTarget > 0 ? (isAmountShort ? "text-rose-600" : "text-emerald-600") : "text-slate-900";
+  
+  const AmountIcon = isAmountShort ? FaArrowDown : FaArrowUp;
+  const amountIconClass = `w-3.5 h-3.5 ${amountColor} ${isAmountShort ? "rotate-45" : "-rotate-45"}`;
+
+  const isFFShort = hasTarget && rangeTargetFF > 0 && footfall < rangeTargetFF;
+  const ffColor = hasTarget && rangeTargetFF > 0 ? (isFFShort ? "text-rose-600" : "text-emerald-600") : "text-slate-900";
+  
+  const FFIcon = isFFShort ? FaArrowDown : FaArrowUp;
+  const ffIconClass = `w-3.5 h-3.5 ${ffColor} ${isFFShort ? "rotate-45" : "-rotate-45"}`;
 
   return (
     <div className={`bg-white rounded-lg border p-3 hover:border-blue-300 transition-colors ${a.border}`}>
@@ -302,15 +358,39 @@ const CategoryCard = ({
         <div className={`text-[12px] font-black uppercase tracking-wider leading-8 ${a.title}`}>{title}</div>
       </div>
       <div className="space-y-1 mb-2.5">
+        {/* ✅ TOTAL Value */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-black text-slate-800 uppercase tracking-wide">{title.toUpperCase()} TOTAL:</span>
-          <span className="text-[14px] font-black text-slate-900">{fmtAmt(total)}</span>
+          <span className="text-[10px] font-black text-slate-800 uppercase tracking-wide">TOTAL:</span>
+          <span className="text-[14px] font-black flex items-center gap-1">
+            {hasTarget && rangeTarget > 0 ? (
+              <>
+                {React.createElement(AmountIcon, { className: amountIconClass })}
+                <span className={amountColor}>{formatSmartAmt(total)}</span>
+                <span className="text-slate-900"> / {formatSmartAmt(rangeTarget)}</span>
+              </>
+            ) : (
+              <span className="text-slate-900">{formatSmartAmt(total)}</span>
+            )}
+          </span>
         </div>
+        
+        {/* ✅ FOOTFALL Value */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-black text-slate-800 uppercase tracking-wide">FOOTFALL TOTAL:</span>
-          <span className="text-[14px] font-black text-slate-900">{footfall}</span>
+          <span className="text-[10px] font-black text-slate-800 uppercase tracking-wide">FOOTFALL:</span>
+          <span className="text-[14px] font-black flex items-center gap-1">
+            {hasTarget && rangeTargetFF > 0 ? (
+              <>
+                {React.createElement(FFIcon, { className: ffIconClass })}
+                <span className={ffColor}>{Math.round(footfall)}</span>
+                <span className="text-slate-900"> / {Math.round(rangeTargetFF)}</span>
+              </>
+            ) : (
+              <span className="text-slate-900">{Math.round(footfall)}</span>
+            )}
+          </span>
         </div>
       </div>
+      
       <div className="space-y-1 pt-2 border-t border-slate-100">
         {metrics.map((m) => {
           const Icon = m.icon;
@@ -320,13 +400,21 @@ const CategoryCard = ({
               <span className="flex items-center gap-1.5 text-slate-600 font-bold">
                 <Icon className={`w-2.5 h-2.5 ${m.color}`} /> {m.label}
               </span>
-              <span className={`font-black ${m.color}`}>{fmtAmt(val)}</span>
+              <span className={`font-black ${m.color}`}>{formatSmartAmt(val)}</span>
             </div>
           );
         })}
       </div>
+      
       {hasTarget && (
-        <TargetProgressStrip rangeTarget={rangeTarget} achieved={total} hasTarget={hasTarget} rangeLabel={rangeLabel} />
+        <TargetProgressStrip 
+          rangeTarget={rangeTarget} 
+          achieved={total} 
+          hasTarget={hasTarget} 
+          rangeLabel={rangeLabel}
+          targetFootFall={rangeTargetFF}
+          achievedFootFall={footfall}
+        />
       )}
     </div>
   );
@@ -337,7 +425,7 @@ const CategoryCard = ({
 /* ============================================================ */
 const GrandTotalCard = ({
   total, cash, online, due, footFall,
-  rangeTarget = 0, hasTarget = false, rangeLabel = "Target",
+  rangeTarget = 0, hasTarget = false, rangeLabel = "Target", rangeTargetFF = 0,
 }) => {
   const diff = total - rangeTarget;
   const pct = rangeTarget > 0 ? (total / rangeTarget) * 100 : 0;
@@ -361,13 +449,23 @@ const GrandTotalCard = ({
         <div className="text-[12px] font-black uppercase tracking-wider leading-8 text-white">Grand Total</div>
       </div>
       <div className="space-y-1 mb-2.5">
+        {/* ✅ Updated: Grand Total with Slash Format */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-black text-white uppercase tracking-wide">GRAND TOTAL:</span>
-          <span className="text-[14px] font-black text-white">{fmtAmt(total)}</span>
+          <span className="text-[14px] font-black text-white">
+            {hasTarget && rangeTarget > 0 
+              ? `${fmtAmt(total)} / ₹${fmt(Math.round(rangeTarget))}` 
+              : fmtAmt(total)}
+          </span>
         </div>
+        {/* ✅ Updated: Footfall with Slash Format */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-black text-white uppercase tracking-wide">FOOTFALL TOTAL:</span>
-          <span className="text-[14px] font-black text-white">{footFall}</span>
+          <span className="text-[14px] font-black text-white">
+            {hasTarget && rangeTargetFF > 0 
+              ? `${footFall} / ${Math.round(rangeTargetFF)}` 
+              : footFall}
+          </span>
         </div>
       </div>
       <div className="space-y-1 pt-2 border-t border-white/20">
@@ -389,7 +487,9 @@ const GrandTotalCard = ({
             <span className="text-white">{statusLabel}</span>
           </div>
           <div className="flex items-center justify-between gap-2 mb-1.5">
-            <span className="text-[11px] font-black text-white">₹{fmt(Math.round(rangeTarget))}</span>
+            <span className="text-[11px] font-black text-white">
+              {fmtAmt(Math.round(total))} / ₹{fmt(Math.round(rangeTarget))}
+            </span>
             <span className="text-[10px] font-black text-white/90">{pct.toFixed(0)}%</span>
           </div>
           <div className="w-full h-1 rounded-full bg-white/20 overflow-hidden">
@@ -420,9 +520,16 @@ const AddTargetModal = ({
     : getCurrentFYStartYear();
 
   const [fyStartYear, setFyStartYear] = useState(defaultFYStart);
+  const [categories, setCategories] = useState([]);
+  
   // Grid structure: { [month]: { [catKey]: { amount: "", footFall: "" } } }
   const [grid, setGrid] = useState({});
   const [fyError, setFyError] = useState("");
+
+  const [showAddSegment, setShowAddSegment] = useState(false);
+  const [newSegName, setNewSegName] = useState("");
+  const [newSegCol1, setNewSegCol1] = useState("");
+  const [newSegCol2, setNewSegCol2] = useState("");
 
   const currentFYStart = getCurrentFYStartYear();
 
@@ -442,10 +549,20 @@ const AddTargetModal = ({
       setFyError("");
       setFyStartYear(defaultFYStart);
       
+      // Load custom segments from localStorage
+      let savedCats = [];
+      try {
+        const stored = localStorage.getItem("revenue_custom_segments");
+        if (stored) savedCats = JSON.parse(stored);
+      } catch (e) { console.error(e); }
+
+      const allCats = [...DEFAULT_CATEGORIES, ...savedCats];
+      setCategories(allCats);
+      
       const emptyGrid = {};
       FY_MONTH_ORDER.forEach((m) => {
         emptyGrid[m] = {};
-        TARGET_CATEGORIES.forEach((c) => {
+        allCats.forEach((c) => {
           emptyGrid[m][c.key] = { amount: "", footFall: "" };
         });
       });
@@ -455,10 +572,12 @@ const AddTargetModal = ({
         const editYear = Number(editTarget.year);
         const editFYStart = getFYStartForMonth(editYear, editMonth);
         if (editFYStart === defaultFYStart) {
-          TARGET_CATEGORIES.forEach((cat) => {
+          allCats.forEach((cat) => {
             const catData = editTarget.categories?.[cat.key];
             if (catData) {
-              emptyGrid[editMonth][cat.key].amount = catData.amount > 0 ? String(Math.round(catData.amount)) : "";
+              // ✅ Convert Lakhs back to raw number for display (e.g. 200000 -> 2)
+              const displayAmount = catData.amount > 0 ? (catData.amount / 100000).toFixed(2).replace(/\.00$/, '') : "";
+              emptyGrid[editMonth][cat.key].amount = displayAmount;
               emptyGrid[editMonth][cat.key].footFall = catData.footFall > 0 ? String(catData.footFall) : "";
             }
           });
@@ -472,6 +591,64 @@ const AddTargetModal = ({
 
   if (!isOpen) return null;
 
+  const handleAddSegmentSubmit = () => {
+    if (!newSegName.trim()) return;
+    const key = `custom_${Date.now()}`;
+    const color = COLOR_PALETTE[categories.length % COLOR_PALETTE.length].color;
+    const newCat = { 
+      key, 
+      label: newSegName.trim(), 
+      color, 
+      short: newSegName.slice(0,2).toUpperCase(),
+      col1: newSegCol1.trim() || "Amount",
+      col2: newSegCol2.trim() || "FootFall"
+    };
+    
+    const updatedCats = [...categories, newCat];
+    setCategories(updatedCats);
+    
+    // Save to localstorage (only custom ones)
+    try {
+      const customOnly = updatedCats.filter(c => c.key.startsWith("custom_"));
+      localStorage.setItem("revenue_custom_segments", JSON.stringify(customOnly));
+    } catch (e) { console.error(e); }
+
+    setGrid(prev => {
+      const next = { ...prev };
+      FY_MONTH_ORDER.forEach((m) => {
+        next[m] = {
+          ...(next[m] || {}),
+          [key]: { amount: "", footFall: "" }
+        };
+      });
+      return next;
+    });
+
+    setNewSegName("");
+    setNewSegCol1("");
+    setNewSegCol2("");
+    setShowAddSegment(false);
+  };
+
+  const handleRemoveSegment = (catKey) => {
+    if (!window.confirm("Are you sure you want to remove this segment?")) return;
+    const updatedCats = categories.filter(c => c.key !== catKey);
+    setCategories(updatedCats);
+
+    try {
+      const customOnly = updatedCats.filter(c => c.key.startsWith("custom_"));
+      localStorage.setItem("revenue_custom_segments", JSON.stringify(customOnly));
+    } catch (e) { console.error(e); }
+
+    setGrid(prev => {
+      const next = { ...prev };
+      FY_MONTH_ORDER.forEach((m) => {
+        if (next[m]) delete next[m][catKey];
+      });
+      return next;
+    });
+  };
+
   const handleSubmit = () => {
     const entries = [];
     let totalAmt = 0;
@@ -479,16 +656,19 @@ const AddTargetModal = ({
 
     FY_MONTH_ORDER.forEach((m) => {
       const calendarYear = m >= 4 ? fyStartYear : fyStartYear + 1;
-      TARGET_CATEGORIES.forEach((cat) => {
+      categories.forEach((cat) => {
         const amtRaw = grid?.[m]?.[cat.key]?.amount;
         const ffRaw = grid?.[m]?.[cat.key]?.footFall;
         
-        const amt = Number(amtRaw) || 0;
+        // ✅ Convert Input Amount (Lakhs) to real Amount (e.g. 2 -> 200000)
+        const amtInLakhs = Number(amtRaw) || 0;
+        const amt = amtInLakhs * 100000;
         const ff = Number(ffRaw) || 0;
 
         if (amt > 0 || ff > 0) {
           entries.push({ 
             category: cat.key, 
+            categoryLabel: cat.label,
             month: m, 
             year: calendarYear, 
             amount: amt,
@@ -528,35 +708,39 @@ const AddTargetModal = ({
     }));
   };
 
+  // ✅ Helper to calculate and display amounts in Lakhs
   const getCategoryTotal = (catKey, field) => {
     let sum = 0;
     FY_MONTH_ORDER.forEach((m) => { 
-      sum += Number(grid?.[m]?.[catKey]?.[field]) || 0; 
+      const val = Number(grid?.[m]?.[catKey]?.[field]) || 0;
+      sum += field === "amount" ? val * 100000 : val; 
     });
     return sum;
   };
 
   const getMonthTotal = (month, field) => {
     let sum = 0;
-    TARGET_CATEGORIES.forEach((c) => { 
-      sum += Number(grid?.[month]?.[c.key]?.[field]) || 0; 
+    categories.forEach((c) => { 
+      const val = Number(grid?.[month]?.[c.key]?.[field]) || 0;
+      sum += field === "amount" ? val * 100000 : val; 
     });
     return sum;
   };
 
   const getGrandTotal = (field) => {
     let sum = 0;
-    TARGET_CATEGORIES.forEach((c) => { 
+    categories.forEach((c) => { 
       sum += getCategoryTotal(c.key, field); 
     });
     return sum;
   };
 
   const editMonth = isEditMode ? Number(editTarget.month) : null;
+  const styles = getDynamicStyles(categories);
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-6xl shadow-2xl border border-purple-200 overflow-hidden flex flex-col max-h-[95vh]">
+      <div className="bg-white rounded-2xl w-full max-w-[95vw] shadow-2xl border border-purple-200 overflow-hidden flex flex-col max-h-[95vh]">
         
         {/* Header */}
         <div className={`px-5 py-4 text-white flex items-center gap-3 flex-shrink-0 ${isEditMode ? "bg-gradient-to-r from-blue-600 to-indigo-600" : "bg-gradient-to-r from-purple-600 to-indigo-600"}`}>
@@ -570,15 +754,23 @@ const AddTargetModal = ({
                 : "Set Your Target"}
             </h3>
             <p className="text-[10px] text-white/80 m-0 mt-0.5">
-              {isEditMode
-                ? "Update the target values for this month (or any other month in the FY)"
-                : "Enter targets for the full Financial Year (Apr → Mar)"}
+              {isEditMode                ? "Update the target values for this month (or any other month in the FY)"
+                : "Enter targets for the full Financial Year (Apr → Mar). Note: Amounts should be entered in LAKHS (e.g. 2 = 2 Lakhs)."}
             </p>
           </div>
-          <button type="button" onClick={onClose} disabled={saving}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-white/80 hover:bg-white/20 hover:text-white disabled:opacity-50">
-            <FiX className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              type="button" 
+              onClick={() => setShowAddSegment(true)}
+              className="px-3 py-1.5 text-[11px] font-bold text-purple-700 bg-white rounded shadow-sm hover:bg-purple-50 flex items-center gap-1.5 transition-colors"
+            >
+              <FaPlus className="w-3 h-3" /> Add Segment
+            </button>
+            <button type="button" onClick={onClose} disabled={saving}
+              className="w-7 h-7 rounded-md flex items-center justify-center text-white/80 hover:bg-white/20 hover:text-white disabled:opacity-50 ml-2">
+              <FiX className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
@@ -600,37 +792,50 @@ const AddTargetModal = ({
                 Editing: {MONTHS[editMonth - 1]} {editTarget.year}
               </div>
             )}
+            <div className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-1 rounded flex items-center gap-1">
+              <FiAlertCircle className="w-3 h-3" /> Amount in Lakhs (e.g. 2 = 2,00,000)
+            </div>
           </div>
 
           <div className="border border-purple-200 rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse" style={{ minWidth: "1100px" }}>
+              <table className="w-full border-collapse">
                 <thead>
                   {/* Top Header: Category Names */}
                   <tr>
-                    <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-purple-700 bg-purple-700 sticky left-0 z-20 whitespace-nowrap" rowSpan={2}>
+                    <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-purple-700 bg-purple-700 sticky left-0 z-20 whitespace-nowrap w-[80px]" rowSpan={2}>
                       Month
                     </th>
-                    {TARGET_CATEGORIES.map((cat) => (
-                      <th key={cat.key} colSpan={2}
-                        className={`px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b ${CAT_HEADER_CLS[cat.color]} whitespace-nowrap`}>
-                        {cat.label}
-                      </th>
-                    ))}
+                  {categories.map((cat) => (
+  <th key={cat.key} colSpan={2}
+    className={`px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b ${styles.header[cat.key]} whitespace-nowrap relative group`}>
+    {cat.label}
+    {cat.key.startsWith("custom_") && (
+      <button
+        type="button"
+        onClick={() => handleRemoveSegment(cat.key)}
+        className="absolute top-1/2 -translate-y-1/2 right-2 p-1 rounded text-white/70 hover:bg-red-600 hover:text-white transition-colors"
+        title="Remove Segment"
+      >
+        <FaMinusCircle className="w-4 h-4" />
+      </button>
+    )}
+  </th>
+))}
                     <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] bg-indigo-700 border-b border-indigo-800 whitespace-nowrap" colSpan={2}>
                       Total
                     </th>
                   </tr>
                   {/* Sub Header: Amount & FootFall */}
                   <tr>
-                    {TARGET_CATEGORIES.map((cat) => (
+                    {categories.map((cat) => (
                       <React.Fragment key={cat.key}>
-                        <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r border-b ${CAT_SUB_CLS[cat.color]} whitespace-nowrap w-[80px]`}>Amount</th>
-                        <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r border-b ${CAT_SUB_CLS[cat.color]} whitespace-nowrap w-[60px]`}>FootFall</th>
+                        <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r border-b ${styles.sub[cat.key]} whitespace-nowrap w-[80px]`}>{cat.col1 || "Amount"} (₹ Lakhs)</th>
+                        <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r border-b ${styles.sub[cat.key]} whitespace-nowrap w-[80px]`}>{cat.col2 || "FootFall"}</th>
                       </React.Fragment>
                     ))}
-                    <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-100 bg-indigo-50 whitespace-nowrap w-[80px]">Amount</th>
-                    <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-b border-indigo-100 bg-indigo-50 whitespace-nowrap w-[60px]">FootFall</th>
+                    <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-100 bg-indigo-50 whitespace-nowrap w-[80px]">Total</th>
+                    <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-b border-indigo-100 bg-indigo-50 whitespace-nowrap w-[80px]">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -643,12 +848,12 @@ const AddTargetModal = ({
 
                     return (
                       <tr key={m} className={`hover:bg-slate-50 ${isEditRow ? "bg-blue-50/50" : ""}`}>
-                        <td className={`px-3 py-2 text-center font-bold text-[11px] border-r border-b sticky left-0 z-10 whitespace-nowrap ${isEditRow ? "bg-blue-100 text-blue-800" : "bg-slate-50 text-slate-700"}`}>
+                        <td className={`px-2 py-2 text-center font-bold text-[11px] border-r border-b sticky left-0 z-10 whitespace-nowrap w-[80px] ${isEditRow ? "bg-blue-100 text-blue-800" : "bg-slate-50 text-slate-700"}`}>
                           <div>{FY_MONTH_SHORT[m]}</div>
-                          <div className="text-[9px] font-semibold text-slate-400 mt-0.5">{String(yr).slice(-2)}</div>
+                          <div className="text-[9px] font-semibold text-slate-500 mt-0.5">{yr}</div>
                         </td>
 
-                        {TARGET_CATEGORIES.map((cat) => {
+                        {categories.map((cat) => {
                           const cellData = grid?.[m]?.[cat.key] || { amount: "", footFall: "" };
                           return (
                             <React.Fragment key={cat.key}>
@@ -680,10 +885,10 @@ const AddTargetModal = ({
                   })}
                   {/* Grand Total Row */}
                   <tr className="bg-gradient-to-r from-slate-100 to-slate-50 border-t-2 border-slate-300">
-                    <td className="px-3 py-2 text-center font-black text-slate-900 text-[10px] uppercase tracking-wider border-r border-slate-300 bg-slate-200 sticky left-0 z-10 whitespace-nowrap">
+                    <td className="px-2 py-2 text-center font-black text-slate-900 text-[10px] uppercase tracking-wider border-r border-slate-300 bg-slate-200 sticky left-0 z-10 whitespace-nowrap w-[80px]">
                       Grand Total
                     </td>
-                    {TARGET_CATEGORIES.map((cat) => {
+                    {categories.map((cat) => {
                       const catTotalAmt = getCategoryTotal(cat.key, "amount");
                       const catTotalFF = getCategoryTotal(cat.key, "footFall");
                       return (
@@ -745,6 +950,70 @@ const AddTargetModal = ({
           </button>
         </div>
       </div>
+
+      {/* Add Segment Modal */}
+      {showAddSegment && (
+        <div className="fixed inset-0 z-[9999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-2xl p-5 border border-slate-200">
+            <h3 className="text-base font-bold text-slate-800 mb-1">Add New Segment</h3>
+            <p className="text-xs text-slate-500 mb-4">Add a custom category and define the names for its two sub-columns.</p>
+            
+            <div className="space-y-4 mb-5">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">Segment Name</label>
+                <input
+                  type="text"
+                  autoFocus
+                  value={newSegName}
+                  onChange={(e) => setNewSegName(e.target.value)}
+                  placeholder="e.g. Digital Marketing"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Sub-column 1 Name</label>
+                  <input
+                    type="text"
+                    value={newSegCol1}
+                    onChange={(e) => setNewSegCol1(e.target.value)}
+                    placeholder="e.g. Spend"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Sub-column 2 Name</label>
+                  <input
+                    type="text"
+                    value={newSegCol2}
+                    onChange={(e) => setNewSegCol2(e.target.value)}
+                    placeholder="e.g. Leads"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAddSegment(false)}
+                className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddSegmentSubmit}
+                disabled={!newSegName.trim()}
+                className="px-4 py-1.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-md shadow-sm disabled:opacity-50"
+              >
+                Add Segment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -793,12 +1062,52 @@ const sumCategoryFromRows = (rows) => {
 /* Target Tracker                                                */
 /* ============================================================ */
 const TargetTracker = ({
-  onSetTargetClick,
+  onSetTargetClick, onExportClick,
   allTargets, loadingAllTargets, onEditRow, onDeleteRow,
   isHidden, onToggleHidden,
   fromDate, toDate, activePreset,
   rangeAchieved = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasData: false, totalFF: 0, clinicFF: 0, labFF: 0, clinicPharmacyFF: 0, retailPharmacyFF: 0 },
 }) => {
+
+  const dynamicCategories = useMemo(() => {
+    let savedCats = [];
+    try {
+      const stored = localStorage.getItem("revenue_custom_segments");
+      if (stored) savedCats = JSON.parse(stored);
+    } catch (e) { console.error(e); }
+
+    const seen = new Set();
+    const cats = [];
+    // Default first
+    DEFAULT_CATEGORIES.forEach(def => {
+      seen.add(def.key);
+      cats.push(def);
+    });
+    // Then saved custom
+    savedCats.forEach(c => {
+      if (!seen.has(c.key)) {
+        seen.add(c.key);
+        cats.push(c);
+      }
+    });
+    // Then any extra from DB not in saved
+    if (allTargets && allTargets.length > 0) {
+      allTargets.forEach(t => {
+        if (t.category && !seen.has(t.category)) {
+          seen.add(t.category);
+          cats.push({
+            key: t.category,
+            label: t.categoryLabel || t.category.replace("custom_", "Segment "),
+            color: COLOR_PALETTE[cats.length % COLOR_PALETTE.length].color,
+            short: (t.categoryLabel || "SG").slice(0,2).toUpperCase(),
+            col1: "Amount",
+            col2: "FootFall"
+          });
+        }
+      });
+    }
+    return cats;
+  }, [allTargets]);
 
   const filteredTargets = useMemo(() => {
     if (!allTargets || allTargets.length === 0) return [];
@@ -874,6 +1183,7 @@ const TargetTracker = ({
   const rangeLabel = useMemo(() => {
     if (activePreset === "today") return "Today's Target";
     if (activePreset === "yesterday") return "Yesterday's Target";
+    if (activePreset === "last7Days") return "Last 7 Days Target";
     if (activePreset === "thisWeek") return "This Week's Target";
     if (activePreset === "thisMonth") return "This Month's Target";
     if (activePreset === "lastMonth") return "Last Month's Target";
@@ -886,11 +1196,13 @@ const TargetTracker = ({
       return formatDateToDDMMYYYY(fromDate);
     }
     if (activePreset === "thisWeek" || activePreset === "thisMonth" ||
-        activePreset === "lastMonth" || activePreset === "thisYear") {
+        activePreset === "lastMonth" || activePreset === "thisYear" || activePreset === "last7Days") {
       return `${FY_MONTH_SHORT[t.month]}-${t.year}`;
     }
     return `${formatDateToDDMMYYYY(fromDate)} – ${formatDateToDDMMYYYY(toDate)}`;
   };
+
+  const styles = getDynamicStyles(dynamicCategories);
 
   return (
     <div className="bg-white rounded-lg border border-purple-200 overflow-hidden shadow-sm mb-3">
@@ -906,6 +1218,10 @@ const TargetTracker = ({
           <button type="button" onClick={onSetTargetClick}
             className="px-3 py-1.5 text-[11px] font-bold text-purple-700 bg-white rounded-md hover:bg-purple-50 flex items-center gap-1.5 shadow-sm">
             <FiPlus className="w-3 h-3" /> Set Your Target
+          </button>
+          <button type="button" onClick={onExportClick}
+            className="px-3 py-1.5 text-[11px] font-bold text-blue-700 bg-white rounded-md hover:bg-blue-50 flex items-center gap-1.5 shadow-sm">
+            <FiDownload className="w-3 h-3" /> Export
           </button>
           <button type="button" onClick={onToggleHidden} title={isHidden ? "Show targets" : "Hide targets"}
             className="px-2.5 py-1.5 text-[10px] font-bold text-white bg-white/20 rounded hover:bg-white/30 flex items-center gap-1">
@@ -939,46 +1255,46 @@ const TargetTracker = ({
               )}
             </div>
           ) : (
-          <table className="w-full border-collapse text-xs" style={{ minWidth: "2200px" }}>
+          <table className="w-full border-collapse text-xs" style={{ minWidth: `${dynamicCategories.length * 6 * 65 + 120}px` }}>
   <thead>
     <tr>
-      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-blue-800 bg-blue-900"
-        rowSpan={2} style={{ minWidth: "130px" }}>
+      <th className="px-1 py-2 text-center font-bold text-white uppercase tracking-wider text-[9px] border-r border-blue-800 bg-blue-900"
+        rowSpan={2} style={{ minWidth: "90px" }}>
         {activePreset === "today" || activePreset === "yesterday" ? "Date" : "Month"}
       </th>
-      {TARGET_CATEGORIES.map((cat) => (
+      {dynamicCategories.map((cat) => (
         <th key={cat.key} colSpan={6}
-          className={`px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r ${CAT_HEADER_CLS[cat.color]} whitespace-nowrap`}>
+          className={`px-1 py-2 text-center font-bold text-white uppercase tracking-wider text-[9px] border-r ${styles.header[cat.key]} whitespace-nowrap`}>
           {cat.label}
         </th>
       ))}
-      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] bg-indigo-700 border-r border-indigo-800 whitespace-nowrap"
+      <th className="px-1 py-2 text-center font-bold text-white uppercase tracking-wider text-[9px] bg-indigo-700 border-r border-indigo-800 whitespace-nowrap"
         colSpan={6}>
         Summary
       </th>
-      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] bg-slate-800"
-        rowSpan={2} style={{ minWidth: "80px" }}>
-        Actions
+      <th className="px-1 py-2 text-center font-bold text-white uppercase tracking-wider text-[9px] bg-slate-800"
+        rowSpan={2} style={{ minWidth: "60px" }}>
+        Act
       </th>
     </tr>
     <tr>
-      {TARGET_CATEGORIES.map((cat) => (
+      {dynamicCategories.map((cat) => (
         <React.Fragment key={cat.key}>
-          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Target / Achieved</th>
-          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>100% / Ach %</th>
-          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Per Day</th>
-          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>Short/Surp</th>
-          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>FootFall T/A</th>
-          <th className={`px-1.5 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${CAT_SUB_CLS[cat.color]} whitespace-nowrap`}>FF Ach %</th>
+          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[8px] border-r ${styles.sub[cat.key]} whitespace-nowrap`}>Ach / Tgt</th>
+          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[8px] border-r ${styles.sub[cat.key]} whitespace-nowrap`}>Ach% / 100%</th>
+          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[8px] border-r ${styles.sub[cat.key]} whitespace-nowrap`}>Per Day</th>
+          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[8px] border-r ${styles.sub[cat.key]} whitespace-nowrap`}>Short/Surp</th>
+          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[8px] border-r ${styles.sub[cat.key]} whitespace-nowrap`}>FF A/T</th>
+          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[8px] border-r ${styles.sub[cat.key]} whitespace-nowrap`}>FF Ach%</th>
         </React.Fragment>
       ))}
       {/* Summary Headers (6 columns to match body) */}
-      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Target / Achieved</th>
-      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">100% / Ach %</th>
-      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Per Day</th>
-      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Short/Surp</th>
-      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">FootFall T/A</th>
-      <th className="px-1.5 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-200 bg-indigo-50 whitespace-nowrap">Status</th>
+      <th className="px-1 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[8px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Ach / Tgt</th>
+      <th className="px-1 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[8px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Ach% / 100%</th>
+      <th className="px-1 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[8px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Per Day</th>
+      <th className="px-1 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[8px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Short/Surp</th>
+      <th className="px-1 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[8px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">FF A/T</th>
+      <th className="px-1 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[8px] border-r border-indigo-200 bg-indigo-50 whitespace-nowrap">Status</th>
     </tr>
   </thead>
   <tbody>
@@ -1016,14 +1332,14 @@ const TargetTracker = ({
 
       return (
         <tr key={`${y}-${m}`} className="hover:bg-slate-50/60 border-b border-slate-200">
-          <td className="px-2 py-2.5 text-center font-bold text-slate-800 text-[11px] border-r border-slate-200 bg-slate-50 whitespace-nowrap">
+          <td className="px-1 py-2 text-center font-bold text-slate-800 text-[10px] border-r border-slate-200 bg-slate-50 whitespace-nowrap">
             <div className="text-purple-700">{getDateLabelForRow(t)}</div>
-            <div className="text-[9px] font-semibold text-slate-400 mt-0.5">
+            <div className="text-[8px] font-semibold text-slate-400 mt-0.5">
               ({t.daysInRange}/{t.daysInMonth} days)
             </div>
           </td>
 
-          {TARGET_CATEGORIES.map((cat) => {
+          {dynamicCategories.map((cat) => {
             const catTarget = Number(t.categories?.[cat.key]?.amount) || 0;
             const catTargetFF = Number(t.categories?.[cat.key]?.footFall) || 0;
             const catAch = catAchMap[cat.key] || 0;
@@ -1042,28 +1358,28 @@ const TargetTracker = ({
 
             return (
               <React.Fragment key={cat.key}>
-                {/* 1. Target / Achieved */}
-                <td className={`px-1.5 py-2.5 text-center font-bold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
-                  <div className="text-purple-800">{catTarget > 0 ? fmtAmt(Math.round(catTarget)) : "—"}</div>
-                  <div className="w-3/4 mx-auto border-t border-slate-300 my-1"></div>
+                {/* 1. Achieved / Target (Reversed) */}
+                <td className={`px-1 py-2 text-center font-bold text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap`}>
                   <div className={`${achColor}`}>
                     {hasAch ? (catAch > 0 ? fmtAmt(Math.round(catAch)) : "—") : "—"}
                   </div>
+                  <div className="w-3/4 mx-auto border-t border-slate-300 my-0.5"></div>
+                  <div className="text-purple-800">{catTarget > 0 ? fmtAmt(Math.round(catTarget)) : "—"}</div>
                 </td>
-                {/* 2. 100% / Ach % */}
-                <td className={`px-1.5 py-2.5 text-center font-bold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
-                  <div className="text-slate-500">100%</div>
-                  <div className="w-3/4 mx-auto border-t border-slate-300 my-1"></div>
+                {/* 2. Ach % / 100% (Reversed) */}
+                <td className={`px-1 py-2 text-center font-bold text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap`}>
                   <div className={`${pctColor}`}>
                     {hasAch && catTarget > 0 ? `${catPct.toFixed(1)}%` : "—"}
                   </div>
+                  <div className="w-3/4 mx-auto border-t border-slate-300 my-0.5"></div>
+                  <div className="text-slate-500">100%</div>
                 </td>
                 {/* 3. Per Day */}
-                <td className={`px-1.5 py-2.5 text-center font-bold text-slate-700 text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
+                <td className={`px-1 py-2 text-center font-bold text-slate-700 text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap`}>
                   {catPerDay > 0 ? fmtAmt(Math.round(catPerDay)) : "—"}
                 </td>
                 {/* 4. Short/Surp */}
-                <td className={`px-1.5 py-2.5 text-center font-extrabold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap ${
+                <td className={`px-1 py-2 text-center font-extrabold text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap ${
                   !hasAch ? "text-slate-400"
                     : catDiffAbs < 0.5 ? "text-emerald-700"
                     : catDiff > 0 ? "text-blue-700" : "text-rose-700"
@@ -1073,22 +1389,22 @@ const TargetTracker = ({
                       <>
                         {catPct > 100 ? `+${(catPct - 100).toFixed(1)}%` : `-${(100 - catPct).toFixed(1)}%`}
                         <div className="text-[8px] font-normal opacity-80 mt-0.5">
-                          {catDiff > 0 ? "Surplus" : "Short"}
+                          {catDiff > 0 ? "Surp" : "Short"}
                         </div>
                       </>
                     )
                   ) : "—"}
                 </td>
-                {/* 5. FootFall T/A */}
-                <td className={`px-1.5 py-2.5 text-center font-bold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
-                  <div className="text-purple-800">{catTargetFF > 0 ? Math.round(catTargetFF) : "—"}</div>
-                  <div className="w-3/4 mx-auto border-t border-slate-300 my-1"></div>
+                {/* 5. FootFall A/T (Reversed) */}
+                <td className={`px-1 py-2 text-center font-bold text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap`}>
                   <div className={`${ffColor}`}>
                     {hasAch ? (catAchFF > 0 ? Math.round(catAchFF) : "—") : "—"}
                   </div>
+                  <div className="w-3/4 mx-auto border-t border-slate-300 my-0.5"></div>
+                  <div className="text-purple-800">{catTargetFF > 0 ? Math.round(catTargetFF) : "—"}</div>
                 </td>
                 {/* 6. FF Ach % */}
-                <td className={`px-1.5 py-2.5 text-center font-bold text-[10px] border-r ${CAT_CELL_CLS[cat.color]} whitespace-nowrap`}>
+                <td className={`px-1 py-2 text-center font-bold text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap`}>
                   <div className={catAchFF >= catTargetFF && hasAch ? "text-emerald-700" : "text-rose-700"}>
                     {hasAch && catTargetFF > 0 ? `${((catAchFF / catTargetFF) * 100).toFixed(1)}%` : "—"}
                   </div>
@@ -1100,29 +1416,25 @@ const TargetTracker = ({
             );
           })}
 
-          {/* Summary Columns (Now 6 columns to match Header) */}
-          {/* 1. Target / Achieved */}
-          <td className="px-2 py-2.5 text-center font-extrabold text-[11px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
-            <div className="text-purple-800">{fmtAmt(Math.round(totalTarget))}</div>
-            <div className="w-3/4 mx-auto border-t border-indigo-300 my-1"></div>
+          {/* Summary Columns */}
+          <td className="px-1 py-2 text-center font-extrabold text-[9px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
             <div className={`${!hasAch ? "text-slate-400" : (totalAch < totalTarget ? "text-rose-700" : "text-emerald-700")}`}>
               {hasAch ? fmtAmt(Math.round(totalAch)) : "—"}
             </div>
+            <div className="w-3/4 mx-auto border-t border-indigo-300 my-0.5"></div>
+            <div className="text-purple-800">{fmtAmt(Math.round(totalTarget))}</div>
           </td>
-          {/* 2. 100% / Ach % */}
-          <td className="px-2 py-2.5 text-center font-bold text-[11px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
-            <div className="text-slate-500">100%</div>
-            <div className="w-3/4 mx-auto border-t border-indigo-300 my-1"></div>
+          <td className="px-1 py-2 text-center font-bold text-[9px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
             <div className={`${!hasAch ? "text-slate-400" : (rowPct < 100 ? "text-rose-700" : "text-emerald-700")}`}>
               {hasAch ? `${rowPct.toFixed(1)}%` : "—"}
             </div>
+            <div className="w-3/4 mx-auto border-t border-indigo-300 my-0.5"></div>
+            <div className="text-slate-500">100%</div>
           </td>
-          {/* 3. Per Day (Amount) */}
-          <td className="px-2 py-2.5 text-center font-bold text-slate-700 text-[10px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
+          <td className="px-1 py-2 text-center font-bold text-slate-700 text-[9px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
             {totalPerDay > 0 ? fmtAmt(Math.round(totalPerDay)) : "—"}
           </td>
-          {/* 4. Short/Surp (Amount) */}
-          <td className={`px-2 py-2.5 text-center font-extrabold text-[10px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap ${
+          <td className={`px-1 py-2 text-center font-extrabold text-[9px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap ${
             !hasAch ? "text-slate-400"
               : rowDiffAbs < 0.5 ? "text-emerald-700"
               : rowDiff > 0 ? "text-blue-700" : "text-rose-700"
@@ -1132,43 +1444,41 @@ const TargetTracker = ({
                 <>
                   {rowPct > 100 ? `+${(rowPct - 100).toFixed(1)}%` : `-${(100 - rowPct).toFixed(1)}%`}
                   <div className="text-[8px] font-normal opacity-80 mt-0.5">
-                    {rowDiff > 0 ? "Surplus" : "Short"}
+                    {rowDiff > 0 ? "Surp" : "Short"}
                   </div>
                 </>
               )
             ) : "—"}
           </td>
-          {/* 5. FootFall T/A */}
-          <td className="px-2 py-2.5 text-center font-extrabold text-[11px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
-            <div className="text-purple-800">{totalTargetFF > 0 ? Math.round(totalTargetFF) : "—"}</div>
-            <div className="w-3/4 mx-auto border-t border-indigo-300 my-1"></div>
+          <td className="px-1 py-2 text-center font-extrabold text-[9px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
             <div className={`${!hasAch ? "text-slate-400" : (totalAchFF < totalTargetFF ? "text-rose-700" : "text-emerald-700")}`}>
               {hasAch ? (totalAchFF > 0 ? Math.round(totalAchFF) : "—") : "—"}
             </div>
+            <div className="w-3/4 mx-auto border-t border-indigo-300 my-0.5"></div>
+            <div className="text-purple-800">{totalTargetFF > 0 ? Math.round(totalTargetFF) : "—"}</div>
           </td>
-          {/* 6. Status / FF Ach % */}
-          <td className={`px-2 py-2.5 text-center font-black text-[10px] uppercase tracking-wider border-r border-indigo-200 bg-indigo-50/50 whitespace-nowrap ${rowStatus.color}`}>
+          <td className={`px-1 py-2 text-center font-black text-[8px] uppercase tracking-wider border-r border-indigo-200 bg-indigo-50/50 whitespace-nowrap ${rowStatus.color}`}>
             {hasAch ? (
-              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border ${rowStatus.bg} ${rowStatus.border}`}>
+              <span className={`inline-flex items-center gap-1 px-1 py-0.5 rounded-full border ${rowStatus.bg} ${rowStatus.border}`}>
                 {React.createElement(rowStatus.icon, { className: "w-2.5 h-2.5" })}
                 {rowStatus.label}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border bg-slate-50 text-slate-400 border-slate-200">
-                <FiClock className="w-2.5 h-2.5" /> PENDING
+              <span className="inline-flex items-center gap-1 px-1 py-0.5 rounded-full border bg-slate-50 text-slate-400 border-slate-200">
+                <FiClock className="w-2.5 h-2.5" /> PEND
               </span>
             )}
           </td>
 
           {/* Actions */}
-          <td className="px-2 py-2 text-center border-slate-200 whitespace-nowrap">
+          <td className="px-1 py-2 text-center border-slate-200 whitespace-nowrap">
             <div className="flex items-center justify-center gap-1">
               <button type="button" onClick={() => onEditRow(t)} title="Edit"
-                className="w-7 h-7 rounded-md flex items-center justify-center text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100">
+                className="w-6 h-6 rounded-md flex items-center justify-center text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100">
                 <FaEdit className="w-3 h-3" />
               </button>
               <button type="button" onClick={() => onDeleteRow(t)} title="Delete"
-                className="w-7 h-7 rounded-md flex items-center justify-center text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100">
+                className="w-6 h-6 rounded-md flex items-center justify-center text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100">
                 <FiTrash2 className="w-3 h-3" />
               </button>
             </div>
@@ -1224,6 +1534,16 @@ export default function RevenueAnalytics() {
   const [loadingAllTargets, setLoadingAllTargets] = useState(false);
 
   const [isTargetHidden, setIsTargetHidden] = useState(false);
+  
+  // ✅ Table dynamic segments
+  const [customSegments, setCustomSegments] = useState([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("revenue_custom_segments");
+      if (stored) setCustomSegments(JSON.parse(stored));
+    } catch (e) { console.error(e); }
+  }, [showAddTargetModal]);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -1257,7 +1577,7 @@ export default function RevenueAnalytics() {
       for (const entry of entries) {
         try {
           const res = await axios.post(`${TARGET_API_BASE}/save-revenue-target`, {
-            month: entry.month, year: entry.year, amount: entry.amount, category: entry.category, footFall: entry.footFall,
+            month: entry.month, year: entry.year, amount: entry.amount, category: entry.category, categoryLabel: entry.categoryLabel, footFall: entry.footFall,
           });
           if (res.data?.success) {
             savedCount++;
@@ -1311,7 +1631,7 @@ export default function RevenueAnalytics() {
             }
           } else {
             const res = await axios.post(`${TARGET_API_BASE}/save-revenue-target`, {
-              month: entry.month, year: entry.year, amount: entry.amount, category: entry.category, footFall: entry.footFall,
+              month: entry.month, year: entry.year, amount: entry.amount, category: entry.category, categoryLabel: entry.categoryLabel, footFall: entry.footFall,
             });
             if (res.data?.success) updatedCount++;
             else {
@@ -1358,7 +1678,7 @@ export default function RevenueAnalytics() {
 
   const handleEditRow = (row) => {
     const categories = {};
-    TARGET_CATEGORIES.forEach((cat) => {
+    DEFAULT_CATEGORIES.forEach((cat) => {
       const rawAmt = Number(row.categories?.[cat.key]?.amount) || 0;
       const rawFF = Number(row.categories?.[cat.key]?.footFall) || 0;
       const ratio = row.ratio || 1;
@@ -1484,6 +1804,15 @@ export default function RevenueAnalytics() {
     setActivePreset(preset);
     if (preset === "today") { const t = fmtDate(nowD); setFromDate(t); setToDate(t); }
     else if (preset === "yesterday") { const y = new Date(nowD); y.setDate(y.getDate() - 1); const t = fmtDate(y); setFromDate(t); setToDate(t); }
+    
+    // ✅ NAYA: Last 7 Days Filter
+    else if (preset === "last7Days") {
+      const past7Days = new Date(nowD);
+      past7Days.setDate(nowD.getDate() - 6);
+      setFromDate(fmtDate(past7Days)); 
+      setToDate(fmtDate(nowD));
+    }
+
     else if (preset === "thisWeek") {
       const dow = nowD.getDay(); const diff = dow === 0 ? 6 : dow - 1;
       const mon = new Date(nowD); mon.setDate(mon.getDate() - diff);
@@ -1529,14 +1858,16 @@ export default function RevenueAnalytics() {
   }, [data, retailPharmacyLive]);
 
   const rangeTargets = useMemo(() => {
-    const empty = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasAny: false, daysCount: 0 };
+    const empty = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasAny: false, daysCount: 0,
+                    clinicFF: 0, labFF: 0, clinicPharmacyFF: 0, retailPharmacyFF: 0, totalFF: 0 };
     if (!fromDate || !toDate) return empty;
 
     const start = new Date(fromDate);
     const end = new Date(toDate);
     if (end < start) return empty;
 
-    const acc = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasAny: false, daysCount: 0 };
+    const acc = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasAny: false, daysCount: 0,
+                  clinicFF: 0, labFF: 0, clinicPharmacyFF: 0, retailPharmacyFF: 0, totalFF: 0 };
     const cur = new Date(start);
 
     while (cur <= end) {
@@ -1548,7 +1879,15 @@ export default function RevenueAnalytics() {
         const catKey = t.category;
         if (!catKey) return;
         const perDay = (Number(t.amount) || 0) / dim;
-        if (acc[catKey] !== undefined) acc[catKey] += perDay;
+        const perDayFF = (Number(t.footFall) || 0) / dim;
+        
+        if (acc[catKey] !== undefined) {
+          acc[catKey] += perDay;
+          acc[`${catKey}FF`] = (acc[`${catKey}FF`] || 0) + perDayFF;
+        } else {
+          acc[catKey] = perDay; // handle custom categories
+          acc[`${catKey}FF`] = perDayFF;
+        }
         acc.hasAny = true;
       });
       acc.daysCount += 1;
@@ -1556,6 +1895,7 @@ export default function RevenueAnalytics() {
     }
 
     acc.total = acc.clinic + acc.lab + acc.clinicPharmacy + acc.retailPharmacy;
+    acc.totalFF = acc.clinicFF + acc.labFF + acc.clinicPharmacyFF + acc.retailPharmacyFF;
     return acc;
   }, [fromDate, toDate, allTargets]);
 
@@ -1564,6 +1904,7 @@ export default function RevenueAnalytics() {
   const rangeLabel = useMemo(() => {
     if (activePreset === "today") return "Today's Target";
     if (activePreset === "yesterday") return "Yesterday's Target";
+    if (activePreset === "last7Days") return "Last 7 Days Target";
     if (activePreset === "thisWeek") return "This Week's Target";
     if (activePreset === "thisMonth") return "This Month's Target";
     if (activePreset === "lastMonth") return "Last Month's Target";
@@ -1802,12 +2143,104 @@ export default function RevenueAnalytics() {
     showToast(`Exported revenue analytics to Excel!`, "success");
   };
 
+  const handleExportTrackerCSV = () => {
+    if (!allTargets || allTargets.length === 0) {
+      showToast("No targets to export", "error");
+      return;
+    }
+    const rows = [
+      ["Month", "Year", "Category", "Target Amount", "Target Footfall"],
+    ];
+    allTargets.forEach(t => {
+      rows.push([
+        MONTHS[t.month - 1],
+        t.year,
+        t.categoryLabel || t.category,
+        t.amount,
+        t.footFall
+      ]);
+    });
+    const csvContent = rows.map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Target_Tracker_Export.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Target Tracker exported successfully!", "success");
+  };
+
+  // ✅ NAYA: presetOptions mein "This Week" update kiya
   const presetOptions = [
     { v: "today", l: "Today" }, { v: "yesterday", l: "Yesterday" },
-    { v: "thisWeek", l: "Week" }, { v: "thisMonth", l: "Month" },
+    { v: "last7Days", l: "Last 7 Days" },
+    { v: "thisWeek", l: "This Week" }, { v: "thisMonth", l: "Month" }, // <-- Yahan update kiya
     { v: "lastMonth", l: "Last Month" }, { v: "thisYear", l: "Year" },
   ];
   const inputCls = "w-full text-center text-xs font-bold bg-white border border-amber-400 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500";
+
+  const styles = getDynamicStyles(customSegments);
+
+  // ✅ Dynamic Cards: Default + Custom
+  const allCardCategories = useMemo(() => {
+    const defaultCards = [
+      { 
+        key: "clinic", title: "Clinic", icon: <FaClinicMedical />, accent: "blue",
+        total: data?.clinic?.total || 0, footfall: data?.clinic?.footFall || 0,
+        data: data?.clinic || {}, rangeTarget: rangeTargets.clinic, rangeTargetFF: rangeTargets.clinicFF,
+        isCustom: false
+      },
+      { 
+        key: "lab", title: "Lab", icon: <FaFlask />, accent: "purple",
+        total: data?.lab?.total || 0, footfall: data?.lab?.footFall || 0,
+        data: data?.lab || {}, rangeTarget: rangeTargets.lab, rangeTargetFF: rangeTargets.labFF,
+        isCustom: false
+      },
+      { 
+        key: "clinicPharmacy", title: "Clinic Pharmacy", icon: <FaPills />, accent: "emerald",
+        total: data?.pharmacy?.total || 0, footfall: data?.pharmacy?.footFall || 0,
+        data: data?.pharmacy || {}, rangeTarget: rangeTargets.clinicPharmacy, rangeTargetFF: rangeTargets.clinicPharmacyFF,
+        isCustom: false
+      },
+      { 
+        key: "retailPharmacy", title: "Retail Pharmacy", icon: <FaPills />, accent: "amber",
+        total: retailPharmacyLive.total, footfall: retailPharmacyLive.footFall,
+        data: retailPharmacyLive, rangeTarget: rangeTargets.retailPharmacy, rangeTargetFF: rangeTargets.retailPharmacyFF,
+        isCustom: false
+      },
+    ];
+
+    const customCards = customSegments.map((cat, idx) => {
+      // Calculate total from rowInputs for this segment
+      let totalAmt = 0;
+      let totalFF = 0;
+      
+      if (data?.rows) {
+        data.rows.forEach(r => {
+          const ri = rowInputs[r.date] || {};
+          totalAmt += Number(ri[cat.key]?.amount) || 0;
+          totalFF += Number(ri[cat.key]?.footFall) || 0;
+        });
+      }
+      
+      return {
+        key: cat.key,
+        title: cat.label,
+        icon: <FiTarget />, // Default icon for custom
+        accent: COLOR_PALETTE[idx % COLOR_PALETTE.length].color,
+        total: totalAmt,
+        footfall: totalFF,
+        data: { cash: totalAmt, online: 0, due: 0, footFall: totalFF }, // Treat amount as cash
+        rangeTarget: rangeTargets[cat.key] || 0,
+        rangeTargetFF: rangeTargets[`${cat.key}FF`] || 0,
+        isCustom: true
+      };
+    });
+
+    return [...defaultCards, ...customCards];
+  }, [data, retailPharmacyLive, rangeTargets, customSegments, rowInputs]);
 
   return (
     <div className="min-h-screen bg-slate-50 p-2 sm:p-3 lg:p-4">
@@ -1877,9 +2310,9 @@ export default function RevenueAnalytics() {
               <FiTrendingUp className="w-4 h-4 text-blue-600" />
               <h1 className="text-sm font-bold text-slate-900 whitespace-nowrap">Revenue Analytics</h1>
             </div>
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider border-l border-slate-200 pl-3">
-              {fromDate && toDate ? `${formatDateToDDMMYYYY(fromDate)} – ${formatDateToDDMMYYYY(toDate)}` : "—"}
-            </span>
+         <span className="text-xs font-extrabold text-blue-700 uppercase tracking-wider border-l border-slate-200 pl-3">
+  {fromDate && toDate ? `${formatDateToDDMMYYYY(fromDate)} – ${formatDateToDDMMYYYY(toDate)}` : "—"}
+</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-0.5 bg-blue-50 p-0.5 rounded-md border border-blue-100">
@@ -1962,6 +2395,7 @@ export default function RevenueAnalytics() {
         {/* TARGET TRACKER */}
         <TargetTracker
           onSetTargetClick={() => { setEditTargetData(null); setShowAddTargetModal(true); }}
+          onExportClick={handleExportTrackerCSV}
           allTargets={allTargets}
           loadingAllTargets={loadingAllTargets}
           onEditRow={handleEditRow}
@@ -1991,12 +2425,35 @@ export default function RevenueAnalytics() {
 
         {data && !loading && grandTotalLive && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 mb-3">
-              <CategoryCard title="Clinic" icon={<FaClinicMedical />} footfall={data.clinic.footFall} total={data.clinic.total} data={data.clinic} accent="blue" rangeTarget={rangeTargets.clinic} hasTarget={hasRangeTarget && rangeTargets.clinic > 0} rangeLabel={rangeLabel} />
-              <CategoryCard title="Lab" icon={<FaFlask />} footfall={data.lab.footFall} total={data.lab.total} data={data.lab} accent="purple" rangeTarget={rangeTargets.lab} hasTarget={hasRangeTarget && rangeTargets.lab > 0} rangeLabel={rangeLabel} />
-              <CategoryCard title="Clinic Pharmacy" icon={<FaPills />} footfall={data.pharmacy.footFall} total={data.pharmacy.total} data={data.pharmacy} accent="emerald" rangeTarget={rangeTargets.clinicPharmacy} hasTarget={hasRangeTarget && rangeTargets.clinicPharmacy > 0} rangeLabel={rangeLabel} />
-              <CategoryCard title="Retail Pharmacy" icon={<FaPills />} footfall={retailPharmacyLive.footFall} total={retailPharmacyLive.total} data={retailPharmacyLive} accent="amber" rangeTarget={rangeTargets.retailPharmacy} hasTarget={hasRangeTarget && rangeTargets.retailPharmacy > 0} rangeLabel={rangeLabel} />
-              <GrandTotalCard total={grandTotalLive.total} cash={grandTotalLive.cash} online={grandTotalLive.online} due={grandTotalLive.due} footFall={grandTotalLive.footFall} rangeTarget={rangeTargets.total} hasTarget={hasRangeTarget && rangeTargets.total > 0} rangeLabel={rangeLabel} />
+            {/* ✅ Dynamic Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5 mb-3">
+              {allCardCategories.map((card) => (
+                <CategoryCard
+                  key={card.key}
+                  title={card.title}
+                  icon={card.icon}
+                  footfall={card.footfall}
+                  total={card.total}
+                  data={card.data}
+                  accent={card.accent}
+                  rangeTarget={card.rangeTarget}
+                  rangeTargetFF={card.rangeTargetFF}
+                  hasTarget={hasRangeTarget && card.rangeTarget > 0}
+                  rangeLabel={rangeLabel}
+                  isCustom={card.isCustom}
+                />
+              ))}
+              <GrandTotalCard 
+                total={grandTotalLive.total} 
+                cash={grandTotalLive.cash} 
+                online={grandTotalLive.online} 
+                due={grandTotalLive.due} 
+                footFall={grandTotalLive.footFall} 
+                rangeTarget={rangeTargets.total} 
+                rangeTargetFF={rangeTargets.totalFF}
+                hasTarget={hasRangeTarget && rangeTargets.total > 0} 
+                rangeLabel={rangeLabel} 
+              />
             </div>
 
             <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
@@ -2009,6 +2466,14 @@ export default function RevenueAnalytics() {
                       <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-purple-700 bg-purple-700" colSpan={4}>Lab</th>
                       <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-emerald-700 bg-emerald-700" colSpan={4}>Clinic Pharmacy</th>
                       <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-amber-700 bg-amber-600" colSpan={4}>Retail Pharmacy</th>
+                      
+                      {/* Custom Segments Headers (2 columns each: Amount & Footfall) */}
+                      {customSegments.map(cat => (
+                        <React.Fragment key={cat.key}>
+                          <th className={`px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r ${styles.header[cat.key]}`} colSpan={2}>{cat.label}</th>
+                        </React.Fragment>
+                      ))}
+
                       <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-indigo-700 bg-indigo-700" colSpan={4}>Summary</th>
                       <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-rose-700 bg-rose-700" rowSpan={2}>Bank Credit</th>
                       <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-rose-700 bg-rose-700" rowSpan={2}>Credited D/W</th>
@@ -2019,18 +2484,30 @@ export default function RevenueAnalytics() {
                       <th className="px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-blue-100 bg-blue-50">Online</th>
                       <th className="px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-blue-100 bg-blue-50">Total</th>
                       <th className="px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-blue-200 bg-blue-50">FootFall</th>
+                      
                       <th className="px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-purple-100 bg-purple-50">Cash</th>
                       <th className="px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-purple-100 bg-purple-50">Online</th>
                       <th className="px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-purple-100 bg-purple-50">Total</th>
                       <th className="px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-purple-200 bg-purple-50">FootFall</th>
+                      
                       <th className="px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-emerald-100 bg-emerald-50">Cash</th>
                       <th className="px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-emerald-100 bg-emerald-50">Online</th>
                       <th className="px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-emerald-100 bg-emerald-50">Total</th>
                       <th className="px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-emerald-200 bg-emerald-50">FootFall</th>
+                      
                       <th className="px-2 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50">Cash</th>
                       <th className="px-2 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50">Online</th>
                       <th className="px-2 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50">Total</th>
                       <th className="px-2 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-200 bg-amber-50">FootFall</th>
+
+                      {/* Custom Segments Sub-Headers */}
+                      {customSegments.map(cat => (
+                        <React.Fragment key={cat.key}>
+                          <th className={`px-2 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]}`}>Amount</th>
+                          <th className={`px-2 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]}`}>FootFall</th>
+                        </React.Fragment>
+                      ))}
+
                       <th className="px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50">Cash</th>
                       <th className="px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50">Online</th>
                       <th className="px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50">Grand Total</th>
@@ -2054,12 +2531,22 @@ export default function RevenueAnalytics() {
                       const rBC = isTotal
                         ? (savedBankCredit !== null ? savedBankCredit : (parseFloat(bankCredit) || 0))
                         : (ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0));
-                      const rGrand = {
+                      
+                      // Default Grand Total (from standard segments)
+                      let rGrand = {
                         cash: r.clinic.cash + r.lab.cash + r.pharmacy.cash + rRetail.cash,
                         online: r.clinic.online + r.lab.online + r.pharmacy.online + rRetail.online,
                         total: r.clinic.total + r.lab.total + r.pharmacy.total + rRetail.total,
                         footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + rRetail.footFall,
                       };
+                      
+                      // Add Custom Segments to Grand Total (Amount only)
+                      customSegments.forEach(cat => {
+                        const customAmt = Number(ri[cat.key]?.amount) || 0;
+                        rGrand.total += customAmt;
+                        rGrand.cash += customAmt; // Treat as cash
+                      });
+
                       const rDiff = rBC - rGrand.total;
                       const rDiffAbs = Math.abs(rDiff);
                       const rDiffLabel = !rBC ? "—" : rDiffAbs < 0.5 ? "MATCHED" : rDiff > 0 ? "CREDIT MORE" : "CREDIT LESS";
@@ -2078,14 +2565,17 @@ export default function RevenueAnalytics() {
                           <td className="px-3 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.clinic.online)}</td>
                           <td className="px-3 py-3 text-center font-bold text-blue-700 border-r border-slate-100 bg-blue-50/40 text-xs">{fmt(r.clinic.total)}</td>
                           <td className="px-3 py-3 text-center font-bold text-blue-800 border-r border-slate-200 bg-blue-50/40 text-xs">{r.clinic.footFall}</td>
+                          
                           <td className="px-3 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.lab.cash)}</td>
                           <td className="px-3 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.lab.online)}</td>
                           <td className="px-3 py-3 text-center font-bold text-purple-700 border-r border-slate-100 bg-purple-50/40 text-xs">{fmt(r.lab.total)}</td>
                           <td className="px-3 py-3 text-center font-bold text-purple-800 border-r border-slate-200 bg-purple-50/40 text-xs">{r.lab.footFall}</td>
+                          
                           <td className="px-3 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.cash)}</td>
                           <td className="px-3 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.online)}</td>
                           <td className="px-3 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-emerald-50/40 text-xs">{fmt(r.pharmacy.total)}</td>
                           <td className="px-3 py-3 text-center font-bold text-emerald-800 border-r border-slate-200 bg-emerald-50/40 text-xs">{r.pharmacy.footFall}</td>
+                          
                           <td className="px-2 py-2 border-r border-slate-100 bg-amber-50/40">
                             <input type="number" min="0" placeholder="0"
                               value={isTotal ? retailInput.cash : (ri.cash || "")}
@@ -2117,6 +2607,33 @@ export default function RevenueAnalytics() {
                               }}
                               className={inputCls} />
                           </td>
+
+                          {/* Custom Segments Cells */}
+                          {customSegments.map(cat => (
+                            <React.Fragment key={cat.key}>
+                              <td className="px-2 py-2 border-r border-slate-100 bg-white">
+                                <input type="number" min="0" placeholder="0"
+                                  value={isTotal ? (retailInput[cat.key] || "") : (ri[cat.key]?.amount || "")}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (isTotal) setRetailInput((p) => ({ ...p, [cat.key]: v }));
+                                    else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), [cat.key]: { ...(p[rowKey]?.[cat.key] || {}), amount: v } } }));
+                                  }}
+                                  className={inputCls} />
+                              </td>
+                              <td className="px-2 py-2 border-r border-slate-100 bg-white">
+                                <input type="number" min="0" placeholder="0"
+                                  value={isTotal ? (retailInput[`${cat.key}_ff`] || "") : (ri[cat.key]?.footFall || "")}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (isTotal) setRetailInput((p) => ({ ...p, [`${cat.key}_ff`]: v }));
+                                    else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), [cat.key]: { ...(p[rowKey]?.[cat.key] || {}), footFall: v } } }));
+                                  }}
+                                  className={inputCls} />
+                              </td>
+                            </React.Fragment>
+                          ))}
+
                           <td className="px-3 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-indigo-50/40 text-xs">{fmt(rGrand.cash)}</td>
                           <td className="px-3 py-3 text-center font-bold text-sky-700 border-r border-slate-100 bg-indigo-50/40 text-xs">{fmt(rGrand.online)}</td>
                           <td className="px-3 py-3 text-center font-black text-indigo-800 border-r border-slate-100 bg-indigo-50/40 text-sm">{fmt(rGrand.total)}</td>
@@ -2196,6 +2713,19 @@ export default function RevenueAnalytics() {
                         <td className="px-3 py-3 text-center font-black text-amber-700 border-r border-slate-200 bg-amber-100 text-xs">{fmt(tableTotal.retail.online)}</td>
                         <td className="px-3 py-3 text-center font-black text-amber-800 border-r border-slate-200 bg-amber-100 text-xs">{fmt(tableTotal.retail.total)}</td>
                         <td className="px-3 py-3 text-center font-black text-amber-900 border-r border-slate-200 bg-amber-100 text-xs">{tableTotal.retail.footFall}</td>
+                        
+                        {/* Custom Segments Totals */}
+                        {customSegments.map(cat => (
+                          <React.Fragment key={cat.key}>
+                            <td className="px-3 py-3 text-center font-black text-slate-800 border-r border-slate-200 bg-slate-100 text-xs">
+                              {fmt(data.rows.reduce((sum, r) => sum + (Number(rowInputs[r.date]?.[cat.key]?.amount) || 0), 0))}
+                            </td>
+                            <td className="px-3 py-3 text-center font-black text-slate-800 border-r border-slate-200 bg-slate-100 text-xs">
+                              {fmt(data.rows.reduce((sum, r) => sum + (Number(rowInputs[r.date]?.[cat.key]?.footFall) || 0), 0))}
+                            </td>
+                          </React.Fragment>
+                        ))}
+
                         <td className="px-3 py-3 text-center font-black text-emerald-800 border-r border-slate-200 bg-indigo-100 text-xs">{fmt(tableTotal.grand.cash)}</td>
                         <td className="px-3 py-3 text-center font-black text-sky-800 border-r border-slate-200 bg-indigo-100 text-xs">{fmt(tableTotal.grand.online)}</td>
                         <td className="px-3 py-3 text-center font-black text-indigo-900 border-r border-slate-200 bg-indigo-200 text-sm">{fmt(tableTotal.grand.total)}</td>
