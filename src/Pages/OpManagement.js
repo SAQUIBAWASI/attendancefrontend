@@ -26,7 +26,8 @@ import {
 } from "react-icons/fi";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
-import logo from "../Images/Timelyhealth logo.png";
+import logo from "../Images/TH_LOGO.png";
+import companyStamp from "../Images/company-stamp-1780465131172.png";
 import prescriptionTemplate from "../Images/prescription.jpg";
 import prescriptionBackTemplate from "../Images/prescriptionbackside.jpg";
 
@@ -94,11 +95,14 @@ const TIME_FILTER_OPTIONS = [
   { value: "today", label: "Today" },
   { value: "yesterday", label: "Yesterday" },
   { value: "thisWeek", label: "This Week" },
+  { value: "last7Days", label: "Last 7 Days" },
   { value: "thisMonth", label: "This Month" },
   { value: "lastMonth", label: "Last Month" },
   { value: "thisYear", label: "This Year" },
   { value: "All", label: "All" },
 ];
+
+
 
 const DISCOUNT_TYPE_OPTIONS = [
   { value: "₹", label: "₹ (Rupees)" },
@@ -379,9 +383,9 @@ const getBookingFinalPayable = (booking) => {
 
 const getBookingPaidInfo = (booking) => {
   if (!booking) return { final: 0, paid: 0, balance: 0, status: "Due" };
-  
+
   const final = getBookingFinalPayable(booking);
-  
+
   let totalDueFromItems = 0;
   let hasExplicitDue = false;
 
@@ -401,7 +405,7 @@ const getBookingPaidInfo = (booking) => {
   const rawSvcList = Array.isArray(booking.serviceItems) && booking.serviceItems.length > 0
     ? booking.serviceItems
     : (Array.isArray(booking.services) ? booking.services : []);
-    
+
   let clinicDueSum = 0;
   let hasExplicitClinicDue = false;
   rawSvcList.forEach(item => {
@@ -743,16 +747,16 @@ const DateRangePopup = ({
       <div className="px-4 pt-2.5 pb-1.5">
         <div className="flex items-center gap-2">
           <div className={`flex-1 flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${currentStep === 1 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-              : fromDate ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                : "bg-gray-50 text-gray-400 border-gray-200"
+            : fromDate ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-gray-50 text-gray-400 border-gray-200"
             }`}>
             {fromDate ? <FaCheckCircle className="w-2.5 h-2.5" /> : <span className="w-3.5 h-3.5 rounded-full bg-white/30 text-[8px] font-bold flex items-center justify-center">1</span>}
             <span className="text-[9px] font-bold uppercase tracking-wide">From</span>
           </div>
           <div className={`w-5 h-0.5 rounded ${fromDate ? "bg-emerald-400" : "bg-gray-200"}`}></div>
           <div className={`flex-1 flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${currentStep === 2 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-              : toDate ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                : "bg-gray-50 text-gray-400 border-gray-200"
+            : toDate ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-gray-50 text-gray-400 border-gray-200"
             }`}>
             {toDate ? <FaCheckCircle className="w-2.5 h-2.5" /> : <span className="w-3.5 h-3.5 rounded-full bg-white/30 text-[8px] font-bold flex items-center justify-center">2</span>}
             <span className="text-[9px] font-bold uppercase tracking-wide">To</span>
@@ -769,8 +773,8 @@ const DateRangePopup = ({
       <div className="px-3 pb-2">
         <div className="grid grid-cols-2 gap-2">
           <div className={`px-2.5 py-1.5 rounded-lg border-2 transition-all ${fromDate ? "border-emerald-400 bg-emerald-50"
-              : currentStep === 1 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-500/20"
-                : "border-dashed border-gray-300 bg-gray-50"
+            : currentStep === 1 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-500/20"
+              : "border-dashed border-gray-300 bg-gray-50"
             }`}>
             <div className="flex items-center justify-between mb-0.5">
               <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">From</span>
@@ -781,8 +785,8 @@ const DateRangePopup = ({
             </div>
           </div>
           <div className={`px-2.5 py-1.5 rounded-lg border-2 transition-all ${toDate ? "border-emerald-400 bg-emerald-50"
-              : currentStep === 2 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-500/20"
-                : "border-dashed border-gray-300 bg-gray-50"
+            : currentStep === 2 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-500/20"
+              : "border-dashed border-gray-300 bg-gray-50"
             }`}>
             <div className="flex items-center justify-between mb-0.5">
               <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">To</span>
@@ -881,8 +885,8 @@ const DateRangePopup = ({
           onClick={handleConfirm}
           disabled={!isConfirmEnabled}
           className={`text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${isConfirmEnabled
-              ? "text-white bg-blue-600 hover:bg-blue-700 shadow-sm"
-              : "text-gray-400 bg-gray-200 cursor-not-allowed"
+            ? "text-white bg-blue-600 hover:bg-blue-700 shadow-sm"
+            : "text-gray-400 bg-gray-200 cursor-not-allowed"
             }`}
         >
           <FaCheckCircle className="w-2.5 h-2.5" /> Confirm
@@ -895,7 +899,7 @@ export default function OpManagement() {
   const navigate = useNavigate();
   const location = useLocation();
 
-   // 👇 YE LINES ADD KARO
+  // 👇 YE LINES ADD KARO
   const userRole = localStorage.getItem("userRole");
   const isAdmin = userRole === "admin";
   // 👆
@@ -1055,11 +1059,11 @@ export default function OpManagement() {
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
 
 
-    // ✅ Naya State Confirmation Modal ke liye
+  // ✅ Naya State Confirmation Modal ke liye
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, type: "", index: null });
 
 
-    // ✅ Naye States Clear Due ke liye
+  // ✅ Naye States Clear Due ke liye
   const [showClearDueModal, setShowClearDueModal] = useState(false);
   const [clearDuePaymentType, setClearDuePaymentType] = useState("Cash");
   const [clearDueCategory, setClearDueCategory] = useState("lab"); // "lab" ya "pharmacy"
@@ -1196,70 +1200,70 @@ export default function OpManagement() {
     if (choice === "register") setTimeout(() => { handleAddNewPatient(); }, 200);
   };
 
-// ✅ FIXED: openClinicServicesModal
-const openClinicServicesModal = (booking) => {
-  if (!booking) return;
-  const allServices = getBookingServices(booking);
-  const clinicOnly = allServices.filter((s) => {
-    if (s.isReviewService) return false;
-    return classifyService(s) === "clinic";
-  });
+  // ✅ FIXED: openClinicServicesModal
+  const openClinicServicesModal = (booking) => {
+    if (!booking) return;
+    const allServices = getBookingServices(booking);
+    const clinicOnly = allServices.filter((s) => {
+      if (s.isReviewService) return false;
+      return classifyService(s) === "clinic";
+    });
 
-  setClinicServicesList(clinicOnly.map((s) => {
-    const price = Number(s.price) || 0;
-    const discount = Number(s.discount) || 0;
-    const netPrice = Math.max(0, price - discount);
-    const isPaid = (s.paymentStatus || "").toLowerCase() === "paid";
+    setClinicServicesList(clinicOnly.map((s) => {
+      const price = Number(s.price) || 0;
+      const discount = Number(s.discount) || 0;
+      const netPrice = Math.max(0, price - discount);
+      const isPaid = (s.paymentStatus || "").toLowerCase() === "paid";
 
-    // ✅ FIX: Explicitly set paidAmount based on status
-    let paidAmount = Number(s.paidAmount) || 0;
-    if (isPaid && paidAmount === 0) paidAmount = netPrice;
-    const dueAmount = Math.max(0, netPrice - paidAmount);
+      // ✅ FIX: Explicitly set paidAmount based on status
+      let paidAmount = Number(s.paidAmount) || 0;
+      if (isPaid && paidAmount === 0) paidAmount = netPrice;
+      const dueAmount = Math.max(0, netPrice - paidAmount);
 
-    return {
-      serviceId: s.serviceId || s._id || "",
-      name: s.name,
-      price,
-      discount,
-      paidAmount, 
-      dueAmount,  
-      description: s.description || "",
-      paymentMode: s.paymentMode || "N/A",
-      paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
-      transactionId: s.transactionId || "",
-      _wasPaid: isPaid, 
-    };
-  }));
-  
-  setClinicServicesBooking(booking);
-  setClinicServiceInput("");
-  setClinicServicePrice("");
-  setClinicServiceSuggestions([]);
-  setShowClinicServiceSuggestions(false);
-  setShowClinicServicesModal(true);
-};
+      return {
+        serviceId: s.serviceId || s._id || "",
+        name: s.name,
+        price,
+        discount,
+        paidAmount,
+        dueAmount,
+        description: s.description || "",
+        paymentMode: s.paymentMode || "N/A",
+        paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
+        transactionId: s.transactionId || "",
+        _wasPaid: isPaid,
+      };
+    }));
+
+    setClinicServicesBooking(booking);
+    setClinicServiceInput("");
+    setClinicServicePrice("");
+    setClinicServiceSuggestions([]);
+    setShowClinicServiceSuggestions(false);
+    setShowClinicServicesModal(true);
+  };
 
 
-const handleAddClinicServiceItem = (service) => {
-  if (!service) return;
-  setClinicServicesList((prev) => [...prev, {
-    serviceId: service._id || "",
-    name: service.name,
-    price: Number(service.price) || 0,
-    discount: 0,
-    paidAmount: 0,
-    dueAmount: Number(service.price) || 0,
-    description: service.description || "",
-    paymentMode: "N/A",
-    paymentStatus: "",
-    transactionId: "",
-    _wasPaid: false,
-  }]);
-  setClinicServiceInput("");
-  setClinicServicePrice("");
-  setClinicServiceSuggestions([]);
-  setShowClinicServiceSuggestions(false);
-};
+  const handleAddClinicServiceItem = (service) => {
+    if (!service) return;
+    setClinicServicesList((prev) => [...prev, {
+      serviceId: service._id || "",
+      name: service.name,
+      price: Number(service.price) || 0,
+      discount: 0,
+      paidAmount: 0,
+      dueAmount: Number(service.price) || 0,
+      description: service.description || "",
+      paymentMode: "N/A",
+      paymentStatus: "",
+      transactionId: "",
+      _wasPaid: false,
+    }]);
+    setClinicServiceInput("");
+    setClinicServicePrice("");
+    setClinicServiceSuggestions([]);
+    setShowClinicServiceSuggestions(false);
+  };
 
   const handleAddCustomClinicService = async () => {
     const name = clinicServiceInput.trim();
@@ -1297,7 +1301,7 @@ const handleAddClinicServiceItem = (service) => {
   };
 
 
-    const handleConfirmDeleteItem = () => {
+  const handleConfirmDeleteItem = () => {
     const { type, index } = deleteConfirm;
     if (type === "lab") {
       setLabItemsList((prev) => prev.filter((_, i) => i !== index));
@@ -1309,25 +1313,25 @@ const handleAddClinicServiceItem = (service) => {
     setDeleteConfirm({ isOpen: false, type: "", index: null });
   };
 
-// ✅ NEW: Update Clinic Item Price with Auto Status
-const handleUpdateClinicServicePrice = (index, newPrice) => {
-  setClinicServicesList((prev) =>
-    prev.map((s, i) => {
-      if (i !== index) return s;
-      const price = Number(newPrice) || 0;
-      const discount = Number(s.discount) || 0;
-      const netPrice = Math.max(0, price - discount);
-      const paid = Number(s.paidAmount) || 0;
-      const due = Math.max(0, netPrice - paid);
+  // ✅ NEW: Update Clinic Item Price with Auto Status
+  const handleUpdateClinicServicePrice = (index, newPrice) => {
+    setClinicServicesList((prev) =>
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(newPrice) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(s.paidAmount) || 0;
+        const due = Math.max(0, netPrice - paid);
 
-      let newStatus = "Due";
-      if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-      else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        let newStatus = "Due";
+        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
 
-      return { ...s, price, dueAmount: due, paymentStatus: newStatus };
-    })
-  );
-};
+        return { ...s, price, dueAmount: due, paymentStatus: newStatus };
+      })
+    );
+  };
 
   const handleUpdateClinicServicePaymentMode = (index, mode) => {
     setClinicServicesList((prev) =>
@@ -1338,52 +1342,52 @@ const handleUpdateClinicServicePrice = (index, newPrice) => {
 
 
 
-// ✅ NEW: Update Clinic Paid Amount with Auto Status
-const handleUpdateClinicServicePaidAmount = (index, newPaid) => {
-  setClinicServicesList((prev) =>
-    prev.map((s, i) => {
-      if (i !== index) return s;
-      const price = Number(s.price) || 0;
-      const discount = Number(s.discount) || 0;
-      const netPrice = Math.max(0, price - discount);
-      const paid = Number(newPaid) || 0;
-      const due = Math.max(0, netPrice - paid);
+  // ✅ NEW: Update Clinic Paid Amount with Auto Status
+  const handleUpdateClinicServicePaidAmount = (index, newPaid) => {
+    setClinicServicesList((prev) =>
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(s.price) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(newPaid) || 0;
+        const due = Math.max(0, netPrice - paid);
 
-      let newStatus = "Due";
-      if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-      else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        let newStatus = "Due";
+        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
 
-      return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
-    })
-  );
-};
+        return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
+      })
+    );
+  };
 
-// ✅ NEW: Update Clinic Discount
-const handleUpdateClinicServiceDiscount = (index, newDiscount) => {
-  setClinicServicesList((prev) =>
-    prev.map((s, i) => {
-      if (i !== index) return s;
-      const price = Number(s.price) || 0;
-      const discount = Number(newDiscount) || 0;
-      const netPrice = Math.max(0, price - discount);
-      const paid = Number(s.paidAmount) || 0;
-      const due = Math.max(0, netPrice - paid);
+  // ✅ NEW: Update Clinic Discount
+  const handleUpdateClinicServiceDiscount = (index, newDiscount) => {
+    setClinicServicesList((prev) =>
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(s.price) || 0;
+        const discount = Number(newDiscount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(s.paidAmount) || 0;
+        const due = Math.max(0, netPrice - paid);
 
-      let newStatus = "Due";
-      if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-      else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        let newStatus = "Due";
+        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
 
-      return { ...s, discount, dueAmount: due, paymentStatus: newStatus };
-    })
-  );
-};
+        return { ...s, discount, dueAmount: due, paymentStatus: newStatus };
+      })
+    );
+  };
 
-// ✅ NEW: Update Clinic Transaction ID
-const handleUpdateClinicServiceTransactionId = (index, txnId) => {
-  setClinicServicesList((prev) =>
-    prev.map((s, i) => (i === index ? { ...s, transactionId: txnId } : s))
-  );
-};
+  // ✅ NEW: Update Clinic Transaction ID
+  const handleUpdateClinicServiceTransactionId = (index, txnId) => {
+    setClinicServicesList((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, transactionId: txnId } : s))
+    );
+  };
 
   const handleUpdateClinicServicePaymentStatus = (index, status) => {
     setClinicServicesList((prev) =>
@@ -1403,29 +1407,29 @@ const handleUpdateClinicServiceTransactionId = (index, txnId) => {
       });
       const fallbackModeDisplay = modeToDisplay(booking.paymentType || "cash");
 
-const mergedServices = [
-  ...clinicServicesList.map((s) => ({
-    serviceId: s.serviceId || "",
-    name: s.name,
-    price: Number(s.price) || 0,
-    discount: Number(s.discount) || 0,
-    paidAmount: Number(s.paidAmount) || 0, // 👈 YE ADD KARO
-    description: s.description || "",
-    category: "clinic",
-    paymentMode: s.paymentMode || fallbackModeDisplay,
-    paymentStatus: s.paymentStatus || "Due",
-    transactionId: s.transactionId || "",
-  })),
-  ...nonClinic.map((s) => ({
-    serviceId: s.serviceId || s._id || "",
-    name: s.name,
-    price: Number(s.price) || 0,
-    description: s.description || "",
-    category: s.category || "",
-    paymentMode: s.paymentMode || fallbackModeDisplay,
-    paymentStatus: s.paymentStatus || "Due",
-  })),
-];
+      const mergedServices = [
+        ...clinicServicesList.map((s) => ({
+          serviceId: s.serviceId || "",
+          name: s.name,
+          price: Number(s.price) || 0,
+          discount: Number(s.discount) || 0,
+          paidAmount: Number(s.paidAmount) || 0, // 👈 YE ADD KARO
+          description: s.description || "",
+          category: "clinic",
+          paymentMode: s.paymentMode || fallbackModeDisplay,
+          paymentStatus: s.paymentStatus || "Due",
+          transactionId: s.transactionId || "",
+        })),
+        ...nonClinic.map((s) => ({
+          serviceId: s.serviceId || s._id || "",
+          name: s.name,
+          price: Number(s.price) || 0,
+          description: s.description || "",
+          category: s.category || "",
+          paymentMode: s.paymentMode || fallbackModeDisplay,
+          paymentStatus: s.paymentStatus || "Due",
+        })),
+      ];
 
       const categoryPayment = computeCategoryPaymentFromBooking(booking, { serviceItems: mergedServices });
 
@@ -1484,54 +1488,56 @@ const mergedServices = [
     } finally { setSavingClinicServices(false); }
   };
 
- // ✅ FIXED: openLabItemsModal
-const openLabItemsModal = (booking) => {
-  if (!booking) return;
-  let items = Array.isArray(booking.labItems) ? booking.labItems : [];
-  if (items.length === 0 && (Number(booking.labTotal) || 0) > 0) {
-    items = [{
-      serviceId: "", name: "Lab Test",
-      price: Number(booking.labTotal) || 0, description: "",
-      category: "lab", paymentMode: "N/A", paymentStatus: "",
-    }];
-  }
-  setLabItemsList(items.map((s, idx) => {
-    const price = Number(s.price) || 0;
-    const discount = Number(s.discount) || 0;
-    const netPrice = Math.max(0, price - discount);
-    const isPaid = (s.paymentStatus || "").toLowerCase() === "paid";
+  // ✅ FIXED: openLabItemsModal
+  const openLabItemsModal = (booking) => {
+    if (!booking) return;
+    let items = Array.isArray(booking.labItems) ? booking.labItems : [];
+    if (items.length === 0 && (Number(booking.labTotal) || 0) > 0) {
+      items = [{
+        serviceId: "", name: "Lab Test",
+        price: Number(booking.labTotal) || 0, description: "",
+        category: "lab", paymentMode: "N/A", paymentStatus: "",
+      }];
+    }
+    setLabItemsList(items.map((s, idx) => {
+      const price = Number(s.price) || 0;
+      const discount = Number(s.discount) || 0;
+      const netPrice = Math.max(0, price - discount);
+      const isPaid = (s.paymentStatus || "").toLowerCase() === "paid";
 
-    // ✅ FIX
-    let paidAmount = Number(s.paidAmount) || 0;
-    if (isPaid && paidAmount === 0) paidAmount = netPrice;
-    const dueAmount = Math.max(0, netPrice - paidAmount);
+      // ✅ FIX
+      let paidAmount = Number(s.paidAmount) || 0;
+      if (isPaid && paidAmount === 0) paidAmount = netPrice;
+      const dueAmount = Math.max(0, netPrice - paidAmount);
 
-    return {
-      serviceId: s.serviceId || s._id || "",
-      name: s.name || `Lab Test ${idx + 1}`,
-      price, discount, paidAmount, dueAmount,
-      description: s.description || "",
-      paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""),
-      paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
-      transactionId: s.transactionId || "",
-      _wasPaid: isPaid,
-    };
-  }));
-  setLabItemsBooking(booking);
-  setLabItemPrice("");
-  setShowLabItemsModal(true);
-};
+      return {
+        serviceId: s.serviceId || s._id || "",
+        name: s.name || `Lab Test ${idx + 1}`,
+        price, discount, paidAmount, dueAmount,
+        description: s.description || "",
+        paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""),
+        paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
+        transactionId: s.transactionId || "",
+        _wasPaid: isPaid,
+      };
+    }));
+    setLabItemsBooking(booking);
+    setLabItemPrice("");
+    setShowLabItemsModal(true);
+  };
   const handleAddLabItem = () => {
     const price = labItemPrice.trim();
     if (!price) { showToast("Please enter lab amount", "error"); return; }
     if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
 
+    const p = Number(price) || 0;
     setLabItemsList((prev) => [...prev, {
       serviceId: "",
       name: `Lab Test ${prev.length + 1}`,
-      price: Number(price) || 0,
+      price: p,
       discount: 0,
       paidAmount: 0,
+      dueAmount: p, // ✅ Add karte hi Due = Price
       description: "",
       paymentMode: "",
       paymentStatus: "Due",
@@ -1563,24 +1569,24 @@ const openLabItemsModal = (booking) => {
     );
   };
 
- const handleUpdateLabItemPaidAmount = (index, newPaid) => {
-  setLabItemsList((prev) =>
-    prev.map((s, i) => {
-      if (i !== index) return s;
-      const price = Number(s.price) || 0;
-      const discount = Number(s.discount) || 0;
-      const netPrice = Math.max(0, price - discount);
-      const paid = Number(newPaid) || 0;
-      const due = Math.max(0, netPrice - paid); // ✅ Due calculate karo
+  const handleUpdateLabItemPaidAmount = (index, newPaid) => {
+    setLabItemsList((prev) =>
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(s.price) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(newPaid) || 0;
+        const due = Math.max(0, netPrice - paid); // ✅ Due calculate karo
 
-      let newStatus = "Due";
-      if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-      else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        let newStatus = "Due";
+        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
 
-      return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
-    })
-  );
-};
+        return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
+      })
+    );
+  };
   // ✅ NEW: Update Transaction ID
   const handleUpdateLabItemTransactionId = (index, txnId) => {
     setLabItemsList((prev) =>
@@ -1615,7 +1621,7 @@ const openLabItemsModal = (booking) => {
     );
   };
 
-   const handleSaveLabItems = async () => {
+  const handleSaveLabItems = async () => {
     if (!labItemsBooking) return;
     setSavingLabItems(true);
     try {
@@ -1656,12 +1662,12 @@ const openLabItemsModal = (booking) => {
           name: s.name || `Lab Test ${labItemsList.indexOf(s) + 1}`,
           price: price,
           discount: discount,
-          paidAmount: paidAmount, 
+          paidAmount: paidAmount,
           description: s.description || "",
           category: "lab",
           paymentMode: s.paymentMode || "",
           paymentStatus: s.paymentStatus || "Due",
-          transactionId: s.transactionId || "", 
+          transactionId: s.transactionId || "",
         };
       });
       const labTotal = labItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
@@ -1736,53 +1742,55 @@ const openLabItemsModal = (booking) => {
     }
   };
 
- const openPharmacyItemsModal = (booking) => {
-  if (!booking) return;
-  let items = Array.isArray(booking.medicineItems) ? booking.medicineItems : [];
-  if (items.length === 0 && (Number(booking.medicineTotal) || 0) > 0) {
-    items = [{
-      serviceId: "", name: "Medicine",
-      price: Number(booking.medicineTotal) || 0, description: "",
-      category: "pharmacy", paymentMode: "N/A", paymentStatus: "",
-    }];
-  }
-  setPharmacyItemsList(items.map((s, idx) => {
-    const price = Number(s.price) || 0;
-    const discount = Number(s.discount) || 0;
-    const netPrice = Math.max(0, price - discount);
-    const isPaid = (s.paymentStatus || "").toLowerCase() === "paid";
+  const openPharmacyItemsModal = (booking) => {
+    if (!booking) return;
+    let items = Array.isArray(booking.medicineItems) ? booking.medicineItems : [];
+    if (items.length === 0 && (Number(booking.medicineTotal) || 0) > 0) {
+      items = [{
+        serviceId: "", name: "Medicine",
+        price: Number(booking.medicineTotal) || 0, description: "",
+        category: "pharmacy", paymentMode: "N/A", paymentStatus: "",
+      }];
+    }
+    setPharmacyItemsList(items.map((s, idx) => {
+      const price = Number(s.price) || 0;
+      const discount = Number(s.discount) || 0;
+      const netPrice = Math.max(0, price - discount);
+      const isPaid = (s.paymentStatus || "").toLowerCase() === "paid";
 
-    // ✅ FIX
-    let paidAmount = Number(s.paidAmount) || 0;
-    if (isPaid && paidAmount === 0) paidAmount = netPrice;
-    const dueAmount = Math.max(0, netPrice - paidAmount);
+      // ✅ FIX
+      let paidAmount = Number(s.paidAmount) || 0;
+      if (isPaid && paidAmount === 0) paidAmount = netPrice;
+      const dueAmount = Math.max(0, netPrice - paidAmount);
 
-    return {
-      serviceId: s.serviceId || s._id || "",
-      name: s.name || `Medicine ${idx + 1}`,
-      price, discount, paidAmount, dueAmount,
-      description: s.description || "",
-      paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""),
-      paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
-      transactionId: s.transactionId || "",
-      _wasPaid: isPaid,
-    };
-  }));
-  setPharmacyItemsBooking(booking);
-  setPharmacyItemPrice("");
-  setShowPharmacyItemsModal(true);
-};
+      return {
+        serviceId: s.serviceId || s._id || "",
+        name: s.name || `Medicine ${idx + 1}`,
+        price, discount, paidAmount, dueAmount,
+        description: s.description || "",
+        paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""),
+        paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
+        transactionId: s.transactionId || "",
+        _wasPaid: isPaid,
+      };
+    }));
+    setPharmacyItemsBooking(booking);
+    setPharmacyItemPrice("");
+    setShowPharmacyItemsModal(true);
+  };
   const handleAddPharmacyItem = () => {
     const price = pharmacyItemPrice.trim();
     if (!price) { showToast("Please enter medicine amount", "error"); return; }
     if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
 
+    const p = Number(price) || 0;
     setPharmacyItemsList((prev) => [...prev, {
       serviceId: "",
       name: `Medicine ${prev.length + 1}`,
-      price: Number(price) || 0,
+      price: p,
       discount: 0,
       paidAmount: 0,
+      dueAmount: p, // ✅ Add karte hi Due = Price
       description: "",
       paymentMode: "",
       paymentStatus: "Due",
@@ -1791,6 +1799,7 @@ const openLabItemsModal = (booking) => {
     }]);
     setPharmacyItemPrice("");
   };
+
 
   const handleRemovePharmacyItem = (index) => {
     setDeleteConfirm({ isOpen: true, type: "pharmacy", index });
@@ -1817,24 +1826,24 @@ const openLabItemsModal = (booking) => {
 
 
   // ✅ NEW: Update Pharmacy Paid Amount with Auto Status
-const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
-  setPharmacyItemsList((prev) =>
-    prev.map((s, i) => {
-      if (i !== index) return s;
-      const price = Number(s.price) || 0;
-      const discount = Number(s.discount) || 0;
-      const netPrice = Math.max(0, price - discount);
-      const paid = Number(newPaid) || 0;
-      const due = Math.max(0, netPrice - paid); // ✅ Due calculate karo
+  const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
+    setPharmacyItemsList((prev) =>
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(s.price) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(newPaid) || 0;
+        const due = Math.max(0, netPrice - paid); // ✅ Due calculate karo
 
-      let newStatus = "Due";
-      if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-      else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        let newStatus = "Due";
+        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
 
-      return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
-    })
-  );
-};
+        return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
+      })
+    );
+  };
 
   // ✅ NEW: Update Pharmacy Transaction ID
   const handleUpdatePharmacyItemTransactionId = (index, txnId) => {
@@ -1896,12 +1905,12 @@ const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
           name: s.name || `Medicine ${idx + 1}`,
           price: price,
           discount: discount,
-          paidAmount: paidAmount, 
+          paidAmount: paidAmount,
           description: s.description || "",
           category: "pharmacy",
           paymentMode: s.paymentMode || "",
           paymentStatus: s.paymentStatus || "Due",
-          transactionId: s.transactionId || "", 
+          transactionId: s.transactionId || "",
         };
       });
       const medicineTotal = medicineItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
@@ -2168,9 +2177,64 @@ const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (timeFilter && timeFilter !== "All") params.append("timeFilter", timeFilter);
-      if (apptFromDate) params.append("apptFrom", apptFromDate);
-      if (apptToDate) params.append("apptTo", apptToDate);
+
+      const today = new Date();
+      const toYMD = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+
+      let computedFrom = "";
+      let computedTo = "";
+
+      const isAllTime =
+        timeFilter === "All" &&
+        !apptFromDate && !apptToDate &&
+        !fromDate && !toDate &&
+        !selectedMonth;
+
+      // ✅ FIX: "All" hone par koi date restriction nahi
+      if (!isAllTime && !apptFromDate && !apptToDate && timeFilter && timeFilter !== "All") {
+        if (timeFilter === "today") {
+          computedFrom = toYMD(today); computedTo = toYMD(today);
+        } else if (timeFilter === "yesterday") {
+          const y = new Date(today); y.setDate(y.getDate() - 1);
+          computedFrom = toYMD(y); computedTo = toYMD(y);
+        } else if (timeFilter === "last7Days") {
+          const s = new Date(today); s.setDate(s.getDate() - 6);
+          computedFrom = toYMD(s); computedTo = toYMD(today);
+        } else if (timeFilter === "thisWeek") {
+          const dow = today.getDay();
+          const diff = dow === 0 ? 6 : dow - 1;
+          const mon = new Date(today); mon.setDate(mon.getDate() - diff);
+          computedFrom = toYMD(mon); computedTo = toYMD(today);
+        } else if (timeFilter === "thisMonth") {
+          const first = new Date(today.getFullYear(), today.getMonth(), 1);
+          const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          computedFrom = toYMD(first); computedTo = toYMD(last);
+        } else if (timeFilter === "lastMonth") {
+          const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+          const last = new Date(today.getFullYear(), today.getMonth(), 0);
+          computedFrom = toYMD(first); computedTo = toYMD(last);
+        } else if (timeFilter === "thisYear") {
+          computedFrom = toYMD(new Date(today.getFullYear(), 0, 1));
+          computedTo = toYMD(new Date(today.getFullYear(), 11, 31));
+        }
+      }
+
+      // ✅ "All" hone par koi date param NAHI bhejna — sirf flag bhejo
+      if (isAllTime) {
+        params.append("all", "true");
+        console.log("🔍 [fetchBookings] ALL mode — no date filter, only all=true");
+      } else {
+        if (computedFrom) params.append("apptFrom", computedFrom);
+        if (computedTo) params.append("apptTo", computedTo);
+        if (apptFromDate) params.append("apptFrom", apptFromDate);
+        if (apptToDate) params.append("apptTo", apptToDate);
+      }
+
       if (fromDate) params.append("regFrom", fromDate);
       if (toDate) params.append("regTo", toDate);
       if (selectedMonth) params.append("month", selectedMonth);
@@ -2182,7 +2246,14 @@ const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
       if (searchQuery.trim()) params.append("search", searchQuery.trim());
 
       const url = `${API_BASE_URL}/appointment-slots/getallbookings${params.toString() ? "?" + params.toString() : ""}`;
+
+      // 🔍 DEBUG — console me check kar
+      console.log("🔍 [fetchBookings] timeFilter:", timeFilter, "| isAllTime:", isAllTime);
+      console.log("🔍 [fetchBookings] URL:", url);
+
       const res = await axios.get(url);
+
+      console.log("📦 [fetchBookings] Response count:", res.data?.bookings?.length || res.data?.data?.length || 0);
 
       let bookingsData = [];
       if (res.data?.success) {
@@ -2195,8 +2266,6 @@ const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
 
       const transformedBookings = bookingsData.map((b) => {
         const slotDetails = b.slotDetails || {};
-
-        // ✅ NEW: Populated slotId object ko safely extract karo
         const slotObj = (b.slotId && typeof b.slotId === "object") ? b.slotId : {};
 
         const rawServices =
@@ -2222,37 +2291,39 @@ const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
             addedAt: s.addedAt || b.createdAt || new Date().toISOString(),
           };
         });
-const normalizedLabItems = Array.isArray(b.labItems)
-  ? b.labItems.map((item) => ({
-    serviceId: item.serviceId || item._id || "",
-    name: item.name || "Lab Test",
-    price: Number(item.price) || 0,
-    discount: Number(item.discount) || 0,
-    paidAmount: Number(item.paidAmount) || 0,
-    dueAmount: Number(item.dueAmount) || 0, // ✅ ADD THIS
-    transactionId: item.transactionId || "",
-    description: item.description || "",
-    category: "lab",
-    paymentMode: item.paymentMode || "",
-    paymentStatus: item.paymentStatus || "Due",
-  }))
-  : [];
 
-      const normalizedMedicineItems = Array.isArray(b.medicineItems)
-  ? b.medicineItems.map((item) => ({
-    serviceId: item.serviceId || item._id || "",
-    name: item.name || "Medicine",
-    price: Number(item.price) || 0,
-    discount: Number(item.discount) || 0,
-    paidAmount: Number(item.paidAmount) || 0,
-    dueAmount: Number(item.dueAmount) || 0, // ✅ ADD THIS
-    transactionId: item.transactionId || "",
-    description: item.description || "",
-    category: "pharmacy",
-    paymentMode: item.paymentMode || "",
-    paymentStatus: item.paymentStatus || "Due",
-  }))
-  : [];
+        const normalizedLabItems = Array.isArray(b.labItems)
+          ? b.labItems.map((item) => ({
+            serviceId: item.serviceId || item._id || "",
+            name: item.name || "Lab Test",
+            price: Number(item.price) || 0,
+            discount: Number(item.discount) || 0,
+            paidAmount: Number(item.paidAmount) || 0,
+            dueAmount: Number(item.dueAmount) || 0,
+            transactionId: item.transactionId || "",
+            description: item.description || "",
+            category: "lab",
+            paymentMode: item.paymentMode || "",
+            paymentStatus: item.paymentStatus || "Due",
+          }))
+          : [];
+
+        const normalizedMedicineItems = Array.isArray(b.medicineItems)
+          ? b.medicineItems.map((item) => ({
+            serviceId: item.serviceId || item._id || "",
+            name: item.name || "Medicine",
+            price: Number(item.price) || 0,
+            discount: Number(item.discount) || 0,
+            paidAmount: Number(item.paidAmount) || 0,
+            dueAmount: Number(item.dueAmount) || 0,
+            transactionId: item.transactionId || "",
+            description: item.description || "",
+            category: "pharmacy",
+            paymentMode: item.paymentMode || "",
+            paymentStatus: item.paymentStatus || "Due",
+          }))
+          : [];
+
         const servicesTotal = normalizedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
         const subtotal = Number(b.subtotal) || servicesTotal;
         const commissionAmount = Number(b.commissionAmount) || 0;
@@ -2349,8 +2420,9 @@ const normalizedLabItems = Array.isArray(b.labItems)
           offerApplied: b.offerApplied || null,
         };
       });
-       transformedBookings.sort((a, b) => new Date(b.createdAt || b.bookedAt || 0) - new Date(a.createdAt || a.bookedAt || 0));
-      
+
+      transformedBookings.sort((a, b) => new Date(b.createdAt || b.bookedAt || 0) - new Date(a.createdAt || a.bookedAt || 0));
+
       setBookings(transformedBookings);
     } catch (error) {
       console.error("Error fetching bookings:", error);
@@ -2932,7 +3004,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
     // ✅ Purana snapshot uthao
     const existing = partialBooking.categoryPayment || {};
     const wasPaid = partialBooking.paymentStatus === "Paid";
-    
+
     const categoryPayment = {
       clinic: { paidAmount: existing?.clinic?.paidAmount !== undefined ? Number(existing.clinic.paidAmount) : (wasPaid ? (Number(bd.clinic) || 0) : 0) },
       lab: { paidAmount: existing?.lab?.paidAmount !== undefined ? Number(existing.lab.paidAmount) : (wasPaid ? (Number(bd.lab) || 0) : 0) },
@@ -3434,20 +3506,70 @@ const normalizedLabItems = Array.isArray(b.labItems)
     return b ? (b.isActive !== undefined ? b.isActive : true) : true;
   };
 
-  const buildBillHtml = (bd, bk) => {
+const buildBillHtml = async (bd, bk) => {
+    // ✅ 1. Logo ko Base64 me convert karne ka logic
+    let logoBase64 = "";
+    try {
+      logoBase64 = await new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.onerror = () => resolve(""); 
+        img.src = logo; 
+      });
+    } catch (err) {
+      console.log("Logo load error:", err);
+    }
+
+    // ✅ 2. Stamp ko Base64 me convert karne ka inline logic
+    let stampBase64 = "";
+    try {
+      stampBase64 = await new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.onerror = () => resolve(""); 
+        img.src = companyStamp;
+      });
+    } catch (err) {
+      console.log("Stamp load error:", err);
+    }
+
     const groups = { clinic: [], lab: [], pharmacy: [] };
     (bd.items || []).forEach((it) => {
       const cat = it.category || "clinic";
+      if (cat === "pharmacy" && (it.name || "").toLowerCase().includes("medicin")) return;
+      
       if (groups[cat]) groups[cat].push(it);
       else groups.clinic.push(it);
     });
+    
     const categoryLabel = { clinic: "CONSULTATION", lab: "LAB", pharmacy: "PHARMACY" };
     let runningIdx = 0;
     let rowsHtml = "";
+    let calculatedGrossTotal = 0; 
+    
     ["clinic", "lab", "pharmacy"].forEach((catKey) => {
       const items = groups[catKey];
       if (items.length === 0) return;
+      
       const subtotal = items.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+      calculatedGrossTotal += subtotal; 
+      
       items.forEach((item) => {
         runningIdx++;
         rowsHtml += `
@@ -3465,15 +3587,57 @@ const normalizedLabItems = Array.isArray(b.labItems)
           </tr>`;
       }
     });
-    const grossTotal = (bd.breakdown?.clinic || 0) + (bd.breakdown?.lab || 0) + (bd.breakdown?.pharmacy || 0);
+    
+    const grossTotal = calculatedGrossTotal; 
+    
     rowsHtml += `
       <tr style="background:#e5e7eb;border-top:2px solid #111;border-bottom:2px solid #111;">
         <td colspan="2" style="text-align:right;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#111;padding:9px 8px;">Gross Total</td>
         <td style="text-align:right;font-size:14px;font-weight:bold;color:#111;padding:9px 8px;">₹ ${grossTotal.toFixed(2)}</td>
       </tr>`;
 
+    const appointmentDateTime = bk?.createdAt || bk?.bookedAt 
+      ? `${formatDateToDDMMYYYY(bk?.appointmentDate || bk?.date)} ${new Date(bk?.createdAt || bk?.bookedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}`
+      : formatDateToDDMMYYYY(bk?.appointmentDate || bk?.date);
+
+    let actualPaymentType = "N/A";
+    const svcList = Array.isArray(bk?.services) && bk.services.length > 0 ? bk.services : (Array.isArray(bk?.serviceItems) ? bk.serviceItems : []);
+    const paidSvc = svcList.find(s => (s.paymentMode || "").trim() !== "" && s.paymentMode !== "N/A");
+    if (paidSvc) actualPaymentType = paidSvc.paymentMode;
+
+    if (actualPaymentType === "N/A" && Array.isArray(bk?.medicineItems) && bk.medicineItems.length > 0) {
+      const paidMed = bk.medicineItems.find(m => (m.paymentMode || "").trim() !== "" && m.paymentMode !== "N/A");
+      if (paidMed) actualPaymentType = paidMed.paymentMode;
+    }
+
+    if (actualPaymentType === "N/A" && Array.isArray(bk?.labItems) && bk.labItems.length > 0) {
+      const paidLab = bk.labItems.find(l => (l.paymentMode || "").trim() !== "" && l.paymentMode !== "N/A");
+      if (paidLab) actualPaymentType = paidLab.paymentMode;
+    }
+
+    if (actualPaymentType === "N/A" && bk?.paymentType) {
+      actualPaymentType = bk.paymentType.charAt(0).toUpperCase() + bk.paymentType.slice(1);
+    }
+
+    const finalNetAmount = grossTotal - (bd.discount || 0);
+    const finalPaidAmount = Math.min(finalNetAmount, bd.paidAmount || 0); 
+    const finalBalance = finalNetAmount - finalPaidAmount;
+
+    // ✅ 3. Built By Logic (Login user based)
+    let builtByName = "Admin";
+    const userRole = localStorage.getItem('userRole');
+    if (userRole === 'employee') {
+        builtByName = localStorage.getItem('employeeName') || localStorage.getItem('userName') || 'Employee';
+    }
+
+    // ✅ 4. Patient Name nikal lo title ke liye
+    const patientNameForTitle = `${bk?.patientTitle || ""} ${bk?.patientName || "Patient"}`.trim();
+    const safePatientName = patientNameForTitle.replace(/\s+/g, '_');
+
     return `
-      <!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Bill - ${bd.invoiceNo}</title>
+      <!DOCTYPE html><html><head><meta charset="UTF-8"/>
+      <!-- ✅ Yahan Title Change kiya hai taaki save hone par patient ke naam se aaye -->
+      <title>Invoice_${safePatientName}_${bd.invoiceNo}</title>
       <style>
         *{margin:0;padding:0;box-sizing:border-box;}
         body{font-family:Arial,sans-serif;color:#222;padding:24px;background:#fff;}
@@ -3481,13 +3645,22 @@ const normalizedLabItems = Array.isArray(b.labItems)
         .watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:.06;z-index:0;width:300px;height:300px;}
         .watermark img{width:100%;height:100%;object-fit:contain;}
         .bill-content{position:relative;z-index:1;}
-        .top-header{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:14px;}
-        .top-header .brand{display:flex;align-items:center;gap:14px;}
+        .top-header{display:flex;align-items:center;gap:16px;border-bottom:2px solid #222;padding-bottom:14px;justify-content:flex-start;}
         .top-header .brand img{width:60px;height:60px;object-fit:contain;}
-        .top-header .brand h1{font-size:20px;font-weight:bold;color:#111;}
-        .top-header .brand p{font-size:11px;color:#555;max-width:440px;line-height:1.4;}
-        .top-header .contact{text-align:right;font-size:11px;color:#555;white-space:nowrap;}
-        .bar-title{text-align:center;background:#f1f1f1;border-top:1px solid #999;border-bottom:1px solid #999;padding:6px 0;font-size:13px;font-weight:bold;letter-spacing:1.5px;margin:10px 0 14px;text-transform:uppercase;}
+        .top-header .brand-text{text-align:center;flex:1;}
+        
+        .top-header .brand-text h1 {
+            font-size: 26px; 
+            font-weight: 900; /* Extra Bold */
+            letter-spacing: 1px; 
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .brand-blue { color: #1e3a8a; } /* TIMELY */
+        .brand-green { color: #10b981; } /* HEALTH */
+
+        .top-header .brand-text p{font-size:11px;color:#555;max-width:100%;line-height:1.4;}
+        .bar-title{text-align:center;background:#1e3a8a;border-top:1px solid #1e3a8a;border-bottom:1px solid #1e3a8a;padding:8px 0;font-size:14px;font-weight:bold;letter-spacing:1.5px;margin:10px 0 14px;text-transform:uppercase;color:#fff;}
         .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;font-size:12px;margin-bottom:16px;}
         .info-grid .label{color:#666;font-weight:bold;display:inline-block;width:120px;}
         table.items{width:100%;border-collapse:collapse;margin-bottom:16px;border-top:2px solid #222;border-bottom:2px solid #222;}
@@ -3496,29 +3669,68 @@ const normalizedLabItems = Array.isArray(b.labItems)
         .totals-box .row{display:flex;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #eee;}
         .totals-box .row.paid{color:#15803d;font-weight:bold;}
         .totals-box .row.final{border-top:2px solid #222;border-bottom:none;font-weight:bold;padding-top:10px;margin-top:2px;font-size:14px;background:#f3f4f6;color:#111;}
-        .amount-words{text-align:right;font-size:11px;color:#555;font-style:italic;margin-bottom:14px;padding-right:10px;}
-        .footer-row{display:flex;justify-content:flex-end;gap:8px;font-size:11px;color:#555;border-top:1px solid #ddd;padding-top:12px;margin-top:10px;}
-        .signature-section{display:flex;justify-content:flex-end;margin-top:8px;}
-        .signature-section .sig{font-weight:bold;color:#333;border-top:1px solid #333;padding-top:4px;min-width:140px;text-align:center;}
+        
+        .footer-info-row{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding-right: 10px;
+        }
+        .amount-words{font-size:11px;color:#555;font-style:italic;}
+        .built-by{font-size:11px;color:#1e3a8a;font-weight:bold;}
+
+        .footer-row{display:flex;justify-content:flex-end;gap:8px;font-size:11px;color:#555;padding-top:5px;margin-top:10px;}
+        
+        .signature-section {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end; 
+          justify-content: flex-end;
+          margin-top: 15px;
+          padding-right: 20px; 
+          position: relative;
+          min-height: 110px; 
+        }
+        .signature-section .stamp {
+          width: 90px;
+          height: 90px;
+          opacity: 0.85;
+          z-index: 1;
+          pointer-events: none;
+          transform: rotate(-5deg);
+          margin-bottom: 5px;
+        }
+        .signature-section .sig {
+          font-weight: bold;
+          color: #333;
+          border-top: 1px solid #333;
+          padding-top: 4px;
+          min-width: 140px;
+          text-align: center;
+          position: relative;
+          z-index: 10;
+        }
         @media print{body{padding:0;}.bill-wrap{border:none;}}
       </style></head><body>
       <div class="bill-wrap">
-        <div class="watermark"><img src="${logo}" alt="${CLINIC_INFO.name}"/></div>
+        <div class="watermark"><img src="${logoBase64 || logo}" alt="${CLINIC_INFO.name}"/></div>
         <div class="bill-content">
           <div class="top-header">
-            <div class="brand"><img src="${logo}" alt="${CLINIC_INFO.name}"/><div><h1>${CLINIC_INFO.name}</h1><p>${CLINIC_INFO.address}</p></div></div>
-            <div class="contact">Contact No : ${CLINIC_INFO.contact}</div>
+            <div class="brand"><img src="${logoBase64 || logo}" alt="${CLINIC_INFO.name}"/></div>
+            <div class="brand-text">
+                <h1><span class="brand-blue">TIMELY</span> <span class="brand-green">HEALTH</span></h1>
+                <p>${CLINIC_INFO.address}</p>
+            </div>
           </div>
           <div class="bar-title">Bill Cum Receipt</div>
           <div class="info-grid">
             <div><span class="label">Name</span>: ${bk?.patientTitle || ""} ${bk?.patientName || "N/A"}</div>
-            <div><span class="label">Invoice No / Date</span>: ${bd.invoiceNo} / ${bd.invoiceDate}</div>
-            <div><span class="label">Age</span>: ${bk?.patientAge || "N/A"} Yrs</div>
-            <div><span class="label">Gender</span>: ${bk?.patientGender || "N/A"}</div>
-            <div><span class="label">Branch</span>: ${bd.branch}</div>
+            <div><span class="label">Invoice No</span>: ${bd.invoiceNo}</div>
+            <div><span class="label">Age / Gender</span>: ${bk?.patientAge || "N/A"} Yrs / ${bk?.patientGender || "N/A"}</div>
             <div><span class="label">Contact No</span>: ${bk?.patientPhone || "N/A"}</div>
-            <div><span class="label">Doctor</span>: ${bd.doctorName}</div>
-            <div><span class="label">Appt. Date</span>: ${formatDateToDDMMYYYY(bk?.date)}</div>
+            <div><span class="label">Doctor</span>: ${bd.doctorName || "N/A"}</div>
+            <div><span class="label">Appt. Date</span>: ${appointmentDateTime}</div>
           </div>
           <table class="items">
             <thead><tr>
@@ -3528,22 +3740,36 @@ const normalizedLabItems = Array.isArray(b.labItems)
             </tr></thead>
             <tbody>${rowsHtml}</tbody>
           </table>
+          
           <div class="totals-box">
-            <div class="row"><span>Gross Amount</span><span style="font-weight:bold;">₹ ${bd.grossAmount.toFixed(2)}</span></div>
+            <div class="row"><span>Gross Amount</span><span style="font-weight:bold;">₹ ${grossTotal.toFixed(2)}</span></div>
             ${bd.discount > 0 ? `<div class="row"><span>Discount</span><span style="color:#dc2626;">− ₹ ${bd.discount.toFixed(2)}</span></div>` : ""}
-            <div class="row" style="background:#eff6ff;font-weight:bold;"><span>Net Amount</span><span>₹ ${bd.netAmount.toFixed(2)}</span></div>
-            <div class="row paid"><span>Paid Amount</span><span>₹ ${bd.paidAmount.toFixed(2)}</span></div>
-            <div class="row final"><span>Balance to Pay</span><span>₹ ${bd.balanceAmount.toFixed(2)}</span></div>
+            <div class="row" style="background:#eff6ff;font-weight:bold;"><span>Net Amount</span><span>₹ ${finalNetAmount.toFixed(2)}</span></div>
+            <div class="row paid"><span>Paid Amount</span><span>₹ ${finalPaidAmount.toFixed(2)}</span></div>
+            <div class="row final"><span>Balance to Pay</span><span>₹ ${finalBalance.toFixed(2)}</span></div>
+            <div class="row" style="border-bottom:none; padding-top:6px;">
+                <span style="font-weight:bold; color:#1e3a8a;">Payment Type</span>
+                <span style="font-weight:bold; color:#1e3a8a;">${actualPaymentType}</span>
+            </div>
           </div>
-          <div class="amount-words">Amount in words: <b>${bd.amountInWords}</b></div>
-          <div class="footer-row"><span>Printed Date : ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} ${new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></div>
-          <div class="signature-section"><span class="sig">Authorised Signature</span></div>
+
+          <div class="footer-info-row">
+            <div class="amount-words">Amount in words: <b>${bd.amountInWords}</b></div>
+            <div class="built-by">Built By: ${builtByName}</div>
+          </div>
+
+          <div class="footer-row"><span style="font-style:italic;font-weight:600;color:#1e3a8a;">This is an electronically generated invoice</span></div>
+          
+          <div class="signature-section">
+             ${stampBase64 ? `<img src="${stampBase64}" alt="Stamp" class="stamp" />` : ''}
+             <span class="sig">Authorised Signature</span>
+          </div>
+          
         </div>
       </div>
     </body></html>`;
-  };
-
-  const saveInvoiceToBackend = async (bookingId, billHtml) => {
+};
+const saveInvoiceToBackend = async (bookingId, billHtml) => {
     if (!bookingId || !billHtml) return null;
     try {
       const res = await axios.post(`${API_BASE_URL}/appointment-slots/save-invoice`, { bookingId, html: billHtml });
@@ -3689,7 +3915,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
       paymentMode: booking.paymentType ? booking.paymentType.charAt(0).toUpperCase() + booking.paymentType.slice(1) : "Cash",
       receivedBy: "Front Desk",
       branch: booking.doctorSpecialization || "Main Branch",
-      doctorName: booking.doctorName || "General OP Doctor",
+      doctorName: booking.doctorName || "N/A",
       items,
       breakdown: {
         clinic: Math.round(finalBreakdown.clinic || 0),
@@ -3701,7 +3927,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
       amountInWords: numberToWords(netAmount),
     };
 
-    const html = buildBillHtml(newBillingData, booking);
+    const html = await buildBillHtml(newBillingData, booking);
     const savedUrl = await saveInvoiceToBackend(booking._id, html);
     setInvoiceLoading(null);
 
@@ -3750,12 +3976,15 @@ const normalizedLabItems = Array.isArray(b.labItems)
 
 
   const handleTimeFilterChange = (value) => {
+    setShowRegDatePopup(false);
+    setShowApptDatePopup(false);
     setTimeFilter(value);
-    if (value !== "All") {
-      setApptFromDate("");
-      setApptToDate("");
-      setSelectedMonth("");
-    }
+    setApptFromDate("");
+    setApptToDate("");
+    setSelectedMonth("");
+    setFromDate("");
+    setToDate("");
+    setCurrentPage(1);
   };
 
   const clearFilters = () => {
@@ -3797,6 +4026,20 @@ const normalizedLabItems = Array.isArray(b.labItems)
       customers: Array.from(customers).sort(),
       doctors: Array.from(doctors).sort(),
     };
+  };
+
+
+
+  const handleCopyPhone = (phone) => {
+    if (!phone) return;
+    navigator.clipboard.writeText(phone)
+      .then(() => {
+        showToast("📋 Mobile number copied!", "success");
+      })
+      .catch((err) => {
+        console.error("Failed to copy:", err);
+        showToast("Failed to copy number", "error");
+      });
   };
 
   const filteredPatients = useMemo(() => {
@@ -3849,7 +4092,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
     return { total: 0, active: 0, inactive: 0, paid: 0, partial: 0, due: 0, pending: 0, totalRevenue: 0 };
   }, [backendStats]);
 
-    const categoryRevenue = useMemo(() => {
+  const categoryRevenue = useMemo(() => {
     const empty = () => ({ total: 0, cash: 0, online: 0, card: 0, insurance: 0, due: 0, footFall: 0 });
     const result = { clinic: empty(), lab: empty(), pharmacy: empty() };
 
@@ -3945,8 +4188,8 @@ const normalizedLabItems = Array.isArray(b.labItems)
               result.lab.due += itemDue;
             }
           });
-        } 
-        
+        }
+
         if (!hasExplicitLabDue) {
           const catStatuses = getCategoryStatuses(booking);
           const labStatus = catStatuses.lab;
@@ -4009,8 +4252,8 @@ const normalizedLabItems = Array.isArray(b.labItems)
               result.pharmacy.due += itemDue;
             }
           });
-        } 
-        
+        }
+
         if (!hasExplicitPharmacyDue) {
           const catStatuses = getCategoryStatuses(booking);
           const phStatus = catStatuses.pharmacy;
@@ -4196,22 +4439,22 @@ const normalizedLabItems = Array.isArray(b.labItems)
         )}
 
         {/* ROW 1 */}
-        <div className="hidden lg:grid grid-cols-3 items-center gap-2 mb-3">
-          <div className="flex items-center">
+        <div className="hidden lg:flex items-center justify-between gap-3 mb-3 relative z-[60]">
+          <div className="flex items-center flex-shrink-0">
             <h1 className="emp-dash__greeting text-lg font-bold whitespace-nowrap">OP <span>Management</span></h1>
           </div>
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 min-w-0 flex-1 overflow-x-auto">
             <div className="relative flex-shrink-0">
               <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
               <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-[140px] pl-8 pr-2 py-2 text-xs border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
             </div>
-            <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200 flex-shrink-0">
               {TIME_FILTER_OPTIONS.map((opt) => (
                 <button key={opt.value} onClick={() => handleTimeFilterChange(opt.value)} className={`px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap ${timeFilter === opt.value ? "bg-blue-600 text-white shadow-sm" : "text-gray-600 hover:bg-white hover:text-gray-900"}`} title={opt.label}>{opt.label}</button>
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-1.5 justify-end">
+          <div className="flex items-center gap-1.5 justify-end flex-shrink-0">
             <button onClick={handleAddNewPatient} className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm whitespace-nowrap"><FiPlus className="w-3.5 h-3.5" /> Add Patient</button>
             <button onClick={downloadCSV} className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-sm whitespace-nowrap"><FiDownload className="w-3.5 h-3.5" /> Export CSV</button>
             <button onClick={() => handleRoleBasedNavigate("/inactive-patients")} className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm whitespace-nowrap"><FiClock className="w-3.5 h-3.5 text-amber-600" /> Inactive Patients</button>
@@ -4220,7 +4463,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
 
         {/* ROW 2 - Filters */}
         {showRevenueBreakdown && (
-          <div className="hidden lg:flex items-center gap-1.5 flex-nowrap mb-3">
+          <div className="hidden lg:flex items-center gap-1.5 flex-nowrap mb-3 relative z-50">
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
               <option value="All">All Payment</option>
               <option value="Partial">Partial</option>
@@ -4402,7 +4645,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
         </div>
 
         {/* Revenue Breakdown */}
-        <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden relative z-0">
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
             <div className="flex items-center gap-2">
               <FaMoneyBillWave className="text-indigo-600 w-5 h-5" />
@@ -4422,6 +4665,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
 
           {showRevenueBreakdown && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3">
+
               <div className="rounded-lg p-4 border border-blue-200 bg-blue-50 min-h-[115px] flex flex-col justify-between">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase"><FaClinicMedical className="text-xs" /> Clinic Revenue</div>
@@ -4522,51 +4766,51 @@ const normalizedLabItems = Array.isArray(b.labItems)
         </div>
 
 
-              {/* ✅ CUSTOM DELETE CONFIRMATION MODAL */}
-      {deleteConfirm.isOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 overflow-hidden transform transition-all">
-            
-            {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b bg-red-50">
-              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
-                <FiAlertCircle className="w-5 h-5" />
+        {/* ✅ CUSTOM DELETE CONFIRMATION MODAL */}
+        {deleteConfirm.isOpen && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 overflow-hidden transform transition-all">
+
+              {/* Header */}
+              <div className="flex items-center gap-3 px-5 py-4 border-b bg-red-50">
+                <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                  <FiAlertCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-sm">Remove Item?</h3>
+                  <p className="text-[11px] text-gray-500 mt-0.5">
+                    Are you sure you want to remove this {deleteConfirm.type} item?
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-gray-900 text-sm">Remove Item?</h3>
-                <p className="text-[11px] text-gray-500 mt-0.5">
-                  Are you sure you want to remove this {deleteConfirm.type} item?
+
+              {/* Body */}
+              <div className="p-5">
+                <p className="text-xs text-gray-600 text-center">
+                  This action cannot be undone. The item will be permanently removed from the list.
                 </p>
               </div>
-            </div>
 
-            {/* Body */}
-            <div className="p-5">
-              <p className="text-xs text-gray-600 text-center">
-                This action cannot be undone. The item will be permanently removed from the list.
-              </p>
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-2 px-5 py-3 border-t bg-gray-50">
-              <button
-                type="button"
-                onClick={() => setDeleteConfirm({ isOpen: false, type: "", index: null })}
-                className="px-4 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                No, Keep it
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDeleteItem}
-                className="px-4 py-2 text-xs font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-sm flex items-center gap-1.5 transition-colors"
-              >
-                <FiTrash2 className="w-3.5 h-3.5" /> Yes, Remove
-              </button>
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-2 px-5 py-3 border-t bg-gray-50">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm({ isOpen: false, type: "", index: null })}
+                  className="px-4 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  No, Keep it
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteItem}
+                  className="px-4 py-2 text-xs font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-sm flex items-center gap-1.5 transition-colors"
+                >
+                  <FiTrash2 className="w-3.5 h-3.5" /> Yes, Remove
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
         {/* ADD/EDIT MODAL */}
         {showForm && (
@@ -5222,7 +5466,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
                           {/* ✅ Created At — PID ke baad */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <div className="text-[10px] font-semibold text-slate-700">{formatDateToDDMMYYYY(createdAt)}</div>
-                            <div className="text-[9px] text-gray-400 mt-0.5">{createdAt ? new Date(createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "N/A"}</div>
+                            <div className="text-[10px] font-semibold text-gray-600 mt-0.5">{createdAt ? new Date(createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "N/A"}</div>
                           </td>
 
                           {/* ✅ Patient */}
@@ -5235,8 +5479,23 @@ const normalizedLabItems = Array.isArray(b.labItems)
                                 <div className="font-semibold text-slate-800 text-xs whitespace-normal break-words leading-tight min-w-[140px]">
                                   {patient.title || ""} {patient.name || "N/A"}
                                 </div>
-                                <div className="text-[10px] text-gray-500 font-medium">{patient.age || "N/A"} yrs · {patient.gender || "N/A"}</div>
-                                <div className="text-[10px] text-gray-500 flex items-center gap-1"><FaPhoneAlt className="text-[8px]" /> {patient.phone || "N/A"}</div>
+                                <div className="text-[12px] text-gray-600 font-semibold">{patient.age || "N/A"} yrs · {patient.gender || "N/A"}</div>
+                                <div className="text-[12px] text-gray-600 font-semibold flex items-center gap-1.5">
+                                  <FaPhoneAlt className="text-[10px] text-gray-500" />
+                                  <span>{patient.phone || "N/A"}</span>
+                                  {patient.phone && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCopyPhone(patient.phone);
+                                      }}
+                                      className="text-[9px] bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold px-1.5 py-0.5 rounded border border-gray-300 transition-colors ml-1"
+                                      title="Copy Number"
+                                    >
+                                      Copy
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -5623,8 +5882,38 @@ const normalizedLabItems = Array.isArray(b.labItems)
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => window.open(invoiceModalUrl, "_blank")} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"><FaExternalLinkAlt className="w-3 h-3" /> Open</button>
-                  <button onClick={() => { const a = document.createElement("a"); a.href = invoiceModalUrl; a.download = `invoice-${invoiceModalBooking?._id || "download"}.pdf`; a.target = "_blank"; document.body.appendChild(a); a.click(); document.body.removeChild(a); }} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg"><FaDownload className="w-3 h-3" /> Download</button>
-                  <button onClick={() => handleSendInvoice(invoiceModalBooking)} disabled={invoiceSending === invoiceModalBooking?._id} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50">
+                  <button 
+  onClick={async () => {
+    try {
+      // 1. Patient ke naam se file ka naam banao
+      const patientName = `${invoiceModalBooking?.patientTitle || ""}_${invoiceModalBooking?.patientName || "Patient"}`.trim().replace(/\s+/g, '_');
+      const fileName = `Invoice_${patientName}_${invoiceModalBooking?.invoiceNo || invoiceModalBooking?._id}.pdf`;
+
+      // 2. File ko fetch karo (taaki download force ho sake)
+      const response = await fetch(invoiceModalUrl);
+      const blob = await response.blob();
+      
+      // 3. Blob URL banake direct download trigger karo
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = fileName; // Yeh attribute new tab kholne se rokta hai
+      document.body.appendChild(a);
+      a.click();
+      
+      // 4. Cleanup
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+      showToast("📥 Invoice downloaded successfully!", "success");
+    } catch (error) {
+      console.error("Download failed:", error);
+      showToast("Failed to download invoice", "error");
+    }
+  }} 
+  className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm"
+>
+  <FaDownload className="w-3 h-3" /> Download
+</button>                  <button onClick={() => handleSendInvoice(invoiceModalBooking)} disabled={invoiceSending === invoiceModalBooking?._id} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50">
                     {invoiceSending === invoiceModalBooking?._id ? (<FiRefreshCw className="w-3 h-3 animate-spin" />) : (<FaWhatsapp className="w-3 h-3" />)}
                     {invoiceSending === invoiceModalBooking?._id ? "Sending..." : "Send Invoice"}
                   </button>
@@ -5980,7 +6269,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
         )}
 
         {/* LAB ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
-             {/* LAB ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
+        {/* LAB ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
         {showLabItemsModal && labItemsBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-7xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
@@ -6064,7 +6353,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Amount</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Disc.</th>
                       <th className="px-3 py-2.5 text-center font-bold text-red-600 w-20 bg-red-50">Due</th>
-                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Paid</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Payment</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Payment Type</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Status</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Transaction ID</th>
@@ -6112,7 +6401,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
                             </td>
                             <td className="px-3 py-2 text-center bg-red-50/50">
                               <span className={`font-bold ${item.dueAmount > 0 ? "text-red-600" : "text-gray-400"}`}>
-                                ₹{item.dueAmount || 0}
+                                ₹{item.dueAmount || 0} {/* 👈 YE BINDING ZAROORI HAI */}
                               </span>
                             </td>
                             <td className="px-3 py-2">
@@ -6140,10 +6429,10 @@ const normalizedLabItems = Array.isArray(b.labItems)
                             <td className="px-3 py-2 text-center">
                               <span
                                 className={`inline-flex items-center justify-center w-full px-2 py-1.5 text-[10px] font-bold border rounded ${item.paymentStatus === "Paid"
-                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                    : item.paymentStatus === "Partial"
-                                      ? "bg-amber-50 text-amber-700 border-amber-200"
-                                      : "bg-red-50 text-red-700 border-red-200"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : item.paymentStatus === "Partial"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                    : "bg-red-50 text-red-700 border-red-200"
                                   }`}
                               >
                                 {item.paymentStatus || "Due"}
@@ -6181,31 +6470,31 @@ const normalizedLabItems = Array.isArray(b.labItems)
 
                   {/* Footer Totals */}
                   {labItemsList.length > 0 && (
-                  <tfoot className="bg-purple-50 border-t-2 border-purple-300 sticky bottom-0">
-                    <tr>
-                      <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-purple-800 uppercase">Total:</td>
-                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-purple-800">₹{labItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
-                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{labItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
-                      <td className="px-3 py-2.5 text-center bg-red-100/50"><span className="text-sm font-extrabold text-red-600">₹{labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}</span></td>
-                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{labItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
-                      <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
-                        {labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setClearDueCategory("lab");
-                              setClearDuePaymentType("Cash");
-                              setShowClearDueModal(true);
-                            }}
-                            className="px-3 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm"
-                          >
-                            Clear Due
-                          </button>
-                        )}
-                      </td>
-                      <td colSpan={3} className="px-3 py-2.5 text-right text-[10px] text-purple-700 font-semibold">{labItemsList.length} item{labItemsList.length !== 1 ? "s" : ""}</td>
-                    </tr>
-                  </tfoot>
+                    <tfoot className="bg-purple-50 border-t-2 border-purple-300 sticky bottom-0">
+                      <tr>
+                        <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-purple-800 uppercase">Total:</td>
+                        <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-purple-800">₹{labItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
+                        <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{labItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
+                        <td className="px-3 py-2.5 text-center bg-red-100/50"><span className="text-sm font-extrabold text-red-600">₹{labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}</span></td>
+                        <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{labItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
+                        <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
+                          {labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setClearDueCategory("lab");
+                                setClearDuePaymentType("Cash");
+                                setShowClearDueModal(true);
+                              }}
+                              className="px-3 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm"
+                            >
+                              Clear Due
+                            </button>
+                          )}
+                        </td>
+                        <td colSpan={3} className="px-3 py-2.5 text-right text-[10px] text-purple-700 font-semibold">{labItemsList.length} item{labItemsList.length !== 1 ? "s" : ""}</td>
+                      </tr>
+                    </tfoot>
                   )}
                 </table>
               </div>
@@ -6238,7 +6527,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
 
 
         {/* PHARMACY ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
-             {/* PHARMACY ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
+        {/* PHARMACY ITEMS MODAL — TABLE FORMAT (WITH DISCOUNT) */}
         {showPharmacyItemsModal && pharmacyItemsBooking && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-7xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
@@ -6322,7 +6611,7 @@ const normalizedLabItems = Array.isArray(b.labItems)
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Amount</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Disc.</th>
                       <th className="px-3 py-2.5 text-center font-bold text-red-600 w-20 bg-red-50">Due</th>
-                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Paid</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Payment</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Payment Type</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Status</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Transaction ID</th>
@@ -6398,10 +6687,10 @@ const normalizedLabItems = Array.isArray(b.labItems)
                             <td className="px-3 py-2 text-center">
                               <span
                                 className={`inline-flex items-center justify-center w-full px-2 py-1.5 text-[10px] font-bold border rounded ${item.paymentStatus === "Paid"
-                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                    : item.paymentStatus === "Partial"
-                                      ? "bg-amber-50 text-amber-700 border-amber-200"
-                                      : "bg-red-50 text-red-700 border-red-200"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : item.paymentStatus === "Partial"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                    : "bg-red-50 text-red-700 border-red-200"
                                   }`}
                               >
                                 {item.paymentStatus || "Due"}
@@ -6439,31 +6728,31 @@ const normalizedLabItems = Array.isArray(b.labItems)
 
                   {/* Footer Totals */}
                   {pharmacyItemsList.length > 0 && (
-                  <tfoot className="bg-green-50 border-t-2 border-green-300 sticky bottom-0">
-                    <tr>
-                      <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-green-800 uppercase">Total:</td>
-                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-green-800">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
-                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
-                      <td className="px-3 py-2.5 text-center bg-red-100/50"><span className="text-sm font-extrabold text-red-600">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}</span></td>
-                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
-                      <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
-                        {pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setClearDueCategory("pharmacy");
-                              setClearDuePaymentType("Cash");
-                              setShowClearDueModal(true);
-                            }}
-                            className="px-3 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm"
-                          >
-                            Clear Due
-                          </button>
-                        )}
-                      </td>
-                      <td colSpan={3} className="px-3 py-2.5 text-right text-[10px] text-green-700 font-semibold">{pharmacyItemsList.length} item{pharmacyItemsList.length !== 1 ? "s" : ""}</td>
-                    </tr>
-                  </tfoot>
+                    <tfoot className="bg-green-50 border-t-2 border-green-300 sticky bottom-0">
+                      <tr>
+                        <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-green-800 uppercase">Total:</td>
+                        <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-green-800">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
+                        <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
+                        <td className="px-3 py-2.5 text-center bg-red-100/50"><span className="text-sm font-extrabold text-red-600">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}</span></td>
+                        <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{pharmacyItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
+                        <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
+                          {pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setClearDueCategory("pharmacy");
+                                setClearDuePaymentType("Cash");
+                                setShowClearDueModal(true);
+                              }}
+                              className="px-3 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm"
+                            >
+                              Clear Due
+                            </button>
+                          )}
+                        </td>
+                        <td colSpan={3} className="px-3 py-2.5 text-right text-[10px] text-green-700 font-semibold">{pharmacyItemsList.length} item{pharmacyItemsList.length !== 1 ? "s" : ""}</td>
+                      </tr>
+                    </tfoot>
                   )}
                 </table>
               </div>
@@ -6493,442 +6782,440 @@ const normalizedLabItems = Array.isArray(b.labItems)
           </div>
         )}
 
-{/* ✅ CLEAR DUE PAYMENT TYPE MODAL — Lab / Pharmacy / Clinic */}
-{showClearDueModal && (
-  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
-    <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border relative">
+        {/* ✅ CLEAR DUE PAYMENT TYPE MODAL — Lab / Pharmacy / Clinic */}
+        {showClearDueModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border relative">
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b">
-        <div className="flex items-center gap-3">
-          <div
-            className={`w-9 h-9 rounded-xl text-white flex items-center justify-center ${
-              clearDueCategory === "lab"
-                ? "bg-purple-500"
-                : clearDueCategory === "pharmacy"
-                  ? "bg-green-500"
-                  : "bg-blue-500"
-            }`}
-          >
-            <FaMoneyBillWave className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 text-sm">Clear Due Payment</h3>
-            <p className="text-[10px] text-gray-500 capitalize">{clearDueCategory} Items</p>
-          </div>
-        </div>
-        <button
-          onClick={() => {
-            setShowClearDueModal(false);
-            setClearDueTransactionId("");
-          }}
-          className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
-        >
-          <FaTimes className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Body */}
-      <div className="p-5 space-y-4">
-
-        {/* Total Due Display */}
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
-          <span className="text-xs font-bold text-red-800">Total Due Amount:</span>
-          <span className="text-lg font-extrabold text-red-600">
-            ₹{clearDueCategory === "lab"
-              ? labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)
-              : clearDueCategory === "pharmacy"
-                ? pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)
-                : clinicServicesList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}
-          </span>
-        </div>
-
-        {/* Payment Type Select */}
-        <div>
-          <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">
-            Select Payment Type
-          </label>
-          <select
-            value={clearDuePaymentType}
-            onChange={(e) => setClearDuePaymentType(e.target.value)}
-            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
-          >
-            <option value="Cash">Cash</option>
-            <option value="Online">Online</option>
-            <option value="Card">Card</option>
-            <option value="UPI">UPI</option>
-          </select>
-        </div>
-
-        {/* Transaction ID — Only for Online / Card / UPI */}
-        {(clearDuePaymentType === "Online" ||
-          clearDuePaymentType === "Card" ||
-          clearDuePaymentType === "UPI") && (
-          <div>
-            <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">
-              Transaction ID
-            </label>
-            <input
-              type="text"
-              value={clearDueTransactionId}
-              onChange={(e) => setClearDueTransactionId(e.target.value)}
-              placeholder="Enter Transaction ID"
-              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Footer Buttons */}
-      <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
-        <button
-          onClick={() => {
-            setShowClearDueModal(false);
-            setClearDueTransactionId("");
-          }}
-          className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={() => {
-            const updateItems = (list) =>
-              list.map((item) => {
-                const netAmount = Math.max(
-                  0,
-                  (Number(item.price) || 0) - (Number(item.discount) || 0)
-                );
-                const paidAmount = Number(item.paidAmount) || 0;
-                const dueAmount = Number(item.dueAmount) || 0;
-
-                if (dueAmount <= 0) return item;
-
-                const newPaidAmount = paidAmount + dueAmount;
-                let newStatus = "Due";
-                if (newPaidAmount >= netAmount) newStatus = "Paid";
-                else if (newPaidAmount > 0) newStatus = "Partial";
-
-                return {
-                  ...item,
-                  paidAmount: newPaidAmount,
-                  dueAmount: 0,
-                  paymentStatus: newStatus,
-                  paymentMode: clearDuePaymentType,
-                  transactionId: clearDueTransactionId, // ✅ Txn ID save
-                };
-              });
-
-            // ✅ Route to correct category list
-            if (clearDueCategory === "lab") {
-              setLabItemsList(updateItems);
-            } else if (clearDueCategory === "pharmacy") {
-              setPharmacyItemsList(updateItems);
-            } else if (clearDueCategory === "clinic") {
-              setClinicServicesList(updateItems);
-            }
-
-            showToast(
-              `✅ Due cleared via ${clearDuePaymentType}! Please click Save.`,
-              "success"
-            );
-            setShowClearDueModal(false);
-            setClearDueTransactionId("");
-          }}
-          className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5"
-        >
-          <FaCheckCircle className="w-3.5 h-3.5" /> Confirm & Clear
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-      {/* CLINIC SERVICES MODAL — TABLE FORMAT */}
-      {showClinicServicesModal && clinicServicesBooking && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-7xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
-
-            {/* Header with Patient Details */}
-            <div className="flex items-start justify-between px-5 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center flex-shrink-0 mt-1">
-                  <FaClinicMedical className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-lg">Clinic Services</h3>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm font-bold text-blue-800">
-                    <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-blue-200">
-                      {clinicServicesBooking.patientTitle} {clinicServicesBooking.patientName}
-                    </span>
-                    <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-blue-200 flex items-center gap-1">
-                      <FaPhoneAlt className="text-[10px]" /> {clinicServicesBooking.patientPhone}
-                    </span>
-                    <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-blue-200">
-                      {clinicServicesBooking.patientAge} Yrs / {clinicServicesBooking.patientGender}
-                    </span>
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-9 h-9 rounded-xl text-white flex items-center justify-center ${clearDueCategory === "lab"
+                      ? "bg-purple-500"
+                      : clearDueCategory === "pharmacy"
+                        ? "bg-green-500"
+                        : "bg-blue-500"
+                      }`}
+                  >
+                    <FaMoneyBillWave className="w-4 h-4" />
                   </div>
-                  {clinicServicesBooking.patientAddress && (
-                    <p className="text-xs font-semibold text-blue-700 mt-1.5 max-w-2xl truncate">
-                      📍 {clinicServicesBooking.patientAddress} {clinicServicesBooking.patientCity ? `, ${clinicServicesBooking.patientCity}` : ""} {clinicServicesBooking.patientPincode ? `- ${clinicServicesBooking.patientPincode}` : ""}
-                    </p>
-                  )}
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Clear Due Payment</h3>
+                    <p className="text-[10px] text-gray-500 capitalize">{clearDueCategory} Items</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => {
+                    setShowClearDueModal(false);
+                    setClearDueTransactionId("");
+                  }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  setShowClinicServicesModal(false);
-                  setClinicServicesBooking(null);
-                  setClinicServicesList([]);
-                }}
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/60"
-              >
-                <FaTimes className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Add New Row */}
-            <div className="px-5 py-3 border-b bg-gray-50">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                  + Add New Service:
-                </span>
-                <div className="flex-1 min-w-[180px] relative">
-                  <input
-                    type="text"
-                    value={clinicServiceInput}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setClinicServiceInput(v);
-                      if (v.trim()) {
-                        const filtered = services.filter((s) => s.name.toLowerCase().includes(v.toLowerCase()));
-                        setClinicServiceSuggestions(filtered);
-                        setShowClinicServiceSuggestions(true);
-                      } else {
-                        setClinicServiceSuggestions([]);
-                        setShowClinicServiceSuggestions(false);
-                      }
-                    }}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCustomClinicService(); } }}
-                    placeholder="Search or type service name..."
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-                  />
-                  {showClinicServiceSuggestions && clinicServiceSuggestions.length > 0 && (
-                    <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-40 overflow-y-auto z-50">
-                      {clinicServiceSuggestions.map((svc) => (
-                        <button
-                          key={svc._id}
-                          type="button"
-                          onMouseDown={(e) => { e.preventDefault(); handleAddClinicServiceItem(svc); }}
-                          className="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0"
-                        >
-                          <span className="font-semibold text-gray-800">{svc.name}</span>
-                          <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">₹{svc.price}</span>
-                        </button>
-                      ))}
+              {/* Body */}
+              <div className="p-5 space-y-4">
+
+                {/* Total Due Display */}
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
+                  <span className="text-xs font-bold text-red-800">Total Due Amount:</span>
+                  <span className="text-lg font-extrabold text-red-600">
+                    ₹{clearDueCategory === "lab"
+                      ? labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)
+                      : clearDueCategory === "pharmacy"
+                        ? pharmacyItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)
+                        : clinicServicesList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}
+                  </span>
+                </div>
+
+                {/* Payment Type Select */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Select Payment Type
+                  </label>
+                  <select
+                    value={clearDuePaymentType}
+                    onChange={(e) => setClearDuePaymentType(e.target.value)}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+                  >
+                    <option value="Cash">Cash</option>
+                    <option value="Online">Online</option>
+                    <option value="Card">Card</option>
+                    <option value="UPI">UPI</option>
+                  </select>
+                </div>
+
+                {/* Transaction ID — Only for Online / Card / UPI */}
+                {(clearDuePaymentType === "Online" ||
+                  clearDuePaymentType === "Card" ||
+                  clearDuePaymentType === "UPI") && (
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">
+                        Transaction ID
+                      </label>
+                      <input
+                        type="text"
+                        value={clearDueTransactionId}
+                        onChange={(e) => setClearDueTransactionId(e.target.value)}
+                        placeholder="Enter Transaction ID"
+                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+                      />
                     </div>
                   )}
-                </div>
-                <input
-                  type="number"
-                  value={clinicServicePrice}
-                  onChange={(e) => setClinicServicePrice(e.target.value)}
-                  placeholder="Price (₹)"
-                  className="w-28 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-                  min="0"
-                />
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50 rounded-b-2xl">
                 <button
-                  type="button"
-                  onClick={handleAddCustomClinicService}
-                  disabled={!clinicServiceInput.trim()}
-                  className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"
+                  onClick={() => {
+                    setShowClearDueModal(false);
+                    setClearDueTransactionId("");
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
                 >
-                  <FaPlus className="w-3 h-3" /> Add
+                  Cancel
+                </button>
+
+                <button
+                  onClick={() => {
+                    const updateItems = (list) =>
+                      list.map((item) => {
+                        const netAmount = Math.max(
+                          0,
+                          (Number(item.price) || 0) - (Number(item.discount) || 0)
+                        );
+                        const paidAmount = Number(item.paidAmount) || 0;
+                        const dueAmount = Number(item.dueAmount) || 0;
+
+                        if (dueAmount <= 0) return item;
+
+                        const newPaidAmount = paidAmount + dueAmount;
+                        let newStatus = "Due";
+                        if (newPaidAmount >= netAmount) newStatus = "Paid";
+                        else if (newPaidAmount > 0) newStatus = "Partial";
+
+                        return {
+                          ...item,
+                          paidAmount: newPaidAmount,
+                          dueAmount: 0,
+                          paymentStatus: newStatus,
+                          paymentMode: clearDuePaymentType,
+                          transactionId: clearDueTransactionId, // ✅ Txn ID save
+                        };
+                      });
+
+                    // ✅ Route to correct category list
+                    if (clearDueCategory === "lab") {
+                      setLabItemsList(updateItems);
+                    } else if (clearDueCategory === "pharmacy") {
+                      setPharmacyItemsList(updateItems);
+                    } else if (clearDueCategory === "clinic") {
+                      setClinicServicesList(updateItems);
+                    }
+
+                    showToast(
+                      `✅ Due cleared via ${clearDuePaymentType}! Please click Save.`,
+                      "success"
+                    );
+                    setShowClearDueModal(false);
+                    setClearDueTransactionId("");
+                  }}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5"
+                >
+                  <FaCheckCircle className="w-3.5 h-3.5" /> Confirm & Clear
                 </button>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* TABLE AREA */}
-            <div className="flex-1 overflow-y-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-gray-100 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-10">#</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-32">Service Name</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Amount</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Disc.</th>
-                    <th className="px-3 py-2.5 text-center font-bold text-red-600 w-20 bg-red-50">Due</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Paid</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Payment Type</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Status</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Transaction ID</th>
-                    <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-12">Act</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clinicServicesList.length === 0 ? (
+        {/* CLINIC SERVICES MODAL — TABLE FORMAT */}
+        {showClinicServicesModal && clinicServicesBooking && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-7xl w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
+
+              {/* Header with Patient Details */}
+              <div className="flex items-start justify-between px-5 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center flex-shrink-0 mt-1">
+                    <FaClinicMedical className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-lg">Clinic Services</h3>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm font-bold text-blue-800">
+                      <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-blue-200">
+                        {clinicServicesBooking.patientTitle} {clinicServicesBooking.patientName}
+                      </span>
+                      <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-blue-200 flex items-center gap-1">
+                        <FaPhoneAlt className="text-[10px]" /> {clinicServicesBooking.patientPhone}
+                      </span>
+                      <span className="bg-white/60 px-2 py-0.5 rounded shadow-sm border border-blue-200">
+                        {clinicServicesBooking.patientAge} Yrs / {clinicServicesBooking.patientGender}
+                      </span>
+                    </div>
+                    {clinicServicesBooking.patientAddress && (
+                      <p className="text-xs font-semibold text-blue-700 mt-1.5 max-w-2xl truncate">
+                        📍 {clinicServicesBooking.patientAddress} {clinicServicesBooking.patientCity ? `, ${clinicServicesBooking.patientCity}` : ""} {clinicServicesBooking.patientPincode ? `- ${clinicServicesBooking.patientPincode}` : ""}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowClinicServicesModal(false);
+                    setClinicServicesBooking(null);
+                    setClinicServicesList([]);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/60"
+                >
+                  <FaTimes className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Add New Row */}
+              <div className="px-5 py-3 border-b bg-gray-50">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    + Add New Service:
+                  </span>
+                  <div className="flex-1 min-w-[180px] relative">
+                    <input
+                      type="text"
+                      value={clinicServiceInput}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setClinicServiceInput(v);
+                        if (v.trim()) {
+                          const filtered = services.filter((s) => s.name.toLowerCase().includes(v.toLowerCase()));
+                          setClinicServiceSuggestions(filtered);
+                          setShowClinicServiceSuggestions(true);
+                        } else {
+                          setClinicServiceSuggestions([]);
+                          setShowClinicServiceSuggestions(false);
+                        }
+                      }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCustomClinicService(); } }}
+                      placeholder="Search or type service name..."
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                    />
+                    {showClinicServiceSuggestions && clinicServiceSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-40 overflow-y-auto z-50">
+                        {clinicServiceSuggestions.map((svc) => (
+                          <button
+                            key={svc._id}
+                            type="button"
+                            onMouseDown={(e) => { e.preventDefault(); handleAddClinicServiceItem(svc); }}
+                            className="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0"
+                          >
+                            <span className="font-semibold text-gray-800">{svc.name}</span>
+                            <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">₹{svc.price}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="number"
+                    value={clinicServicePrice}
+                    onChange={(e) => setClinicServicePrice(e.target.value)}
+                    placeholder="Price (₹)"
+                    className="w-28 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                    min="0"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomClinicService}
+                    disabled={!clinicServiceInput.trim()}
+                    className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"
+                  >
+                    <FaPlus className="w-3 h-3" /> Add
+                  </button>
+                </div>
+              </div>
+
+              {/* TABLE AREA */}
+              <div className="flex-1 overflow-y-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-gray-100 sticky top-0 z-10">
                     <tr>
-                      <td colSpan={10} className="px-3 py-8 text-center text-gray-400 bg-gray-50 text-xs italic">
-                        No clinic services added yet. Search above and click Add.
-                      </td>
+                      <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-10">#</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-32">Service Name</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Amount</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Disc.</th>
+                      <th className="px-3 py-2.5 text-center font-bold text-red-600 w-20 bg-red-50">Due</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Payment</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Payment Type</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Status</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Transaction ID</th>
+                      <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-12">Act</th>
                     </tr>
-                  ) : (
-                    clinicServicesList.map((svc, i) => {
-                      const isPaid = svc._wasPaid === true && !isAdmin;
-                      return (
-                        <tr key={`${svc.serviceId}-${i}`} className={`border-b border-gray-100 ${isPaid ? "bg-gray-50" : "hover:bg-blue-50/40"}`}>
-                          <td className="px-3 py-2 text-center">
-                            <span className="w-6 h-6 inline-flex items-center justify-center rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">{i + 1}</span>
-                          </td>
-                          <td className="px-3 py-2">
-                            <div className="font-semibold text-slate-700 truncate text-[11px]" title={svc.name}>{svc.name || `Service ${i + 1}`}</div>
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              value={svc.price}
-                              onChange={(e) => handleUpdateClinicServicePrice(i, e.target.value)}
-                              disabled={isPaid}
-                              className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-blue-700 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
-                              min="0"
-                            />
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              value={svc.discount || ""}
-                              onChange={(e) => handleUpdateClinicServiceDiscount(i, e.target.value)}
-                              disabled={isPaid}
-                              placeholder="0"
-                              className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-rose-700 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
-                              min="0"
-                            />
-                          </td>
-                          <td className="px-3 py-2 text-center bg-red-50/50">
-                            <span className={`font-bold ${svc.dueAmount > 0 ? "text-red-600" : "text-gray-400"}`}>
-                              ₹{svc.dueAmount || 0}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              value={svc.paidAmount || ""}
-                              onChange={(e) => handleUpdateClinicServicePaidAmount(i, e.target.value)}
-                              disabled={isPaid}
-                              placeholder="0"
-                              className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-emerald-700 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
-                              min="0"
-                            />
-                          </td>
-                          <td className="px-3 py-2">
-                            <select
-                              value={svc.paymentMode || ""}
-                              onChange={(e) => handleUpdateClinicServicePaymentMode(i, e.target.value)}
-                              disabled={isPaid}
-                              className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
-                            >
-                              <option value="">Choose Payment Type</option>
-                              {ITEM_PAYMENT_MODE_OPTIONS.filter(o => o.value !== "N/A").map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-                            </select>
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <span
-                              className={`inline-flex items-center justify-center w-full px-2 py-1.5 text-[10px] font-bold border rounded ${
-                                svc.paymentStatus === "Paid"
+                  </thead>
+                  <tbody>
+                    {clinicServicesList.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className="px-3 py-8 text-center text-gray-400 bg-gray-50 text-xs italic">
+                          No clinic services added yet. Search above and click Add.
+                        </td>
+                      </tr>
+                    ) : (
+                      clinicServicesList.map((svc, i) => {
+                        const isPaid = svc._wasPaid === true && !isAdmin;
+                        return (
+                          <tr key={`${svc.serviceId}-${i}`} className={`border-b border-gray-100 ${isPaid ? "bg-gray-50" : "hover:bg-blue-50/40"}`}>
+                            <td className="px-3 py-2 text-center">
+                              <span className="w-6 h-6 inline-flex items-center justify-center rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">{i + 1}</span>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="font-semibold text-slate-700 truncate text-[11px]" title={svc.name}>{svc.name || `Service ${i + 1}`}</div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={svc.price}
+                                onChange={(e) => handleUpdateClinicServicePrice(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-blue-700 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={svc.discount || ""}
+                                onChange={(e) => handleUpdateClinicServiceDiscount(i, e.target.value)}
+                                disabled={isPaid}
+                                placeholder="0"
+                                className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-rose-700 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-center bg-red-50/50">
+                              <span className={`font-bold ${svc.dueAmount > 0 ? "text-red-600" : "text-gray-400"}`}>
+                                ₹{svc.dueAmount || 0}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={svc.paidAmount || ""}
+                                onChange={(e) => handleUpdateClinicServicePaidAmount(i, e.target.value)}
+                                disabled={isPaid}
+                                placeholder="0"
+                                className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-emerald-700 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={svc.paymentMode || ""}
+                                onChange={(e) => handleUpdateClinicServicePaymentMode(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                              >
+                                <option value="">Choose Payment Type</option>
+                                {ITEM_PAYMENT_MODE_OPTIONS.filter(o => o.value !== "N/A").map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <span
+                                className={`inline-flex items-center justify-center w-full px-2 py-1.5 text-[10px] font-bold border rounded ${svc.paymentStatus === "Paid"
                                   ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                   : svc.paymentStatus === "Partial"
                                     ? "bg-amber-50 text-amber-700 border-amber-200"
                                     : "bg-red-50 text-red-700 border-red-200"
-                              }`}
-                            >
-                              {svc.paymentStatus || "Due"}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2">
-                            {svc.paymentMode === "Online" || svc.paymentMode === "Credit Card" ? (
-                              <input
-                                type="text"
-                                value={svc.transactionId || ""}
-                                onChange={(e) => handleUpdateClinicServiceTransactionId(i, e.target.value)}
+                                  }`}
+                              >
+                                {svc.paymentStatus || "Due"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2">
+                              {svc.paymentMode === "Online" || svc.paymentMode === "Credit Card" ? (
+                                <input
+                                  type="text"
+                                  value={svc.transactionId || ""}
+                                  onChange={(e) => handleUpdateClinicServiceTransactionId(i, e.target.value)}
+                                  disabled={isPaid}
+                                  placeholder="Txn ID"
+                                  className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                                />
+                              ) : (
+                                <span className="text-[10px] text-gray-400 italic block text-center">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveClinicServiceItem(i)}
                                 disabled={isPaid}
-                                placeholder="Txn ID"
-                                className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
-                              />
-                            ) : (
-                              <span className="text-[10px] text-gray-400 italic block text-center">—</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-center">
+                                className={`p-1.5 rounded-md ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600 hover:bg-red-50"}`}
+                              >
+                                {isPaid ? <FaLock className="w-3.5 h-3.5" /> : <FaMinusCircle className="w-3.5 h-3.5" />}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+
+                  {/* Footer Totals */}
+                  {clinicServicesList.length > 0 && (
+                    <tfoot className="bg-blue-50 border-t-2 border-blue-300 sticky bottom-0">
+                      <tr>
+                        <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-blue-800 uppercase">Total:</td>
+                        <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-blue-800">₹{clinicServicesList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
+                        <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{clinicServicesList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
+                        <td className="px-3 py-2.5 text-center bg-red-100/50"><span className="text-sm font-extrabold text-red-600">₹{clinicServicesList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}</span></td>
+                        <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{clinicServicesList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
+                        <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
+                          {clinicServicesList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
                             <button
                               type="button"
-                              onClick={() => handleRemoveClinicServiceItem(i)}
-                              disabled={isPaid}
-                              className={`p-1.5 rounded-md ${isPaid ? "text-gray-300 cursor-not-allowed" : "text-red-400 hover:text-red-600 hover:bg-red-50"}`}
+                              onClick={() => {
+                                setClearDueCategory("clinic");
+                                setClearDuePaymentType("Cash");
+                                setShowClearDueModal(true);
+                              }}
+                              className="px-3 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm"
                             >
-                              {isPaid ? <FaLock className="w-3.5 h-3.5" /> : <FaMinusCircle className="w-3.5 h-3.5" />}
+                              Clear Due
                             </button>
-                          </td>
-                        </tr>
-                      );
-                    })
+                          )}
+                        </td>
+                        <td colSpan={3} className="px-3 py-2.5 text-right text-[10px] text-blue-700 font-semibold">{clinicServicesList.length} item{clinicServicesList.length !== 1 ? "s" : ""}</td>
+                      </tr>
+                    </tfoot>
                   )}
-                </tbody>
+                </table>
+              </div>
 
-                {/* Footer Totals */}
-                {clinicServicesList.length > 0 && (
-                  <tfoot className="bg-blue-50 border-t-2 border-blue-300 sticky bottom-0">
-                    <tr>
-                      <td colSpan={2} className="px-3 py-2.5 text-right text-[11px] font-bold text-blue-800 uppercase">Total:</td>
-                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-blue-800">₹{clinicServicesList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
-                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{clinicServicesList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
-                      <td className="px-3 py-2.5 text-center bg-red-100/50"><span className="text-sm font-extrabold text-red-600">₹{clinicServicesList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}</span></td>
-                      <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-emerald-700">₹{clinicServicesList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
-                      <td colSpan={2} className="px-3 py-2.5 flex items-center justify-start gap-3">
-                        {clinicServicesList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setClearDueCategory("clinic");
-                              setClearDuePaymentType("Cash");
-                              setShowClearDueModal(true);
-                            }}
-                            className="px-3 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm"
-                          >
-                            Clear Due
-                          </button>
-                        )}
-                      </td>
-                      <td colSpan={3} className="px-3 py-2.5 text-right text-[10px] text-blue-700 font-semibold">{clinicServicesList.length} item{clinicServicesList.length !== 1 ? "s" : ""}</td>
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
-            </div>
-
-            {/* Footer Buttons */}
-            <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur">
-              <button
-                onClick={() => {
-                  setShowClinicServicesModal(false);
-                  setClinicServicesBooking(null);
-                  setClinicServicesList([]);
-                }}
-                className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveClinicServices}
-                disabled={savingClinicServices}
-                className="px-5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-              >
-                {savingClinicServices ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
-                {savingClinicServices ? "Saving..." : `Save Services (${clinicServicesList.length})`}
-              </button>
+              {/* Footer Buttons */}
+              <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/80 backdrop-blur">
+                <button
+                  onClick={() => {
+                    setShowClinicServicesModal(false);
+                    setClinicServicesBooking(null);
+                    setClinicServicesList([]);
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveClinicServices}
+                  disabled={savingClinicServices}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {savingClinicServices ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
+                  {savingClinicServices ? "Saving..." : `Save Services (${clinicServicesList.length})`}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
         {/* VITALS MODAL */}
         {showVitalsModal && vitalsBooking && (

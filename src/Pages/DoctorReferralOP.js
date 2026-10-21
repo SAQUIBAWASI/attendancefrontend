@@ -1,8 +1,4 @@
-// ReferralBookings.js — Combined Doctor + Customer Referred OP Bookings
-// ✅ Payment Status: Pending / Paid / Partial
-// ✅ Payment Modes: cash / online / wallet
-// ✅ Total Revenue card + Total Payable card + Referral Payout % card
-// ✅ Payment dropdowns empty by default (user must select)
+// ReferralBookings.js — COMPLETE (All Filters Fixed + Cursor Fixed + Date Range Popup Redesigned)
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import {
@@ -31,6 +27,7 @@ const TIME_FILTER_OPTIONS = [
   { value: "today", label: "Today" },
   { value: "yesterday", label: "Yesterday" },
   { value: "thisWeek", label: "This Week" },
+  { value: "last7Days", label: "Last 7 Days" },
   { value: "thisMonth", label: "This Month" },
   { value: "lastMonth", label: "Last Month" },
   { value: "thisYear", label: "This Year" },
@@ -329,13 +326,14 @@ const formatBookingCommission = (booking, catKey) => {
 };
 
 /* ============================================================
-   DateRangePopup
+   DateRangePopup — SAME DESIGN AS OpManagement.js
    ============================================================ */
 const DateRangePopup = ({
   isOpen, position, fromDate, toDate,
   onFromChange, onToChange, onClear, onClose, dataAttr,
 }) => {
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [hoverDate, setHoverDate] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -343,7 +341,10 @@ const DateRangePopup = ({
         const d = new Date(fromDate);
         if (!isNaN(d.getTime())) setCalendarMonth(new Date(d.getFullYear(), d.getMonth(), 1));
         else setCalendarMonth(new Date());
-      } else setCalendarMonth(new Date());
+      } else {
+        setCalendarMonth(new Date());
+      }
+      setHoverDate(null);
     }
   }, [isOpen, fromDate]);
 
@@ -363,10 +364,16 @@ const DateRangePopup = ({
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const prevMonthDays = new Date(year, month, 0).getDate();
     const days = [];
-    for (let i = firstDay - 1; i >= 0; i--) days.push({ date: new Date(year, month - 1, prevMonthDays - i), currentMonth: false });
-    for (let i = 1; i <= daysInMonth; i++) days.push({ date: new Date(year, month, i), currentMonth: true });
+    for (let i = firstDay - 1; i >= 0; i--) {
+      days.push({ date: new Date(year, month - 1, prevMonthDays - i), currentMonth: false });
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push({ date: new Date(year, month, i), currentMonth: true });
+    }
     const remaining = 42 - days.length;
-    for (let i = 1; i <= remaining; i++) days.push({ date: new Date(year, month + 1, i), currentMonth: false });
+    for (let i = 1; i <= remaining; i++) {
+      days.push({ date: new Date(year, month + 1, i), currentMonth: false });
+    }
     return days;
   };
 
@@ -375,100 +382,228 @@ const DateRangePopup = ({
   const weekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const todayStr = toYMD(new Date());
 
+  const currentStep = !fromDate ? 1 : (!toDate ? 2 : 3);
+
   const handleDayClick = (dateStr, isCurrentMonth) => {
     if (!isCurrentMonth) return;
+
     if (!fromDate || (fromDate && toDate)) {
       onFromChange(dateStr);
       onToChange("");
-    } else if (fromDate && !toDate) {
-      if (dateStr >= fromDate) onToChange(dateStr);
-      else onFromChange(dateStr);
+      setHoverDate(null);
+    }
+    else if (fromDate && !toDate) {
+      if (dateStr >= fromDate) {
+        onToChange(dateStr);
+      } else {
+        onFromChange(dateStr);
+      }
+      setHoverDate(null);
     }
   };
 
-  const isInRange = (d) => {
-    if (!fromDate || !toDate) return false;
-    return d >= fromDate && d <= toDate;
+  const handleDayHover = (dateStr, isCurrentMonth) => {
+    if (!isCurrentMonth) { setHoverDate(null); return; }
+    if (fromDate && !toDate) setHoverDate(dateStr);
   };
+
+  const isInRange = (d) => {
+    if (!fromDate) return false;
+    if (fromDate && !toDate && hoverDate) {
+      const start = fromDate < hoverDate ? fromDate : hoverDate;
+      const end = fromDate < hoverDate ? hoverDate : fromDate;
+      return d > start && d < end;
+    }
+    if (!fromDate || !toDate) return false;
+    return d > fromDate && d < toDate;
+  };
+
+  const isStart = (d) => d === fromDate;
+  const isEnd = (d) => d === toDate;
+  const isHoverEnd = (d) => fromDate && !toDate && hoverDate === d;
 
   const fmtDisplay = (ymd) => {
     if (!ymd) return "";
     const [y, m, d] = ymd.split("-");
-    return `${d}/${m}/${y.slice(-2)}`;
+    return `${d}/${m}/${y}`;
+  };
+
+  const isConfirmEnabled = !!(fromDate && toDate);
+
+  const handleConfirm = () => {
+    if (!isConfirmEnabled) return;
+    onClose();
   };
 
   return (
     <div
       data-attr={dataAttr}
-      className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl"
+      className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden"
       style={{ top: position.top, left: position.left, zIndex: 999999, width: 340 }}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <h3 className="text-base font-bold text-gray-900">Date Range</h3>
-        <button type="button" onClick={onClear} className="text-[11px] font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md border border-red-200 transition-colors">Reset</button>
+      {/* ─── HEADER ─── */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center gap-2">
+          <FaCalendarAlt className="w-3.5 h-3.5 text-blue-600" />
+          <h3 className="text-xs font-bold text-gray-900">Select Date Range</h3>
+        </div>
+        <button
+          type="button"
+          onClick={() => { onClear(); setHoverDate(null); }}
+          className="text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-md border border-rose-200 transition-colors flex items-center gap-1"
+        >
+          <FaTimes className="w-2.5 h-2.5" /> Clear
+        </button>
       </div>
 
-      <div className="px-3 py-3 bg-gray-50 flex items-center gap-2">
-        <div className="flex-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">From</label>
-          <div className="px-2 py-1.5 text-[11px] border border-gray-300 rounded-md bg-white text-gray-800 font-semibold">
-            {fmtDisplay(fromDate) || <span className="text-gray-400 font-normal">dd/mm/yy</span>}
+      {/* ─── STEP INDICATOR ─── */}
+      <div className="px-4 pt-2.5 pb-1.5">
+        <div className="flex items-center gap-2">
+          <div className={`flex-1 flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${currentStep === 1 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+            : fromDate ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-gray-50 text-gray-400 border-gray-200"
+            }`}>
+            {fromDate ? <FaCheckCircle className="w-2.5 h-2.5" /> : <span className="w-3.5 h-3.5 rounded-full bg-white/30 text-[8px] font-bold flex items-center justify-center">1</span>}
+            <span className="text-[9px] font-bold uppercase tracking-wide">From</span>
+          </div>
+          <div className={`w-5 h-0.5 rounded ${fromDate ? "bg-emerald-400" : "bg-gray-200"}`}></div>
+          <div className={`flex-1 flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${currentStep === 2 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+            : toDate ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-gray-50 text-gray-400 border-gray-200"
+            }`}>
+            {toDate ? <FaCheckCircle className="w-2.5 h-2.5" /> : <span className="w-3.5 h-3.5 rounded-full bg-white/30 text-[8px] font-bold flex items-center justify-center">2</span>}
+            <span className="text-[9px] font-bold uppercase tracking-wide">To</span>
           </div>
         </div>
-        <div className="flex-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">To</label>
-          <div className="px-2 py-1.5 text-[11px] border border-gray-300 rounded-md bg-white text-gray-800 font-semibold">
-            {fmtDisplay(toDate) || <span className="text-gray-400 font-normal">dd/mm/yy</span>}
+        <p className="text-[9px] text-gray-500 mt-1.5 text-center font-medium">
+          {currentStep === 1 && "👆 Select the FROM date"}
+          {currentStep === 2 && "👆 Now select the TO date"}
+          {currentStep === 3 && "✅ Both dates selected — click Confirm"}
+        </p>
+      </div>
+
+      {/* ─── FROM / TO DISPLAY BOXES ─── */}
+      <div className="px-3 pb-2">
+        <div className="grid grid-cols-2 gap-2">
+          <div className={`px-2.5 py-1.5 rounded-lg border-2 transition-all ${fromDate ? "border-emerald-400 bg-emerald-50"
+            : currentStep === 1 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-500/20"
+              : "border-dashed border-gray-300 bg-gray-50"
+            }`}>
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">From</span>
+              {fromDate && <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" />}
+            </div>
+            <div className={`text-[11px] font-bold ${fromDate ? "text-emerald-800" : "text-gray-400 italic"}`}>
+              {fmtDisplay(fromDate) || "Not selected"}
+            </div>
+          </div>
+          <div className={`px-2.5 py-1.5 rounded-lg border-2 transition-all ${toDate ? "border-emerald-400 bg-emerald-50"
+            : currentStep === 2 ? "border-blue-400 bg-blue-50 ring-1 ring-blue-500/20"
+              : "border-dashed border-gray-300 bg-gray-50"
+            }`}>
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">To</span>
+              {toDate && <FaCheckCircle className="w-2.5 h-2.5 text-emerald-600" />}
+            </div>
+            <div className={`text-[11px] font-bold ${toDate ? "text-emerald-800" : "text-gray-400 italic"}`}>
+              {fmtDisplay(toDate) || "Not selected"}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="px-3 py-3">
-        <div className="flex items-center justify-between mb-2">
-          <button type="button" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600">
+      {/* ─── CALENDAR ─── */}
+      <div className="px-3 pb-2 pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between mb-1.5">
+          <button
+            type="button"
+            onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
+            className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors"
+          >
             <FaChevronLeft className="w-3 h-3" />
           </button>
-          <div className="text-xs font-bold text-gray-800">{monthLabel}</div>
-          <button type="button" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600">
+          <div className="text-[11px] font-bold text-gray-800">{monthLabel}</div>
+          <button
+            type="button"
+            onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
+            className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors"
+          >
             <FaChevronRight className="w-3 h-3" />
           </button>
         </div>
 
         <div className="grid grid-cols-7 gap-0.5 mb-1">
           {weekdays.map((wd, i) => (
-            <div key={wd} className={`text-[9px] font-bold text-center py-1 ${i === 0 ? "text-red-500" : "text-gray-500"}`}>{wd}</div>
+            <div key={wd} className={`text-[8px] font-bold text-center py-0.5 ${i === 0 ? "text-red-500" : "text-gray-500"}`}>{wd}</div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-0.5">
+        <div className="grid grid-cols-7 gap-0.5" onMouseLeave={() => setHoverDate(null)}>
           {days.map(({ date, currentMonth }, idx) => {
             const ymd = toYMD(date);
             const inRange = isInRange(ymd);
-            const isFromDay = ymd === fromDate;
-            const isToDay = ymd === toDate;
+            const start = isStart(ymd);
+            const end = isEnd(ymd);
+            const hoverEnd = isHoverEnd(ymd);
             const isToday = ymd === todayStr;
             const isWeekend = date.getDay() === 0;
 
-            let cls = "text-[11px] font-semibold py-1.5 rounded-md text-center transition-colors ";
-            if (!currentMonth) cls += "text-gray-300 cursor-default ";
-            else if (isFromDay || isToDay) cls += "bg-orange-500 text-white cursor-pointer ";
-            else if (inRange) cls += "bg-orange-100 text-orange-700 cursor-pointer ";
-            else if (isToday) cls += "bg-blue-50 text-blue-700 ring-1 ring-blue-300 cursor-pointer ";
-            else if (isWeekend) cls += "text-red-500 hover:bg-orange-50 cursor-pointer ";
-            else cls += "text-gray-800 hover:bg-orange-50 cursor-pointer ";
+            let cls = "text-[10px] font-semibold py-1.5 rounded-md text-center transition-all relative ";
+
+            if (!currentMonth) {
+              cls += "text-gray-300 cursor-default ";
+            } else if (start || end) {
+              cls += "bg-blue-600 text-white cursor-pointer shadow-sm ";
+            } else if (hoverEnd) {
+              cls += "bg-blue-400 text-white cursor-pointer shadow-sm ";
+            } else if (inRange) {
+              cls += "bg-blue-100 text-blue-700 cursor-pointer ";
+            } else if (isToday) {
+              cls += "bg-amber-50 text-amber-700 ring-1 ring-amber-300 cursor-pointer hover:bg-amber-100 ";
+            } else if (isWeekend) {
+              cls += "text-red-500 hover:bg-blue-50 cursor-pointer ";
+            } else {
+              cls += "text-gray-800 hover:bg-blue-50 cursor-pointer ";
+            }
 
             return (
-              <button key={idx} type="button" onClick={() => handleDayClick(ymd, currentMonth)} className={cls}>
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleDayClick(ymd, currentMonth)}
+                onMouseEnter={() => handleDayHover(ymd, currentMonth)}
+                className={cls}
+              >
                 {String(date.getDate()).padStart(2, "0")}
+                {(start || end) && (
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 border border-white"></span>
+                )}
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-        <button type="button" onClick={onClose} className="text-xs font-bold text-gray-600 hover:text-gray-900">Close</button>
-        <button type="button" onClick={onClose} className="text-xs font-bold text-orange-600 hover:text-orange-700">Confirm</button>
+      {/* ─── FOOTER ─── */}
+      <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100 bg-gray-50">
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-[11px] font-bold text-gray-600 hover:text-gray-900 px-2.5 py-1 rounded-md hover:bg-gray-100 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleConfirm}
+          disabled={!isConfirmEnabled}
+          className={`text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${isConfirmEnabled
+            ? "text-white bg-blue-600 hover:bg-blue-700 shadow-sm"
+            : "text-gray-400 bg-gray-200 cursor-not-allowed"
+            }`}
+        >
+          <FaCheckCircle className="w-2.5 h-2.5" /> Confirm
+        </button>
       </div>
     </div>
   );
@@ -520,7 +655,6 @@ export default function ReferralBookings() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedBookingForPayment, setSelectedBookingForPayment] = useState(null);
   const [selectedReferrerForPayment, setSelectedReferrerForPayment] = useState(null);
-  // ✅ Empty by default — user must select
   const [newPaymentStatus, setNewPaymentStatus] = useState("");
   const [newPaymentMode, setNewPaymentMode] = useState("");
   const [newPaidAmount, setNewPaidAmount] = useState("");
@@ -552,9 +686,55 @@ export default function ReferralBookings() {
   const fetchBookings = async () => {
     try {
       const params = new URLSearchParams();
-      if (timeFilter && timeFilter !== "All") params.append("timeFilter", timeFilter);
-      if (apptFromDate) params.append("apptFrom", apptFromDate);
-      if (apptToDate) params.append("apptTo", apptToDate);
+      
+      const today = new Date();
+      const toYMD = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+
+      let computedFrom = "";
+      let computedTo = "";
+
+      const isAllTime = timeFilter === "All" && !apptFromDate && !apptToDate && !fromDate && !toDate && !selectedMonth;
+
+      if (!isAllTime && !apptFromDate && !apptToDate && timeFilter && timeFilter !== "All") {
+        if (timeFilter === "today") {
+          computedFrom = toYMD(today); computedTo = toYMD(today);
+        } else if (timeFilter === "yesterday") {
+          const y = new Date(today); y.setDate(y.getDate() - 1);
+          computedFrom = toYMD(y); computedTo = toYMD(y);
+        } else if (timeFilter === "last7Days") {
+          const s = new Date(today); s.setDate(s.getDate() - 6);
+          computedFrom = toYMD(s); computedTo = toYMD(today);
+        } else if (timeFilter === "thisWeek") {
+          const dow = today.getDay();
+          const diff = dow === 0 ? 6 : dow - 1;
+          const mon = new Date(today); mon.setDate(mon.getDate() - diff);
+          computedFrom = toYMD(mon); computedTo = toYMD(today);
+        } else if (timeFilter === "thisMonth") {
+          const first = new Date(today.getFullYear(), today.getMonth(), 1);
+          const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          computedFrom = toYMD(first); computedTo = toYMD(last);
+        } else if (timeFilter === "lastMonth") {
+          const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+          const last = new Date(today.getFullYear(), today.getMonth(), 0);
+          computedFrom = toYMD(first); computedTo = toYMD(last);
+        } else if (timeFilter === "thisYear") {
+          computedFrom = toYMD(new Date(today.getFullYear(), 0, 1));
+          computedTo = toYMD(new Date(today.getFullYear(), 11, 31));
+        }
+      }
+
+      if (isAllTime) {
+        params.append("all", "true");
+      } else {
+        if (computedFrom) params.append("apptFrom", computedFrom);
+        if (computedTo) params.append("apptTo", computedTo);
+      }
+
       if (fromDate) params.append("regFrom", fromDate);
       if (toDate) params.append("regTo", toDate);
       if (selectedMonth) params.append("month", selectedMonth);
@@ -567,6 +747,7 @@ export default function ReferralBookings() {
 
       const url = `${BOOKINGS_API}/getallreferralbookings${params.toString() ? "?" + params.toString() : ""}`;
       const res = await axios.get(url);
+      
       if (res.data?.success) {
         setBookings(res.data.bookings || []);
       } else {
@@ -834,7 +1015,12 @@ export default function ReferralBookings() {
 
   const handleTimeFilterChange = (value) => {
     setTimeFilter(value);
-    if (value !== "All") { setApptFromDate(""); setApptToDate(""); setSelectedMonth(""); }
+    // ✅ HAMESHA saari date states clear karo — "All" ho ya na ho
+    setApptFromDate("");
+    setApptToDate("");
+    setSelectedMonth("");
+    setFromDate("");
+    setToDate("");
   };
 
   const clearFilters = () => {
@@ -936,7 +1122,6 @@ export default function ReferralBookings() {
     showToast(`Exported ${filteredRows.length} records!`);
   };
 
-  // ✅ Force reset — user must select fresh
   const openPaymentModal = (referrer, booking) => {
     if (!booking) { showToast("No booking selected", "error"); return; }
     setSelectedReferrerForPayment(referrer);
@@ -949,7 +1134,6 @@ export default function ReferralBookings() {
     setShowPaymentModal(true);
   };
 
-  // ✅ Close helper
   const closePaymentModal = () => {
     setShowPaymentModal(false);
     setSelectedReferrerForPayment(null);
@@ -962,7 +1146,6 @@ export default function ReferralBookings() {
   const handleSavePaymentStatus = async () => {
     if (!selectedBookingForPayment) { showToast("No booking selected", "error"); return; }
 
-    // ✅ Validation
     if (!newPaymentMode) {
       showToast("Please select payment mode", "error");
       return;
@@ -1053,7 +1236,6 @@ export default function ReferralBookings() {
 
   const fmt = (n) => `₹${Math.round(Number(n) || 0).toLocaleString("en-IN")}`;
 
-  // ✅ CategoryPayableList — filter on BASE amount, show base → payable
   const CategoryPayableList = ({ booking }) => {
     const payable = getCategoryWisePayable(booking);
     const rateMap = getCategoryRateMap(booking);
@@ -1217,11 +1399,11 @@ export default function ReferralBookings() {
 
         {/* TABS */}
         <div className="flex items-center gap-2 mb-4 border-b-2 border-gray-200 overflow-x-auto">
-          <button onClick={() => handleTabChange("customer")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${activeTab === "customer" ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          <button onClick={() => handleTabChange("customer")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all cursor-pointer ${activeTab === "customer" ? "border-indigo-600 text-indigo-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
             <FaUser className="w-4 h-4" /> Customer Referred Bookings
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "customer" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-500"}`}>{customerReferrals.length}</span>
           </button>
-          <button onClick={() => handleTabChange("doctor")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${activeTab === "doctor" ? "border-purple-600 text-purple-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          <button onClick={() => handleTabChange("doctor")} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 transition-all cursor-pointer ${activeTab === "doctor" ? "border-purple-600 text-purple-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
             <FaUserMd className="w-4 h-4" /> Doctor Referred Bookings
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === "doctor" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>{doctorReferrals.length}</span>
           </button>
@@ -1240,13 +1422,13 @@ export default function ReferralBookings() {
             <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200">
               {TIME_FILTER_OPTIONS.map((opt) => (
                 <button key={opt.value} onClick={() => handleTimeFilterChange(opt.value)}
-                  className={`px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap ${timeFilter === opt.value ? "bg-blue-600 text-white shadow-sm" : "text-gray-600 hover:bg-white hover:text-gray-900"}`}
+                  className={`px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap cursor-pointer ${timeFilter === opt.value ? "bg-blue-600 text-white shadow-sm" : "text-gray-600 hover:bg-white hover:text-gray-900"}`}
                   title={opt.label}>{opt.label}</button>
               ))}
             </div>
           </div>
           <div className="flex items-center gap-1.5 justify-end">
-            <button onClick={downloadCSV} className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 whitespace-nowrap shadow-sm">
+            <button onClick={downloadCSV} className="flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 whitespace-nowrap shadow-sm cursor-pointer">
               <FiDownload className="w-3.5 h-3.5" /> Export CSV
             </button>
           </div>
@@ -1255,35 +1437,36 @@ export default function ReferralBookings() {
         {/* ROW 2 — Filters */}
         {showRevenueBreakdown && (
           <div className="hidden lg:flex items-center gap-1.5 flex-nowrap mb-3">
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0 cursor-pointer">
               <option value="All">All Payment</option>
               <option value="Partial">Partial</option>
               <option value="Paid">Paid</option>
               <option value="Pending">Pending</option>
             </select>
 
-            <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
+            <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0 cursor-pointer">
               {BOOKING_TYPE_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
 
-            <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg max-w-[110px] truncate flex-shrink-0">
+            <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg max-w-[110px] truncate flex-shrink-0 cursor-pointer">
               <option value="All">All Doctors</option>
               {getUniqueDoctors().map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
 
-            <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
+            <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0 cursor-pointer">
               {REVENUE_CATEGORY_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
 
-            <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
+            <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0 cursor-pointer">
               {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
 
-            <select value={referrerFilter} onChange={(e) => setReferrerFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg max-w-[140px] truncate flex-shrink-0">
+            <select value={referrerFilter} onChange={(e) => setReferrerFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg max-w-[140px] truncate flex-shrink-0 cursor-pointer">
               <option value="All">All {referrerLabelPlural}</option>
               {uniqueReferrers.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
 
+            {/* ─── REG DATE BUTTON (OpManagement style) ─── */}
             <div className="relative flex-shrink-0">
               <button
                 data-btn="reg"
@@ -1295,7 +1478,7 @@ export default function ReferralBookings() {
                   setShowRegDatePopup(!showRegDatePopup);
                   setShowApptDatePopup(false);
                 }}
-                className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${(fromDate || toDate) ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}
+                className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap cursor-pointer ${(fromDate || toDate) ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}
               >
                 <FaCalendarAlt className="w-3 h-3" />
                 <span>
@@ -1321,6 +1504,7 @@ export default function ReferralBookings() {
               />
             </div>
 
+            {/* ─── APPT DATE BUTTON (OpManagement style) ─── */}
             <div className="relative flex-shrink-0">
               <button
                 data-btn="appt"
@@ -1332,7 +1516,7 @@ export default function ReferralBookings() {
                   setShowApptDatePopup(!showApptDatePopup);
                   setShowRegDatePopup(false);
                 }}
-                className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${(apptFromDate || apptToDate) ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}
+                className={`flex items-center gap-1.5 h-9 px-2.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap cursor-pointer ${(apptFromDate || apptToDate) ? "border-blue-500 text-blue-700 bg-blue-50 ring-2 ring-blue-500/10" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}
               >
                 <FaCalendarAlt className="w-3 h-3" />
                 <span>
@@ -1358,10 +1542,10 @@ export default function ReferralBookings() {
               />
             </div>
 
-            <input type="month" value={selectedMonth} onChange={(e) => { setSelectedMonth(e.target.value); setFromDate(""); setToDate(""); setTimeFilter("All"); }} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg w-[110px] flex-shrink-0" title="Appointment month" />
+            <input type="month" value={selectedMonth} onChange={(e) => { setSelectedMonth(e.target.value); setFromDate(""); setToDate(""); setTimeFilter("All"); }} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg w-[110px] flex-shrink-0 cursor-pointer" title="Appointment month" />
 
             {hasActiveFilters && (
-              <button onClick={clearFilters} className="flex items-center gap-1 h-9 px-2.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex-shrink-0">
+              <button onClick={clearFilters} className="flex items-center gap-1 h-9 px-2.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex-shrink-0 cursor-pointer">
                 <FiTrash2 className="w-3 h-3 text-red-500" /> Clear
               </button>
             )}
@@ -1377,7 +1561,7 @@ export default function ReferralBookings() {
               <span>{activeReferrals.length}{isDoctorTab ? "D" : "C"} • {stats.totalBookings}B</span>
             </div>
           </div>
-          <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
+          <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg cursor-pointer">
             <FiFilter className="w-3 h-3" /> Filters
           </button>
         </div>
@@ -1386,7 +1570,7 @@ export default function ReferralBookings() {
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
             {TIME_FILTER_OPTIONS.map((opt) => (
               <button key={opt.value} onClick={() => handleTimeFilterChange(opt.value)}
-                className={`px-4 py-2.5 text-xs font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${timeFilter === opt.value ? "bg-blue-600 text-white border-blue-600 shadow-sm" : "bg-white text-gray-600 border-gray-300"}`}>{opt.label}</button>
+                className={`px-4 py-2.5 text-xs font-bold rounded-lg border transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${timeFilter === opt.value ? "bg-blue-600 text-white border-blue-600 shadow-sm" : "bg-white text-gray-600 border-gray-300"}`}>{opt.label}</button>
             ))}
           </div>
         </div>
@@ -1397,53 +1581,53 @@ export default function ReferralBookings() {
               <label className="block text-xs font-medium text-gray-600 mb-1">Search PID, Name, Phone</label>
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer">
                 <option value="All">All Status</option><option value="Partial">Partial</option><option value="Paid">Paid</option><option value="Pending">Pending</option>
               </select>
-              <select value={referrerFilter} onChange={(e) => setReferrerFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
+              <select value={referrerFilter} onChange={(e) => setReferrerFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer">
                 <option value="All">All {referrerLabelPlural}</option>
                 {uniqueReferrers.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Booking Type</label>
-              <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
+              <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer">
                 {BOOKING_TYPE_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
+              <select value={revenueCategoryFilter} onChange={(e) => setRevenueCategoryFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer">
                 {REVENUE_CATEGORY_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
-              <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
+              <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer">
                 {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Registered Date</label>
               <div className="grid grid-cols-2 gap-2">
-                <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
-                <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+                <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer" />
+                <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); if (e.target.value) setSelectedMonth(""); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer" />
               </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Appointment Date</label>
               <div className="grid grid-cols-2 gap-2">
-                <input type="date" value={apptFromDate} onChange={(e) => { setApptFromDate(e.target.value); if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); } }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
-                <input type="date" value={apptToDate} onChange={(e) => { setApptToDate(e.target.value); if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); } }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+                <input type="date" value={apptFromDate} onChange={(e) => { setApptFromDate(e.target.value); if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); } }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer" />
+                <input type="date" value={apptToDate} onChange={(e) => { setApptToDate(e.target.value); if (e.target.value) { setSelectedMonth(""); setTimeFilter("All"); } }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer" />
               </div>
             </div>
-            <input type="month" value={selectedMonth} onChange={(e) => { setSelectedMonth(e.target.value); setFromDate(""); setToDate(""); setTimeFilter("All"); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg" />
+            <input type="month" value={selectedMonth} onChange={(e) => { setSelectedMonth(e.target.value); setFromDate(""); setToDate(""); setTimeFilter("All"); }} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg cursor-pointer" />
             <div className="pt-3 border-t border-gray-200 flex gap-2">
-              <button onClick={downloadCSV} disabled={!filteredRows.length} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg disabled:opacity-50"><FiDownload className="w-4 h-4" /> Export</button>
-              <button onClick={fetchAllData} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg"><FiRefreshCw className="w-4 h-4" /> Refresh</button>
+              <button onClick={downloadCSV} disabled={!filteredRows.length} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg disabled:opacity-50 cursor-pointer"><FiDownload className="w-4 h-4" /> Export</button>
+              <button onClick={fetchAllData} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg cursor-pointer"><FiRefreshCw className="w-4 h-4" /> Refresh</button>
             </div>
             {hasActiveFilters && (
-              <button onClick={clearFilters} className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">
+              <button onClick={clearFilters} className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg cursor-pointer">
                 <FiTrash2 className="w-4 h-4 text-red-500" /> Clear All
               </button>
             )}
@@ -1463,7 +1647,7 @@ export default function ReferralBookings() {
               </span>
               <button
                 onClick={() => setShowRevenueBreakdown(!showRevenueBreakdown)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 shadow-sm transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-white border border-indigo-300 rounded-lg hover:bg-indigo-50 shadow-sm transition-colors cursor-pointer"
               >
                 {showRevenueBreakdown ? <FiChevronUp className="w-3.5 h-3.5" /> : <FiChevronDown className="w-3.5 h-3.5" />}
                 {showRevenueBreakdown ? "Hide" : "Show"}
@@ -1645,7 +1829,7 @@ export default function ReferralBookings() {
               <p className="text-xs text-gray-500 mt-1 mb-4">
                 {flatRows.length === 0 ? `No bookings from referred ${referrerLabelPlural.toLowerCase()} yet.` : "No records match your filters."}
               </p>
-              {hasActiveFilters && <button onClick={clearFilters} className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg">Clear Filters</button>}
+              {hasActiveFilters && <button onClick={clearFilters} className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg cursor-pointer">Clear Filters</button>}
             </div>
           ) : (
             <>
@@ -1847,11 +2031,11 @@ export default function ReferralBookings() {
                           <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1">
                               <button onClick={() => { setSelectedReferrer(referrer); setSelectedBookingForModal(booking); setShowDetailModal(true); }}
-                                className="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg" title="View Details">
+                                className="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg cursor-pointer" title="View Details">
                                 <FiEye className="w-3.5 h-3.5" />
                               </button>
                               <button onClick={() => openPaymentModal(referrer, booking)}
-                                className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg" title={`Update ${referrerLabel} Payment`}>
+                                className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg cursor-pointer" title={`Update ${referrerLabel} Payment`}>
                                 <FiEdit2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
@@ -1988,11 +2172,11 @@ export default function ReferralBookings() {
                           <div className="text-[10px] text-gray-500">{formatDateToDDMMYYYY(booking.createdAt)}</div>
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => { setSelectedReferrer(referrer); setSelectedBookingForModal(booking); setShowDetailModal(true); }}
-                              className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold">
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold cursor-pointer">
                               <FiEye className="w-3.5 h-3.5" /> View
                             </button>
                             <button onClick={() => openPaymentModal(referrer, booking)}
-                              className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold">
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold cursor-pointer">
                               <FiEdit2 className="w-3.5 h-3.5" /> Pay
                             </button>
                           </div>
@@ -2008,7 +2192,7 @@ export default function ReferralBookings() {
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <span>Show</span>
-                    <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-1 border rounded-md bg-white">
+                    <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-1 border rounded-md bg-white cursor-pointer">
                       <option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option>
                     </select>
                     <span>entries</span>
@@ -2019,13 +2203,13 @@ export default function ReferralBookings() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}
-                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg ${currentPage === 1 ? "text-gray-400 bg-gray-100 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50"}`}>Prev</button>
+                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg cursor-pointer ${currentPage === 1 ? "text-gray-400 bg-gray-100 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50"}`}>Prev</button>
                   {getPageNumbers().map((page, i) => (
                     <button key={i} onClick={() => typeof page === "number" && setCurrentPage(page)} disabled={page === "..."}
-                      className={`px-3 py-1 text-xs font-semibold border rounded-lg min-w-[32px] ${page === "..." ? "text-gray-400 border-transparent" : currentPage === page ? "text-white bg-blue-600 border-blue-600" : "text-gray-700 bg-white hover:bg-gray-50"}`}>{page}</button>
+                      className={`px-3 py-1 text-xs font-semibold border rounded-lg min-w-[32px] cursor-pointer ${page === "..." ? "text-gray-400 border-transparent" : currentPage === page ? "text-white bg-blue-600 border-blue-600" : "text-gray-700 bg-white hover:bg-gray-50"}`}>{page}</button>
                   ))}
                   <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages || totalPages === 0}
-                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg ${currentPage === totalPages ? "text-gray-400 bg-gray-100 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50"}`}>Next</button>
+                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg cursor-pointer ${currentPage === totalPages ? "text-gray-400 bg-gray-100 cursor-not-allowed" : "text-gray-700 bg-white hover:bg-gray-50"}`}>Next</button>
                 </div>
               </div>
             </>
@@ -2046,7 +2230,7 @@ export default function ReferralBookings() {
                     <p className="text-xs text-gray-500">ID: {selectedReferrer._id}</p>
                   </div>
                 </div>
-                <button onClick={() => { setShowDetailModal(false); setSelectedReferrer(null); setSelectedBookingForModal(null); }} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => { setShowDetailModal(false); setSelectedReferrer(null); setSelectedBookingForModal(null); }} className="text-gray-400 hover:text-gray-600 cursor-pointer">
                   <FaTimes />
                 </button>
               </div>
@@ -2158,10 +2342,10 @@ export default function ReferralBookings() {
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => { const r = selectedReferrer; const b = selectedBookingForModal; setShowDetailModal(false); setSelectedReferrer(null); setSelectedBookingForModal(null); if (b) openPaymentModal(r, b); }}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 flex items-center gap-1.5">
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 flex items-center gap-1.5 cursor-pointer">
                   <FiEdit2 className="w-3.5 h-3.5" /> Update {referrerLabel} Payment
                 </button>
-                <button onClick={() => { setShowDetailModal(false); setSelectedReferrer(null); setSelectedBookingForModal(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700">Close</button>
+                <button onClick={() => { setShowDetailModal(false); setSelectedReferrer(null); setSelectedBookingForModal(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">Close</button>
               </div>
             </div>
           </div>
@@ -2183,7 +2367,7 @@ export default function ReferralBookings() {
                 </div>
                 <button
                   onClick={closePaymentModal}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer"
                 >
                   <FaTimes className="w-3.5 h-3.5" />
                 </button>
@@ -2218,7 +2402,7 @@ export default function ReferralBookings() {
                     <select
                       value={newPaymentMode}
                       onChange={(e) => setNewPaymentMode(e.target.value)}
-                      className={`w-full h-10 bg-white border border-gray-300 rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 capitalize ${newPaymentMode === "" ? "text-gray-400" : "text-slate-800"}`}
+                      className={`w-full h-10 bg-white border border-gray-300 rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 capitalize cursor-pointer ${newPaymentMode === "" ? "text-gray-400" : "text-slate-800"}`}
                     >
                       <option value="" disabled>Select Payment Mode</option>
                       {PAYMENT_MODE_OPTIONS.map((m) => (
@@ -2236,7 +2420,7 @@ export default function ReferralBookings() {
                     <select
                       value={newPaymentStatus}
                       onChange={(e) => setNewPaymentStatus(e.target.value)}
-                      className={`w-full h-10 bg-white border border-gray-300 rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${newPaymentStatus === "" ? "text-gray-400" : "text-slate-800"}`}
+                      className={`w-full h-10 bg-white border border-gray-300 rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer ${newPaymentStatus === "" ? "text-gray-400" : "text-slate-800"}`}
                     >
                       <option value="" disabled>Select Payment Status</option>
                       <option value="Pending" className="text-slate-800">Pending</option>
@@ -2276,7 +2460,7 @@ export default function ReferralBookings() {
                         <button
                           type="button"
                           onClick={() => setNewPaidAmount(String(totalPayable))}
-                          className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline"
+                          className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline cursor-pointer"
                         >
                           Set Full (₹{totalPayable})
                         </button>
@@ -2289,7 +2473,6 @@ export default function ReferralBookings() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[9px] font-bold uppercase text-gray-400">Current:</span>
                     {(() => {
-                      // ✅ Live — use newPaymentStatus if selected, else fallback to saved value
                       const liveStatus = newPaymentStatus || (() => {
                         const raw = isDoctorTab
                           ? (selectedBookingForPayment.doctorPaymentStatus || "Pending")
@@ -2318,14 +2501,14 @@ export default function ReferralBookings() {
               <div className="flex justify-end gap-2.5 px-5 py-3.5 border-t bg-gray-50/50">
                 <button
                   onClick={closePaymentModal}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-white border border-gray-300 hover:bg-gray-100 text-gray-700"
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSavePaymentStatus}
                   disabled={savingPayment}
-                  className={`px-5 py-2 rounded-lg text-xs font-bold ${isDoctorTab ? "bg-purple-600 hover:bg-purple-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white flex items-center gap-1.5 disabled:opacity-50`}
+                  className={`px-5 py-2 rounded-lg text-xs font-bold ${isDoctorTab ? "bg-purple-600 hover:bg-purple-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white flex items-center gap-1.5 disabled:opacity-50 cursor-pointer`}
                 >
                   {savingPayment ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
                   {savingPayment ? "Saving..." : "Save Payment"}
