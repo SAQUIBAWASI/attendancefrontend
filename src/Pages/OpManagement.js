@@ -3623,11 +3623,11 @@ const buildBillHtml = async (bd, bk) => {
     const finalPaidAmount = Math.min(finalNetAmount, bd.paidAmount || 0); 
     const finalBalance = finalNetAmount - finalPaidAmount;
 
-    // ✅ 3. Built By Logic (Login user based)
-    let builtByName = "Admin";
+    // ✅ 3. Billed By Logic (Login user based)
+    let billedByName = "Admin";
     const userRole = localStorage.getItem('userRole');
     if (userRole === 'employee') {
-        builtByName = localStorage.getItem('employeeName') || localStorage.getItem('userName') || 'Employee';
+        billedByName = localStorage.getItem('employeeName') || localStorage.getItem('userName') || 'Employee';
     }
 
     // ✅ 4. Patient Name nikal lo title ke liye
@@ -3636,7 +3636,6 @@ const buildBillHtml = async (bd, bk) => {
 
     return `
       <!DOCTYPE html><html><head><meta charset="UTF-8"/>
-      <!-- ✅ Yahan Title Change kiya hai taaki save hone par patient ke naam se aaye -->
       <title>Invoice_${safePatientName}_${bd.invoiceNo}</title>
       <style>
         *{margin:0;padding:0;box-sizing:border-box;}
@@ -3658,6 +3657,7 @@ const buildBillHtml = async (bd, bk) => {
         }
         .brand-blue { color: #1e3a8a; } /* TIMELY */
         .brand-green { color: #10b981; } /* HEALTH */
+        .brand-clinic { color: #1e3a8a; font-size: 18px; } /* (SVV) Clinic text */
 
         .top-header .brand-text p{font-size:11px;color:#555;max-width:100%;line-height:1.4;}
         .bar-title{text-align:center;background:#1e3a8a;border-top:1px solid #1e3a8a;border-bottom:1px solid #1e3a8a;padding:8px 0;font-size:14px;font-weight:bold;letter-spacing:1.5px;margin:10px 0 14px;text-transform:uppercase;color:#fff;}
@@ -3678,7 +3678,7 @@ const buildBillHtml = async (bd, bk) => {
             padding-right: 10px;
         }
         .amount-words{font-size:11px;color:#555;font-style:italic;}
-        .built-by{font-size:11px;color:#1e3a8a;font-weight:bold;}
+        .billed-by{font-size:11px;color:#1e3a8a;font-weight:bold;}
 
         .footer-row{display:flex;justify-content:flex-end;gap:8px;font-size:11px;color:#555;padding-top:5px;margin-top:10px;}
         
@@ -3719,7 +3719,7 @@ const buildBillHtml = async (bd, bk) => {
           <div class="top-header">
             <div class="brand"><img src="${logoBase64 || logo}" alt="${CLINIC_INFO.name}"/></div>
             <div class="brand-text">
-                <h1><span class="brand-blue">TIMELY</span> <span class="brand-green">HEALTH</span></h1>
+                <h1><span class="brand-blue">TIMELY</span> <span class="brand-green">HEALTH</span> <span class="brand-clinic">(SVV) Clinic</span></h1>
                 <p>${CLINIC_INFO.address}</p>
             </div>
           </div>
@@ -3755,7 +3755,7 @@ const buildBillHtml = async (bd, bk) => {
 
           <div class="footer-info-row">
             <div class="amount-words">Amount in words: <b>${bd.amountInWords}</b></div>
-            <div class="built-by">Built By: ${builtByName}</div>
+            <div class="billed-by">Billed By: ${billedByName}</div>
           </div>
 
           <div class="footer-row"><span style="font-style:italic;font-weight:600;color:#1e3a8a;">This is an electronically generated invoice</span></div>
