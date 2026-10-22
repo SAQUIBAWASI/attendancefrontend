@@ -69,7 +69,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     "Healthcare Administrator"
   ];
 
-  // ✅ OP Management related permissions — UPDATED with new IDs
+  // ✅ OP Management related permissions
   const OP_MANAGEMENT_PERMISSIONS = [
     "op_dashboard_view",
     "op_patient_records_view",
@@ -87,7 +87,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     "user_activity_view", "user_access_manage", "expenses_manage", "expense_manage",
     "locations_manage", "job_posts_view", "job_applicants_view", "score_board_view",
     "assessments_view", "documents_view", "job_recruitment_manage", "holidays_view",
-    "events_manage", "events_create", "events_edit", "events_delete", 
+    "events_manage", "events_create", "events_edit", "events_delete",
     "events_view_all", "events_register_participants", "issues_view", "issues_manage",
     "tasks_view", "tasks_manage"
   ];
@@ -109,6 +109,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/mysalary": "Payslips",
       "/mypermissions": "My Permissions",
       "/myleaves": "My Leaves",
+      // "/employee-events": "My Events",
       "/emp-admin-dashboard": "Dashboard",
       "/emp-employees": "Employees",
       "/emp-add-employee": "Add Employee",
@@ -137,7 +138,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/emp-holidays-calendar": "Holidays Calendar",
       "/emp-permissions": "Permissions",
       "/emp-events": "Events",
-      "/emp-my-events": "My Events",
+
       "/emp-issues": "Issues",
       "/emp-tasks": "Tasks",
       "/employee-visits-data": "My Visits",
@@ -162,8 +163,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   // 🔥 Check if user has OP Management access based on role
   const hasOPManagementAccess = (role) => {
     if (!role) return false;
-    return OP_MANAGEMENT_ROLES.some(r => 
-      role.toLowerCase().includes(r.toLowerCase()) || 
+    return OP_MANAGEMENT_ROLES.some(r =>
+      role.toLowerCase().includes(r.toLowerCase()) ||
       r.toLowerCase().includes(role.toLowerCase())
     );
   };
@@ -179,7 +180,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return OP_MANAGEMENT_PERMISSIONS.some(p => permissions.includes(p));
   };
 
-  // ✅ NEW — Build OP Management dropdown based on NEW permission IDs
+  // ✅ Build OP Management dropdown based on NEW permission IDs
   const buildOPManagementDropdown = () => {
     const items = [];
 
@@ -376,12 +377,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         } else if (isManagerUser) {
           if (!fetchedPermissions.includes("leave_approve_manager")) fetchedPermissions.push("leave_approve_manager");
           if (!fetchedPermissions.includes("shifts_manage")) fetchedPermissions.push("shifts_manage");
-          if (!fetchedPermissions.includes("events_view_all")) fetchedPermissions.push("events_view_all");
-          if (!fetchedPermissions.includes("events_manage")) fetchedPermissions.push("events_manage");
-          if (!fetchedPermissions.includes("issues_view")) fetchedPermissions.push("issues_view");
-          if (!fetchedPermissions.includes("issues_manage")) fetchedPermissions.push("issues_manage");
-          if (!fetchedPermissions.includes("tasks_view")) fetchedPermissions.push("tasks_view");
-          if (!fetchedPermissions.includes("tasks_manage")) fetchedPermissions.push("tasks_manage");
         }
 
         setPermissions(fetchedPermissions);
@@ -397,7 +392,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       } catch (error) {
         let localPermissions = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
-        
+
         // 🔥 Get employee role from localStorage
         const role = empLocal.role || empLocal.designation || "";
         setEmployeeRole(role);
@@ -411,12 +406,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         } else if (isManagerUser) {
           if (!localPermissions.includes("leave_approve_manager")) localPermissions.push("leave_approve_manager");
           if (!localPermissions.includes("shifts_manage")) localPermissions.push("shifts_manage");
-          if (!localPermissions.includes("events_view_all")) localPermissions.push("events_view_all");
-          if (!localPermissions.includes("events_manage")) localPermissions.push("events_manage");
-          if (!localPermissions.includes("issues_view")) localPermissions.push("issues_view");
-          if (!localPermissions.includes("issues_manage")) localPermissions.push("issues_manage");
-          if (!localPermissions.includes("tasks_view")) localPermissions.push("tasks_view");
-          if (!localPermissions.includes("tasks_manage")) localPermissions.push("tasks_manage");
         }
 
         setPermissions(localPermissions);
@@ -445,7 +434,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     let employeeData = {};
     try {
       employeeData = JSON.parse(employeeDataRaw || "{}");
-    } catch (e) {}
+    } catch (e) { }
 
     const email = employeeData.email || employeeData.employeeEmail || '';
     const password = employeeData.password || employeeData.employeePassword || '';
@@ -485,35 +474,36 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       { icon: <i className="ri-money-rupee-circle-fill"></i>, name: "Payslips", path: "/mysalary" },
       { icon: <i className="ri-funds-fill"></i>, name: "Expenses", path: "/expense-management" },
       { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
+      // { icon: <i className="ri-calendar-todo-fill"></i>, name: "My Events", path: "/employee-events" },
       { icon: <i className="ri-file-paper-2-line"></i>, name: "Relieving Letters", path: "/relieving-letters" },
-      { 
-        icon: <i className="ri-map-pin-user-fill"></i>, 
-        name: "My Visits", 
+      {
+        icon: <i className="ri-map-pin-user-fill"></i>,
+        name: "My Visits",
         path: "/employee-visits-data",
         badge: "NEW"
       },
-      { 
-        icon: <i className="ri-share-forward-fill"></i>, 
-        name: "My Referrals", 
+      {
+        icon: <i className="ri-share-forward-fill"></i>,
+        name: "My Referrals",
         path: "/myreferral",
         badge: "NEW"
       },
-      { 
-        icon: <i className="ri-error-warning-fill"></i>, 
-        name: "Issues", 
+      {
+        icon: <i className="ri-error-warning-fill"></i>,
+        name: "Issues",
         path: "/emp-issues",
         badge: "NEW"
       },
-      { 
-        icon: <i className="ri-task-fill"></i>, 
-        name: "Tasks", 
+      {
+        icon: <i className="ri-task-fill"></i>,
+        name: "Tasks",
         path: tasksUrl,
         isExternal: true,
         badge: "NEW"
       },
-      { 
-        icon: <i className="ri-building-fill"></i>, 
-        name: "Hire", 
+      {
+        icon: <i className="ri-building-fill"></i>,
+        name: "Hire",
         action: navigateToIngrainHire,
         isExternal: true,
         badge: "HIRE"
@@ -527,7 +517,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
       if (opDropdownItems.length > 0) {
         const dashboardIndex = menu.findIndex(item => item.path === "/employeedashboard");
-        
+
         const opManagementSection = {
           icon: <i className="ri-hospital-line"></i>,
           name: "OP Management",
@@ -606,18 +596,18 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     }
 
     if (hasPermission("issues_view") || hasPermission("issues_manage")) {
-      menu.push({ 
-        icon: <i className="ri-error-warning-fill"></i>, 
-        name: "Issues", 
+      menu.push({
+        icon: <i className="ri-error-warning-fill"></i>,
+        name: "Issues",
         path: "/emp-issues",
         badge: "NEW"
       });
     }
 
     if (hasPermission("tasks_view") || hasPermission("tasks_manage")) {
-      menu.push({ 
-        icon: <i className="ri-task-fill"></i>, 
-        name: "Tasks", 
+      menu.push({
+        icon: <i className="ri-task-fill"></i>,
+        name: "Tasks",
         path: tasksUrl,
         isExternal: true,
         badge: "NEW"
@@ -647,20 +637,15 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       });
     }
 
-    if (hasPermission("events_view_all") || hasPermission("events_manage") || 
-        hasPermission("events_create") || hasPermission("events_register_participants")) {
-      menu.push({
-        icon: <i className="ri-calendar-event-fill"></i>,
-        name: "Events",
-        path: "/emp-events",
-      });
+    // ✅ FIXED: events block properly closed
+    if (
+      hasPermission("events_view_all") ||
+      hasPermission("events_manage") ||
+      hasPermission("events_create") ||
+      hasPermission("events_register_participants")
+    ) {
+      // events menu disabled for now
     }
-
-    menu.push({
-      icon: <i className="ri-calendar-todo-fill"></i>,
-      name: "My Events",
-      path: "/emp-my-events",
-    });
 
     if (hasPermission("locations_manage")) {
       menu.push({ icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/emp-locations" });
@@ -682,33 +667,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         });
       }
     }
-
-    // My Visits - Admin Side
-    menu.push({ 
-      icon: <i className="ri-map-pin-user-fill"></i>, 
-      name: "My Visits", 
-      path: "/employee-visits-data",
-      badge: "NEW"
-    });
-
-    // ✅ MY REFERRALS - Added in Admin Menu too
-    menu.push({ 
-      icon: <i className="ri-share-forward-fill"></i>, 
-      name: "My Referrals", 
-      path: "/myreferral",
-      badge: "NEW"
-    });
-
-    // Ingrain Hire in Admin Menu
-    menu.push({ 
-      icon: <i className="ri-building-fill"></i>, 
-      name: "Ingrain Hire", 
-      action: navigateToIngrainHire,
-      isExternal: true,
-      badge: "HIRE"
-    });
-
-    menu.push({ icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout });
 
     return menu;
   };

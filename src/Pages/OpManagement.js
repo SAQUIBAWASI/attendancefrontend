@@ -3574,16 +3574,16 @@ const buildBillHtml = async (bd, bk) => {
         runningIdx++;
         rowsHtml += `
           <tr>
-            <td style="padding:6px 6px;font-size:11px;color:#333;border-bottom:1px solid #eee;text-align:center;">${runningIdx}</td>
-            <td style="padding:6px 6px;font-size:12px;color:#111;border-bottom:1px solid #eee;">${item.name}</td>
-            <td style="padding:6px 6px;font-size:12px;font-weight:600;color:#111;text-align:right;border-bottom:1px solid #eee;">₹ ${Number(item.amount).toFixed(2)}</td>
+            <td style="padding:4px 6px;font-size:11px;color:#333;border-bottom:1px solid #eee;text-align:center;">${runningIdx}</td>
+            <td style="padding:4px 6px;font-size:12px;color:#111;border-bottom:1px solid #eee;">${item.name}</td>
+            <td style="padding:4px 6px;font-size:12px;font-weight:600;color:#111;text-align:right;border-bottom:1px solid #eee;">₹ ${Number(item.amount).toFixed(2)}</td>
           </tr>`;
       });
       if (items.length > 1) {
         rowsHtml += `
           <tr style="background:#f9fafb;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;">
-            <td colspan="2" style="text-align:right;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#374151;padding:7px 8px;">Subtotal — ${categoryLabel[catKey]}</td>
-            <td style="text-align:right;font-size:12px;font-weight:bold;color:#111;padding:7px 8px;">₹ ${subtotal.toFixed(2)}</td>
+            <td colspan="2" style="text-align:right;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#374151;padding:4px 8px;">Subtotal — ${categoryLabel[catKey]}</td>
+            <td style="text-align:right;font-size:12px;font-weight:bold;color:#111;padding:4px 8px;">₹ ${subtotal.toFixed(2)}</td>
           </tr>`;
       }
     });
@@ -3592,8 +3592,8 @@ const buildBillHtml = async (bd, bk) => {
     
     rowsHtml += `
       <tr style="background:#e5e7eb;border-top:2px solid #111;border-bottom:2px solid #111;">
-        <td colspan="2" style="text-align:right;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#111;padding:9px 8px;">Gross Total</td>
-        <td style="text-align:right;font-size:14px;font-weight:bold;color:#111;padding:9px 8px;">₹ ${grossTotal.toFixed(2)}</td>
+        <td colspan="2" style="text-align:right;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#111;padding:6px 8px;">Total</td>
+        <td style="text-align:right;font-size:14px;font-weight:bold;color:#111;padding:6px 8px;">₹ ${grossTotal.toFixed(2)}</td>
       </tr>`;
 
     const appointmentDateTime = bk?.createdAt || bk?.bookedAt 
@@ -3623,110 +3623,194 @@ const buildBillHtml = async (bd, bk) => {
     const finalPaidAmount = Math.min(finalNetAmount, bd.paidAmount || 0); 
     const finalBalance = finalNetAmount - finalPaidAmount;
 
-    // ✅ 3. Billed By Logic (Login user based)
+    // ✅ 3. Billed By & EmpID Logic (Login user based)
     let billedByName = "Admin";
+    let billedByEmpId = "";
     const userRole = localStorage.getItem('userRole');
     if (userRole === 'employee') {
         billedByName = localStorage.getItem('employeeName') || localStorage.getItem('userName') || 'Employee';
+        billedByEmpId = localStorage.getItem('employeeId') || "";
     }
 
     // ✅ 4. Patient Name nikal lo title ke liye
     const patientNameForTitle = `${bk?.patientTitle || ""} ${bk?.patientName || "Patient"}`.trim();
     const safePatientName = patientNameForTitle.replace(/\s+/g, '_');
 
+    // ✅ 5. NAYA INVOICE NO FORMAT (Date + Custom PID)
+    let finalInvoiceNo = bd.invoiceNo; // Fallback
+    if (bk?.appointmentDate && bk?.customPID) {
+      const dateObj = new Date(bk.appointmentDate);
+      if (!isNaN(dateObj.getTime())) {
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const yyyy = dateObj.getFullYear();
+        finalInvoiceNo = `${dd}${mm}${yyyy}-${bk.customPID}`;
+      }
+    } else if (bk?.customPID) {
+       finalInvoiceNo = `${bd.invoiceNo}-${bk.customPID}`;
+    }
+
     return `
       <!DOCTYPE html><html><head><meta charset="UTF-8"/>
-      <title>Invoice_${safePatientName}_${bd.invoiceNo}</title>
+      <title>Invoice_${safePatientName}_${finalInvoiceNo}</title>
       <style>
         *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:Arial,sans-serif;color:#222;padding:24px;background:#fff;}
-        .bill-wrap{max-width:820px;margin:0 auto;border:1px solid #999;padding:24px 28px;background:#fff;overflow:hidden;position:relative;}
+        body{font-family:Arial,sans-serif;color:#222;padding:15px;background:#fff;}
+        
+        .bill-wrap{max-width:820px;margin:0 auto;border:1px solid #999;padding:15px 25px;background:#fff;overflow:hidden;position:relative; min-height: 1000px; display: flex; flex-direction: column;}
+        
         .watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:.06;z-index:0;width:300px;height:300px;}
         .watermark img{width:100%;height:100%;object-fit:contain;}
-        .bill-content{position:relative;z-index:1;}
-        .top-header{display:flex;align-items:center;gap:16px;border-bottom:2px solid #222;padding-bottom:14px;justify-content:flex-start;}
-        .top-header .brand img{width:60px;height:60px;object-fit:contain;}
+        .bill-content{position:relative;z-index:1; flex: 1; display: flex; flex-direction: column;}
+        
+        .top-header{display:flex;align-items:center;gap:20px;border-bottom:2px solid #222;padding-bottom:8px;justify-content:flex-start;}
+        .top-header .brand img{width:110px;height:110px;object-fit:contain;} 
         .top-header .brand-text{text-align:center;flex:1;}
         
         .top-header .brand-text h1 {
-            font-size: 26px; 
-            font-weight: 900; /* Extra Bold */
+            font-size: 24px; 
+            font-weight: 900;
             letter-spacing: 1px; 
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             text-transform: uppercase;
         }
-        .brand-blue { color: #1e3a8a; } /* TIMELY */
-        .brand-green { color: #10b981; } /* HEALTH */
-        .brand-clinic { color: #1e3a8a; font-size: 18px; } /* (SVV) Clinic text */
+        .brand-blue { color: #1e3a8a; }
+        .brand-green { color: #10b981; }
+        .brand-clinic { color: #1e3a8a; font-size: 24px; }
 
-        .top-header .brand-text p{font-size:11px;color:#555;max-width:100%;line-height:1.4;}
-        .bar-title{text-align:center;background:#1e3a8a;border-top:1px solid #1e3a8a;border-bottom:1px solid #1e3a8a;padding:8px 0;font-size:14px;font-weight:bold;letter-spacing:1.5px;margin:10px 0 14px;text-transform:uppercase;color:#fff;}
-        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;font-size:12px;margin-bottom:16px;}
-        .info-grid .label{color:#666;font-weight:bold;display:inline-block;width:120px;}
-        table.items{width:100%;border-collapse:collapse;margin-bottom:16px;border-top:2px solid #222;border-bottom:2px solid #222;}
-        table.items th{text-align:left;font-size:11px;color:#555;padding:8px 6px;border-bottom:1px solid #bbb;text-transform:uppercase;letter-spacing:.4px;background:#f9fafb;}
-        .totals-box{width:100%;max-width:340px;margin-left:auto;font-size:12px;margin-bottom:12px;}
-        .totals-box .row{display:flex;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #eee;}
-        .totals-box .row.paid{color:#15803d;font-weight:bold;}
-        .totals-box .row.final{border-top:2px solid #222;border-bottom:none;font-weight:bold;padding-top:10px;margin-top:2px;font-size:14px;background:#f3f4f6;color:#111;}
-        
-        .footer-info-row{
+        .company-name-text {
+            font-size: 12px; 
+            font-weight: bold; 
+            color: #333; 
+            margin-bottom: 2px;
+        }
+
+        .top-header .brand-text p{font-size:10px;color:#555;max-width:100%;line-height:1.2; margin-bottom: 2px;}
+
+        .header-address-block {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: left; 
+        }
+        .gst-helpline-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            padding-right: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #444;
+            width: 100%;
+            margin-top: 4px;
         }
-        .amount-words{font-size:11px;color:#555;font-style:italic;}
-        .billed-by{font-size:11px;color:#1e3a8a;font-weight:bold;}
 
-        .footer-row{display:flex;justify-content:flex-end;gap:8px;font-size:11px;color:#555;padding-top:5px;margin-top:10px;}
+        .bar-title{text-align:center;background:#1e3a8a;border-top:1px solid #1e3a8a;border-bottom:1px solid #1e3a8a;padding:5px 0;font-size:13px;font-weight:bold;letter-spacing:1.5px;margin:8px 0 10px;text-transform:uppercase;color:#fff;}
+        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 20px;font-size:11px;margin-bottom:10px;}
+        .info-grid .label{color:#666;font-weight:bold;display:inline-block;width:110px;}
+        table.items{width:100%;border-collapse:collapse;margin-bottom:10px;border-top:2px solid #222;border-bottom:2px solid #222;}
+        table.items th{text-align:left;font-size:10px;color:#555;padding:5px 6px;border-bottom:1px solid #bbb;text-transform:uppercase;letter-spacing:.4px;background:#f9fafb;}
         
+        .totals-and-info-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        .left-info-block {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 3px;
+            padding-left: 5px;
+            padding-top: 4px;
+        }
+        .left-info-block .info-line {
+            font-size: 11px;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+        .left-info-block .words-line {
+            font-size: 11px;
+            color: #555;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .totals-box{width:100%;max-width:320px;font-size:11px;}
+        .totals-box .row{display:flex;justify-content:space-between;padding:5px 8px;border-bottom:1px solid #eee;}
+        .totals-box .row.paid{color:#15803d;font-weight:bold;}
+        .totals-box .row.final{border-top:2px solid #222;border-bottom:none;font-weight:bold;padding-top:6px;margin-top:2px;font-size:13px;background:#f3f4f6;color:#111;}
+
         .signature-section {
           display: flex;
           flex-direction: column;
           align-items: flex-end; 
           justify-content: flex-end;
-          margin-top: 15px;
           padding-right: 20px; 
           position: relative;
-          min-height: 110px; 
+          min-height: 100px; 
+          margin-top: 20px; 
         }
         .signature-section .stamp {
-          width: 90px;
-          height: 90px;
+          width: 85px;
+          height: 85px;
           opacity: 0.85;
           z-index: 1;
           pointer-events: none;
           transform: rotate(-5deg);
-          margin-bottom: 5px;
+          margin-bottom: 2px;
         }
         .signature-section .sig {
           font-weight: bold;
           color: #333;
           border-top: 1px solid #333;
-          padding-top: 4px;
-          min-width: 140px;
+          padding-top: 2px;
+          min-width: 130px;
           text-align: center;
           position: relative;
           z-index: 10;
+        }
+
+        .bottom-spacer { flex: 1; }
+
+        .bottom-generated-text {
+            text-align: center;
+            font-size: 10px;
+            color: #1e3a8a;
+            font-style: italic;
+            font-weight: 600;
+            padding-top: 8px;
+            border-top: 1px dashed #ccc;
+            margin-top: 300px; 
         }
         @media print{body{padding:0;}.bill-wrap{border:none;}}
       </style></head><body>
       <div class="bill-wrap">
         <div class="watermark"><img src="${logoBase64 || logo}" alt="${CLINIC_INFO.name}"/></div>
         <div class="bill-content">
+          
           <div class="top-header">
-            <div class="brand"><img src="${logoBase64 || logo}" alt="${CLINIC_INFO.name}"/></div>
+            <div class="brand"><img src="${logoBase64 || logo}" alt="Logo"/></div>
             <div class="brand-text">
                 <h1><span class="brand-blue">TIMELY</span> <span class="brand-green">HEALTH</span> <span class="brand-clinic">(SVV) Clinic</span></h1>
-                <p>${CLINIC_INFO.address}</p>
+                <div class="company-name-text">Timely Healthtech Pvt. Ltd.</div>
+                
+                <div class="header-address-block">
+                    <!-- ✅ Yahan Naya Address Replace Kiya Hai -->
+                    <p>Flat No: 301, H.No: 1-68/22, Plot No. 54 & 55, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad, Telangana-500081</p>
+                    <div class="gst-helpline-row">
+                        <span>GST No: 36AAJCT3528Q1ZN</span>
+                        <span>Helpline: 90 1048 1048</span>
+                    </div>
+                </div>
             </div>
           </div>
-          <div class="bar-title">Bill Cum Receipt</div>
+
+          <div class="bar-title">Bill / Invoice</div>
           <div class="info-grid">
             <div><span class="label">Name</span>: ${bk?.patientTitle || ""} ${bk?.patientName || "N/A"}</div>
-            <div><span class="label">Invoice No</span>: ${bd.invoiceNo}</div>
+            <!-- ✅ Yahan Naya Invoice No Format Use Kiya -->
+            <div><span class="label">Invoice No</span>: ${finalInvoiceNo}</div>
             <div><span class="label">Age / Gender</span>: ${bk?.patientAge || "N/A"} Yrs / ${bk?.patientGender || "N/A"}</div>
             <div><span class="label">Contact No</span>: ${bk?.patientPhone || "N/A"}</div>
             <div><span class="label">Doctor</span>: ${bd.doctorName || "N/A"}</div>
@@ -3741,28 +3825,31 @@ const buildBillHtml = async (bd, bk) => {
             <tbody>${rowsHtml}</tbody>
           </table>
           
-          <div class="totals-box">
-            <div class="row"><span>Gross Amount</span><span style="font-weight:bold;">₹ ${grossTotal.toFixed(2)}</span></div>
-            ${bd.discount > 0 ? `<div class="row"><span>Discount</span><span style="color:#dc2626;">− ₹ ${bd.discount.toFixed(2)}</span></div>` : ""}
-            <div class="row" style="background:#eff6ff;font-weight:bold;"><span>Net Amount</span><span>₹ ${finalNetAmount.toFixed(2)}</span></div>
-            <div class="row paid"><span>Paid Amount</span><span>₹ ${finalPaidAmount.toFixed(2)}</span></div>
-            <div class="row final"><span>Balance to Pay</span><span>₹ ${finalBalance.toFixed(2)}</span></div>
-            <div class="row" style="border-bottom:none; padding-top:6px;">
-                <span style="font-weight:bold; color:#1e3a8a;">Payment Type</span>
-                <span style="font-weight:bold; color:#1e3a8a;">${actualPaymentType}</span>
-            </div>
+          <div class="totals-and-info-wrapper">
+              <div class="left-info-block">
+                <div class="info-line">Payment Type: ${actualPaymentType}</div>
+                <!-- ✅ Yahan Billed By ke sath Emp ID bhi dikhaya -->
+                <div class="info-line">Billed By: ${billedByName}${billedByEmpId ? `, EmpID: ${billedByEmpId}` : ''}</div>
+                <div class="words-line">Received with thanks a sum of Rs. <b>${bd.amountInWords}</b></div>
+              </div>
+
+              <div class="totals-box">
+                <div class="row"><span>Total</span><span style="font-weight:bold;">₹ ${grossTotal.toFixed(2)}</span></div>
+                <div class="row"><span>Discount</span><span style="color:#dc2626;">− ₹ ${Number(bd.discount || 0).toFixed(2)}</span></div>
+                <div class="row paid"><span>Paid Amount</span><span>₹ ${finalPaidAmount.toFixed(2)}</span></div>
+                <div class="row final"><span>Balance to Pay</span><span>₹ ${finalBalance.toFixed(2)}</span></div>
+              </div>
           </div>
 
-          <div class="footer-info-row">
-            <div class="amount-words">Amount in words: <b>${bd.amountInWords}</b></div>
-            <div class="billed-by">Billed By: ${billedByName}</div>
-          </div>
-
-          <div class="footer-row"><span style="font-style:italic;font-weight:600;color:#1e3a8a;">This is an electronically generated invoice</span></div>
-          
           <div class="signature-section">
              ${stampBase64 ? `<img src="${stampBase64}" alt="Stamp" class="stamp" />` : ''}
              <span class="sig">Authorised Signature</span>
+          </div>
+
+          <div class="bottom-spacer"></div>
+
+          <div class="bottom-generated-text">
+            This is an electronically generated invoice
           </div>
           
         </div>

@@ -1,5 +1,5 @@
 // src/Pages/RevenueAnalytics.jsx
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import {
@@ -7,12 +7,12 @@ import {
   FaMoneyBillWave, FaChevronLeft, FaChevronRight,
   FaRupeeSign, FaCheckCircle, FaTimesCircle,
   FaGlobe, FaArrowUp, FaArrowDown, FaEquals, FaSave,
-  FaBullseye, FaEdit, FaPlus, FaTrash, FaMinusCircle,
+  FaBullseye, FaEdit, FaPlus, FaTrash, FaMinusCircle, FaPlusCircle, FaMinus
 } from "react-icons/fa";
 import {
   FiRefreshCw, FiTrendingUp, FiAlertCircle, FiClock, FiFilter,
   FiDownload, FiTrash2, FiCheckCircle, FiXCircle, FiSearch,
-  FiX, FiTarget, FiPlus, FiEye, FiEyeOff,
+  FiX, FiTarget, FiPlus, FiEye, FiEyeOff, FiChevronDown,
 } from "react-icons/fi";
 
 /* ============================================================ */
@@ -147,6 +147,31 @@ const normalizeAnalyticsData = (raw) => {
       });
       const bank = r.bankCredit || null;
       const rp = bank?.retailPharmacy || {};
+
+      // ✅ Parse monthData if exists
+      const monthData = Array.isArray(r.monthData) ? r.monthData.map(md => {
+        const mdcb = md.categoryBreakdown || {};
+        const mdBuild = (k) => ({
+          total: Number(mdcb[k]?.total) || 0,
+          cash: Number(mdcb[k]?.cash) || 0,
+          online: Number(mdcb[k]?.online) || 0,
+          card: Number(mdcb[k]?.card) || 0,
+          insurance: Number(mdcb[k]?.insurance) || 0,
+          due: Number(mdcb[k]?.due) || 0,
+          footFall: Number(mdcb[k]?.footFall) || 0,
+        });
+        return {
+          date: md.date,
+          label: md.label,
+          count: md.count || 0,
+          clinic: mdBuild("clinic"),
+          lab: mdBuild("lab"),
+          pharmacy: mdBuild("pharmacy"),
+          retailPharmacy: { cash: 0, online: 0, footFall: 0, total: 0 },
+          bankCredit: null
+        };
+      }) : [];
+
       return {
         date: r.date,
         label: r.label,
@@ -164,6 +189,7 @@ const normalizeAnalyticsData = (raw) => {
           due: 0, card: 0, insurance: 0,
         },
         bankCredit: bank?.bankCredit != null ? Number(bank.bankCredit) : null,
+        monthData: monthData
       };
     })
     : [];
@@ -237,28 +263,34 @@ const TargetProgressStrip = ({ rangeTarget, achieved, hasTarget, rangeLabel = "T
   if (!hasTarget || rangeTarget <= 0) return null;
 
   const diff = achieved - rangeTarget;
-  const pct = rangeTarget > 0 ? (achieved / rangeTarget) * 100 : 0;
   const diffAbs = Math.abs(diff);
-
+  const pct = rangeTarget > 0 ? (achieved / rangeTarget) * 100 : 0;
+  const shortPct = 100 - pct;
+  
   let statusLabel = "PENDING";
   let statusColor = "text-slate-500";
   let barColor = "bg-slate-400";
+  let displayPct = `${pct.toFixed(0)}%`;
 
   if (diffAbs < 0.5) {
     statusLabel = "MATCHED";
     statusColor = "text-emerald-700";
     barColor = "bg-emerald-500";
+    displayPct = "100%";
   } else if (diff > 0) {
     statusLabel = "EXCEEDED";
     statusColor = "text-blue-700";
     barColor = "bg-blue-500";
+    displayPct = `+${(pct - 100).toFixed(0)}%`;
   } else {
     statusLabel = "SHORTFALL";
     statusColor = "text-rose-700";
     barColor = "bg-rose-500";
+    displayPct = `-${shortPct.toFixed(0)}%`;
   }
 
   const barWidth = Math.min(pct, 100);
+  const formatAmt = (val) => `₹${fmt(Math.round(val))}`;
 
   return (
     <div className="mt-2.5 pt-2 border-t border-slate-200/70">
@@ -268,16 +300,18 @@ const TargetProgressStrip = ({ rangeTarget, achieved, hasTarget, rangeLabel = "T
       </div>
       <div className="flex items-center justify-between gap-2 mb-1.5">
         <span className="text-[11px] font-black text-slate-800">
-          {fmtAmt(Math.round(achieved))} / ₹{fmt(Math.round(rangeTarget))}
+          {formatAmt(achieved)} / {formatAmt(rangeTarget)}
         </span>
-        <span className={`text-[10px] font-black ${statusColor}`}>{pct.toFixed(0)}%</span>
+        <span className={`text-[10px] font-black ${statusColor}`}>{displayPct}</span>
       </div>
       <div className="w-full h-1 rounded-full bg-slate-200 overflow-hidden">
         <div className={`h-full ${barColor} transition-all`} style={{ width: `${barWidth}%` }} />
       </div>
       {diffAbs >= 0.5 && (
         <div className={`text-[9px] font-bold mt-1 ${statusColor}`}>
-          {diff > 0 ? `+₹${fmt(Math.round(diffAbs))} surplus` : `−₹${fmt(Math.round(diffAbs))} short`}
+          {diff > 0 
+            ? `+₹${fmt(Math.round(diffAbs))} surplus (+${shortPct.toFixed(0)}%)` 
+            : `−₹${fmt(Math.round(diffAbs))} short (-${shortPct.toFixed(0)}%)`}
         </div>
       )}
     </div>
@@ -309,27 +343,24 @@ const CategoryCard = ({
   };
   const a = accentMap[accent] || accentMap.blue;
 
-  // ✅ Smart Helper: Round decimals, check if >= 1 Lakh
   const formatSmartAmt = (val) => {
-    // Pehle decimal ko round karo (9677.419 -> 9677)
     const roundedNum = Math.round(Number(val) || 0);
-    const isLakh = roundedNum >= 100000;
-
     let displayStr = "";
-    if (isLakh) {
-      let lVal = (roundedNum / 100000).toFixed(2).replace(/\.00$/, '');
-      displayStr = `₹${lVal} L`;
+    if (roundedNum >= 10000000) {
+      displayStr = `₹${(roundedNum / 10000000).toFixed(2).replace(/\.00$/, '')} Cr`;
+    } else if (roundedNum >= 100000) {
+      displayStr = `₹${(roundedNum / 100000).toFixed(2).replace(/\.00$/, '')} L`;
+    } else if (roundedNum >= 1000) {
+      displayStr = `₹${(roundedNum / 1000).toFixed(1).replace(/\.0$/, '')}K`;
     } else {
-      displayStr = fmtAmt(roundedNum);
+      displayStr = `₹${fmt(roundedNum)}`;
     }
-
     return (
       <span className="group relative inline-block cursor-help">
         {displayStr}
-        {/* ✅ Popup Tooltip */}
         <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center z-[999] pointer-events-none">
           <span className="bg-slate-800 text-white text-[11px] font-medium py-1.5 px-3 rounded-md shadow-2xl whitespace-nowrap tracking-wide">
-            Exact: <span className="font-bold text-emerald-300">{fmtAmt(roundedNum)}</span>
+            Exact: <span className="font-bold text-emerald-300">₹{fmt(roundedNum)}</span>
           </span>
           <span className="w-2.5 h-2.5 bg-slate-800 transform rotate-45 -mt-1.5"></span>
         </span>
@@ -337,18 +368,17 @@ const CategoryCard = ({
     );
   };
 
-  // ✅ Color and Icon logic for Achieved Values
   const isAmountShort = hasTarget && rangeTarget > 0 && total < rangeTarget;
   const amountColor = hasTarget && rangeTarget > 0 ? (isAmountShort ? "text-rose-600" : "text-emerald-600") : "text-slate-900";
-
   const AmountIcon = isAmountShort ? FaArrowDown : FaArrowUp;
   const amountIconClass = `w-3.5 h-3.5 ${amountColor} ${isAmountShort ? "rotate-45" : "-rotate-45"}`;
+  const amountPrefix = (!isAmountShort && total > rangeTarget) ? "+" : "";
 
   const isFFShort = hasTarget && rangeTargetFF > 0 && footfall < rangeTargetFF;
   const ffColor = hasTarget && rangeTargetFF > 0 ? (isFFShort ? "text-rose-600" : "text-emerald-600") : "text-slate-900";
-
   const FFIcon = isFFShort ? FaArrowDown : FaArrowUp;
   const ffIconClass = `w-3.5 h-3.5 ${ffColor} ${isFFShort ? "rotate-45" : "-rotate-45"}`;
+  const ffPrefix = (!isFFShort && footfall > rangeTargetFF) ? "+" : "";
 
   return (
     <div className={`bg-white rounded-lg border p-3 hover:border-blue-300 transition-colors ${a.border}`}>
@@ -357,14 +387,13 @@ const CategoryCard = ({
         <div className={`text-[12px] font-black uppercase tracking-wider leading-8 ${a.title}`}>{title}</div>
       </div>
       <div className="space-y-1 mb-2.5">
-        {/* ✅ TOTAL Value */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-black text-slate-800 uppercase tracking-wide">TOTAL:</span>
           <span className="text-[14px] font-black flex items-center gap-1">
             {hasTarget && rangeTarget > 0 ? (
               <>
                 {React.createElement(AmountIcon, { className: amountIconClass })}
-                <span className={amountColor}>{formatSmartAmt(total)}</span>
+                <span className={amountColor}>{amountPrefix}{formatSmartAmt(total)}</span>
                 <span className="text-slate-900"> / {formatSmartAmt(rangeTarget)}</span>
               </>
             ) : (
@@ -373,14 +402,13 @@ const CategoryCard = ({
           </span>
         </div>
 
-        {/* ✅ FOOTFALL Value */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-black text-slate-800 uppercase tracking-wide">FOOTFALL:</span>
           <span className="text-[14px] font-black flex items-center gap-1">
             {hasTarget && rangeTargetFF > 0 ? (
               <>
                 {React.createElement(FFIcon, { className: ffIconClass })}
-                <span className={ffColor}>{Math.round(footfall)}</span>
+                <span className={ffColor}>{ffPrefix}{Math.round(footfall)}</span>
                 <span className="text-slate-900"> / {Math.round(rangeTargetFF)}</span>
               </>
             ) : (
@@ -419,6 +447,7 @@ const CategoryCard = ({
   );
 };
 
+
 /* ============================================================ */
 /* Grand Total Card                                              */
 /* ============================================================ */
@@ -426,18 +455,44 @@ const GrandTotalCard = ({
   total, cash, online, due, footFall,
   rangeTarget = 0, hasTarget = false, rangeLabel = "Target", rangeTargetFF = 0,
 }) => {
+  const formatSmartAmt = (val) => {
+    const roundedNum = Math.round(Number(val) || 0);
+    if (roundedNum >= 10000000) return `₹${(roundedNum / 10000000).toFixed(2).replace(/\.00$/, '')} Cr`;
+    if (roundedNum >= 100000) return `₹${(roundedNum / 100000).toFixed(2).replace(/\.00$/, '')} L`;
+    if (roundedNum >= 1000) return `₹${(roundedNum / 1000).toFixed(1).replace(/\.0$/, '')}K`;
+    return `₹${fmt(roundedNum)}`;
+  };
+
   const diff = total - rangeTarget;
-  const pct = rangeTarget > 0 ? (total / rangeTarget) * 100 : 0;
   const diffAbs = Math.abs(diff);
+  const pct = rangeTarget > 0 ? (total / rangeTarget) * 100 : 0;
+  const shortPct = 100 - pct;
   const barWidth = Math.min(pct, 100);
 
   let statusLabel = "PENDING";
   let barColor = "bg-white/60";
+  let displayPct = `${pct.toFixed(0)}%`;
+
   if (rangeTarget > 0) {
-    if (diffAbs < 0.5) { statusLabel = "MATCHED"; barColor = "bg-emerald-300"; }
-    else if (diff > 0) { statusLabel = "EXCEEDED"; barColor = "bg-cyan-300"; }
-    else { statusLabel = "SHORTFALL"; barColor = "bg-rose-300"; }
+    if (diffAbs < 0.5) { 
+      statusLabel = "MATCHED"; 
+      barColor = "bg-emerald-300"; 
+      displayPct = "100%";
+    }
+    else if (diff > 0) { 
+      statusLabel = "EXCEEDED"; 
+      barColor = "bg-cyan-300"; 
+      displayPct = `+${(pct - 100).toFixed(0)}%`;
+    }
+    else { 
+      statusLabel = "SHORTFALL"; 
+      barColor = "bg-rose-300"; 
+      displayPct = `-${shortPct.toFixed(0)}%`; 
+    }
   }
+
+  const totalPrefix = (hasTarget && total > rangeTarget) ? "+" : "";
+  const ffPrefix = (hasTarget && rangeTargetFF > 0 && footFall > rangeTargetFF) ? "+" : "";
 
   return (
     <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-3 text-white shadow-md shadow-blue-500/20">
@@ -448,21 +503,19 @@ const GrandTotalCard = ({
         <div className="text-[12px] font-black uppercase tracking-wider leading-8 text-white">Grand Total</div>
       </div>
       <div className="space-y-1 mb-2.5">
-        {/* ✅ Updated: Grand Total with Slash Format */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-black text-white uppercase tracking-wide">GRAND TOTAL:</span>
           <span className="text-[14px] font-black text-white">
             {hasTarget && rangeTarget > 0
-              ? `${fmtAmt(total)} / ₹${fmt(Math.round(rangeTarget))}`
-              : fmtAmt(total)}
+              ? `${totalPrefix}${formatSmartAmt(total)} / ${formatSmartAmt(rangeTarget)}`
+              : formatSmartAmt(total)}
           </span>
         </div>
-        {/* ✅ Updated: Footfall with Slash Format */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-black text-white uppercase tracking-wide">FOOTFALL TOTAL:</span>
           <span className="text-[14px] font-black text-white">
             {hasTarget && rangeTargetFF > 0
-              ? `${footFall} / ${Math.round(rangeTargetFF)}`
+              ? `${ffPrefix}${footFall} / ${Math.round(rangeTargetFF)}`
               : footFall}
           </span>
         </div>
@@ -475,7 +528,7 @@ const GrandTotalCard = ({
         ].map((m) => (
           <div key={m.label} className="flex items-center justify-between text-[11px]">
             <span className="flex items-center gap-1.5 text-white/80 font-bold">{m.label}</span>
-            <span className={`font-black ${m.isDue ? "text-rose-200" : "text-white"}`}>{fmtAmt(m.val)}</span>
+            <span className={`font-black ${m.isDue ? "text-rose-200" : "text-white"}`}>{formatSmartAmt(m.val)}</span>
           </div>
         ))}
       </div>
@@ -487,16 +540,18 @@ const GrandTotalCard = ({
           </div>
           <div className="flex items-center justify-between gap-2 mb-1.5">
             <span className="text-[11px] font-black text-white">
-              {fmtAmt(Math.round(total))} / ₹{fmt(Math.round(rangeTarget))}
+              {formatSmartAmt(total)} / {formatSmartAmt(rangeTarget)}
             </span>
-            <span className="text-[10px] font-black text-white/90">{pct.toFixed(0)}%</span>
+            <span className="text-[10px] font-black text-white/90">{displayPct}</span>
           </div>
           <div className="w-full h-1 rounded-full bg-white/20 overflow-hidden">
             <div className={`h-full ${barColor}`} style={{ width: `${barWidth}%` }} />
           </div>
           {diffAbs >= 0.5 && (
             <div className="text-[9px] font-bold mt-1 text-white/90">
-              {diff > 0 ? `+₹${fmt(Math.round(diffAbs))} surplus` : `−₹${fmt(Math.round(diffAbs))} short`}
+              {diff > 0 
+                ? `+₹${fmt(Math.round(diffAbs))} surplus (+${shortPct.toFixed(0)}%)` 
+                : `−₹${fmt(Math.round(diffAbs))} short (-${shortPct.toFixed(0)}%)`}
             </div>
           )}
         </div>
@@ -521,7 +576,6 @@ const AddTargetModal = ({
   const [fyStartYear, setFyStartYear] = useState(defaultFYStart);
   const [categories, setCategories] = useState([]);
 
-  // Grid structure: { [month]: { [catKey]: { amount: "", footFall: "" } } }
   const [grid, setGrid] = useState({});
   const [fyError, setFyError] = useState("");
 
@@ -548,7 +602,6 @@ const AddTargetModal = ({
       setFyError("");
       setFyStartYear(defaultFYStart);
 
-      // Load custom segments from localStorage
       let savedCats = [];
       try {
         const stored = localStorage.getItem("revenue_custom_segments");
@@ -574,7 +627,6 @@ const AddTargetModal = ({
           allCats.forEach((cat) => {
             const catData = editTarget.categories?.[cat.key];
             if (catData) {
-              // ✅ Convert Lakhs back to raw number for display (e.g. 200000 -> 2)
               const displayAmount = catData.amount > 0 ? (catData.amount / 100000).toFixed(2).replace(/\.00$/, '') : "";
               emptyGrid[editMonth][cat.key].amount = displayAmount;
               emptyGrid[editMonth][cat.key].footFall = catData.footFall > 0 ? String(catData.footFall) : "";
@@ -585,7 +637,6 @@ const AddTargetModal = ({
 
       setGrid(emptyGrid);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, editTarget]);
 
   if (!isOpen) return null;
@@ -606,7 +657,6 @@ const AddTargetModal = ({
     const updatedCats = [...categories, newCat];
     setCategories(updatedCats);
 
-    // Save to localstorage (only custom ones)
     try {
       const customOnly = updatedCats.filter(c => c.key.startsWith("custom_"));
       localStorage.setItem("revenue_custom_segments", JSON.stringify(customOnly));
@@ -659,7 +709,6 @@ const AddTargetModal = ({
         const amtRaw = grid?.[m]?.[cat.key]?.amount;
         const ffRaw = grid?.[m]?.[cat.key]?.footFall;
 
-        // ✅ Convert Input Amount (Lakhs) to real Amount (e.g. 2 -> 200000)
         const amtInLakhs = Number(amtRaw) || 0;
         const amt = amtInLakhs * 100000;
         const ff = Number(ffRaw) || 0;
@@ -707,7 +756,6 @@ const AddTargetModal = ({
     }));
   };
 
-  // ✅ Helper to calculate and display amounts in Lakhs
   const getCategoryTotal = (catKey, field) => {
     let sum = 0;
     FY_MONTH_ORDER.forEach((m) => {
@@ -741,7 +789,6 @@ const AddTargetModal = ({
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-[95vw] shadow-2xl border border-purple-200 overflow-hidden flex flex-col max-h-[95vh]">
 
-        {/* Header */}
         <div className={`px-5 py-4 text-white flex items-center gap-3 flex-shrink-0 ${isEditMode ? "bg-gradient-to-r from-blue-600 to-indigo-600" : "bg-gradient-to-r from-purple-600 to-indigo-600"}`}>
           <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
             {isEditMode ? <FaEdit className="w-5 h-5" /> : <FiTarget className="w-5 h-5" />}
@@ -772,7 +819,6 @@ const AddTargetModal = ({
           </div>
         </div>
 
-        {/* Body */}
         <div className="p-5 space-y-3 overflow-y-auto flex-1">
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
@@ -800,7 +846,6 @@ const AddTargetModal = ({
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  {/* Top Header: Category Names */}
                   <tr>
                     <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-purple-700 bg-purple-700 sticky left-0 z-20 whitespace-nowrap w-[80px]" rowSpan={2}>
                       Month
@@ -825,7 +870,6 @@ const AddTargetModal = ({
                       Total
                     </th>
                   </tr>
-                  {/* Sub Header: Amount & FootFall */}
                   <tr>
                     {categories.map((cat) => (
                       <React.Fragment key={cat.key}>
@@ -838,7 +882,6 @@ const AddTargetModal = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Rows: Months */}
                   {FY_MONTH_ORDER.map((m) => {
                     const yr = m >= 4 ? fyStartYear : fyStartYear + 1;
                     const isEditRow = isEditMode && m === editMonth;
@@ -872,7 +915,6 @@ const AddTargetModal = ({
                           );
                         })}
 
-                        {/* Month Total */}
                         <td className="px-2 py-2 text-center font-black text-indigo-800 text-xs bg-indigo-50 border-r border-b whitespace-nowrap">
                           {monthTotalAmount > 0 ? fmt(monthTotalAmount) : "—"}
                         </td>
@@ -882,7 +924,6 @@ const AddTargetModal = ({
                       </tr>
                     );
                   })}
-                  {/* Grand Total Row */}
                   <tr className="bg-gradient-to-r from-slate-100 to-slate-50 border-t-2 border-slate-300">
                     <td className="px-2 py-2 text-center font-black text-slate-900 text-[10px] uppercase tracking-wider border-r border-slate-300 bg-slate-200 sticky left-0 z-10 whitespace-nowrap w-[80px]">
                       Grand Total
@@ -930,7 +971,6 @@ const AddTargetModal = ({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-5 py-3 bg-slate-50 border-t border-slate-200 flex-shrink-0">
           <button type="button" onClick={onClose} disabled={saving}
             className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50">
@@ -949,7 +989,6 @@ const AddTargetModal = ({
         </div>
       </div>
 
-      {/* Add Segment Modal */}
       {showAddSegment && (
         <div className="fixed inset-0 z-[9999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-md w-full shadow-2xl p-5 border border-slate-200">
@@ -1078,19 +1117,16 @@ const TargetTracker = ({
 
     const seen = new Set();
     const cats = [];
-    // Default first
     DEFAULT_CATEGORIES.forEach(def => {
       seen.add(def.key);
       cats.push(def);
     });
-    // Then saved custom
     savedCats.forEach(c => {
       if (!seen.has(c.key)) {
         seen.add(c.key);
         cats.push(c);
       }
     });
-    // Then any extra from DB not in saved
     if (allTargets && allTargets.length > 0) {
       allTargets.forEach(t => {
         if (t.category && !seen.has(t.category)) {
@@ -1288,7 +1324,6 @@ const TargetTracker = ({
                       <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[8px] border-r ${styles.sub[cat.key]} whitespace-nowrap`}>FF Ach%</th>
                     </React.Fragment>
                   ))}
-                  {/* Summary Headers (6 columns to match body) */}
                   <th className="px-1 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[8px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Ach / Tgt</th>
                   <th className="px-1 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[8px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Ach% / 100%</th>
                   <th className="px-1 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[8px] border-r border-indigo-100 bg-indigo-50 whitespace-nowrap">Per Day</th>
@@ -1326,7 +1361,6 @@ const TargetTracker = ({
                   const rowPct = totalTarget > 0 ? (totalAch / totalTarget) * 100 : 0;
                   const rowStatus = getRowStatus(hasAch, totalTarget, rowDiff, rowDiffAbs);
 
-                  // Summary Calculations
                   const totalPerDay = t.daysInRange > 0 ? totalTarget / t.daysInRange : 0;
                   const totalPerDayFF = t.daysInRange > 0 ? totalTargetFF / t.daysInRange : 0;
 
@@ -1347,6 +1381,7 @@ const TargetTracker = ({
                         const catDiff = catAch - catTarget;
                         const catDiffAbs = Math.abs(catDiff);
                         const catPct = catTarget > 0 ? (catAch / catTarget) * 100 : 0;
+                        const catShortPct = 100 - catPct;
                         const catPerDay = t.daysInRange > 0 ? catTarget / t.daysInRange : 0;
 
                         const achColor = !hasAch ? "text-slate-400"
@@ -1358,7 +1393,6 @@ const TargetTracker = ({
 
                         return (
                           <React.Fragment key={cat.key}>
-                            {/* 1. Achieved / Target (Reversed) */}
                             <td className={`px-1 py-2 text-center font-bold text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap`}>
                               <div className={`${achColor}`}>
                                 {hasAch ? (catAch > 0 ? fmtAmt(Math.round(catAch)) : "—") : "—"}
@@ -1366,7 +1400,6 @@ const TargetTracker = ({
                               <div className="w-3/4 mx-auto border-t border-slate-300 my-0.5"></div>
                               <div className="text-purple-800">{catTarget > 0 ? fmtAmt(Math.round(catTarget)) : "—"}</div>
                             </td>
-                            {/* 2. Ach % / 100% (Reversed) */}
                             <td className={`px-1 py-2 text-center font-bold text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap`}>
                               <div className={`${pctColor}`}>
                                 {hasAch && catTarget > 0 ? `${catPct.toFixed(1)}%` : "—"}
@@ -1374,11 +1407,9 @@ const TargetTracker = ({
                               <div className="w-3/4 mx-auto border-t border-slate-300 my-0.5"></div>
                               <div className="text-slate-500">100%</div>
                             </td>
-                            {/* 3. Per Day */}
                             <td className={`px-1 py-2 text-center font-bold text-slate-700 text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap`}>
                               {catPerDay > 0 ? fmtAmt(Math.round(catPerDay)) : "—"}
                             </td>
-                            {/* 4. Short/Surp */}
                             <td className={`px-1 py-2 text-center font-extrabold text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap ${!hasAch ? "text-slate-400"
                                 : catDiffAbs < 0.5 ? "text-emerald-700"
                                   : catDiff > 0 ? "text-blue-700" : "text-rose-700"
@@ -1386,7 +1417,7 @@ const TargetTracker = ({
                               {hasAch ? (
                                 catDiffAbs < 0.5 ? "—" : (
                                   <>
-                                    {catPct > 100 ? `+${(catPct - 100).toFixed(1)}%` : `-${(100 - catPct).toFixed(1)}%`}
+                                    {catDiff > 0 ? `+${fmtAmt(Math.round(catDiffAbs))}` : `-${fmtAmt(Math.round(catDiffAbs))}`}
                                     <div className="text-[8px] font-normal opacity-80 mt-0.5">
                                       {catDiff > 0 ? "Surp" : "Short"}
                                     </div>
@@ -1394,7 +1425,6 @@ const TargetTracker = ({
                                 )
                               ) : "—"}
                             </td>
-                            {/* 5. FootFall A/T (Reversed) */}
                             <td className={`px-1 py-2 text-center font-bold text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap`}>
                               <div className={`${ffColor}`}>
                                 {hasAch ? (catAchFF > 0 ? Math.round(catAchFF) : "—") : "—"}
@@ -1402,7 +1432,6 @@ const TargetTracker = ({
                               <div className="w-3/4 mx-auto border-t border-slate-300 my-0.5"></div>
                               <div className="text-purple-800">{catTargetFF > 0 ? Math.round(catTargetFF) : "—"}</div>
                             </td>
-                            {/* 6. FF Ach % */}
                             <td className={`px-1 py-2 text-center font-bold text-[9px] border-r ${styles.cell[cat.key]} whitespace-nowrap`}>
                               <div className={catAchFF >= catTargetFF && hasAch ? "text-emerald-700" : "text-rose-700"}>
                                 {hasAch && catTargetFF > 0 ? `${((catAchFF / catTargetFF) * 100).toFixed(1)}%` : "—"}
@@ -1415,7 +1444,6 @@ const TargetTracker = ({
                         );
                       })}
 
-                      {/* Summary Columns */}
                       <td className="px-1 py-2 text-center font-extrabold text-[9px] border-r border-indigo-100 bg-indigo-50/50 whitespace-nowrap">
                         <div className={`${!hasAch ? "text-slate-400" : (totalAch < totalTarget ? "text-rose-700" : "text-emerald-700")}`}>
                           {hasAch ? fmtAmt(Math.round(totalAch)) : "—"}
@@ -1440,7 +1468,7 @@ const TargetTracker = ({
                         {hasAch ? (
                           rowDiffAbs < 0.5 ? "—" : (
                             <>
-                              {rowPct > 100 ? `+${(rowPct - 100).toFixed(1)}%` : `-${(100 - rowPct).toFixed(1)}%`}
+                              {rowDiff > 0 ? `+${fmtAmt(Math.round(rowDiffAbs))}` : `-${fmtAmt(Math.round(rowDiffAbs))}`}
                               <div className="text-[8px] font-normal opacity-80 mt-0.5">
                                 {rowDiff > 0 ? "Surp" : "Short"}
                               </div>
@@ -1468,7 +1496,6 @@ const TargetTracker = ({
                         )}
                       </td>
 
-                      {/* Actions */}
                       <td className="px-1 py-2 text-center border-slate-200 whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1">
                           <button type="button" onClick={() => onEditRow(t)} title="Edit"
@@ -1533,8 +1560,13 @@ export default function RevenueAnalytics() {
 
   const [isTargetHidden, setIsTargetHidden] = useState(false);
 
-  // ✅ Table dynamic segments
   const [customSegments, setCustomSegments] = useState([]);
+
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const exportDropdownRef = useRef(null);
+
+  // ✅ Expand state for month rows
+  const [expandedMonths, setExpandedMonths] = useState({});
 
   useEffect(() => {
     try {
@@ -1542,6 +1574,16 @@ export default function RevenueAnalytics() {
       if (stored) setCustomSegments(JSON.parse(stored));
     } catch (e) { console.error(e); }
   }, [showAddTargetModal]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target)) {
+        setShowExportDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -1723,16 +1765,14 @@ export default function RevenueAnalytics() {
   };
 
   const fetchAnalytics = useCallback(async () => {
-    // ✅ FIX: "All" mode ke liye date empty hone par bhi call karo
     let queryFrom = fromDate;
     let queryTo = toDate;
 
     if (activePreset === "all") {
-      // Backend ko bolo saara data de (bohot purani date se aaj tak)
       queryFrom = "2020-01-01";
       queryTo = new Date().toISOString().split("T")[0];
     } else if (!fromDate || !toDate) {
-      return; // Baaki cases mein date zaroori hai
+      return;
     }
 
     setLoading(true);
@@ -1814,7 +1854,6 @@ export default function RevenueAnalytics() {
     if (preset === "today") { const t = fmtDate(nowD); setFromDate(t); setToDate(t); }
     else if (preset === "yesterday") { const y = new Date(nowD); y.setDate(y.getDate() - 1); const t = fmtDate(y); setFromDate(t); setToDate(t); }
 
-    // ✅ NAYA: Last 7 Days Filter
     else if (preset === "last7Days") {
       const past7Days = new Date(nowD);
       past7Days.setDate(nowD.getDate() - 6);
@@ -1838,7 +1877,7 @@ export default function RevenueAnalytics() {
       const first = new Date(nowD.getFullYear(), 0, 1);
       const last = new Date(nowD.getFullYear(), 11, 31);
       setFromDate(fmtDate(first)); setToDate(fmtDate(last));
-    } else if (preset === "all") { // 👈 Ye block add karo
+    } else if (preset === "all") {
       setFromDate("");
       setToDate("");
     }
@@ -1901,7 +1940,7 @@ export default function RevenueAnalytics() {
           acc[catKey] += perDay;
           acc[`${catKey}FF`] = (acc[`${catKey}FF`] || 0) + perDayFF;
         } else {
-          acc[catKey] = perDay; // handle custom categories
+          acc[catKey] = perDay;
           acc[`${catKey}FF`] = perDayFF;
         }
         acc.hasAny = true;
@@ -2190,7 +2229,6 @@ export default function RevenueAnalytics() {
     showToast("Target Tracker exported successfully!", "success");
   };
 
-  // ✅ NAYA: presetOptions mein "This Week" update kiya
   const presetOptions = [
     { v: "today", l: "Today" },
     { v: "yesterday", l: "Yesterday" },
@@ -2199,13 +2237,12 @@ export default function RevenueAnalytics() {
     { v: "thisMonth", l: "This Month" },
     { v: "lastMonth", l: "Last Month" },
     { v: "thisYear", l: "This Year" },
-    { v: "all", l: "All" }, // 👈 Ye line add karo
+    { v: "all", l: "All" },
   ];
   const inputCls = "w-full text-center text-xs font-bold bg-white border border-amber-400 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500";
 
   const styles = getDynamicStyles(customSegments);
 
-  // ✅ Dynamic Cards: Default + Custom
   const allCardCategories = useMemo(() => {
     const defaultCards = [
       {
@@ -2235,7 +2272,6 @@ export default function RevenueAnalytics() {
     ];
 
     const customCards = customSegments.map((cat, idx) => {
-      // Calculate total from rowInputs for this segment
       let totalAmt = 0;
       let totalFF = 0;
 
@@ -2250,11 +2286,11 @@ export default function RevenueAnalytics() {
       return {
         key: cat.key,
         title: cat.label,
-        icon: <FiTarget />, // Default icon for custom
+        icon: <FiTarget />, 
         accent: COLOR_PALETTE[idx % COLOR_PALETTE.length].color,
         total: totalAmt,
         footfall: totalFF,
-        data: { cash: totalAmt, online: 0, due: 0, footFall: totalFF }, // Treat amount as cash
+        data: { cash: totalAmt, online: 0, due: 0, footFall: totalFF }, 
         rangeTarget: rangeTargets[cat.key] || 0,
         rangeTargetFF: rangeTargets[`${cat.key}FF`] || 0,
         isCustom: true
@@ -2263,6 +2299,198 @@ export default function RevenueAnalytics() {
 
     return [...defaultCards, ...customCards];
   }, [data, retailPharmacyLive, rangeTargets, customSegments, rowInputs]);
+
+  // ✅ Function to toggle expansion
+  const toggleExpand = (rowKey) => {
+    setExpandedMonths(prev => ({ ...prev, [rowKey]: !prev[rowKey] }));
+  };
+
+    // ✅ Reusable Table Row Renderer
+  const renderTableRow = (r, isSubRow = false) => {
+    const rowKey = r.date || "__total__";
+    const isTotal = rowKey === "__total__";
+    const ri = rowInputs[rowKey] || {};
+    const rCash = isTotal ? (Number(retailInput.cash) || 0) : (Number(ri.cash) || 0);
+    const rOnline = isTotal ? (Number(retailInput.online) || 0) : (Number(ri.online) || 0);
+    const rFoot = isTotal ? (Number(retailInput.footFall) || 0) : (Number(ri.footFall) || 0);
+    const rRetail = { cash: rCash, online: rOnline, total: rCash + rOnline, footFall: rFoot };
+    const rBC = isTotal
+      ? (savedBankCredit !== null ? savedBankCredit : (parseFloat(bankCredit) || 0))
+      : (ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0));
+
+    let rGrand = {
+      cash: r.clinic.cash + r.lab.cash + r.pharmacy.cash + rRetail.cash,
+      online: r.clinic.online + r.lab.online + r.pharmacy.online + rRetail.online,
+      total: r.clinic.total + r.lab.total + r.pharmacy.total + rRetail.total,
+      footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + rRetail.footFall,
+    };
+
+    customSegments.forEach(cat => {
+      const customAmt = Number(ri[cat.key]?.amount) || 0;
+      rGrand.total += customAmt;
+      rGrand.cash += customAmt; 
+    });
+
+    const rDiff = rBC - rGrand.total;
+    const rDiffAbs = Math.abs(rDiff);
+    const rDiffLabel = !rBC ? "—" : rDiffAbs < 0.5 ? "MATCHED" : rDiff > 0 ? "CREDIT MORE" : "CREDIT LESS";
+    const rDiffColor = rDiffLabel === "MATCHED" ? "text-emerald-700"
+      : rDiffLabel === "CREDIT MORE" ? "text-blue-700"
+        : rDiffLabel === "CREDIT LESS" ? "text-rose-700" : "text-slate-400";
+    const isMonthly = r.year && r.month;
+    const dateLabel = isTotal
+      ? `${formatDateToDDMMYYYY(fromDate)} – ${formatDateToDDMMYYYY(toDate)}`
+      : isMonthly ? `${MONTHS[r.month - 1].slice(0, 3)} ${r.year}` : formatDateToDDMMYYYY(r.date);
+
+    const hasMonthData = r.monthData && r.monthData.length > 0;
+    const isExpanded = expandedMonths[rowKey];
+
+    return (
+      <tr key={rowKey} className={`hover:bg-slate-50 ${isTotal ? "bg-amber-50/60 border-t-2 border-amber-300" : isSubRow ? "bg-slate-50/50" : ""}`}>
+              <td className={`px-3 py-3 text-center font-bold text-slate-800 text-[11px] border-r border-slate-200 whitespace-nowrap ${isTotal ? "bg-amber-50" : isSubRow ? "bg-slate-100/50" : "bg-slate-50"}`}>
+          <div className="flex items-center justify-center gap-1.5">
+            {hasMonthData && !isTotal && (
+              <div className="relative group flex items-center justify-center">
+                <button onClick={() => toggleExpand(rowKey)} className="text-blue-600 hover:text-blue-800 transition-colors focus:outline-none">
+                  {isExpanded ? <FaMinusCircle className="w-3.5 h-3.5" /> : <FaPlusCircle className="w-3.5 h-3.5" />}
+                </button>
+                
+                {/* ✅ Tooltip fixed to the right side */}
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 hidden group-hover:block bg-slate-800 text-white text-[10px] font-medium px-2 py-1 rounded shadow-lg whitespace-nowrap z-[999] pointer-events-none">
+                  {isExpanded ? "Collapse Month" : "Expand Month"}
+                </div>
+              </div>
+            )}
+            <span>{dateLabel}</span>
+          </div>
+        </td>
+        <td className="px-3 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.clinic.cash)}</td>
+        <td className="px-3 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.clinic.online)}</td>
+        <td className="px-3 py-3 text-center font-bold text-blue-700 border-r border-slate-100 bg-blue-50/40 text-xs">{fmt(r.clinic.total)}</td>
+        <td className="px-3 py-3 text-center font-bold text-blue-800 border-r border-slate-200 bg-blue-50/40 text-xs">{r.clinic.footFall}</td>
+
+        <td className="px-3 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.lab.cash)}</td>
+        <td className="px-3 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.lab.online)}</td>
+        <td className="px-3 py-3 text-center font-bold text-purple-700 border-r border-slate-100 bg-purple-50/40 text-xs">{fmt(r.lab.total)}</td>
+        <td className="px-3 py-3 text-center font-bold text-purple-800 border-r border-slate-200 bg-purple-50/40 text-xs">{r.lab.footFall}</td>
+
+        <td className="px-3 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.cash)}</td>
+        <td className="px-3 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.online)}</td>
+        <td className="px-3 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-emerald-50/40 text-xs">{fmt(r.pharmacy.total)}</td>
+        <td className="px-3 py-3 text-center font-bold text-emerald-800 border-r border-slate-200 bg-emerald-50/40 text-xs">{r.pharmacy.footFall}</td>
+
+        <td className="px-2 py-2 border-r border-slate-100 bg-amber-50/40">
+          <input type="number" min="0" placeholder="0"
+            value={isTotal ? retailInput.cash : (ri.cash || "")}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (isTotal) setRetailInput((p) => ({ ...p, cash: v }));
+              else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), cash: v } }));
+            }}
+            className={inputCls} />
+        </td>
+        <td className="px-2 py-2 border-r border-slate-100 bg-amber-50/40">
+          <input type="number" min="0" placeholder="0"
+            value={isTotal ? retailInput.online : (ri.online || "")}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (isTotal) setRetailInput((p) => ({ ...p, online: v }));
+              else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), online: v } }));
+            }}
+            className={inputCls} />
+        </td>
+        <td className="px-3 py-3 text-center font-bold text-amber-700 border-r border-slate-100 bg-amber-50/40 text-xs">{fmt(rRetail.total)}</td>
+        <td className="px-2 py-2 border-r border-slate-200 bg-amber-50/40">
+          <input type="number" min="0" placeholder="0"
+            value={isTotal ? retailInput.footFall : (ri.footFall || "")}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (isTotal) setRetailInput((p) => ({ ...p, footFall: v }));
+              else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), footFall: v } }));
+            }}
+            className={inputCls} />
+        </td>
+
+        {customSegments.map(cat => (
+          <React.Fragment key={cat.key}>
+            <td className="px-2 py-2 border-r border-slate-100 bg-white">
+              <input type="number" min="0" placeholder="0"
+                value={isTotal ? (retailInput[cat.key] || "") : (ri[cat.key]?.amount || "")}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (isTotal) setRetailInput((p) => ({ ...p, [cat.key]: v }));
+                  else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), [cat.key]: { ...(p[rowKey]?.[cat.key] || {}), amount: v } } }));
+                }}
+                className={inputCls} />
+            </td>
+            <td className="px-2 py-2 border-r border-slate-100 bg-white">
+              <input type="number" min="0" placeholder="0"
+                value={isTotal ? (retailInput[`${cat.key}_ff`] || "") : (ri[cat.key]?.footFall || "")}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (isTotal) setRetailInput((p) => ({ ...p, [`${cat.key}_ff`]: v }));
+                  else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), [cat.key]: { ...(p[rowKey]?.[cat.key] || {}), footFall: v } } }));
+                }}
+                className={inputCls} />
+            </td>
+          </React.Fragment>
+        ))}
+
+        <td className="px-3 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-indigo-50/40 text-xs">{fmt(rGrand.cash)}</td>
+        <td className="px-3 py-3 text-center font-bold text-sky-700 border-r border-slate-100 bg-indigo-50/40 text-xs">{fmt(rGrand.online)}</td>
+        <td className="px-3 py-3 text-center font-black text-indigo-800 border-r border-slate-100 bg-indigo-50/40 text-sm">{fmt(rGrand.total)}</td>
+        <td className="px-3 py-3 text-center font-black text-indigo-800 border-r border-slate-200 bg-indigo-50/40 text-xs">{rGrand.footFall}</td>
+        <td className="px-2 py-2 border-r border-slate-200 bg-rose-50/40">
+          <div className="flex items-center gap-1 justify-center">
+            <input type="number" min="0" placeholder="0"
+              value={isTotal ? bankCredit : (ri.bankCredit || "")}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (isTotal) setBankCredit(v);
+                else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), bankCredit: v } }));
+              }}
+              className="w-[110px] text-center text-sm font-extrabold text-rose-700 bg-white border border-rose-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500" />
+            <button type="button"
+              onClick={() => {
+                if (isTotal) handleSaveClick();
+                else {
+                  const bcNum = parseFloat(ri.bankCredit) || 0;
+                  if (bcNum <= 0) { showToast("Enter bank credit first", "error"); return; }
+                  handleSaveRow(rowKey, bcNum, rGrand.total, rRetail);
+                }
+              }}
+              disabled={isTotal ? (!bankCredit || parseFloat(bankCredit) <= 0 || !hasUnsavedChange) : (!ri.bankCredit || parseFloat(ri.bankCredit) <= 0)}
+              title={isTotal && hasSavedValue && !hasUnsavedChange ? "Already saved" : "Save"}
+              className={`flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-all shadow-sm ${(isTotal ? (hasUnsavedChange && parseFloat(bankCredit) > 0) : (parseFloat(ri.bankCredit) > 0))
+                  ? "bg-gradient-to-br from-rose-500 to-rose-600 text-white hover:from-rose-600 hover:to-rose-700 hover:scale-105"
+                  : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                }`}>
+              {savingRowKey === rowKey ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FaSave className="w-3 h-3" />}
+            </button>
+          </div>
+          {(isTotal ? hasSavedValue : ri.saved) && (
+            <div className="mt-1 text-center text-[9px] font-bold text-emerald-600 flex items-center justify-center gap-1">
+              <FaCheckCircle className="w-2 h-2" /> Saved
+            </div>
+          )}
+        </td>
+        <td className={`px-3 py-3 text-center font-black text-sm border-r border-slate-200 bg-rose-50/40 ${rDiffColor}`}>
+          {rDiffLabel === "—" ? "—" : (rDiffAbs < 0.5 ? "0" : fmt(rDiffAbs))}
+        </td>
+        <td className={`px-3 py-3 text-center font-bold text-[10px] uppercase tracking-wider bg-rose-50/40 ${rDiffColor}`}>
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border ${rDiffLabel === "MATCHED" ? "bg-emerald-50 border-emerald-200"
+              : rDiffLabel === "CREDIT MORE" ? "bg-blue-50 border-blue-200"
+                : rDiffLabel === "CREDIT LESS" ? "bg-rose-50 border-rose-200" : "bg-slate-50 border-slate-200"
+            }`}>
+            {rDiffLabel === "MATCHED" && <FaEquals className="w-2.5 h-2.5" />}
+            {rDiffLabel === "CREDIT MORE" && <FaArrowUp className="w-2.5 h-2.5" />}
+            {rDiffLabel === "CREDIT LESS" && <FaArrowDown className="w-2.5 h-2.5" />}
+            {rDiffLabel}
+          </span>
+        </td>
+      </tr>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-2 sm:p-3 lg:p-4">
@@ -2325,7 +2553,7 @@ export default function RevenueAnalytics() {
       )}
 
       <div className="w-full">
-        {/* COMMON FILTER HEADER */}
+              {/* COMMON FILTER HEADER */}
         <div className="hidden lg:flex items-center justify-between gap-3 mb-3 bg-white border border-slate-200 rounded-lg px-3 py-2.5">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -2337,6 +2565,7 @@ export default function RevenueAnalytics() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {/* 1. Preset Filters (Today, Yesterday...) */}
             <div className="flex items-center gap-0.5 bg-blue-50 p-0.5 rounded-md border border-blue-100">
               {presetOptions.map((p) => (
                 <button key={p.v} onClick={() => setPreset(p.v)}
@@ -2346,12 +2575,8 @@ export default function RevenueAnalytics() {
                 </button>
               ))}
             </div>
-            {hasAnalyticsFilters && (
-              <button type="button" onClick={handleClearAnalyticsFilters}
-                className="flex items-center gap-1 h-8 px-2.5 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-md hover:bg-rose-100 whitespace-nowrap">
-                <FiX className="w-3 h-3" /> Clear
-              </button>
-            )}
+            
+            {/* 3. Month Picker */}
             <div className="relative ra-month-trigger">
               <button onClick={handleMonthPickerClick}
                 className="flex items-center gap-2 h-8 px-3 text-[11px] font-bold text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700 whitespace-nowrap shadow-sm"
@@ -2370,16 +2595,48 @@ export default function RevenueAnalytics() {
                 />
               </div>
             </div>
-            <button onClick={fetchAnalytics} disabled={loading}
-              className="flex items-center gap-1.5 h-8 px-2.5 text-[11px] font-semibold text-blue-700 bg-white border border-blue-200 rounded-md hover:bg-blue-50 disabled:opacity-50 whitespace-nowrap"
-              type="button">
-              <FiRefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} /> Refresh
+
+             {/* 2. Clear Button (Moved Here) */}
+            {hasAnalyticsFilters && (
+              <button type="button" onClick={handleClearAnalyticsFilters}
+                className="flex items-center gap-1 h-8 px-2.5 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-md hover:bg-rose-100 whitespace-nowrap">
+                <FiX className="w-3 h-3" /> Clear
+              </button>
+            )}
+
+            
+            {/* 4. Set Target Button */}
+            <button type="button" onClick={() => { setEditTargetData(null); setShowAddTargetModal(true); }}
+              className="flex items-center gap-1.5 h-8 px-3 text-[11px] font-bold text-white bg-purple-600 rounded-md hover:bg-purple-700 whitespace-nowrap shadow-sm"
+            >
+              <FiTarget className="w-3 h-3" /> Set Target
             </button>
-            <button onClick={handleExportCSV} disabled={!data}
-              className="flex items-center gap-1.5 h-8 px-2.5 text-[11px] font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
-              type="button">
-              <FiDownload className="w-3 h-3" /> Export
-            </button>
+
+            {/* 5. Export Dropdown */}
+            <div className="relative" ref={exportDropdownRef}>
+              <button onClick={() => setShowExportDropdown(!showExportDropdown)} disabled={!data}
+                className="flex items-center gap-1.5 h-8 px-2.5 text-[11px] font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+                type="button">
+                <FiDownload className="w-3 h-3" /> Export <FiChevronDown className="w-3 h-3" />
+              </button>
+              
+              {showExportDropdown && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-[999]">
+                  <button 
+                    onClick={() => { handleExportCSV(); setShowExportDropdown(false); }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2"
+                  >
+                    <FiDownload className="w-3.5 h-3.5" /> Export Revenue
+                  </button>
+                  <button 
+                    onClick={() => { handleExportTrackerCSV(); setShowExportDropdown(false); }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2"
+                  >
+                    <FiDownload className="w-3.5 h-3.5" /> Export Targets
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -2396,12 +2653,20 @@ export default function RevenueAnalytics() {
                 <FiX className="w-3 h-3" />
               </button>
             )}
-            <button onClick={fetchAnalytics} disabled={loading} className="p-1.5 text-blue-700 bg-blue-50 border border-blue-200 rounded-md">
-              <FiRefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
+            <button type="button" onClick={() => { setEditTargetData(null); setShowAddTargetModal(true); }} className="p-1.5 text-purple-700 bg-purple-50 border border-purple-200 rounded-md">
+              <FiTarget className="w-3 h-3" />
             </button>
-            <button onClick={handleExportCSV} disabled={!data} className="p-1.5 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md disabled:opacity-50">
-              <FiDownload className="w-3 h-3" />
-            </button>
+            <div className="relative" ref={exportDropdownRef}>
+              <button onClick={() => setShowExportDropdown(!showExportDropdown)} disabled={!data} className="p-1.5 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md disabled:opacity-50">
+                <FiDownload className="w-3 h-3" />
+              </button>
+              {showExportDropdown && (
+                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-[999]">
+                  <button onClick={() => { handleExportCSV(); setShowExportDropdown(false); }} className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50">Export Revenue</button>
+                  <button onClick={() => { handleExportTrackerCSV(); setShowExportDropdown(false); }} className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-purple-50">Export Targets</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="lg:hidden mb-3 flex items-center gap-1 overflow-x-auto pb-1">
@@ -2414,7 +2679,8 @@ export default function RevenueAnalytics() {
           ))}
         </div>
 
-        {/* TARGET TRACKER */}
+        {/* ✅ COMMENTED OUT: TARGET TRACKER HIDDEN AS REQUESTED */}
+        {/* 
         <TargetTracker
           onSetTargetClick={() => { setEditTargetData(null); setShowAddTargetModal(true); }}
           onExportClick={handleExportTrackerCSV}
@@ -2429,6 +2695,7 @@ export default function RevenueAnalytics() {
           activePreset={activePreset}
           rangeAchieved={rangeAchieved}
         />
+        */}
 
         {error && (
           <div className="flex items-center gap-2 px-3 py-2 mb-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-xs font-medium">
@@ -2536,7 +2803,7 @@ export default function RevenueAnalytics() {
                       <th className="px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-200 bg-indigo-50">FootFall</th>
                     </tr>
                   </thead>
-                  <tbody>
+                                <tbody>
                     {(data.rows && data.rows.length > 0 ? data.rows : [{
                       date: "__total__", label: "", year: null, month: null,
                       clinic: data.clinic, lab: data.lab, pharmacy: data.pharmacy,
@@ -2544,173 +2811,100 @@ export default function RevenueAnalytics() {
                       bankCredit: data.bankCredit?.bankCredit ?? null,
                     }]).map((r, idx) => {
                       const rowKey = r.date || "__total__";
-                      const isTotal = rowKey === "__total__";
-                      const ri = rowInputs[rowKey] || {};
-                      const rCash = isTotal ? (Number(retailInput.cash) || 0) : (Number(ri.cash) || 0);
-                      const rOnline = isTotal ? (Number(retailInput.online) || 0) : (Number(ri.online) || 0);
-                      const rFoot = isTotal ? (Number(retailInput.footFall) || 0) : (Number(ri.footFall) || 0);
-                      const rRetail = { cash: rCash, online: rOnline, total: rCash + rOnline, footFall: rFoot };
-                      const rBC = isTotal
-                        ? (savedBankCredit !== null ? savedBankCredit : (parseFloat(bankCredit) || 0))
-                        : (ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0));
-
-                      // Default Grand Total (from standard segments)
-                      let rGrand = {
-                        cash: r.clinic.cash + r.lab.cash + r.pharmacy.cash + rRetail.cash,
-                        online: r.clinic.online + r.lab.online + r.pharmacy.online + rRetail.online,
-                        total: r.clinic.total + r.lab.total + r.pharmacy.total + rRetail.total,
-                        footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + rRetail.footFall,
-                      };
-
-                      // Add Custom Segments to Grand Total (Amount only)
-                      customSegments.forEach(cat => {
-                        const customAmt = Number(ri[cat.key]?.amount) || 0;
-                        rGrand.total += customAmt;
-                        rGrand.cash += customAmt; // Treat as cash
-                      });
-
-                      const rDiff = rBC - rGrand.total;
-                      const rDiffAbs = Math.abs(rDiff);
-                      const rDiffLabel = !rBC ? "—" : rDiffAbs < 0.5 ? "MATCHED" : rDiff > 0 ? "CREDIT MORE" : "CREDIT LESS";
-                      const rDiffColor = rDiffLabel === "MATCHED" ? "text-emerald-700"
-                        : rDiffLabel === "CREDIT MORE" ? "text-blue-700"
-                          : rDiffLabel === "CREDIT LESS" ? "text-rose-700" : "text-slate-400";
-                      const isMonthly = r.year && r.month;
-                      const dateLabel = isTotal
-                        ? `${formatDateToDDMMYYYY(fromDate)} – ${formatDateToDDMMYYYY(toDate)}`
-                        : isMonthly ? `${MONTHS[r.month - 1].slice(0, 3)} ${r.year}` : formatDateToDDMMYYYY(r.date);
-
+                      const isExpanded = expandedMonths[rowKey];
+                      
                       return (
-                        <tr key={rowKey || idx} className={`hover:bg-slate-50 ${isTotal ? "bg-amber-50/60 border-t-2 border-amber-300" : ""}`}>
-                          <td className={`px-3 py-3 text-center font-bold text-slate-800 text-[11px] border-r border-slate-200 whitespace-nowrap ${isTotal ? "bg-amber-50" : "bg-slate-50"}`}>{dateLabel}</td>
-                          <td className="px-3 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.clinic.cash)}</td>
-                          <td className="px-3 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.clinic.online)}</td>
-                          <td className="px-3 py-3 text-center font-bold text-blue-700 border-r border-slate-100 bg-blue-50/40 text-xs">{fmt(r.clinic.total)}</td>
-                          <td className="px-3 py-3 text-center font-bold text-blue-800 border-r border-slate-200 bg-blue-50/40 text-xs">{r.clinic.footFall}</td>
+                        <React.Fragment key={rowKey || idx}>
+                          {/* Main Month / Total Row */}
+                          {renderTableRow(r, false)}
 
-                          <td className="px-3 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.lab.cash)}</td>
-                          <td className="px-3 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.lab.online)}</td>
-                          <td className="px-3 py-3 text-center font-bold text-purple-700 border-r border-slate-100 bg-purple-50/40 text-xs">{fmt(r.lab.total)}</td>
-                          <td className="px-3 py-3 text-center font-bold text-purple-800 border-r border-slate-200 bg-purple-50/40 text-xs">{r.lab.footFall}</td>
+                          {/* Expanded Daily Rows */}
+                          {isExpanded && r.monthData && r.monthData.map(md => renderTableRow(md, true))}
 
-                          <td className="px-3 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.cash)}</td>
-                          <td className="px-3 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.online)}</td>
-                          <td className="px-3 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-emerald-50/40 text-xs">{fmt(r.pharmacy.total)}</td>
-                          <td className="px-3 py-3 text-center font-bold text-emerald-800 border-r border-slate-200 bg-emerald-50/40 text-xs">{r.pharmacy.footFall}</td>
+                          {/* ✅ End of Month Line & Summary Row */}
+                          {isExpanded && r.monthData && r.monthData.length > 0 && (
+                            <>
+                              {/* Divider Line */}
+                              <tr>
+                                <td colSpan={50} className="py-2 bg-slate-100 border-y border-slate-300 text-center">
+                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center justify-center gap-2">
+                                    <span className="w-10 h-px bg-slate-400"></span>
+                                    END OF {r.label.toUpperCase()}
+                                    <span className="w-10 h-px bg-slate-400"></span>
+                                  </span>
+                                </td>
+                              </tr>
+                              
+                              {/* Summary Row */}
+                              <tr className="bg-indigo-50/50 border-b-2 border-indigo-200">
+                                <td className="px-3 py-2 text-center font-bold text-indigo-800 text-[10px] uppercase tracking-wider border-r border-indigo-200 whitespace-nowrap">
+                                  Summary ({r.label})
+                                </td>
+                                <td className="px-3 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.clinic.cash)}</td>
+                                <td className="px-3 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.clinic.online)}</td>
+                                <td className="px-3 py-2 text-center font-black text-blue-800 border-r border-indigo-100 bg-blue-100/30 text-[10px]">{fmt(r.clinic.total)}</td>
+                                <td className="px-3 py-2 text-center font-black text-blue-900 border-r border-indigo-100 bg-blue-100/30 text-[10px]">{r.clinic.footFall}</td>
 
-                          <td className="px-2 py-2 border-r border-slate-100 bg-amber-50/40">
-                            <input type="number" min="0" placeholder="0"
-                              value={isTotal ? retailInput.cash : (ri.cash || "")}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                if (isTotal) setRetailInput((p) => ({ ...p, cash: v }));
-                                else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), cash: v } }));
-                              }}
-                              className={inputCls} />
-                          </td>
-                          <td className="px-2 py-2 border-r border-slate-100 bg-amber-50/40">
-                            <input type="number" min="0" placeholder="0"
-                              value={isTotal ? retailInput.online : (ri.online || "")}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                if (isTotal) setRetailInput((p) => ({ ...p, online: v }));
-                                else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), online: v } }));
-                              }}
-                              className={inputCls} />
-                          </td>
-                          <td className="px-3 py-3 text-center font-bold text-amber-700 border-r border-slate-100 bg-amber-50/40 text-xs">{fmt(rRetail.total)}</td>
-                          <td className="px-2 py-2 border-r border-slate-200 bg-amber-50/40">
-                            <input type="number" min="0" placeholder="0"
-                              value={isTotal ? retailInput.footFall : (ri.footFall || "")}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                if (isTotal) setRetailInput((p) => ({ ...p, footFall: v }));
-                                else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), footFall: v } }));
-                              }}
-                              className={inputCls} />
-                          </td>
+                                <td className="px-3 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.lab.cash)}</td>
+                                <td className="px-3 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.lab.online)}</td>
+                                <td className="px-3 py-2 text-center font-black text-purple-800 border-r border-indigo-100 bg-purple-100/30 text-[10px]">{fmt(r.lab.total)}</td>
+                                <td className="px-3 py-2 text-center font-black text-purple-900 border-r border-indigo-100 bg-purple-100/30 text-[10px]">{r.lab.footFall}</td>
 
-                          {/* Custom Segments Cells */}
-                          {customSegments.map(cat => (
-                            <React.Fragment key={cat.key}>
-                              <td className="px-2 py-2 border-r border-slate-100 bg-white">
-                                <input type="number" min="0" placeholder="0"
-                                  value={isTotal ? (retailInput[cat.key] || "") : (ri[cat.key]?.amount || "")}
-                                  onChange={(e) => {
-                                    const v = e.target.value;
-                                    if (isTotal) setRetailInput((p) => ({ ...p, [cat.key]: v }));
-                                    else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), [cat.key]: { ...(p[rowKey]?.[cat.key] || {}), amount: v } } }));
-                                  }}
-                                  className={inputCls} />
-                              </td>
-                              <td className="px-2 py-2 border-r border-slate-100 bg-white">
-                                <input type="number" min="0" placeholder="0"
-                                  value={isTotal ? (retailInput[`${cat.key}_ff`] || "") : (ri[cat.key]?.footFall || "")}
-                                  onChange={(e) => {
-                                    const v = e.target.value;
-                                    if (isTotal) setRetailInput((p) => ({ ...p, [`${cat.key}_ff`]: v }));
-                                    else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), [cat.key]: { ...(p[rowKey]?.[cat.key] || {}), footFall: v } } }));
-                                  }}
-                                  className={inputCls} />
-                              </td>
-                            </React.Fragment>
-                          ))}
+                                <td className="px-3 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.pharmacy.cash)}</td>
+                                <td className="px-3 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.pharmacy.online)}</td>
+                                <td className="px-3 py-2 text-center font-black text-emerald-800 border-r border-indigo-100 bg-emerald-100/30 text-[10px]">{fmt(r.pharmacy.total)}</td>
+                                <td className="px-3 py-2 text-center font-black text-emerald-900 border-r border-indigo-100 bg-emerald-100/30 text-[10px]">{r.pharmacy.footFall}</td>
 
-                          <td className="px-3 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-indigo-50/40 text-xs">{fmt(rGrand.cash)}</td>
-                          <td className="px-3 py-3 text-center font-bold text-sky-700 border-r border-slate-100 bg-indigo-50/40 text-xs">{fmt(rGrand.online)}</td>
-                          <td className="px-3 py-3 text-center font-black text-indigo-800 border-r border-slate-100 bg-indigo-50/40 text-sm">{fmt(rGrand.total)}</td>
-                          <td className="px-3 py-3 text-center font-black text-indigo-800 border-r border-slate-200 bg-indigo-50/40 text-xs">{rGrand.footFall}</td>
-                          <td className="px-2 py-2 border-r border-slate-200 bg-rose-50/40">
-                            <div className="flex items-center gap-1 justify-center">
-                              <input type="number" min="0" placeholder="0"
-                                value={isTotal ? bankCredit : (ri.bankCredit || "")}
-                                onChange={(e) => {
-                                  const v = e.target.value;
-                                  if (isTotal) setBankCredit(v);
-                                  else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), bankCredit: v } }));
-                                }}
-                                className="w-[110px] text-center text-sm font-extrabold text-rose-700 bg-white border border-rose-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500" />
-                              <button type="button"
-                                onClick={() => {
-                                  if (isTotal) handleSaveClick();
-                                  else {
-                                    const bcNum = parseFloat(ri.bankCredit) || 0;
-                                    if (bcNum <= 0) { showToast("Enter bank credit first", "error"); return; }
-                                    handleSaveRow(rowKey, bcNum, rGrand.total, rRetail);
-                                  }
-                                }}
-                                disabled={isTotal ? (!bankCredit || parseFloat(bankCredit) <= 0 || !hasUnsavedChange) : (!ri.bankCredit || parseFloat(ri.bankCredit) <= 0)}
-                                title={isTotal && hasSavedValue && !hasUnsavedChange ? "Already saved" : "Save"}
-                                className={`flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-all shadow-sm ${(isTotal ? (hasUnsavedChange && parseFloat(bankCredit) > 0) : (parseFloat(ri.bankCredit) > 0))
-                                    ? "bg-gradient-to-br from-rose-500 to-rose-600 text-white hover:from-rose-600 hover:to-rose-700 hover:scale-105"
-                                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                                  }`}>
-                                {savingRowKey === rowKey ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FaSave className="w-3 h-3" />}
-                              </button>
-                            </div>
-                            {(isTotal ? hasSavedValue : ri.saved) && (
-                              <div className="mt-1 text-center text-[9px] font-bold text-emerald-600 flex items-center justify-center gap-1">
-                                <FaCheckCircle className="w-2 h-2" /> Saved
-                              </div>
-                            )}
-                          </td>
-                          <td className={`px-3 py-3 text-center font-black text-sm border-r border-slate-200 bg-rose-50/40 ${rDiffColor}`}>
-                            {rDiffLabel === "—" ? "—" : (rDiffAbs < 0.5 ? "0" : fmt(rDiffAbs))}
-                          </td>
-                          <td className={`px-3 py-3 text-center font-bold text-[10px] uppercase tracking-wider bg-rose-50/40 ${rDiffColor}`}>
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border ${rDiffLabel === "MATCHED" ? "bg-emerald-50 border-emerald-200"
-                                : rDiffLabel === "CREDIT MORE" ? "bg-blue-50 border-blue-200"
-                                  : rDiffLabel === "CREDIT LESS" ? "bg-rose-50 border-rose-200" : "bg-slate-50 border-slate-200"
-                              }`}>
-                              {rDiffLabel === "MATCHED" && <FaEquals className="w-2.5 h-2.5" />}
-                              {rDiffLabel === "CREDIT MORE" && <FaArrowUp className="w-2.5 h-2.5" />}
-                              {rDiffLabel === "CREDIT LESS" && <FaArrowDown className="w-2.5 h-2.5" />}
-                              {rDiffLabel}
-                            </span>
-                          </td>
-                        </tr>
+                                {/* Retail Pharmacy (Empty Inputs in summary, just showing totals) */}
+                                <td className="px-2 py-2 border-r border-indigo-100 bg-amber-100/30"></td>
+                                <td className="px-2 py-2 border-r border-indigo-100 bg-amber-100/30"></td>
+                                <td className="px-3 py-2 text-center font-black text-amber-800 border-r border-indigo-100 bg-amber-100/30 text-[10px]">
+                                  {fmt((Number(rowInputs[rowKey]?.cash) || 0) + (Number(rowInputs[rowKey]?.online) || 0))}
+                                </td>
+                                <td className="px-3 py-2 text-center font-black text-amber-900 border-r border-indigo-200 bg-amber-100/30 text-[10px]">
+                                  {rowInputs[rowKey]?.footFall || 0}
+                                </td>
+
+                                {/* Custom Segments Empty in Summary (Optional: Add sums if needed) */}
+                                {customSegments.map(cat => (
+                                  <React.Fragment key={cat.key}>
+                                    <td className="px-2 py-2 border-r border-indigo-100 bg-slate-100/30"></td>
+                                    <td className="px-2 py-2 border-r border-indigo-100 bg-slate-100/30"></td>
+                                  </React.Fragment>
+                                ))}
+
+                                {/* Grand Totals in Summary */}
+                                <td className="px-3 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
+                                  {fmt(
+                                    r.clinic.total + 
+                                    r.lab.total + 
+                                    r.pharmacy.total + 
+                                    (Number(rowInputs[rowKey]?.cash) || 0) + 
+                                    (Number(rowInputs[rowKey]?.online) || 0)
+                                  )}
+                                </td>
+                                <td className="px-3 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
+                                  {r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (Number(rowInputs[rowKey]?.footFall) || 0)}
+                                </td>
+                                <td className="px-2 py-2 border-r border-indigo-100 bg-rose-100/30"></td>
+                                <td className="px-3 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
+                                  {fmt(
+                                    r.clinic.total + 
+                                    r.lab.total + 
+                                    r.pharmacy.total + 
+                                    (Number(rowInputs[rowKey]?.cash) || 0) + 
+                                    (Number(rowInputs[rowKey]?.online) || 0)
+                                  )}
+                                </td>
+                                <td className="px-3 py-2 text-center border-indigo-100 bg-rose-100/30"></td>
+                              </tr>
+                            </>
+                          )}
+                        </React.Fragment>
                       );
                     })}
+                    
+                    {/* Main Grand Total Row */}
                     {tableTotal && data.rows && data.rows.length > 0 && (
                       <tr className="bg-gradient-to-r from-slate-100 to-slate-50 border-t-2 border-b-2 border-slate-400 font-bold">
                         <td className="px-3 py-3 text-center font-black text-slate-900 text-[11px] uppercase tracking-wider border-r border-slate-300 bg-slate-200 whitespace-nowrap">
