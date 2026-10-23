@@ -243,6 +243,7 @@ import TimelyPlans from "./Pages/TimelyPlans.js";
 import PrivacyPolicy from "./Pages/PrivacyPolicy.js";
 import RevenueAnalytics from "./Pages/RevenueAnalytics";
 import Sheets from "./Pages/Sheets.js";
+import RetailPharmacyAnalytics from "./Pages/RetailPharmacyAnalytics.js";
 
 
 function App() {
@@ -553,6 +554,7 @@ function App() {
               <Route path="/timely-plans" element={<TimelyPlans />} />
               <Route path="/revenue-analytics" element={<RevenueAnalytics />} />
               <Route path ="/sheets" element={<Sheets />} />
+              <Route path ="/retailpharmacy" element={<RetailPharmacyAnalytics />} />
             </Routes>
           </AdminLayout>
         }

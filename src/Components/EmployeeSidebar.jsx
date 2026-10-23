@@ -78,7 +78,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     "op_referral_bookings_view",
     "op_doctors_view",
     "op_services_view",
-    "op_letterhead_view"
+    "op_letterhead_view",
+    "retail_pharmacy_view" // 🔥 Added Retail Pharmacy Permission
   ];
 
   const ADMIN_PERMISSIONS = [
@@ -153,6 +154,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/employee/services": "Services",
       "/employee/letterhead": "Letter Head",
       "/employee/appointment-slots": "Appointments Slots",
+      // 🔥 Retail Pharmacy
+      "/retailpharmacy": "Retail Pharmacy", // 🔥 Added Path Name
       // ✅ My Referrals
       "/myreferral": "My Referrals",
       "/Rosters": "Rosters",
@@ -222,6 +225,11 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     // 8. Letter Head
     if (permissions.includes("op_letterhead_view")) {
       items.push({ name: "Letter Head", path: "/employee/letterhead" });
+    }
+
+    // 🔥 9. Retail Pharmacy (Added)
+    if (permissions.includes("retail_pharmacy_view")) {
+      items.push({ name: "Retail Pharmacy", path: "/retailpharmacy" });
     }
 
     return items;

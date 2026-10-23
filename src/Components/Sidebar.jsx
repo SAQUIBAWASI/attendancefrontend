@@ -1919,6 +1919,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Services", path: "/services" },
         { name: "Letter Head", path: "/letterhead" },
         { name: "Revenue Analytics", path: "/revenue-analytics" },
+        { name: "Retail Pharmacy", path: "/retailpharmacy" },
       ],
     },
 

@@ -4705,6 +4705,7 @@ const UserAccessManagement = () => {
         { id: "op_doctors_view", name: "Doctors" },
         { id: "op_services_view", name: "Services" },
         { id: "op_letterhead_view", name: "Letter Head" },
+        { id: "retail_pharmacy_view", name: "Retail Pharmacy" }, // 🔥 Added Retail Pharmacy
       ]
     },
     {
@@ -4996,7 +4997,8 @@ const UserAccessManagement = () => {
       "op_referral_bookings_view",
       "op_doctors_view",
       "op_services_view",
-      "op_letterhead_view"
+      "op_letterhead_view",
+      "retail_pharmacy_view" // 🔥 Added Retail Pharmacy
     ].includes(permId)) {
       setPermissions(prev =>
         prev.includes(permId) ? prev.filter(p => p !== permId) : [...prev, permId]

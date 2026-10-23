@@ -13,6 +13,7 @@ import {
   FiRefreshCw, FiTrendingUp, FiAlertCircle, FiClock, FiFilter,
   FiDownload, FiTrash2, FiCheckCircle, FiXCircle, FiSearch,
   FiX, FiTarget, FiPlus, FiEye, FiEyeOff, FiChevronDown,
+  FiPieChart, FiBarChart2,
 } from "react-icons/fi";
 
 /* ============================================================ */
@@ -123,14 +124,39 @@ const normalizeAnalyticsData = (raw) => {
 
   const rpFromBank = raw.bankCredit?.retailPharmacy || {};
   const rpFromCb = cb.retailPharmacy || {};
+  
+  // 🔥 YAHAN FIX HAI: Agar raw.bankCredit null hai par rows me data hai, toh rows se uthao
+  let rpTotal = Number(rpFromCb.total ?? rpFromBank.total) || 0;
+  let rpCash = Number(rpFromCb.cash ?? rpFromBank.cash) || 0;
+  let rpOnline = Number(rpFromCb.online ?? rpFromBank.online) || 0;
+  let rpFoot = Number(rpFromCb.footFall ?? rpFromBank.footFall) || 0;
+
+  // Agar top level bankCredit null hai, toh rows se sum nikal lo
+  if (!raw.bankCredit && Array.isArray(raw.rows) && raw.rows.length > 0) {
+    let sumCash = 0, sumOnline = 0, sumFoot = 0;
+    raw.rows.forEach(r => {
+      if (r.bankCredit?.retailPharmacy) {
+        sumCash += Number(r.bankCredit.retailPharmacy.cash) || 0;
+        sumOnline += Number(r.bankCredit.retailPharmacy.online) || 0;
+        sumFoot += Number(r.bankCredit.retailPharmacy.footFall) || 0;
+      }
+    });
+    if (sumCash > 0 || sumOnline > 0 || sumFoot > 0) {
+      rpCash = sumCash;
+      rpOnline = sumOnline;
+      rpTotal = sumCash + sumOnline;
+      rpFoot = sumFoot;
+    }
+  }
+
   const retailPharmacy = {
-    total: Number(rpFromCb.total ?? rpFromBank.total) || 0,
-    cash: Number(rpFromCb.cash ?? rpFromBank.cash) || 0,
-    online: Number(rpFromCb.online ?? rpFromBank.online) || 0,
+    total: rpTotal,
+    cash: rpCash,
+    online: rpOnline,
     card: Number(rpFromCb.card ?? rpFromBank.card) || 0,
     insurance: Number(rpFromCb.insurance ?? rpFromBank.insurance) || 0,
     due: Number(rpFromCb.due ?? rpFromBank.due) || 0,
-    footFall: Number(rpFromCb.footFall ?? rpFromBank.footFall) || 0,
+    footFall: rpFoot,
   };
 
   const rows = Array.isArray(raw.rows)
@@ -148,7 +174,6 @@ const normalizeAnalyticsData = (raw) => {
       const bank = r.bankCredit || null;
       const rp = bank?.retailPharmacy || {};
 
-      // ✅ Parse monthData if exists
       const monthData = Array.isArray(r.monthData) ? r.monthData.map(md => {
         const mdcb = md.categoryBreakdown || {};
         const mdBuild = (k) => ({
@@ -204,7 +229,6 @@ const normalizeAnalyticsData = (raw) => {
     dateRange: raw.dateRange || null,
   };
 };
-
 /* ============================================================ */
 /* Month-Year Picker Popup                                       */
 /* ============================================================ */
@@ -1098,6 +1122,323 @@ const sumCategoryFromRows = (rows) => {
 };
 
 /* ============================================================ */
+/* 🔵 UPDATED: Shows Short/Surplus inside every slice            */
+/* ============================================================ */
+const DonutChart = ({
+  total, cash, online, due, footFall,
+  rangeTarget = 0, hasTarget = false,
+  rangeTargetFF = 0,
+  title = "Total", size = 320, 
+  color = "blue",
+}) => {
+  const center = size / 2;
+  const radius = (size / 2) - 10;
+  const thickness = 110; 
+  const innerRadius = radius - thickness;
+  
+  const safeTotal = Number(total) || 0;
+  const safeCash = Number(cash) || 0;
+  const safeOnline = Number(online) || 0;
+  const safeDue = Number(due) || 0;
+  const safeFootFall = Number(footFall) || 0;
+
+  const categoryBaseColor = {
+    blue: "#1e40af",     // Clinic
+    purple: "#6b21a8",   // Lab
+    emerald: "#047857",  // Clinic Pharmacy
+    amber: "#b45309",    // Retail Pharmacy
+    indigo: "#312e81",   // Grand Total
+  }[color] || "#1e40af";
+
+  const colors = {
+    total: categoryBaseColor,   
+    due: "#f43f5e",     
+    online: "#0ea5e9",  
+    cash: "#10b981",    
+    footFall: "#8b5cf6",
+  };
+
+  let rawSlices = [
+    { key: "total", label: "Total", value: safeTotal, color: colors.total },
+    { key: "due", label: "Due", value: safeDue, color: colors.due },
+    { key: "online", label: "Online", value: safeOnline, color: colors.online },
+    { key: "cash", label: "Cash", value: safeCash, color: colors.cash },
+    { key: "ff", label: "Footfall", value: safeFootFall, color: colors.footFall, isFF: true },
+  ].filter(s => s.value > 0);
+
+  let hasRealData = rawSlices.length > 0;
+  
+  if (title === "Grand Total" && safeTotal > 0) {
+    hasRealData = true;
+    if (rawSlices.length === 0) {
+      rawSlices = [{ key: "total", label: "Total", value: safeTotal, color: colors.total }];
+    }
+  }
+
+  let smallSlices = [];
+  let largeSlices = [];
+  const MIN_ANGLE = 45; 
+
+  if (hasRealData) {
+    let processedSlices = rawSlices.map(s => {
+      let baseForPct = safeTotal > 0 ? safeTotal : (safeFootFall > 0 ? safeFootFall : 1);
+      return { ...s, angle: (s.value / baseForPct) * 360 };
+    });
+    
+    processedSlices.forEach(s => {
+      if (s.angle < MIN_ANGLE && s.key !== "total") {
+        s.angle = MIN_ANGLE; 
+        smallSlices.push(s);
+      } else {
+        largeSlices.push(s); 
+      }
+    });
+
+    if (smallSlices.length > 0) {
+      const usedBySmall = smallSlices.reduce((acc, curr) => acc + curr.angle, 0);
+      const availableForLarge = 360 - usedBySmall;
+      
+      let originalLargeAngleSum = 0;
+      largeSlices.forEach(s => {
+        let baseForPct = safeTotal > 0 ? safeTotal : 1;
+        originalLargeAngleSum += (s.value / baseForPct) * 360;
+      });
+
+      largeSlices = largeSlices.map(s => {
+        let baseForPct = safeTotal > 0 ? safeTotal : 1;
+        const originalAngle = (s.value / baseForPct) * 360;
+        return {
+          ...s,
+          angle: originalLargeAngleSum > 0 ? (originalAngle / originalLargeAngleSum) * availableForLarge : 0
+        };
+      });
+    }
+  }
+
+  const finalSlices = [...largeSlices, ...smallSlices];
+
+  const shortNum = (v) => {
+    const n = Math.round(Number(v) || 0);
+    if (n >= 10000000) return `₹${(n / 10000000).toFixed(2).replace(/\.00$/, "")}Cr`;
+    if (n >= 100000) return `₹${(n / 100000).toFixed(2).replace(/\.00$/, "")}L`;
+    if (n >= 1000) return `₹${(n / 1000).toFixed(1).replace(/\.0$/, "")}K`;
+    return `₹${n}`;
+  };
+
+  let startAngle = -90;
+  const renderedPaths = [];
+
+  finalSlices.forEach((slice, idx) => {
+    if (slice.angle === 0) return;
+
+    const endAngle = startAngle + slice.angle;
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+
+    const x1 = center + radius * Math.cos(startRad);
+    const y1 = center + radius * Math.sin(startRad);
+    const x2 = center + radius * Math.cos(endRad);
+    const y2 = center + radius * Math.sin(endRad);
+    
+    const x3 = center + innerRadius * Math.cos(endRad);
+    const y3 = center + innerRadius * Math.sin(endRad);
+    const x4 = center + innerRadius * Math.cos(startRad);
+    const y4 = center + innerRadius * Math.sin(startRad);
+
+    const largeArcFlag = slice.angle > 180 ? 1 : 0;
+
+    const pathData = [
+      `M ${x1} ${y1}`,
+      `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+      `L ${x3} ${y3}`,
+      `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x4} ${y4}`,
+      `Z`
+    ].join(" ");
+
+    const midAngle = startAngle + slice.angle / 2;
+    const midRad = (midAngle * Math.PI) / 180;
+    const textRadius = innerRadius + thickness / 2; 
+    
+    const textX = center + textRadius * Math.cos(midRad);
+    const textY = center + textRadius * Math.sin(midRad);
+
+    let valStr = "";
+    let subStr = "";
+    
+    if (slice.isFF) {
+      const targetFF = Math.round(rangeTargetFF) || 0;
+      valStr = `${Number(slice.value).toLocaleString('en-IN')}${hasTarget ? ` / ${targetFF}` : ""}`;
+      
+      const diff = targetFF - slice.value;
+      const diffAbs = Math.abs(diff);
+      if (hasTarget && diffAbs > 0.5) {
+        subStr = diff > 0 ? `Short ${Math.round(diffAbs)}` : `Surp +${Math.round(diffAbs)}`;
+      }
+    } else {
+      valStr = `${shortNum(slice.value)}${hasTarget && rangeTarget > 0 ? ` / ${shortNum(rangeTarget)}` : ""}`;
+      
+      if (hasTarget && rangeTarget > 0) {
+        let targetShare = 0;
+        if (slice.key === "total") {
+          targetShare = rangeTarget;
+        } else if (safeTotal > 0) {
+          targetShare = (slice.value / safeTotal) * rangeTarget;
+        }
+
+        const diff = targetShare - slice.value;
+        const diffAbs = Math.abs(diff);
+        
+        if (diffAbs > 0.5) {
+          subStr = diff > 0 ? `Short ${shortNum(diffAbs)}` : `Surp +${shortNum(diffAbs)}`;
+        }
+      }
+    }
+
+    renderedPaths.push(
+      <g key={idx}>
+        <path d={pathData} fill={slice.color} stroke="#ffffff" strokeWidth="2" />
+        
+        <text 
+          x={textX} y={textY} 
+          fill="#ffffff" 
+          textAnchor="middle" 
+          dominantBaseline="middle"
+          className="font-sans"
+        >
+          <tspan x={textX} dy="-1.6em" className="font-bold text-[13px]">{slice.label}</tspan>
+          
+          <tspan x={textX} dy="1.4em" className="font-black text-[14px]">
+            {valStr}
+          </tspan>
+
+          {subStr && (
+            <tspan x={textX} dy="1.4em" className="font-bold text-[10px] opacity-90">
+              {subStr}
+            </tspan>
+          )}
+        </text>
+      </g>
+    );
+
+    startAngle = endAngle;
+  });
+
+  const targetDiff = safeTotal - rangeTarget;
+  const diffAbs = Math.abs(targetDiff);
+  const pct = rangeTarget > 0 ? (safeTotal / rangeTarget) * 100 : 0;
+  const shortPct = 100 - pct;
+  
+  const isMatched = hasTarget && rangeTarget > 0 && diffAbs < 0.5;
+  const isSurplus = hasTarget && rangeTarget > 0 && targetDiff > 0;
+  const isShortfall = hasTarget && rangeTarget > 0 && targetDiff < 0;
+
+  return (
+    <div className="flex flex-col bg-white rounded-lg border border-slate-200 p-3 shadow-sm hover:shadow-md transition-shadow">
+      <div className="text-[13px] font-black uppercase tracking-wider text-slate-700 mb-1 text-center border-b border-slate-100 pb-1">
+        {title}
+      </div>
+      
+      <div className="flex justify-center items-center relative my-1" style={{ height: size }}>
+        <svg width={size} height={size} className="block">
+          <circle cx={center} cy={center} r={radius} fill="none" stroke="#f1f5f9" strokeWidth={thickness} />
+          {renderedPaths}
+        </svg>
+
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <div className="text-[10px] font-black uppercase tracking-wide text-slate-500">TOTAL</div>
+          <div className="font-black text-slate-800 text-xl leading-tight">
+            {shortNum(safeTotal)}
+          </div>
+          
+          {hasTarget && rangeTarget > 0 && (
+            <div className="flex flex-col items-center mt-1">
+              <div className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${isMatched ? "text-emerald-600 bg-emerald-50" : isSurplus ? "text-blue-600 bg-blue-50" : "text-rose-600 bg-rose-50"}`}>
+                {isMatched ? "100%" : isSurplus ? `+${(pct - 100).toFixed(0)}%` : `-${shortPct.toFixed(0)}%`}
+              </div>
+              <div className={`text-[9px] font-black uppercase mt-0.5 ${isMatched ? "text-emerald-600" : isSurplus ? "text-blue-600" : "text-rose-600"}`}>
+                {isMatched ? "MATCHED" : isSurplus ? "SURPLUS" : "SHORT"}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {hasTarget && rangeTarget > 0 && (
+        <div className="mt-2 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="font-semibold text-slate-500">Target:</span>
+            <span className="font-black text-slate-700">{shortNum(rangeTarget)}</span>
+          </div>
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="font-semibold text-slate-500">Status:</span>
+            <span className={`font-black uppercase ${isMatched ? "text-emerald-600" : isSurplus ? "text-blue-600" : "text-rose-600"}`}>
+              {isMatched ? "MATCHED" : isSurplus ? "EXCEEDED" : "SHORTFALL"}
+            </span>
+          </div>
+          {!isMatched && (
+            <div className="flex items-center justify-between text-[10px]">
+              <span className="font-semibold text-slate-500">{isSurplus ? "Surplus:" : "Short:"}</span>
+              <span className={`font-black ${isSurplus ? "text-blue-600" : "text-rose-600"}`}>
+                {isSurplus ? "+" : "−"}{shortNum(diffAbs)} ({isSurplus ? "+" : "−"}{isSurplus ? (pct - 100).toFixed(0) : shortPct.toFixed(0)}%)
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ============================================================ */
+/* 🔵 GraphRepresentation                                       */
+/* ============================================================ */
+const GraphRepresentation = ({ cards, grandTotal, hasRangeTarget, rangeLabel = "Target" }) => {
+  return (
+    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm mb-3">
+      <div className="bg-gradient-to-r from-blue-800 to-blue-600 px-3 py-2 flex items-center gap-2 text-white">
+        <FiPieChart className="w-4 h-4" />
+        <h2 className="text-sm font-bold m-0">Graphical Representation</h2>
+        <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded">
+          Breakdown with Targets
+        </span>
+      </div>
+      <div className="p-4 bg-slate-50">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          {cards.map((card) => (
+            <DonutChart
+              key={card.key}
+              title={card.title}
+              total={card.total}
+              cash={card.data.cash || 0}
+              online={card.data.online || 0}
+              due={card.data.due || 0}
+              footFall={card.footfall || 0}
+              rangeTarget={card.rangeTarget}
+              rangeTargetFF={card.rangeTargetFF}
+              hasTarget={hasRangeTarget && card.rangeTarget > 0}
+              color={card.accent}
+            />
+          ))}
+
+          <DonutChart
+            title="Grand Total"
+            total={grandTotal.total}
+            cash={grandTotal.cash || 0}
+            online={grandTotal.online || 0}
+            due={grandTotal.due || 0}
+            footFall={grandTotal.footFall || 0}
+            rangeTarget={grandTotal.rangeTarget || 0}
+            rangeTargetFF={grandTotal.rangeTargetFF || 0}
+            hasTarget={hasRangeTarget && (grandTotal.rangeTarget || 0) > 0}
+            color="indigo"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================ */
 /* Target Tracker                                                */
 /* ============================================================ */
 const TargetTracker = ({
@@ -1107,7 +1448,6 @@ const TargetTracker = ({
   fromDate, toDate, activePreset,
   rangeAchieved = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasData: false, totalFF: 0, clinicFF: 0, labFF: 0, clinicPharmacyFF: 0, retailPharmacyFF: 0 },
 }) => {
-
   const dynamicCategories = useMemo(() => {
     let savedCats = [];
     try {
@@ -1568,6 +1908,9 @@ export default function RevenueAnalytics() {
   // ✅ Expand state for month rows
   const [expandedMonths, setExpandedMonths] = useState({});
 
+  // ✅ NEW: Show / hide graph section
+  const [showGraph, setShowGraph] = useState(false);
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem("revenue_custom_segments");
@@ -1780,39 +2123,47 @@ export default function RevenueAnalytics() {
     try {
       const url = `${ANALYTICS_API_BASE}/revenue-analytics?from=${queryFrom}&to=${queryTo}`;
       const res = await axios.get(url);
-      if (res.data?.success) {
-        const normalized = normalizeAnalyticsData(res.data);
-        setData(normalized);
+     // fetchAnalytics function ke andar axios call ke baad
+if (res.data?.success) {
+  const normalized = normalizeAnalyticsData(res.data);
+  setData(normalized);
 
-        const rp = normalized.retailPharmacy || {};
-        setRetailInput({
-          cash: rp.cash ? String(rp.cash) : "",
-          online: rp.online ? String(rp.online) : "",
-          footFall: rp.footFall ? String(rp.footFall) : "",
-        });
+  const rp = normalized.retailPharmacy || {};
+  setRetailInput({
+    cash: rp.cash ? String(rp.cash) : "",
+    online: rp.online ? String(rp.online) : "",
+    footFall: rp.footFall ? String(rp.footFall) : "",
+  });
 
-        const nextRowInputs = {};
-        (normalized.rows || []).forEach((r) => {
-          const key = r.date;
-          nextRowInputs[key] = {
-            cash: r.retailPharmacy?.cash ? String(r.retailPharmacy.cash) : "",
-            online: r.retailPharmacy?.online ? String(r.retailPharmacy.online) : "",
-            footFall: r.retailPharmacy?.footFall ? String(r.retailPharmacy.footFall) : "",
-            bankCredit: r.bankCredit != null ? String(r.bankCredit) : "",
-            savedBankCredit: r.bankCredit != null ? Number(r.bankCredit) : null,
-            saved: r.bankCredit != null,
-          };
-        });
-        setRowInputs(nextRowInputs);
+  const nextRowInputs = {};
+  (normalized.rows || []).forEach((r) => {
+    const key = r.date;
+    nextRowInputs[key] = {
+      cash: r.retailPharmacy?.cash ? String(r.retailPharmacy.cash) : "",
+      online: r.retailPharmacy?.online ? String(r.retailPharmacy.online) : "",
+      footFall: r.retailPharmacy?.footFall ? String(r.retailPharmacy.footFall) : "",
+      bankCredit: r.bankCredit != null ? String(r.bankCredit) : "",
+      savedBankCredit: r.bankCredit != null ? Number(r.bankCredit) : null,
+      saved: r.bankCredit != null,
+    };
+  });
+  setRowInputs(nextRowInputs);
 
-        if (res.data.bankCredit) {
-          setBankCredit(String(res.data.bankCredit.bankCredit || ""));
-          setSavedBankCredit(Number(res.data.bankCredit.bankCredit) || 0);
-        } else {
-          setBankCredit("");
-          setSavedBankCredit(null);
-        }
-      } else {
+  if (res.data.bankCredit) {
+    setBankCredit(String(res.data.bankCredit.bankCredit || ""));
+    setSavedBankCredit(Number(res.data.bankCredit.bankCredit) || 0);
+  } else {
+    // Agar top-level bankCredit null hai par rows me bankCredit hai, toh pehli row se utha lo
+    const firstRowWithBC = normalized.rows.find(r => r.bankCredit != null);
+    if (firstRowWithBC) {
+      setBankCredit(String(firstRowWithBC.bankCredit));
+      setSavedBankCredit(Number(firstRowWithBC.bankCredit));
+    } else {
+      setBankCredit("");
+      setSavedBankCredit(null);
+    }
+  }
+} else {
         setError(res.data?.message || "Failed to fetch analytics");
         setData(null);
       }
@@ -2286,11 +2637,11 @@ export default function RevenueAnalytics() {
       return {
         key: cat.key,
         title: cat.label,
-        icon: <FiTarget />, 
+        icon: <FiTarget />,
         accent: COLOR_PALETTE[idx % COLOR_PALETTE.length].color,
         total: totalAmt,
         footfall: totalFF,
-        data: { cash: totalAmt, online: 0, due: 0, footFall: totalFF }, 
+        data: { cash: totalAmt, online: 0, due: 0, footFall: totalFF },
         rangeTarget: rangeTargets[cat.key] || 0,
         rangeTargetFF: rangeTargets[`${cat.key}FF`] || 0,
         isCustom: true
@@ -2305,7 +2656,7 @@ export default function RevenueAnalytics() {
     setExpandedMonths(prev => ({ ...prev, [rowKey]: !prev[rowKey] }));
   };
 
-    // ✅ Reusable Table Row Renderer
+  // ✅ Reusable Table Row Renderer
   const renderTableRow = (r, isSubRow = false) => {
     const rowKey = r.date || "__total__";
     const isTotal = rowKey === "__total__";
@@ -2612,6 +2963,14 @@ export default function RevenueAnalytics() {
               <FiTarget className="w-3 h-3" /> Set Target
             </button>
 
+            {/* ✅ NEW: Show Graph Toggle Button */}
+            <button type="button" onClick={() => setShowGraph((p) => !p)}
+              className={`flex items-center gap-1.5 h-8 px-3 text-[11px] font-bold rounded-md whitespace-nowrap shadow-sm transition-colors ${showGraph ? "text-white bg-indigo-600 hover:bg-indigo-700" : "text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100"}`}
+              title={showGraph ? "Hide Graphical Representation" : "Show Graphical Representation"}
+            >
+              <FiPieChart className="w-3 h-3" /> {showGraph ? "Hide Graph" : "Show Graph"}
+            </button>
+
             {/* 5. Export Dropdown */}
             <div className="relative" ref={exportDropdownRef}>
               <button onClick={() => setShowExportDropdown(!showExportDropdown)} disabled={!data}
@@ -2655,6 +3014,11 @@ export default function RevenueAnalytics() {
             )}
             <button type="button" onClick={() => { setEditTargetData(null); setShowAddTargetModal(true); }} className="p-1.5 text-purple-700 bg-purple-50 border border-purple-200 rounded-md">
               <FiTarget className="w-3 h-3" />
+            </button>
+            {/* ✅ NEW: Mobile Graph Toggle */}
+            <button type="button" onClick={() => setShowGraph((p) => !p)}
+              className={`p-1.5 rounded-md border ${showGraph ? "text-white bg-indigo-600 border-indigo-600" : "text-indigo-700 bg-indigo-50 border-indigo-200"}`}>
+              <FiPieChart className="w-3 h-3" />
             </button>
             <div className="relative" ref={exportDropdownRef}>
               <button onClick={() => setShowExportDropdown(!showExportDropdown)} disabled={!data} className="p-1.5 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md disabled:opacity-50">
@@ -2744,6 +3108,24 @@ export default function RevenueAnalytics() {
                 rangeLabel={rangeLabel}
               />
             </div>
+
+            {/* ✅ NEW: Graphical Representation Section (Rings) — toggled by Show Graph */}
+            {showGraph && (
+              <GraphRepresentation
+                cards={allCardCategories}
+                grandTotal={{
+                  total: grandTotalLive.total,
+                  cash: grandTotalLive.cash,
+                  online: grandTotalLive.online,
+                  due: grandTotalLive.due,
+                  footFall: grandTotalLive.footFall,
+                  rangeTarget: rangeTargets.total,
+                  rangeTargetFF: rangeTargets.totalFF,
+                }}
+                hasRangeTarget={hasRangeTarget && rangeTargets.total > 0}
+                rangeLabel={rangeLabel}
+              />
+            )}
 
             <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
