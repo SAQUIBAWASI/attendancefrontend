@@ -1,4 +1,4 @@
-// OpDashboard.js — Row 2 filters tied to Revenue Breakdown toggle
+// OpDashboard.js — Fixed Total Patients Count to match OpManagement
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -253,7 +253,6 @@ const OpDashboard = () => {
   const [timeFilter, setTimeFilter] = useState("today");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // ✅ Default HIDDEN — Row 2 filters + Revenue cards both tied to this
   const [showRevenueBreakdown, setShowRevenueBreakdown] = useState(false);
   const [showMobileWelcome, setShowMobileWelcome] = useState(false);
 
@@ -334,11 +333,38 @@ const OpDashboard = () => {
       if (debouncedSearch.trim()) params.append("search", debouncedSearch.trim());
       if (selectedTrendMonth) params.append("trendMonth", selectedTrendMonth);
 
-      const url = `${API_BASE_URL}/appointment-slots/op-dashboard-stats?${params.toString()}`;
-      const res = await axios.get(url);
+      const baseUrl = `${API_BASE_URL}/appointment-slots`;
+      
+      // ✅ FIX: Fetch both stats and raw bookings in parallel
+      const [statsRes, bookingsRes] = await Promise.all([
+        axios.get(`${baseUrl}/op-dashboard-stats?${params.toString()}`),
+        axios.get(`${baseUrl}/getallbookings?${params.toString()}`)
+      ]);
 
-      if (res.data?.success) setDashboardData(res.data);
-      else setDashboardData(null);
+      let finalData = statsRes.data?.success ? { ...statsRes.data } : null;
+
+      if (finalData) {
+        const bookingsList = bookingsRes.data?.bookings || bookingsRes.data?.data || [];
+        const bStats = bookingsRes.data?.stats;
+
+        if (!finalData.stats) finalData.stats = {};
+        
+        // ✅ Override totalPatients with exact booking row count (matches OpManagement)
+        finalData.stats.totalPatients = bookingsList.length;
+        
+        // ✅ Sync other stats if backend stats are available
+        if (bStats) {
+          finalData.stats.active = bStats.active || 0;
+          finalData.stats.inactive = bStats.inactive || 0;
+          finalData.stats.paid = bStats.paid || 0;
+          finalData.stats.partial = bStats.partial || 0;
+          finalData.stats.due = bStats.due || 0;
+        }
+
+        setDashboardData(finalData);
+      } else {
+        setDashboardData(null);
+      }
     } catch (err) {
       console.error("Dashboard fetch error:", err);
       setDashboardData(null);
@@ -354,11 +380,6 @@ const OpDashboard = () => {
       setDoctors(data);
       writeCache(CACHE_KEYS.DOCTORS, data);
     } catch { /* keep cached */ }
-  };
-
-  const fetchAllData = () => {
-    fetchDashboardData();
-    fetchDoctorsData();
   };
 
   const stats = dashboardData?.stats || {
@@ -631,9 +652,7 @@ const OpDashboard = () => {
           </div>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════
-            ✅ ROW 2 (Desktop) — Filters ONLY VISIBLE when Revenue Breakdown is shown
-        ══════════════════════════════════════════════════════════ */}
+        {/* ROW 2 (Desktop) — Filters ONLY VISIBLE when Revenue Breakdown is shown */}
         {showRevenueBreakdown && (
           <div className="hidden lg:flex items-center gap-1.5 flex-nowrap mb-3 overflow-x-auto">
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">

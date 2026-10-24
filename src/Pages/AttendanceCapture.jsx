@@ -3127,7 +3127,7 @@ export default function AttendanceCapture() {
     return () => clearInterval(interval);
   }, []);
 
-  // Get location
+  // Get location (✅ FIXED: Returns exact distance along with coords)
   const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -3141,8 +3141,10 @@ export default function AttendanceCapture() {
             lng: pos.coords.longitude,
           };
           setPosition(coords);
+          
+          let dist = null;
           if (assignedLocation) {
-            const dist = haversineDistance(
+            dist = haversineDistance(
               coords.lat,
               coords.lng,
               assignedLocation.latitude,
@@ -3150,7 +3152,7 @@ export default function AttendanceCapture() {
             );
             setDistance(dist);
           }
-          resolve(coords);
+          resolve({ lat: coords.lat, lng: coords.lng, distance: dist });
         },
         (err) => {
           reject(new Error("Error getting location: " + err.message));
@@ -3218,8 +3220,8 @@ export default function AttendanceCapture() {
     return imageData;
   };
 
-  // --- Instant Capture ---
-  const handleCaptureNow = () => {
+  // ✅ FIXED: Capture Now flow (Only asks reason if > 50m)
+  const handleCaptureNow = async () => {
     if (!videoRef.current || !isCameraReady) {
       alert("Camera is not ready. Please wait.");
       return;
@@ -3228,46 +3230,45 @@ export default function AttendanceCapture() {
     setIsCapturing(true);
     const imageData = captureImage();
     
-    if (imageData) {
-      setTimeout(() => {
-        // CHECK-IN flow — reason check
-        if (cameraMode === "checkin") {
-          if (reason.trim()) {
-            handleSubmitCheckIn(imageData);
-            return;
-          }
+    if (!imageData) {
+      setIsCapturing(false);
+      alert("Failed to capture image. Please try again.");
+      return;
+    }
 
-          if (distance > ONSITE_RADIUS_M) {
-            if (!isReasonProcessing && !showReasonPopup) {
-              setPendingAction("submit");
-              setTempReason("");
-              setShowReasonPopup(true);
-              setIsCapturing(false);
-            }
-            return;
-          }
+    let freshDistance = distance;
+    try {
+      const coords = await getCurrentLocation();
+      freshDistance = coords.distance;
+    } catch (err) {
+      console.warn("Location refresh failed", err);
+    }
 
-          handleSubmitCheckIn(imageData);
-        } 
-        // CHECK-OUT flow — reason always required
-        else {
-          if (checkoutReason.trim()) {
-            handleSubmitCheckOut(imageData);
-            return;
+    setTimeout(() => {
+      if (cameraMode === "checkin") {
+        if (freshDistance != null && freshDistance > ONSITE_RADIUS_M && !reason.trim()) {
+          if (!isReasonProcessing && !showReasonPopup) {
+            setPendingAction("submit");
+            setTempReason("");
+            setShowReasonPopup(true);
+            setIsCapturing(false);
           }
-
+          return;
+        }
+        handleSubmitCheckIn(imageData, freshDistance);
+      } else {
+        if (freshDistance != null && freshDistance > ONSITE_RADIUS_M && !checkoutReason.trim()) {
           if (!isReasonProcessing && !showReasonPopup) {
             setPendingAction("submit_checkout");
             setTempReason("");
             setShowReasonPopup(true);
             setIsCapturing(false);
           }
+          return;
         }
-      }, 300);
-    } else {
-      setIsCapturing(false);
-      alert("Failed to capture image. Please try again.");
-    }
+        handleSubmitCheckOut(imageData, freshDistance);
+      }
+    }, 300);
   };
 
   const handleRetake = () => {
@@ -3279,22 +3280,27 @@ export default function AttendanceCapture() {
   };
 
   // Submit functions
-  const handleSubmitCheckIn = async (imageData) => {
+  // ✅ FIXED: Submit Check-In
+  const handleSubmitCheckIn = async (imageData, freshDist = null) => {
     if (!employeeId || !employeeEmail) {
       alert("Employee data missing.");
       setIsCapturing(false);
       return;
     }
 
-    try {
-      await getCurrentLocation();
-    } catch (err) {
-      alert("Could not get location: " + err.message);
-      setIsCapturing(false);
-      return;
+    let currentDistance = freshDist;
+    if (currentDistance == null) {
+      try {
+        const coords = await getCurrentLocation();
+        currentDistance = coords.distance;
+      } catch (err) {
+        alert("Could not get location: " + err.message);
+        setIsCapturing(false);
+        return;
+      }
     }
 
-    if (distance > ONSITE_RADIUS_M && !reason.trim()) {
+    if (currentDistance != null && currentDistance > ONSITE_RADIUS_M && !reason.trim()) {
       if (!isReasonProcessing && !showReasonPopup) {
         setPendingAction("submit");
         setTempReason("");
@@ -3318,7 +3324,7 @@ export default function AttendanceCapture() {
       formData.append("employeeEmail", employeeEmail);
       formData.append("latitude", position.lat.toString());
       formData.append("longitude", position.lng.toString());
-      formData.append("reason", reason || "Onsite");
+      formData.append("reason", currentDistance > ONSITE_RADIUS_M ? reason : "Onsite");
       formData.append("image", imageFile);
 
       await axios.post(`${cleanBaseUrl}/api/attendance/checkin`, formData, {
@@ -3346,14 +3352,23 @@ export default function AttendanceCapture() {
     }
   };
 
-  const handleSubmitCheckOut = async (imageData) => {
+  // ✅ FIXED: Submit Check-Out
+  const handleSubmitCheckOut = async (imageData, freshDist = null) => {
     if (!employeeId) {
       alert("Employee data missing.");
       setIsCapturing(false);
       return;
     }
 
-    if (!checkoutReason.trim()) {
+    let currentDistance = freshDist;
+    if (currentDistance == null) {
+      try {
+        const coords = await getCurrentLocation();
+        currentDistance = coords.distance;
+      } catch (err) {}
+    }
+
+    if (currentDistance != null && currentDistance > ONSITE_RADIUS_M && !checkoutReason.trim()) {
       if (!isReasonProcessing && !showReasonPopup) {
         setPendingAction("submit_checkout");
         setTempReason("");
@@ -3361,14 +3376,6 @@ export default function AttendanceCapture() {
       }
       return;
     }
-
-    let lat = null;
-    let lng = null;
-    try {
-      const coords = await getCurrentLocation();
-      lat = coords.lat;
-      lng = coords.lng;
-    } catch (err) {}
 
     setSubmitting(true);
     try {
@@ -3382,11 +3389,11 @@ export default function AttendanceCapture() {
 
       const formData = new FormData();
       formData.append("employeeId", employeeId);
-      if (lat && lng) {
-        formData.append("latitude", lat.toString());
-        formData.append("longitude", lng.toString());
+      if (position?.lat && position?.lng) {
+        formData.append("latitude", position.lat.toString());
+        formData.append("longitude", position.lng.toString());
       }
-      formData.append("reason", checkoutReason);
+      formData.append("reason", currentDistance > ONSITE_RADIUS_M ? checkoutReason : "Onsite");
       formData.append("image", imageFile);
 
       await axios.post(`${cleanBaseUrl}/api/attendance/checkout`, formData, {
@@ -3416,16 +3423,26 @@ export default function AttendanceCapture() {
 
   // Normal Check-in (without camera)
   const handleNormalCheckIn = async () => {
-    if (!position) {
-      alert("Please get your location first.");
-      return;
-    }
     if (!employeeId || !employeeEmail) {
       alert("Employee data missing.");
       return;
     }
 
-    if (distance > ONSITE_RADIUS_M && !reason.trim()) {
+    let currentDistance = distance;
+    try {
+      const coords = await getCurrentLocation();
+      currentDistance = coords.distance;
+    } catch (err) {
+      alert("Could not get location: " + err.message);
+      return;
+    }
+
+    if (!position) {
+      alert("Please get your location first.");
+      return;
+    }
+
+    if (currentDistance != null && currentDistance > ONSITE_RADIUS_M && !reason.trim()) {
       alert("Outside office range. Please select a reason.");
       return;
     }
@@ -3437,7 +3454,7 @@ export default function AttendanceCapture() {
         employeeEmail,
         latitude: position.lat,
         longitude: position.lng,
-        reason: reason || "Onsite",
+        reason: currentDistance > ONSITE_RADIUS_M ? reason : "Onsite",
       });
 
       setSuccessMessage("✅ Check-in Successful!");
@@ -3462,25 +3479,20 @@ export default function AttendanceCapture() {
   const handleNormalCheckOut = async () => {
     if (!employeeId) return alert("Employee data missing.");
 
-    if (!checkoutReason.trim()) {
-      alert("Please select a reason for check-out.");
-      return;
-    }
+    let currentDistance = distance;
+    let lat = position?.lat ?? null;
+    let lng = position?.lng ?? null;
 
-    let lat = null;
-    let lng = null;
-    if (position) {
-      lat = position.lat;
-      lng = position.lng;
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          lat = pos.coords.latitude;
-          lng = pos.coords.longitude;
-        },
-        () => {},
-        { enableHighAccuracy: true, timeout: 5000 }
-      );
+    try {
+      const coords = await getCurrentLocation();
+      currentDistance = coords.distance;
+      lat = coords.lat;
+      lng = coords.lng;
+    } catch (err) {}
+
+    if (currentDistance != null && currentDistance > ONSITE_RADIUS_M && !checkoutReason.trim()) {
+      alert("Outside office range. Please select a reason for check-out.");
+      return;
     }
 
     if (!window.confirm("Are you sure you want to check out?")) return;
@@ -3489,7 +3501,7 @@ export default function AttendanceCapture() {
     try {
       const payload = { 
         employeeId,
-        reason: checkoutReason,
+        reason: currentDistance > ONSITE_RADIUS_M ? checkoutReason : "Onsite",
       };
       if (lat && lng) {
         payload.latitude = lat;
@@ -3522,14 +3534,16 @@ export default function AttendanceCapture() {
       return;
     }
 
+    let currentDistance = distance;
     try {
-      await getCurrentLocation();
+      const coords = await getCurrentLocation();
+      currentDistance = coords.distance;
     } catch (err) {
       alert(err.message);
       return;
     }
 
-    if (distance > ONSITE_RADIUS_M && !reason.trim()) {
+    if (currentDistance != null && currentDistance > ONSITE_RADIUS_M && !reason.trim()) {
       setPendingAction("camera");
       setTempReason("");
       setShowReasonPopup(true);
@@ -3547,11 +3561,13 @@ export default function AttendanceCapture() {
       return;
     }
 
+    let currentDistance = distance;
     try {
-      await getCurrentLocation();
+      const coords = await getCurrentLocation();
+      currentDistance = coords.distance;
     } catch (err) {}
 
-    if (!checkoutReason.trim()) {
+    if (currentDistance != null && currentDistance > ONSITE_RADIUS_M && !checkoutReason.trim()) {
       setPendingAction("camera_checkout");
       setTempReason("");
       setShowReasonPopup(true);
@@ -3589,11 +3605,13 @@ export default function AttendanceCapture() {
         setShowCameraModal(true);
         setTimeout(() => startCamera(), 300);
       } else if (pendingAction === "submit") {
-        if (cameraMode === "checkin") {
-          handleSubmitCheckIn(capturedImage);
+        if (cameraMode === "checkin" && capturedImage) {
+          handleSubmitCheckIn(capturedImage, distance);
         }
       } else if (pendingAction === "submit_checkout") {
-        handleSubmitCheckOut(capturedImage);
+        if (capturedImage) {
+          handleSubmitCheckOut(capturedImage, distance);
+        }
       }
       setPendingAction(null);
       setIsReasonProcessing(false);
@@ -3609,7 +3627,7 @@ export default function AttendanceCapture() {
 
   const handleGetLocation = async () => {
     try {
-      await getCurrentLocation();
+      const coords = await getCurrentLocation();
       setToastMessage({ text: "📍 Location captured!", type: "success" });
       setTimeout(() => setToastMessage(null), 3000);
     } catch (err) {
@@ -3839,14 +3857,16 @@ export default function AttendanceCapture() {
                       <FaRedo className="text-base" /> Retake
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         if (capturedImage) {
+                          let currentDistance = distance;
+                          try {
+                            const coords = await getCurrentLocation();
+                            currentDistance = coords.distance;
+                          } catch (err) {}
+
                           if (cameraMode === "checkin") {
-                            if (reason.trim()) {
-                              handleSubmitCheckIn(capturedImage);
-                              return;
-                            }
-                            if (distance > ONSITE_RADIUS_M) {
+                            if (currentDistance != null && currentDistance > ONSITE_RADIUS_M && !reason.trim()) {
                               if (!isReasonProcessing && !showReasonPopup) {
                                 setPendingAction("submit");
                                 setTempReason("");
@@ -3855,18 +3875,18 @@ export default function AttendanceCapture() {
                               }
                               return;
                             }
-                            handleSubmitCheckIn(capturedImage);
+                            handleSubmitCheckIn(capturedImage, currentDistance);
                           } else {
-                            if (checkoutReason.trim()) {
-                              handleSubmitCheckOut(capturedImage);
+                            if (currentDistance != null && currentDistance > ONSITE_RADIUS_M && !checkoutReason.trim()) {
+                              if (!isReasonProcessing && !showReasonPopup) {
+                                setPendingAction("submit_checkout");
+                                setTempReason("");
+                                setShowReasonPopup(true);
+                                setIsCapturing(false);
+                              }
                               return;
                             }
-                            if (!isReasonProcessing && !showReasonPopup) {
-                              setPendingAction("submit_checkout");
-                              setTempReason("");
-                              setShowReasonPopup(true);
-                              setIsCapturing(false);
-                            }
+                            handleSubmitCheckOut(capturedImage, currentDistance);
                           }
                         }
                       }}
@@ -4079,8 +4099,8 @@ export default function AttendanceCapture() {
               </div>
             )}
 
-            {/* CHECK-IN reason selector */}
-            {!checkedIn && !isImageCaptureAllowed && distance !== null && distance > ONSITE_RADIUS_M && (
+            {/* CHECK-IN reason selector — only when outside 50m */}
+            {!checkedIn && distance !== null && distance > ONSITE_RADIUS_M && (
               <div className="bg-yellow-50/80 rounded-xl border border-yellow-200/50 p-3 mb-3">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -4103,14 +4123,15 @@ export default function AttendanceCapture() {
               </div>
             )}
 
-            {/* CHECK-OUT reason selector — always required for checkout */}
-            {checkedIn && (
+            {/* CHECK-OUT reason selector — only when outside 50m */}
+            {checkedIn && distance !== null && distance > ONSITE_RADIUS_M && (
               <div className="bg-orange-50/80 rounded-xl border border-orange-200/50 p-3 mb-3">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center">
                     <span className="text-xs">📝</span>
                   </div>
                   <span className="text-xs font-medium text-gray-900">Check-Out Reason Required</span>
+                  <span className="ml-auto text-[10px] text-red-500 font-medium">Outside: {distance}m</span>
                 </div>
                 <select
                   value={checkoutReason}

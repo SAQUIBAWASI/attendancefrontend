@@ -941,6 +941,7 @@ export default function OpManagement() {
   const [revenueCategoryFilter, setRevenueCategoryFilter] = useState("All");
   const [paymentTypeFilter, setPaymentTypeFilter] = useState("All");
   const [referredByFilter, setReferredByFilter] = useState("All");
+  const [addedByFilter, setAddedByFilter] = useState("All");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -1188,7 +1189,7 @@ export default function OpManagement() {
     (selectedMonth && selectedMonth !== "") ||
     (timeFilter && timeFilter !== "All") ||
     revenueCategoryFilter !== "All" || paymentTypeFilter !== "All" ||
-    referredByFilter !== "All";
+    referredByFilter !== "All" || addedByFilter !== "All";
 
   useEffect(() => {
     const isMobile = window.innerWidth < 1024;
@@ -1998,45 +1999,46 @@ export default function OpManagement() {
   };
 
   const patients = useMemo(() => {
-    const map = new Map();
-    const sortedBookings = [...bookings].sort((a, b) => new Date(b.createdAt || b.bookedAt || 0) - new Date(a.createdAt || a.bookedAt || 0));
-    sortedBookings.forEach((b) => {
-      const key = (b.patientPhone || b.patientName || "").toString().trim();
-      if (!key) return;
-      if (!map.has(key)) {
-        const rawPS = b.paymentStatus || "Due";
-        const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
-        map.set(key, {
-          _id: b.patientId || b._id || key,
-          title: b.patientTitle || "Mr.", name: b.patientName || "",
-          dob: b.patientDob || "", age: b.patientAge || "",
-          gender: b.patientGender || "", phone: b.patientPhone || "",
-          email: b.patientEmail || "", address: b.patientAddress || "",
-          city: b.patientCity || "", pincode: b.patientPincode || "",
-          bloodGroup: b.patientBloodGroup || "",
-          medicalHistory: b.patientMedicalHistory || "",
-          allergies: b.patientAllergies || "",
-          medications: b.patientMedications || "",
-          reason: b.purpose || "",
-          paymentType: b.paymentType || "cash",
-          paymentStatus: normalizedPS,
-          serviceItems: getBookingServices(b),
-          referredByCustomer: b.referredByCustomer || "",
-          referredByDoctor: b.referredByDoctor || "",
-          referralCustomerId: b.referralCustomerId || "",
-          referralDoctorId: b.referralDoctorId || "",
-          referralCommission: b.referralCommission || "",
-          referralCommissionType: b.referralCommissionType || "",
-          createdAt: b.createdAt || b.bookedAt,
-          latestBookingId: b._id,
-          isActive: b.isActive !== undefined ? b.isActive : true,
-          isReviewed: b.isReviewed === true,
-          reviewDate: b.reviewDate || null,
-          isOP: b.isOP,
-        });
-      }
+    // ✅ FIX: Grouping hata di, ab har booking ki alag row banegi
+    return bookings.map((b) => {
+      const rawPS = b.paymentStatus || "Due";
+      const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
+      return {
+        _id: b._id, // Unique Booking ID
+        bookingId: b._id,
+        customPID: b.customPID || "",
+        title: b.patientTitle || "Mr.",
+        name: b.patientName || "",
+        dob: b.patientDob || "",
+        age: b.patientAge || "",
+        gender: b.patientGender || "",
+        phone: b.patientPhone || "",
+        email: b.patientEmail || "",
+        address: b.patientAddress || "",
+        city: b.patientCity || "",
+        pincode: b.patientPincode || "",
+        bloodGroup: b.patientBloodGroup || "",
+        medicalHistory: b.patientMedicalHistory || "",
+        allergies: b.patientAllergies || "",
+        medications: b.patientMedications || "",
+        reason: b.purpose || "",
+        paymentType: b.paymentType || "cash",
+        paymentStatus: normalizedPS,
+        serviceItems: getBookingServices(b),
+        referredByCustomer: b.referredByCustomer || "",
+        referredByDoctor: b.referredByDoctor || "",
+        referralCustomerId: b.referralCustomerId || "",
+        referralDoctorId: b.referralDoctorId || "",
+        referralCommission: b.referralCommission || "",
+        referralCommissionType: b.referralCommissionType || "",
+        createdAt: b.createdAt || b.bookedAt,
+        latestBookingId: b._id,
+        isActive: b.isActive !== undefined ? b.isActive : true,
+        isReviewed: b.isReviewed === true,
+        reviewDate: b.reviewDate || null,
+        isOP: b.isOP,
+      };
     });
-    return Array.from(map.values());
   }, [bookings]);
 
   useEffect(() => {
@@ -2418,6 +2420,7 @@ export default function OpManagement() {
           reviewServicesTotal: Number(b.reviewServicesTotal) || 0,
           invoiceUrl: b.invoiceUrl || null,
           offerApplied: b.offerApplied || null,
+          addedBy: b.addedBy || null,
         };
       });
 
@@ -2568,9 +2571,10 @@ export default function OpManagement() {
       if (latest) {
         const rawPS = latest.paymentStatus || "Due";
         const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
-        const derived = patients.find((p) => p.phone === value) || {
+        // ✅ FIX: Direct latest booking se data uthao (kyunki patients array me ab duplicate phones hain)
+        const derived = {
           _id: latest.patientId || latest._id,
-          customPID: latest.customPID || "",   // ✅ NEW
+          customPID: latest.customPID || "",
           title: latest.patientTitle || "Mr.",
           name: latest.patientName || "",
           dob: latest.patientDob || "", age: latest.patientAge || "",
@@ -3288,6 +3292,15 @@ export default function OpManagement() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // ✅ 1. LocalStorage se login user ki details nikalein
+      const userRole = localStorage.getItem("userRole");
+      const userName = userRole === 'employee' 
+          ? (localStorage.getItem("employeeName") || "Employee") 
+          : "Admin";
+      const userEmpId = userRole === 'employee' 
+          ? (localStorage.getItem("employeeId") || "") 
+          : "";
+
       const fin = computeFinancials(formData.serviceItems, {
         labTotal: 0, medicineTotal: 0,
         referralCommission: formData.referralCommission,
@@ -3325,6 +3338,9 @@ export default function OpManagement() {
         referralCommissionType: formData.referralCommissionType,
         slotId: formData.slotId,
         offerApplied: formData.offerApplied || null,
+        
+        // ✅ 2. Naya field yahan add karein
+        addedBy: { name: userName, empId: userEmpId },
       };
 
       const slotRes = await axios.post(`${API_BASE_URL}/appointment-slots/book`, bookingPayload);
@@ -3480,9 +3496,22 @@ export default function OpManagement() {
     win.focus();
   };
 
-  const getMatchingBooking = (patient) => bookings.find((b) =>
-    b.patientPhone === patient.phone ||
-    (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
+  const getMatchingBooking = (patient) => {
+    if (!patient) return null;
+    // ✅ FIX: Pehle exact Booking ID se match karo
+    if (patient.bookingId) {
+      const match = bookings.find((b) => b._id === patient.bookingId);
+      if (match) return match;
+    }
+    if (patient._id) {
+      const match = bookings.find((b) => b._id === patient._id);
+      if (match) return match;
+    }
+    // Fallback (purane code ke liye)
+    return bookings.find((b) =>
+      b.patientPhone === patient.phone ||
+      (b.patientName && patient.name && b.patientName.toLowerCase() === patient.name.toLowerCase()));
+  };
 
   const getConsultationPaymentStatus = (patient) => {
     const raw = getMatchingBooking(patient)?.paymentStatus || patient.paymentStatus || "Due";
@@ -3506,7 +3535,7 @@ export default function OpManagement() {
     return b ? (b.isActive !== undefined ? b.isActive : true) : true;
   };
 
-const buildBillHtml = async (bd, bk) => {
+  const buildBillHtml = async (bd, bk) => {
     // ✅ 1. Logo ko Base64 me convert karne ka logic
     let logoBase64 = "";
     try {
@@ -3521,8 +3550,8 @@ const buildBillHtml = async (bd, bk) => {
           ctx.drawImage(img, 0, 0);
           resolve(canvas.toDataURL("image/png"));
         };
-        img.onerror = () => resolve(""); 
-        img.src = logo; 
+        img.onerror = () => resolve("");
+        img.src = logo;
       });
     } catch (err) {
       console.log("Logo load error:", err);
@@ -3542,7 +3571,7 @@ const buildBillHtml = async (bd, bk) => {
           ctx.drawImage(img, 0, 0);
           resolve(canvas.toDataURL("image/png"));
         };
-        img.onerror = () => resolve(""); 
+        img.onerror = () => resolve("");
         img.src = companyStamp;
       });
     } catch (err) {
@@ -3553,23 +3582,23 @@ const buildBillHtml = async (bd, bk) => {
     (bd.items || []).forEach((it) => {
       const cat = it.category || "clinic";
       if (cat === "pharmacy" && (it.name || "").toLowerCase().includes("medicin")) return;
-      
+
       if (groups[cat]) groups[cat].push(it);
       else groups.clinic.push(it);
     });
-    
+
     const categoryLabel = { clinic: "CONSULTATION", lab: "LAB", pharmacy: "PHARMACY" };
     let runningIdx = 0;
     let rowsHtml = "";
-    let calculatedGrossTotal = 0; 
-    
+    let calculatedGrossTotal = 0;
+
     ["clinic", "lab", "pharmacy"].forEach((catKey) => {
       const items = groups[catKey];
       if (items.length === 0) return;
-      
+
       const subtotal = items.reduce((s, x) => s + (Number(x.amount) || 0), 0);
-      calculatedGrossTotal += subtotal; 
-      
+      calculatedGrossTotal += subtotal;
+
       items.forEach((item) => {
         runningIdx++;
         rowsHtml += `
@@ -3587,16 +3616,16 @@ const buildBillHtml = async (bd, bk) => {
           </tr>`;
       }
     });
-    
-    const grossTotal = calculatedGrossTotal; 
-    
+
+    const grossTotal = calculatedGrossTotal;
+
     rowsHtml += `
       <tr style="background:#e5e7eb;border-top:2px solid #111;border-bottom:2px solid #111;">
         <td colspan="2" style="text-align:right;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;color:#111;padding:6px 8px;">Total</td>
         <td style="text-align:right;font-size:14px;font-weight:bold;color:#111;padding:6px 8px;">₹ ${grossTotal.toFixed(2)}</td>
       </tr>`;
 
-    const appointmentDateTime = bk?.createdAt || bk?.bookedAt 
+    const appointmentDateTime = bk?.createdAt || bk?.bookedAt
       ? `${formatDateToDDMMYYYY(bk?.appointmentDate || bk?.date)} ${new Date(bk?.createdAt || bk?.bookedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}`
       : formatDateToDDMMYYYY(bk?.appointmentDate || bk?.date);
 
@@ -3620,7 +3649,7 @@ const buildBillHtml = async (bd, bk) => {
     }
 
     const finalNetAmount = grossTotal - (bd.discount || 0);
-    const finalPaidAmount = Math.min(finalNetAmount, bd.paidAmount || 0); 
+    const finalPaidAmount = Math.min(finalNetAmount, bd.paidAmount || 0);
     const finalBalance = finalNetAmount - finalPaidAmount;
 
     // ✅ 3. Billed By & EmpID Logic (Login user based)
@@ -3628,8 +3657,8 @@ const buildBillHtml = async (bd, bk) => {
     let billedByEmpId = "";
     const userRole = localStorage.getItem('userRole');
     if (userRole === 'employee') {
-        billedByName = localStorage.getItem('employeeName') || localStorage.getItem('userName') || 'Employee';
-        billedByEmpId = localStorage.getItem('employeeId') || "";
+      billedByName = localStorage.getItem('employeeName') || localStorage.getItem('userName') || 'Employee';
+      billedByEmpId = localStorage.getItem('employeeId') || "";
     }
 
     // ✅ 4. Patient Name nikal lo title ke liye
@@ -3647,7 +3676,7 @@ const buildBillHtml = async (bd, bk) => {
         finalInvoiceNo = `${dd}${mm}${yyyy}-${bk.customPID}`;
       }
     } else if (bk?.customPID) {
-       finalInvoiceNo = `${bd.invoiceNo}-${bk.customPID}`;
+      finalInvoiceNo = `${bd.invoiceNo}-${bk.customPID}`;
     }
 
     return `
@@ -3855,8 +3884,8 @@ const buildBillHtml = async (bd, bk) => {
         </div>
       </div>
     </body></html>`;
-};
-const saveInvoiceToBackend = async (bookingId, billHtml) => {
+  };
+  const saveInvoiceToBackend = async (bookingId, billHtml) => {
     if (!bookingId || !billHtml) return null;
     try {
       const res = await axios.post(`${API_BASE_URL}/appointment-slots/save-invoice`, { bookingId, html: billHtml });
@@ -4082,6 +4111,7 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
     setTimeFilter("today");
     setRevenueCategoryFilter("All"); setPaymentTypeFilter("All");
     setReferredByFilter("All");
+    setAddedByFilter("All");
     setActiveCardFilter("all"); setCurrentPage(1);
     setActiveFilter("all");
     setShowRegDatePopup(false); setShowApptDatePopup(false);
@@ -4116,6 +4146,25 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
   };
 
 
+   const getUniqueAddedBy = () => {
+    const map = new Map();
+    bookings.forEach((b) => {
+      if (b.addedBy && b.addedBy.name) {
+        const key = b.addedBy.empId
+          ? `${b.addedBy.name}::${b.addedBy.empId}`
+          : b.addedBy.name;
+        if (!map.has(key)) {
+          map.set(key, {
+            name: b.addedBy.name,
+            empId: b.addedBy.empId || "",
+          });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  };
 
   const handleCopyPhone = (phone) => {
     if (!phone) return;
@@ -4153,14 +4202,25 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
         }
       }
 
+        if (addedByFilter !== "All") {
+        const b = getMatchingBooking(p);
+        const addedByName = b?.addedBy?.name || "";
+        const addedByEmpId = b?.addedBy?.empId || "";
+        const itemKey = addedByEmpId
+          ? `${addedByName}::${addedByEmpId}`
+          : addedByName;
+        if (itemKey !== addedByFilter) return false;
+      }
+
       return true;
     });
-  }, [patients, activeFilter, feeTypeFilter, referredByFilter, bookings]);
+  }, [patients, activeFilter, feeTypeFilter, referredByFilter, addedByFilter, bookings]);
 
   useEffect(() => { setCurrentPage(1); }, [
     searchQuery, statusFilter, feeTypeFilter, doctorFilter, bookingTypeFilter,
     fromDate, toDate, selectedMonth, apptFromDate, apptToDate, activeFilter,
-    revenueCategoryFilter, paymentTypeFilter, timeFilter, referredByFilter
+    revenueCategoryFilter, paymentTypeFilter, timeFilter, referredByFilter,
+    addedByFilter
   ]);
 
   const stats = useMemo(() => {
@@ -4412,7 +4472,7 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
 
   const downloadCSV = () => {
     if (!filteredPatients.length) { alert("No patient records available to export!"); return; }
-    const headers = ["#", "Patient Name", "Phone", "Address", "City", "Pincode", "Doctor", "Booking Type", "Appointment Date & Time", "Booking Status", "Active Status", "Services", "Clinic Amount", "Lab Amount", "Pharmacy Amount", "Medicine Total", "Discount", "Offer Applied", "Offer Amount", "Total Fee", "Paid Amount", "Balance Amount", "Payment Status", "Payment Mode", "Reason", "Referred By Customer", "Referred By Doctor", "Created At", "Registered", "Review Status", "Reviewed On"];
+    const headers = ["#", "Patient Name", "Phone", "Address", "City", "Pincode", "Doctor", "Booking Type", "Appointment Date & Time", "Booking Status", "Active Status", "Services", "Clinic Amount", "Lab Amount", "Pharmacy Amount", "Medicine Total", "Discount", "Offer Applied", "Offer Amount", "Total Fee", "Paid Amount", "Balance Amount", "Payment Status", "Payment Mode", "Reason", "Referred By Customer", "Referred By Doctor", "Booked By", "Booked By Emp ID", "Created At", "Registered", "Review Status", "Reviewed On"];
     const csvRows = [headers.join(","), ...filteredPatients.map((p, idx) => {
       const booking = getMatchingBooking(p);
       const paidInfo = getBookingPaidInfo(booking);
@@ -4451,6 +4511,8 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
         `"${(p.reason || "").replace(/"/g, '""')}"`,
         `"${(p.referredByCustomer || "").replace(/"/g, '""')}"`,
         `"${(p.referredByDoctor || "").replace(/"/g, '""')}"`,
+        `"${(booking?.addedBy?.name || "").replace(/"/g, '""')}"`,
+        `"${(booking?.addedBy?.empId || "").replace(/"/g, '""')}"`,
         `"${formatDateTimeToDDMMYYYY(getBookingCreatedDate(p))}"`,
         `${regDate} ${regTime}`,
         `"${reviewStatus}"`,
@@ -4584,6 +4646,28 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
               )}
             </select>
 
+            
+
+            
+
+              {/* ✅ ADDED BY FILTER DESKTOP */}
+            <select
+              value={addedByFilter}
+              onChange={(e) => setAddedByFilter(e.target.value)}
+              className={`h-9 px-2 text-xs border rounded-lg max-w-[140px] truncate flex-shrink-0 ${addedByFilter !== "All" ? "border-teal-500 text-teal-700 bg-teal-50" : "border-gray-300 bg-white"}`}
+              title="Filter by Booked By"
+            >
+              <option value="All">All Booked By</option>
+              {getUniqueAddedBy().map((a) => {
+                const val = a.empId ? `${a.name}::${a.empId}` : a.name;
+                return (
+                  <option key={val} value={val}>
+                    {a.name}{a.empId ? ` (${a.empId})` : ""}
+                  </option>
+                );
+              })}
+            </select>
+
             <div className="relative flex-shrink-0">
               <button data-btn="reg" onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -4701,6 +4785,25 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
                   {getUniqueReferrers().doctors.length > 0 && (<optgroup label="Doctors">{getUniqueReferrers().doctors.map((d) => (<option key={`d-${d}`} value={`doctor::${d}`}>{d}</option>))}</optgroup>)}
                 </select>
               </div>
+                         <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Booked By</label>
+                <select
+                  value={addedByFilter}
+                  onChange={(e) => setAddedByFilter(e.target.value)}
+                  className={`w-full px-3 py-2.5 text-sm border rounded-lg ${addedByFilter !== "All" ? "border-teal-500 text-teal-700 bg-teal-50" : "border-gray-300"}`}
+                >
+                  <option value="All">All Booked By</option>
+                  {getUniqueAddedBy().map((a) => {
+                    const val = a.empId ? `${a.name}::${a.empId}` : a.name;
+                    return (
+                      <option key={val} value={val}>
+                        {a.name}{a.empId ? ` (${a.empId})` : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Registered Date</label>
                 <div className="grid grid-cols-2 gap-2">
@@ -4901,7 +5004,7 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
 
         {/* ADD/EDIT MODAL */}
         {showForm && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-start justify-center pt-12 sm:pt-16 px-2 sm:px-4 pb-4">
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[9999] flex items-start justify-center pt-12 sm:pt-16 px-2 sm:px-4 pb-4">
             <button
               onClick={cancelForm}
               className="absolute top-4 right-4 sm:top-6 sm:right-72 z-[60] w-10 h-10 rounded-full bg-black text-white hover:bg-black hover:text-white shadow-2xl border-2 border-gray-700 hover:border-black flex items-center justify-center transition-all"
@@ -5507,6 +5610,7 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
                       <th style={{ textAlign: "center", minWidth: "110px" }}>P Type</th>
                       <th style={{ textAlign: "center", minWidth: "130px" }}>P Status</th>
                       <th style={{ textAlign: "center", minWidth: "150px" }}>Referred By</th>
+                      <th style={{ textAlign: "center", minWidth: "120px" }}>Booked By</th> {/* ✅ NEW */}
                       <th style={{ textAlign: "center", minWidth: "70px" }}>BILL</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
                     </tr>
@@ -5749,6 +5853,24 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
                             </div>
                           </td>
 
+                                   {/* ✅ NEW — Added By */}
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {matchingBooking?.addedBy ? (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className="text-[11px] font-bold text-slate-700 truncate max-w-[100px]" title={matchingBooking.addedBy.name}>
+                                  {matchingBooking.addedBy.name || "N/A"}
+                                </span>
+                                {matchingBooking.addedBy.empId && (
+                                  <span className="text-[9px] font-bold font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                    {matchingBooking.addedBy.empId}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">—</span>
+                            )}
+                          </td>
+
                           {/* ✅ BILL — printer icon */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <button
@@ -5883,6 +6005,23 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
                           </div>
                           <div><div className="text-[9px] font-bold uppercase text-gray-400">Appt. Date</div><div className="font-semibold text-slate-700">{formatDateToDDMMYYYY(appointmentDate)}</div></div>
                           <div><div className="text-[9px] font-bold uppercase text-gray-400">Slot Time</div><div className="font-semibold text-blue-700">{slotTiming !== "-" ? slotTiming : "N/A"}</div></div>
+                          <div className="col-span-2">
+                            <div className="text-[9px] font-bold uppercase text-gray-400">Booked By</div>
+                            {matchingBooking?.addedBy?.name ? (
+                              <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                <span className="font-semibold text-slate-700 text-[11px] truncate max-w-[140px]" title={matchingBooking.addedBy.name}>
+                                  {matchingBooking.addedBy.name}
+                                </span>
+                                {matchingBooking.addedBy.empId && (
+                                  <span className="text-[9px] font-bold font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                    {matchingBooking.addedBy.empId}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 italic">—</span>
+                            )}
+                          </div>
                         </div>
 
                         {offerApplied && offerApplied.offerAmount > 0 && (
@@ -5969,38 +6108,38 @@ const saveInvoiceToBackend = async (bookingId, billHtml) => {
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => window.open(invoiceModalUrl, "_blank")} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"><FaExternalLinkAlt className="w-3 h-3" /> Open</button>
-                  <button 
-  onClick={async () => {
-    try {
-      // 1. Patient ke naam se file ka naam banao
-      const patientName = `${invoiceModalBooking?.patientTitle || ""}_${invoiceModalBooking?.patientName || "Patient"}`.trim().replace(/\s+/g, '_');
-      const fileName = `Invoice_${patientName}_${invoiceModalBooking?.invoiceNo || invoiceModalBooking?._id}.pdf`;
+                  <button
+                    onClick={async () => {
+                      try {
+                        // 1. Patient ke naam se file ka naam banao
+                        const patientName = `${invoiceModalBooking?.patientTitle || ""}_${invoiceModalBooking?.patientName || "Patient"}`.trim().replace(/\s+/g, '_');
+                        const fileName = `Invoice_${patientName}_${invoiceModalBooking?.invoiceNo || invoiceModalBooking?._id}.pdf`;
 
-      // 2. File ko fetch karo (taaki download force ho sake)
-      const response = await fetch(invoiceModalUrl);
-      const blob = await response.blob();
-      
-      // 3. Blob URL banake direct download trigger karo
-      const blobUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = fileName; // Yeh attribute new tab kholne se rokta hai
-      document.body.appendChild(a);
-      a.click();
-      
-      // 4. Cleanup
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(blobUrl);
-      showToast("📥 Invoice downloaded successfully!", "success");
-    } catch (error) {
-      console.error("Download failed:", error);
-      showToast("Failed to download invoice", "error");
-    }
-  }} 
-  className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm"
->
-  <FaDownload className="w-3 h-3" /> Download
-</button>                  <button onClick={() => handleSendInvoice(invoiceModalBooking)} disabled={invoiceSending === invoiceModalBooking?._id} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50">
+                        // 2. File ko fetch karo (taaki download force ho sake)
+                        const response = await fetch(invoiceModalUrl);
+                        const blob = await response.blob();
+
+                        // 3. Blob URL banake direct download trigger karo
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = blobUrl;
+                        a.download = fileName; // Yeh attribute new tab kholne se rokta hai
+                        document.body.appendChild(a);
+                        a.click();
+
+                        // 4. Cleanup
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(blobUrl);
+                        showToast("📥 Invoice downloaded successfully!", "success");
+                      } catch (error) {
+                        console.error("Download failed:", error);
+                        showToast("Failed to download invoice", "error");
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm"
+                  >
+                    <FaDownload className="w-3 h-3" /> Download
+                  </button>                  <button onClick={() => handleSendInvoice(invoiceModalBooking)} disabled={invoiceSending === invoiceModalBooking?._id} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50">
                     {invoiceSending === invoiceModalBooking?._id ? (<FiRefreshCw className="w-3 h-3 animate-spin" />) : (<FaWhatsapp className="w-3 h-3" />)}
                     {invoiceSending === invoiceModalBooking?._id ? "Sending..." : "Send Invoice"}
                   </button>
