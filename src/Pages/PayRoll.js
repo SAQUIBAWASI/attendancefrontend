@@ -32,6 +32,7 @@ import "./EmployeeDashboard.css";
 import "./AttendanceSummary.css";
 
 const formatDateLocal = (date) => {
+  if (!date) return '';
   const d = new Date(date);
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -40,6 +41,7 @@ const formatDateLocal = (date) => {
 };
 
 const formatMonthLocal = (date) => {
+  if (!date) return '';
   const d = new Date(date);
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -367,6 +369,142 @@ const calculateWeekOffData = (
   };
 };
 
+const DEFAULT_SHIFT_DAY_TYPE_RULES = {
+  4: { fullDayMin: 216, halfDayMin: 120 },
+  5: { fullDayMin: 270, halfDayMin: 150 },
+  6: { fullDayMin: 324, halfDayMin: 180 },
+  7: { fullDayMin: 378, halfDayMin: 210 },
+  8: { fullDayMin: 432, halfDayMin: 240 },
+  9: { fullDayMin: 510, halfDayMin: 270 },
+  10: { fullDayMin: 570, halfDayMin: 300 },
+  11: { fullDayMin: 594, halfDayMin: 330 },
+  11.5: { fullDayMin: 621, halfDayMin: 345 },
+  12: { fullDayMin: 648, halfDayMin: 360 }
+};
+
+const HARDCODED_SHIFT_TIMES = {
+  "A": { start: "07:00", end: "17:00" },
+  "B": { start: "10:00", end: "19:00" },
+  "C": { start: "11:00", end: "20:00" },
+  "D": { start: "09:00", end: "21:00" },
+  "E": { start: "07:00", end: "21:30" },
+  "F": { start: "06:30", end: "22:00" },
+  "G": { start: "16:00", end: "23:00" },
+  "H": { start: "17:00", end: "22:00" },
+  "I": { start: "18:00", end: "22:00" },
+  "J": { start: "10:00", end: "22:00" },
+  "K": { start: "10:00", end: "21:30" },
+  "L": { start: "01:00", end: "12:00" },
+  "M": { start: "08:00", end: "14:00" },
+  "N": { start: "18:00", end: "23:00" },
+  "O": { start: "17:00", end: "23:00" },
+  "P": { start: "06:30", end: "17:00" },
+  "S": { start: "06:30", end: "13:00" },
+  "BR": { start: "07:00", end: "21:30" },
+};
+
+const parseHM = (t) => {
+  if (!t) return null;
+  const m = String(t).trim().match(/(\d{1,2})[:.](\d{2})\s*(AM|PM|am|pm)?/i);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const mn = parseInt(m[2], 10);
+  const ampm = m[3] ? m[3].toUpperCase() : null;
+  if (ampm === 'PM' && h < 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  const formatted24 = `${String(h).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
+  return { h, m: mn, formatted24 };
+};
+
+const buildDateTime = (dateKey, timeStr, checkInTimeStr = null) => {
+  if (!dateKey || !timeStr) return null;
+  let targetDate = dateKey;
+  if (checkInTimeStr) {
+    const cin = parseHM(checkInTimeStr);
+    const cout = parseHM(timeStr);
+    if (cin && cout) {
+      const cinMin = cin.h * 60 + cin.m;
+      const coutMin = cout.h * 60 + cout.m;
+      if (coutMin < cinMin) {
+        const parts = dateKey.split('-').map(Number);
+        const nextDate = new Date(parts[0], parts[1] - 1, parts[2] + 1);
+        targetDate = nextDate.getFullYear() + '-' + String(nextDate.getMonth() + 1).padStart(2, '0') + '-' + String(nextDate.getDate()).padStart(2, '0');
+      }
+    }
+  }
+  return targetDate + 'T' + timeStr + ':00+05:30';
+};
+
+const formatTimeForInput = (isoString) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+};
+
+const parseHoursToDecimal = (val) => {
+  if (val === undefined || val === null || val === "") return 0;
+  if (typeof val === "number") return val;
+  const s = String(val).trim();
+  if (s.includes(":")) {
+    const parts = s.split(":");
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    return parseFloat((h + m / 60).toFixed(2));
+  }
+  const hmMatch = s.match(/(\d+)\s*h(?:rs?)?\s*(\d+)?\s*m?/i);
+  if (hmMatch) {
+    const h = parseInt(hmMatch[1], 10) || 0;
+    const m = parseInt(hmMatch[2] || "0", 10) || 0;
+    return parseFloat((h + m / 60).toFixed(2));
+  }
+  return parseFloat(s) || 0;
+};
+
+const formatHoursToDisplay = (val) => {
+  if (val === undefined || val === null || val === "" || val === 0) return "0:00";
+  if (typeof val === "string" && val.includes(":")) return val;
+  const num = parseFloat(val);
+  if (isNaN(num) || num <= 0) return "0:00";
+  const h = Math.floor(num);
+  let m = Math.round((num - h) * 60);
+  let finalH = h;
+  if (m >= 60) {
+    finalH += 1;
+    m = 0;
+  }
+  return finalH + ":" + String(m).padStart(2, '0');
+};
+
+const calculateHoursBetween = (startStr, endStr) => {
+  if (!startStr || !endStr) return 0;
+  const st = parseHM(startStr);
+  const en = parseHM(endStr);
+  if (!st || !en) return 0;
+  let sm = st.h * 60 + st.m;
+  let em = en.h * 60 + en.m;
+  if (em < sm) em += 24 * 60;
+  const diff = (em - sm) / 60;
+  return parseFloat(diff.toFixed(2));
+};
+
+const getDayTypeRuleForShift = (shiftDuration, dayTypeRules) => {
+  const dur = (parseFloat(shiftDuration) > 0 && !isNaN(shiftDuration)) ? parseFloat(shiftDuration) : 9;
+  const rules = dayTypeRules || DEFAULT_SHIFT_DAY_TYPE_RULES;
+  const key = Object.keys(rules).find(k => Math.abs(parseFloat(k) - dur) < 0.1);
+  if (key && rules[key]) return rules[key];
+  return {
+    fullDayMin: dur >= 9 ? Math.round((dur - 0.5) * 60) : Math.round(dur * 60 * 0.90),
+    halfDayMin: Math.round(dur * 60 * 0.50)
+  };
+};
+
+
 const PayRoll = () => {
   const [records, setRecords] = useState([]);
   const [allEmployees, setAllEmployees] = useState([]);
@@ -441,6 +579,16 @@ const PayRoll = () => {
   const [deductionAmountInput, setDeductionAmountInput] = useState("");
   const [deductionReasonInput, setDeductionReasonInput] = useState("");
 
+  const [editedRows, setEditedRows] = useState({});
+  
+  const [dayTypeRules, setDayTypeRules] = useState(() => {
+    try {
+      const saved = localStorage.getItem("attendance_day_type_rules");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return DEFAULT_SHIFT_DAY_TYPE_RULES;
+  });
+
   const getSavedItemsPerPage = () => {
     try {
       const saved = localStorage.getItem('payroll_itemsPerPage');
@@ -466,7 +614,7 @@ const PayRoll = () => {
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [templateConfig, setTemplateConfig] = useState({
     companyName: "Timely Health Tech Pvt Ltd",
-    address: "H. No: 1-98/9/25/p, # 301, 3rd Floor, Sri Sai Balaji Avenue,\nArunodaya Colony, Madhapur, Hyderabad, TG - 500081",
+    address: "H. No: 1-98/9/25/p, # 301, 3rd Floor, Sri Sai Balaji Avenue,\nArunodaya Colony,Madhapur,Hyderabad,TG-500081",
     logo: logo
   });
 
@@ -497,9 +645,58 @@ const PayRoll = () => {
     return `${hours}h ${minutes}m`;
   };
 
+  const formatOTHours = (decimalHours) => {
+    if (decimalHours === null || decimalHours === undefined || isNaN(decimalHours)) {
+      return "0.0";
+    }
+    if (decimalHours === 0) return "0.0";
+    return decimalHours.toFixed(1);
+  };
+
   const getEmployeeShiftHours = (employeeId) => {
     const employeeData = employeesMasterData[employeeId] || {};
     return employeeData.shiftHours || 9;
+  };
+
+  const getEmployeeShiftTimings = (employeeId) => {
+    const emp = allEmployees.find(e => e.employeeId === employeeId);
+    let start = null;
+    let end = null;
+    let shiftType = emp?.shiftType || null;
+
+    if ((!start || !end) && emp?.shiftStart && emp?.shiftEnd) {
+      start = emp.shiftStart;
+      end = emp.shiftEnd;
+    }
+
+    if ((!start || !end) && shiftType && HARDCODED_SHIFT_TIMES[shiftType]) {
+      start = HARDCODED_SHIFT_TIMES[shiftType].start;
+      end = HARDCODED_SHIFT_TIMES[shiftType].end;
+    }
+
+    if (!start) start = "09:00";
+    if (!end) end = "18:00";
+
+    const st = parseHM(start) || { h: 9, m: 0, formatted24: "09:00" };
+    const en = parseHM(end) || { h: 18, m: 0, formatted24: "18:00" };
+
+    let sm2 = st.h * 60 + st.m;
+    let em2 = en.h * 60 + en.m;
+    if (em2 <= sm2) em2 += 24 * 60;
+    const shiftHours = parseFloat(((em2 - sm2) / 60).toFixed(2));
+
+    return {
+      start: st.formatted24,
+      end: en.formatted24,
+      rawStart: start,
+      rawEnd: end,
+      shiftHours: (shiftHours > 0 && shiftHours <= 24) ? shiftHours : 9,
+      startHour: st.h,
+      startMinute: st.m,
+      endHour: en.h,
+      endMinute: en.m,
+      shiftType: shiftType,
+    };
   };
 
   const calculateOTForEmployee = (employeeId, hoursWorked) => {
@@ -843,60 +1040,11 @@ const PayRoll = () => {
 
   const handleRowClick = async (employee) => {
     setSelectedEmployee(employee);
-    const monthToFetch = selectedMonth || new Date().toISOString().slice(0, 7);
+    setEditedRows({});
     await fetchEmployeeAttendance(employee.employeeId, selectedMonth);
     setShowAttendancePopup(true);
   };
 
-  const getLiveAttendanceCounts = (employeeId, allAttendanceRecords, employeesMap) => {
-    let presentDays = 0;
-    let halfDays = 0;
-    let totalOtHours = 0;
-
-    const dailyRecords = {};
-    allAttendanceRecords.forEach((rec) => {
-      if (rec.employeeId !== employeeId) return;
-      if (!rec.checkInTime) return;
-
-      if (selectedMonth) {
-        const recMonth = formatMonthLocal(rec.checkInTime);
-        if (recMonth !== selectedMonth) return;
-      }
-
-      const dateKey = formatDateLocal(rec.checkInTime);
-      if (!dailyRecords[dateKey]) dailyRecords[dateKey] = [];
-      dailyRecords[dateKey].push(rec);
-    });
-
-    const shiftHours = employeesMap[employeeId]?.shiftHours || 9;
-
-    Object.values(dailyRecords).forEach((recsForDay) => {
-      const lastRec = recsForDay[recsForDay.length - 1];
-      const hours = lastRec.totalHours || lastRec.hours || 0;
-      const fullDayThreshold = shiftHours * 0.90;
-      const halfDayThreshold = shiftHours * 0.50;
-
-      if (hours >= fullDayThreshold) {
-        presentDays++;
-        if (hours > shiftHours) {
-          totalOtHours += (hours - shiftHours);
-        }
-      } else if (hours >= halfDayThreshold) {
-        halfDays++;
-      }
-    });
-
-    return {
-      presentDays: presentDays,
-      halfDayWorking: halfDays,
-      totalWorkingDays: presentDays + (halfDays * 0.5),
-      totalOtHours: Number(totalOtHours.toFixed(2))
-    };
-  };
-
-  // ============================================================================
-  // 🚀 FAST fetchData — Single bulk API se saara data
-  // ============================================================================
   const fetchData = useCallback(async (month = "") => {
     let isMounted = true;
 
@@ -909,7 +1057,6 @@ const PayRoll = () => {
       const isCurrent = isCurrentMonth(month);
       const targetMonth = month || selectedMonth;
 
-      // 🚀 SINGLE BULK API CALL
       const res = await fetch(`${BULK_PAYROLL_API_URL}?month=${targetMonth}`);
 
       if (!res.ok) {
@@ -934,17 +1081,14 @@ const PayRoll = () => {
 
       const daysInMonthValue = json.daysInMonth;
 
-      // ✅ Employees filter by joining date
       const employeesForMonth = filterEmployeesByJoiningDate(employeesData, targetMonth);
 
-      // ✅ Leaves data ko expected format me convert karo
       const allLeavesArray = [];
       Object.keys(leavesByEmployee).forEach(empId => {
         leavesByEmployee[empId].forEach(l => allLeavesArray.push(l));
       });
       const currentLeavesMap = processLeavesData(allLeavesArray, targetMonth);
 
-      // ✅ Comp-offs map
       const compOffMap = {};
       Object.keys(compOffsByEmployee).forEach(empId => {
         compOffMap[empId] = compOffsByEmployee[empId].map(co => ({
@@ -956,7 +1100,6 @@ const PayRoll = () => {
         }));
       });
 
-      // ✅ Employees map banao (frontend ko expected format me)
       const employeesMap = {};
       employeesForMonth.forEach(emp => {
         employeesMap[emp.employeeId] = {
@@ -1001,10 +1144,8 @@ const PayRoll = () => {
 
       extractUniqueValues(employeesForMonth);
 
-      // ✅ Summary data array me convert karo
       const summaryData = Object.values(summaryMap);
 
-      // ✅ localStorage se OT aur Manual Deduction maps
       const savedOTMap = (() => {
         try {
           const saved = localStorage.getItem(`otApplied_${targetMonth}`);
@@ -1019,9 +1160,6 @@ const PayRoll = () => {
         } catch { return {}; }
       })();
 
-      // ============================================================
-      // 🚀 MAIN LOOP — No API calls inside!
-      // ============================================================
       const [year, monthNum] = targetMonth.split('-').map(Number);
       const processedSalaries = [];
 
@@ -1037,7 +1175,6 @@ const PayRoll = () => {
         const attendanceForEmployee = attendanceByEmployee[emp.employeeId] || [];
         const weekOffDates = weekOffMap[emp.employeeId] || [];
 
-        // Build attendance map for holiday calculation
         const attendanceMapForHoliday = new Map();
         attendanceForEmployee.forEach(record => {
           const dateKey = formatDateLocal(record.date || record.checkInTime);
@@ -1100,7 +1237,6 @@ const PayRoll = () => {
         let originalSalary = emp.originalSalary || emp.salaryPerMonth;
         let incrementDetails = null;
 
-        // ✅ Salary from bulk data (no API call)
         if (emp.salaryIncrements && emp.salaryIncrements.length > 0) {
           const targetDate = new Date(year, monthNum - 1, 15);
           let applicableSalary = emp.originalSalary || emp.salaryPerMonth;
@@ -1864,99 +2000,90 @@ const PayRoll = () => {
 
     const daysInMonth = employee.monthDays || monthDays || getDaysInMonth(employee.month || selectedMonth);
     const dailyRate = parseFloat(calculateDailyRate(employee)) || 0;
-    const compOffData = employeeCompOffs[employee.employeeId] || { earned: 0, used: 0, balance: 0 };
-
-    const actualWeekOffDaysNumeric = employee.usedWeekOffs || 0;
-
+    
     const presentDays = employee.presentDays ?? 0;
     const halfDays = employee.halfDayWorking || 0;
+    const actualWeekOffDaysNumeric = employee.usedWeekOffs || 0;
     const holidays = employee.holidayCount || 0;
-
-    const finalNetPay = employee.finalPay || employee.calculatedSalary || 0;
-
-    const manualDeductionAmount = employee.manualDeduction || 0;
-    const manualDeductionReason = employee.manualDeductionReason || '';
-
     const compOffDays = employee.compOffDays || 0;
-    const compOffAmount = employee.compOffAmount || 0;
+    
+    const finalNetPay = employee.finalPay || employee.calculatedSalary || 0;
+    const fixedSalary = employeeData.salaryPerMonth || 0;
+
+    const totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + compOffDays + holidays;
+    let lopDays = Math.max(0, daysInMonth - totalPaidDays);
+    let lopAmount = Math.max(0, fixedSalary - employee.calculatedSalary);
 
     const earningsItems = [];
-
-    // ✅ Fixed Monthly Salary in Earnings
-    const fixedSalary = employeeData.salaryPerMonth || employeeData.basicPay || 0;
-    if (fixedSalary > 0) earningsItems.push({ label: 'Basic Salary', amount: fixedSalary });
-
-    earningsItems.push({ label: `Working Days (Full: ${presentDays})`, amount: 0, isInfo: true });
-    earningsItems.push({ label: `Week Off Days (${actualWeekOffDaysNumeric})`, amount: 0, isInfo: true });
-
-    if (employee.holidayAmount > 0 && employee.holidayCount > 0) {
-      earningsItems.push({
-        label: `Holiday Pay (${employee.holidayCount} day${employee.holidayCount > 1 ? 's' : ''})`,
-        amount: employee.holidayAmount
-      });
+    
+    if (employeeData.basicPay > 0) {
+      earningsItems.push({ label: 'Basic', amount: employeeData.basicPay });
     }
+    
+    if (employeeData.hra > 0) {
+      earningsItems.push({ label: 'House Rent Allowance', amount: employeeData.hra });
+    }
+    
+    if (employeeData.conveyanceAllowance > 0) {
+      earningsItems.push({ label: 'Conveyance Allowance', amount: employeeData.conveyanceAllowance });
+    }
+
+    if (employeeData.medicalAllowance > 0) {
+      earningsItems.push({ label: 'Medical Allowance', amount: employeeData.medicalAllowance });
+    }
+
+    if (employeeData.performanceAllowance > 0) {
+      earningsItems.push({ label: 'Performance Allowance', amount: employeeData.performanceAllowance });
+    }
+
+    if (employeeData.specialAllowance > 0) {
+      earningsItems.push({ label: 'Special Allowance', amount: employeeData.specialAllowance });
+    }
+
+    let currentEarningsSum = earningsItems.reduce((sum, item) => sum + item.amount, 0);
+    let remainingAmount = fixedSalary - currentEarningsSum;
+    
+    if (remainingAmount > 0.5) {
+      earningsItems.push({ label: 'Fixed Allowance', amount: remainingAmount });
+    }
+
+    let grossEarnings = earningsItems.reduce((sum, item) => sum + item.amount, 0);
+
+    const otherEarnings = [];
+    if (employee.finalOTAmount > 0) {
+      otherEarnings.push({ label: 'Over Time Pay', amount: employee.finalOTAmount });
+    }
+    const totalOtherEarnings = otherEarnings.reduce((sum, item) => sum + item.amount, 0);
+
+    const totalEarningsAmt = grossEarnings + totalOtherEarnings;
 
     const deductionsItems = [];
-
-    // ✅ LOP Deduction calculation exactly based on the difference
-    const totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDaysNumeric + compOffData.balance + compOffDays + holidays;
-    let lopDays = Math.max(0, daysInMonth - totalPaidDays);
     
-    // Amount Deducted = Fixed Salary - Calculated Salary (This ensures Net Pay matches exactly)
-    let lopAmount = Math.max(0, fixedSalary - employee.calculatedSalary); 
-
-    if (lopDays > 0 || lopAmount > 0) {
-       deductionsItems.push({ label: `LOP / Absent (${Math.round(lopDays * 10)/10} days)`, amount: lopAmount });
-    } else {
-       deductionsItems.push({ label: `LOP / Absent (0 days)`, amount: 0 });
+    if (employeeData.profTax > 0) {
+      deductionsItems.push({ label: 'Professional Tax', amount: employeeData.profTax });
+    }
+    
+    if (employeeData.gmc > 0) {
+      deductionsItems.push({ label: 'GMC', amount: employeeData.gmc });
     }
 
-    const gmcAmt = employee.gmcAmount || employeeData.gmc || 0;
-    const ptaxAmt = employee.ptax || employeeData.profTax || 0;
-    const extraDeductions = (employee.otherDeductions || 0) + (employee.extraWork?.deductions || 0);
-    const totalOtherDeductions = gmcAmt + ptaxAmt + extraDeductions;
-
-    deductionsItems.push({ label: `Other Deductions`, amount: totalOtherDeductions });
-
-    if (manualDeductionAmount > 0) {
-      deductionsItems.push({
-        label: `Manual Deduction${manualDeductionReason ? ` (${manualDeductionReason})` : ''}`,
-        amount: manualDeductionAmount
+    if (lopAmount > 0) {
+      deductionsItems.push({ label: `Loss of Pay (${Math.round(lopDays * 10)/10} days)`, amount: lopAmount });
+    }
+    
+    if (employee.manualDeduction > 0) {
+      deductionsItems.push({ 
+        label: `Deduction ${employee.manualDeductionReason ? '(' + employee.manualDeductionReason + ')' : ''}`, 
+        amount: employee.manualDeduction 
       });
     }
 
-    const totalEarningsAmt = earningsItems.filter(item => !item.isInfo).reduce((sum, item) => sum + item.amount, 0);
-    const totalDeductionsAmt = deductionsItems.reduce((sum, item) => sum + item.amount, 0);
-
-    let tableRowsHTML = '';
-    const maxRows = Math.max(earningsItems.length, deductionsItems.length);
-    for (let i = 0; i < maxRows; i++) {
-      const earn = earningsItems[i];
-      const ded = deductionsItems[i];
-
-      let earnAmountStr = '';
-      let earnLabel = '';
-      if (earn) {
-        earnLabel = earn.label;
-        earnAmountStr = earn.isInfo ? '-' : `₹${earn.amount.toFixed(2)}`;
-      }
-
-      let dedAmountStr = '';
-      let dedLabel = '';
-      if (ded) {
-        dedLabel = ded.label;
-        dedAmountStr = `₹${ded.amount.toFixed(2)}`;
-      }
-
-      tableRowsHTML += `
-        <tr>
-          <td style="border: 1px solid #000; padding: 8px 10px; font-size: 12px;">${earnLabel}</td>
-          <td style="border: 1px solid #000; padding: 8px 10px; text-align: right; font-size: 12px;">${earnAmountStr}</td>
-          <td style="border: 1px solid #000; padding: 8px 10px; font-size: 12px;">${dedLabel}</td>
-          <td style="border: 1px solid #000; padding: 8px 10px; text-align: right; font-size: 12px;">${dedAmountStr}</td>
-        </tr>
-      `;
+    if (employeeData.otherDeductions > 0) {
+      deductionsItems.push({ label: 'Other Deductions', amount: employeeData.otherDeductions });
     }
+
+    const totalDeductionsAmt = deductionsItems.reduce((sum, item) => sum + item.amount, 0);
+    const finalCalculatedNetPay = totalEarningsAmt - totalDeductionsAmt;
 
     const numberToWords = (num) => {
       const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
@@ -1974,14 +2101,42 @@ const PayRoll = () => {
     };
 
     const logoData = templateConfig.logo || logo || '';
-    const stampData = companyStamp || '';
+    const stampData = companyStamp || ''; 
+    const monthDisplay = formatMonthDisplay(employee.month || selectedMonth);
+    const payDate = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 5).toLocaleDateString('en-GB');
 
-    const formatMonthDisplayFn = (month) => {
-      if (!month) return "Current Month";
-      const [year, monthNum] = month.split('-');
-      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      return `${monthNames[parseInt(monthNum) - 1]} ${year}`;
-    };
+    let earnRowsHTML = '';
+    let maxRows = Math.max(earningsItems.length, deductionsItems.length);
+    
+    for (let i = 0; i < maxRows; i++) {
+      const earn = earningsItems[i];
+      const ded = deductionsItems[i];
+
+      earnRowsHTML += `
+        <tr>
+          <td style="padding: 10px; border-right: 1px solid #000;">${earn ? earn.label : ''}</td>
+          <td style="padding: 10px; text-align: right; border-right: 1px solid #000;">${earn ? `₹${earn.amount.toFixed(2)}` : ''}</td>
+          <td style="padding: 10px; text-align: right; border-right: 1px solid #000;">${earn ? `₹${earn.amount.toFixed(2)}` : ''}</td>
+          <td style="padding: 10px; border-right: 1px solid #000;">${ded ? ded.label : ''}</td>
+          <td style="padding: 10px; text-align: right; border-right: 1px solid #000;">${ded ? `₹${ded.amount.toFixed(2)}` : ''}</td>
+          <td style="padding: 10px; text-align: right;">${ded ? `₹${ded.amount.toFixed(2)}` : ''}</td>
+        </tr>
+      `;
+    }
+
+    let otherEarnRowsHTML = '';
+    if (otherEarnings.length > 0) {
+       otherEarnings.forEach(item => {
+         otherEarnRowsHTML += `
+          <tr>
+            <td style="padding: 10px; border-right: 1px solid #000;">${item.label}</td>
+            <td style="padding: 10px; text-align: right; border-right: 1px solid #000;">₹${item.amount.toFixed(2)}</td>
+            <td style="padding: 10px; text-align: right; border-right: 1px solid #000;">₹${item.amount.toFixed(2)}</td>
+            <td colspan="3" style="border-right: none;"></td>
+          </tr>
+         `;
+       });
+    }
 
     return `
       <!DOCTYPE html>
@@ -1990,123 +2145,117 @@ const PayRoll = () => {
           <meta charset="utf-8">
           <title>Payslip - ${employee.name}</title>
           <style>
-            @page { size: A4; margin: 0; }
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: white; }
-            .invoice-container { max-width: 210mm; margin: 0 auto; border: 1px solid #000; border-radius: 4px; padding: 0; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 6px 8px; border: 1px solid #000; font-size: 12px; vertical-align: top; color: #000; }
-            .header-cell { border: none; padding: 12px; border-bottom: 1px solid #000; }
-            .section-header { text-align: center; padding: 8px; font-weight: bold; background: #f5f5f5; color: #000; }
-            .total-row { font-weight: bold; background: #f9f9f9; }
-            .gross-row { font-weight: bold; background: #f0f0f0; }
-            .logo-image { height: 80px; width: auto; max-width: 200px; object-fit: contain; display: block; }
-            .stamp-image { width: 90px; height: auto; opacity: 0.8; display: block; }
-            .stamp-container { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-            .amount-word { font-weight: bold; font-size: 12px; padding: 8px; text-align: center; color: #000; }
-            .net-pay-amount { font-weight: bold; font-size: 14px; color: #000; }
-            @media print {
-              body { padding: 10px; }
-              .invoice-container { border: 1px solid #000; }
-              .logo-image, .stamp-image { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            }
+            @page { size: A4; margin: 10mm; }
+            * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: white; color: #333; }
+            .payslip-container { max-width: 800px; margin: 0 auto; border: 1px solid #000; padding: 20px; }
+            .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #000; padding-bottom: 15px; margin-bottom: 10px; }
+            .header-logo { width: 180px; flex-shrink: 0; }
+            .header-logo img { height: 50px; max-width: 100%; object-fit: contain; }
+            .header-company { flex: 1; text-align: center; padding: 0 20px; }
+            .header-company h2 { font-size: 20px; margin-bottom: 4px; color: #000; white-space: nowrap; font-weight: bold; }
+            .header-company p { font-size: 11px; color: #555; line-height: 1.4; white-space: nowrap; }
+            .header-spacer { width: 180px; flex-shrink: 0; }
+            .payslip-title { text-align: center; font-size: 16px; font-weight: bold; padding: 10px 0; border: 1px solid #000; margin-bottom: 20px; background: #26204A !important; color: #ffffff; }
+            .summary-container { display: flex; border: 1px solid #000; margin-bottom: 20px; }
+            .summary-left { width: 60%; padding: 15px; border-right: 1px solid #000; }
+            .summary-right { width: 40%; padding: 15px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+            .summary-left table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            .summary-left td { padding: 6px 0; }
+            .summary-left td.label { font-weight: bold; color: #333; width: 40%; }
+            .net-pay-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+            .net-pay-amount { font-size: 32px; font-weight: 900; color: #000; margin-bottom: 5px; }
+            .net-pay-days { font-size: 12px; color: #555; }
+            .table-title { background: #26204A !important; color: #ffffff; font-weight: bold; text-align: center; padding: 8px; font-size: 13px; letter-spacing: 1px; border: 1px solid #000; border-bottom: none; }
+            .salary-table { width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #000; }
+            .salary-table th { background: #f8f9fa !important; padding: 10px; border: 1px solid #000; text-align: left; font-weight: bold; }
+            .salary-table th.right { text-align: right; }
+            .salary-table td { border: 1px solid #000; }
+            .salary-table tr.total-row td { font-weight: bold; background: #f8f9fa !important; }
+            .net-pay-summary { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; border: 1px solid #000; }
+            .net-pay-summary td { padding: 10px; border: 1px solid #000; }
+            .net-pay-summary td.label { font-weight: bold; text-align: left; width: 50%; }
+            .net-pay-summary td.amount { text-align: right; font-weight: bold; width: 50%; }
+            .net-pay-highlight { background: #f0f0f0 !important; padding: 10px; border-radius: 5px; margin-top: 20px; text-align: center; font-size: 13px; font-weight: bold; }
+            .footer-wrapper { margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-end; }
+            .footer-note-wrapper { flex: 1; font-size: 11px; color: #555; padding-bottom: 10px; }
+            .stamp-box { text-align: center; margin-left: auto; }
+            .stamp-box img { height: 80px; opacity: 0.9; margin-bottom: 5px; }
+            .stamp-text { font-size: 11px; font-weight: bold; color: #333; }
+            .stamp-subtext { font-size: 9px; color: #666; }
           </style>
         </head>
         <body>
-          <div class="invoice-container">
-            <table>
-              <tr>
-                <td colspan="6" class="header-cell">
-                  <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                    <div style="width: 200px; flex-shrink: 0;">
-                      ${logoData ? `<img src="${logoData}" alt="Logo" class="logo-image">` : ''}
-                    </div>
-                    <div style="flex: 1; text-align: center; padding: 0 10px;">
-                      <h2 style="margin: 0; font-size: 16px; font-weight: bold; color: #000;">Timely Healthtech Private Limited</h2>
-                      <p style="margin: 2px 0 0; font-size: 7px; line-height: 1.4; color: #555;">
-                        Reg. Address: Flat No:301, H.No:1-68/22, Plot No. 54 & 55, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad, Telangana-500081
-                      </p>
-                    </div>
-                    <div style="width: 200px; flex-shrink: 0;"></div>
-                  </div>
-                </td>
-              </tr>
-              <tr><td colspan="6" class="section-header">PAYSLIP FOR ${formatMonthDisplayFn(employee.month || selectedMonth).toUpperCase()}</td></tr>
-              <tr>
-                <td width="15%"><strong>Name:</strong></td>
-                <td width="35%">${employee.name || '-'}</td>
-                <td width="15%"><strong>Employee No:</strong></td>
-                <td width="35%">${employee.employeeId || '-'}</td>
-              </tr>
-              <tr>
-                <td><strong>Joining Date:</strong></td>
-                <td>${employeeData.joiningDate ? new Date(employeeData.joiningDate).toLocaleDateString('en-GB') : '-'}</td>
-                <td><strong>Bank Name:</strong></td>
-                <td>${employeeData.bankName || '-'}</td>
-              </tr>
-              <tr>
-                <td><strong>Designation:</strong></td>
-                <td>${employeeData.designation || employee.designation || '-'}</td>
-                <td><strong>Bank Account No:</strong></td>
-                <td>${employeeData.bankAccount || '-'}</td>
-              </tr>
-              <tr>
-                <td><strong>Department:</strong></td>
-                <td>${employeeData.department || employee.department || '-'}</td>
-                <td><strong>PAN Number:</strong></td>
-                <td>${employeeData.panNo || '-'}</td>
-              </tr>
-              <tr>
-                <td><strong>Location:</strong></td>
-                <td>${employeeData.location || 'HYDERABAD'}</td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td><strong>EMP EFFECTIVE</strong></td>
-                <td>:30</td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td><strong>LOP:</strong></td>
-                <td>${lopDays > 0 ? (Math.round(lopDays * 10) / 10) : '0'}</td>
-                <td></td>
-                <td></td>
+          <div class="payslip-container">
+            <div class="header">
+              <div class="header-logo">${logoData ? `<img src="${logoData}" alt="Logo">` : ''}</div>
+              <div class="header-company">
+                <h2>${templateConfig.companyName || 'Timely Health Tech Pvt Ltd'}</h2>
+                <p>${(templateConfig.address || 'H. No: 1-98/9/25/p, # 301, 3rd Floor, Sri Sai Balaji Avenue,, Arunodaya Colony,Madhapur,Hyderabad,TG-500081').replace(/\n/g, ', ')}</p>
+              </div>
+              <div class="header-spacer"></div>
+            </div>
+            <div class="payslip-title">Payslip for the month of ${monthDisplay}</div>
+            <div class="summary-container">
+              <div class="summary-left">
+                <table>
+                  <tr><td class="label">Employee Name</td><td>: ${employee.name || '-'}</td></tr>
+                  <tr><td class="label">Designation</td><td>: ${employeeData.designation || employee.designation || '-'}</td></tr>
+                  <tr><td class="label">Date of Joining</td><td>: ${employeeData.joiningDate ? new Date(employeeData.joiningDate).toLocaleDateString('en-GB') : '-'}</td></tr>
+                  <tr><td class="label">Pay Period</td><td>: ${monthDisplay}</td></tr>
+                  <tr><td class="label">Pay Date</td><td>: ${payDate}</td></tr>
+                </table>
+              </div>
+              <div class="summary-right">
+                <div class="net-pay-title">Employee Net Pay</div>
+                <div class="net-pay-amount">₹${finalCalculatedNetPay.toFixed(2)}</div>
+                <div class="net-pay-days">Paid Days : ${totalPaidDays.toFixed(1)} | LOP Days : ${lopDays.toFixed(1)}</div>
+              </div>
+            </div>
+            <div class="table-title">EARNINGS & DEDUCTIONS</div>
+            <table class="salary-table">
+              <thead>
+                <tr>
+                  <th style="width: 20%;">EARNINGS</th>
+                  <th style="width: 15%;" class="right">AMOUNT</th>
+                  <th style="width: 15%;" class="right">YTD</th>
+                  <th style="width: 20%;">DEDUCTIONS</th>
+                  <th style="width: 15%;" class="right">AMOUNT</th>
+                  <th style="width: 15%;" class="right">YTD</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${earnRowsHTML}
+                ${otherEarnRowsHTML}
+                <tr class="total-row">
+                  <td>Gross Earnings</td>
+                  <td class="right">₹${grossEarnings.toFixed(2)}</td>
+                  <td class="right">₹${grossEarnings.toFixed(2)}</td>
+                  <td>Total Deductions</td>
+                  <td class="right">₹${totalDeductionsAmt.toFixed(2)}</td>
+                  <td class="right">₹${totalDeductionsAmt.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="table-title" style="margin-top: 15px;">NET PAY</div>
+            <table class="net-pay-summary">
+              <tr><td class="label">Gross Earnings</td><td class="amount">₹${totalEarningsAmt.toFixed(2)}</td></tr>
+              <tr><td class="label">Total Deductions</td><td class="amount">₹${totalDeductionsAmt.toFixed(2)}</td></tr>
+              <tr style="background: #f8f9fa !important; font-size: 14px;">
+                <td class="label" style="font-size: 14px;">Total Net Payable</td>
+                <td class="amount" style="font-size: 16px; color: #000;">₹${finalCalculatedNetPay.toFixed(2)}</td>
               </tr>
             </table>
-
-            <table>
-              <tr style="background:#f0f0f0;">
-                <td style="width:30%;"><strong>Earnings</strong></td>
-                <td style="width:20%; text-align:center;"><strong>Actual</strong></td>
-                <td style="width:30%;"><strong>Deductions</strong></td>
-                <td style="width:20%; text-align:center;"><strong>Actual</strong></td>
-              </tr>
-              ${tableRowsHTML}
-              <tr class="gross-row">
-                <td><strong>Total Earnings: INR.</strong></td>
-                <td style="text-align: right;"><strong>₹${totalEarningsAmt.toFixed(2)}</strong></td>
-                <td><strong>Total Deductions.</strong></td>
-                <td style="text-align: right;"><strong>₹${totalDeductionsAmt.toFixed(2)}</strong></td>
-              </tr>
-              <tr class="total-row">
-                <td colspan="2"></td>
-                <td><strong>Net Pay for the month</strong></td>
-                <td style="text-align: right;"><strong class="net-pay-amount">₹${finalNetPay.toFixed(2)}</strong></td>
-              </tr>
-              <tr>
-                <td colspan="4" class="amount-word">(${numberToWords(finalNetPay)})</td>
-              </tr>
-            </table>
-
-            <div style="display: flex; justify-content: flex-end; align-items: center; padding: 10px 20px; border-top: 1px solid #000; margin-top: 5px;">
-              <div class="stamp-container">
-                ${stampData ? `<img src="${stampData}" alt="Company Stamp" class="stamp-image">` : ''}
-                <div style="text-align: right; line-height: 1.2;">
-                  <strong style="font-size: 7px; color: #333; display: block;">Authorized Signatory</strong>
-                  <span style="font-size: 6px; color: #555; display: block;">Timely Healthtech Private Limited</span>
-                </div>
+            <div class="net-pay-highlight">
+              Total Net Payable ₹${finalCalculatedNetPay.toFixed(2)} (${numberToWords(finalCalculatedNetPay)})
+              <div style="font-size: 11px; font-weight: normal; color: #555; margin-top: 5px;">**Total Net Payable = Gross Earnings - Total Deductions</div>
+            </div>
+            <div class="footer-wrapper">
+              <div class="footer-note-wrapper"></div>
+              <div class="stamp-box">
+                ${stampData ? `<img src="${stampData}" alt="Company Stamp">` : ''}
+                <div class="stamp-text">Authorized Signatory</div>
+                <div class="stamp-subtext">${templateConfig.companyName || 'Timely Health Tech Pvt Ltd'}</div>
               </div>
             </div>
           </div>
@@ -2132,6 +2281,121 @@ const PayRoll = () => {
     const [year, monthNum] = month.split('-');
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     return `${monthNames[parseInt(monthNum) - 1]} ${year}`;
+  };
+
+  const calculateAttendanceStatus = (employeeId, checkInTime, checkOutTime, totalHours) => {
+    if (!checkInTime) { 
+      return { 
+        status: 'absent', 
+        message: '❌ Absent', 
+        color: 'text-red-600 bg-red-50 border-red-100',
+        icon: '❌',
+        shortMessage: 'Absent'
+      };
+    }
+    
+    const shiftTimings = getEmployeeShiftTimings(employeeId);
+    const checkInDate = new Date(checkInTime);
+    const shiftStart = new Date(checkInTime);
+    shiftStart.setHours(shiftTimings.startHour, shiftTimings.startMinute, 0, 0);
+    
+    const diffMinutes = (checkInDate - shiftStart) / (1000 * 60);
+    
+    const shiftHours = shiftTimings.shiftHours || 9;
+    const actualHours = totalHours || 0;
+    const actualMinutes = Math.round(actualHours * 60);
+    const rule = getDayTypeRuleForShift(shiftHours, dayTypeRules);
+
+    if (checkInTime && !checkOutTime) {
+      return { 
+        status: 'single_punch', 
+        message: '📤 Single Punch', 
+        shortMessage: 'Single Punch',
+        color: 'text-purple-700 bg-purple-50 border-purple-200',
+        icon: '📤'
+      };
+    }
+
+    if (actualMinutes >= rule.fullDayMin) {
+      return { 
+        status: 'full_day', 
+        message: '✅ Full Day', 
+        shortMessage: 'Full Day',
+        color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+        icon: '✅'
+      };
+    } else if (actualMinutes >= rule.halfDayMin) {
+      return { 
+        status: 'half_day', 
+        message: '🌓 Half Day', 
+        shortMessage: 'Half Day',
+        color: 'text-amber-700 bg-amber-50 border-amber-200',
+        icon: '🌓'
+      };
+    } else if (checkOutTime && actualHours > 0) {
+      return { 
+        status: 'leave',
+        message: '❌ Leave (< Half Day)',
+        shortMessage: 'Leave',
+        color: 'text-rose-700 bg-rose-50 border-rose-200',
+        icon: '❌'
+      };
+    } else if (diffMinutes >= 60) {
+      return { 
+        status: 'half_day', 
+        message: '🌓 Half Day (' + Math.round(diffMinutes) + ' mins late)', 
+        shortMessage: 'Half Day',
+        color: 'text-amber-700 bg-amber-50 border-amber-200',
+        icon: '🌓'
+      };
+    } else if (diffMinutes > 15) {
+      return { 
+        status: 'late', 
+        message: '⏰ Late (' + Math.round(diffMinutes) + ' mins)', 
+        shortMessage: 'Late',
+        color: 'text-orange-600 bg-orange-50 border-orange-200',
+        icon: '⏰'
+      };
+    } else {
+      return { 
+        status: 'present', 
+        message: '📌 Present', 
+        shortMessage: 'Present',
+        color: 'text-blue-700 bg-blue-50 border-blue-200',
+        icon: '📌'
+      };
+    }
+  };
+
+  const calculateDayType = (employeeId, hours) => {
+    const numericHours = parseFloat(hours) || 0;
+    if (numericHours <= 0) return "full_leave";
+    const shiftHours = getEmployeeShiftHours(employeeId);
+    const rule = getDayTypeRuleForShift(shiftHours, dayTypeRules);
+    const totalMin = Math.round(numericHours * 60);
+
+    if (totalMin >= rule.fullDayMin) return "full";
+    if (totalMin >= rule.halfDayMin) return "half";
+    return "full_leave";
+  };
+
+  const calculateOTForRecord = (employeeId, totalHours) => {
+    const shiftHours = getEmployeeShiftHours(employeeId);
+    if (!totalHours || totalHours === 0) return 0;
+    const ot = totalHours - shiftHours;
+    return ot > 0 ? parseFloat(ot.toFixed(2)) : 0;
+  };
+
+  const getAllDatesOfMonth = (month) => {
+    if (!month) return [];
+    const [year, m] = month.split("-");
+    const start = new Date(year, m - 1, 1);
+    const end = new Date(year, m, 0);
+    const dates = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(new Date(d));
+    }
+    return dates;
   };
 
   const AttendancePopupModal = () => {
@@ -2348,8 +2612,8 @@ const PayRoll = () => {
                       <th className="px-2 py-1.5 text-center text-xs font-medium">Check-In</th>
                       <th className="px-2 py-1.5 text-center text-xs font-medium">Check-Out</th>
                       <th className="px-2 py-1.5 text-center text-xs font-medium">Reason</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Hours</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Status</th>
+                      <th className="px-2 py-1.5 text-center text-xs font-medium w-32">Hours</th>
+                      <th className="px-2 py-1.5 text-center text-xs font-medium">Day Type</th>
                       <th className="px-2 py-1.5 text-center text-xs font-medium">Admin Comment</th>
                     </tr>
                   </thead>
@@ -2371,60 +2635,82 @@ const PayRoll = () => {
 
                       let bgColor = '';
                       let dayType = '';
+                      let dayTypeClass = '';
 
                       if (futureDate && !hasAttendance) {
                         bgColor = 'bg-gray-50';
-                        dayType = 'NA';
+                        dayType = '-';
+                        dayTypeClass = 'bg-transparent text-gray-300 border-transparent';
                       } else if (compOffCheck) {
                         bgColor = 'bg-teal-50';
                         dayType = 'Comp-off';
+                        dayTypeClass = 'bg-teal-50 text-teal-700 border-teal-100';
                       } else if (holidayCheck && !hasAttendance) {
                         bgColor = 'bg-purple-50';
                         dayType = 'Public Holiday';
+                        dayTypeClass = 'bg-purple-50 text-purple-700 border-purple-100';
                       } else if (effectiveWeekOff) {
                         bgColor = 'bg-orange-50';
                         dayType = 'Week Off';
+                        dayTypeClass = 'bg-orange-50 text-orange-700 border-orange-100';
                       } else if (isLeave && !hasAttendance) {
                         bgColor = 'bg-red-50';
                         dayType = 'Leave';
+                        dayTypeClass = 'bg-rose-50 text-rose-700 border-rose-100';
                       } else if (!hasAttendance) {
                         bgColor = 'bg-white';
                         dayType = 'Absent';
+                        dayTypeClass = 'bg-gray-100 text-gray-600 border-gray-200';
                       } else if (singlePunch) {
                         bgColor = 'bg-blue-50';
                         dayType = 'Single Punch';
+                        dayTypeClass = 'bg-blue-50 text-blue-700 border-blue-100';
                       } else {
                         bgColor = 'bg-white';
                         const hoursNum = parseFloat(workHours);
-                        if (workHours && hoursNum >= shiftHours * 0.9) dayType = 'Full Day';
-                        else if (workHours && hoursNum >= shiftHours * 0.5) dayType = 'Half Day';
-                        else if (workHours) dayType = 'Absent';
-                        else dayType = 'Full Day';
+                        if (workHours && hoursNum >= shiftHours * 0.9) {
+                           dayType = 'Full Day';
+                           dayTypeClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                        } else if (workHours && hoursNum >= shiftHours * 0.5) {
+                           dayType = 'Half Day';
+                           dayTypeClass = 'bg-amber-50 text-amber-700 border-amber-100';
+                        } else if (workHours) {
+                           dayType = 'Absent';
+                           dayTypeClass = 'bg-gray-100 text-gray-600 border-gray-200';
+                        } else {
+                           dayType = 'Full Day';
+                           dayTypeClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                        }
                       }
 
                       return (
                         <tr key={dateKey} className={`${bgColor} hover:bg-gray-50 transition-colors`}>
-                          <td className={`px-2 py-1 text-xs text-center ${futureDate ? 'text-gray-400' : ''}`}>
+                          <td className={`px-2 py-1 text-xs text-center font-medium ${futureDate ? 'text-gray-400' : ''}`}>
                             {date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                           </td>
                           <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && !compOffCheck && !futureDate && hasAttendance ? formatTime(record?.checkInTime) : '-'}</td>
                           <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && !compOffCheck && !futureDate && hasAttendance ? formatTime(record?.checkOutTime) : '-'}</td>
                           <td className="px-2 py-1 text-xs text-center">{record?.reason || (compOffCheck ? 'Comp-off approved' : '-')}</td>
-                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && !compOffCheck && hasAttendance && workHours ? `${workHours}h` : '-'}</td>
+                          
+                          {/* Image 2 Style Hours Column */}
                           <td className="px-2 py-1 text-center">
-                            <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${
-                              dayType === 'NA' ? 'bg-gray-100 text-gray-400 border border-dashed border-gray-300'
-                              : compOffCheck ? 'bg-teal-100 text-teal-700'
-                              : holidayCheck && !hasAttendance ? 'bg-purple-100 text-purple-700'
-                              : effectiveWeekOff ? 'bg-orange-100 text-orange-700'
-                              : isLeave ? 'bg-red-100 text-red-700'
-                              : !hasAttendance ? 'bg-gray-100 text-gray-500'
-                              : dayType === 'Single Punch' ? 'bg-blue-100 text-blue-700'
-                              : dayType === 'Full Day' ? 'bg-green-100 text-green-700'
-                              : dayType === 'Half Day' ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-gray-100 text-gray-500'
-                            }`}>{dayType}</span>
+                            <div className="flex flex-col items-center justify-center">
+                              <div className="border border-slate-300 rounded-md px-2 py-0.5 text-xs font-bold text-slate-800 bg-white min-w-[50px]">
+                                {(!effectiveWeekOff && !isLeave && !compOffCheck && hasAttendance && workHours) ? formatHoursToDisplay(workHours) : "0:00"}
+                              </div>
+                              <span className="text-[10px] text-slate-400 mt-0.5">
+                                {(!effectiveWeekOff && !isLeave && !compOffCheck && hasAttendance && workHours) ? formatDecimalHours(workHours) : "0h 0m"}
+                              </span>
+                            </div>
                           </td>
+
+                          {/* Merged Day Type & Status Column */}
+                          <td className="px-2 py-1 text-center">
+                             <span className={`inline-flex px-2 py-1 rounded border text-[10px] font-bold ${dayTypeClass}`}>
+                               {dayType}
+                             </span>
+                          </td>
+
                           <td className="px-2 py-1 text-xs text-center">{record?.comment || (compOffCheck ? `Comp-off (${compOffDatesList.find(co => co.date === dateKey)?.count || 1} day)` : '-')}</td>
                         </tr>
                       );
@@ -2913,7 +3199,7 @@ const PayRoll = () => {
         </div>
       </main>
 
-      {/* VIEW MODAL */}
+      {/* View Modal */}
       {showViewModal && selectedEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto border border-gray-100">
@@ -2936,39 +3222,21 @@ const PayRoll = () => {
             </div>
 
             <div className="grid grid-cols-1 text-xs sm:grid-cols-2 gap-x-8 gap-y-2 mb-6">
-              {/* 1. Days Present */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Days Present</span><span className="font-bold text-emerald-700">{selectedEmployee.presentDays || 0}</span></div>
-              {/* 2. Days Worked */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Days Worked</span><span className="font-bold text-blue-700">{selectedEmployee.totalWorkingDays || 0}</span></div>
-              
-              {/* 3. Half Days */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Half Days</span><span className="font-bold text-amber-700">{selectedEmployee.halfDayWorking || 0}</span></div>
-              
-              {/* 4. Week-Offs Earned */}
               <div className="flex justify-between py-1.5 border-b border-green-100 bg-green-50 rounded px-1"><span className="text-green-600 font-semibold">Week-Offs Earned</span><span className="font-bold text-green-700">{selectedEmployee.earnedWeekOffs || 0}</span></div>
-              
-              {/* 5. Paid Week-Offs (Used / Total) */}
               <div className="flex justify-between py-1.5 border-b border-orange-100 bg-orange-50 rounded px-1"><span className="text-orange-600 font-semibold">Paid Week-Offs</span><span className="font-bold text-orange-700">{selectedEmployee.usedWeekOffs || 0}/{selectedEmployee.earnedWeekOffs || 0}</span></div>
-              
-              {/* 6. Week-Offs Worked (Carry Forward) */}
               <div className="flex justify-between py-1.5 border-b border-purple-100 bg-purple-50 rounded px-1"><span className="text-purple-600 font-semibold">Week-Offs Worked (Carry Forward)</span><span className="font-bold text-purple-700">{selectedEmployee.workedOnWeekOff || 0}</span></div>
-              
-              {/* 7. Total Week-Offs */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Total Week-Offs</span><span className="font-bold text-gray-600">{selectedEmployee.totalWeekOffDays || 0}</span></div>
-
-              {/* 8. Calendar Days */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Calendar Days</span><span className="font-bold text-slate-700">{selectedEmployee.monthDays || monthDays}</span></div>
-              
-              {/* 9. Payable Days */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Payable Days</span><span className="font-bold text-blue-700">{typeof selectedEmployee.payablePresentDays === 'number' ? selectedEmployee.payablePresentDays : (selectedEmployee.presentDays || 0)}</span></div>
               
-              {/* 10. Unpaid Absence (LOP) */}
               {(() => {
                 const dailyRate = parseFloat(calculateDailyRate(selectedEmployee)) || 0;
                 const salary = selectedEmployee.salaryPerMonth || 0;
                 const calcSalary = selectedEmployee.calculatedSalary || 0;
                 
-                // Calculate exact LOP amount based on salary cut
                 let lopAmount = 0;
                 let lopDays = 0;
                 
@@ -2994,7 +3262,6 @@ const PayRoll = () => {
                 }
               })()}
 
-              {/* 11. Week-Off Dates */}
               {selectedEmployee.weekOffDates && selectedEmployee.weekOffDates.length > 0 && (
                 <div className="flex flex-col py-1.5 border-b border-orange-100 bg-orange-50 rounded px-1 sm:col-span-2">
                   <span className="text-orange-600 font-semibold mb-1">Week-Off Dates ({selectedEmployee.weekOffDates.length})</span>
@@ -3013,7 +3280,6 @@ const PayRoll = () => {
                 </div>
               )}
 
-              {/* Comp-off Dates (Keeping original logic, not in the specific list but requested to keep other code same) */}
               {selectedEmployee.compOffDates && selectedEmployee.compOffDates.length > 0 && (
                 <div className="flex flex-col py-1.5 border-b border-teal-100 bg-teal-50 rounded px-1 sm:col-span-2">
                   <span className="text-teal-600 font-semibold mb-1">Comp-off Dates ({selectedEmployee.compOffDates.length})</span>
@@ -3027,24 +3293,11 @@ const PayRoll = () => {
                 </div>
               )}
 
-              {/* 12. Monthly Salary */}
-              <div className="flex justify-between py-1.5 border-b border-gray-100">
-                <span className="text-gray-500 font-medium">Monthly Salary</span>
-                <div className="text-right">
-                  <span className="font-bold text-slate-800">₹{selectedEmployee.salaryPerMonth || 0}</span>
-                </div>
-              </div>
-              
-              {/* 13. Daily Rate */}
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Monthly Salary</span><div className="text-right"><span className="font-bold text-slate-800">₹{selectedEmployee.salaryPerMonth || 0}</span></div></div>
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Daily Rate</span><span className="font-bold text-slate-700">₹{calculateDailyRate(selectedEmployee)}/day</span></div>
-              
-              {/* 14. Overtime Pay */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Overtime Pay</span><span className="font-bold text-emerald-600">₹{(selectedEmployee.finalOTAmount || 0).toFixed(0)}</span></div>
-              
-              {/* 15. Calculated Salary */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium text-blue-600">Calculated Salary</span><span className="font-bold text-blue-600">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
 
-              {/* Manual Deduction (Keeping original logic) */}
               {selectedEmployee.manualDeduction > 0 && (
                 <div className="flex justify-between py-1.5 border-b border-rose-100 bg-rose-50 rounded px-1 sm:col-span-2">
                   <span className="text-rose-600 font-semibold">Manual Deduction{selectedEmployee.manualDeductionReason ? ` (${selectedEmployee.manualDeductionReason})` : ''}</span>
@@ -3052,7 +3305,6 @@ const PayRoll = () => {
                 </div>
               )}
 
-              {/* 16. Final Payable Salary */}
               <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-700 font-bold">Final Payable Salary</span><span className="font-bold text-emerald-700">₹{Math.round(selectedEmployee.finalPay || selectedEmployee.calculatedSalary || 0)}</span></div>
             </div>
 
@@ -3064,7 +3316,6 @@ const PayRoll = () => {
         </div>
       )}
 
-      {/* EDIT MODAL */}
       {showEditModal && selectedEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto border border-gray-100">
@@ -3126,7 +3377,6 @@ const PayRoll = () => {
         </div>
       )}
 
-      {/* TEMPLATE MODAL */}
       {showTemplateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-2xl border border-gray-100">
@@ -3156,7 +3406,6 @@ const PayRoll = () => {
         </div>
       )}
 
-      {/* OT MODAL */}
       {showOTModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] flex flex-col border border-gray-100">
@@ -3190,95 +3439,37 @@ const PayRoll = () => {
         </div>
       )}
 
-      {/* DEDUCTION MODAL */}
       {showDeductionModal && deductionModalEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
               <h2 className="text-base font-bold text-gray-800">Add Manual Deduction</h2>
-              <button
-                onClick={() => setShowDeductionModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition"
-              >
-                <FaTimes size={18} />
-              </button>
+              <button onClick={() => setShowDeductionModal(false)} className="text-gray-400 hover:text-gray-600 transition"><FaTimes size={18} /></button>
             </div>
 
-            <p className="text-xs text-slate-500 mb-4">
-              {deductionModalEmployee.name} ({deductionModalEmployee.employeeId})
-            </p>
+            <p className="text-xs text-slate-500 mb-4">{deductionModalEmployee.name} ({deductionModalEmployee.employeeId})</p>
 
             <div className="bg-slate-50 p-4 rounded-lg mb-4 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Current Net Salary:</span>
-                <span className="font-bold text-slate-800">
-                  ₹{(deductionModalEmployee.finalPay || 0).toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Existing Total Deductions:</span>
-                <span className="font-bold text-rose-500">
-                  ₹{(deductionModalEmployee.deductions || 0).toLocaleString()}
-                </span>
-              </div>
+              <div className="flex justify-between"><span className="text-slate-500">Current Net Salary:</span><span className="font-bold text-slate-800">₹{(deductionModalEmployee.finalPay || 0).toLocaleString()}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Existing Total Deductions:</span><span className="font-bold text-rose-500">₹{(deductionModalEmployee.deductions || 0).toLocaleString()}</span></div>
             </div>
 
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-              Deduction Amount (₹)
-            </label>
-            <input
-              type="number"
-              value={deductionAmountInput}
-              onChange={(e) => setDeductionAmountInput(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg mb-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
-              step="1"
-              min="0"
-              placeholder="Enter deduction amount"
-            />
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Deduction Amount (₹)</label>
+            <input type="number" value={deductionAmountInput} onChange={(e) => setDeductionAmountInput(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg mb-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" step="1" min="0" placeholder="Enter deduction amount" />
 
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-              Reason (optional)
-            </label>
-            <input
-              type="text"
-              value={deductionReasonInput}
-              onChange={(e) => setDeductionReasonInput(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
-              placeholder="e.g. Advance, Penalty, Damage"
-            />
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Reason (optional)</label>
+            <input type="text" value={deductionReasonInput} onChange={(e) => setDeductionReasonInput(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" placeholder="e.g. Advance, Penalty, Damage" />
 
             <div className="text-xs text-slate-500 mb-4">
-              New Net Salary:{" "}
-              <span className="font-bold text-rose-600">
-                ₹{Math.max(
-                  0,
-                  (deductionModalEmployee.finalPay || 0) -
-                    (parseFloat(deductionAmountInput) || 0)
-                ).toLocaleString()}
-              </span>
+              New Net Salary: <span className="font-bold text-rose-600">₹{Math.max(0, (deductionModalEmployee.finalPay || 0) - (parseFloat(deductionAmountInput) || 0)).toLocaleString()}</span>
             </div>
 
             <div className="flex gap-2 justify-end">
               {manualDeductionMap[deductionModalEmployee.employeeId] !== undefined && (
-                <button
-                  onClick={handleRemoveDeduction}
-                  className="px-3 py-2 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100"
-                >
-                  Remove
-                </button>
+                <button onClick={handleRemoveDeduction} className="px-3 py-2 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100">Remove</button>
               )}
-              <button
-                onClick={() => setShowDeductionModal(false)}
-                className="px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveDeduction}
-                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700"
-              >
-                Save Deduction
-              </button>
+              <button onClick={() => setShowDeductionModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200">Cancel</button>
+              <button onClick={handleSaveDeduction} className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700">Save Deduction</button>
             </div>
           </div>
         </div>

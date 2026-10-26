@@ -971,6 +971,7 @@ export default function OpManagement() {
   const [patientBookings, setPatientBookings] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
   const [selectedBookingForPrescription, setSelectedBookingForPrescription] = useState(null);
@@ -1201,8 +1202,7 @@ export default function OpManagement() {
     if (choice === "register") setTimeout(() => { handleAddNewPatient(); }, 200);
   };
 
-  // ✅ FIXED: openClinicServicesModal
-  const openClinicServicesModal = (booking) => {
+    const openClinicServicesModal = (booking) => {
     if (!booking) return;
     const allServices = getBookingServices(booking);
     const clinicOnly = allServices.filter((s) => {
@@ -1216,7 +1216,6 @@ export default function OpManagement() {
       const netPrice = Math.max(0, price - discount);
       const isPaid = (s.paymentStatus || "").toLowerCase() === "paid";
 
-      // ✅ FIX: Explicitly set paidAmount based on status
       let paidAmount = Number(s.paidAmount) || 0;
       if (isPaid && paidAmount === 0) paidAmount = netPrice;
       const dueAmount = Math.max(0, netPrice - paidAmount);
@@ -1229,7 +1228,7 @@ export default function OpManagement() {
         paidAmount,
         dueAmount,
         description: s.description || "",
-        paymentMode: s.paymentMode || "N/A",
+        paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""), 
         paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
         transactionId: s.transactionId || "",
         _wasPaid: isPaid,
@@ -1243,7 +1242,6 @@ export default function OpManagement() {
     setShowClinicServiceSuggestions(false);
     setShowClinicServicesModal(true);
   };
-
 
   const handleAddClinicServiceItem = (service) => {
     if (!service) return;
@@ -1314,8 +1312,7 @@ export default function OpManagement() {
     setDeleteConfirm({ isOpen: false, type: "", index: null });
   };
 
-  // ✅ NEW: Update Clinic Item Price with Auto Status
-  const handleUpdateClinicServicePrice = (index, newPrice) => {
+   const handleUpdateClinicServicePrice = (index, newPrice) => {
     setClinicServicesList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1326,25 +1323,42 @@ export default function OpManagement() {
         const due = Math.max(0, netPrice - paid);
 
         let newStatus = "Due";
-        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        const isModeEmpty = !s.paymentMode || s.paymentMode.trim() === "" || s.paymentMode.trim().toLowerCase() === "n/a";
+        if (!isModeEmpty) {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
 
         return { ...s, price, dueAmount: due, paymentStatus: newStatus };
       })
     );
   };
 
-  const handleUpdateClinicServicePaymentMode = (index, mode) => {
+
+   const handleUpdateClinicServicePaymentMode = (index, mode) => {
     setClinicServicesList((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, paymentMode: mode } : s))
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(s.price) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(s.paidAmount) || 0;
+        const due = Math.max(0, netPrice - paid);
+
+        let newStatus = "Due";
+        const isModeEmpty = !mode || mode.trim() === "" || mode.trim().toLowerCase() === "n/a";
+        if (!isModeEmpty) {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
+
+        return { ...s, paymentMode: mode, paymentStatus: newStatus };
+      })
     );
   };
 
 
-
-
-  // ✅ NEW: Update Clinic Paid Amount with Auto Status
-  const handleUpdateClinicServicePaidAmount = (index, newPaid) => {
+    const handleUpdateClinicServicePaidAmount = (index, newPaid) => {
     setClinicServicesList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1355,15 +1369,18 @@ export default function OpManagement() {
         const due = Math.max(0, netPrice - paid);
 
         let newStatus = "Due";
-        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        const isModeEmpty = !s.paymentMode || s.paymentMode.trim() === "" || s.paymentMode.trim().toLowerCase() === "n/a";
+        if (!isModeEmpty) {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
 
         return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
       })
     );
   };
 
-  // ✅ NEW: Update Clinic Discount
+
   const handleUpdateClinicServiceDiscount = (index, newDiscount) => {
     setClinicServicesList((prev) =>
       prev.map((s, i) => {
@@ -1375,14 +1392,16 @@ export default function OpManagement() {
         const due = Math.max(0, netPrice - paid);
 
         let newStatus = "Due";
-        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        const isModeEmpty = !s.paymentMode || s.paymentMode.trim() === "" || s.paymentMode.trim().toLowerCase() === "n/a";
+        if (!isModeEmpty) {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
 
         return { ...s, discount, dueAmount: due, paymentStatus: newStatus };
       })
     );
   };
-
   // ✅ NEW: Update Clinic Transaction ID
   const handleUpdateClinicServiceTransactionId = (index, txnId) => {
     setClinicServicesList((prev) =>
@@ -1397,7 +1416,23 @@ export default function OpManagement() {
   };
 
   const handleSaveClinicServices = async () => {
-    if (!clinicServicesBooking) return;
+      if (!clinicServicesBooking) return;
+
+    for (let i = 0; i < clinicServicesList.length; i++) {
+      const item = clinicServicesList[i];
+      const paidAmt = Number(item.paidAmount) || 0;
+      const mode = item.paymentMode || "";
+      const isModeEmpty = !mode || mode.trim() === "" || mode.trim().toLowerCase() === "n/a";
+
+      if (paidAmt > 0 && isModeEmpty) {
+        showToast(`Please select Payment Type for Clinic item ${i + 1}`, "error");
+        return;
+      }
+      if (!isModeEmpty && paidAmt <= 0) {
+        showToast(`Please enter Paid Amount for Clinic item ${i + 1}`, "error");
+        return;
+      }
+    }
     setSavingClinicServices(true);
     try {
       const booking = clinicServicesBooking;
@@ -1551,8 +1586,10 @@ export default function OpManagement() {
   const handleRemoveLabItem = (index) => {
     setDeleteConfirm({ isOpen: true, type: "lab", index });
   };
-  // ✅ NEW: Update Price with Auto Status Recalculation
-  const handleUpdateLabItemPrice = (index, newPrice) => {
+
+
+
+   const handleUpdateLabItemPrice = (index, newPrice) => {
     setLabItemsList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1560,16 +1597,19 @@ export default function OpManagement() {
         const discount = Number(s.discount) || 0;
         const netPrice = Math.max(0, price - discount);
         const paid = Number(s.paidAmount) || 0;
+        const due = Math.max(0, netPrice - paid);
 
         let newStatus = "Due";
-        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        // 👇 Condition lagayi: Status tabhi badlega jab Payment Type select ho
+        if (s.paymentMode && s.paymentMode.trim() !== "") {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
 
-        return { ...s, price, paymentStatus: newStatus };
+        return { ...s, price, dueAmount: due, paymentStatus: newStatus };
       })
     );
   };
-
   const handleUpdateLabItemPaidAmount = (index, newPaid) => {
     setLabItemsList((prev) =>
       prev.map((s, i) => {
@@ -1578,11 +1618,13 @@ export default function OpManagement() {
         const discount = Number(s.discount) || 0;
         const netPrice = Math.max(0, price - discount);
         const paid = Number(newPaid) || 0;
-        const due = Math.max(0, netPrice - paid); // ✅ Due calculate karo
+        const due = Math.max(0, netPrice - paid);
 
         let newStatus = "Due";
-        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        if (s.paymentMode && s.paymentMode.trim() !== "") {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
 
         return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
       })
@@ -1600,22 +1642,73 @@ export default function OpManagement() {
   // ✅ NEW: Update Lab Item Discount
   const handleUpdateLabItemDiscount = (index, newDiscount) => {
     setLabItemsList((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, discount: Number(newDiscount) || 0 } : s))
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(s.price) || 0;
+        const discount = Number(newDiscount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(s.paidAmount) || 0;
+        const due = Math.max(0, netPrice - paid);
+
+        let newStatus = "Due";
+        // 👇 Condition lagayi
+        if (s.paymentMode && s.paymentMode.trim() !== "") {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
+
+        return { ...s, discount, dueAmount: due, paymentStatus: newStatus };
+      })
     );
   };
 
   // ✅ NEW: Update Pharmacy Item Discount
   const handleUpdatePharmacyItemDiscount = (index, newDiscount) => {
     setPharmacyItemsList((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, discount: Number(newDiscount) || 0 } : s))
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(s.price) || 0;
+        const discount = Number(newDiscount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(s.paidAmount) || 0;
+        const due = Math.max(0, netPrice - paid);
+
+        let newStatus = "Due";
+        // 👇 Condition lagayi
+        if (s.paymentMode && s.paymentMode.trim() !== "") {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
+
+        return { ...s, discount, dueAmount: due, paymentStatus: newStatus };
+      })
     );
   };
 
   const handleUpdateLabItemPaymentMode = (index, mode) => {
     setLabItemsList((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, paymentMode: mode } : s))
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(s.price) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(s.paidAmount) || 0;
+        const due = Math.max(0, netPrice - paid);
+
+        let newStatus = "Due";
+        if (mode && mode.trim() !== "") {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
+
+        return { ...s, paymentMode: mode, paymentStatus: newStatus };
+      })
     );
   };
+
+
+
+
   const handleUpdateLabItemPaymentStatus = (index, status) => {
     setLabItemsList((prev) =>
       prev.map((s, i) => (i === index ? { ...s, paymentStatus: status } : s))
@@ -1623,8 +1716,24 @@ export default function OpManagement() {
   };
 
   const handleSaveLabItems = async () => {
-    if (!labItemsBooking) return;
-    setSavingLabItems(true);
+     if (!labItemsBooking) return;
+
+    // 👇 YE NAYA VALIDATION CODE ADD KAREIN 👇
+    for (let i = 0; i < labItemsList.length; i++) {
+      const item = labItemsList[i];
+      const paidAmt = Number(item.paidAmount) || 0;
+      const mode = item.paymentMode || "";
+
+      if (paidAmt > 0 && !mode) {
+        showToast(`Please select Payment Type for Lab item ${i + 1}`, "error");
+        return;
+      }
+      if (mode && paidAmt <= 0) {
+        showToast(`Please enter Paid Amount for Lab item ${i + 1}`, "error");
+        return;
+      }
+    }
+        setSavingLabItems(true);
     try {
       const booking = labItemsBooking;
       const allServices = getBookingServices(booking);
@@ -1806,8 +1915,7 @@ export default function OpManagement() {
     setDeleteConfirm({ isOpen: true, type: "pharmacy", index });
   };
 
-  // ✅ UPDATE: Auto status recalculate jab price change ho
-  const handleUpdatePharmacyItemPrice = (index, newPrice) => {
+   const handleUpdatePharmacyItemPrice = (index, newPrice) => {
     setPharmacyItemsList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1815,19 +1923,22 @@ export default function OpManagement() {
         const discount = Number(s.discount) || 0;
         const netPrice = Math.max(0, price - discount);
         const paid = Number(s.paidAmount) || 0;
+        const due = Math.max(0, netPrice - paid);
 
         let newStatus = "Due";
-        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        // 👇 Condition lagayi
+        if (s.paymentMode && s.paymentMode.trim() !== "") {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
 
-        return { ...s, price, paymentStatus: newStatus };
+        return { ...s, price, dueAmount: due, paymentStatus: newStatus };
       })
     );
   };
 
 
-  // ✅ NEW: Update Pharmacy Paid Amount with Auto Status
-  const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
+   const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
     setPharmacyItemsList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1835,11 +1946,13 @@ export default function OpManagement() {
         const discount = Number(s.discount) || 0;
         const netPrice = Math.max(0, price - discount);
         const paid = Number(newPaid) || 0;
-        const due = Math.max(0, netPrice - paid); // ✅ Due calculate karo
+        const due = Math.max(0, netPrice - paid);
 
         let newStatus = "Due";
-        if (paid > 0 && paid >= netPrice) newStatus = "Paid";
-        else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        if (s.paymentMode && s.paymentMode.trim() !== "") {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
 
         return { ...s, paidAmount: paid, dueAmount: due, paymentStatus: newStatus };
       })
@@ -1856,7 +1969,22 @@ export default function OpManagement() {
 
   const handleUpdatePharmacyItemPaymentMode = (index, mode) => {
     setPharmacyItemsList((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, paymentMode: mode } : s))
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(s.price) || 0;
+        const discount = Number(s.discount) || 0;
+        const netPrice = Math.max(0, price - discount);
+        const paid = Number(s.paidAmount) || 0;
+        const due = Math.max(0, netPrice - paid);
+
+        let newStatus = "Due";
+        if (mode && mode.trim() !== "") {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
+
+        return { ...s, paymentMode: mode, paymentStatus: newStatus };
+      })
     );
   };
   const handleUpdatePharmacyItemPaymentStatus = (index, status) => {
@@ -1866,7 +1994,23 @@ export default function OpManagement() {
   };
 
   const handleSavePharmacyItems = async () => {
-    if (!pharmacyItemsBooking) return;
+     if (!pharmacyItemsBooking) return;
+
+    // 👇 YE NAYA VALIDATION CODE ADD KAREIN 👇
+    for (let i = 0; i < pharmacyItemsList.length; i++) {
+      const item = pharmacyItemsList[i];
+      const paidAmt = Number(item.paidAmount) || 0;
+      const mode = item.paymentMode || "";
+
+      if (paidAmt > 0 && !mode) {
+        showToast(`Please select Payment Type for Pharmacy item ${i + 1}`, "error");
+        return;
+      }
+      if (mode && paidAmt <= 0) {
+        showToast(`Please enter Paid Amount for Pharmacy item ${i + 1}`, "error");
+        return;
+      }
+    }
     setSavingPharmacyItems(true);
     try {
       const booking = pharmacyItemsBooking;
@@ -3944,42 +4088,31 @@ export default function OpManagement() {
     normalizedItems.forEach((s, idx) => {
       const cat = classifyService(s);
       const finalCat = s.isReviewService ? "clinic" : cat;
+      
+      // 👇 YAHAN FIX: Sirf Clinic items allow karo, Lab aur Pharmacy ko skip karo
+      if (finalCat !== "clinic") return; 
+
       const rawPS = booking.paymentStatus || "Due";
       const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
       items.push({
         no: items.length + 1, name: s.name,
         serviceCode: s.serviceId ? String(s.serviceId).slice(-6).toUpperCase() : `SVC-${String(idx + 1).padStart(2, "0")}`,
-        remarks: s.isReviewService ? "Review Service" : finalCat === "lab" ? "Lab Test" : finalCat === "pharmacy" ? "Pharmacy" : "Consultation",
-        category: finalCat, amount: Number(s.price) || 0,
+        remarks: s.isReviewService ? "Review Service" : "Consultation",
+        category: "clinic", amount: Number(s.price) || 0,
         paymentStatus: normalizedPS,
         isReviewService: s.isReviewService || false,
       });
     });
 
+    // 👇 YAHAN FIX: Lab aur Pharmacy items ko push karne wala code hata diya hai
+    /*
     if (Array.isArray(booking.labItems)) {
-      booking.labItems.forEach((item) => {
-        items.push({
-          no: items.length + 1, name: item.name || "Lab Test",
-          serviceCode: item.serviceId ? String(item.serviceId).slice(-6).toUpperCase() : "LAB",
-          remarks: "Lab Test",
-          category: "lab", amount: Number(item.price) || 0,
-          paymentStatus: booking.paymentStatus || "Due",
-          isReviewService: false,
-        });
-      });
+      booking.labItems.forEach((item) => { ... });
     }
     if (Array.isArray(booking.medicineItems)) {
-      booking.medicineItems.forEach((item) => {
-        items.push({
-          no: items.length + 1, name: item.name || "Medicine",
-          serviceCode: item.serviceId ? String(item.serviceId).slice(-6).toUpperCase() : "PHM",
-          remarks: "Pharmacy",
-          category: "pharmacy", amount: Number(item.price) || 0,
-          paymentStatus: booking.paymentStatus || "Due",
-          isReviewService: false,
-        });
-      });
+      booking.medicineItems.forEach((item) => { ... });
     }
+    */
 
     if (items.length === 0) {
       const fallback = Number(booking.finalPayable) || Number(booking.finalPayableAmount) || Number(booking.grandTotal) || Number(booking.totalAmount) || 0;
@@ -4005,25 +4138,36 @@ export default function OpManagement() {
       }
     });
 
+    // 👇 YAHAN FIX: Total amount ab sirf Clinic items se calculate hoga
     const grossAmount = items.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
     const commissionPercent = parseFloat(booking.referralCommission) || 0;
-    const commissionAmount = Number(booking.commissionAmount) || (grossAmount * commissionPercent) / 100;
+    
+    // Commission bhi sirf clinic par calculate hoga
+    const commissionAmount = (grossAmount * commissionPercent) / 100; 
     const discountAmount = Number(booking.discount) || 0;
-    const netAmount = Number(booking.finalPayable) || Number(booking.finalPayableAmount) || Number(booking.grandTotal) || grossAmount - commissionAmount - discountAmount;
+    
+    // Net Amount (Final Payable) bhi sirf clinic ka nikalenge
+    const netAmount = Math.max(0, grossAmount - commissionAmount - discountAmount);
 
-    const isPaid = booking.paymentStatus === "Paid";
-    const isPartial = booking.paymentStatus === "Partial";
-    const paidAmount = isPaid ? netAmount : isPartial ? Number(booking.amountPaid) || 0 : 0;
+    // 👇 YAHAN FIX: Clinic ka paid amount check karenge
+    const catStatuses = getCategoryStatuses(booking);
+    let paidAmount = 0;
+    if (catStatuses.clinic === "Paid") {
+        paidAmount = netAmount;
+    } else if (catStatuses.clinic === "Partial") {
+        paidAmount = Math.min(netAmount, Number(booking.categoryPayment?.clinic?.paidAmount) || 0);
+    }
+    
     const balanceAmount = Math.max(0, netAmount - paidAmount);
+    const isPaid = paidAmount >= netAmount && netAmount > 0;
+    const isPartial = paidAmount > 0 && paidAmount < netAmount;
+    const finalPaymentStatus = isPaid ? "Paid" : isPartial ? "Partial" : "Due";
 
     const now = new Date();
     const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
     const shortId = String(booking._id || "").slice(-6).toUpperCase() || "000000";
     const invoiceNo = `${dateStamp}-${shortId}`;
     const dateTimeLabel = `${now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
-
-    const rawPS2 = booking.paymentStatus || "Due";
-    const normalizedPS2 = rawPS2 === "Pending" ? "Due" : rawPS2;
 
     const newBillingData = {
       invoiceNo, invoiceDate: dateTimeLabel,
@@ -4035,11 +4179,11 @@ export default function OpManagement() {
       items,
       breakdown: {
         clinic: Math.round(finalBreakdown.clinic || 0),
-        lab: Math.round(finalBreakdown.lab || 0),
-        pharmacy: Math.round(finalBreakdown.pharmacy || 0),
+        lab: 0, // Ab bill me lab 0 rahega
+        pharmacy: 0, // Ab bill me pharmacy 0 rahega
       },
       grossAmount, discount: discountAmount, netAmount, paidAmount, balanceAmount,
-      paymentStatus: normalizedPS2,
+      paymentStatus: finalPaymentStatus,
       amountInWords: numberToWords(netAmount),
     };
 
@@ -4593,9 +4737,20 @@ export default function OpManagement() {
             <h1 className="emp-dash__greeting text-lg font-bold whitespace-nowrap">OP <span>Management</span></h1>
           </div>
           <div className="flex items-center justify-center gap-2 min-w-0 flex-1 overflow-x-auto">
-            <div className="relative flex-shrink-0">
-              <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-              <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-[140px] pl-8 pr-2 py-2 text-xs border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                      <div className="relative flex-shrink-0">
+              {/* Icon position thoda adjust kiya hai capsule ke hisaab se */}
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]" />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                value={searchQuery} 
+                onChange={(e) => setSearchQuery(e.target.value)} 
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                className={`pl-8 pr-3 py-2 text-xs border border-gray-300 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 ease-in-out ${
+                  isSearchFocused ? "w-[220px]" : "w-[140px]"
+                }`} 
+              />
             </div>
             <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200 flex-shrink-0">
               {TIME_FILTER_OPTIONS.map((opt) => (
