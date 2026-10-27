@@ -822,6 +822,14 @@ export default function ReferralBookings() {
       if (refBookings.length === 0) return;
       refBookings.forEach((b) => rows.push({ referrer: ref, booking: b }));
     });
+
+    // ✅ SORTING ADD KI HAI (Latest Booking First)
+    rows.sort((a, b) => {
+      const dateA = new Date(a.booking.createdAt || a.booking.bookedAt || 0).getTime();
+      const dateB = new Date(b.booking.createdAt || b.booking.bookedAt || 0).getTime();
+      return dateB - dateA; 
+    });
+
     return rows;
   };
 
@@ -1122,14 +1130,32 @@ export default function ReferralBookings() {
     showToast(`Exported ${filteredRows.length} records!`);
   };
 
+  // ✅ Initialize payment modal with current booking data
   const openPaymentModal = (referrer, booking) => {
     if (!booking) { showToast("No booking selected", "error"); return; }
     setSelectedReferrerForPayment(referrer);
     setSelectedBookingForPayment(booking);
 
-    setNewPaymentStatus("");
-    setNewPaymentMode("");
-    setNewPaidAmount("");
+    const totalPayable = getReferralPayable(referrer, booking);
+    
+    // ✅ Dono default empty rahenge
+    setNewPaymentMode(""); 
+    setNewPaymentStatus(""); 
+
+    const currentPaymentStatusRaw = isDoctorTab
+      ? (booking.doctorPaymentStatus || "Pending")
+      : (booking.customerPaymentStatus || "Pending");
+    const currentPaymentStatus = currentPaymentStatusRaw === "Due" ? "Pending" : currentPaymentStatusRaw;
+    const currentPaidAmount = isDoctorTab
+      ? (booking.doctorReferralPaidAmount || 0)
+      : (booking.customerReferralPaidAmount || 0);
+
+    let initialAmount = currentPaidAmount;
+    if (currentPaymentStatus === "Paid") {
+      initialAmount = totalPayable;
+    }
+
+    setNewPaidAmount(initialAmount > 0 ? String(initialAmount) : "");
 
     setShowPaymentModal(true);
   };
@@ -1364,6 +1390,7 @@ export default function ReferralBookings() {
               : Number(b.customerReferralPaidAmount) || 0;
           });
           const totalToPay = Math.max(0, grand - totalPaid);
+          const isGrandZero = grand <= 0;
           return (
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-200 text-center">
@@ -1372,12 +1399,12 @@ export default function ReferralBookings() {
                   ₹{Math.round(totalPaid).toLocaleString("en-IN")}
                 </div>
               </div>
-              <div className={`p-2 rounded-lg border text-center ${totalToPay > 0 ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}>
-                <div className={`text-[9px] font-bold uppercase ${totalToPay > 0 ? "text-red-600" : "text-emerald-600"}`}>
+              <div className={`p-2 rounded-lg border text-center ${isGrandZero ? "bg-indigo-50 border-indigo-200" : totalToPay > 0 ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}>
+                <div className={`text-[9px] font-bold uppercase ${isGrandZero ? "text-indigo-600" : totalToPay > 0 ? "text-red-600" : "text-emerald-600"}`}>
                   Remaining To Pay
                 </div>
-                <div className={`text-base font-extrabold ${totalToPay > 0 ? "text-red-700" : "text-emerald-700"}`}>
-                  {totalToPay > 0 ? `₹${Math.round(totalToPay).toLocaleString("en-IN")}` : "✓ Settled"}
+                <div className={`text-base font-extrabold ${isGrandZero ? "text-indigo-700" : totalToPay > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                  {isGrandZero ? `Update ${referrerLabel}` : totalToPay > 0 ? `₹${Math.round(totalToPay).toLocaleString("en-IN")}` : "✓ Settled"}
                 </div>
               </div>
             </div>
@@ -1873,6 +1900,7 @@ export default function ReferralBookings() {
                       const slotTiming = getSlotTiming(booking);
 
                       const toPay = getReferralToPay(referrer, booking);
+                      const isTotalZero = (Number(booking.partnerPayable) || 0) <= 0;
 
                       return (
                         <tr key={booking._id} className={`hover:${isDoctorTab ? "bg-purple-50/30" : "bg-indigo-50/30"}`}>
@@ -1968,7 +1996,11 @@ export default function ReferralBookings() {
                           </td>
 
                           <td className="px-3 py-3 text-center whitespace-nowrap">
-                            {toPay === null ? (
+                            {isTotalZero ? (
+                              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                                First Update {referrerLabel}
+                              </span>
+                            ) : toPay === null ? (
                               <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                                 1st Clear Payment
                               </span>
@@ -1986,7 +2018,7 @@ export default function ReferralBookings() {
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <button type="button" onClick={() => openPaymentModal(referrer, booking)}
                               className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border cursor-pointer hover:shadow-md transition-all ${payColors.bg} ${payColors.text} ${payColors.border}`}
-                              title={`Click to update ${referrerLabel.toLowerCase()} payment status`}>
+                              title={`Click to update referral payment status`}>
                               <payColors.icon className={`w-2.5 h-2.5 ${payColors.iconColor}`} /> {payStatus}
                             </button>
                           </td>
@@ -2035,7 +2067,7 @@ export default function ReferralBookings() {
                                 <FiEye className="w-3.5 h-3.5" />
                               </button>
                               <button onClick={() => openPaymentModal(referrer, booking)}
-                                className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg cursor-pointer" title={`Update ${referrerLabel} Payment`}>
+                                className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg cursor-pointer" title={`Update Referral Payment`}>
                                 <FiEdit2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
@@ -2067,6 +2099,7 @@ export default function ReferralBookings() {
                   const slotTiming = getSlotTiming(booking);
 
                   const toPay = getReferralToPay(referrer, booking);
+                  const isTotalZero = (Number(booking.partnerPayable) || 0) <= 0;
 
                   return (
                     <div key={booking._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -2150,10 +2183,10 @@ export default function ReferralBookings() {
                           <CategoryPayableList booking={booking} />
                         </div>
 
-                        <div className={`text-center p-2 rounded-lg border ${toPay === null ? "bg-amber-50 border-amber-200" : toPay > 0 ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}>
-                          <div className={`text-[8px] font-bold uppercase ${toPay === null ? "text-amber-600" : toPay > 0 ? "text-red-600" : "text-emerald-600"}`}>To Pay</div>
-                          <div className={`text-sm font-extrabold ${toPay === null ? "text-amber-700" : toPay > 0 ? "text-red-700" : "text-emerald-700"}`}>
-                            {toPay === null ? "1st Clear Payment" : toPay > 0 ? `₹${toPay}` : "✓ Settled"}
+                        <div className={`text-center p-2 rounded-lg border ${isTotalZero ? "bg-indigo-50 border-indigo-200" : toPay === null ? "bg-amber-50 border-amber-200" : toPay > 0 ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}>
+                          <div className={`text-[8px] font-bold uppercase ${isTotalZero ? "text-indigo-600" : toPay === null ? "text-amber-600" : toPay > 0 ? "text-red-600" : "text-emerald-600"}`}>To Pay</div>
+                          <div className={`text-sm font-extrabold ${isTotalZero ? "text-indigo-700" : toPay === null ? "text-amber-700" : toPay > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                            {isTotalZero ? "First Update Customer" : toPay === null ? "1st Clear Payment" : toPay > 0 ? `₹${toPay}` : "✓ Settled"}
                           </div>
                         </div>
 
@@ -2262,6 +2295,7 @@ export default function ReferralBookings() {
                   const payStatus = payStatusRaw === "Due" ? "Pending" : payStatusRaw;
                   const payAt = isDoctorTab ? selectedBookingForModal.doctorPaymentUpdatedAt : selectedBookingForModal.customerPaymentUpdatedAt;
                   const toPay = getReferralToPay(selectedReferrer, selectedBookingForModal);
+                  const isTotalZero = (Number(selectedBookingForModal.partnerPayable) || 0) <= 0;
                   const bookingTypeInfo = getBookingType(selectedBookingForModal);
                   const slotTiming = getSlotTiming(selectedBookingForModal);
                   return (
@@ -2283,8 +2317,8 @@ export default function ReferralBookings() {
                         <div className="flex justify-between"><span className="text-gray-500">Total Amount:</span><span className="font-semibold">₹{Math.round(getBookingFinalPayable(selectedBookingForModal))}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Referral Payout:</span><span className="font-semibold text-fuchsia-700">{getReferralPayoutPct(selectedBookingForModal)}%</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">To Pay:</span>
-                          <span className={`font-bold ${toPay === null ? "text-amber-600" : toPay > 0 ? "text-red-600" : "text-emerald-600"}`}>
-                            {toPay === null ? "1st Clear Payment" : toPay > 0 ? `₹${toPay}` : "✓ Settled"}
+                          <span className={`font-bold ${isTotalZero ? "text-indigo-600" : toPay === null ? "text-amber-600" : toPay > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                            {isTotalZero ? `Update ${referrerLabel}` : toPay === null ? "1st Clear Payment" : toPay > 0 ? `₹${toPay}` : "✓ Settled"}
                           </span>
                         </div>
                         <div className="flex justify-between"><span className="text-gray-500">{referrerLabel} Payment:</span>
@@ -2343,7 +2377,7 @@ export default function ReferralBookings() {
                 <button
                   onClick={() => { const r = selectedReferrer; const b = selectedBookingForModal; setShowDetailModal(false); setSelectedReferrer(null); setSelectedBookingForModal(null); if (b) openPaymentModal(r, b); }}
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 flex items-center gap-1.5 cursor-pointer">
-                  <FiEdit2 className="w-3.5 h-3.5" /> Update {referrerLabel} Payment
+                  <FiEdit2 className="w-3.5 h-3.5" /> Update Referral Payment
                 </button>
                 <button onClick={() => { setShowDetailModal(false); setSelectedReferrer(null); setSelectedBookingForModal(null); }} className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">Close</button>
               </div>
@@ -2351,60 +2385,134 @@ export default function ReferralBookings() {
           </div>
         )}
 
-        {/* PAYMENT MODAL */}
+        {/* PAYMENT MODAL — FIXED: Title changed to Update Referral Payment */}
         {showPaymentModal && selectedReferrerForPayment && selectedBookingForPayment && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b">
+            <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-6 py-4 border-b">
                 <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl ${isDoctorTab ? "bg-purple-600" : "bg-indigo-600"} text-white flex items-center justify-center`}>
-                    <FaHandHoldingUsd className="w-4 h-4" />
+                  <div className={`w-10 h-10 rounded-xl ${isDoctorTab ? "bg-purple-600" : "bg-indigo-600"} text-white flex items-center justify-center`}>
+                    <FaHandHoldingUsd className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-sm">Update {referrerLabel} Payment</h3>
-                    <p className="text-[11px] text-gray-500">{isDoctorTab ? selectedReferrerForPayment.doctorName : selectedReferrerForPayment.customerName}</p>
+                    <h3 className="font-bold text-gray-900 text-base">Update Referral Payment</h3>
+                    <p className="text-sm text-gray-500">{isDoctorTab ? selectedReferrerForPayment.doctorName : selectedReferrerForPayment.customerName}</p>
                   </div>
                 </div>
                 <button
                   onClick={closePaymentModal}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer"
+                  className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 cursor-pointer"
                 >
-                  <FaTimes className="w-3.5 h-3.5" />
+                  <FaTimes className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="p-5 space-y-4">
-                <div className={`p-3 ${payableBgColor} rounded-lg border ${payableBorderColor}`}>
+              <div className="p-6 space-y-5">
+                <div className={`p-4 ${payableBgColor} rounded-xl border ${payableBorderColor}`}>
                   <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <div className={`text-[10px] ${payableTextColor} font-bold uppercase`}>{referrerLabel} Payable</div>
-                      <div className={`text-lg font-extrabold ${statPayableColor}`}>
+                                      <div>
+                      {/* ✅ Customer/Doctor name added above Payable text and Bold */}
+                      <div className="text-sm font-bold text-slate-800 mb-1">
+                        {referrerLabel} Name: {isDoctorTab ? selectedReferrerForPayment.doctorName : selectedReferrerForPayment.customerName}
+                      </div>
+                      <div className={`text-xs ${payableTextColor} font-bold uppercase`}>{referrerLabel} Payable</div>
+                      <div className={`text-2xl font-extrabold ${statPayableColor}`}>
                         ₹{getReferralPayable(selectedReferrerForPayment, selectedBookingForPayment)}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] text-gray-500">Patient</div>
-                      <div className="text-[11px] font-semibold text-slate-700 truncate max-w-[140px]">
+                      <div className="text-xs text-gray-500">Patient</div>
+                      <div className="text-sm font-semibold text-slate-700 truncate max-w-[200px]">
                         {selectedBookingForPayment.patientTitle} {selectedBookingForPayment.patientName}
                       </div>
                     </div>
                   </div>
-                  <div className="mt-2 pt-2 border-t border-white/60">
+                  <div className="mt-3 pt-3 border-t border-white/60">
                     <CategoryPayableList booking={selectedBookingForPayment} />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* ✅ REORDERED: Amount -> Type -> Status */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                      Payment Mode
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-2">
+                      Payment Need to Pay (₹)
+                    </label>
+                    <div className="relative">
+                      <FaRupeeSign className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="number"
+                        value={newPaidAmount}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNewPaidAmount(val);
+                          
+                          // ✅ Status change only if Payment Type is already selected
+                          if (newPaymentMode) {
+                            const total = getReferralPayable(selectedReferrerForPayment, selectedBookingForPayment);
+                            const paid = Number(val) || 0;
+                            if (paid <= 0) setNewPaymentStatus("Pending");
+                            else if (paid >= total) setNewPaymentStatus("Paid");
+                            else setNewPaymentStatus("Partial");
+                          }
+                        }}
+                        placeholder="0"
+                        min="0"
+                        className="w-full h-11 bg-white border border-gray-300 rounded-lg pl-9 pr-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                    {/* Pending / Settled text below amount */}
+                    {(() => {
+                      const totalPayable = getReferralPayable(selectedReferrerForPayment, selectedBookingForPayment);
+                      const paidAmt = Number(newPaidAmount) || 0;
+                      const pending = Math.max(0, totalPayable - paidAmt);
+                      const isTotalZero = totalPayable <= 0;
+                      return (
+                        <div className="flex items-center justify-between mt-2 px-1">
+                          <span className="text-[11px] font-semibold text-gray-500">
+                            Pending:{" "}
+                            <span className={isTotalZero ? "text-indigo-600 font-bold" : pending > 0 ? "text-red-600 font-bold" : "text-emerald-600 font-bold"}>
+                              {isTotalZero ? "Update First" : pending > 0 ? `₹${pending}` : "✓ Settled"}
+                            </span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewPaidAmount(String(totalPayable));
+                              if (newPaymentMode) {
+                                setNewPaymentStatus("Paid");
+                              }
+                            }}
+                            className="text-[11px] font-bold text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                          >
+                            Set Full (₹{totalPayable})
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-2">
+                      Payment Type
                     </label>
                     <select
                       value={newPaymentMode}
-                      onChange={(e) => setNewPaymentMode(e.target.value)}
-                      className={`w-full h-10 bg-white border border-gray-300 rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 capitalize cursor-pointer ${newPaymentMode === "" ? "text-gray-400" : "text-slate-800"}`}
+                      onChange={(e) => {
+                        const mode = e.target.value;
+                        setNewPaymentMode(mode);
+                        // ✅ Payment Type select hote hi status calculate karo
+                        if (mode && newPaidAmount) {
+                          const total = getReferralPayable(selectedReferrerForPayment, selectedBookingForPayment);
+                          const paid = Number(newPaidAmount) || 0;
+                          if (paid <= 0) setNewPaymentStatus("Pending");
+                          else if (paid >= total) setNewPaymentStatus("Paid");
+                          else setNewPaymentStatus("Partial");
+                        }
+                      }}
+                      className={`w-full h-11 bg-white border border-gray-300 rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 capitalize cursor-pointer ${newPaymentMode === "" ? "text-gray-400" : "text-slate-800"}`}
                     >
-                      <option value="" disabled>Select Payment Mode</option>
+                      <option value="" disabled>Select Payment Type</option>
                       {PAYMENT_MODE_OPTIONS.map((m) => (
                         <option key={m.value} value={m.value} className="capitalize text-slate-800">
                           {m.label}
@@ -2414,13 +2522,13 @@ export default function ReferralBookings() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-2">
                       Payment Status
                     </label>
                     <select
                       value={newPaymentStatus}
                       onChange={(e) => setNewPaymentStatus(e.target.value)}
-                      className={`w-full h-10 bg-white border border-gray-300 rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer ${newPaymentStatus === "" ? "text-gray-400" : "text-slate-800"}`}
+                      className={`w-full h-11 bg-white border border-gray-300 rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer ${newPaymentStatus === "" ? "text-gray-400" : "text-slate-800"}`}
                     >
                       <option value="" disabled>Select Payment Status</option>
                       <option value="Pending" className="text-slate-800">Pending</option>
@@ -2430,66 +2538,25 @@ export default function ReferralBookings() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                    {referrerLabel} Paid Amount (₹)
-                  </label>
-                  <div className="relative">
-                    <FaRupeeSign className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="number"
-                      value={newPaidAmount}
-                      onChange={(e) => setNewPaidAmount(e.target.value)}
-                      placeholder="0"
-                      min="0"
-                      className="w-full h-10 bg-white border border-gray-300 rounded-lg pl-9 pr-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    />
-                  </div>
-                  {(() => {
-                    const totalPayable = getReferralPayable(selectedReferrerForPayment, selectedBookingForPayment);
-                    const paidAmt = Number(newPaidAmount) || 0;
-                    const pending = Math.max(0, totalPayable - paidAmt);
-                    return (
-                      <div className="flex items-center justify-between mt-1.5 px-1">
-                        <span className="text-[10px] font-semibold text-gray-500">
-                          Pending:{" "}
-                          <span className={pending > 0 ? "text-red-600 font-bold" : "text-emerald-600 font-bold"}>
-                            ₹{pending}
-                          </span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setNewPaidAmount(String(totalPayable))}
-                          className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline cursor-pointer"
-                        >
-                          Set Full (₹{totalPayable})
-                        </button>
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[9px] font-bold uppercase text-gray-400">Current:</span>
+                    <span className="text-[10px] font-bold uppercase text-gray-400">Live Preview:</span>
                     {(() => {
-                      const liveStatus = newPaymentStatus || (() => {
-                        const raw = isDoctorTab
-                          ? (selectedBookingForPayment.doctorPaymentStatus || "Pending")
-                          : (selectedBookingForPayment.customerPaymentStatus || "Pending");
-                        return raw === "Due" ? "Pending" : raw;
-                      })();
+                      const liveStatus = newPaymentStatus;
+                      if (!liveStatus) {
+                         return <span className="text-[11px] text-gray-400 italic">Not selected</span>;
+                      }
                       const colors = getPaymentStatusColors(liveStatus);
                       return (
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${colors.bg} ${colors.text} ${colors.border}`}>
-                          <colors.icon className={`w-2.5 h-2.5 ${colors.iconColor}`} /> {liveStatus}
+                        <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase border ${colors.bg} ${colors.text} ${colors.border}`}>
+                          <colors.icon className={`w-3 h-3 ${colors.iconColor}`} /> {liveStatus}
                         </span>
                       );
                     })()}
                     {(newPaymentMode) && (
                       <>
                         <span className="text-[10px] text-gray-400">•</span>
-                        <span className="text-[10px] font-bold text-slate-700 capitalize">
+                        <span className="text-[11px] font-bold text-slate-700 capitalize">
                           {newPaymentMode}
                         </span>
                       </>
@@ -2498,19 +2565,19 @@ export default function ReferralBookings() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2.5 px-5 py-3.5 border-t bg-gray-50/50">
+              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50/50 rounded-b-2xl">
                 <button
                   onClick={closePaymentModal}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 cursor-pointer"
+                  className="px-5 py-2.5 rounded-lg text-sm font-bold bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSavePaymentStatus}
                   disabled={savingPayment}
-                  className={`px-5 py-2 rounded-lg text-xs font-bold ${isDoctorTab ? "bg-purple-600 hover:bg-purple-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white flex items-center gap-1.5 disabled:opacity-50 cursor-pointer`}
+                  className={`px-6 py-2.5 rounded-lg text-sm font-bold ${isDoctorTab ? "bg-purple-600 hover:bg-purple-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white flex items-center gap-2 disabled:opacity-50 cursor-pointer`}
                 >
-                  {savingPayment ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
+                  {savingPayment ? <FiRefreshCw className="w-4 h-4 animate-spin" /> : <FiCheckCircle className="w-4 h-4" />}
                   {savingPayment ? "Saving..." : "Save Payment"}
                 </button>
               </div>

@@ -1202,7 +1202,7 @@ export default function OpManagement() {
     if (choice === "register") setTimeout(() => { handleAddNewPatient(); }, 200);
   };
 
-    const openClinicServicesModal = (booking) => {
+  const openClinicServicesModal = (booking) => {
     if (!booking) return;
     const allServices = getBookingServices(booking);
     const clinicOnly = allServices.filter((s) => {
@@ -1228,7 +1228,7 @@ export default function OpManagement() {
         paidAmount,
         dueAmount,
         description: s.description || "",
-        paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""), 
+        paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""),
         paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
         transactionId: s.transactionId || "",
         _wasPaid: isPaid,
@@ -1312,7 +1312,7 @@ export default function OpManagement() {
     setDeleteConfirm({ isOpen: false, type: "", index: null });
   };
 
-   const handleUpdateClinicServicePrice = (index, newPrice) => {
+  const handleUpdateClinicServicePrice = (index, newPrice) => {
     setClinicServicesList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1335,7 +1335,7 @@ export default function OpManagement() {
   };
 
 
-   const handleUpdateClinicServicePaymentMode = (index, mode) => {
+  const handleUpdateClinicServicePaymentMode = (index, mode) => {
     setClinicServicesList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1358,7 +1358,7 @@ export default function OpManagement() {
   };
 
 
-    const handleUpdateClinicServicePaidAmount = (index, newPaid) => {
+  const handleUpdateClinicServicePaidAmount = (index, newPaid) => {
     setClinicServicesList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1416,7 +1416,7 @@ export default function OpManagement() {
   };
 
   const handleSaveClinicServices = async () => {
-      if (!clinicServicesBooking) return;
+    if (!clinicServicesBooking) return;
 
     for (let i = 0; i < clinicServicesList.length; i++) {
       const item = clinicServicesList[i];
@@ -1589,7 +1589,7 @@ export default function OpManagement() {
 
 
 
-   const handleUpdateLabItemPrice = (index, newPrice) => {
+  const handleUpdateLabItemPrice = (index, newPrice) => {
     setLabItemsList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1716,7 +1716,7 @@ export default function OpManagement() {
   };
 
   const handleSaveLabItems = async () => {
-     if (!labItemsBooking) return;
+    if (!labItemsBooking) return;
 
     // 👇 YE NAYA VALIDATION CODE ADD KAREIN 👇
     for (let i = 0; i < labItemsList.length; i++) {
@@ -1733,7 +1733,7 @@ export default function OpManagement() {
         return;
       }
     }
-        setSavingLabItems(true);
+    setSavingLabItems(true);
     try {
       const booking = labItemsBooking;
       const allServices = getBookingServices(booking);
@@ -1915,7 +1915,7 @@ export default function OpManagement() {
     setDeleteConfirm({ isOpen: true, type: "pharmacy", index });
   };
 
-   const handleUpdatePharmacyItemPrice = (index, newPrice) => {
+  const handleUpdatePharmacyItemPrice = (index, newPrice) => {
     setPharmacyItemsList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1938,7 +1938,7 @@ export default function OpManagement() {
   };
 
 
-   const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
+  const handleUpdatePharmacyItemPaidAmount = (index, newPaid) => {
     setPharmacyItemsList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
@@ -1994,7 +1994,7 @@ export default function OpManagement() {
   };
 
   const handleSavePharmacyItems = async () => {
-     if (!pharmacyItemsBooking) return;
+    if (!pharmacyItemsBooking) return;
 
     // 👇 YE NAYA VALIDATION CODE ADD KAREIN 👇
     for (let i = 0; i < pharmacyItemsList.length; i++) {
@@ -3438,12 +3438,12 @@ export default function OpManagement() {
     try {
       // ✅ 1. LocalStorage se login user ki details nikalein
       const userRole = localStorage.getItem("userRole");
-      const userName = userRole === 'employee' 
-          ? (localStorage.getItem("employeeName") || "Employee") 
-          : "Admin";
-      const userEmpId = userRole === 'employee' 
-          ? (localStorage.getItem("employeeId") || "") 
-          : "";
+      const userName = userRole === 'employee'
+        ? (localStorage.getItem("employeeName") || "Employee")
+        : "Admin";
+      const userEmpId = userRole === 'employee'
+        ? (localStorage.getItem("employeeId") || "")
+        : "";
 
       const fin = computeFinancials(formData.serviceItems, {
         labTotal: 0, medicineTotal: 0,
@@ -3482,7 +3482,7 @@ export default function OpManagement() {
         referralCommissionType: formData.referralCommissionType,
         slotId: formData.slotId,
         offerApplied: formData.offerApplied || null,
-        
+
         // ✅ 2. Naya field yahan add karein
         addedBy: { name: userName, empId: userEmpId },
       };
@@ -4088,9 +4088,9 @@ export default function OpManagement() {
     normalizedItems.forEach((s, idx) => {
       const cat = classifyService(s);
       const finalCat = s.isReviewService ? "clinic" : cat;
-      
+
       // 👇 YAHAN FIX: Sirf Clinic items allow karo, Lab aur Pharmacy ko skip karo
-      if (finalCat !== "clinic") return; 
+      if (finalCat !== "clinic") return;
 
       const rawPS = booking.paymentStatus || "Due";
       const normalizedPS = rawPS === "Pending" ? "Due" : rawPS;
@@ -4141,11 +4141,11 @@ export default function OpManagement() {
     // 👇 YAHAN FIX: Total amount ab sirf Clinic items se calculate hoga
     const grossAmount = items.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
     const commissionPercent = parseFloat(booking.referralCommission) || 0;
-    
+
     // Commission bhi sirf clinic par calculate hoga
-    const commissionAmount = (grossAmount * commissionPercent) / 100; 
+    const commissionAmount = (grossAmount * commissionPercent) / 100;
     const discountAmount = Number(booking.discount) || 0;
-    
+
     // Net Amount (Final Payable) bhi sirf clinic ka nikalenge
     const netAmount = Math.max(0, grossAmount - commissionAmount - discountAmount);
 
@@ -4153,11 +4153,11 @@ export default function OpManagement() {
     const catStatuses = getCategoryStatuses(booking);
     let paidAmount = 0;
     if (catStatuses.clinic === "Paid") {
-        paidAmount = netAmount;
+      paidAmount = netAmount;
     } else if (catStatuses.clinic === "Partial") {
-        paidAmount = Math.min(netAmount, Number(booking.categoryPayment?.clinic?.paidAmount) || 0);
+      paidAmount = Math.min(netAmount, Number(booking.categoryPayment?.clinic?.paidAmount) || 0);
     }
-    
+
     const balanceAmount = Math.max(0, netAmount - paidAmount);
     const isPaid = paidAmount >= netAmount && netAmount > 0;
     const isPartial = paidAmount > 0 && paidAmount < netAmount;
@@ -4290,7 +4290,7 @@ export default function OpManagement() {
   };
 
 
-   const getUniqueAddedBy = () => {
+  const getUniqueAddedBy = () => {
     const map = new Map();
     bookings.forEach((b) => {
       if (b.addedBy && b.addedBy.name) {
@@ -4346,7 +4346,7 @@ export default function OpManagement() {
         }
       }
 
-        if (addedByFilter !== "All") {
+      if (addedByFilter !== "All") {
         const b = getMatchingBooking(p);
         const addedByName = b?.addedBy?.name || "";
         const addedByEmpId = b?.addedBy?.empId || "";
@@ -4681,9 +4681,9 @@ export default function OpManagement() {
     <div className="emp-dash">
       <main className="p-2 sm:p-4 lg:p-6">
         {toast && (
-          <div className={`fixed top-5 right-5 z-[99999] flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white ${toast.type === "error" ? "bg-red-600" : toast.type === "info" ? "bg-cyan-600" : "bg-emerald-600"}`}>
-            {toast.type === "error" ? <FiXCircle className="w-5 h-5" /> : <FiCheckCircle className="w-5 h-5" />}
-            <span className="font-medium text-sm">{toast.message}</span>
+          <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[999999] flex flex-col items-center justify-center gap-2 px-6 py-5 rounded-2xl shadow-2xl text-white transition-all duration-300 animate-in fade-in zoom-in ${toast.type === "error" ? "bg-red-600" : toast.type === "info" ? "bg-cyan-600" : "bg-emerald-600"}`}>
+            {toast.type === "error" ? <FiXCircle className="w-8 h-8 mb-1" /> : <FiCheckCircle className="w-8 h-8 mb-1" />}
+            <span className="font-bold text-base text-center px-4">{toast.message}</span>
           </div>
         )}
 
@@ -4737,25 +4737,32 @@ export default function OpManagement() {
             <h1 className="emp-dash__greeting text-lg font-bold whitespace-nowrap">OP <span>Management</span></h1>
           </div>
           <div className="flex items-center justify-center gap-2 min-w-0 flex-1 overflow-x-auto">
-                      <div className="relative flex-shrink-0">
+            <div className="relative flex-shrink-0">
               {/* Icon position thoda adjust kiya hai capsule ke hisaab se */}
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                value={searchQuery} 
-                onChange={(e) => setSearchQuery(e.target.value)} 
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
-                className={`pl-8 pr-3 py-2 text-xs border border-gray-300 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 ease-in-out ${
-                  isSearchFocused ? "w-[220px]" : "w-[140px]"
-                }`} 
+                className={`pl-8 pr-3 py-2 text-xs border border-gray-300 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 ease-in-out ${isSearchFocused ? "w-[220px]" : "w-[140px]"
+                  }`}
               />
             </div>
-            <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200 flex-shrink-0">
-              {TIME_FILTER_OPTIONS.map((opt) => (
-                <button key={opt.value} onClick={() => handleTimeFilterChange(opt.value)} className={`px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap ${timeFilter === opt.value ? "bg-blue-600 text-white shadow-sm" : "text-gray-600 hover:bg-white hover:text-gray-900"}`} title={opt.label}>{opt.label}</button>
-              ))}
+                     <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200 flex-shrink-0">
+              {TIME_FILTER_OPTIONS.map((opt) => {
+                // ✅ ADMIN KO ALL DIKHEGA, BAAKI KO SIRF YE 5 DIKHEGA
+                if (!isAdmin) {
+                  if (["All", "lastMonth", "thisYear"].includes(opt.value)) {
+                    return null; 
+                  }
+                }
+                return (
+                  <button key={opt.value} onClick={() => handleTimeFilterChange(opt.value)} className={`px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap ${timeFilter === opt.value ? "bg-blue-600 text-white shadow-sm" : "text-gray-600 hover:bg-white hover:text-gray-900"}`} title={opt.label}>{opt.label}</button>
+                );
+              })}
             </div>
           </div>
           <div className="flex items-center gap-1.5 justify-end flex-shrink-0">
@@ -4765,8 +4772,8 @@ export default function OpManagement() {
           </div>
         </div>
 
-        {/* ROW 2 - Filters */}
-        {showRevenueBreakdown && (
+              {/* ROW 2 - Filters */}
+        {showRevenueBreakdown && isAdmin && (
           <div className="hidden lg:flex items-center gap-1.5 flex-nowrap mb-3 relative z-50">
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
               <option value="All">All Payment</option>
@@ -4801,11 +4808,11 @@ export default function OpManagement() {
               )}
             </select>
 
-            
 
-            
 
-              {/* ✅ ADDED BY FILTER DESKTOP */}
+
+
+            {/* ✅ ADDED BY FILTER DESKTOP */}
             <select
               value={addedByFilter}
               onChange={(e) => setAddedByFilter(e.target.value)}
@@ -4901,7 +4908,7 @@ export default function OpManagement() {
 
         {/* Mobile Filters */}
         <div className="lg:hidden">
-          {showMobileFilters && showRevenueBreakdown && (
+          {showMobileFilters && showRevenueBreakdown && isAdmin && (
             <div className="mb-4 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
               <div><label className="block text-xs font-medium text-gray-600 mb-1">Search</label>
                 <div className="relative">
@@ -4940,7 +4947,7 @@ export default function OpManagement() {
                   {getUniqueReferrers().doctors.length > 0 && (<optgroup label="Doctors">{getUniqueReferrers().doctors.map((d) => (<option key={`d-${d}`} value={`doctor::${d}`}>{d}</option>))}</optgroup>)}
                 </select>
               </div>
-                         <div>
+              <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Booked By</label>
                 <select
                   value={addedByFilter}
@@ -5489,7 +5496,9 @@ export default function OpManagement() {
                                 if (matchedService) {
                                   newServiceItems = [...formData.serviceItems, { ...matchedService, custom: false }];
                                   showToast(`✅ Offer applied & service "${matchedService.name}" (₹${matchedService.price}) auto-added!`, "success");
-                                } else { showToast(`Offer applied: ${offer.offerName} (₹${offer.offerAmount}) — no matching service found`, "info"); }
+                                } else {
+                                  showToast(`Congratulations! ${offer.offerName} Applied Successfully 🎉`, "success");
+                                }
                                 setFormData((prev) => ({
                                   ...prev, serviceItems: newServiceItems,
                                   offerApplied: {
@@ -5501,9 +5510,14 @@ export default function OpManagement() {
                               }
                             } else { setAppliedOffer(null); setFormData((prev) => ({ ...prev, offerApplied: null })); }
                           }} className="w-full bg-white border border-amber-300 rounded-lg px-3 py-3 text-base sm:text-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
-                            <option value="">-- No Offer --</option>
+                            {/* ✅ YAHAN CHANGE HUA HAI */}
+                            <option value="">
+                              {selectedCustomerOffers.length > 0 ? "✨ Offers Available - Please Select" : "-- No Offers Available --"}
+                            </option>
                             {selectedCustomerOffers.map((o) => (
-                              <option key={o._id} value={o._id}>{o.offerName} — ₹{o.offerAmount}</option>
+                              <option key={o._id} value={o._id}>
+                                {o.offerName} — {o.offerUnit === "₹" ? `₹${o.offerAmount}` : `${o.offerAmount}%`} OFF
+                              </option>
                             ))}
                           </select>
                           {appliedOffer && (
@@ -6008,7 +6022,7 @@ export default function OpManagement() {
                             </div>
                           </td>
 
-                                   {/* ✅ NEW — Added By */}
+                          {/* ✅ NEW — Added By */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             {matchingBooking?.addedBy ? (
                               <div className="flex flex-col items-center gap-0.5">

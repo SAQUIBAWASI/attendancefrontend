@@ -56,7 +56,9 @@ const EMPTY_DOCTOR_FORM = {
   discountFees: "",
   discountFeesType: "%",
   discountLab: "",
-  discountLabType: "%"
+  discountLabType: "%",
+  discountPharmacy: "",
+  discountPharmacyType: "%"
 };
 
 const EMPTY_CUSTOMER_FORM = {
@@ -81,7 +83,9 @@ const EMPTY_CUSTOMER_FORM = {
   discountFees: "",
   discountFeesType: "%",
   discountLab: "",
-  discountLabType: "%"
+  discountLabType: "%",
+  discountPharmacy: "",
+  discountPharmacyType: "%"
 };
 
 const COMMISSION_FIELDS = [
@@ -89,6 +93,12 @@ const COMMISSION_FIELDS = [
   { key: "pharmacyCommission", typeKey: "pharmacyCommissionType", label: "Pharmacy", icon: FaPills, color: "green" },
   { key: "labCommission", typeKey: "labCommissionType", label: "Lab", icon: FaFlask, color: "purple" },
   { key: "feesCommission", typeKey: "feesCommissionType", label: "Fees", icon: FaMoneyBillWave, color: "amber" }
+];
+
+const DISCOUNT_FIELDS = [
+  { key: "discountFees", typeKey: "discountFeesType", label: "Fees", icon: FaMoneyBillWave, color: "amber" },
+  { key: "discountLab", typeKey: "discountLabType", label: "Lab", icon: FaFlask, color: "purple" },
+  { key: "discountPharmacy", typeKey: "discountPharmacyType", label: "Pharmacy", icon: FaPills, color: "green" }
 ];
 
 // ==================== HELPERS ====================
@@ -210,12 +220,6 @@ export default function ReferralManagement() {
   const [selectedReferral, setSelectedReferral] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  const [showOfferModal, setShowOfferModal] = useState(false);
-  const [selectedOfferReferral, setSelectedOfferReferral] = useState(null);
-  const [offerSubmitting, setOfferSubmitting] = useState(false);
-  const [editingOfferId, setEditingOfferId] = useState(null);
-  const [offerForm, setOfferForm] = useState({ offerName: "", amount: "" });
-
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
     const saved = localStorage.getItem("referralManagement_itemsPerPage");
@@ -303,11 +307,37 @@ export default function ReferralManagement() {
         referralsData = res.data;
       }
 
-      referralsData = referralsData.map((r) => ({
-        ...r,
-        offers: Array.isArray(r.offers) ? r.offers : [],
-        services: Array.isArray(r.services) ? r.services : []
-      }));
+      // ✅ Map offers back to discount fields for the UI
+      referralsData = referralsData.map((r) => {
+        let discountFees = 0, discountFeesType = "%";
+        let discountLab = 0, discountLabType = "%";
+        let discountPharmacy = 0, discountPharmacyType = "%";
+
+        // Parse the offers array to extract discounts
+        if (Array.isArray(r.offers)) {
+          r.offers.forEach(o => {
+            if (o.offerName === 'Fees Discount') { discountFees = o.offerAmount; discountFeesType = o.offerUnit || "%"; }
+            else if (o.offerName === 'Lab Discount') { discountLab = o.offerAmount; discountLabType = o.offerUnit || "%"; }
+            else if (o.offerName === 'Pharmacy Discount') { discountPharmacy = o.offerAmount; discountPharmacyType = o.offerUnit || "%"; }
+          });
+        }
+
+        // Fallback for legacy data
+        if (r.discountFees > 0) { discountFees = r.discountFees; discountFeesType = r.discountFeesType || "%"; }
+        if (r.discountLab > 0) { discountLab = r.discountLab; discountLabType = r.discountLabType || "%"; }
+        if (r.discountPharmacy > 0) { discountPharmacy = r.discountPharmacy; discountPharmacyType = r.discountPharmacyType || "%"; }
+
+        return {
+          ...r,
+          discountFees,
+          discountFeesType,
+          discountLab,
+          discountLabType,
+          discountPharmacy,
+          discountPharmacyType,
+          services: Array.isArray(r.services) ? r.services : []
+        };
+      });
 
       const doctors = referralsData.filter((r) => r.referralType === "doctor");
       const customers = referralsData.filter((r) => r.referralType === "customer");
@@ -390,23 +420,50 @@ export default function ReferralManagement() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    setFormData((prev) => {
+      const newData = { ...prev, [name]: value };
+      
+      const valNum = parseFloat(value) || 0;
 
-    if (
-      name === "serviceCommission" || name === "pharmacyCommission" ||
-      name === "labCommission" || name === "feesCommission" ||
-      name === "serviceCommissionType" || name === "pharmacyCommissionType" ||
-      name === "labCommissionType" || name === "feesCommissionType"
-    ) {
-      const serviceVal = parseFloat(name === "serviceCommission" ? value : formData.serviceCommission) || 0;
-      const pharmacyVal = parseFloat(name === "pharmacyCommission" ? value : formData.pharmacyCommission) || 0;
-      const labVal = parseFloat(name === "labCommission" ? value : formData.labCommission) || 0;
-      const feesVal = parseFloat(name === "feesCommission" ? value : formData.feesCommission) || 0;
-      setFormData((prev) => ({
-        ...prev,
-        totalCommission: (serviceVal + pharmacyVal + labVal + feesVal).toString()
-      }));
-    }
+      // Auto-clear commission if discount is added (and vice versa)
+      // Fees
+      if (name === "discountFees" && valNum > 0) {
+        newData.feesCommission = "";
+      } else if (name === "feesCommission" && valNum > 0) {
+        newData.discountFees = "";
+      }
+
+      // Lab
+      if (name === "discountLab" && valNum > 0) {
+        newData.labCommission = "";
+      } else if (name === "labCommission" && valNum > 0) {
+        newData.discountLab = "";
+      }
+
+      // Pharmacy
+      if (name === "discountPharmacy" && valNum > 0) {
+        newData.pharmacyCommission = "";
+      } else if (name === "pharmacyCommission" && valNum > 0) {
+        newData.discountPharmacy = "";
+      }
+
+      // Recalculate total commission
+      if (
+        name === "serviceCommission" || name === "pharmacyCommission" ||
+        name === "labCommission" || name === "feesCommission" ||
+        name === "serviceCommissionType" || name === "pharmacyCommissionType" ||
+        name === "labCommissionType" || name === "feesCommissionType"
+      ) {
+        const serviceVal = parseFloat(name === "serviceCommission" ? value : newData.serviceCommission) || 0;
+        const pharmacyVal = parseFloat(name === "pharmacyCommission" ? value : newData.pharmacyCommission) || 0;
+        const labVal = parseFloat(name === "labCommission" ? value : newData.labCommission) || 0;
+        const feesVal = parseFloat(name === "feesCommission" ? value : newData.feesCommission) || 0;
+        newData.totalCommission = (serviceVal + pharmacyVal + labVal + feesVal).toString();
+      }
+
+      return newData;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -436,7 +493,7 @@ export default function ReferralManagement() {
         if (res.data.success) {
           const updatedData = res.data.data || { _id: editingId, ...payload };
           setActiveReferrals((prev) =>
-            prev.map((r) => (r._id === editingId ? { ...r, ...updatedData, offers: r.offers || [] } : r))
+            prev.map((r) => (r._id === editingId ? { ...r, ...updatedData } : r))
           );
           showToast(`${referrerLabel} referral updated successfully!`);
         }
@@ -444,14 +501,10 @@ export default function ReferralManagement() {
         const res = await addReferral(payload);
         if (res.data.success) {
           const newData = res.data.data || {
-            _id: Date.now().toString(), ...payload, offers: [],
+            _id: Date.now().toString(), ...payload,
             createdAt: new Date().toISOString()
           };
-          const savedReferral = {
-            ...newData,
-            offers: newData.offers || [],
-          };
-          setActiveReferrals((prev) => [savedReferral, ...prev]);
+          setActiveReferrals((prev) => [newData, ...prev]);
           showToast(`${referrerLabel} referral added successfully!`);
         }
       }
@@ -460,6 +513,9 @@ export default function ReferralManagement() {
       setEditingId(null);
       setEditingType(null);
       setShowForm(false);
+      
+      // Auto refresh the page data
+      await fetchReferrals();
     } catch (err) {
       console.error(`Error saving ${referrerLabel.toLowerCase()} referral:`, err);
       showToast(err.response?.data?.message || `Failed to save referral`, "error");
@@ -485,7 +541,9 @@ export default function ReferralManagement() {
       discountFees: referral.discountFees || "",
       discountFeesType: referral.discountFeesType || "%",
       discountLab: referral.discountLab || "",
-      discountLabType: referral.discountLabType || "%"
+      discountLabType: referral.discountLabType || "%",
+      discountPharmacy: referral.discountPharmacy || "",
+      discountPharmacyType: referral.discountPharmacyType || "%"
     };
 
     if (isDoctorTab) {
@@ -520,6 +578,9 @@ export default function ReferralManagement() {
       await deleteReferral(id);
       setActiveReferrals((prev) => prev.filter((r) => r._id !== id));
       showToast(`${referrerLabel} referral deleted successfully`, "info");
+      
+      // Auto refresh the page data
+      await fetchReferrals();
     } catch (err) {
       console.error("Error deleting:", err);
       showToast(err.response?.data?.message || "Failed to delete referral", "error");
@@ -535,91 +596,13 @@ export default function ReferralManagement() {
           setSelectedReferral((prev) => ({ ...prev, status: newStatus }));
         }
         showToast(`Referral status updated to '${newStatus}'`);
+        
+        // Auto refresh the page data
+        await fetchReferrals();
       }
     } catch (err) {
       console.error("Error updating status:", err);
       showToast(err.response?.data?.message || "Failed to update status", "error");
-    }
-  };
-
-  const openOfferModal = (referral) => {
-    setSelectedOfferReferral(referral);
-    setEditingOfferId(null);
-    setOfferForm({ offerName: "", amount: "" });
-    setShowOfferModal(true);
-  };
-
-  const openEditOfferModal = (referral, offer) => {
-    setSelectedOfferReferral(referral);
-    setEditingOfferId(offer._id);
-    setOfferForm({ offerName: offer.offerName || "", amount: offer.offerAmount || "" });
-    setShowOfferModal(true);
-  };
-
-  const closeOfferModal = () => {
-    setShowOfferModal(false);
-    setSelectedOfferReferral(null);
-    setEditingOfferId(null);
-    setOfferForm({ offerName: "", amount: "" });
-  };
-
-  const handleOfferInputChange = (e) => {
-    const { name, value } = e.target;
-    setOfferForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleOfferSubmit = async (e) => {
-    e.preventDefault();
-    if (!offerForm.offerName || !offerForm.amount) {
-      showToast("Please fill Offer Name and Amount", "error");
-      return;
-    }
-    if (!selectedOfferReferral) return;
-
-    setOfferSubmitting(true);
-    try {
-      const payload = { offerName: offerForm.offerName, offerAmount: Number(offerForm.amount) };
-      let res;
-      if (editingOfferId) {
-        res = await axios.put(`${API_BASE_URL}/updateoffer/${selectedOfferReferral._id}/${editingOfferId}`, payload);
-      } else {
-        res = await axios.post(`${API_BASE_URL}/addoffer/${selectedOfferReferral._id}`, payload);
-      }
-
-      if (res.data.success) {
-        const updatedReferral = {
-          ...res.data.data,
-          offers: Array.isArray(res.data.data?.offers) ? res.data.data.offers : []
-        };
-        setActiveReferrals((prev) => prev.map((r) => (r._id === updatedReferral._id ? updatedReferral : r)));
-        if (selectedReferral && selectedReferral._id === updatedReferral._id) setSelectedReferral(updatedReferral);
-        showToast(editingOfferId ? "Offer updated successfully!" : "Offer added successfully!");
-        closeOfferModal();
-      }
-    } catch (err) {
-      console.error("Error saving offer:", err);
-      showToast(err.response?.data?.message || "Failed to save offer", "error");
-    } finally {
-      setOfferSubmitting(false);
-    }
-  };
-
-  const handleDeleteOffer = async (referral, offerId) => {
-    if (!window.confirm("Are you sure you want to delete this offer?")) return;
-    try {
-      const res = await axios.delete(`${API_BASE_URL}/deleteoffer/${referral._id}/${offerId}`);
-      if (res.data.success) {
-        const updatedReferral = {
-          ...res.data.data,
-          offers: Array.isArray(res.data.data?.offers) ? res.data.data.offers : []
-        };
-        setActiveReferrals((prev) => prev.map((r) => (r._id === updatedReferral._id ? updatedReferral : r)));
-        if (selectedReferral && selectedReferral._id === updatedReferral._id) setSelectedReferral(updatedReferral);
-        showToast("Offer deleted successfully!");
-      }
-    } catch (err) {
-      console.error("Error deleting offer:", err);
-      showToast(err.response?.data?.message || "Failed to delete offer", "error");
     }
   };
 
@@ -715,14 +698,15 @@ export default function ReferralManagement() {
       return;
     }
     const headers = isDoctorTab
-      ? ["Sl No", "Name", "Organisation", "Phone", "Specialization", "Address", "Service", "Pharmacy", "Lab", "Fees", "Discount Fees", "Discount Lab", "Status", "Onboard Date"]
-      : ["Sl No", "Name", "Phone", "Address", "Service", "Pharmacy", "Lab", "Fees", "Discount Fees", "Discount Lab", "Status", "Onboard Date"];
+      ? ["Sl No", "Name", "Organisation", "Phone", "Specialization", "Address", "Service", "Pharmacy", "Lab", "Fees", "Discount Fees", "Discount Lab", "Discount Pharmacy", "Status", "Onboard Date"]
+      : ["Sl No", "Name", "Phone", "Address", "Service", "Pharmacy", "Lab", "Fees", "Discount Fees", "Discount Lab", "Discount Pharmacy", "Status", "Onboard Date"];
 
     const csvRows = [
       headers.join(","),
       ...filteredReferrals.map((r, idx) => {
-        const discountFeesStr = r.discountFees ? `${r.discountFees}${r.discountFeesType || "%"}` : "";
-        const discountLabStr = r.discountLab ? `${r.discountLab}${r.discountLabType || "%"}` : "";
+        const discountFeesStr = Number(r.discountFees) > 0 ? `${r.discountFees}${r.discountFeesType || "%"}` : "";
+        const discountLabStr = Number(r.discountLab) > 0 ? `${r.discountLab}${r.discountLabType || "%"}` : "";
+        const discountPharmacyStr = Number(r.discountPharmacy) > 0 ? `${r.discountPharmacy}${r.discountPharmacyType || "%"}` : "";
         const serviceStr = formatCommission(r.serviceCommission || r.clinicCommission, r.serviceCommissionType || r.clinicCommissionType);
         const pharmacyStr = formatCommission(r.pharmacyCommission, r.pharmacyCommissionType);
         const labStr = formatCommission(r.labCommission, r.labCommissionType);
@@ -736,7 +720,7 @@ export default function ReferralManagement() {
             `"${(r.doctorSpecialization || "").replace(/"/g, '""')}"`,
             `"${(r.doctorAddress || "").replace(/"/g, '""')}"`,
             `"${serviceStr}"`, `"${pharmacyStr}"`, `"${labStr}"`, `"${feesStr}"`,
-            `"${discountFeesStr}"`, `"${discountLabStr}"`,
+            `"${discountFeesStr}"`, `"${discountLabStr}"`, `"${discountPharmacyStr}"`,
             `"${r.status || "active"}"`,
             `"${formatDate(r.onboardDate || r.referralDate || r.createdAt)}"`
           ].join(",");
@@ -747,7 +731,7 @@ export default function ReferralManagement() {
             `"${r.customerPhone || ""}"`,
             `"${(r.customerAddress || "").replace(/"/g, '""')}"`,
             `"${serviceStr}"`, `"${pharmacyStr}"`, `"${labStr}"`, `"${feesStr}"`,
-            `"${discountFeesStr}"`, `"${discountLabStr}"`,
+            `"${discountFeesStr}"`, `"${discountLabStr}"`, `"${discountPharmacyStr}"`,
             `"${r.status || "active"}"`,
             `"${formatDate(r.onboardDate || r.referralDate || r.createdAt)}"`
           ].join(",");
@@ -978,7 +962,6 @@ export default function ReferralManagement() {
                   </thead>
                   <tbody>
                     {currentReferrals.map((referral, idx) => {
-                      const offers = referral.offers || [];
                       const name = isDoctorTab ? (referral.doctorName || "N/A") : (referral.customerName || "N/A");
 
                       return (
@@ -1024,19 +1007,12 @@ export default function ReferralManagement() {
                               {formatCommission(referral.feesCommission, referral.feesCommissionType)}
                             </span>
                           </td>
-                          <td className="px-3 py-3 text-center">
-                            {(referral.discountFees || referral.discountLab) ? (
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            {(Number(referral.discountFees) > 0 || Number(referral.discountLab) > 0 || Number(referral.discountPharmacy) > 0) ? (
                               <div className="flex flex-col gap-1 text-[10px] font-bold">
-                                {referral.discountFees && <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Fees: {formatDiscount(referral.discountFees, referral.discountFeesType)}</span>}
-                                {referral.discountLab && <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Lab: {formatDiscount(referral.discountLab, referral.discountLabType)}</span>}
-                              </div>
-                            ) : offers.length > 0 ? (
-                              <div className="flex flex-col items-center gap-1">
-                                {offers.slice(0, 1).map((offer) => (
-                                  <div key={offer._id} className="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                                    <FiGift className="w-2.5 h-2.5" />{offer.offerName}: ₹{offer.offerAmount}
-                                  </div>
-                                ))}
+                                {Number(referral.discountFees) > 0 && <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 whitespace-nowrap">Fees: {formatDiscount(referral.discountFees, referral.discountFeesType)}</span>}
+                                {Number(referral.discountLab) > 0 && <span className="text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 whitespace-nowrap">Lab: {formatDiscount(referral.discountLab, referral.discountLabType)}</span>}
+                                {Number(referral.discountPharmacy) > 0 && <span className="text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 whitespace-nowrap">Pharm: {formatDiscount(referral.discountPharmacy, referral.discountPharmacyType)}</span>}
                               </div>
                             ) : <span className="text-[10px] text-gray-400 italic">-</span>}
                           </td>
@@ -1050,7 +1026,6 @@ export default function ReferralManagement() {
                           </td>
                           <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1">
-                              <button onClick={() => openOfferModal(referral)} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg" title="Add Offer"><FiGift className="w-4 h-4" /></button>
                               <button onClick={() => { setSelectedReferral(referral); setShowDetailModal(true); }} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg" title="View Details"><FiEye className="w-4 h-4" /></button>
                               <button onClick={() => handleEdit(referral)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit"><FiEdit2 className="w-4 h-4" /></button>
                               <button onClick={() => handleDelete(referral._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg" title="Delete"><FiTrash2 className="w-4 h-4" /></button>
@@ -1126,17 +1101,25 @@ export default function ReferralManagement() {
                             <div className="text-[10px] font-extrabold text-amber-800">{formatCommission(referral.feesCommission, referral.feesCommissionType)}</div>
                           </div>
                         </div>
-                        {(referral.discountFees || referral.discountLab) && (
-                          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
-                            <div className="text-center p-1.5 rounded-lg bg-amber-50 border border-amber-200"><div className="text-[8px] font-bold text-amber-600 uppercase">Discount Fees</div><div className="text-xs font-extrabold text-amber-800">{formatDiscount(referral.discountFees, referral.discountFeesType) || "-"}</div></div>
-                            <div className="text-center p-1.5 rounded-lg bg-amber-50 border border-amber-200"><div className="text-[8px] font-bold text-amber-600 uppercase">Discount Lab</div><div className="text-xs font-extrabold text-amber-800">{formatDiscount(referral.discountLab, referral.discountLabType) || "-"}</div></div>
+                        {(Number(referral.discountFees) > 0 || Number(referral.discountLab) > 0 || Number(referral.discountPharmacy) > 0) && (
+                          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-100">
+                            {Number(referral.discountFees) > 0 ? (
+                              <div className="text-center p-1.5 rounded-lg bg-amber-50 border border-amber-200"><div className="text-[8px] font-bold text-amber-600 uppercase">Disc. Fees</div><div className="text-xs font-extrabold text-amber-800 whitespace-nowrap">{formatDiscount(referral.discountFees, referral.discountFeesType)}</div></div>
+                            ) : <div className="text-center p-1.5 rounded-lg bg-gray-50 border border-gray-200"><div className="text-[8px] font-bold text-gray-400 uppercase">Disc. Fees</div><div className="text-xs font-extrabold text-gray-400">-</div></div>}
+                            
+                            {Number(referral.discountLab) > 0 ? (
+                              <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200"><div className="text-[8px] font-bold text-purple-600 uppercase">Disc. Lab</div><div className="text-xs font-extrabold text-purple-800 whitespace-nowrap">{formatDiscount(referral.discountLab, referral.discountLabType)}</div></div>
+                            ) : <div className="text-center p-1.5 rounded-lg bg-gray-50 border border-gray-200"><div className="text-[8px] font-bold text-gray-400 uppercase">Disc. Lab</div><div className="text-xs font-extrabold text-gray-400">-</div></div>}
+
+                            {Number(referral.discountPharmacy) > 0 ? (
+                              <div className="text-center p-1.5 rounded-lg bg-green-50 border border-green-200"><div className="text-[8px] font-bold text-green-600 uppercase">Disc. Pharm</div><div className="text-xs font-extrabold text-green-800 whitespace-nowrap">{formatDiscount(referral.discountPharmacy, referral.discountPharmacyType)}</div></div>
+                            ) : <div className="text-center p-1.5 rounded-lg bg-gray-50 border border-gray-200"><div className="text-[8px] font-bold text-gray-400 uppercase">Disc. Pharm</div><div className="text-xs font-extrabold text-gray-400">-</div></div>}
                           </div>
                         )}
                         <div className="flex items-center justify-end text-[11px] pt-2 border-t border-gray-100">
                           <div className="text-slate-600 font-medium">{formatDate(referral.onboardDate || referral.referralDate || referral.createdAt)}</div>
                         </div>
                         <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-100 flex-wrap">
-                          <button onClick={() => openOfferModal(referral)} className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg text-[10px] font-bold"><FiGift className="w-3.5 h-3.5" /> Offer</button>
                           <button onClick={() => { setSelectedReferral(referral); setShowDetailModal(true); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold"><FiEye className="w-3.5 h-3.5" /> View</button>
                           <button onClick={() => handleEdit(referral)} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold"><FiEdit2 className="w-3.5 h-3.5" /> Edit</button>
                           <button onClick={() => handleDelete(referral._id)} className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-[10px] font-bold"><FiTrash2 className="w-3.5 h-3.5" /> Delete</button>
@@ -1268,6 +1251,80 @@ export default function ReferralManagement() {
                     )}
                   </div>
 
+                  {/* Special Offers (Discount) */}
+                  <div className="border rounded-xl p-5 bg-amber-50/20 border-amber-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-2">
+                        <FiGift className="text-amber-600 w-4 h-4" /> Special Offers (Discount)
+                      </label>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {DISCOUNT_FIELDS.map((field) => {
+                        const Icon = field.icon;
+                        const borderColor = {
+                          amber: "border-amber-300 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20",
+                          purple: "border-purple-300 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20",
+                          green: "border-green-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-500/20"
+                        }[field.color];
+                        const selectColor = {
+                          amber: "bg-amber-50 text-amber-800 border-amber-300",
+                          purple: "bg-purple-50 text-purple-800 border-purple-300",
+                          green: "bg-green-50 text-green-800 border-green-300"
+                        }[field.color];
+                        const labelColor = {
+                          amber: "text-amber-700",
+                          purple: "text-purple-700",
+                          green: "text-green-700"
+                        }[field.color];
+
+                        return (
+                          <div key={field.key}>
+                            <label className={`block text-[10px] font-bold mb-1.5 flex items-center gap-1 ${labelColor} uppercase tracking-wider`}>
+                              <Icon className="text-[11px]" />
+                              {field.label}
+                            </label>
+                            <div className={`flex items-stretch w-full bg-white border rounded-lg overflow-hidden ${borderColor}`}>
+                              <input
+                                type="number"
+                                name={field.key}
+                                value={formData[field.key] || ""}
+                                onChange={handleInputChange}
+                                placeholder="0"
+                                min="0"
+                                className="flex-1 min-w-0 px-2.5 py-2.5 text-sm font-semibold bg-transparent focus:outline-none"
+                                style={{ border: "none" }}
+                              />
+                              <div className={`w-[48px] shrink-0 flex items-center justify-center border-l ${selectColor}`}>
+                                <select
+                                  name={field.typeKey}
+                                  value={formData[field.typeKey] || "%"}
+                                  onChange={handleInputChange}
+                                  className="w-full h-full bg-transparent border-0 text-xs font-bold text-center cursor-pointer focus:outline-none"
+                                  style={{ appearance: "none", WebkitAppearance: "none", MozAppearance: "none", textAlignLast: "center", padding: 0 }}
+                                >
+                                  {DISCOUNT_UNIT_OPTIONS.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {(Number(formData.discountFees) > 0 || Number(formData.discountLab) > 0 || Number(formData.discountPharmacy) > 0) && (
+                      <div className="mt-3 p-3 bg-white rounded-lg border border-amber-200 flex items-center justify-between flex-wrap gap-2">
+                        <span className="text-sm font-semibold text-amber-800 flex items-center gap-1.5"><FiGift className="w-4 h-4" />Discount Applied</span>
+                        <span className="text-base font-extrabold text-amber-900 flex flex-wrap gap-2">
+                          {Number(formData.discountFees) > 0 ? <span>Fees: {formatDiscount(formData.discountFees, formData.discountFeesType)}</span> : ""}
+                          {Number(formData.discountLab) > 0 ? <span>Lab: {formatDiscount(formData.discountLab, formData.discountLabType)}</span> : ""}
+                          {Number(formData.discountPharmacy) > 0 ? <span>Pharmacy: {formatDiscount(formData.discountPharmacy, formData.discountPharmacyType)}</span> : ""}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Consultant Fee — 4 fields in one row (Service, Pharmacy, Lab, Fees) */}
                   <div>
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-100">
@@ -1358,82 +1415,6 @@ export default function ReferralManagement() {
                     </div>
                   </div>
 
-                  {/* Special Offers (Discount) */}
-                  <div className="border rounded-xl p-5 bg-amber-50/40 border-amber-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <label className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-2">
-                        <FiGift className="text-amber-600 w-4 h-4" /> Special Offers (Discount)
-                      </label>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-gray-600 uppercase mb-1.5">Fees Discount</label>
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <FiPercent className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                            <input
-                              type="number"
-                              name="discountFees"
-                              value={formData.discountFees || ""}
-                              onChange={handleInputChange}
-                              placeholder="0"
-                              min="0"
-                              className="w-full bg-white border border-amber-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium"
-                            />
-                          </div>
-                          <select
-                            name="discountFeesType"
-                            value={formData.discountFeesType || "%"}
-                            onChange={handleInputChange}
-                            className="w-[70px] bg-white border border-amber-300 rounded-lg px-2 py-2.5 text-sm font-bold text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                          >
-                            {DISCOUNT_UNIT_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] font-semibold text-gray-600 uppercase mb-1.5">Lab Discount</label>
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <FaFlask className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                            <input
-                              type="number"
-                              name="discountLab"
-                              value={formData.discountLab || ""}
-                              onChange={handleInputChange}
-                              placeholder="0"
-                              min="0"
-                              className="w-full bg-white border border-amber-300 rounded-lg pl-11 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium"
-                            />
-                          </div>
-                          <select
-                            name="discountLabType"
-                            value={formData.discountLabType || "%"}
-                            onChange={handleInputChange}
-                            className="w-[70px] bg-white border border-amber-300 rounded-lg px-2 py-2.5 text-sm font-bold text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                          >
-                            {DISCOUNT_UNIT_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {(formData.discountFees || formData.discountLab) && (
-                      <div className="mt-3 p-3 bg-white rounded-lg border border-amber-200 flex items-center justify-between">
-                        <span className="text-sm font-semibold text-amber-800 flex items-center gap-1.5"><FiGift className="w-4 h-4" />Discount Applied</span>
-                        <span className="text-base font-extrabold text-amber-900">
-                          {formData.discountFees ? `Fees: ${formatDiscount(formData.discountFees, formData.discountFeesType)}` : ""}
-                          {formData.discountFees && formData.discountLab ? " • " : ""}
-                          {formData.discountLab ? `Lab: ${formatDiscount(formData.discountLab, formData.discountLabType)}` : ""}
-                        </span>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </form>
 
@@ -1511,12 +1492,13 @@ export default function ReferralManagement() {
                   </div>
                 </div>
 
-                {(selectedReferral.discountFees || selectedReferral.discountLab) && (
+                {(Number(selectedReferral.discountFees) > 0 || Number(selectedReferral.discountLab) > 0 || Number(selectedReferral.discountPharmacy) > 0) && (
                   <div className="pt-2 border-t border-gray-200">
                     <div className="text-[10px] font-bold uppercase text-gray-400">Special Offers (Discount)</div>
-                    <div className="grid grid-cols-2 gap-2 mt-1">
-                      {selectedReferral.discountFees && <div className="bg-amber-50 p-2 rounded-lg text-center border border-amber-100"><div className="text-[9px] text-amber-700 font-bold">Fees</div><div className="text-sm font-extrabold text-amber-900">{formatDiscount(selectedReferral.discountFees, selectedReferral.discountFeesType)}</div></div>}
-                      {selectedReferral.discountLab && <div className="bg-amber-50 p-2 rounded-lg text-center border border-amber-100"><div className="text-[9px] text-amber-700 font-bold">Lab</div><div className="text-sm font-extrabold text-amber-900">{formatDiscount(selectedReferral.discountLab, selectedReferral.discountLabType)}</div></div>}
+                    <div className="grid grid-cols-3 gap-2 mt-1">
+                      {Number(selectedReferral.discountFees) > 0 && <div className="bg-amber-50 p-2 rounded-lg text-center border border-amber-100"><div className="text-[9px] text-amber-700 font-bold">Fees</div><div className="text-sm font-extrabold text-amber-900">{formatDiscount(selectedReferral.discountFees, selectedReferral.discountFeesType)}</div></div>}
+                      {Number(selectedReferral.discountLab) > 0 && <div className="bg-purple-50 p-2 rounded-lg text-center border border-purple-100"><div className="text-[9px] text-purple-700 font-bold">Lab</div><div className="text-sm font-extrabold text-purple-900">{formatDiscount(selectedReferral.discountLab, selectedReferral.discountLabType)}</div></div>}
+                      {Number(selectedReferral.discountPharmacy) > 0 && <div className="bg-green-50 p-2 rounded-lg text-center border border-green-100"><div className="text-[9px] text-green-700 font-bold">Pharmacy</div><div className="text-sm font-extrabold text-green-900">{formatDiscount(selectedReferral.discountPharmacy, selectedReferral.discountPharmacyType)}</div></div>}
                     </div>
                   </div>
                 )}
@@ -1550,46 +1532,6 @@ export default function ReferralManagement() {
           </div>
         )}
 
-        {/* OFFER MODAL */}
-        {showOfferModal && selectedOfferReferral && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold"><FiGift className="w-5 h-5" /></div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base">{editingOfferId ? "Edit Offer" : "Add Offer"}</h3>
-                    <p className="text-xs text-gray-500 truncate max-w-[200px]">{isDoctorTab ? selectedOfferReferral.doctorName : selectedOfferReferral.customerName}</p>
-                  </div>
-                </div>
-                <button onClick={closeOfferModal} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"><FaTimes className="w-4 h-4" /></button>
-              </div>
-              <form onSubmit={handleOfferSubmit} className="mt-5 space-y-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Offer Name <span className="text-amber-600">*</span></label>
-                  <div className="relative">
-                    <FiGift className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                    <input type="text" name="offerName" value={offerForm.offerName} onChange={handleOfferInputChange} placeholder="e.g. Consultation Discount" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium" required />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Amount (₹) <span className="text-amber-600">*</span></label>
-                  <div className="relative">
-                    <FaRupeeSign className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                    <input type="number" name="amount" value={offerForm.amount} onChange={handleOfferInputChange} placeholder="150" min="0" className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium" required />
-                  </div>
-                </div>
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                  <button type="button" onClick={closeOfferModal} className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700">Cancel</button>
-                  <button type="submit" disabled={offerSubmitting} className="px-5 py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1.5 disabled:opacity-50">
-                    {offerSubmitting ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : editingOfferId ? <FiCheckCircle className="w-3.5 h-3.5" /> : <FiPlus className="w-3.5 h-3.5" />}
-                    {editingOfferId ? "Update Offer" : "Add Offer"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );
