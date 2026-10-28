@@ -250,7 +250,7 @@ const OpDashboard = () => {
   const [apptToDate, setApptToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
 
-  const [timeFilter, setTimeFilter] = useState("today");
+  const [timeFilter, setTimeFilter] = useState("All");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const [showRevenueBreakdown, setShowRevenueBreakdown] = useState(false);
@@ -444,7 +444,7 @@ const OpDashboard = () => {
     setPaymentTypeFilter("All"); setReferredByFilter("All");
     setFromDate(""); setToDate("");
     setApptFromDate(""); setApptToDate(""); setSelectedMonth("");
-    setTimeFilter("today");
+    setTimeFilter("All"); // 👈 "All" KAR DO
   };
 
   const handleTimeFilterChange = (value) => {

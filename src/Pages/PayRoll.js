@@ -84,29 +84,33 @@ const holidayAppliesToDepartment = (holiday, employeeDepartment) => {
 
   let depts = [];
 
+  // 🔥 FIX: Pehle 'departments' array check karo
   if (Array.isArray(holiday.departments) && holiday.departments.length > 0) {
-    depts = holiday.departments.filter(d => d && typeof d === 'string');
-  }
-
-  if (depts.length === 0 && holiday.department && typeof holiday.department === 'string') {
+    depts = holiday.departments;
+  } 
+  // Agar array nahi hai toh string format check karo
+  else if (holiday.department && typeof holiday.department === 'string') {
     const depStr = holiday.department.trim();
     if (depStr.toLowerCase() !== "all" && depStr.toLowerCase() !== "all departments") {
       depts = depStr.split(",").map(d => d.trim()).filter(Boolean);
     }
   }
 
+  // Agar pehle se hi sabko assign kiya hai, toh true return karo
   if (depts.length === 0) return true;
 
+  // Agar array mein All hai
   if (depts.some(d => d.toLowerCase() === "all" || d.toLowerCase() === "all departments")) {
     return true;
   }
 
+  // Agar employee ka department available nahi hai, toh safe side true return karo
   if (!employeeDepartment) return true;
 
+  // Strict match check
   const empDept = employeeDepartment.toLowerCase().trim();
   return depts.some(d => d.toLowerCase().trim() === empDept);
 };
-
 const calculateHolidayCountForDepartment = (
   holidaysData,
   targetMonth,
@@ -1092,10 +1096,12 @@ const PayRoll = () => {
       const compOffMap = {};
       Object.keys(compOffsByEmployee).forEach(empId => {
         compOffMap[empId] = compOffsByEmployee[empId].map(co => ({
-          date: co.workDate,
+          // ✅ FIX: Agar leaveDate (22 Oct) hai toh usko 'date' banao, warna workDate (6 Oct)
+          date: co.leaveDate || co.workDate, 
           count: co.count || 1,
           reason: co.reason || '',
           workDate: co.workDate,
+          leaveDate: co.leaveDate, // ✅ Save leaveDate too
           _id: co._id
         }));
       });
@@ -1982,7 +1988,7 @@ const PayRoll = () => {
     }
   };
 
-  const generateInvoiceHTML = (employee) => {
+ const generateInvoiceHTML = (employee) => {
     const employeeData = getEmployeeData(employee);
 
     if (!employeeData.salaryPerMonth || employeeData.salaryPerMonth === 0) {
@@ -2103,7 +2109,6 @@ const PayRoll = () => {
     const logoData = templateConfig.logo || logo || '';
     const stampData = companyStamp || ''; 
     const monthDisplay = formatMonthDisplay(employee.month || selectedMonth);
-    const payDate = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 5).toLocaleDateString('en-GB');
 
     let earnRowsHTML = '';
     let maxRows = Math.max(earningsItems.length, deductionsItems.length);
@@ -2203,7 +2208,6 @@ const PayRoll = () => {
                   <tr><td class="label">Designation</td><td>: ${employeeData.designation || employee.designation || '-'}</td></tr>
                   <tr><td class="label">Date of Joining</td><td>: ${employeeData.joiningDate ? new Date(employeeData.joiningDate).toLocaleDateString('en-GB') : '-'}</td></tr>
                   <tr><td class="label">Pay Period</td><td>: ${monthDisplay}</td></tr>
-                  <tr><td class="label">Pay Date</td><td>: ${payDate}</td></tr>
                 </table>
               </div>
               <div class="summary-right">
@@ -2248,7 +2252,6 @@ const PayRoll = () => {
             </table>
             <div class="net-pay-highlight">
               Total Net Payable ₹${finalCalculatedNetPay.toFixed(2)} (${numberToWords(finalCalculatedNetPay)})
-              <div style="font-size: 11px; font-weight: normal; color: #555; margin-top: 5px;">**Total Net Payable = Gross Earnings - Total Deductions</div>
             </div>
             <div class="footer-wrapper">
               <div class="footer-note-wrapper"></div>
@@ -2398,7 +2401,7 @@ const PayRoll = () => {
     return dates;
   };
 
-  const AttendancePopupModal = () => {
+   const AttendancePopupModal = () => {
     const [holidays, setHolidays] = useState([]);
 
     useEffect(() => {
@@ -2482,8 +2485,12 @@ const PayRoll = () => {
 
     const shiftHours = getEmployeeShiftHoursLocal(selectedEmployee?.employeeId);
 
+    // ✅ FIX: Filter holidays based on employee's department
+    const employeeDept = employeesMasterData[selectedEmployee?.employeeId]?.department || selectedEmployee?.department || "";
+    const applicableHolidays = holidays.filter(h => holidayAppliesToDepartment(h, employeeDept));
+
     const holidayDatesSet = new Set();
-    holidays.forEach(h => {
+    applicableHolidays.forEach(h => {
       if (h.isActive === false) return;
       if (!h.fromDate || !h.toDate) return;
       const start = new Date(h.fromDate);
@@ -2649,10 +2656,31 @@ const PayRoll = () => {
                         bgColor = 'bg-purple-50';
                         dayType = 'Public Holiday';
                         dayTypeClass = 'bg-purple-50 text-purple-700 border-purple-100';
-                      } else if (effectiveWeekOff) {
+                      } else if (isWeekOff) {
                         bgColor = 'bg-orange-50';
-                        dayType = 'Week Off';
-                        dayTypeClass = 'bg-orange-50 text-orange-700 border-orange-100';
+                        
+                        if (effectiveWeekOff) {
+                          dayType = 'Week Off';
+                          dayTypeClass = 'bg-orange-50 text-orange-700 border-orange-100';
+                        } else if (singlePunch) {
+                          dayType = 'Week Off / Single Punch';
+                          dayTypeClass = 'bg-blue-50 text-blue-700 border-blue-100';
+                        } else {
+                          const hoursNum = parseFloat(workHours);
+                          if (workHours && hoursNum >= shiftHours * 0.9) {
+                             dayType = 'Week Off / Full Day';
+                             dayTypeClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                          } else if (workHours && hoursNum >= shiftHours * 0.5) {
+                             dayType = 'Week Off / Half Day';
+                             dayTypeClass = 'bg-amber-50 text-amber-700 border-amber-100';
+                          } else if (workHours) {
+                             dayType = 'Week Off / Absent';
+                             dayTypeClass = 'bg-gray-100 text-gray-600 border-gray-200';
+                          } else {
+                             dayType = 'Week Off / Full Day';
+                             dayTypeClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                          }
+                        }
                       } else if (isLeave && !hasAttendance) {
                         bgColor = 'bg-red-50';
                         dayType = 'Leave';
@@ -2692,7 +2720,6 @@ const PayRoll = () => {
                           <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && !compOffCheck && !futureDate && hasAttendance ? formatTime(record?.checkOutTime) : '-'}</td>
                           <td className="px-2 py-1 text-xs text-center">{record?.reason || (compOffCheck ? 'Comp-off approved' : '-')}</td>
                           
-                          {/* Image 2 Style Hours Column */}
                           <td className="px-2 py-1 text-center">
                             <div className="flex flex-col items-center justify-center">
                               <div className="border border-slate-300 rounded-md px-2 py-0.5 text-xs font-bold text-slate-800 bg-white min-w-[50px]">
@@ -2704,7 +2731,6 @@ const PayRoll = () => {
                             </div>
                           </td>
 
-                          {/* Merged Day Type & Status Column */}
                           <td className="px-2 py-1 text-center">
                              <span className={`inline-flex px-2 py-1 rounded border text-[10px] font-bold ${dayTypeClass}`}>
                                {dayType}

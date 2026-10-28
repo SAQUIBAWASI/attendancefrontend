@@ -1295,9 +1295,7 @@ const EmployeeLeaves = () => {
     extraDays: { count: 0, list: [] }
   });
   
-  const [isCompOffRequestsModalOpen, setIsCompOffRequestsModalOpen] = useState(false);
   const [extraDayCompOffRequests, setExtraDayCompOffRequests] = useState([]);
-  const [selectedLeaveForCompOff, setSelectedLeaveForCompOff] = useState(null);
   const [selectedExtraDayForCompOff, setSelectedExtraDayForCompOff] = useState("");
   const [compOffRequestsFromAPI, setCompOffRequestsFromAPI] = useState([]);
   
@@ -1426,7 +1424,7 @@ const EmployeeLeaves = () => {
     }
   };
 
-  // ✅ Fetch extra worked days (week-off / holiday work)
+  // ✅ Fetch extra worked days (Duplicates removed, all employees data allowed)
   const fetchExtraWorkedDays = async (empId) => {
     try {
       if (!empId) return;
@@ -1441,35 +1439,75 @@ const EmployeeLeaves = () => {
           throw errFirst;
         }
       }
+      
       if (res.data && res.data.success) {
-        const days = res.data.extraDays || [];
-        setExtraWorkedDays(days);
+        const allDays = res.data.extraDays || [];
+        
+        // 1. Base filter for workType
+        const validDays = allDays.filter(d => {
+          if (!d.workType) return false;
+          const t = d.workType.toLowerCase();
+          return t.includes('week-off') || t.includes('week off') || t.includes('holiday') || t.includes('wo') || t.includes('ph');
+        });
+
+        // 2. ✅ FIX: Remove duplicates by date (Fixes Akhil's 5, 12, 19, 26 issue)
+        const uniqueDays = [];
+        const seenDates = new Set();
+        
+        validDays.forEach(day => {
+          if (!seenDates.has(day.date)) {
+            seenDates.add(day.date);
+            uniqueDays.push(day);
+          }
+        });
+        
+        // 3. Match with CompOff API and disable if used
+        const finalDays = uniqueDays.map(day => {
+          const matchingReq = compOffRequestsFromAPI.find(req => {
+            const reqDate = req.leaveDetails?.startDate || req.leaveDate || req.workDate || req.extraDayDate;
+            if (!reqDate) return false;
+            
+            const d = new Date(reqDate);
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            return dateStr === day.date;
+          });
+
+          if (matchingReq) {
+            if (matchingReq.status === 'approved') {
+              return { ...day, status: 'used', requestStatus: 'approved', isExpired: true };
+            }
+            if (matchingReq.status === 'pending') {
+              return { ...day, status: 'pending', requestStatus: 'pending' };
+            }
+            if (matchingReq.status === 'rejected') {
+              return { ...day, status: 'active', requestStatus: 'rejected' };
+            }
+          }
+          return day;
+        });
+
+        setExtraWorkedDays(finalDays);
 
         setSelectedExtraWorkDay(prev => {
           if (prev) {
-            const found = days.find(d => d.date === prev.date);
+            const found = finalDays.find(d => d.date === prev.date);
             return found || prev;
           }
-          const firstEligible = days.find(d => (d.status === "available" || d.requestStatus === "available") && !d.isExpired);
+          const firstEligible = finalDays.find(d => 
+            d.status === "active" && 
+            d.requestStatus === "available" && 
+            !d.isExpired
+          );
           if (firstEligible) {
-            setLeaveFormData(f => ({
-              ...f,
-              startDate: f.startDate || firstEligible.date,
-              endDate: f.endDate || firstEligible.date,
-              days: 1
-            }));
+            setLeaveFormData(f => ({ ...f, startDate: f.startDate || firstEligible.date, endDate: f.endDate || firstEligible.date, days: 1 }));
           }
           return firstEligible || null;
         });
       }
-    } catch (err) {
-      console.error("Error fetching extra worked days:", err);
-    } finally {
-      setLoadingExtraWorkedDays(false);
-    }
+    } catch (err) { console.error(err); } 
+    finally { setLoadingExtraWorkedDays(false); }
   };
 
-  // ✅ Fetch comp-off requests
   const fetchCompOffRequests = async (empId) => {
     try {
       if (!empId) return;
@@ -1574,7 +1612,6 @@ const EmployeeLeaves = () => {
       reason: `Requesting comp-off for extra day on ${extraDay.day || formatDateDisplay(extraDay.date)} (${extraDay.totalHours || 8} hours) against ${leave.leaveType} leave (${formatDateDisplay(leave.startDate)} - ${formatDateDisplay(leave.endDate)})`
     });
     setIsExtraDayCompOffModalOpen(true);
-    setSelectedLeaveForCompOff(null);
     setSelectedExtraDayForCompOff("");
   };
 
@@ -1605,6 +1642,7 @@ const EmployeeLeaves = () => {
         employeeId, employeeName,
         extraDayDate: selectedExtraDay.date,
         workDate: selectedExtraDay.date,
+        leaveDate: selectedExtraDay.leaveStartDate,
         extraDayDetails: {
           date: selectedExtraDay.date,
           day: selectedExtraDay.day || formatDateDisplay(selectedExtraDay.date),
@@ -1725,6 +1763,7 @@ const EmployeeLeaves = () => {
           employeeName: name,
           workDate: workDateToUse,
           extraDayDate: workDateToUse,
+          leaveDate: leaveFormData.startDate, // ✅ Add leave date
           extraDayDetails: selectedExtraWorkDay || {
             date: workDateToUse,
             day: new Date(workDateToUse).toLocaleDateString('en-US', {
@@ -1735,7 +1774,7 @@ const EmployeeLeaves = () => {
             workType: "Week-off Work"
           },
           leaveId: null,
-          leaveDetails: null,
+          leaveDetails: { startDate: leaveFormData.startDate },
           reason: leaveFormData.reason
         };
 
@@ -2432,7 +2471,11 @@ const EmployeeLeaves = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center text-sm text-gray-700">
-                          {req.leaveDate ? formatDateDisplay(req.leaveDate) : (req.workDate ? formatDateDisplay(req.workDate) : "-")}
+                          {req.leaveDetails?.startDate 
+                            ? formatDateDisplay(req.leaveDetails.startDate) 
+                            : (req.leaveDate 
+                                ? formatDateDisplay(req.leaveDate) 
+                                : (req.workDate ? formatDateDisplay(req.workDate) : "-"))}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 border border-purple-200">
@@ -2709,7 +2752,7 @@ const EmployeeLeaves = () => {
                           <label className="block text-xs font-semibold text-purple-700 uppercase tracking-wider">Select Extra Worked Day</label>
                           {extraWorkedDays.length > 0 && (
                             <span className="text-[11px] text-gray-500">
-                              (Eligible: <strong className="text-green-600">{extraWorkedDays.filter(d => !d.isExpired && d.status !== 'pending' && d.status !== 'approved' && d.requestStatus !== 'expired').length}</strong>, Expired: <strong className="text-red-500">{extraWorkedDays.filter(d => d.isExpired || d.status === 'expired' || d.requestStatus === 'expired').length}</strong>)
+                              (Eligible: <strong className="text-green-600">{extraWorkedDays.filter(d => !d.isExpired && d.status !== 'pending' && d.status !== 'approved' && d.status !== 'used' && d.requestStatus !== 'expired').length}</strong>, Expired: <strong className="text-red-500">{extraWorkedDays.filter(d => d.isExpired || d.status === 'expired' || d.status === 'used' || d.requestStatus === 'expired').length}</strong>)
                             </span>
                           )}
                         </div>
@@ -2742,9 +2785,14 @@ const EmployeeLeaves = () => {
                           {extraWorkedDays.map((item, idx) => {
                             const workDateObj = new Date(item.date);
                             const expiryDateObj = new Date(workDateObj.getFullYear(), workDateObj.getMonth() + 1, 15, 23, 59, 59, 999);
-                            const isExpired = item.isExpired || item.requestStatus === "expired" || item.status === "expired" || (new Date() > expiryDateObj);
+                            
                             const isPending = item.requestStatus === "pending" || item.status === "pending";
-                            const isApproved = item.requestStatus === "approved" || item.status === "approved";
+                            // ✅ FIX: Mark as approved if status is used
+                            const isApproved = item.requestStatus === "approved" || item.status === "approved" || item.status === "used";
+                            
+                            // ✅ FIX: Use ho chuka din dobara use na ho sake, isliye isApproved ko isExpired me add kiya
+                            const isExpired = item.isExpired || item.requestStatus === "expired" || item.status === "expired" || (new Date() > expiryDateObj) || isApproved;
+                            
                             const isAvailable = !isExpired && !isPending && !isApproved;
                             const isSelected = selectedExtraWorkDay?.date === item.date;
                             const validTillFormatted = item.validTillFormatted || expiryDateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -2790,7 +2838,7 @@ const EmployeeLeaves = () => {
                                   {isPending ? (
                                     <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-yellow-100 text-yellow-800 border-yellow-200">⏳ Pending</span>
                                   ) : isApproved ? (
-                                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-green-100 text-green-800 border-green-200">✅ Approved</span>
+                                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-green-100 text-green-800 border-green-200">✅ Used</span>
                                   ) : isExpired ? (
                                     <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-gray-200 text-gray-700 border-gray-300">⚠️ Expired</span>
                                   ) : (

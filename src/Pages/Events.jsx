@@ -501,9 +501,6 @@ const Events = () => {
                             <span className="font-bold text-gray-800">
                               {formatDate(event.date)}
                             </span>
-                            <span className="text-[10px] text-gray-400">
-                              Since {new Date(event.originalDate).getFullYear()}
-                            </span>
                           </div>
                         </td>
 
@@ -611,9 +608,6 @@ const Events = () => {
                     <div>
                       <span className="text-gray-400">Date:</span>{' '}
                       <span className="font-semibold text-gray-800">{formatDate(event.date)}</span>
-                      <span className="text-[10px] text-gray-400 ml-1">
-                        (Since {new Date(event.originalDate).getFullYear()})
-                      </span>
                     </div>
                     <div>
                       {event.daysRemaining === 0 ? (
