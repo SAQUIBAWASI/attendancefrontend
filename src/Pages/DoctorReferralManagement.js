@@ -313,7 +313,6 @@ export default function ReferralManagement() {
         let discountLab = 0, discountLabType = "%";
         let discountPharmacy = 0, discountPharmacyType = "%";
 
-        // Parse the offers array to extract discounts
         if (Array.isArray(r.offers)) {
           r.offers.forEach(o => {
             if (o.offerName === 'Fees Discount') { discountFees = o.offerAmount; discountFeesType = o.offerUnit || "%"; }
@@ -322,7 +321,6 @@ export default function ReferralManagement() {
           });
         }
 
-        // Fallback for legacy data
         if (r.discountFees > 0) { discountFees = r.discountFees; discountFeesType = r.discountFeesType || "%"; }
         if (r.discountLab > 0) { discountLab = r.discountLab; discountLabType = r.discountLabType || "%"; }
         if (r.discountPharmacy > 0) { discountPharmacy = r.discountPharmacy; discountPharmacyType = r.discountPharmacyType || "%"; }
@@ -418,53 +416,56 @@ export default function ReferralManagement() {
   const updateReferral = async (id, payload) => axios.put(`${API_BASE_URL}/updatereferralcontact/${id}`, payload);
   const deleteReferral = async (id) => axios.delete(`${API_BASE_URL}/deletereferralcontact/${id}`);
 
+  // ==================== ⚡ FIXED handleInputChange ====================
+  // Discount add karne par ab commission CLEAR nahi hota — uski value se
+  // discount amount MINUS ho jaati hai.
+  // e.g. Commission Lab = 20%, Discount Lab = 10% add kiya → Commission = 10%
+  // e.g. Commission Fees = 150, Discount Fees = 150 → Commission = 0
+  // Discount hataane par wapas add ho jaata hai (delta based logic).
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
+
       const valNum = parseFloat(value) || 0;
+      const oldVal = parseFloat(prev[name]) || 0;
+      const delta = valNum - oldVal;
 
-      // Auto-clear commission if discount is added (and vice versa)
-      // Fees
-      if (name === "discountFees" && valNum > 0) {
-        newData.feesCommission = "";
-      } else if (name === "feesCommission" && valNum > 0) {
-        newData.discountFees = "";
+      // Map each discount field -> matching commission field
+      const discountToCommission = {
+        discountFees: "feesCommission",
+        discountLab: "labCommission",
+        discountPharmacy: "pharmacyCommission"
+      };
+
+      // ✅ When user changes a discount, reduce the matching commission by delta
+      if (discountToCommission[name] && delta !== 0) {
+        const commissionKey = discountToCommission[name];
+        const oldCommission = parseFloat(prev[commissionKey]) || 0;
+        const newCommission = Math.max(0, oldCommission - delta);
+        newData[commissionKey] = newCommission === 0 ? "" : newCommission.toString();
       }
 
-      // Lab
-      if (name === "discountLab" && valNum > 0) {
-        newData.labCommission = "";
-      } else if (name === "labCommission" && valNum > 0) {
-        newData.discountLab = "";
-      }
-
-      // Pharmacy
-      if (name === "discountPharmacy" && valNum > 0) {
-        newData.pharmacyCommission = "";
-      } else if (name === "pharmacyCommission" && valNum > 0) {
-        newData.discountPharmacy = "";
-      }
-
-      // Recalculate total commission
+      // Recalculate total commission whenever a commission field or discount changes
       if (
         name === "serviceCommission" || name === "pharmacyCommission" ||
         name === "labCommission" || name === "feesCommission" ||
         name === "serviceCommissionType" || name === "pharmacyCommissionType" ||
-        name === "labCommissionType" || name === "feesCommissionType"
+        name === "labCommissionType" || name === "feesCommissionType" ||
+        discountToCommission[name]
       ) {
-        const serviceVal = parseFloat(name === "serviceCommission" ? value : newData.serviceCommission) || 0;
-        const pharmacyVal = parseFloat(name === "pharmacyCommission" ? value : newData.pharmacyCommission) || 0;
-        const labVal = parseFloat(name === "labCommission" ? value : newData.labCommission) || 0;
-        const feesVal = parseFloat(name === "feesCommission" ? value : newData.feesCommission) || 0;
+        const serviceVal = parseFloat(newData.serviceCommission) || 0;
+        const pharmacyVal = parseFloat(newData.pharmacyCommission) || 0;
+        const labVal = parseFloat(newData.labCommission) || 0;
+        const feesVal = parseFloat(newData.feesCommission) || 0;
         newData.totalCommission = (serviceVal + pharmacyVal + labVal + feesVal).toString();
       }
 
       return newData;
     });
   };
+  // ==================== END FIXED handleInputChange ====================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -514,7 +515,6 @@ export default function ReferralManagement() {
       setEditingType(null);
       setShowForm(false);
       
-      // Auto refresh the page data
       await fetchReferrals();
     } catch (err) {
       console.error(`Error saving ${referrerLabel.toLowerCase()} referral:`, err);
@@ -578,8 +578,6 @@ export default function ReferralManagement() {
       await deleteReferral(id);
       setActiveReferrals((prev) => prev.filter((r) => r._id !== id));
       showToast(`${referrerLabel} referral deleted successfully`, "info");
-      
-      // Auto refresh the page data
       await fetchReferrals();
     } catch (err) {
       console.error("Error deleting:", err);
@@ -596,8 +594,6 @@ export default function ReferralManagement() {
           setSelectedReferral((prev) => ({ ...prev, status: newStatus }));
         }
         showToast(`Referral status updated to '${newStatus}'`);
-        
-        // Auto refresh the page data
         await fetchReferrals();
       }
     } catch (err) {
@@ -1082,7 +1078,6 @@ export default function ReferralManagement() {
                           </div>
                         )}
 
-                        {/* 4 column grid for Service, Pharmacy, Lab, Fees */}
                         <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-gray-100">
                           <div className="text-center p-1.5 rounded-lg bg-blue-50 border border-blue-200">
                             <div className="text-[8px] font-bold text-blue-600 uppercase">Service</div>

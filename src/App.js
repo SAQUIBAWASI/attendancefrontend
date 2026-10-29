@@ -244,6 +244,7 @@ import PrivacyPolicy from "./Pages/PrivacyPolicy.js";
 import RevenueAnalytics from "./Pages/RevenueAnalytics";
 import Sheets from "./Pages/Sheets.js";
 import RetailPharmacyAnalytics from "./Pages/RetailPharmacyAnalytics.js";
+import TimelyOnePrivacyPolicy from "./Pages/TimelyOnePrivacyPolicy.js";
 
 
 function App() {
@@ -263,6 +264,7 @@ function App() {
       <Route path="/employee-login" element={<Login />} />
       <Route path="/candidate-login" element={<CandidateLogin />} />
       <Route path="/candidate-register" element={<CandidateRegister />} />
+      <Route path="/timelyone-privacypolicy" element={<TimelyOnePrivacyPolicy />} />
       
       {/* ===== EMPLOYEE LAYOUT ROUTES (without OP) ===== */}
       <Route path="/employeedashboard" element={<EmployeeLayout><EmployeeDashboard /></EmployeeLayout>} />
