@@ -1486,8 +1486,20 @@ export default function RevenueAnalytics() {
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Failed to fetch analytics");
       setData(null);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }, [fromDate, toDate]);
+
+    useEffect(() => {
+    // Page load hote hi Default Today set karo
+    const nowD = new Date();
+    setActivePreset("today");
+    setFromDate(fmtDate(nowD));
+    setToDate(fmtDate(nowD));
+    setSelectedMonth(nowD.getMonth() + 1);
+    setSelectedYear(nowD.getFullYear());
+  }, []);
 
   useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
 
@@ -1518,7 +1530,7 @@ export default function RevenueAnalytics() {
   const setPreset = (preset) => {
     const nowD = new Date();
     setActivePreset(preset);
-    if (preset === "today") { const t = fmtDate(nowD); setFromDate(t); setToDate(t); }
+    if (preset === "today") { const t = fmtDate(nowD); setFromDate(t); setToDate(t); setSelectedMonth(nowD.getMonth() + 1); setSelectedYear(nowD.getFullYear()); }
     else if (preset === "yesterday") { const y = new Date(nowD); y.setDate(y.getDate() - 1); const t = fmtDate(y); setFromDate(t); setToDate(t); }
     else if (preset === "last7Days") { const past7Days = new Date(nowD); past7Days.setDate(nowD.getDate() - 6); setFromDate(fmtDate(past7Days)); setToDate(fmtDate(nowD)); }
     else if (preset === "thisWeek") { const dow = nowD.getDay(); const diff = dow === 0 ? 6 : dow - 1; const mon = new Date(nowD); mon.setDate(mon.getDate() - diff); setFromDate(fmtDate(mon)); setToDate(fmtDate(nowD)); }
@@ -1542,26 +1554,39 @@ export default function RevenueAnalytics() {
     return { cash, online, due: 0, total: cash + online, card: 0, insurance: 0, footFall: Number(retailInput.footFall) || 0 };
   }, [retailInput]);
 
+  // FIXED: W Pharmacy = 0 if Total Pharmacy is 0, else (Total - Clinic)
   const wPharmacyLive = useMemo(() => {
+    const totalPharmacyCash = retailPharmacyLive.cash;
+    const totalPharmacyOnline = retailPharmacyLive.online;
+    const totalPharmacyFF = retailPharmacyLive.footFall;
+    
+    // If Total Pharmacy is 0, W Pharmacy should be 0
+    const isRetailZero = (totalPharmacyCash === 0 && totalPharmacyOnline === 0 && totalPharmacyFF === 0);
+    
+    if (isRetailZero) {
+      return { cash: 0, online: 0, total: 0, footFall: 0, due: 0 };
+    }
+
     const cp = data?.pharmacy || { cash: 0, online: 0, total: 0, footFall: 0 };
     return {
-      cash: retailPharmacyLive.cash - (Number(cp.cash) || 0),
-      online: retailPharmacyLive.online - (Number(cp.online) || 0),
-      total: retailPharmacyLive.total - (Number(cp.total) || 0),
-      footFall: retailPharmacyLive.footFall - (Number(cp.footFall) || 0),
+      cash: totalPharmacyCash - (Number(cp.cash) || 0),
+      online: totalPharmacyOnline - (Number(cp.online) || 0),
+      total: (totalPharmacyCash + totalPharmacyOnline) - (Number(cp.cash) + Number(cp.online)),
+      footFall: totalPharmacyFF - (Number(cp.footFall) || 0),
       due: 0,
     };
   }, [retailPharmacyLive, data]);
 
+  // FIXED: Grand Total = Clinic + Lab + Clinic Pharmacy + W Pharmacy
   const grandTotalLive = useMemo(() => {
     if (!data) return null;
-    const c = data.clinic, l = data.lab, p = data.pharmacy, r = retailPharmacyLive;
+    const c = data.clinic, l = data.lab, cp = data.pharmacy, w = wPharmacyLive;
     
-    let total = c.total + l.total + p.total + r.total;
-    let cash = c.cash + l.cash + p.cash + r.cash;
-    let online = c.online + l.online + p.online + r.online;
-    let due = c.due + l.due + p.due + r.due;
-    let footFall = c.footFall + l.footFall + p.footFall + r.footFall;
+    let total = c.total + l.total + cp.total + w.total;
+    let cash = c.cash + l.cash + cp.cash + w.cash;
+    let online = c.online + l.online + cp.online + w.online;
+    let due = c.due + l.due + cp.due + w.due;
+    let footFall = c.footFall + l.footFall + cp.footFall + w.footFall;
 
     if (data.rows) {
       data.rows.forEach(row => {
@@ -1580,7 +1605,7 @@ export default function RevenueAnalytics() {
     }
 
     return { total, cash, online, due, footFall };
-  }, [data, retailPharmacyLive, customSegments, rowInputs]);
+  }, [data, wPharmacyLive, customSegments, rowInputs]);
 
   const rangeTargets = useMemo(() => {
     const empty = { clinic: 0, lab: 0, clinicPharmacy: 0, retailPharmacy: 0, total: 0, hasAny: false, daysCount: 0, clinicFF: 0, labFF: 0, clinicPharmacyFF: 0, retailPharmacyFF: 0, totalFF: 0 };
@@ -1605,8 +1630,9 @@ export default function RevenueAnalytics() {
       acc.daysCount += 1;
       cur.setDate(cur.getDate() + 1);
     }
-    acc.total = acc.clinic + acc.lab + acc.clinicPharmacy + acc.retailPharmacy;
-    acc.totalFF = acc.clinicFF + acc.labFF + acc.clinicPharmacyFF + acc.retailPharmacyFF;
+    // Target total
+    acc.total = acc.clinic + acc.lab + acc.clinicPharmacy;
+    acc.totalFF = acc.clinicFF + acc.labFF + acc.clinicPharmacyFF;
     return acc;
   }, [fromDate, toDate, allTargets]);
 
@@ -1644,10 +1670,11 @@ export default function RevenueAnalytics() {
       grand: { cash: 0, online: 0, total: 0, footFall: 0 },
       bankCredit: 0, creditedDiff: 0,
     };
-    data.rows.forEach((r) => {
+      data.rows.forEach((r) => {
       const rowKey = r.date || "__total__";
       const ri = rowInputs[rowKey] || {};
       const rCash = Number(ri.cash) || 0, rOnline = Number(ri.online) || 0, rFoot = Number(ri.footFall) || 0;
+      
       acc.clinic.cash += Number(r.clinic.cash) || 0; acc.clinic.online += Number(r.clinic.online) || 0; acc.clinic.total += Number(r.clinic.total) || 0; acc.clinic.footFall += Number(r.clinic.footFall) || 0;
       acc.lab.cash += Number(r.lab.cash) || 0; acc.lab.online += Number(r.lab.online) || 0; acc.lab.total += Number(r.lab.total) || 0; acc.lab.footFall += Number(r.lab.footFall) || 0;
       acc.pharmacy.cash += Number(r.pharmacy.cash) || 0; acc.pharmacy.online += Number(r.pharmacy.online) || 0; acc.pharmacy.total += Number(r.pharmacy.total) || 0; acc.pharmacy.footFall += Number(r.pharmacy.footFall) || 0;
@@ -1660,20 +1687,26 @@ export default function RevenueAnalytics() {
         rowCustomFoot += Number(ri[cat.key]?.footFall) || 0;
       });
 
-      acc.grand.cash += (Number(r.clinic.cash) || 0) + (Number(r.lab.cash) || 0) + (Number(r.pharmacy.cash) || 0) + rCash + rowCustomCash;
-      acc.grand.online += (Number(r.clinic.online) || 0) + (Number(r.lab.online) || 0) + (Number(r.pharmacy.online) || 0) + rOnline + rowCustomOnline;
-      acc.grand.total += (Number(r.clinic.total) || 0) + (Number(r.lab.total) || 0) + (Number(r.pharmacy.total) || 0) + (rCash + rOnline) + (rowCustomCash + rowCustomOnline);
-      acc.grand.footFall += (Number(r.clinic.footFall) || 0) + (Number(r.lab.footFall) || 0) + (Number(r.pharmacy.footFall) || 0) + rFoot + rowCustomFoot;
+      const isRetailZero = (rCash === 0 && rOnline === 0 && rFoot === 0);
+      const wCashVal = isRetailZero ? 0 : (rCash - (Number(r.pharmacy.cash) || 0));
+      const wOnlineVal = isRetailZero ? 0 : (rOnline - (Number(r.pharmacy.online) || 0));
+
+      acc.grand.cash += (Number(r.clinic.cash) || 0) + (Number(r.lab.cash) || 0) + (Number(r.pharmacy.cash) || 0) + wCashVal + rowCustomCash;
+      acc.grand.online += (Number(r.clinic.online) || 0) + (Number(r.lab.online) || 0) + (Number(r.pharmacy.online) || 0) + wOnlineVal + rowCustomOnline;
+      acc.grand.total += (Number(r.clinic.total) || 0) + (Number(r.lab.total) || 0) + (Number(r.pharmacy.total) || 0) + (wCashVal + wOnlineVal) + (rowCustomCash + rowCustomOnline);
+      acc.grand.footFall += (Number(r.clinic.footFall) || 0) + (Number(r.lab.footFall) || 0) + (Number(r.pharmacy.footFall) || 0) + (isRetailZero ? 0 : (rFoot - (Number(r.pharmacy.footFall) || 0))) + rowCustomFoot;
       
       const rBC = ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0);
       acc.bankCredit += rBC;
     });
-    // W Pharmacy totals = Total Pharmacy - Clinic Pharmacy
-    acc.wPharmacy.cash = acc.retail.cash - acc.pharmacy.cash;
-    acc.wPharmacy.online = acc.retail.online - acc.pharmacy.online;
-    acc.wPharmacy.total = acc.retail.total - acc.pharmacy.total;
-    acc.wPharmacy.footFall = acc.retail.footFall - acc.pharmacy.footFall;
-    acc.creditedDiff = acc.bankCredit - acc.grand.total;
+    
+    const isRetailZeroTotal = (acc.retail.cash === 0 && acc.retail.online === 0 && acc.retail.footFall === 0);
+    acc.wPharmacy.cash = isRetailZeroTotal ? 0 : (acc.retail.cash - acc.pharmacy.cash);
+    acc.wPharmacy.online = isRetailZeroTotal ? 0 : (acc.retail.online - acc.pharmacy.online);
+    acc.wPharmacy.total = isRetailZeroTotal ? 0 : (acc.retail.total - acc.pharmacy.total);
+    acc.wPharmacy.footFall = isRetailZeroTotal ? 0 : (acc.retail.footFall - acc.pharmacy.footFall);
+    
+    acc.creditedDiff = acc.bankCredit - acc.grand.online;
     return acc;
   }, [data, rowInputs, customSegments]);
 
@@ -1687,7 +1720,8 @@ export default function RevenueAnalytics() {
       if (/^\d{4}-\d{2}$/.test(rowKey)) { const [y, m] = rowKey.split("-").map(Number); rowFrom = fmtDate(new Date(y, m - 1, 1)); rowTo = fmtDate(new Date(y, m, 0)); }
       else { rowFrom = rowKey; rowTo = rowKey; }
 
-      const diff = existingBC - rowGrandTotal;
+      // Diff is now calculated against the Online portion of the row grand total
+      const diff = existingBC - (Number(rowInputs[rowKey]?.online) + (Number(data?.clinic?.online)||0) + (Number(data?.lab?.online)||0) + (Number(data?.pharmacy?.online)||0)); 
       const absDiff = Math.abs(diff);
       let diffStatus = "—";
       if (existingBC && rowGrandTotal) { if (absDiff < 0.5) diffStatus = "MATCHED"; else if (diff > 0) diffStatus = "CREDIT MORE"; else diffStatus = "CREDIT LESS"; }
@@ -1724,7 +1758,8 @@ export default function RevenueAnalytics() {
     let rowFrom, rowTo;
     if (/^\d{4}-\d{2}$/.test(rowKey)) { const [y, m] = rowKey.split("-").map(Number); rowFrom = fmtDate(new Date(y, m - 1, 1)); rowTo = fmtDate(new Date(y, m, 0)); }
     else { rowFrom = rowKey; rowTo = rowKey; }
-    const diff = bankCreditNum - rowGrandTotal;
+    // Diff is now calculated against the Online portion
+    const diff = bankCreditNum - (Number(retailData.online) + (Number(data?.clinic?.online)||0) + (Number(data?.lab?.online)||0) + (Number(data?.pharmacy?.online)||0));
     const absDiff = Math.abs(diff);
     let diffStatus = "—";
     if (bankCreditNum && rowGrandTotal) { if (absDiff < 0.5) diffStatus = "MATCHED"; else if (diff > 0) diffStatus = "CREDIT MORE"; else diffStatus = "CREDIT LESS"; }
@@ -1750,16 +1785,17 @@ export default function RevenueAnalytics() {
 
   const handleConfirmSave = async () => {
     const bankCreditNum = parseFloat(bankCredit) || 0;
-    const grandTotalNum = grandTotalLive?.total || 0;
-    const diff = bankCreditNum - grandTotalNum;
+    // Diff is now calculated against the total ONLINE instead of grand total
+    const onlineTotalNum = grandTotalLive?.online || 0;
+    const diff = bankCreditNum - onlineTotalNum;
     const absDiff = Math.abs(diff);
     let diffStatus = "—";
-    if (bankCreditNum && grandTotalNum) { if (absDiff < 0.5) diffStatus = "MATCHED"; else if (diff > 0) diffStatus = "CREDIT MORE"; else diffStatus = "CREDIT LESS"; }
+    if (bankCreditNum && onlineTotalNum) { if (absDiff < 0.5) diffStatus = "MATCHED"; else if (diff > 0) diffStatus = "CREDIT MORE"; else diffStatus = "CREDIT LESS"; }
     setSavingBankCredit(true);
     try {
       const res = await axios.post(`${ANALYTICS_API_BASE}/save-bank-credit`, {
         fromDate, toDate, rowKey: "__total__",
-        bankCredit: bankCreditNum, grandTotal: grandTotalNum,
+        bankCredit: bankCreditNum, grandTotal: grandTotalLive?.total || 0,
         creditedDiff: diff, diffStatus, savedBy: "Admin",
         retailPharmacy: retailPharmacyLive,
       });
@@ -1780,7 +1816,8 @@ export default function RevenueAnalytics() {
 
   const handleExportCSV = () => {
     if (!data || !grandTotalLive) return;
-    const diff = bankCreditNum - (grandTotalLive.total || 0);
+    // Export now uses online difference
+    const diff = bankCreditNum - (grandTotalLive.online || 0);
     const diffLabel = !bankCreditNum ? "—" : Math.abs(diff) < 0.5 ? "MATCHED" : diff > 0 ? "CREDIT MORE" : "CREDIT LESS";
     const rowCells = (r) => {
       const rowKey = r.date || "__total__";
@@ -1789,19 +1826,21 @@ export default function RevenueAnalytics() {
       const rRetail = { cash: rCash, online: rOnline, total: rCash + rOnline, footFall: rFoot };
       const rBC = ri.savedBankCredit != null ? Number(ri.savedBankCredit) : 0;
       
-      // W Pharmacy = Total Pharmacy - Clinic Pharmacy
       const wCash = rRetail.cash - (Number(r.pharmacy.cash) || 0);
       const wOnline = rRetail.online - (Number(r.pharmacy.online) || 0);
       const wTotal = rRetail.total - (Number(r.pharmacy.total) || 0);
       const wFoot = rRetail.footFall - (Number(r.pharmacy.footFall) || 0);
 
       const rGrand = {
-        cash: r.clinic.cash + r.lab.cash + r.pharmacy.cash + rRetail.cash,
-        online: r.clinic.online + r.lab.online + r.pharmacy.online + rRetail.online,
-        total: r.clinic.total + r.lab.total + r.pharmacy.total + rRetail.total,
-        footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + rRetail.footFall,
+        cash: r.clinic.cash + r.lab.cash + r.pharmacy.cash + (rRetail.cash - (Number(r.pharmacy.cash) || 0)),
+        online: r.clinic.online + r.lab.online + r.pharmacy.online + (rRetail.online - (Number(r.pharmacy.online) || 0)),
+        total: r.clinic.total + r.lab.total + r.pharmacy.total + (rRetail.total - (Number(r.pharmacy.total) || 0)),
+        footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (rRetail.footFall - (Number(r.pharmacy.footFall) || 0)),
       };
-      const rDiff = rBC - rGrand.total;
+      
+      // Diff is calculated against online
+      const rDiff = rBC - rGrand.online;
+      
       const rDiffLabel = !rBC ? "—" : Math.abs(rDiff) < 0.5 ? "MATCHED" : rDiff > 0 ? "CREDIT MORE" : "CREDIT LESS";
       const isMonthly = r.year && r.month;
       const dateLabel = rowKey === "__total__" ? `${formatDateToDDMMYYYY(fromDate)} – ${formatDateToDDMMYYYY(toDate)}` : isMonthly ? `${MONTHS[r.month - 1].slice(0, 3)} ${r.year}` : formatDateToDDMMYYYY(r.date);
@@ -1986,17 +2025,19 @@ export default function RevenueAnalytics() {
     const rRetail = { cash: rCash, online: rOnline, total: rCash + rOnline, footFall: rFoot };
     const rBC = isTotal ? (savedBankCredit !== null ? savedBankCredit : (parseFloat(bankCredit) || 0)) : (ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0));
 
-    // W Pharmacy = Total Pharmacy - Clinic Pharmacy
-    const wCash = rRetail.cash - (Number(r.pharmacy.cash) || 0);
-    const wOnline = rRetail.online - (Number(r.pharmacy.online) || 0);
-    const wTotal = rRetail.total - (Number(r.pharmacy.total) || 0);
-    const wFoot = rRetail.footFall - (Number(r.pharmacy.footFall) || 0);
+      // W Pharmacy calculate hota hai Total - Clinic
+    const isRetailZero = (rCash === 0 && rOnline === 0 && rFoot === 0);
+    const wCash = isRetailZero ? 0 : rCash - (Number(r.pharmacy.cash) || 0);
+    const wOnline = isRetailZero ? 0 : rOnline - (Number(r.pharmacy.online) || 0);
+    const wTotal = isRetailZero ? 0 : rRetail.total - (Number(r.pharmacy.total) || 0);
+    const wFoot = isRetailZero ? 0 : rFoot - (Number(r.pharmacy.footFall) || 0);
 
+    // AGAR Total Pharmacy 0 hai, toh Grand Total mein minus nahi hoga (0 hi judega)
     let rGrand = {
-      cash: r.clinic.cash + r.lab.cash + r.pharmacy.cash + rRetail.cash,
-      online: r.clinic.online + r.lab.online + r.pharmacy.online + rRetail.online,
-      total: r.clinic.total + r.lab.total + r.pharmacy.total + rRetail.total,
-      footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + rRetail.footFall,
+      cash: r.clinic.cash + r.lab.cash + r.pharmacy.cash + (isRetailZero ? 0 : wCash),
+      online: r.clinic.online + r.lab.online + r.pharmacy.online + (isRetailZero ? 0 : wOnline),
+      total: r.clinic.total + r.lab.total + r.pharmacy.total + (isRetailZero ? 0 : wTotal),
+      footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (isRetailZero ? 0 : wFoot),
     };
     customSegments.forEach(cat => {
       const cCash = isTotal ? (Number(retailInput[`${cat.key}_cash`]) || 0) : (Number(ri[cat.key]?.cash) || 0);
@@ -2009,7 +2050,8 @@ export default function RevenueAnalytics() {
       rGrand.footFall += cFoot;
     });
 
-    const rDiff = rBC - rGrand.total;
+    // Calculate Diff against ONLINE
+    const rDiff = rBC - rGrand.online; 
     const rDiffAbs = Math.abs(rDiff);
     const rDiffLabel = !rBC ? "—" : rDiffAbs < 0.5 ? "MATCHED" : rDiff > 0 ? "CREDIT MORE" : "CREDIT LESS";
     const rDiffColor = rDiffLabel === "MATCHED" ? "text-emerald-700" : rDiffLabel === "CREDIT MORE" ? "text-blue-700" : rDiffLabel === "CREDIT LESS" ? "text-rose-700" : "text-slate-400";
@@ -2027,7 +2069,7 @@ export default function RevenueAnalytics() {
     const hasUnsavedRetailChange = rCash !== savedCash || rOnline !== savedOnline || rFoot !== savedFoot;
     
     // Custom classes for compact inputs
-    const compactInputCls = "w-[45px] text-center text-xs font-bold bg-white border border-amber-400 rounded px-0.5 py-0.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 disabled:bg-slate-100 disabled:text-slate-500";
+    const compactInputCls = "w-[70px] text-center text-xs font-bold bg-white border border-amber-400 rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 disabled:bg-slate-100 disabled:text-slate-500";
 
     return (
       <tr key={rowKey} className={`hover:bg-slate-50 ${isTotal ? "bg-amber-50/60 border-t-2 border-amber-300" : isSubRow ? "bg-slate-50/50" : ""}`}>
@@ -2068,7 +2110,7 @@ export default function RevenueAnalytics() {
         <td className="px-2 py-3 text-center font-bold text-cyan-800 border-r border-slate-200 bg-cyan-50/40 text-xs">{wFoot}</td>
 
         {/* Total Pharmacy inputs (COMPACT) */}
-        <td className="px-1 py-2 border-r border-slate-100 bg-amber-50/40 w-[50px]">
+        <td className="px-1 py-2 border-r border-slate-100 bg-amber-50/40 w-[75px]">
           <input type="number" min="0" placeholder="0" disabled={!isTotal && isRetailSaved}
             value={isTotal ? retailInput.cash : (ri.cash || "")}
             onChange={(e) => {
@@ -2078,7 +2120,7 @@ export default function RevenueAnalytics() {
             }}
             className={compactInputCls} />
         </td>
-        <td className="px-1 py-2 border-r border-slate-100 bg-amber-50/40 w-[50px]">
+        <td className="px-1 py-2 border-r border-slate-100 bg-amber-50/40 w-[75px]">
           <input type="number" min="0" placeholder="0" disabled={!isTotal && isRetailSaved}
             value={isTotal ? retailInput.online : (ri.online || "")}
             onChange={(e) => {
@@ -2090,7 +2132,7 @@ export default function RevenueAnalytics() {
         </td>
         
         {/* Total Pharmacy Total (with integrated Save/Edit icon) (COMPACT) */}
-        <td className="px-0.5 py-2 text-center border-r border-slate-100 bg-amber-50/40 w-[80px]">
+        <td className="px-1 py-2 text-center border-r border-slate-100 bg-amber-50/40 w-[110px]">
           <div className="flex items-center justify-center gap-0.5">
             <span className="font-bold text-amber-700 text-xs">{fmt(rRetail.total)}</span>
             {!isTotal && (
@@ -2107,7 +2149,7 @@ export default function RevenueAnalytics() {
           </div>
         </td>
 
-        <td className="px-1 py-2 border-r border-slate-200 bg-amber-50/40 w-[50px]">
+        <td className="px-1 py-2 border-r border-slate-200 bg-amber-50/40 w-[75px]">
           <input type="number" min="0" placeholder="0" disabled={!isTotal && isRetailSaved}
             value={isTotal ? retailInput.footFall : (ri.footFall || "")}
             onChange={(e) => {
@@ -2125,7 +2167,7 @@ export default function RevenueAnalytics() {
 
           return (
             <React.Fragment key={cat.key}>
-              <td className="px-1 py-2 border-r border-slate-100 bg-white w-[50px]">
+              <td className="px-1 py-2 border-r border-slate-100 bg-white w-[70px]">
                 <input type="number" min="0" placeholder="0"
                   value={isTotal ? (retailInput[`${cat.key}_cash`] || "") : (ri[cat.key]?.cash || "")}
                   onChange={(e) => {
@@ -2135,7 +2177,7 @@ export default function RevenueAnalytics() {
                   }}
                   className={compactInputCls} />
               </td>
-              <td className="px-1 py-2 border-r border-slate-100 bg-white w-[50px]">
+              <td className="px-1 py-2 border-r border-slate-100 bg-white w-[70px]">
                 <input type="number" min="0" placeholder="0"
                   value={isTotal ? (retailInput[`${cat.key}_online`] || "") : (ri[cat.key]?.online || "")}
                   onChange={(e) => {
@@ -2145,10 +2187,10 @@ export default function RevenueAnalytics() {
                   }}
                   className={compactInputCls} />
               </td>
-              <td className="px-2 py-3 text-center font-bold text-slate-700 border-r border-slate-100 bg-white text-xs w-[50px]">
+              <td className="px-2 py-3 text-center font-bold text-slate-700 border-r border-slate-100 bg-white text-xs w-[70px]">
                 {fmt(cTotal)}
               </td>
-              <td className="px-1 py-2 border-r border-slate-100 bg-white w-[50px]">
+              <td className="px-1 py-2 border-r border-slate-100 bg-white w-[70px]">
                 <input type="number" min="0" placeholder="0"
                   value={isTotal ? (retailInput[`${cat.key}_ff`] || "") : (ri[cat.key]?.footFall || "")}
                   onChange={(e) => {
@@ -2203,8 +2245,8 @@ export default function RevenueAnalytics() {
             return (
               <>
                 <div className="flex items-center gap-1 justify-center">
-                  <input type="number" min="0" placeholder="0"
-                    value={isTotal ? bankCredit : (ri.bankCredit || "")}
+                                   <input type="number" min="0" placeholder="0"
+                    value={(isTotal ? bankCredit : ri.bankCredit) === "0" || (isTotal ? bankCredit : ri.bankCredit) === 0 ? "" : (isTotal ? bankCredit : ri.bankCredit) || ""}
                     onChange={(e) => {
                       const v = e.target.value;
                       if (isTotal) setBankCredit(v);
@@ -2289,7 +2331,7 @@ export default function RevenueAnalytics() {
             <div className="p-5 space-y-3">
               <div className="bg-purple-50 rounded-lg border border-purple-200 p-3">
                 <div className="flex items-center justify-between text-xs"><span className="text-slate-600 font-medium">Bank Credit:</span><span className="font-extrabold text-purple-700 text-base">{fmtAmt(parseFloat(bankCredit) || 0)}</span></div>
-                <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-purple-200"><span className="text-slate-600 font-medium">Grand Total:</span><span className="font-bold text-slate-700">{fmtAmt(grandTotalLive?.total || 0)}</span></div>
+                <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-purple-200"><span className="text-slate-600 font-medium">Online Total:</span><span className="font-bold text-slate-700">{fmtAmt(grandTotalLive?.online || 0)}</span></div>
               </div>
               <p className="text-sm text-slate-700 text-center font-medium m-0">Do you want to save this bank credit?</p>
             </div>
@@ -2416,7 +2458,7 @@ export default function RevenueAnalytics() {
 
             <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
-                <table className="w-full text-xs" style={{ minWidth: `${1000 + customSegments.length * 200}px` }}>
+                <table className="w-full text-xs" style={{ minWidth: `${1100 + customSegments.length * 260}px` }}>
                   <thead>
                     <tr>
                       <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-blue-700 bg-blue-800" rowSpan={2}>Date</th>
@@ -2462,17 +2504,17 @@ export default function RevenueAnalytics() {
                       <th className="px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-cyan-100 bg-cyan-50">Total</th>
                       <th className="px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-cyan-200 bg-cyan-50">FootFall</th>
 
-                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50 w-[50px]">Cash</th>
-                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50 w-[50px]">Online</th>
-                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50 w-[80px]">Total</th>
-                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-200 bg-amber-50 w-[50px]">FootFall</th>
+                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50 w-[75px]">Cash</th>
+                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50 w-[75px]">Online</th>
+                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50 w-[110px]">Total</th>
+                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-200 bg-amber-50 w-[75px]">FootFall</th>
 
                       {customSegments.map(cat => (
                         <React.Fragment key={cat.key}>
-                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[50px]`}>Cash</th>
-                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[50px]`}>Online</th>
-                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[50px]`}>Total</th>
-                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[50px]`}>FootFall</th>
+                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[70px]`}>Cash</th>
+                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[70px]`}>Online</th>
+                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[70px]`}>Total</th>
+                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[70px]`}>FootFall</th>
                         </React.Fragment>
                       ))}
 

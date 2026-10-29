@@ -609,6 +609,7 @@ export default function RetailPharmacyAnalytics() {
     { v: "all", l: "All" },
   ];
 
+  // 🔥 FIX: Preserve existing bankCredit and sent proper diff/status
   const handleSaveRow = async (rowKey, customData = null) => {
     let rCash, rOnline, rFoot, rTotal;
     
@@ -622,12 +623,28 @@ export default function RetailPharmacyAnalytics() {
       rTotal = rCash + rOnline;
     }
 
+    // Find existing bank credit for this row (to prevent overwriting to 0)
+    const existingRow = data?.rows?.find(r => r.date === rowKey);
+    const existingBC = existingRow?.bankCredit != null ? Number(existingRow.bankCredit) : 0;
+
+    // Calculate status if existing BC is present
+    let diff = 0;
+    let diffStatus = "—";
+    if (existingBC > 0) {
+      // Since this page only cares about Retail Online, we compare it with existing BC
+      diff = existingBC - rOnline;
+      const absDiff = Math.abs(diff);
+      if (absDiff < 0.5) diffStatus = "MATCHED";
+      else if (diff > 0) diffStatus = "CREDIT MORE";
+      else diffStatus = "CREDIT LESS";
+    }
+
     setSavingRowKey(rowKey);
     try {
       const res = await axios.post(`${ANALYTICS_API_BASE}/save-bank-credit`, {
         fromDate: rowKey, toDate: rowKey, rowKey,
-        bankCredit: 0, grandTotal: rTotal,
-        creditedDiff: 0, diffStatus: "—", savedBy: "Admin",
+        bankCredit: existingBC, grandTotal: rTotal,
+        creditedDiff: diff, diffStatus, savedBy: "Admin",
         retailPharmacy: { cash: rCash, online: rOnline, footFall: rFoot, total: rTotal },
       });
       if (res.data?.success) {
