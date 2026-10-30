@@ -136,7 +136,7 @@ export default function TimelyOnePrivacyPolicy() {
               
               <p>
                 Contact us:<br />
-                Email: <a href="mailto:hello@timelyhealth.in" className="text-blue-600 hover:underline">hello@timelyhealth.in</a>
+                Email: <a href="mailto:info@timelyhealth.in" className="text-blue-600 hover:underline">info@timelyhealth.in</a>
               </p>
               <p className="mt-1">
                 Or contact your company HR / admin for employment-related data requests.

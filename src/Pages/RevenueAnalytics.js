@@ -93,7 +93,7 @@ const formatDateToDDMMYYYY = (dateStr) => {
   if (!dateStr) return "";
   try {
     const [y, m, d] = dateStr.split("-");
-    return `${d}/${m}/${y}`;
+    return `${d}/${m}/${y.slice(-2)}`; // Yahan y.slice(-2) lagaya hai
   } catch { return dateStr; }
 };
 
@@ -123,7 +123,7 @@ const normalizeAnalyticsData = (raw) => {
 
   const rpFromBank = raw.bankCredit?.retailPharmacy || {};
   const rpFromCb = cb.retailPharmacy || {};
-  
+
   let rpTotal = Number(rpFromCb.total ?? rpFromBank.total) || 0;
   let rpCash = Number(rpFromCb.cash ?? rpFromBank.cash) || 0;
   let rpOnline = Number(rpFromCb.online ?? rpFromBank.online) || 0;
@@ -508,7 +508,7 @@ const AddTargetModal = ({ isOpen, onClose, onSave, saving, editTarget = null }) 
   const [newSegName, setNewSegName] = useState("");
   const [newSegCol1, setNewSegCol1] = useState("SALES");
   const [newSegCol2, setNewSegCol2] = useState("FOOTFALL");
-  
+
   const [newSegAssoc, setNewSegAssoc] = useState("Pharmacy");
   const [newSegCard, setNewSegCard] = useState(false);
 
@@ -562,13 +562,13 @@ const AddTargetModal = ({ isOpen, onClose, onSave, saving, editTarget = null }) 
     if (!newSegName.trim()) return;
     const key = `custom_${Date.now()}`;
     const color = COLOR_PALETTE[categories.length % COLOR_PALETTE.length].color;
-    
-    const newCat = { 
-      key, 
-      label: newSegName.trim(), 
-      color, 
-      short: newSegName.slice(0, 2).toUpperCase(), 
-      col1: newSegCol1.trim() || "SALES", 
+
+    const newCat = {
+      key,
+      label: newSegName.trim(),
+      color,
+      short: newSegName.slice(0, 2).toUpperCase(),
+      col1: newSegCol1.trim() || "SALES",
       col2: newSegCol2.trim() || "FOOTFALL",
       associatedWith: newSegAssoc,
       cardNeeded: newSegCard
@@ -675,8 +675,8 @@ const AddTargetModal = ({ isOpen, onClose, onSave, saving, editTarget = null }) 
           </div>
 
           <div className="border border-purple-200 rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+            <div className="overflow-x-auto overflow-y-auto max-h-[75vh]">
+              <table className="w-full text-xs">
                 <thead>
                   <tr>
                     <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-purple-700 bg-purple-700 sticky left-0 z-20 whitespace-nowrap w-[80px]" rowSpan={2}>Month</th>
@@ -1290,7 +1290,7 @@ export default function RevenueAnalytics() {
   const [savedBankCredit, setSavedBankCredit] = useState(null);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [savingBankCredit, setSavingBankCredit] = useState(false);
-  
+
   const [isEditingTotalBC, setIsEditingTotalBC] = useState(false);
 
   const [retailInput, setRetailInput] = useState({ cash: "", online: "", footFall: "" });
@@ -1436,6 +1436,10 @@ export default function RevenueAnalytics() {
 
     setLoading(true);
     setError(null);
+    setData(null);
+    setRowInputs({}); // 👈 YEH NAYI LINE ADD KAREIN
+    setBankCredit("");
+    setSavedBankCredit(null);
     try {
       const url = `${ANALYTICS_API_BASE}/revenue-analytics?from=${queryFrom}&to=${queryTo}`;
       const res = await axios.get(url);
@@ -1450,7 +1454,7 @@ export default function RevenueAnalytics() {
         (normalized.rows || []).forEach((r) => {
           const key = r.date;
           const hasRetailData = (Number(r.retailPharmacy?.cash) > 0) || (Number(r.retailPharmacy?.online) > 0) || (Number(r.retailPharmacy?.footFall) > 0);
-          
+
           const hasBankCredit = r.bankCredit != null && Number(r.bankCredit) > 0;
 
           nextRowInputs[key] = {
@@ -1468,7 +1472,7 @@ export default function RevenueAnalytics() {
           };
         });
         setRowInputs(nextRowInputs);
-        
+
         setIsEditingTotalBC(false);
 
         if (res.data.bankCredit && Number(res.data.bankCredit.bankCredit) > 0) {
@@ -1491,7 +1495,7 @@ export default function RevenueAnalytics() {
     }
   }, [fromDate, toDate]);
 
-    useEffect(() => {
+  useEffect(() => {
     // Page load hote hi Default Today set karo
     const nowD = new Date();
     setActivePreset("today");
@@ -1559,10 +1563,10 @@ export default function RevenueAnalytics() {
     const totalPharmacyCash = retailPharmacyLive.cash;
     const totalPharmacyOnline = retailPharmacyLive.online;
     const totalPharmacyFF = retailPharmacyLive.footFall;
-    
+
     // If Total Pharmacy is 0, W Pharmacy should be 0
     const isRetailZero = (totalPharmacyCash === 0 && totalPharmacyOnline === 0 && totalPharmacyFF === 0);
-    
+
     if (isRetailZero) {
       return { cash: 0, online: 0, total: 0, footFall: 0, due: 0 };
     }
@@ -1581,7 +1585,7 @@ export default function RevenueAnalytics() {
   const grandTotalLive = useMemo(() => {
     if (!data) return null;
     const c = data.clinic, l = data.lab, cp = data.pharmacy, w = wPharmacyLive;
-    
+
     let total = c.total + l.total + cp.total + w.total;
     let cash = c.cash + l.cash + cp.cash + w.cash;
     let online = c.online + l.online + cp.online + w.online;
@@ -1595,7 +1599,7 @@ export default function RevenueAnalytics() {
           const cCash = Number(ri[cat.key]?.cash) || 0;
           const cOnline = Number(ri[cat.key]?.online) || 0;
           const cFoot = Number(ri[cat.key]?.footFall) || 0;
-          
+
           cash += cCash;
           online += cOnline;
           total += (cCash + cOnline);
@@ -1658,28 +1662,28 @@ export default function RevenueAnalytics() {
     const sums = sumCategoryFromRows(filteredRows);
     return { ...sums, hasData: filteredRows.length > 0 };
   }, [data, fromDate, toDate]);
-
   const tableTotal = useMemo(() => {
     if (!data || !data.rows || data.rows.length === 0) return null;
     const acc = {
-      clinic: { cash: 0, online: 0, total: 0, footFall: 0 },
-      lab: { cash: 0, online: 0, total: 0, footFall: 0 },
-      pharmacy: { cash: 0, online: 0, total: 0, footFall: 0 },
+      clinic: { cash: 0, online: 0, total: 0, footFall: 0, due: 0 },
+      lab: { cash: 0, online: 0, total: 0, footFall: 0, due: 0 },
+      pharmacy: { cash: 0, online: 0, total: 0, footFall: 0, due: 0 },
       retail: { cash: 0, online: 0, total: 0, footFall: 0 },
-      wPharmacy: { cash: 0, online: 0, total: 0, footFall: 0 },
-      grand: { cash: 0, online: 0, total: 0, footFall: 0 },
+      wPharmacy: { cash: 0, online: 0, total: 0, footFall: 0, due: 0 },
+      grand: { cash: 0, online: 0, total: 0, footFall: 0, due: 0 },
       bankCredit: 0, creditedDiff: 0,
+      statusSummary: { less: { count: 0, amt: 0 }, more: { count: 0, amt: 0 }, matched: { count: 0 } },
     };
-      data.rows.forEach((r) => {
+    data.rows.forEach((r) => {
       const rowKey = r.date || "__total__";
       const ri = rowInputs[rowKey] || {};
       const rCash = Number(ri.cash) || 0, rOnline = Number(ri.online) || 0, rFoot = Number(ri.footFall) || 0;
-      
-      acc.clinic.cash += Number(r.clinic.cash) || 0; acc.clinic.online += Number(r.clinic.online) || 0; acc.clinic.total += Number(r.clinic.total) || 0; acc.clinic.footFall += Number(r.clinic.footFall) || 0;
-      acc.lab.cash += Number(r.lab.cash) || 0; acc.lab.online += Number(r.lab.online) || 0; acc.lab.total += Number(r.lab.total) || 0; acc.lab.footFall += Number(r.lab.footFall) || 0;
-      acc.pharmacy.cash += Number(r.pharmacy.cash) || 0; acc.pharmacy.online += Number(r.pharmacy.online) || 0; acc.pharmacy.total += Number(r.pharmacy.total) || 0; acc.pharmacy.footFall += Number(r.pharmacy.footFall) || 0;
+
+      acc.clinic.cash += Number(r.clinic.cash) || 0; acc.clinic.online += Number(r.clinic.online) || 0; acc.clinic.total += Number(r.clinic.total) || 0; acc.clinic.footFall += Number(r.clinic.footFall) || 0; acc.clinic.due += Number(r.clinic.due) || 0;
+      acc.lab.cash += Number(r.lab.cash) || 0; acc.lab.online += Number(r.lab.online) || 0; acc.lab.total += Number(r.lab.total) || 0; acc.lab.footFall += Number(r.lab.footFall) || 0; acc.lab.due += Number(r.lab.due) || 0;
+      acc.pharmacy.cash += Number(r.pharmacy.cash) || 0; acc.pharmacy.online += Number(r.pharmacy.online) || 0; acc.pharmacy.total += Number(r.pharmacy.total) || 0; acc.pharmacy.footFall += Number(r.pharmacy.footFall) || 0; acc.pharmacy.due += Number(r.pharmacy.due) || 0;
       acc.retail.cash += rCash; acc.retail.online += rOnline; acc.retail.total += rCash + rOnline; acc.retail.footFall += rFoot;
-      
+
       let rowCustomCash = 0, rowCustomOnline = 0, rowCustomFoot = 0;
       customSegments.forEach(cat => {
         rowCustomCash += Number(ri[cat.key]?.cash) || 0;
@@ -1695,17 +1699,37 @@ export default function RevenueAnalytics() {
       acc.grand.online += (Number(r.clinic.online) || 0) + (Number(r.lab.online) || 0) + (Number(r.pharmacy.online) || 0) + wOnlineVal + rowCustomOnline;
       acc.grand.total += (Number(r.clinic.total) || 0) + (Number(r.lab.total) || 0) + (Number(r.pharmacy.total) || 0) + (wCashVal + wOnlineVal) + (rowCustomCash + rowCustomOnline);
       acc.grand.footFall += (Number(r.clinic.footFall) || 0) + (Number(r.lab.footFall) || 0) + (Number(r.pharmacy.footFall) || 0) + (isRetailZero ? 0 : (rFoot - (Number(r.pharmacy.footFall) || 0))) + rowCustomFoot;
-      
+
       const rBC = ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0);
       acc.bankCredit += rBC;
+
+      // Row-wise status summary (Credit Less / Credit More / Matched)
+      if (rBC) {
+        const rowGrandOnline = (Number(r.clinic.online) || 0) + (Number(r.lab.online) || 0) + (Number(r.pharmacy.online) || 0) + wOnlineVal + rowCustomOnline;
+        const rowDiff = rBC - rowGrandOnline;
+        if (Math.abs(rowDiff) < 0.5) acc.statusSummary.matched.count += 1;
+        else if (rowDiff > 0) { acc.statusSummary.more.count += 1; acc.statusSummary.more.amt += rowDiff; }
+        else { acc.statusSummary.less.count += 1; acc.statusSummary.less.amt += Math.abs(rowDiff); }
+      }
     });
-    
+
+    // 🔥 YAHAN FIX KIYA HAI: Clinic aur Lab ka total Cash + Online kar diya
+    acc.clinic.total = acc.clinic.cash + acc.clinic.online;
+    acc.lab.total = acc.lab.cash + acc.lab.online;
+    acc.pharmacy.total = acc.pharmacy.cash + acc.pharmacy.online;
+
     const isRetailZeroTotal = (acc.retail.cash === 0 && acc.retail.online === 0 && acc.retail.footFall === 0);
     acc.wPharmacy.cash = isRetailZeroTotal ? 0 : (acc.retail.cash - acc.pharmacy.cash);
     acc.wPharmacy.online = isRetailZeroTotal ? 0 : (acc.retail.online - acc.pharmacy.online);
     acc.wPharmacy.total = isRetailZeroTotal ? 0 : (acc.retail.total - acc.pharmacy.total);
     acc.wPharmacy.footFall = isRetailZeroTotal ? 0 : (acc.retail.footFall - acc.pharmacy.footFall);
-    
+    acc.wPharmacy.due = 0;
+
+    // 🔥 Grand Total ko bhi sahi kar diya (Cash + Online)
+    acc.grand.total = acc.grand.cash + acc.grand.online;
+    // Grand Due = Clinic + Lab + Clinic Pharmacy + W Pharmacy due
+    acc.grand.due = acc.clinic.due + acc.lab.due + acc.pharmacy.due + acc.wPharmacy.due;
+
     acc.creditedDiff = acc.bankCredit - acc.grand.online;
     return acc;
   }, [data, rowInputs, customSegments]);
@@ -1721,7 +1745,7 @@ export default function RevenueAnalytics() {
       else { rowFrom = rowKey; rowTo = rowKey; }
 
       // Diff is now calculated against the Online portion of the row grand total
-      const diff = existingBC - (Number(rowInputs[rowKey]?.online) + (Number(data?.clinic?.online)||0) + (Number(data?.lab?.online)||0) + (Number(data?.pharmacy?.online)||0)); 
+      const diff = existingBC - (Number(rowInputs[rowKey]?.online) + (Number(data?.clinic?.online) || 0) + (Number(data?.lab?.online) || 0) + (Number(data?.pharmacy?.online) || 0));
       const absDiff = Math.abs(diff);
       let diffStatus = "—";
       if (existingBC && rowGrandTotal) { if (absDiff < 0.5) diffStatus = "MATCHED"; else if (diff > 0) diffStatus = "CREDIT MORE"; else diffStatus = "CREDIT LESS"; }
@@ -1734,15 +1758,15 @@ export default function RevenueAnalytics() {
       });
 
       if (res.data?.success) {
-        setRowInputs((p) => ({ 
-          ...p, 
-          [rowKey]: { 
-            ...(p[rowKey] || {}), 
+        setRowInputs((p) => ({
+          ...p,
+          [rowKey]: {
+            ...(p[rowKey] || {}),
             savedRetail: true,
             savedRetailCash: retailData.cash,
             savedRetailOnline: retailData.online,
             savedRetailFootFall: retailData.footFall
-          } 
+          }
         }));
         showToast("✅ Total Pharmacy saved!", "success");
       } else { showToast(res.data?.message || "Failed to save retail", "error"); }
@@ -1759,7 +1783,7 @@ export default function RevenueAnalytics() {
     if (/^\d{4}-\d{2}$/.test(rowKey)) { const [y, m] = rowKey.split("-").map(Number); rowFrom = fmtDate(new Date(y, m - 1, 1)); rowTo = fmtDate(new Date(y, m, 0)); }
     else { rowFrom = rowKey; rowTo = rowKey; }
     // Diff is now calculated against the Online portion
-    const diff = bankCreditNum - (Number(retailData.online) + (Number(data?.clinic?.online)||0) + (Number(data?.lab?.online)||0) + (Number(data?.pharmacy?.online)||0));
+    const diff = bankCreditNum - (Number(retailData.online) + (Number(data?.clinic?.online) || 0) + (Number(data?.lab?.online) || 0) + (Number(data?.pharmacy?.online) || 0));
     const absDiff = Math.abs(diff);
     let diffStatus = "—";
     if (bankCreditNum && rowGrandTotal) { if (absDiff < 0.5) diffStatus = "MATCHED"; else if (diff > 0) diffStatus = "CREDIT MORE"; else diffStatus = "CREDIT LESS"; }
@@ -1825,7 +1849,7 @@ export default function RevenueAnalytics() {
       const rCash = Number(ri.cash) || 0, rOnline = Number(ri.online) || 0, rFoot = Number(ri.footFall) || 0;
       const rRetail = { cash: rCash, online: rOnline, total: rCash + rOnline, footFall: rFoot };
       const rBC = ri.savedBankCredit != null ? Number(ri.savedBankCredit) : 0;
-      
+
       const wCash = rRetail.cash - (Number(r.pharmacy.cash) || 0);
       const wOnline = rRetail.online - (Number(r.pharmacy.online) || 0);
       const wTotal = rRetail.total - (Number(r.pharmacy.total) || 0);
@@ -1837,14 +1861,14 @@ export default function RevenueAnalytics() {
         total: r.clinic.total + r.lab.total + r.pharmacy.total + (rRetail.total - (Number(r.pharmacy.total) || 0)),
         footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (rRetail.footFall - (Number(r.pharmacy.footFall) || 0)),
       };
-      
+
       // Diff is calculated against online
       const rDiff = rBC - rGrand.online;
-      
+
       const rDiffLabel = !rBC ? "—" : Math.abs(rDiff) < 0.5 ? "MATCHED" : rDiff > 0 ? "CREDIT MORE" : "CREDIT LESS";
       const isMonthly = r.year && r.month;
       const dateLabel = rowKey === "__total__" ? `${formatDateToDDMMYYYY(fromDate)} – ${formatDateToDDMMYYYY(toDate)}` : isMonthly ? `${MONTHS[r.month - 1].slice(0, 3)} ${r.year}` : formatDateToDDMMYYYY(r.date);
-      
+
       return `
     <tr class="data-row">
       <td>${dateLabel}</td>
@@ -1867,7 +1891,7 @@ export default function RevenueAnalytics() {
       <td>${rDiffLabel}</td>
     </tr>`;
     };
-    
+
     const totalRowHtml = `
     <tr class="data-row" style="background:#fef3c7;">
       <td style="font-weight:bold;">TOTAL</td>
@@ -1917,7 +1941,7 @@ export default function RevenueAnalytics() {
 </head>
 <body>
 <table>
-  <thead>
+<thead className="sticky top-0 z-30 bg-white">
     <tr>
       <th class="grp-clinic" rowspan="2">Date</th>
       <th class="grp-clinic" colspan="4">Clinic</th>
@@ -1985,7 +2009,7 @@ export default function RevenueAnalytics() {
       { key: "clinicPharmacy", title: "Clinic Pharmacy", icon: <FaPills />, accent: "emerald", total: data?.pharmacy?.total || 0, footfall: data?.pharmacy?.footFall || 0, data: data?.pharmacy || {}, rangeTarget: rangeTargets.clinicPharmacy, rangeTargetFF: rangeTargets.clinicPharmacyFF, isCustom: false },
       { key: "retailPharmacy", title: "Total Pharmacy", icon: <FaPills />, accent: "amber", total: retailPharmacyLive.total, footfall: retailPharmacyLive.footFall, data: retailPharmacyLive, rangeTarget: rangeTargets.retailPharmacy, rangeTargetFF: rangeTargets.retailPharmacyFF, isCustom: false },
     ];
-    
+
     const customCards = customSegments.filter(cat => cat.cardNeeded).map((cat, idx) => {
       let totalCash = 0, totalOnline = 0, totalFF = 0;
       if (data?.rows) {
@@ -1996,20 +2020,20 @@ export default function RevenueAnalytics() {
           totalFF += Number(ri[cat.key]?.footFall) || 0;
         });
       }
-      return { 
-        key: cat.key, 
-        title: cat.label, 
-        icon: <FiTarget />, 
-        accent: COLOR_PALETTE[idx % COLOR_PALETTE.length].color, 
-        total: totalCash + totalOnline, 
-        footfall: totalFF, 
-        data: { cash: totalCash, online: totalOnline, due: 0, footFall: totalFF }, 
-        rangeTarget: rangeTargets[cat.key] || 0, 
-        rangeTargetFF: rangeTargets[`${cat.key}FF`] || 0, 
-        isCustom: true 
+      return {
+        key: cat.key,
+        title: cat.label,
+        icon: <FiTarget />,
+        accent: COLOR_PALETTE[idx % COLOR_PALETTE.length].color,
+        total: totalCash + totalOnline,
+        footfall: totalFF,
+        data: { cash: totalCash, online: totalOnline, due: 0, footFall: totalFF },
+        rangeTarget: rangeTargets[cat.key] || 0,
+        rangeTargetFF: rangeTargets[`${cat.key}FF`] || 0,
+        isCustom: true
       };
     });
-    
+
     return [...defaultCards, ...customCards];
   }, [data, retailPharmacyLive, rangeTargets, customSegments, rowInputs]);
 
@@ -2025,12 +2049,19 @@ export default function RevenueAnalytics() {
     const rRetail = { cash: rCash, online: rOnline, total: rCash + rOnline, footFall: rFoot };
     const rBC = isTotal ? (savedBankCredit !== null ? savedBankCredit : (parseFloat(bankCredit) || 0)) : (ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0));
 
-      // W Pharmacy calculate hota hai Total - Clinic
+    // W Pharmacy calculate hota hai Total - Clinic
     const isRetailZero = (rCash === 0 && rOnline === 0 && rFoot === 0);
     const wCash = isRetailZero ? 0 : rCash - (Number(r.pharmacy.cash) || 0);
     const wOnline = isRetailZero ? 0 : rOnline - (Number(r.pharmacy.online) || 0);
     const wTotal = isRetailZero ? 0 : rRetail.total - (Number(r.pharmacy.total) || 0);
     const wFoot = isRetailZero ? 0 : rFoot - (Number(r.pharmacy.footFall) || 0);
+    // W Pharmacy Due (no due source for W Pharmacy, so 0)
+    const wDue = 0;
+
+    // Due values for each section
+    const clinicDue = Number(r.clinic.due) || 0;
+    const labDue = Number(r.lab.due) || 0;
+    const pharmacyDue = Number(r.pharmacy.due) || 0;
 
     // AGAR Total Pharmacy 0 hai, toh Grand Total mein minus nahi hoga (0 hi judega)
     let rGrand = {
@@ -2038,12 +2069,13 @@ export default function RevenueAnalytics() {
       online: r.clinic.online + r.lab.online + r.pharmacy.online + (isRetailZero ? 0 : wOnline),
       total: r.clinic.total + r.lab.total + r.pharmacy.total + (isRetailZero ? 0 : wTotal),
       footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (isRetailZero ? 0 : wFoot),
+      due: clinicDue + labDue + pharmacyDue + wDue,
     };
     customSegments.forEach(cat => {
       const cCash = isTotal ? (Number(retailInput[`${cat.key}_cash`]) || 0) : (Number(ri[cat.key]?.cash) || 0);
       const cOnline = isTotal ? (Number(retailInput[`${cat.key}_online`]) || 0) : (Number(ri[cat.key]?.online) || 0);
       const cFoot = isTotal ? (Number(retailInput[`${cat.key}_ff`]) || 0) : (Number(ri[cat.key]?.footFall) || 0);
-      
+
       rGrand.cash += cCash;
       rGrand.online += cOnline;
       rGrand.total += (cCash + cOnline);
@@ -2051,7 +2083,7 @@ export default function RevenueAnalytics() {
     });
 
     // Calculate Diff against ONLINE
-    const rDiff = rBC - rGrand.online; 
+    const rDiff = rBC - rGrand.online;
     const rDiffAbs = Math.abs(rDiff);
     const rDiffLabel = !rBC ? "—" : rDiffAbs < 0.5 ? "MATCHED" : rDiff > 0 ? "CREDIT MORE" : "CREDIT LESS";
     const rDiffColor = rDiffLabel === "MATCHED" ? "text-emerald-700" : rDiffLabel === "CREDIT MORE" ? "text-blue-700" : rDiffLabel === "CREDIT LESS" ? "text-rose-700" : "text-slate-400";
@@ -2062,12 +2094,12 @@ export default function RevenueAnalytics() {
 
     const isRetailSaved = !isTotal && ri.savedRetail === true;
     const isRetailSaving = savingRetailKey === rowKey;
-    
+
     const savedCash = Number(ri.savedRetailCash) || 0;
     const savedOnline = Number(ri.savedRetailOnline) || 0;
     const savedFoot = Number(ri.savedRetailFootFall) || 0;
     const hasUnsavedRetailChange = rCash !== savedCash || rOnline !== savedOnline || rFoot !== savedFoot;
-    
+
     // Custom classes for compact inputs
     const compactInputCls = "w-[70px] text-center text-xs font-bold bg-white border border-amber-400 rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 disabled:bg-slate-100 disabled:text-slate-500";
 
@@ -2090,24 +2122,28 @@ export default function RevenueAnalytics() {
         </td>
         <td className="px-2 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.clinic.cash)}</td>
         <td className="px-2 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.clinic.online)}</td>
-        <td className="px-2 py-3 text-center font-bold text-blue-700 border-r border-slate-100 bg-blue-50/40 text-xs">{fmt(r.clinic.total)}</td>
+        <td className="px-2 py-3 text-center font-bold text-blue-700 border-r border-slate-100 bg-blue-50/40 text-xs">{fmt((r.clinic.cash || 0) + (r.clinic.online || 0))}</td>
         <td className="px-2 py-3 text-center font-bold text-blue-800 border-r border-slate-200 bg-blue-50/40 text-xs">{r.clinic.footFall}</td>
+        <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(clinicDue)}</td>
 
         <td className="px-2 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.lab.cash)}</td>
         <td className="px-2 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.lab.online)}</td>
-        <td className="px-2 py-3 text-center font-bold text-purple-700 border-r border-slate-100 bg-purple-50/40 text-xs">{fmt(r.lab.total)}</td>
+        <td className="px-2 py-3 text-center font-bold text-purple-700 border-r border-slate-100 bg-purple-50/40 text-xs">{fmt((r.lab.cash || 0) + (r.lab.online || 0))}</td>
         <td className="px-2 py-3 text-center font-bold text-purple-800 border-r border-slate-200 bg-purple-50/40 text-xs">{r.lab.footFall}</td>
+        <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(labDue)}</td>
 
         <td className="px-2 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.cash)}</td>
         <td className="px-2 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.online)}</td>
         <td className="px-2 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-emerald-50/40 text-xs">{fmt(r.pharmacy.total)}</td>
         <td className="px-2 py-3 text-center font-bold text-emerald-800 border-r border-slate-200 bg-emerald-50/40 text-xs">{r.pharmacy.footFall}</td>
+        <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(pharmacyDue)}</td>
 
         {/* W Pharmacy - auto-calculated */}
         <td className="px-2 py-3 text-center font-semibold text-cyan-600 border-r border-slate-100 text-xs">{fmt(wCash)}</td>
         <td className="px-2 py-3 text-center font-semibold text-cyan-600 border-r border-slate-100 text-xs">{fmt(wOnline)}</td>
         <td className="px-2 py-3 text-center font-bold text-cyan-700 border-r border-slate-100 bg-cyan-50/40 text-xs">{fmt(wTotal)}</td>
         <td className="px-2 py-3 text-center font-bold text-cyan-800 border-r border-slate-200 bg-cyan-50/40 text-xs">{wFoot}</td>
+        <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(wDue)}</td>
 
         {/* Total Pharmacy inputs (COMPACT) */}
         <td className="px-1 py-2 border-r border-slate-100 bg-amber-50/40 w-[75px]">
@@ -2130,7 +2166,7 @@ export default function RevenueAnalytics() {
             }}
             className={compactInputCls} />
         </td>
-        
+
         {/* Total Pharmacy Total (with integrated Save/Edit icon) (COMPACT) */}
         <td className="px-1 py-2 text-center border-r border-slate-100 bg-amber-50/40 w-[110px]">
           <div className="flex items-center justify-center gap-0.5">
@@ -2208,6 +2244,7 @@ export default function RevenueAnalytics() {
         <td className="px-2 py-3 text-center font-bold text-sky-700 border-r border-slate-100 bg-indigo-50/40 text-xs">{fmt(rGrand.online)}</td>
         <td className="px-2 py-3 text-center font-black text-indigo-800 border-r border-slate-100 bg-indigo-50/40 text-sm">{fmt(rGrand.total)}</td>
         <td className="px-2 py-3 text-center font-black text-indigo-800 border-r border-slate-200 bg-indigo-50/40 text-xs">{rGrand.footFall}</td>
+        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(rGrand.due)}</td>
 
         <td className="px-2 py-2 border-r border-slate-200 bg-rose-50/40">
           {(() => {
@@ -2245,7 +2282,7 @@ export default function RevenueAnalytics() {
             return (
               <>
                 <div className="flex items-center gap-1 justify-center">
-                                   <input type="number" min="0" placeholder="0"
+                  <input type="number" min="0" placeholder="0"
                     value={(isTotal ? bankCredit : ri.bankCredit) === "0" || (isTotal ? bankCredit : ri.bankCredit) === 0 ? "" : (isTotal ? bankCredit : ri.bankCredit) || ""}
                     onChange={(e) => {
                       const v = e.target.value;
@@ -2253,7 +2290,7 @@ export default function RevenueAnalytics() {
                       else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), bankCredit: v } }));
                     }}
                     className="w-[70px] text-center text-sm font-extrabold text-rose-700 bg-white border border-rose-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500" />
-                  
+
                   {isBCSaved && (
                     <button type="button"
                       onClick={() => {
@@ -2432,14 +2469,14 @@ export default function RevenueAnalytics() {
           </div>
         )}
 
-        {loading && !data && (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-16 text-slate-500 bg-white rounded-lg border border-slate-200 mt-3 mb-3">
             <FiRefreshCw className="w-6 h-6 text-blue-500 animate-spin mb-2" />
-            <p className="text-xs m-0 font-medium">Loading revenue analytics...</p>
+            <p className="text-xs m-0 font-medium">Loading TIMELYHEALTH revenue analytics...</p>
           </div>
         )}
 
-        {data && !loading && grandTotalLive && (
+        {!loading && data && grandTotalLive && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5 mb-3">
               {allCardCategories.map((card) => (
@@ -2457,71 +2494,76 @@ export default function RevenueAnalytics() {
             )}
 
             <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs" style={{ minWidth: `${1100 + customSegments.length * 260}px` }}>
+              <div className="overflow-auto" style={{ maxHeight: "70vh" }}>
+                <table className="w-full text-xs" style={{ minWidth: `${1400 + customSegments.length * 260}px` }}>
                   <thead>
                     <tr>
-                      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-blue-700 bg-blue-800" rowSpan={2}>Date</th>
-                      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-blue-700 bg-blue-800" colSpan={4}>Clinic</th>
-                      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-purple-700 bg-purple-700" colSpan={4}>Lab</th>
-                      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-emerald-700 bg-emerald-700" colSpan={4}>Clinic Pharmacy</th>
-                      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-cyan-700 bg-cyan-700" colSpan={4}>
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-blue-700 bg-blue-800 bg-clip-padding" rowSpan={2}>Date</th>
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-blue-700 bg-blue-800 bg-clip-padding" colSpan={5}>Clinic</th>
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-purple-700 bg-purple-700 bg-clip-padding" colSpan={5}>Lab</th>
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-emerald-700 bg-emerald-700 bg-clip-padding" colSpan={5}>Clinic Pharmacy</th>
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-cyan-700 bg-cyan-700 bg-clip-padding" colSpan={5}>
                         <div className="flex items-center justify-center gap-1.5">
                           <FaWalking className="w-3 h-3" /> W Pharmacy
                         </div>
                       </th>
-                      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-amber-700 bg-amber-600" colSpan={4}>Total Pharmacy</th>
-                      
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-amber-700 bg-amber-600 bg-clip-padding" colSpan={4}>Total Pharmacy</th>
+
                       {customSegments.map(cat => (
                         <React.Fragment key={cat.key}>
-                          <th className={`px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r ${styles.header[cat.key]}`} colSpan={4}>{cat.label}</th>
+                          <th className={`sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b bg-clip-padding ${styles.header[cat.key]}`} colSpan={4}>{cat.label}</th>
                         </React.Fragment>
                       ))}
-                      
-                      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-indigo-700 bg-indigo-700" colSpan={4}>Grand Total</th>
-                      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-rose-700 bg-rose-700" rowSpan={2}>Bank Credit</th>
-                      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-rose-700 bg-rose-700" rowSpan={2}>Credited D/W</th>
-                      <th className="px-2 py-2 text-center font-bold text-white uppercase tracking-wider text-[10px] bg-rose-700" rowSpan={2}>Status</th>
+
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-indigo-700 bg-indigo-700 bg-clip-padding" colSpan={5}>Grand Total</th>
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-rose-700 bg-rose-700 bg-clip-padding" rowSpan={2}>Bank Credit</th>
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-rose-700 bg-rose-700 bg-clip-padding" rowSpan={2}>Credited D/W</th>
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-b bg-rose-700 bg-clip-padding" rowSpan={2}>Status</th>
                     </tr>
                     <tr>
-                      <th className="px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-blue-100 bg-blue-50">Cash</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-blue-100 bg-blue-50">Online</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-blue-100 bg-blue-50">Total</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-blue-200 bg-blue-50">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-b border-blue-200 bg-blue-50 bg-clip-padding">Cash</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-b border-blue-200 bg-blue-50 bg-clip-padding">Online</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-b border-blue-200 bg-blue-50 bg-clip-padding">Total</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-b border-blue-200 bg-blue-50 bg-clip-padding">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
 
-                      <th className="px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-purple-100 bg-purple-50">Cash</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-purple-100 bg-purple-50">Online</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-purple-100 bg-purple-50">Total</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-purple-200 bg-purple-50">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-b border-purple-200 bg-purple-50 bg-clip-padding">Cash</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-b border-purple-200 bg-purple-50 bg-clip-padding">Online</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-b border-purple-200 bg-purple-50 bg-clip-padding">Total</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-b border-purple-200 bg-purple-50 bg-clip-padding">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
 
-                      <th className="px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-emerald-100 bg-emerald-50">Cash</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-emerald-100 bg-emerald-50">Online</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-emerald-100 bg-emerald-50">Total</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-emerald-200 bg-emerald-50">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-b border-emerald-200 bg-emerald-50 bg-clip-padding">Cash</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-b border-emerald-200 bg-emerald-50 bg-clip-padding">Online</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-b border-emerald-200 bg-emerald-50 bg-clip-padding">Total</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-b border-emerald-200 bg-emerald-50 bg-clip-padding">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
 
-                      <th className="px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-cyan-100 bg-cyan-50">Cash</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-cyan-100 bg-cyan-50">Online</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-cyan-100 bg-cyan-50">Total</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-cyan-200 bg-cyan-50">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-b border-cyan-200 bg-cyan-50 bg-clip-padding">Cash</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-b border-cyan-200 bg-cyan-50 bg-clip-padding">Online</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-b border-cyan-200 bg-cyan-50 bg-clip-padding">Total</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-b border-cyan-200 bg-cyan-50 bg-clip-padding">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
 
-                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50 w-[75px]">Cash</th>
-                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50 w-[75px]">Online</th>
-                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-100 bg-amber-50 w-[110px]">Total</th>
-                      <th className="px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-amber-200 bg-amber-50 w-[75px]">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-b border-amber-200 bg-amber-50 bg-clip-padding w-[75px]">Cash</th>
+                      <th className="sticky top-[34px] z-40 px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-b border-amber-200 bg-amber-50 bg-clip-padding w-[75px]">Online</th>
+                      <th className="sticky top-[34px] z-40 px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-b border-amber-200 bg-amber-50 bg-clip-padding w-[110px]">Total</th>
+                      <th className="sticky top-[34px] z-40 px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-b border-amber-200 bg-amber-50 bg-clip-padding w-[75px]">FootFall</th>
 
                       {customSegments.map(cat => (
                         <React.Fragment key={cat.key}>
-                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[70px]`}>Cash</th>
-                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[70px]`}>Online</th>
-                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[70px]`}>Total</th>
-                          <th className={`px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r ${styles.sub[cat.key]} w-[70px]`}>FootFall</th>
+                          <th className={`sticky top-[34px] z-40 px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r border-b bg-clip-padding ${styles.sub[cat.key]} w-[70px]`}>Cash</th>
+                          <th className={`sticky top-[34px] z-40 px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r border-b bg-clip-padding ${styles.sub[cat.key]} w-[70px]`}>Online</th>
+                          <th className={`sticky top-[34px] z-40 px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r border-b bg-clip-padding ${styles.sub[cat.key]} w-[70px]`}>Total</th>
+                          <th className={`sticky top-[34px] z-40 px-1 py-1.5 text-center font-bold uppercase tracking-wider text-[9px] border-r border-b bg-clip-padding ${styles.sub[cat.key]} w-[70px]`}>FootFall</th>
                         </React.Fragment>
                       ))}
 
-                      <th className="px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50">Cash</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50">Online</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-100 bg-indigo-50">Grand Total</th>
-                      <th className="px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-indigo-200 bg-indigo-50">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-200 bg-indigo-50 bg-clip-padding">Cash</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-200 bg-indigo-50 bg-clip-padding">Online</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-200 bg-indigo-50 bg-clip-padding">Grand Total</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-200 bg-indigo-50 bg-clip-padding">FootFall</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2552,25 +2594,29 @@ export default function RevenueAnalytics() {
                                 <td className="px-2 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.clinic.online)}</td>
                                 <td className="px-2 py-2 text-center font-black text-blue-800 border-r border-indigo-100 bg-blue-100/30 text-[10px]">{fmt(r.clinic.total)}</td>
                                 <td className="px-2 py-2 text-center font-black text-blue-900 border-r border-indigo-100 bg-blue-100/30 text-[10px]">{r.clinic.footFall}</td>
+                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.clinic.due)}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.lab.cash)}</td>
                                 <td className="px-2 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.lab.online)}</td>
                                 <td className="px-2 py-2 text-center font-black text-purple-800 border-r border-indigo-100 bg-purple-100/30 text-[10px]">{fmt(r.lab.total)}</td>
                                 <td className="px-2 py-2 text-center font-black text-purple-900 border-r border-indigo-100 bg-purple-100/30 text-[10px]">{r.lab.footFall}</td>
+                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.lab.due)}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.pharmacy.cash)}</td>
                                 <td className="px-2 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.pharmacy.online)}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-800 border-r border-indigo-100 bg-emerald-100/30 text-[10px]">{fmt(r.pharmacy.total)}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-900 border-r border-indigo-100 bg-emerald-100/30 text-[10px]">{r.pharmacy.footFall}</td>
+                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.pharmacy.due)}</td>
                                 {/* W Pharmacy summary cells */}
                                 <td className="px-2 py-2 text-center font-black text-cyan-700 border-r border-indigo-100 bg-cyan-100/30 text-[10px]">{fmt((Number(rowInputs[rowKey]?.cash) || 0) - (Number(r.pharmacy.cash) || 0))}</td>
                                 <td className="px-2 py-2 text-center font-black text-cyan-700 border-r border-indigo-100 bg-cyan-100/30 text-[10px]">{fmt((Number(rowInputs[rowKey]?.online) || 0) - (Number(r.pharmacy.online) || 0))}</td>
                                 <td className="px-2 py-2 text-center font-black text-cyan-800 border-r border-indigo-100 bg-cyan-100/30 text-[10px]">{fmt((Number(rowInputs[rowKey]?.cash) || 0) + (Number(rowInputs[rowKey]?.online) || 0) - (Number(r.pharmacy.cash) || 0) - (Number(r.pharmacy.online) || 0))}</td>
                                 <td className="px-2 py-2 text-center font-black text-cyan-900 border-r border-indigo-100 bg-cyan-100/30 text-[10px]">{(Number(rowInputs[rowKey]?.footFall) || 0) - (Number(r.pharmacy.footFall) || 0)}</td>
+                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(0)}</td>
                                 {/* Total Pharmacy summary cells (Action removed) */}
                                 <td className="px-2 py-2 border-r border-indigo-100 bg-amber-100/30"></td>
                                 <td className="px-2 py-2 border-r border-indigo-100 bg-amber-100/30"></td>
                                 <td className="px-2 py-2 text-center font-black text-amber-800 border-r border-indigo-100 bg-amber-100/30 text-[10px]">{fmt((Number(rowInputs[rowKey]?.cash) || 0) + (Number(rowInputs[rowKey]?.online) || 0))}</td>
                                 <td className="px-2 py-2 text-center font-black text-amber-900 border-r border-indigo-200 bg-amber-100/30 text-[10px]">{rowInputs[rowKey]?.footFall || 0}</td>
-                                
+
                                 {customSegments.map(cat => (
                                   <React.Fragment key={cat.key}>
                                     <td className="px-2 py-2 border-r border-indigo-100 bg-slate-100/30"></td>
@@ -2585,6 +2631,9 @@ export default function RevenueAnalytics() {
                                 </td>
                                 <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
                                   {r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (Number(rowInputs[rowKey]?.footFall) || 0)}
+                                </td>
+                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">
+                                  {fmt((Number(r.clinic.due) || 0) + (Number(r.lab.due) || 0) + (Number(r.pharmacy.due) || 0))}
                                 </td>
                                 <td className="px-2 py-2 border-r border-indigo-100 bg-rose-100/30"></td>
                                 <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
@@ -2607,19 +2656,23 @@ export default function RevenueAnalytics() {
                         <td className="px-2 py-3 text-center font-black text-sky-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.clinic.online)}</td>
                         <td className="px-2 py-3 text-center font-black text-blue-800 border-r border-slate-200 bg-blue-100 text-xs">{fmt(tableTotal.clinic.total)}</td>
                         <td className="px-2 py-3 text-center font-black text-blue-900 border-r border-slate-200 bg-blue-100 text-xs">{tableTotal.clinic.footFall}</td>
+                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.clinic.due)}</td>
                         <td className="px-2 py-3 text-center font-black text-emerald-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.lab.cash)}</td>
                         <td className="px-2 py-3 text-center font-black text-sky-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.lab.online)}</td>
                         <td className="px-2 py-3 text-center font-black text-purple-800 border-r border-slate-200 bg-purple-100 text-xs">{fmt(tableTotal.lab.total)}</td>
                         <td className="px-2 py-3 text-center font-black text-purple-900 border-r border-slate-200 bg-purple-100 text-xs">{tableTotal.lab.footFall}</td>
+                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.lab.due)}</td>
                         <td className="px-2 py-3 text-center font-black text-emerald-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.pharmacy.cash)}</td>
                         <td className="px-2 py-3 text-center font-black text-sky-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.pharmacy.online)}</td>
                         <td className="px-2 py-3 text-center font-black text-emerald-800 border-r border-slate-200 bg-emerald-100 text-xs">{fmt(tableTotal.pharmacy.total)}</td>
                         <td className="px-2 py-3 text-center font-black text-emerald-900 border-r border-slate-200 bg-emerald-100 text-xs">{tableTotal.pharmacy.footFall}</td>
+                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.pharmacy.due)}</td>
                         {/* W Pharmacy totals */}
                         <td className="px-2 py-3 text-center font-black text-cyan-700 border-r border-slate-200 bg-cyan-100 text-xs">{fmt(tableTotal.wPharmacy.cash)}</td>
                         <td className="px-2 py-3 text-center font-black text-cyan-700 border-r border-slate-200 bg-cyan-100 text-xs">{fmt(tableTotal.wPharmacy.online)}</td>
                         <td className="px-2 py-3 text-center font-black text-cyan-800 border-r border-slate-200 bg-cyan-100 text-xs">{fmt(tableTotal.wPharmacy.total)}</td>
                         <td className="px-2 py-3 text-center font-black text-cyan-900 border-r border-slate-200 bg-cyan-100 text-xs">{tableTotal.wPharmacy.footFall}</td>
+                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.wPharmacy.due)}</td>
                         {/* Total Pharmacy totals (Action removed) */}
                         <td className="px-2 py-3 text-center font-black text-amber-700 border-r border-slate-200 bg-amber-100 text-xs">{fmt(tableTotal.retail.cash)}</td>
                         <td className="px-2 py-3 text-center font-black text-amber-700 border-r border-slate-200 bg-amber-100 text-xs">{fmt(tableTotal.retail.online)}</td>
@@ -2644,16 +2697,31 @@ export default function RevenueAnalytics() {
                         <td className="px-2 py-3 text-center font-black text-sky-800 border-r border-slate-200 bg-indigo-100 text-xs">{fmt(tableTotal.grand.online)}</td>
                         <td className="px-2 py-3 text-center font-black text-indigo-900 border-r border-slate-200 bg-indigo-200 text-sm">{fmt(tableTotal.grand.total)}</td>
                         <td className="px-2 py-3 text-center font-black text-indigo-900 border-r border-slate-200 bg-indigo-100 text-xs">{tableTotal.grand.footFall}</td>
+                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.grand.due)}</td>
                         <td className="px-2 py-3 text-center font-black text-rose-800 border-r border-slate-200 bg-rose-100 text-sm">{tableTotal.bankCredit ? fmt(tableTotal.bankCredit) : "—"}</td>
                         <td className={`px-2 py-3 text-center font-black text-sm border-r border-slate-200 bg-rose-100 ${!tableTotal.bankCredit ? "text-slate-400" : Math.abs(tableTotal.creditedDiff) < 0.5 ? "text-emerald-800" : tableTotal.creditedDiff > 0 ? "text-blue-800" : "text-rose-800"}`}>
                           {!tableTotal.bankCredit ? "—" : (Math.abs(tableTotal.creditedDiff) < 0.5 ? "0" : fmt(Math.abs(tableTotal.creditedDiff)))}
                         </td>
-                        <td className="px-2 py-3 text-center bg-rose-100">
+                        <td className="px-2 py-2 text-center bg-rose-100">
                           {(() => {
-                            if (!tableTotal.bankCredit) return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border bg-slate-50 border-slate-200 text-slate-400 text-[10px] font-bold uppercase tracking-wider">—</span>;
-                            if (Math.abs(tableTotal.creditedDiff) < 0.5) return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border bg-emerald-50 border-emerald-200 text-emerald-800 text-[10px] font-bold uppercase tracking-wider"><FaEquals className="w-2.5 h-2.5" />MATCHED</span>;
-                            if (tableTotal.creditedDiff > 0) return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border bg-blue-50 border-blue-200 text-blue-800 text-[10px] font-bold uppercase tracking-wider"><FaArrowUp className="w-2.5 h-2.5" />CREDIT MORE</span>;
-                            return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border bg-rose-50 border-rose-200 text-rose-800 text-[10px] font-bold uppercase tracking-wider"><FaArrowDown className="w-2.5 h-2.5" />CREDIT LESS</span>;
+                            const ss = tableTotal.statusSummary;
+                            if (ss.less.count + ss.more.count + ss.matched.count === 0) return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border bg-slate-50 border-slate-200 text-slate-400 text-[10px] font-bold uppercase tracking-wider">—</span>;
+                            return (
+                              <div className="flex flex-col gap-1 items-stretch min-w-[150px]">
+                                <div className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-full border bg-rose-50 border-rose-300 text-rose-700 text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
+                                  <span className="flex items-center gap-1"><FaArrowDown className="w-2.5 h-2.5" />Less ({ss.less.count})</span>
+                                  <span>{fmtAmt(Math.round(ss.less.amt))}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-full border bg-emerald-50 border-emerald-300 text-emerald-700 text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
+                                  <span className="flex items-center gap-1"><FaArrowUp className="w-2.5 h-2.5" />More ({ss.more.count})</span>
+                                  <span>{fmtAmt(Math.round(ss.more.amt))}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-full border bg-blue-50 border-blue-300 text-blue-700 text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
+                                  <span className="flex items-center gap-1"><FaEquals className="w-2.5 h-2.5" />Matched</span>
+                                  <span>{ss.matched.count}</span>
+                                </div>
+                              </div>
+                            );
                           })()}
                         </td>
                       </tr>

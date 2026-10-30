@@ -1069,8 +1069,9 @@ export default function OpManagement() {
   // ✅ Naye States Clear Due ke liye
   const [showClearDueModal, setShowClearDueModal] = useState(false);
   const [clearDuePaymentType, setClearDuePaymentType] = useState("Cash");
-  const [clearDueCategory, setClearDueCategory] = useState("lab"); // "lab" ya "pharmacy"
+  const [clearDueCategory, setClearDueCategory] = useState("lab");
   const [clearDueTransactionId, setClearDueTransactionId] = useState("");
+  const [clearDuePaidDate, setClearDuePaidDate] = useState("");   // ✅ NAYA
 
   const phoneInputRef = useRef(null);
   const nameInputRef = useRef(null);
@@ -6132,7 +6133,7 @@ export default function OpManagement() {
                             )}
                           </td>
 
-                                                   {/* ✅ BILL — printer icon */}
+                          {/* ✅ BILL — printer icon */}
                           <td className="px-3 py-3 text-center whitespace-nowrap">
                             <button
                               onClick={(e) => { e.stopPropagation(); if (matchingBooking) openBillingModal(matchingBooking); }}
@@ -6155,12 +6156,12 @@ export default function OpManagement() {
                               title={
                                 matchingBooking
                                   ? ([
-                                      matchingBooking.vitalsTemp && `Temp: ${matchingBooking.vitalsTemp}°F`,
-                                      matchingBooking.vitalsBp && `BP: ${matchingBooking.vitalsBp} mmHg`,
-                                      matchingBooking.vitalsPr && `Pulse: ${matchingBooking.vitalsPr} bpm`,
-                                      matchingBooking.vitalsWeight && `Weight: ${matchingBooking.vitalsWeight} Kg`,
-                                      matchingBooking.vitalsGlucose && `Glucose: ${matchingBooking.vitalsGlucose} mg/dl`,
-                                    ].filter(Boolean).join(' • ') || 'No vitals recorded — Click to add')
+                                    matchingBooking.vitalsTemp && `Temp: ${matchingBooking.vitalsTemp}°F`,
+                                    matchingBooking.vitalsBp && `BP: ${matchingBooking.vitalsBp} mmHg`,
+                                    matchingBooking.vitalsPr && `Pulse: ${matchingBooking.vitalsPr} bpm`,
+                                    matchingBooking.vitalsWeight && `Weight: ${matchingBooking.vitalsWeight} Kg`,
+                                    matchingBooking.vitalsGlucose && `Glucose: ${matchingBooking.vitalsGlucose} mg/dl`,
+                                  ].filter(Boolean).join(' • ') || 'No vitals recorded — Click to add')
                                   : 'View Vitals'
                               }
                               className="inline-flex flex-col items-center justify-center gap-0.5 w-9 h-9 rounded-lg bg-pink-50 hover:bg-pink-100 border border-pink-200 text-pink-700 transition-all"
@@ -6353,7 +6354,7 @@ export default function OpManagement() {
                           <button onClick={(e) => { e.stopPropagation(); handleEdit(patient, matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[10px] font-bold"><FiEdit2 className="w-3.5 h-3.5" /> Edit</button>
                           {matchingBooking && (
                             <>
-                                                         <button onClick={(e) => { e.stopPropagation(); openPrescriptionModal(matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg text-[10px] font-bold"><FaPrescription className="w-3.5 h-3.5" /> Rx</button>
+                              <button onClick={(e) => { e.stopPropagation(); openPrescriptionModal(matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg text-[10px] font-bold"><FaPrescription className="w-3.5 h-3.5" /> Rx</button>
                               <button onClick={(e) => { e.stopPropagation(); openVitalsModal(matchingBooking); }} className="flex items-center gap-1 px-2.5 py-1.5 bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-lg text-[10px] font-bold"><FaHeartbeat className="w-3.5 h-3.5" /> Vitals</button>
                               <button onClick={(e) => { e.stopPropagation(); openBillingModal(matchingBooking); }} disabled={invoiceLoading === matchingBooking._id} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${matchingBooking?.invoiceUrl ? "bg-blue-100 text-blue-700" : "bg-emerald-50 text-emerald-600"} disabled:opacity-50`}>
                                 {invoiceLoading === matchingBooking._id ? <FiRefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FaFileInvoiceDollar className="w-3.5 h-3.5" />} {matchingBooking?.invoiceUrl ? "Invoice" : "Bill"}
@@ -7005,8 +7006,9 @@ export default function OpManagement() {
                             <button
                               type="button"
                               onClick={() => {
-                                setClearDueCategory("lab");
+                                setClearDueCategory("lab");        // ya "pharmacy" / "clinic"
                                 setClearDuePaymentType("Cash");
+                                setClearDuePaidDate(new Date().toISOString().split("T")[0]);   // ✅ NAYA — default aaj ki date
                                 setShowClearDueModal(true);
                               }}
                               className="px-3 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm whitespace-nowrap"
@@ -7329,6 +7331,7 @@ export default function OpManagement() {
                   onClick={() => {
                     setShowClearDueModal(false);
                     setClearDueTransactionId("");
+                    setClearDuePaidDate("");   // ✅ NAYA
                   }}
                   className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
                 >
