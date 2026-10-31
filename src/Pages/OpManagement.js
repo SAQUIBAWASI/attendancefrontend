@@ -34,6 +34,7 @@ import prescriptionBackTemplate from "../Images/prescriptionbackside.jpg";
 const TITLE_OPTIONS = [
   { value: "Mr.", label: "Mr." },
   { value: "Mrs.", label: "Mrs." },
+  { value: "Ms.", label: "Ms." },
   { value: "Miss", label: "Miss" },
   { value: "Master", label: "Master" },
   { value: "Baby", label: "Baby" },
@@ -172,7 +173,7 @@ const genderFromTitle = (title) => {
   if (!title) return "";
   const t = title.toString().trim();
   if (t === "Mr." || t === "Master") return "Male";
-  if (t === "Mrs." || t === "Miss") return "Female";
+  if (t === "Mrs." || t === "Miss" || t === "Ms.") return "Female";
   if (t === "Baby" || t === "BabyOf") return "Other";
   if (t === "Dr.") return "";
   return "";
@@ -907,6 +908,7 @@ export default function OpManagement() {
 
 
   const [bookings, setBookings] = useState([]);
+  const [filterOptionsSource, setFilterOptionsSource] = useState([]); // ✅ dropdown options: ALL bookings (unfiltered)
   const [backendStats, setBackendStats] = useState(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState(null);
   const [doctors, setDoctors] = useState([]);
@@ -1060,6 +1062,35 @@ export default function OpManagement() {
   const [savingClinicServices, setSavingClinicServices] = useState(false);
 
   const [openActionDropdown, setOpenActionDropdown] = useState(null);
+  const [actionMenuPos, setActionMenuPos] = useState({ top: null, bottom: null, right: 0, maxHeight: 420 });
+
+  // ✅ 3-dot menu fixed position pe hai — scroll / resize par band kar do
+  useEffect(() => {
+    if (!openActionDropdown) return;
+    const close = () => setOpenActionDropdown(null);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [openActionDropdown]);
+
+  const toggleActionMenu = (e, patientId) => {
+    e.stopPropagation();
+    if (openActionDropdown === patientId) { setOpenActionDropdown(null); return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const gap = 6, margin = 10;
+    const spaceBelow = window.innerHeight - rect.bottom - margin;
+    const spaceAbove = rect.top - margin;
+    const openUp = spaceBelow < 300 && spaceAbove > spaceBelow; // neeche jagah kam ho to upar khulega
+    setActionMenuPos(
+      openUp
+        ? { top: null, bottom: window.innerHeight - rect.top + gap, right: window.innerWidth - rect.right, maxHeight: spaceAbove - gap }
+        : { top: rect.bottom + gap, bottom: null, right: window.innerWidth - rect.right, maxHeight: spaceBelow - gap }
+    );
+    setOpenActionDropdown(patientId);
+  };
 
 
   // ✅ Naya State Confirmation Modal ke liye
@@ -2315,10 +2346,38 @@ export default function OpManagement() {
 
   const fetchAllData = () => {
     fetchBookings();
+    fetchFilterOptions();
     fetchDoctors();
     fetchAllSlots();
     fetchServices();
     fetchReferralContacts();
+  };
+
+  // ✅ Dropdown options (Doctors / Referred By / Booked By) — hamesha DB ki SAARI bookings se,
+  // chahe koi bhi date / doctor / status filter laga ho
+  const fetchFilterOptions = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/appointment-slots/getallbookings?all=true`);
+      let list = [];
+      if (res.data?.success) list = res.data.bookings || res.data.data || [];
+      else if (Array.isArray(res.data)) list = res.data;
+
+      // sirf wahi fields rakho jo dropdown ko chahiye (memory light rahegi)
+      const slim = list.map((b) => {
+        const slotDetails = b.slotDetails || {};
+        const slotObj = (b.slotId && typeof b.slotId === "object") ? b.slotId : {};
+        return {
+          doctorName: slotDetails.doctorName || b.doctorName || slotObj.doctorName || "",
+          doctorSpecialization: slotDetails.doctorSpecialization || b.doctorSpecialization || slotObj.doctorSpecialization || "",
+          referredByCustomer: b.referredByCustomer || "",
+          referredByDoctor: b.referredByDoctor || "",
+          addedBy: b.addedBy || null,
+        };
+      });
+      setFilterOptionsSource(slim);
+    } catch (error) {
+      console.error("Error fetching filter options:", error);
+    }
   };
 
   const fetchBookings = async () => {
@@ -3649,6 +3708,7 @@ export default function OpManagement() {
             <div class="fld" style="top:200px;left:300px;">${b.vitalsBp || ""}</div>
             <div class="fld" style="top:200px;left:500px;">${b.vitalsPr || ""}</div>
             <div class="fld" style="top:200px;right:80px;">${b.vitalsWeight || ""}</div>
+            ${b.vitalsGlucose ? `<div class="fld" style="top:240px;right:40px;white-space:nowrap;font-size:16px;font-weight:800;color:#1d4ed8;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Glucose: ${b.vitalsGlucose}mg/dl</div>` : ""}
           </div>
         </div>
         <script>window.onload = function() { window.print(); }</script>
@@ -4266,6 +4326,14 @@ export default function OpManagement() {
     setCurrentPage(1);
   };
 
+  // ✅ Doctor / Referred By / Booked By select karte hi date filter "All" ho jaye,
+  // taaki us doctor ki bookings kisi bhi date ki ho — dikhein (Today pe khaali na aaye)
+  const handleDropdownFilterChange = (setter, value) => {
+    setter(value);
+    if (value !== "All") handleTimeFilterChange("All");
+    setCurrentPage(1);
+  };
+
   const clearFilters = () => {
     setSearchQuery(""); setStatusFilter("All"); setFeeTypeFilter("All"); setDoctorFilter("All");
     setBookingTypeFilter("All");
@@ -4289,16 +4357,18 @@ export default function OpManagement() {
     else { setStatusFilter(type); setActiveFilter("all"); }
   };
 
+  const getOptionSourceBookings = () => [...filterOptionsSource, ...bookings];
+
   const getUniqueDoctors = () => {
     const map = new Map();
-    bookings.forEach((b) => { if (b.doctorName) map.set(b.doctorName, { name: b.doctorName, specialization: b.doctorSpecialization || "" }); });
-    return Array.from(map.values());
+    getOptionSourceBookings().forEach((b) => { if (b.doctorName) map.set(b.doctorName, { name: b.doctorName, specialization: b.doctorSpecialization || "" }); });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const getUniqueReferrers = () => {
     const customers = new Set();
     const doctors = new Set();
-    bookings.forEach((b) => {
+    getOptionSourceBookings().forEach((b) => {
       if (b.referredByCustomer) customers.add(b.referredByCustomer);
       if (b.referredByDoctor) doctors.add(b.referredByDoctor);
     });
@@ -4311,7 +4381,7 @@ export default function OpManagement() {
 
   const getUniqueAddedBy = () => {
     const map = new Map();
-    bookings.forEach((b) => {
+    getOptionSourceBookings().forEach((b) => {
       if (b.addedBy && b.addedBy.name) {
         const key = b.addedBy.empId
           ? `${b.addedBy.name}::${b.addedBy.empId}`
@@ -4803,7 +4873,7 @@ export default function OpManagement() {
             <select value={bookingTypeFilter} onChange={(e) => setBookingTypeFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
               {BOOKING_TYPE_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
             </select>
-            <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg max-w-[110px] truncate flex-shrink-0">
+            <select value={doctorFilter} onChange={(e) => handleDropdownFilterChange(setDoctorFilter, e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg max-w-[110px] truncate flex-shrink-0">
               <option value="All">All Doctors</option>
               {getUniqueDoctors().map((doc) => (<option key={doc.name} value={doc.name}>{doc.name}</option>))}
             </select>
@@ -4813,7 +4883,7 @@ export default function OpManagement() {
             <select value={paymentTypeFilter} onChange={(e) => setPaymentTypeFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
               {PAYMENT_TYPE_FILTER_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
             </select>
-            <select value={referredByFilter} onChange={(e) => setReferredByFilter(e.target.value)} className={`h-9 px-2 text-xs border rounded-lg max-w-[140px] truncate flex-shrink-0 ${referredByFilter !== "All" ? "border-indigo-500 text-indigo-700 bg-indigo-50" : "border-gray-300 bg-white"}`} title="Filter by Referred By">
+            <select value={referredByFilter} onChange={(e) => handleDropdownFilterChange(setReferredByFilter, e.target.value)} className={`h-9 px-2 text-xs border rounded-lg max-w-[140px] truncate flex-shrink-0 ${referredByFilter !== "All" ? "border-indigo-500 text-indigo-700 bg-indigo-50" : "border-gray-300 bg-white"}`} title="Filter by Referred By">
               <option value="All">All Referrers</option>
               {getUniqueReferrers().customers.length > 0 && (
                 <optgroup label="Customers">
@@ -4834,7 +4904,7 @@ export default function OpManagement() {
             {/* ✅ ADDED BY FILTER DESKTOP */}
             <select
               value={addedByFilter}
-              onChange={(e) => setAddedByFilter(e.target.value)}
+              onChange={(e) => handleDropdownFilterChange(setAddedByFilter, e.target.value)}
               className={`h-9 px-2 text-xs border rounded-lg max-w-[140px] truncate flex-shrink-0 ${addedByFilter !== "All" ? "border-teal-500 text-teal-700 bg-teal-50" : "border-gray-300 bg-white"}`}
               title="Filter by Booked By"
             >
@@ -4939,7 +5009,7 @@ export default function OpManagement() {
                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
                   <option value="All">All Status</option><option value="Partial">Partial</option><option value="Paid">Paid</option><option value="Due">Due</option>
                 </select>
-                <select value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
+                <select value={doctorFilter} onChange={(e) => handleDropdownFilterChange(setDoctorFilter, e.target.value)} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg">
                   <option value="All">All Doctors</option>
                   {getUniqueDoctors().map((doc) => <option key={doc.name} value={doc.name}>{doc.name}</option>)}
                 </select>
@@ -4960,7 +5030,7 @@ export default function OpManagement() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Referred By</label>
-                <select value={referredByFilter} onChange={(e) => setReferredByFilter(e.target.value)} className={`w-full px-3 py-2.5 text-sm border rounded-lg ${referredByFilter !== "All" ? "border-indigo-500 text-indigo-700 bg-indigo-50" : "border-gray-300"}`}>
+                <select value={referredByFilter} onChange={(e) => handleDropdownFilterChange(setReferredByFilter, e.target.value)} className={`w-full px-3 py-2.5 text-sm border rounded-lg ${referredByFilter !== "All" ? "border-indigo-500 text-indigo-700 bg-indigo-50" : "border-gray-300"}`}>
                   <option value="All">All Referrers</option>
                   {getUniqueReferrers().customers.length > 0 && (<optgroup label="Customers">{getUniqueReferrers().customers.map((c) => (<option key={`c-${c}`} value={`customer::${c}`}>{c}</option>))}</optgroup>)}
                   {getUniqueReferrers().doctors.length > 0 && (<optgroup label="Doctors">{getUniqueReferrers().doctors.map((d) => (<option key={`d-${d}`} value={`doctor::${d}`}>{d}</option>))}</optgroup>)}
@@ -4970,7 +5040,7 @@ export default function OpManagement() {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Booked By</label>
                 <select
                   value={addedByFilter}
-                  onChange={(e) => setAddedByFilter(e.target.value)}
+                  onChange={(e) => handleDropdownFilterChange(setAddedByFilter, e.target.value)}
                   className={`w-full px-3 py-2.5 text-sm border rounded-lg ${addedByFilter !== "All" ? "border-teal-500 text-teal-700 bg-teal-50" : "border-gray-300"}`}
                 >
                   <option value="All">All Booked By</option>
@@ -6186,11 +6256,11 @@ export default function OpManagement() {
                           {/* Actions */}
                           <td className="px-3 py-3 text-right whitespace-nowrap">
                             <div className="relative inline-block action-dropdown">
-                              <button onClick={(e) => { e.stopPropagation(); setOpenActionDropdown(openActionDropdown === patient._id ? null : patient._id); }} className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors" title="Actions">
+                              <button onClick={(e) => toggleActionMenu(e, patient._id)} className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors" title="Actions">
                                 <FiMoreVertical className="w-4 h-4" />
                               </button>
                               {openActionDropdown === patient._id && (
-                                <div className="absolute right-0 top-full mt-1 z-[9999] bg-white rounded-xl shadow-2xl border border-gray-200 py-2 min-w-[170px]" onClick={(e) => e.stopPropagation()}>
+                                <div className="fixed z-[9999] bg-white rounded-xl shadow-2xl border border-gray-200 py-2 min-w-[170px] overflow-y-auto" style={{ top: actionMenuPos.top ?? "auto", bottom: actionMenuPos.bottom ?? "auto", right: actionMenuPos.right, maxHeight: actionMenuPos.maxHeight }} onClick={(e) => e.stopPropagation()}>
                                   <div className="px-3 pb-2 mb-1 border-b border-gray-100">
                                     <div className="text-[11px] font-bold text-slate-800 truncate">{patient.title || ""} {patient.name || "N/A"}</div>
                                     <div className="text-[9px] text-gray-400">{patient.phone || ""}</div>

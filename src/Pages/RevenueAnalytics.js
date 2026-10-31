@@ -4,16 +4,16 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import {
   FaClinicMedical, FaFlask, FaPills, FaCalendarAlt, FaUsers, FaWalking,
-  FaMoneyBillWave, FaChevronLeft, FaChevronRight,
+  FaChevronLeft, FaChevronRight,
   FaRupeeSign, FaCheckCircle, FaTimesCircle,
   FaGlobe, FaArrowUp, FaArrowDown, FaEquals, FaSave,
-  FaBullseye, FaEdit, FaPlus, FaTrash, FaMinusCircle, FaPlusCircle, FaMinus
+  FaBullseye, FaEdit, FaPlus, FaTrash, FaMinusCircle, FaPlusCircle, FaMinus, FaMoneyBillWave, FaTimes,
 } from "react-icons/fa";
 import {
   FiRefreshCw, FiTrendingUp, FiAlertCircle, FiClock, FiFilter,
   FiDownload, FiTrash2, FiCheckCircle, FiXCircle, FiSearch,
   FiX, FiTarget, FiPlus, FiEye, FiEyeOff, FiChevronDown,
-  FiPieChart, FiBarChart2,
+  FiPieChart, FiBarChart2
 } from "react-icons/fi";
 
 /* ============================================================ */
@@ -21,6 +21,8 @@ import {
 /* ============================================================ */
 const TARGET_API_BASE = `${API_BASE_URL}/targetrev`;
 const ANALYTICS_API_BASE = `${API_BASE_URL}/appointment-slots`;
+
+const NAVBAR_HEIGHT = 80; // apne navbar ki height (px) yahan daalo
 
 /* ============================================================ */
 /* Helpers                                                       */
@@ -93,7 +95,7 @@ const formatDateToDDMMYYYY = (dateStr) => {
   if (!dateStr) return "";
   try {
     const [y, m, d] = dateStr.split("-");
-    return `${d}/${m}/${y.slice(-2)}`; // Yahan y.slice(-2) lagaya hai
+    return `${d}/${m}/${y.slice(-2)}`;
   } catch { return dateStr; }
 };
 
@@ -190,7 +192,8 @@ const normalizeAnalyticsData = (raw) => {
           lab: mdBuild("lab"),
           pharmacy: mdBuild("pharmacy"),
           retailPharmacy: { cash: 0, online: 0, footFall: 0, total: 0 },
-          bankCredit: null
+          bankCredit: null,
+          cashReceived: null
         };
       }) : [];
 
@@ -211,6 +214,7 @@ const normalizeAnalyticsData = (raw) => {
           due: 0, card: 0, insurance: 0,
         },
         bankCredit: bank?.bankCredit != null ? Number(bank.bankCredit) : null,
+        cashReceived: bank?.cashReceived != null ? Number(bank.cashReceived) : (r.cashReceived != null ? Number(r.cashReceived) : null),
         monthData: monthData
       };
     })
@@ -223,6 +227,7 @@ const normalizeAnalyticsData = (raw) => {
     retailPharmacy,
     rows,
     bankCredit: raw.bankCredit || null,
+    cashReceived: raw.bankCredit?.cashReceived != null ? Number(raw.bankCredit.cashReceived) : (raw.cashReceived != null ? Number(raw.cashReceived) : null),
     dateRange: raw.dateRange || null,
   };
 };
@@ -1286,16 +1291,25 @@ export default function RevenueAnalytics() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
+
+  // Bank Credit States
   const [bankCredit, setBankCredit] = useState("");
   const [savedBankCredit, setSavedBankCredit] = useState(null);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [savingBankCredit, setSavingBankCredit] = useState(false);
-
   const [isEditingTotalBC, setIsEditingTotalBC] = useState(false);
+
+  // Cash Received States
+  const [cashReceived, setCashReceived] = useState("");
+  const [savedCashReceived, setSavedCashReceived] = useState(null);
+  const [showSaveCashConfirm, setShowSaveCashConfirm] = useState(false);
+  const [savingCashReceived, setSavingCashReceived] = useState(false);
+  const [isEditingTotalCash, setIsEditingTotalCash] = useState(false);
 
   const [retailInput, setRetailInput] = useState({ cash: "", online: "", footFall: "" });
   const [rowInputs, setRowInputs] = useState({});
   const [savingRowKey, setSavingRowKey] = useState(null);
+  const [savingCashRowKey, setSavingCashRowKey] = useState(null);
   const [savingRetailKey, setSavingRetailKey] = useState(null);
 
   const [savedTarget, setSavedTarget] = useState(null);
@@ -1312,6 +1326,22 @@ export default function RevenueAnalytics() {
   const exportDropdownRef = useRef(null);
   const [expandedMonths, setExpandedMonths] = useState({});
   const [showGraph, setShowGraph] = useState(false);
+
+
+  // ✅ CLEAR DUE STATES — same as OP Management
+const [showClearDueModal, setShowClearDueModal] = useState(false);
+const [clearDueCategory, setClearDueCategory] = useState("lab");
+const [clearDuePaymentType, setClearDuePaymentType] = useState("Cash");
+const [clearDueTransactionId, setClearDueTransactionId] = useState("");
+const [clearDuePaidDate, setClearDuePaidDate] = useState("");
+const [clearDueLoading, setClearDueLoading] = useState(false);
+const [clearDueSaving, setClearDueSaving] = useState(false);
+const [clearDueRowKey, setClearDueRowKey] = useState(null);
+
+// Fetched bookings for this row (with items)
+const [clearDueBookings, setClearDueBookings] = useState([]);
+// Item-level list (same as OP Management's labItemsList/pharmacyItemsList/clinicServicesList)
+const [clearDueItemsList, setClearDueItemsList] = useState([]);
 
   useEffect(() => {
     try {
@@ -1332,6 +1362,361 @@ export default function RevenueAnalytics() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
+
+
+
+ // ✅ Open Clear Due Modal for a row + category
+const openClearDueModal = async (rowKey, category) => {
+  setClearDueCategory(category);
+  setClearDuePaymentType("Cash");
+  setClearDueTransactionId("");
+  setClearDuePaidDate(new Date().toISOString().split("T")[0]);
+  setClearDueRowKey(rowKey);
+  setShowClearDueModal(true);
+  setClearDueLoading(true);
+  setClearDueItemsList([]);
+  setClearDueBookings([]);
+
+  try {
+    // Row ka date nikaalo
+    let from = rowKey, to = rowKey;
+    if (/^\d{4}-\d{2}$/.test(rowKey)) {
+      const [y, m] = rowKey.split("-").map(Number);
+      from = fmtDate(new Date(y, m - 1, 1));
+      to = fmtDate(new Date(y, m, 0));
+    } else if (rowKey === "__total__") {
+      from = fromDate;
+      to = toDate;
+    }
+
+    const params = new URLSearchParams();
+    params.append("apptFrom", from);
+    params.append("apptTo", to);
+
+    const res = await axios.get(
+      `${ANALYTICS_API_BASE}/getallbookings?${params.toString()}`
+    );
+
+    let bookingsData = [];
+    if (res.data?.success) {
+      bookingsData = res.data.bookings || res.data.data || [];
+    } else if (Array.isArray(res.data)) {
+      bookingsData = res.data;
+    }
+
+    // 🚨 CHANGE: Get exact row due amount (jo UI pe dikh raha hai)
+    const rowData = data?.rows?.find(x => (x.date || "__total__") === rowKey);
+    let targetDue = 0;
+    if (rowData) {
+      if (category === "clinic") targetDue = Number(rowData.clinic?.due) || 0;
+      else if (category === "lab") targetDue = Number(rowData.lab?.due) || 0;
+      else if (category === "pharmacy") targetDue = Number(rowData.pharmacy?.due) || 0;
+    }
+
+    // Filter bookings to only this row
+    const isSpecificDate = /^\d{4}-\d{2}-\d{2}$/.test(rowKey);
+    const filteredBookingsForRow = isSpecificDate 
+      ? bookingsData.filter(b => (b.appointmentDate || b.date) === rowKey)
+      : bookingsData;
+
+    // ✅ Create just ONE single combined item for the popup
+    const itemsList = [];
+    if (targetDue > 0) {
+      itemsList.push({
+        bookingId: "MULTIPLE", // Marker for bulk update
+        patientName: "Multiple Patients (Combined)",
+        patientPhone: "-",
+        serviceId: "",
+        name: `${category.charAt(0).toUpperCase() + category.slice(1)} Due (Combined)`,
+        price: targetDue,
+        discount: 0,
+        paidAmount: 0,
+        dueAmount: targetDue,
+        paymentMode: "",
+        paymentStatus: "Due",
+        transactionId: "",
+      });
+    }
+
+    setClearDueBookings(filteredBookingsForRow); 
+    setClearDueItemsList(itemsList);
+  } catch (err) {
+    console.error("Fetch clear due items error:", err);
+    showToast(err.response?.data?.message || "Failed to load due items", "error");
+    setShowClearDueModal(false);
+  } finally {
+    setClearDueLoading(false);
+  }
+};
+
+// ✅ Confirm clear — same PUT /updateop/:id jo OP Management me hai
+const handleConfirmClearDue = async () => {
+  if (clearDueItemsList.length === 0) return;
+  setClearDueSaving(true);
+
+  try {
+    let updatedCount = 0;
+    let failedCount = 0;
+    let totalToClear = Number(clearDueItemsList[0]?.dueAmount) || 0;
+
+    if (totalToClear <= 0) {
+      showToast("Nothing to clear", "error");
+      setClearDueSaving(false);
+      return;
+    }
+
+    // Row ke saare bookings lo jisme due hai
+    let remainingToClear = totalToClear;
+
+    for (const orig of clearDueBookings) {
+      if (remainingToClear <= 0) break;
+
+      let bookingClearedAmt = 0;
+      let updatedItems = [];
+      let payload = {};
+
+      if (clearDueCategory === "lab") {
+        const existingLab = Array.isArray(orig.labItems) ? orig.labItems : [];
+        updatedItems = existingLab.map((item) => {
+          if (remainingToClear <= 0) return item;
+          
+          const net = Math.max(0, (Number(item.price) || 0) - (Number(item.discount) || 0));
+          const paid = Number(item.paidAmount) || 0;
+          let due = Number(item.dueAmount) || Math.max(0, net - paid);
+
+          if (due > 0) {
+            const clearAmt = Math.min(due, remainingToClear);
+            remainingToClear -= clearAmt;
+            bookingClearedAmt += clearAmt;
+            
+            return {
+              ...item.toObject?.() ?? item,
+              paidAmount: paid + clearAmt,
+              dueAmount: due - clearAmt,
+              paymentStatus: due - clearAmt <= 0.5 ? "Paid" : "Partial",
+              paymentMode: clearDuePaymentType,
+              transactionId: clearDueTransactionId || "",
+            };
+          }
+          return item;
+        });
+
+        if (bookingClearedAmt > 0) {
+          const labTotal = updatedItems.reduce((s, x) => s + (Number(x.price) || 0), 0);
+          const catPay = orig.categoryPayment || {};
+          const newCatPay = {
+            clinic: { paidAmount: Number(catPay.clinic?.paidAmount) || 0 },
+            lab: { paidAmount: updatedItems.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0) },
+            pharmacy: { paidAmount: Number(catPay.pharmacy?.paidAmount) || 0 },
+          };
+          const totalPaid = newCatPay.clinic.paidAmount + newCatPay.lab.paidAmount + newCatPay.pharmacy.paidAmount;
+
+          payload = {
+            ...copyBookingBasics(orig),
+            labItems: updatedItems,
+            labTotal,
+            categoryPayment: newCatPay,
+            amountPaid: totalPaid,
+            partialAmount: totalPaid,
+            paymentStatus: computeStatusFromCategoryPayment(newCatPay, orig),
+            balanceAmount: computeBalance(orig, totalPaid),
+          };
+        }
+      } 
+      else if (clearDueCategory === "pharmacy") {
+        const existingMed = Array.isArray(orig.medicineItems) ? orig.medicineItems : [];
+        updatedItems = existingMed.map((item) => {
+          if (remainingToClear <= 0) return item;
+          
+          const net = Math.max(0, (Number(item.price) || 0) - (Number(item.discount) || 0));
+          const paid = Number(item.paidAmount) || 0;
+          let due = Number(item.dueAmount) || Math.max(0, net - paid);
+
+          if (due > 0) {
+            const clearAmt = Math.min(due, remainingToClear);
+            remainingToClear -= clearAmt;
+            bookingClearedAmt += clearAmt;
+            
+            return {
+              ...item.toObject?.() ?? item,
+              paidAmount: paid + clearAmt,
+              dueAmount: due - clearAmt,
+              paymentStatus: due - clearAmt <= 0.5 ? "Paid" : "Partial",
+              paymentMode: clearDuePaymentType,
+              transactionId: clearDueTransactionId || "",
+            };
+          }
+          return item;
+        });
+
+        if (bookingClearedAmt > 0) {
+          const medicineTotal = updatedItems.reduce((s, x) => s + (Number(x.price) || 0), 0);
+          const catPay = orig.categoryPayment || {};
+          const newCatPay = {
+            clinic: { paidAmount: Number(catPay.clinic?.paidAmount) || 0 },
+            lab: { paidAmount: Number(catPay.lab?.paidAmount) || 0 },
+            pharmacy: { paidAmount: updatedItems.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0) },
+          };
+          const totalPaid = newCatPay.clinic.paidAmount + newCatPay.lab.paidAmount + newCatPay.pharmacy.paidAmount;
+
+          payload = {
+            ...copyBookingBasics(orig),
+            medicineItems: updatedItems,
+            medicineTotal,
+            categoryPayment: newCatPay,
+            amountPaid: totalPaid,
+            partialAmount: totalPaid,
+            paymentStatus: computeStatusFromCategoryPayment(newCatPay, orig),
+            balanceAmount: computeBalance(orig, totalPaid),
+          };
+        }
+      } 
+      else if (clearDueCategory === "clinic") {
+        const svcKey = Array.isArray(orig.serviceItems) && orig.serviceItems.length > 0
+          ? "serviceItems"
+          : "services";
+        const existingSvc = Array.isArray(orig[svcKey]) ? orig[svcKey] : [];
+
+        updatedItems = existingSvc.map((item) => {
+          const cat = (item.category || item.serviceCategory || "").toLowerCase();
+          const isClinic = !cat.includes("lab") && !cat.includes("test") && !cat.includes("pharm") && !cat.includes("medic");
+          
+          if (!isClinic || remainingToClear <= 0) return item;
+
+          const net = Math.max(0, (Number(item.price) || 0) - (Number(item.discount) || 0));
+          const paid = Number(item.paidAmount) || 0;
+          let due = Number(item.dueAmount) || Math.max(0, net - paid);
+
+          if (due > 0) {
+            const clearAmt = Math.min(due, remainingToClear);
+            remainingToClear -= clearAmt;
+            bookingClearedAmt += clearAmt;
+            
+            return {
+              ...item.toObject?.() ?? item,
+              paidAmount: paid + clearAmt,
+              dueAmount: due - clearAmt,
+              paymentStatus: due - clearAmt <= 0.5 ? "Paid" : "Partial",
+              paymentMode: clearDuePaymentType,
+              transactionId: clearDueTransactionId || "",
+            };
+          }
+          return item;
+        });
+
+        if (bookingClearedAmt > 0) {
+          const catPay = orig.categoryPayment || {};
+          const newCatPay = {
+            clinic: { paidAmount: updatedItems.reduce((s, x) => {
+              const cat = (x.category || x.serviceCategory || "").toLowerCase();
+              const isClinic = !cat.includes("lab") && !cat.includes("test") && !cat.includes("pharm") && !cat.includes("medic");
+              return isClinic ? s + (Number(x.paidAmount) || 0) : s;
+            }, 0) },
+            lab: { paidAmount: Number(catPay.lab?.paidAmount) || 0 },
+            pharmacy: { paidAmount: Number(catPay.pharmacy?.paidAmount) || 0 },
+          };
+          const totalPaid = newCatPay.clinic.paidAmount + newCatPay.lab.paidAmount + newCatPay.pharmacy.paidAmount;
+
+          payload = {
+            ...copyBookingBasics(orig),
+            [svcKey]: updatedItems,
+            serviceItems: updatedItems,
+            services: updatedItems,
+            categoryPayment: newCatPay,
+            amountPaid: totalPaid,
+            partialAmount: totalPaid,
+            paymentStatus: computeStatusFromCategoryPayment(newCatPay, orig),
+            balanceAmount: computeBalance(orig, totalPaid),
+          };
+        }
+      }
+
+      if (bookingClearedAmt > 0 && Object.keys(payload).length > 0) {
+        try {
+          const res = await axios.put(`${ANALYTICS_API_BASE}/updateop/${orig._id}`, payload);
+          if (res.data?.success) updatedCount++;
+          else failedCount++;
+        } catch (e) {
+          console.error("updateop error:", e);
+          failedCount++;
+        }
+      }
+    }
+
+    if (failedCount === 0) {
+      showToast(`✅ ${clearDueCategory} due cleared! Total cleared: ₹${Math.round(totalToClear)}`, "success");
+      setShowClearDueModal(false);
+      setClearDueItemsList([]);
+      setClearDueBookings([]);
+      setClearDueRowKey(null);
+      await fetchAnalytics();
+    } else {
+      showToast(`⚠️ Some failures. ${updatedCount} updated, ${failedCount} failed`, "error");
+      await fetchAnalytics();
+    }
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to clear due", "error");
+  } finally {
+    setClearDueSaving(false);
+  }
+};
+
+
+
+// ✅ Helper: copy booking basics for updateop payload
+const copyBookingBasics = (b) => ({
+  patientTitle: b.patientTitle,
+  patientName: b.patientName,
+  patientPhone: b.patientPhone,
+  patientAge: b.patientAge,
+  patientDob: b.patientDob,
+  patientGender: b.patientGender,
+  patientAddress: b.patientAddress,
+  patientCity: b.patientCity,
+  patientPincode: b.patientPincode,
+  purpose: b.purpose,
+  paymentType: b.paymentType,
+  doctorId: b.doctorId,
+  appointmentDate: b.appointmentDate,
+  isOP: true,
+  status: b.status || "confirmed",
+  subtotal: b.subtotal,
+  commissionAmount: b.commissionAmount,
+  discount: b.discount,
+  discountType: b.discountType || "₹",
+  finalPayable: b.finalPayable,
+  finalPayableAmount: b.finalPayableAmount || b.finalPayable,
+  grandTotal: b.grandTotal || b.finalPayable,
+  totalAmount: b.totalAmount || b.finalPayable,
+  referredByCustomer: b.referredByCustomer,
+  referredByDoctor: b.referredByDoctor,
+  referralCustomerId: b.referralCustomerId,
+  referralDoctorId: b.referralDoctorId,
+  referralCommission: b.referralCommission,
+  referralCommissionType: b.referralCommissionType,
+  offerApplied: b.offerApplied || null,
+  serviceItems: Array.isArray(b.serviceItems) ? b.serviceItems : (Array.isArray(b.services) ? b.services : []),
+  services: Array.isArray(b.services) ? b.services : (Array.isArray(b.serviceItems) ? b.serviceItems : []),
+  labItems: Array.isArray(b.labItems) ? b.labItems : [],
+  medicineItems: Array.isArray(b.medicineItems) ? b.medicineItems : [],
+  labTotal: Number(b.labTotal) || 0,
+  medicineTotal: Number(b.medicineTotal) || 0,
+});
+
+// ✅ Status derive karo categoryPayment se
+const computeStatusFromCategoryPayment = (catPay, booking) => {
+  const totalPaid = (catPay.clinic?.paidAmount || 0) + (catPay.lab?.paidAmount || 0) + (catPay.pharmacy?.paidAmount || 0);
+  const totalFinal = Number(booking.finalPayable) || Number(booking.grandTotal) || Number(booking.totalAmount) || 0;
+  if (totalFinal <= 0) return totalPaid > 0 ? "Paid" : "Due";
+  if (totalPaid >= totalFinal - 0.5) return "Paid";
+  if (totalPaid > 0) return "Partial";
+  return "Due";
+};
+
+const computeBalance = (booking, totalPaid) => {
+  const totalFinal = Number(booking.finalPayable) || Number(booking.grandTotal) || Number(booking.totalAmount) || 0;
+  return Math.max(0, totalFinal - totalPaid);
+};
 
   const fetchAllTargets = useCallback(async () => {
     setLoadingAllTargets(true);
@@ -1437,9 +1822,11 @@ export default function RevenueAnalytics() {
     setLoading(true);
     setError(null);
     setData(null);
-    setRowInputs({}); // 👈 YEH NAYI LINE ADD KAREIN
+    setRowInputs({});
     setBankCredit("");
     setSavedBankCredit(null);
+    setCashReceived("");
+    setSavedCashReceived(null);
     try {
       const url = `${ANALYTICS_API_BASE}/revenue-analytics?from=${queryFrom}&to=${queryTo}`;
       const res = await axios.get(url);
@@ -1454,8 +1841,8 @@ export default function RevenueAnalytics() {
         (normalized.rows || []).forEach((r) => {
           const key = r.date;
           const hasRetailData = (Number(r.retailPharmacy?.cash) > 0) || (Number(r.retailPharmacy?.online) > 0) || (Number(r.retailPharmacy?.footFall) > 0);
-
           const hasBankCredit = r.bankCredit != null && Number(r.bankCredit) > 0;
+          const hasCashReceived = r.cashReceived != null && Number(r.cashReceived) > 0;
 
           nextRowInputs[key] = {
             cash: r.retailPharmacy?.cash ? String(r.retailPharmacy.cash) : "",
@@ -1464,17 +1851,23 @@ export default function RevenueAnalytics() {
             bankCredit: r.bankCredit != null ? String(r.bankCredit) : "",
             savedBankCredit: hasBankCredit ? Number(r.bankCredit) : null,
             saved: hasBankCredit,
+            cashReceived: r.cashReceived != null ? String(r.cashReceived) : "",
+            savedCashReceived: hasCashReceived ? Number(r.cashReceived) : null,
+            savedCash: hasCashReceived,
             savedRetail: hasRetailData,
             savedRetailCash: Number(r.retailPharmacy?.cash) || 0,
             savedRetailOnline: Number(r.retailPharmacy?.online) || 0,
             savedRetailFootFall: Number(r.retailPharmacy?.footFall) || 0,
             editingBankCredit: false,
+            editingCashReceived: false,
           };
         });
         setRowInputs(nextRowInputs);
 
         setIsEditingTotalBC(false);
+        setIsEditingTotalCash(false);
 
+        // Populate Bank Credit Total
         if (res.data.bankCredit && Number(res.data.bankCredit.bankCredit) > 0) {
           setBankCredit(String(res.data.bankCredit.bankCredit || ""));
           setSavedBankCredit(Number(res.data.bankCredit.bankCredit) || 0);
@@ -1482,6 +1875,16 @@ export default function RevenueAnalytics() {
           const firstRowWithBC = normalized.rows.find(r => r.bankCredit != null && Number(r.bankCredit) > 0);
           if (firstRowWithBC) { setBankCredit(String(firstRowWithBC.bankCredit)); setSavedBankCredit(Number(firstRowWithBC.bankCredit)); }
           else { setBankCredit(""); setSavedBankCredit(null); }
+        }
+
+        // Populate Cash Received Total
+        if (res.data.bankCredit && Number(res.data.bankCredit.cashReceived) > 0) {
+          setCashReceived(String(res.data.bankCredit.cashReceived || ""));
+          setSavedCashReceived(Number(res.data.bankCredit.cashReceived) || 0);
+        } else {
+          const firstRowWithCR = normalized.rows.find(r => r.cashReceived != null && Number(r.cashReceived) > 0);
+          if (firstRowWithCR) { setCashReceived(String(firstRowWithCR.cashReceived)); setSavedCashReceived(Number(firstRowWithCR.cashReceived)); }
+          else { setCashReceived(""); setSavedCashReceived(null); }
         }
       } else {
         setError(res.data?.message || "Failed to fetch analytics");
@@ -1496,7 +1899,6 @@ export default function RevenueAnalytics() {
   }, [fromDate, toDate]);
 
   useEffect(() => {
-    // Page load hote hi Default Today set karo
     const nowD = new Date();
     setActivePreset("today");
     setFromDate(fmtDate(nowD));
@@ -1539,7 +1941,7 @@ export default function RevenueAnalytics() {
     else if (preset === "last7Days") { const past7Days = new Date(nowD); past7Days.setDate(nowD.getDate() - 6); setFromDate(fmtDate(past7Days)); setToDate(fmtDate(nowD)); }
     else if (preset === "thisWeek") { const dow = nowD.getDay(); const diff = dow === 0 ? 6 : dow - 1; const mon = new Date(nowD); mon.setDate(mon.getDate() - diff); setFromDate(fmtDate(mon)); setToDate(fmtDate(nowD)); }
     else if (preset === "thisMonth") { const first = new Date(nowD.getFullYear(), nowD.getMonth(), 1); const last = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0); setFromDate(fmtDate(first)); setToDate(fmtDate(last)); }
-    else if (preset === "lastMonth") { const first = new Date(nowD.getFullYear(), nowD.getMonth() - 1, 1); const last = new Date(nowD.getFullYear(), nowD.getMonth(), 0); setFromDate(fmtDate(first)); setToDate(fmtDate(last)); }
+    else if (preset === "lastMonth") { const first = new Date(nowD.getFullYear(), nowD.getMonth() - 1, 1); const last = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0); setFromDate(fmtDate(first)); setToDate(fmtDate(last)); }
     else if (preset === "thisYear") { const first = new Date(nowD.getFullYear(), 0, 1); const last = new Date(nowD.getFullYear(), 11, 31); setFromDate(fmtDate(first)); setToDate(fmtDate(last)); }
     else if (preset === "all") { setFromDate(""); setToDate(""); }
   };
@@ -1558,13 +1960,11 @@ export default function RevenueAnalytics() {
     return { cash, online, due: 0, total: cash + online, card: 0, insurance: 0, footFall: Number(retailInput.footFall) || 0 };
   }, [retailInput]);
 
-  // FIXED: W Pharmacy = 0 if Total Pharmacy is 0, else (Total - Clinic)
   const wPharmacyLive = useMemo(() => {
     const totalPharmacyCash = retailPharmacyLive.cash;
     const totalPharmacyOnline = retailPharmacyLive.online;
     const totalPharmacyFF = retailPharmacyLive.footFall;
 
-    // If Total Pharmacy is 0, W Pharmacy should be 0
     const isRetailZero = (totalPharmacyCash === 0 && totalPharmacyOnline === 0 && totalPharmacyFF === 0);
 
     if (isRetailZero) {
@@ -1581,7 +1981,6 @@ export default function RevenueAnalytics() {
     };
   }, [retailPharmacyLive, data]);
 
-  // FIXED: Grand Total = Clinic + Lab + Clinic Pharmacy + W Pharmacy
   const grandTotalLive = useMemo(() => {
     if (!data) return null;
     const c = data.clinic, l = data.lab, cp = data.pharmacy, w = wPharmacyLive;
@@ -1634,7 +2033,6 @@ export default function RevenueAnalytics() {
       acc.daysCount += 1;
       cur.setDate(cur.getDate() + 1);
     }
-    // Target total
     acc.total = acc.clinic + acc.lab + acc.clinicPharmacy;
     acc.totalFF = acc.clinicFF + acc.labFF + acc.clinicPharmacyFF;
     return acc;
@@ -1662,6 +2060,7 @@ export default function RevenueAnalytics() {
     const sums = sumCategoryFromRows(filteredRows);
     return { ...sums, hasData: filteredRows.length > 0 };
   }, [data, fromDate, toDate]);
+
   const tableTotal = useMemo(() => {
     if (!data || !data.rows || data.rows.length === 0) return null;
     const acc = {
@@ -1672,7 +2071,9 @@ export default function RevenueAnalytics() {
       wPharmacy: { cash: 0, online: 0, total: 0, footFall: 0, due: 0 },
       grand: { cash: 0, online: 0, total: 0, footFall: 0, due: 0 },
       bankCredit: 0, creditedDiff: 0,
+      cashReceived: 0, cashDiff: 0,
       statusSummary: { less: { count: 0, amt: 0 }, more: { count: 0, amt: 0 }, matched: { count: 0 } },
+      cashStatusSummary: { less: { count: 0, amt: 0 }, more: { count: 0, amt: 0 }, matched: { count: 0 } },
     };
     data.rows.forEach((r) => {
       const rowKey = r.date || "__total__";
@@ -1703,17 +2104,27 @@ export default function RevenueAnalytics() {
       const rBC = ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0);
       acc.bankCredit += rBC;
 
-      // Row-wise status summary (Credit Less / Credit More / Matched)
+      const rCR = ri.savedCashReceived != null ? Number(ri.savedCashReceived) : (parseFloat(ri.cashReceived) || 0);
+      acc.cashReceived += rCR;
+
+      const rowGrandOnline = (Number(r.clinic.online) || 0) + (Number(r.lab.online) || 0) + (Number(r.pharmacy.online) || 0) + wOnlineVal + rowCustomOnline;
+      const rowGrandCash = (Number(r.clinic.cash) || 0) + (Number(r.lab.cash) || 0) + (Number(r.pharmacy.cash) || 0) + wCashVal + rowCustomCash;
+
       if (rBC) {
-        const rowGrandOnline = (Number(r.clinic.online) || 0) + (Number(r.lab.online) || 0) + (Number(r.pharmacy.online) || 0) + wOnlineVal + rowCustomOnline;
         const rowDiff = rBC - rowGrandOnline;
         if (Math.abs(rowDiff) < 0.5) acc.statusSummary.matched.count += 1;
         else if (rowDiff > 0) { acc.statusSummary.more.count += 1; acc.statusSummary.more.amt += rowDiff; }
         else { acc.statusSummary.less.count += 1; acc.statusSummary.less.amt += Math.abs(rowDiff); }
       }
+
+      if (rCR) {
+        const rowCashDiff = rCR - rowGrandCash;
+        if (Math.abs(rowCashDiff) < 0.5) acc.cashStatusSummary.matched.count += 1;
+        else if (rowCashDiff > 0) { acc.cashStatusSummary.more.count += 1; acc.cashStatusSummary.more.amt += rowCashDiff; }
+        else { acc.cashStatusSummary.less.count += 1; acc.cashStatusSummary.less.amt += Math.abs(rowCashDiff); }
+      }
     });
 
-    // 🔥 YAHAN FIX KIYA HAI: Clinic aur Lab ka total Cash + Online kar diya
     acc.clinic.total = acc.clinic.cash + acc.clinic.online;
     acc.lab.total = acc.lab.cash + acc.lab.online;
     acc.pharmacy.total = acc.pharmacy.cash + acc.pharmacy.online;
@@ -1725,12 +2136,11 @@ export default function RevenueAnalytics() {
     acc.wPharmacy.footFall = isRetailZeroTotal ? 0 : (acc.retail.footFall - acc.pharmacy.footFall);
     acc.wPharmacy.due = 0;
 
-    // 🔥 Grand Total ko bhi sahi kar diya (Cash + Online)
     acc.grand.total = acc.grand.cash + acc.grand.online;
-    // Grand Due = Clinic + Lab + Clinic Pharmacy + W Pharmacy due
     acc.grand.due = acc.clinic.due + acc.lab.due + acc.pharmacy.due + acc.wPharmacy.due;
 
     acc.creditedDiff = acc.bankCredit - acc.grand.online;
+    acc.cashDiff = acc.cashReceived - acc.grand.cash;
     return acc;
   }, [data, rowInputs, customSegments]);
 
@@ -1739,12 +2149,12 @@ export default function RevenueAnalytics() {
     try {
       const ri = rowInputs[rowKey] || {};
       const existingBC = ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0);
+      const existingCR = ri.savedCashReceived != null ? Number(ri.savedCashReceived) : (parseFloat(ri.cashReceived) || 0);
 
       let rowFrom, rowTo;
       if (/^\d{4}-\d{2}$/.test(rowKey)) { const [y, m] = rowKey.split("-").map(Number); rowFrom = fmtDate(new Date(y, m - 1, 1)); rowTo = fmtDate(new Date(y, m, 0)); }
       else { rowFrom = rowKey; rowTo = rowKey; }
 
-      // Diff is now calculated against the Online portion of the row grand total
       const diff = existingBC - (Number(rowInputs[rowKey]?.online) + (Number(data?.clinic?.online) || 0) + (Number(data?.lab?.online) || 0) + (Number(data?.pharmacy?.online) || 0));
       const absDiff = Math.abs(diff);
       let diffStatus = "—";
@@ -1752,7 +2162,7 @@ export default function RevenueAnalytics() {
 
       const res = await axios.post(`${ANALYTICS_API_BASE}/save-bank-credit`, {
         fromDate: rowFrom, toDate: rowTo, rowKey,
-        bankCredit: existingBC, grandTotal: rowGrandTotal,
+        bankCredit: existingBC, cashReceived: existingCR, grandTotal: rowGrandTotal,
         creditedDiff: diff, diffStatus, savedBy: "Admin",
         retailPharmacy: { cash: retailData.cash, online: retailData.online, footFall: retailData.footFall, total: retailData.total },
       });
@@ -1778,11 +2188,15 @@ export default function RevenueAnalytics() {
     setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), savedRetail: false } }));
   };
 
+  // Row Bank Credit Save
   const handleSaveRow = async (rowKey, bankCreditNum, rowGrandTotal, retailData) => {
     let rowFrom, rowTo;
     if (/^\d{4}-\d{2}$/.test(rowKey)) { const [y, m] = rowKey.split("-").map(Number); rowFrom = fmtDate(new Date(y, m - 1, 1)); rowTo = fmtDate(new Date(y, m, 0)); }
     else { rowFrom = rowKey; rowTo = rowKey; }
-    // Diff is now calculated against the Online portion
+
+    const ri = rowInputs[rowKey] || {};
+    const existingCR = ri.savedCashReceived != null ? Number(ri.savedCashReceived) : (parseFloat(ri.cashReceived) || 0);
+
     const diff = bankCreditNum - (Number(retailData.online) + (Number(data?.clinic?.online) || 0) + (Number(data?.lab?.online) || 0) + (Number(data?.pharmacy?.online) || 0));
     const absDiff = Math.abs(diff);
     let diffStatus = "—";
@@ -1791,25 +2205,67 @@ export default function RevenueAnalytics() {
     try {
       const res = await axios.post(`${ANALYTICS_API_BASE}/save-bank-credit`, {
         fromDate: rowFrom, toDate: rowTo, rowKey,
-        bankCredit: bankCreditNum, grandTotal: rowGrandTotal,
+        bankCredit: bankCreditNum, cashReceived: existingCR, grandTotal: rowGrandTotal,
         creditedDiff: diff, diffStatus, savedBy: "Admin",
         retailPharmacy: { cash: retailData.cash, online: retailData.online, footFall: retailData.footFall, total: retailData.total },
       });
       if (res.data?.success) {
         setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), saved: true, savedBankCredit: bankCreditNum, savedRetail: true, editingBankCredit: false } }));
-        showToast(`✅ Row saved!`, "success");
+        showToast(`✅ Bank Credit saved!`, "success");
       } else { showToast(res.data?.message || "Failed to save", "error"); }
     } catch (err) { showToast(err.response?.data?.message || "Failed to save", "error"); }
     finally { setSavingRowKey(null); }
   };
 
+  // Row Cash Received Save
+  const handleSaveCashRow = async (rowKey, cashReceivedNum, rowGrandTotal, retailData, rowGrandCash) => {
+    let rowFrom, rowTo;
+    if (/^\d{4}-\d{2}$/.test(rowKey)) { const [y, m] = rowKey.split("-").map(Number); rowFrom = fmtDate(new Date(y, m - 1, 1)); rowTo = fmtDate(new Date(y, m, 0)); }
+    else { rowFrom = rowKey; rowTo = rowKey; }
+
+    const ri = rowInputs[rowKey] || {};
+    const existingBC = ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0);
+
+    const diff = cashReceivedNum - (rowGrandCash || 0);
+    const absDiff = Math.abs(diff);
+    let cashStatus = "—";
+    if (cashReceivedNum && rowGrandTotal) {
+      if (absDiff < 0.5) cashStatus = "MATCHED";
+      else if (diff > 0) cashStatus = "RCVD MORE";
+      else cashStatus = "RCVD LESS";
+    }
+
+    setSavingCashRowKey(rowKey);
+    try {
+      const res = await axios.post(`${ANALYTICS_API_BASE}/save-bank-credit`, {
+        fromDate: rowFrom, toDate: rowTo, rowKey,
+        bankCredit: existingBC, cashReceived: cashReceivedNum, grandTotal: rowGrandTotal,
+        cashDiff: diff, cashStatus, savedBy: "Admin",
+        retailPharmacy: { cash: retailData.cash, online: retailData.online, footFall: retailData.footFall, total: retailData.total },
+      });
+      if (res.data?.success) {
+        setRowInputs((p) => ({
+          ...p,
+          [rowKey]: {
+            ...(p[rowKey] || {}),
+            savedCash: true,
+            savedCashReceived: cashReceivedNum,
+            editingCashReceived: false,
+          }
+        }));
+        showToast(`✅ Cash Received saved!`, "success");
+      } else { showToast(res.data?.message || "Failed to save cash received", "error"); }
+    } catch (err) { showToast(err.response?.data?.message || "Failed to save cash received", "error"); }
+    finally { setSavingCashRowKey(null); }
+  };
+
+  // Total Bank Credit Save
   const handleSaveClick = () => {
     setShowSaveConfirm(true);
   };
 
   const handleConfirmSave = async () => {
     const bankCreditNum = parseFloat(bankCredit) || 0;
-    // Diff is now calculated against the total ONLINE instead of grand total
     const onlineTotalNum = grandTotalLive?.online || 0;
     const diff = bankCreditNum - onlineTotalNum;
     const absDiff = Math.abs(diff);
@@ -1819,7 +2275,9 @@ export default function RevenueAnalytics() {
     try {
       const res = await axios.post(`${ANALYTICS_API_BASE}/save-bank-credit`, {
         fromDate, toDate, rowKey: "__total__",
-        bankCredit: bankCreditNum, grandTotal: grandTotalLive?.total || 0,
+        bankCredit: bankCreditNum,
+        cashReceived: savedCashReceived !== null ? savedCashReceived : (parseFloat(cashReceived) || 0),
+        grandTotal: grandTotalLive?.total || 0,
         creditedDiff: diff, diffStatus, savedBy: "Admin",
         retailPharmacy: retailPharmacyLive,
       });
@@ -1833,22 +2291,60 @@ export default function RevenueAnalytics() {
     finally { setSavingBankCredit(false); }
   };
 
+  // Total Cash Received Save
+  const handleSaveCashClick = () => {
+    setShowSaveCashConfirm(true);
+  };
+
+  const handleConfirmSaveCash = async () => {
+    const cashReceivedNum = parseFloat(cashReceived) || 0;
+    const cashTotalNum = grandTotalLive?.cash || 0;
+    const diff = cashReceivedNum - cashTotalNum;
+    const absDiff = Math.abs(diff);
+    let cashStatus = "—";
+    if (cashReceivedNum && cashTotalNum) {
+      if (absDiff < 0.5) cashStatus = "MATCHED";
+      else if (diff > 0) cashStatus = "RCVD MORE";
+      else cashStatus = "RCVD LESS";
+    }
+    setSavingCashReceived(true);
+    try {
+      const res = await axios.post(`${ANALYTICS_API_BASE}/save-bank-credit`, {
+        fromDate, toDate, rowKey: "__total__",
+        bankCredit: savedBankCredit !== null ? savedBankCredit : (parseFloat(bankCredit) || 0),
+        cashReceived: cashReceivedNum,
+        grandTotal: grandTotalLive?.total || 0,
+        cashDiff: diff, cashStatus, savedBy: "Admin",
+        retailPharmacy: retailPharmacyLive,
+      });
+      if (res.data?.success) {
+        setSavedCashReceived(cashReceivedNum);
+        setIsEditingTotalCash(false);
+        setShowSaveCashConfirm(false);
+        showToast(`✅ Cash Received ${fmtAmt(cashReceivedNum)} saved!`, "success");
+      } else { showToast(res.data?.message || "Failed to save cash received", "error"); }
+    } catch (err) { showToast(err.response?.data?.message || "Failed to save cash received", "error"); }
+    finally { setSavingCashReceived(false); }
+  };
+
   const bankCreditNum = savedBankCredit !== null ? savedBankCredit : (parseFloat(bankCredit) || 0);
-  const hasSavedValue = savedBankCredit !== null && savedBankCredit > 0;
-  const currentInputNum = parseFloat(bankCredit) || 0;
-  const hasUnsavedChange = currentInputNum !== (savedBankCredit || 0);
+  const cashReceivedNum = savedCashReceived !== null ? savedCashReceived : (parseFloat(cashReceived) || 0);
 
   const handleExportCSV = () => {
     if (!data || !grandTotalLive) return;
-    // Export now uses online difference
     const diff = bankCreditNum - (grandTotalLive.online || 0);
     const diffLabel = !bankCreditNum ? "—" : Math.abs(diff) < 0.5 ? "MATCHED" : diff > 0 ? "CREDIT MORE" : "CREDIT LESS";
+
+    const cashDiff = cashReceivedNum - (grandTotalLive.cash || 0);
+    const cashDiffLabel = !cashReceivedNum ? "—" : Math.abs(cashDiff) < 0.5 ? "MATCHED" : cashDiff > 0 ? "RCVD MORE" : "RCVD LESS";
+
     const rowCells = (r) => {
       const rowKey = r.date || "__total__";
       const ri = rowInputs[rowKey] || {};
       const rCash = Number(ri.cash) || 0, rOnline = Number(ri.online) || 0, rFoot = Number(ri.footFall) || 0;
       const rRetail = { cash: rCash, online: rOnline, total: rCash + rOnline, footFall: rFoot };
       const rBC = ri.savedBankCredit != null ? Number(ri.savedBankCredit) : 0;
+      const rCR = ri.savedCashReceived != null ? Number(ri.savedCashReceived) : 0;
 
       const wCash = rRetail.cash - (Number(r.pharmacy.cash) || 0);
       const wOnline = rRetail.online - (Number(r.pharmacy.online) || 0);
@@ -1862,10 +2358,12 @@ export default function RevenueAnalytics() {
         footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (rRetail.footFall - (Number(r.pharmacy.footFall) || 0)),
       };
 
-      // Diff is calculated against online
       const rDiff = rBC - rGrand.online;
-
       const rDiffLabel = !rBC ? "—" : Math.abs(rDiff) < 0.5 ? "MATCHED" : rDiff > 0 ? "CREDIT MORE" : "CREDIT LESS";
+
+      const rCashDiff = rCR - rGrand.cash;
+      const rCashDiffLabel = !rCR ? "—" : Math.abs(rCashDiff) < 0.5 ? "MATCHED" : rCashDiff > 0 ? "RCVD MORE" : "RCVD LESS";
+
       const isMonthly = r.year && r.month;
       const dateLabel = rowKey === "__total__" ? `${formatDateToDDMMYYYY(fromDate)} – ${formatDateToDDMMYYYY(toDate)}` : isMonthly ? `${MONTHS[r.month - 1].slice(0, 3)} ${r.year}` : formatDateToDDMMYYYY(r.date);
 
@@ -1886,6 +2384,13 @@ export default function RevenueAnalytics() {
       <td>${rRetail.cash}</td><td>${rRetail.online}</td><td class="total-cell">${rRetail.total}</td><td class="footfall">${rRetail.footFall}</td>
       
       <td>${rGrand.cash}</td><td>${rGrand.online}</td><td class="grand-total">${rGrand.total}</td><td class="footfall">${rGrand.footFall}</td>
+      
+      <!-- Cash Rcvd -->
+      <td>${rCR || "—"}</td>
+      <td>${Math.abs(rCashDiff) >= 0.5 && rCR ? Math.abs(rCashDiff) : (rCR ? 0 : "—")}</td>
+      <td>${rCashDiffLabel}</td>
+
+      <!-- Bank Credit -->
       <td>${rBC || "—"}</td>
       <td>${Math.abs(rDiff) >= 0.5 && rBC ? Math.abs(rDiff) : (rBC ? 0 : "—")}</td>
       <td>${rDiffLabel}</td>
@@ -1909,6 +2414,13 @@ export default function RevenueAnalytics() {
       <td>${retailPharmacyLive.cash}</td><td>${retailPharmacyLive.online}</td><td class="total-cell">${retailPharmacyLive.total}</td><td class="footfall">${retailPharmacyLive.footFall}</td>
       
       <td>${grandTotalLive.cash}</td><td>${grandTotalLive.online}</td><td class="grand-total">${grandTotalLive.total}</td><td class="footfall">${grandTotalLive.footFall}</td>
+      
+      <!-- Cash Rcvd -->
+      <td>${cashReceivedNum || "—"}</td>
+      <td>${Math.abs(cashDiff) >= 0.5 && cashReceivedNum ? Math.abs(cashDiff) : (cashReceivedNum ? 0 : "—")}</td>
+      <td>${cashDiffLabel}</td>
+
+      <!-- Bank Credit -->
       <td>${bankCreditNum || "—"}</td>
       <td>${Math.abs(diff) >= 0.5 && bankCreditNum ? Math.abs(diff) : (bankCreditNum ? 0 : "—")}</td>
       <td>${diffLabel}</td>
@@ -1926,6 +2438,7 @@ export default function RevenueAnalytics() {
   .grp-wpharmacy { background: #0891b2; color: #fff; font-weight: bold; }
   .grp-retail { background: #d97706; color: #fff; font-weight: bold; }
   .grp-summary { background: #4338ca; color: #fff; font-weight: bold; }
+  .grp-cash { background: #047857; color: #fff; font-weight: bold; }
   .grp-bank { background: #be123c; color: #fff; font-weight: bold; }
   .sub-clinic { background: #dbeafe; color: #1e40af; font-weight: bold; }
   .sub-lab { background: #ede9fe; color: #6d28d9; font-weight: bold; }
@@ -1950,6 +2463,9 @@ export default function RevenueAnalytics() {
       <th class="grp-wpharmacy" colspan="4">W Pharmacy</th>
       <th class="grp-retail" colspan="4">Total Pharmacy</th>
       <th class="grp-summary" colspan="4">Grand Total</th>
+      <th class="grp-cash" rowspan="2">Cash Rcvd</th>
+      <th class="grp-cash" rowspan="2">Cash D/W</th>
+      <th class="grp-cash" rowspan="2">Cash Status</th>
       <th class="grp-bank" rowspan="2">Bank Credit</th>
       <th class="grp-bank" rowspan="2">Credited D/W</th>
       <th class="grp-bank" rowspan="2">Status</th>
@@ -1998,7 +2514,7 @@ export default function RevenueAnalytics() {
     { v: "thisYear", l: "This Year" }, { v: "all", l: "All" },
   ];
 
-  const inputCls = "w-full text-center text-xs font-bold bg-white border border-amber-400 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500";
+  const compactInputCls = "w-[70px] text-center text-xs font-bold bg-white border border-amber-400 rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 disabled:bg-slate-100 disabled:text-slate-500";
 
   const styles = getDynamicStyles(customSegments);
 
@@ -2047,23 +2563,24 @@ export default function RevenueAnalytics() {
     const rOnline = isTotal ? (Number(retailInput.online) || 0) : (Number(ri.online) || 0);
     const rFoot = isTotal ? (Number(retailInput.footFall) || 0) : (Number(ri.footFall) || 0);
     const rRetail = { cash: rCash, online: rOnline, total: rCash + rOnline, footFall: rFoot };
+
+    // Bank Credit value
     const rBC = isTotal ? (savedBankCredit !== null ? savedBankCredit : (parseFloat(bankCredit) || 0)) : (ri.savedBankCredit != null ? Number(ri.savedBankCredit) : (parseFloat(ri.bankCredit) || 0));
 
-    // W Pharmacy calculate hota hai Total - Clinic
+    // Cash Received value
+    const rCR = isTotal ? (savedCashReceived !== null ? savedCashReceived : (parseFloat(cashReceived) || 0)) : (ri.savedCashReceived != null ? Number(ri.savedCashReceived) : (parseFloat(ri.cashReceived) || 0));
+
     const isRetailZero = (rCash === 0 && rOnline === 0 && rFoot === 0);
     const wCash = isRetailZero ? 0 : rCash - (Number(r.pharmacy.cash) || 0);
     const wOnline = isRetailZero ? 0 : rOnline - (Number(r.pharmacy.online) || 0);
     const wTotal = isRetailZero ? 0 : rRetail.total - (Number(r.pharmacy.total) || 0);
     const wFoot = isRetailZero ? 0 : rFoot - (Number(r.pharmacy.footFall) || 0);
-    // W Pharmacy Due (no due source for W Pharmacy, so 0)
     const wDue = 0;
 
-    // Due values for each section
     const clinicDue = Number(r.clinic.due) || 0;
     const labDue = Number(r.lab.due) || 0;
     const pharmacyDue = Number(r.pharmacy.due) || 0;
 
-    // AGAR Total Pharmacy 0 hai, toh Grand Total mein minus nahi hoga (0 hi judega)
     let rGrand = {
       cash: r.clinic.cash + r.lab.cash + r.pharmacy.cash + (isRetailZero ? 0 : wCash),
       online: r.clinic.online + r.lab.online + r.pharmacy.online + (isRetailZero ? 0 : wOnline),
@@ -2082,11 +2599,18 @@ export default function RevenueAnalytics() {
       rGrand.footFall += cFoot;
     });
 
-    // Calculate Diff against ONLINE
+    // Bank Credit Diff against ONLINE
     const rDiff = rBC - rGrand.online;
     const rDiffAbs = Math.abs(rDiff);
     const rDiffLabel = !rBC ? "—" : rDiffAbs < 0.5 ? "MATCHED" : rDiff > 0 ? "CREDIT MORE" : "CREDIT LESS";
     const rDiffColor = rDiffLabel === "MATCHED" ? "text-emerald-700" : rDiffLabel === "CREDIT MORE" ? "text-blue-700" : rDiffLabel === "CREDIT LESS" ? "text-rose-700" : "text-slate-400";
+
+    // Cash Received Diff against CASH
+    const rCashDiff = rCR - rGrand.cash;
+    const rCashDiffAbs = Math.abs(rCashDiff);
+    const rCashDiffLabel = !rCR ? "—" : rCashDiffAbs < 0.5 ? "MATCHED" : rCashDiff > 0 ? "RCVD MORE" : "RCVD LESS";
+    const rCashDiffColor = rCashDiffLabel === "MATCHED" ? "text-emerald-700" : rCashDiffLabel === "RCVD MORE" ? "text-blue-700" : rCashDiffLabel === "RCVD LESS" ? "text-rose-700" : "text-slate-400";
+
     const isMonthly = r.year && r.month;
     const dateLabel = isTotal ? `${formatDateToDDMMYYYY(fromDate)} – ${formatDateToDDMMYYYY(toDate)}` : isMonthly ? `${MONTHS[r.month - 1].slice(0, 3)} ${r.year}` : formatDateToDDMMYYYY(r.date);
     const hasMonthData = r.monthData && r.monthData.length > 0;
@@ -2100,12 +2624,9 @@ export default function RevenueAnalytics() {
     const savedFoot = Number(ri.savedRetailFootFall) || 0;
     const hasUnsavedRetailChange = rCash !== savedCash || rOnline !== savedOnline || rFoot !== savedFoot;
 
-    // Custom classes for compact inputs
-    const compactInputCls = "w-[70px] text-center text-xs font-bold bg-white border border-amber-400 rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 disabled:bg-slate-100 disabled:text-slate-500";
-
     return (
       <tr key={rowKey} className={`hover:bg-slate-50 ${isTotal ? "bg-amber-50/60 border-t-2 border-amber-300" : isSubRow ? "bg-slate-50/50" : ""}`}>
-        <td className={`px-3 py-3 text-center font-bold text-slate-800 text-[11px] border-r border-slate-200 whitespace-nowrap ${isTotal ? "bg-amber-50" : isSubRow ? "bg-slate-100/50" : "bg-slate-50"}`}>
+        <td className={`sticky left-0 z-30 px-3 py-3 text-center font-bold text-slate-800 text-[11px] border-r border-slate-200 whitespace-nowrap shadow-[2px_0_4px_-1px_rgba(0,0,0,0.12)] ${isTotal ? "bg-amber-50" : isSubRow ? "bg-slate-100" : "bg-slate-50"}`}>
           <div className="flex items-center justify-center gap-1.5">
             {hasMonthData && !isTotal && (
               <div className="relative group flex items-center justify-center">
@@ -2122,30 +2643,68 @@ export default function RevenueAnalytics() {
         </td>
         <td className="px-2 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.clinic.cash)}</td>
         <td className="px-2 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.clinic.online)}</td>
-        <td className="px-2 py-3 text-center font-bold text-blue-700 border-r border-slate-100 bg-blue-50/40 text-xs">{fmt((r.clinic.cash || 0) + (r.clinic.online || 0))}</td>
+<td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">
+  {clinicDue > 0 ? (
+    <button
+      type="button"
+      onClick={() => openClearDueModal(rowKey, "clinic")}
+      className="text-rose-600 hover:text-rose-800 hover:underline font-black"
+      title="Click to Clear Clinic Due"
+    >
+      {fmt(clinicDue)}
+    </button>
+  ) : (
+    <span className="text-slate-400">{fmt(clinicDue)}</span>
+  )}
+</td>        <td className="px-2 py-3 text-center font-bold text-blue-700 border-r border-slate-100 bg-blue-50/40 text-xs">{fmt((r.clinic.cash || 0) + (r.clinic.online || 0))}</td>
         <td className="px-2 py-3 text-center font-bold text-blue-800 border-r border-slate-200 bg-blue-50/40 text-xs">{r.clinic.footFall}</td>
-        <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(clinicDue)}</td>
 
         <td className="px-2 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.lab.cash)}</td>
         <td className="px-2 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.lab.online)}</td>
+      <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">
+  {labDue > 0 ? (
+    <button
+      type="button"
+      onClick={() => openClearDueModal(rowKey, "lab")}
+      className="text-rose-600 hover:text-rose-800 hover:underline font-black"
+      title="Click to Clear Lab Due"
+    >
+      {fmt(labDue)}
+    </button>
+  ) : (
+    <span className="text-slate-400">{fmt(labDue)}</span>
+  )}
+</td>
         <td className="px-2 py-3 text-center font-bold text-purple-700 border-r border-slate-100 bg-purple-50/40 text-xs">{fmt((r.lab.cash || 0) + (r.lab.online || 0))}</td>
         <td className="px-2 py-3 text-center font-bold text-purple-800 border-r border-slate-200 bg-purple-50/40 text-xs">{r.lab.footFall}</td>
-        <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(labDue)}</td>
 
         <td className="px-2 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.cash)}</td>
         <td className="px-2 py-3 text-center font-semibold text-sky-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.online)}</td>
+        <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">
+  {pharmacyDue > 0 ? (
+    <button
+      type="button"
+      onClick={() => openClearDueModal(rowKey, "pharmacy")}
+      className="text-rose-600 hover:text-rose-800 hover:underline font-black"
+      title="Click to Clear Pharmacy Due"
+    >
+      {fmt(pharmacyDue)}
+    </button>
+  ) : (
+    <span className="text-slate-400">{fmt(pharmacyDue)}</span>
+  )}
+</td>
         <td className="px-2 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-emerald-50/40 text-xs">{fmt(r.pharmacy.total)}</td>
         <td className="px-2 py-3 text-center font-bold text-emerald-800 border-r border-slate-200 bg-emerald-50/40 text-xs">{r.pharmacy.footFall}</td>
-        <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(pharmacyDue)}</td>
 
-        {/* W Pharmacy - auto-calculated */}
+        {/* W Pharmacy */}
         <td className="px-2 py-3 text-center font-semibold text-cyan-600 border-r border-slate-100 text-xs">{fmt(wCash)}</td>
         <td className="px-2 py-3 text-center font-semibold text-cyan-600 border-r border-slate-100 text-xs">{fmt(wOnline)}</td>
+        <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(wDue)}</td>
         <td className="px-2 py-3 text-center font-bold text-cyan-700 border-r border-slate-100 bg-cyan-50/40 text-xs">{fmt(wTotal)}</td>
         <td className="px-2 py-3 text-center font-bold text-cyan-800 border-r border-slate-200 bg-cyan-50/40 text-xs">{wFoot}</td>
-        <td className="px-2 py-3 text-center font-bold text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(wDue)}</td>
 
-        {/* Total Pharmacy inputs (COMPACT) */}
+        {/* Total Pharmacy */}
         <td className="px-1 py-2 border-r border-slate-100 bg-amber-50/40 w-[75px]">
           <input type="number" min="0" placeholder="0" disabled={!isTotal && isRetailSaved}
             value={isTotal ? retailInput.cash : (ri.cash || "")}
@@ -2167,7 +2726,6 @@ export default function RevenueAnalytics() {
             className={compactInputCls} />
         </td>
 
-        {/* Total Pharmacy Total (with integrated Save/Edit icon) (COMPACT) */}
         <td className="px-1 py-2 text-center border-r border-slate-100 bg-amber-50/40 w-[110px]">
           <div className="flex items-center justify-center gap-0.5">
             <span className="font-bold text-amber-700 text-xs">{fmt(rRetail.total)}</span>
@@ -2242,10 +2800,109 @@ export default function RevenueAnalytics() {
 
         <td className="px-2 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-indigo-50/40 text-xs">{fmt(rGrand.cash)}</td>
         <td className="px-2 py-3 text-center font-bold text-sky-700 border-r border-slate-100 bg-indigo-50/40 text-xs">{fmt(rGrand.online)}</td>
+        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(rGrand.due)}</td>
         <td className="px-2 py-3 text-center font-black text-indigo-800 border-r border-slate-100 bg-indigo-50/40 text-sm">{fmt(rGrand.total)}</td>
         <td className="px-2 py-3 text-center font-black text-indigo-800 border-r border-slate-200 bg-indigo-50/40 text-xs">{rGrand.footFall}</td>
-        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-50/40 text-xs">{fmt(rGrand.due)}</td>
 
+        {/* ======================================================== */}
+        {/* CASH RECEIVED COLUMNS (Cash Rcvd / Cash D/W / Status)    */}
+        {/* ======================================================== */}
+        <td className="px-2 py-2 border-r border-slate-200 bg-emerald-50/40">
+          {(() => {
+            const isCRSaved = isTotal ? (savedCashReceived !== null && savedCashReceived > 0) : (ri.savedCash && ri.savedCashReceived !== null && ri.savedCashReceived > 0);
+            const isEditingCR = isTotal ? isEditingTotalCash : !!ri.editingCashReceived;
+
+            if (isCRSaved && !isEditingCR) {
+              return (
+                <div className="flex flex-col items-center gap-0.5">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span className="text-sm font-extrabold text-emerald-700 whitespace-nowrap">₹{fmt(isTotal ? savedCashReceived : ri.savedCashReceived)}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isTotal) setIsEditingTotalCash(true);
+                        else setRowInputs(p => ({ ...p, [rowKey]: { ...p[rowKey], editingCashReceived: true } }));
+                      }}
+                      className="w-6 h-6 rounded flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200"
+                      title="Edit Cash Received"
+                    >
+                      <FaEdit className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                  <span className="text-[9px] font-bold text-emerald-600 flex items-center justify-center gap-1">
+                    <FaCheckCircle className="w-2 h-2" /> Saved
+                  </span>
+                </div>
+              );
+            }
+
+            const currentCRInputNum = parseFloat(isTotal ? cashReceived : ri.cashReceived) || 0;
+            const savedCRNum = isTotal ? (savedCashReceived || 0) : (ri.savedCashReceived || 0);
+            const hasUnsavedCRChange = currentCRInputNum !== savedCRNum;
+
+            return (
+              <div className="flex items-center gap-1 justify-center">
+                <input type="number" min="0" placeholder="0"
+                  value={(isTotal ? cashReceived : ri.cashReceived) === "0" || (isTotal ? cashReceived : ri.cashReceived) === 0 ? "" : (isTotal ? cashReceived : ri.cashReceived) || ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (isTotal) setCashReceived(v);
+                    else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), cashReceived: v } }));
+                  }}
+                  className="w-[70px] text-center text-sm font-extrabold text-emerald-700 bg-white border border-emerald-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500" />
+
+                {isCRSaved && (
+                  <button type="button"
+                    onClick={() => {
+                      if (isTotal) {
+                        setIsEditingTotalCash(false);
+                        setCashReceived(String(savedCashReceived));
+                      } else {
+                        setRowInputs(p => ({ ...p, [rowKey]: { ...p[rowKey], editingCashReceived: false, cashReceived: String(ri.savedCashReceived) } }));
+                      }
+                    }}
+                    className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-slate-500 bg-slate-200 hover:bg-slate-300 shadow-sm"
+                    title="Cancel">
+                    <FiX className="w-3 h-3" />
+                  </button>
+                )}
+
+                <button type="button"
+                  onClick={() => {
+                    if (isTotal) handleSaveCashClick();
+                    else {
+                      const crNum = parseFloat(ri.cashReceived) || 0;
+                      handleSaveCashRow(rowKey, crNum, rGrand.total, rRetail, rGrand.cash);
+                    }
+                  }}
+                  disabled={!hasUnsavedCRChange}
+                  title="Save Cash Received"
+                  className={`flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-all shadow-sm ${hasUnsavedCRChange
+                    ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 hover:scale-105"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                    }`}>
+                  {savingCashRowKey === rowKey ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FaSave className="w-3 h-3" />}
+                </button>
+              </div>
+            );
+          })()}
+        </td>
+
+        <td className={`px-2 py-3 text-center font-black text-sm border-r border-slate-200 bg-emerald-50/40 ${rCashDiffColor}`}>
+          {rCashDiffLabel === "—" ? "—" : (rCashDiffAbs < 0.5 ? "0" : fmt(rCashDiffAbs))}
+        </td>
+        <td className={`px-2 py-3 text-center font-bold text-[10px] uppercase tracking-wider border-r border-slate-200 bg-emerald-50/40 ${rCashDiffColor}`}>
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border ${rCashDiffLabel === "MATCHED" ? "bg-emerald-50 border-emerald-200" : rCashDiffLabel === "RCVD MORE" ? "bg-blue-50 border-blue-200" : rCashDiffLabel === "RCVD LESS" ? "bg-rose-50 border-rose-200" : "bg-slate-50 border-slate-200"}`}>
+            {rCashDiffLabel === "MATCHED" && <FaEquals className="w-2.5 h-2.5" />}
+            {rCashDiffLabel === "RCVD MORE" && <FaArrowUp className="w-2.5 h-2.5" />}
+            {rCashDiffLabel === "RCVD LESS" && <FaArrowDown className="w-2.5 h-2.5" />}
+            {rCashDiffLabel}
+          </span>
+        </td>
+
+        {/* ======================================================== */}
+        {/* BANK CREDIT COLUMNS (Bank Credit / Credited D/W / Status)*/}
+        {/* ======================================================== */}
         <td className="px-2 py-2 border-r border-slate-200 bg-rose-50/40">
           {(() => {
             const isBCSaved = isTotal ? (savedBankCredit !== null && savedBankCredit > 0) : (ri.saved && ri.savedBankCredit !== null && ri.savedBankCredit > 0);
@@ -2280,51 +2937,49 @@ export default function RevenueAnalytics() {
             const hasUnsavedChange = currentInputNum !== savedBCNum;
 
             return (
-              <>
-                <div className="flex items-center gap-1 justify-center">
-                  <input type="number" min="0" placeholder="0"
-                    value={(isTotal ? bankCredit : ri.bankCredit) === "0" || (isTotal ? bankCredit : ri.bankCredit) === 0 ? "" : (isTotal ? bankCredit : ri.bankCredit) || ""}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (isTotal) setBankCredit(v);
-                      else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), bankCredit: v } }));
-                    }}
-                    className="w-[70px] text-center text-sm font-extrabold text-rose-700 bg-white border border-rose-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500" />
+              <div className="flex items-center gap-1 justify-center">
+                <input type="number" min="0" placeholder="0"
+                  value={(isTotal ? bankCredit : ri.bankCredit) === "0" || (isTotal ? bankCredit : ri.bankCredit) === 0 ? "" : (isTotal ? bankCredit : ri.bankCredit) || ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (isTotal) setBankCredit(v);
+                    else setRowInputs((p) => ({ ...p, [rowKey]: { ...(p[rowKey] || {}), bankCredit: v } }));
+                  }}
+                  className="w-[70px] text-center text-sm font-extrabold text-rose-700 bg-white border border-rose-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500" />
 
-                  {isBCSaved && (
-                    <button type="button"
-                      onClick={() => {
-                        if (isTotal) {
-                          setIsEditingTotalBC(false);
-                          setBankCredit(String(savedBankCredit));
-                        } else {
-                          setRowInputs(p => ({ ...p, [rowKey]: { ...p[rowKey], editingBankCredit: false, bankCredit: String(ri.savedBankCredit) } }));
-                        }
-                      }}
-                      className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-slate-500 bg-slate-200 hover:bg-slate-300 shadow-sm"
-                      title="Cancel">
-                      <FiX className="w-3 h-3" />
-                    </button>
-                  )}
-
+                {isBCSaved && (
                   <button type="button"
                     onClick={() => {
-                      if (isTotal) handleSaveClick();
-                      else {
-                        const bcNum = parseFloat(ri.bankCredit) || 0;
-                        handleSaveRow(rowKey, bcNum, rGrand.total, rRetail);
+                      if (isTotal) {
+                        setIsEditingTotalBC(false);
+                        setBankCredit(String(savedBankCredit));
+                      } else {
+                        setRowInputs(p => ({ ...p, [rowKey]: { ...p[rowKey], editingBankCredit: false, bankCredit: String(ri.savedBankCredit) } }));
                       }
                     }}
-                    disabled={!hasUnsavedChange}
-                    title="Save"
-                    className={`flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-all shadow-sm ${hasUnsavedChange
-                      ? "bg-gradient-to-br from-rose-500 to-rose-600 text-white hover:from-rose-600 hover:to-rose-700 hover:scale-105"
-                      : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                      }`}>
-                    {savingRowKey === rowKey ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FaSave className="w-3 h-3" />}
+                    className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-slate-500 bg-slate-200 hover:bg-slate-300 shadow-sm"
+                    title="Cancel">
+                    <FiX className="w-3 h-3" />
                   </button>
-                </div>
-              </>
+                )}
+
+                <button type="button"
+                  onClick={() => {
+                    if (isTotal) handleSaveClick();
+                    else {
+                      const bcNum = parseFloat(ri.bankCredit) || 0;
+                      handleSaveRow(rowKey, bcNum, rGrand.total, rRetail);
+                    }
+                  }}
+                  disabled={!hasUnsavedChange}
+                  title="Save"
+                  className={`flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-all shadow-sm ${hasUnsavedChange
+                    ? "bg-gradient-to-br from-rose-500 to-rose-600 text-white hover:from-rose-600 hover:to-rose-700 hover:scale-105"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                    }`}>
+                  {savingRowKey === rowKey ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FaSave className="w-3 h-3" />}
+                </button>
+              </div>
             );
           })()}
         </td>
@@ -2358,6 +3013,7 @@ export default function RevenueAnalytics() {
         onSave={(payload) => { if (payload.mode === "edit") handleUpdateTargets(payload); else if (payload.mode === "fy") handleSaveFYTargets(payload); }}
         saving={savingTarget} editTarget={editTargetData} />
 
+      {/* Save Bank Credit Confirmation Modal */}
       {showSaveConfirm && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-purple-200 overflow-hidden">
@@ -2377,6 +3033,221 @@ export default function RevenueAnalytics() {
               <button onClick={handleConfirmSave} disabled={savingBankCredit} type="button" className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md flex items-center gap-1.5 disabled:opacity-50">
                 {savingBankCredit ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FaSave className="w-3 h-3" />}
                 {savingBankCredit ? "Saving..." : "Yes, Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+      {/* ✅ CLEAR DUE MODAL — OP Management jaisa exact */}
+{showClearDueModal && (
+  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border relative max-h-[90vh] overflow-hidden flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-9 h-9 rounded-xl text-white flex items-center justify-center ${
+              clearDueCategory === "lab"
+                ? "bg-purple-500"
+                : clearDueCategory === "pharmacy"
+                  ? "bg-green-500"
+                  : "bg-blue-500"
+            }`}
+          >
+            <FaMoneyBillWave className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900 text-sm">
+              Clear {clearDueCategory.charAt(0).toUpperCase() + clearDueCategory.slice(1)} Due
+            </h3>
+            <p className="text-[10px] text-gray-500">
+              {clearDueItemsList.length} due item(s) · {clearDueRowKey}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            setShowClearDueModal(false);
+            setClearDueTransactionId("");
+            setClearDuePaidDate("");
+            setClearDueRowKey(null);
+            setClearDueItemsList([]);
+            setClearDueBookings([]);
+          }}
+          className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
+        >
+          <FiX className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Loading */}
+      {clearDueLoading ? (
+        <div className="p-8 flex items-center justify-center gap-2 text-slate-500">
+          <FiRefreshCw className="w-4 h-4 animate-spin" />
+          <span className="text-xs font-medium">Loading due items...</span>
+        </div>
+      ) : (
+        <>
+          {/* Due Total */}
+          <div className="px-5 pt-4">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
+              <span className="text-xs font-bold text-red-800">Total Due Amount:</span>
+              <span className="text-lg font-extrabold text-red-600">
+                ₹
+                {Math.round(
+                  clearDueItemsList.reduce(
+                    (s, x) => s + (Number(x.dueAmount) || 0),
+                    0
+                  )
+                )}
+              </span>
+            </div>
+          </div>
+
+          {/* Items list */}
+          <div className="flex-1 overflow-y-auto px-5 py-3">
+            {clearDueItemsList.length === 0 ? (
+              <div className="text-center py-8 text-gray-400 text-xs italic">
+                No due items found for this selection.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {clearDueItemsList.map((it, i) => (
+                  <div
+                    key={`${it.bookingId}-${i}`}
+                    className="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-gray-200 bg-gray-50 text-xs"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-800 truncate">
+                        {it.name}
+                      </div>
+                      <div className="text-[10px] text-gray-500 truncate">
+                        {it.patientName} · {it.patientPhone}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="font-black text-red-600">
+                        ₹{Math.round(it.dueAmount)}
+                      </div>
+                      <div className="text-[9px] text-gray-400">
+                        of ₹{Math.round(it.price)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Payment fields */}
+          <div className="px-5 py-3 space-y-3 border-t bg-gray-50/50">
+            <div>
+              <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                Payment Type
+              </label>
+              <select
+                value={clearDuePaymentType}
+                onChange={(e) => setClearDuePaymentType(e.target.value)}
+                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+              >
+                <option value="Cash">Cash</option>
+                <option value="Online">Online</option>
+                <option value="Card">Card</option>
+                <option value="UPI">UPI</option>
+              </select>
+            </div>
+
+            {(clearDuePaymentType === "Online" ||
+              clearDuePaymentType === "Card" ||
+              clearDuePaymentType === "UPI") && (
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Transaction ID
+                </label>
+                <input
+                  type="text"
+                  value={clearDueTransactionId}
+                  onChange={(e) => setClearDueTransactionId(e.target.value)}
+                  placeholder="Enter Transaction ID"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                Paid Date
+              </label>
+              <input
+                type="date"
+                value={clearDuePaidDate}
+                onChange={(e) => setClearDuePaidDate(e.target.value)}
+                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Footer buttons */}
+          <div className="flex justify-end gap-3 px-5 py-3 border-t bg-gray-50/50">
+            <button
+              onClick={() => {
+                setShowClearDueModal(false);
+                setClearDueTransactionId("");
+                setClearDuePaidDate("");
+                setClearDueRowKey(null);
+                setClearDueItemsList([]);
+                setClearDueBookings([]);
+              }}
+              disabled={clearDueSaving}
+              className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmClearDue}
+              disabled={
+                clearDueSaving ||
+                clearDueItemsList.length === 0
+              }
+              className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {clearDueSaving ? (
+                <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <FaCheckCircle className="w-3.5 h-3.5" />
+              )}
+              {clearDueSaving ? "Clearing..." : "Confirm & Clear"}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
+
+      {/* Save Cash Received Confirmation Modal */}
+      {showSaveCashConfirm && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-emerald-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-4 text-white flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0"><FaMoneyBillWave className="w-5 h-5" /></div>
+              <div><h3 className="font-bold text-sm m-0">Save Cash Received</h3><p className="text-[10px] text-white/80 m-0 mt-0.5">Confirm before saving</p></div>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="bg-emerald-50 rounded-lg border border-emerald-200 p-3">
+                <div className="flex items-center justify-between text-xs"><span className="text-slate-600 font-medium">Cash Received:</span><span className="font-extrabold text-emerald-700 text-base">{fmtAmt(parseFloat(cashReceived) || 0)}</span></div>
+                <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-emerald-200"><span className="text-slate-600 font-medium">Cash Total:</span><span className="font-bold text-slate-700">{fmtAmt(grandTotalLive?.cash || 0)}</span></div>
+              </div>
+              <p className="text-sm text-slate-700 text-center font-medium m-0">Do you want to save this cash received?</p>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 py-3 bg-slate-50 border-t border-slate-200">
+              <button onClick={() => setShowSaveCashConfirm(false)} disabled={savingCashReceived} type="button" className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 disabled:opacity-50">Cancel</button>
+              <button onClick={handleConfirmSaveCash} disabled={savingCashReceived} type="button" className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg shadow-md flex items-center gap-1.5 disabled:opacity-50">
+                {savingCashReceived ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FaSave className="w-3 h-3" />}
+                {savingCashReceived ? "Saving..." : "Yes, Save"}
               </button>
             </div>
           </div>
@@ -2493,12 +3364,15 @@ export default function RevenueAnalytics() {
                 hasRangeTarget={hasRangeTarget && rangeTargets.total > 0} rangeLabel={rangeLabel} />
             )}
 
-            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
-              <div className="overflow-auto" style={{ maxHeight: "70vh" }}>
-                <table className="w-full text-xs" style={{ minWidth: `${1400 + customSegments.length * 260}px` }}>
+            <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+              <div
+                className="overflow-auto"
+                style={{ maxHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)` }}
+              >
+                <table className="w-full text-xs" style={{ minWidth: `${1650 + customSegments.length * 260}px` }}>
                   <thead>
                     <tr>
-                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-blue-700 bg-blue-800 bg-clip-padding" rowSpan={2}>Date</th>
+                      <th className="sticky top-0 left-0 z-50 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-blue-700 bg-blue-800 bg-clip-padding shadow-[2px_0_4px_-1px_rgba(0,0,0,0.25)]" rowSpan={2}>Date</th>
                       <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-blue-700 bg-blue-800 bg-clip-padding" colSpan={5}>Clinic</th>
                       <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-purple-700 bg-purple-700 bg-clip-padding" colSpan={5}>Lab</th>
                       <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-emerald-700 bg-emerald-700 bg-clip-padding" colSpan={5}>Clinic Pharmacy</th>
@@ -2516,6 +3390,13 @@ export default function RevenueAnalytics() {
                       ))}
 
                       <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-indigo-700 bg-indigo-700 bg-clip-padding" colSpan={5}>Grand Total</th>
+                      
+                      {/* Cash Received Columns */}
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-teal-700 bg-teal-700 bg-clip-padding" rowSpan={2}>Cash Rcvd</th>
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-teal-700 bg-teal-700 bg-clip-padding" rowSpan={2}>Cash D/W</th>
+                      <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-teal-700 bg-teal-700 bg-clip-padding" rowSpan={2}>Cash Status</th>
+
+                      {/* Bank Credit Columns */}
                       <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-rose-700 bg-rose-700 bg-clip-padding" rowSpan={2}>Bank Credit</th>
                       <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-r border-b border-rose-700 bg-rose-700 bg-clip-padding" rowSpan={2}>Credited D/W</th>
                       <th className="sticky top-0 z-40 h-[34px] px-2 py-0 text-center font-bold text-white uppercase tracking-wider text-[10px] border-b bg-rose-700 bg-clip-padding" rowSpan={2}>Status</th>
@@ -2523,27 +3404,27 @@ export default function RevenueAnalytics() {
                     <tr>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-b border-blue-200 bg-blue-50 bg-clip-padding">Cash</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-b border-blue-200 bg-blue-50 bg-clip-padding">Online</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-b border-blue-200 bg-blue-50 bg-clip-padding">Total</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-blue-700 uppercase tracking-wider text-[9px] border-r border-b border-blue-200 bg-blue-50 bg-clip-padding">FootFall</th>
-                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
 
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-b border-purple-200 bg-purple-50 bg-clip-padding">Cash</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-b border-purple-200 bg-purple-50 bg-clip-padding">Online</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-b border-purple-200 bg-purple-50 bg-clip-padding">Total</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-purple-700 uppercase tracking-wider text-[9px] border-r border-b border-purple-200 bg-purple-50 bg-clip-padding">FootFall</th>
-                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
 
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-b border-emerald-200 bg-emerald-50 bg-clip-padding">Cash</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-b border-emerald-200 bg-emerald-50 bg-clip-padding">Online</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-b border-emerald-200 bg-emerald-50 bg-clip-padding">Total</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-emerald-700 uppercase tracking-wider text-[9px] border-r border-b border-emerald-200 bg-emerald-50 bg-clip-padding">FootFall</th>
-                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
 
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-b border-cyan-200 bg-cyan-50 bg-clip-padding">Cash</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-b border-cyan-200 bg-cyan-50 bg-clip-padding">Online</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-b border-cyan-200 bg-cyan-50 bg-clip-padding">Total</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-cyan-700 uppercase tracking-wider text-[9px] border-r border-b border-cyan-200 bg-cyan-50 bg-clip-padding">FootFall</th>
-                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
 
                       <th className="sticky top-[34px] z-40 px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-b border-amber-200 bg-amber-50 bg-clip-padding w-[75px]">Cash</th>
                       <th className="sticky top-[34px] z-40 px-1 py-1.5 text-center font-bold text-amber-700 uppercase tracking-wider text-[9px] border-r border-b border-amber-200 bg-amber-50 bg-clip-padding w-[75px]">Online</th>
@@ -2561,9 +3442,9 @@ export default function RevenueAnalytics() {
 
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-200 bg-indigo-50 bg-clip-padding">Cash</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-200 bg-indigo-50 bg-clip-padding">Online</th>
+                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-200 bg-indigo-50 bg-clip-padding">Grand Total</th>
                       <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-indigo-700 uppercase tracking-wider text-[9px] border-r border-b border-indigo-200 bg-indigo-50 bg-clip-padding">FootFall</th>
-                      <th className="sticky top-[34px] z-40 px-2 py-1.5 text-center font-bold text-rose-600 uppercase tracking-wider text-[9px] border-r border-b border-rose-200 bg-rose-50 bg-clip-padding">Due</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2572,6 +3453,7 @@ export default function RevenueAnalytics() {
                       clinic: data.clinic, lab: data.lab, pharmacy: data.pharmacy,
                       retailPharmacy: { cash: 0, online: 0, footFall: 0, total: 0 },
                       bankCredit: data.bankCredit?.bankCredit ?? null,
+                      cashReceived: data.bankCredit?.cashReceived ?? null,
                     }]).map((r, idx) => {
                       const rowKey = r.date || "__total__";
                       const isExpanded = expandedMonths[rowKey];
@@ -2589,29 +3471,29 @@ export default function RevenueAnalytics() {
                                 </td>
                               </tr>
                               <tr className="bg-indigo-50/50 border-b-2 border-indigo-200">
-                                <td className="px-2 py-2 text-center font-bold text-indigo-800 text-[10px] uppercase tracking-wider border-r border-indigo-200 whitespace-nowrap">Summary ({r.label})</td>
+                                <td className="sticky left-0 z-30 px-2 py-2 text-center font-bold text-indigo-800 text-[10px] uppercase tracking-wider border-r border-indigo-200 whitespace-nowrap bg-indigo-100 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.12)]">Summary ({r.label})</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.clinic.cash)}</td>
                                 <td className="px-2 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.clinic.online)}</td>
+                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.clinic.due)}</td>
                                 <td className="px-2 py-2 text-center font-black text-blue-800 border-r border-indigo-100 bg-blue-100/30 text-[10px]">{fmt(r.clinic.total)}</td>
                                 <td className="px-2 py-2 text-center font-black text-blue-900 border-r border-indigo-100 bg-blue-100/30 text-[10px]">{r.clinic.footFall}</td>
-                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.clinic.due)}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.lab.cash)}</td>
                                 <td className="px-2 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.lab.online)}</td>
+                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.lab.due)}</td>
                                 <td className="px-2 py-2 text-center font-black text-purple-800 border-r border-indigo-100 bg-purple-100/30 text-[10px]">{fmt(r.lab.total)}</td>
                                 <td className="px-2 py-2 text-center font-black text-purple-900 border-r border-indigo-100 bg-purple-100/30 text-[10px]">{r.lab.footFall}</td>
-                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.lab.due)}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.pharmacy.cash)}</td>
                                 <td className="px-2 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.pharmacy.online)}</td>
+                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.pharmacy.due)}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-800 border-r border-indigo-100 bg-emerald-100/30 text-[10px]">{fmt(r.pharmacy.total)}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-900 border-r border-indigo-100 bg-emerald-100/30 text-[10px]">{r.pharmacy.footFall}</td>
-                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.pharmacy.due)}</td>
-                                {/* W Pharmacy summary cells */}
+                                
                                 <td className="px-2 py-2 text-center font-black text-cyan-700 border-r border-indigo-100 bg-cyan-100/30 text-[10px]">{fmt((Number(rowInputs[rowKey]?.cash) || 0) - (Number(r.pharmacy.cash) || 0))}</td>
                                 <td className="px-2 py-2 text-center font-black text-cyan-700 border-r border-indigo-100 bg-cyan-100/30 text-[10px]">{fmt((Number(rowInputs[rowKey]?.online) || 0) - (Number(r.pharmacy.online) || 0))}</td>
+                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(0)}</td>
                                 <td className="px-2 py-2 text-center font-black text-cyan-800 border-r border-indigo-100 bg-cyan-100/30 text-[10px]">{fmt((Number(rowInputs[rowKey]?.cash) || 0) + (Number(rowInputs[rowKey]?.online) || 0) - (Number(r.pharmacy.cash) || 0) - (Number(r.pharmacy.online) || 0))}</td>
                                 <td className="px-2 py-2 text-center font-black text-cyan-900 border-r border-indigo-100 bg-cyan-100/30 text-[10px]">{(Number(rowInputs[rowKey]?.footFall) || 0) - (Number(r.pharmacy.footFall) || 0)}</td>
-                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(0)}</td>
-                                {/* Total Pharmacy summary cells (Action removed) */}
+                                
                                 <td className="px-2 py-2 border-r border-indigo-100 bg-amber-100/30"></td>
                                 <td className="px-2 py-2 border-r border-indigo-100 bg-amber-100/30"></td>
                                 <td className="px-2 py-2 text-center font-black text-amber-800 border-r border-indigo-100 bg-amber-100/30 text-[10px]">{fmt((Number(rowInputs[rowKey]?.cash) || 0) + (Number(rowInputs[rowKey]?.online) || 0))}</td>
@@ -2627,18 +3509,29 @@ export default function RevenueAnalytics() {
                                 ))}
 
                                 <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
+                                  {fmt(r.clinic.cash + r.lab.cash + r.pharmacy.cash + (Number(rowInputs[rowKey]?.cash) || 0))}
+                                </td>
+                                <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
+                                  {fmt(r.clinic.online + r.lab.online + r.pharmacy.online + (Number(rowInputs[rowKey]?.online) || 0))}
+                                </td>
+                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">
+                                  {fmt((Number(r.clinic.due) || 0) + (Number(r.lab.due) || 0) + (Number(r.pharmacy.due) || 0))}
+                                </td>
+                                <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
                                   {fmt(r.clinic.total + r.lab.total + r.pharmacy.total + (Number(rowInputs[rowKey]?.cash) || 0) + (Number(rowInputs[rowKey]?.online) || 0))}
                                 </td>
                                 <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
                                   {r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (Number(rowInputs[rowKey]?.footFall) || 0)}
                                 </td>
-                                <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">
-                                  {fmt((Number(r.clinic.due) || 0) + (Number(r.lab.due) || 0) + (Number(r.pharmacy.due) || 0))}
-                                </td>
+
+                                {/* Cash Rcvd summary placeholders */}
+                                <td className="px-2 py-2 border-r border-indigo-100 bg-emerald-100/30"></td>
+                                <td className="px-2 py-2 border-r border-indigo-100 bg-emerald-100/30"></td>
+                                <td className="px-2 py-2 border-r border-indigo-100 bg-emerald-100/30"></td>
+
+                                {/* Bank Credit summary placeholders */}
                                 <td className="px-2 py-2 border-r border-indigo-100 bg-rose-100/30"></td>
-                                <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
-                                  {fmt(r.clinic.total + r.lab.total + r.pharmacy.total + (Number(rowInputs[rowKey]?.cash) || 0) + (Number(rowInputs[rowKey]?.online) || 0))}
-                                </td>
+                                <td className="px-2 py-2 border-r border-indigo-100 bg-rose-100/30"></td>
                                 <td className="px-2 py-2 text-center border-indigo-100 bg-rose-100/30"></td>
                               </tr>
                             </>
@@ -2649,31 +3542,31 @@ export default function RevenueAnalytics() {
 
                     {tableTotal && data.rows && data.rows.length > 0 && (
                       <tr className="bg-gradient-to-r from-slate-100 to-slate-50 border-t-2 border-b-2 border-slate-400 font-bold">
-                        <td className="px-2 py-3 text-center font-black text-slate-900 text-[11px] uppercase tracking-wider border-r border-slate-300 bg-slate-200 whitespace-nowrap">
+                        <td className="sticky left-0 z-30 px-2 py-3 text-center font-black text-slate-900 text-[11px] uppercase tracking-wider border-r border-slate-300 bg-slate-200 whitespace-nowrap shadow-[2px_0_4px_-1px_rgba(0,0,0,0.12)]">
                           TOTAL<div className="text-[9px] font-semibold text-slate-500 normal-case mt-0.5">({data.rows.length} row{data.rows.length > 1 ? "s" : ""})</div>
                         </td>
                         <td className="px-2 py-3 text-center font-black text-emerald-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.clinic.cash)}</td>
                         <td className="px-2 py-3 text-center font-black text-sky-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.clinic.online)}</td>
+                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.clinic.due)}</td>
                         <td className="px-2 py-3 text-center font-black text-blue-800 border-r border-slate-200 bg-blue-100 text-xs">{fmt(tableTotal.clinic.total)}</td>
                         <td className="px-2 py-3 text-center font-black text-blue-900 border-r border-slate-200 bg-blue-100 text-xs">{tableTotal.clinic.footFall}</td>
-                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.clinic.due)}</td>
                         <td className="px-2 py-3 text-center font-black text-emerald-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.lab.cash)}</td>
                         <td className="px-2 py-3 text-center font-black text-sky-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.lab.online)}</td>
+                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.lab.due)}</td>
                         <td className="px-2 py-3 text-center font-black text-purple-800 border-r border-slate-200 bg-purple-100 text-xs">{fmt(tableTotal.lab.total)}</td>
                         <td className="px-2 py-3 text-center font-black text-purple-900 border-r border-slate-200 bg-purple-100 text-xs">{tableTotal.lab.footFall}</td>
-                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.lab.due)}</td>
                         <td className="px-2 py-3 text-center font-black text-emerald-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.pharmacy.cash)}</td>
                         <td className="px-2 py-3 text-center font-black text-sky-700 border-r border-slate-200 bg-slate-100 text-xs">{fmt(tableTotal.pharmacy.online)}</td>
+                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.pharmacy.due)}</td>
                         <td className="px-2 py-3 text-center font-black text-emerald-800 border-r border-slate-200 bg-emerald-100 text-xs">{fmt(tableTotal.pharmacy.total)}</td>
                         <td className="px-2 py-3 text-center font-black text-emerald-900 border-r border-slate-200 bg-emerald-100 text-xs">{tableTotal.pharmacy.footFall}</td>
-                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.pharmacy.due)}</td>
-                        {/* W Pharmacy totals */}
+                        
                         <td className="px-2 py-3 text-center font-black text-cyan-700 border-r border-slate-200 bg-cyan-100 text-xs">{fmt(tableTotal.wPharmacy.cash)}</td>
                         <td className="px-2 py-3 text-center font-black text-cyan-700 border-r border-slate-200 bg-cyan-100 text-xs">{fmt(tableTotal.wPharmacy.online)}</td>
+                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.wPharmacy.due)}</td>
                         <td className="px-2 py-3 text-center font-black text-cyan-800 border-r border-slate-200 bg-cyan-100 text-xs">{fmt(tableTotal.wPharmacy.total)}</td>
                         <td className="px-2 py-3 text-center font-black text-cyan-900 border-r border-slate-200 bg-cyan-100 text-xs">{tableTotal.wPharmacy.footFall}</td>
-                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.wPharmacy.due)}</td>
-                        {/* Total Pharmacy totals (Action removed) */}
+                        
                         <td className="px-2 py-3 text-center font-black text-amber-700 border-r border-slate-200 bg-amber-100 text-xs">{fmt(tableTotal.retail.cash)}</td>
                         <td className="px-2 py-3 text-center font-black text-amber-700 border-r border-slate-200 bg-amber-100 text-xs">{fmt(tableTotal.retail.online)}</td>
                         <td className="px-2 py-3 text-center font-black text-amber-800 border-r border-slate-200 bg-amber-100 text-xs">{fmt(tableTotal.retail.total)}</td>
@@ -2695,35 +3588,45 @@ export default function RevenueAnalytics() {
 
                         <td className="px-2 py-3 text-center font-black text-emerald-800 border-r border-slate-200 bg-indigo-100 text-xs">{fmt(tableTotal.grand.cash)}</td>
                         <td className="px-2 py-3 text-center font-black text-sky-800 border-r border-slate-200 bg-indigo-100 text-xs">{fmt(tableTotal.grand.online)}</td>
+                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.grand.due)}</td>
                         <td className="px-2 py-3 text-center font-black text-indigo-900 border-r border-slate-200 bg-indigo-200 text-sm">{fmt(tableTotal.grand.total)}</td>
                         <td className="px-2 py-3 text-center font-black text-indigo-900 border-r border-slate-200 bg-indigo-100 text-xs">{tableTotal.grand.footFall}</td>
-                        <td className="px-2 py-3 text-center font-black text-rose-600 border-r border-slate-200 bg-rose-100 text-xs">{fmt(tableTotal.grand.due)}</td>
-                        <td className="px-2 py-3 text-center font-black text-rose-800 border-r border-slate-200 bg-rose-100 text-sm">{tableTotal.bankCredit ? fmt(tableTotal.bankCredit) : "—"}</td>
-                        <td className={`px-2 py-3 text-center font-black text-sm border-r border-slate-200 bg-rose-100 ${!tableTotal.bankCredit ? "text-slate-400" : Math.abs(tableTotal.creditedDiff) < 0.5 ? "text-emerald-800" : tableTotal.creditedDiff > 0 ? "text-blue-800" : "text-rose-800"}`}>
-                          {!tableTotal.bankCredit ? "—" : (Math.abs(tableTotal.creditedDiff) < 0.5 ? "0" : fmt(Math.abs(tableTotal.creditedDiff)))}
-                        </td>
-                        <td className="px-2 py-2 text-center bg-rose-100">
+
+                           {/* Cash Received Totals */}
+                        <td className="px-2 py-3 text-center font-black text-emerald-800 border-r border-slate-200 bg-emerald-100 text-sm">{tableTotal.cashReceived ? fmt(tableTotal.cashReceived) : "—"}</td>
+                        <td className={`px-2 py-3 text-center font-black text-sm border-r border-slate-200 bg-emerald-100 ${!tableTotal.cashReceived ? "text-slate-400" : Math.abs(tableTotal.cashDiff) < 0.5 ? "text-emerald-800" : tableTotal.cashDiff > 0 ? "text-blue-800" : "text-rose-800"}`}>
+                          <div>{!tableTotal.cashReceived ? "—" : (Math.abs(tableTotal.cashDiff) < 0.5 ? "0" : fmt(Math.abs(tableTotal.cashDiff)))}</div>
                           {(() => {
-                            const ss = tableTotal.statusSummary;
-                            if (ss.less.count + ss.more.count + ss.matched.count === 0) return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border bg-slate-50 border-slate-200 text-slate-400 text-[10px] font-bold uppercase tracking-wider">—</span>;
+                            const ss = tableTotal.cashStatusSummary;
+                            if (ss.less.count + ss.more.count + ss.matched.count === 0) return null;
                             return (
-                              <div className="flex flex-col gap-1 items-stretch min-w-[150px]">
-                                <div className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-full border bg-rose-50 border-rose-300 text-rose-700 text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
-                                  <span className="flex items-center gap-1"><FaArrowDown className="w-2.5 h-2.5" />Less ({ss.less.count})</span>
-                                  <span>{fmtAmt(Math.round(ss.less.amt))}</span>
-                                </div>
-                                <div className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-full border bg-emerald-50 border-emerald-300 text-emerald-700 text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
-                                  <span className="flex items-center gap-1"><FaArrowUp className="w-2.5 h-2.5" />More ({ss.more.count})</span>
-                                  <span>{fmtAmt(Math.round(ss.more.amt))}</span>
-                                </div>
-                                <div className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-full border bg-blue-50 border-blue-300 text-blue-700 text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
-                                  <span className="flex items-center gap-1"><FaEquals className="w-2.5 h-2.5" />Matched</span>
-                                  <span>{ss.matched.count}</span>
-                                </div>
+                              <div className="flex flex-col items-center gap-0.5 mt-1 text-[11px] font-black leading-tight">
+                                <span className="text-rose-700">{fmt(Math.round(ss.less.amt))}</span>
+                                <span className="text-emerald-700">{fmt(Math.round(ss.more.amt))}</span>
+                                <span className="text-blue-700">{ss.matched.count}</span>
                               </div>
                             );
                           })()}
                         </td>
+                        <td className="px-2 py-3 text-center border-r border-slate-200 bg-emerald-100"></td>
+
+                        {/* Bank Credit Totals */}
+                        <td className="px-2 py-3 text-center font-black text-rose-800 border-r border-slate-200 bg-rose-100 text-sm">{tableTotal.bankCredit ? fmt(tableTotal.bankCredit) : "—"}</td>
+                        <td className={`px-2 py-3 text-center font-black text-sm border-r border-slate-200 bg-rose-100 ${!tableTotal.bankCredit ? "text-slate-400" : Math.abs(tableTotal.creditedDiff) < 0.5 ? "text-emerald-800" : tableTotal.creditedDiff > 0 ? "text-blue-800" : "text-rose-800"}`}>
+                          <div>{!tableTotal.bankCredit ? "—" : (Math.abs(tableTotal.creditedDiff) < 0.5 ? "0" : fmt(Math.abs(tableTotal.creditedDiff)))}</div>
+                          {(() => {
+                            const ss = tableTotal.statusSummary;
+                            if (ss.less.count + ss.more.count + ss.matched.count === 0) return null;
+                            return (
+                              <div className="flex flex-col items-center gap-0.5 mt-1 text-[11px] font-black leading-tight">
+                                <span className="text-rose-700">{fmt(Math.round(ss.less.amt))}</span>
+                                <span className="text-emerald-700">{fmt(Math.round(ss.more.amt))}</span>
+                                <span className="text-blue-700">{ss.matched.count}</span>
+                              </div>
+                            );
+                          })()}
+                        </td>
+                        <td className="px-2 py-3 text-center bg-rose-100"></td>
                       </tr>
                     )}
                   </tbody>
