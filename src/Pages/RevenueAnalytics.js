@@ -184,6 +184,8 @@ const normalizeAnalyticsData = (raw) => {
           due: Number(mdcb[k]?.due) || 0,
           footFall: Number(mdcb[k]?.footFall) || 0,
         });
+        const mdBank = md.bankCredit || null;
+        const mdRp = mdBank?.retailPharmacy || {};
         return {
           date: md.date,
           label: md.label,
@@ -191,9 +193,15 @@ const normalizeAnalyticsData = (raw) => {
           clinic: mdBuild("clinic"),
           lab: mdBuild("lab"),
           pharmacy: mdBuild("pharmacy"),
-          retailPharmacy: { cash: 0, online: 0, footFall: 0, total: 0 },
-          bankCredit: null,
-          cashReceived: null
+          retailPharmacy: {
+            cash: Number(mdRp.cash) || 0,
+            online: Number(mdRp.online) || 0,
+            footFall: Number(mdRp.footFall) || 0,
+            total: (Number(mdRp.cash) || 0) + (Number(mdRp.online) || 0),
+            due: 0, card: 0, insurance: 0,
+          },
+          bankCredit: mdBank?.bankCredit != null ? Number(mdBank.bankCredit) : null,
+          cashReceived: mdBank?.cashReceived != null ? Number(mdBank.cashReceived) : (md.cashReceived != null ? Number(md.cashReceived) : null),
         };
       }) : [];
 
@@ -229,6 +237,32 @@ const normalizeAnalyticsData = (raw) => {
     bankCredit: raw.bankCredit || null,
     cashReceived: raw.bankCredit?.cashReceived != null ? Number(raw.bankCredit.cashReceived) : (raw.cashReceived != null ? Number(raw.cashReceived) : null),
     dateRange: raw.dateRange || null,
+  };
+};
+
+/* ============================================================ */
+/* Row input builder (daily / monthly rows ke liye common)       */
+/* ============================================================ */
+const buildRowInput = (r) => {
+  const hasRetailData = (Number(r.retailPharmacy?.cash) > 0) || (Number(r.retailPharmacy?.online) > 0) || (Number(r.retailPharmacy?.footFall) > 0);
+  const hasBankCredit = r.bankCredit != null && Number(r.bankCredit) > 0;
+  const hasCashReceived = r.cashReceived != null && Number(r.cashReceived) > 0;
+  return {
+    cash: r.retailPharmacy?.cash ? String(r.retailPharmacy.cash) : "",
+    online: r.retailPharmacy?.online ? String(r.retailPharmacy.online) : "",
+    footFall: r.retailPharmacy?.footFall ? String(r.retailPharmacy.footFall) : "",
+    bankCredit: r.bankCredit != null ? String(r.bankCredit) : "",
+    savedBankCredit: hasBankCredit ? Number(r.bankCredit) : null,
+    saved: hasBankCredit,
+    cashReceived: r.cashReceived != null ? String(r.cashReceived) : "",
+    savedCashReceived: hasCashReceived ? Number(r.cashReceived) : null,
+    savedCash: hasCashReceived,
+    savedRetail: hasRetailData,
+    savedRetailCash: Number(r.retailPharmacy?.cash) || 0,
+    savedRetailOnline: Number(r.retailPharmacy?.online) || 0,
+    savedRetailFootFall: Number(r.retailPharmacy?.footFall) || 0,
+    editingBankCredit: false,
+    editingCashReceived: false,
   };
 };
 
@@ -1823,6 +1857,7 @@ const computeBalance = (booking, totalPaid) => {
     setError(null);
     setData(null);
     setRowInputs({});
+    setExpandedMonths({});
     setBankCredit("");
     setSavedBankCredit(null);
     setCashReceived("");
@@ -1839,28 +1874,11 @@ const computeBalance = (booking, totalPaid) => {
 
         const nextRowInputs = {};
         (normalized.rows || []).forEach((r) => {
-          const key = r.date;
-          const hasRetailData = (Number(r.retailPharmacy?.cash) > 0) || (Number(r.retailPharmacy?.online) > 0) || (Number(r.retailPharmacy?.footFall) > 0);
-          const hasBankCredit = r.bankCredit != null && Number(r.bankCredit) > 0;
-          const hasCashReceived = r.cashReceived != null && Number(r.cashReceived) > 0;
-
-          nextRowInputs[key] = {
-            cash: r.retailPharmacy?.cash ? String(r.retailPharmacy.cash) : "",
-            online: r.retailPharmacy?.online ? String(r.retailPharmacy.online) : "",
-            footFall: r.retailPharmacy?.footFall ? String(r.retailPharmacy.footFall) : "",
-            bankCredit: r.bankCredit != null ? String(r.bankCredit) : "",
-            savedBankCredit: hasBankCredit ? Number(r.bankCredit) : null,
-            saved: hasBankCredit,
-            cashReceived: r.cashReceived != null ? String(r.cashReceived) : "",
-            savedCashReceived: hasCashReceived ? Number(r.cashReceived) : null,
-            savedCash: hasCashReceived,
-            savedRetail: hasRetailData,
-            savedRetailCash: Number(r.retailPharmacy?.cash) || 0,
-            savedRetailOnline: Number(r.retailPharmacy?.online) || 0,
-            savedRetailFootFall: Number(r.retailPharmacy?.footFall) || 0,
-            editingBankCredit: false,
-            editingCashReceived: false,
-          };
+          nextRowInputs[r.date] = buildRowInput(r);
+          // monthly row ke andar ke daily rows (agar backend ne bheje ho) ka bhi input bana do
+          (r.monthData || []).forEach((md) => {
+            if (md.date && !nextRowInputs[md.date]) nextRowInputs[md.date] = buildRowInput(md);
+          });
         });
         setRowInputs(nextRowInputs);
 
@@ -1933,18 +1951,51 @@ const computeBalance = (booking, totalPaid) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const setPreset = (preset) => {
-    const nowD = new Date();
-    setActivePreset(preset);
-    if (preset === "today") { const t = fmtDate(nowD); setFromDate(t); setToDate(t); setSelectedMonth(nowD.getMonth() + 1); setSelectedYear(nowD.getFullYear()); }
-    else if (preset === "yesterday") { const y = new Date(nowD); y.setDate(y.getDate() - 1); const t = fmtDate(y); setFromDate(t); setToDate(t); }
-    else if (preset === "last7Days") { const past7Days = new Date(nowD); past7Days.setDate(nowD.getDate() - 6); setFromDate(fmtDate(past7Days)); setToDate(fmtDate(nowD)); }
-    else if (preset === "thisWeek") { const dow = nowD.getDay(); const diff = dow === 0 ? 6 : dow - 1; const mon = new Date(nowD); mon.setDate(mon.getDate() - diff); setFromDate(fmtDate(mon)); setToDate(fmtDate(nowD)); }
-    else if (preset === "thisMonth") { const first = new Date(nowD.getFullYear(), nowD.getMonth(), 1); const last = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0); setFromDate(fmtDate(first)); setToDate(fmtDate(last)); }
-    else if (preset === "lastMonth") { const first = new Date(nowD.getFullYear(), nowD.getMonth() - 1, 1); const last = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0); setFromDate(fmtDate(first)); setToDate(fmtDate(last)); }
-    else if (preset === "thisYear") { const first = new Date(nowD.getFullYear(), 0, 1); const last = new Date(nowD.getFullYear(), 11, 31); setFromDate(fmtDate(first)); setToDate(fmtDate(last)); }
-    else if (preset === "all") { setFromDate(""); setToDate(""); }
-  };
+ const setPreset = (preset) => {
+  const nowD = new Date();
+  setActivePreset(preset);
+  let anchor = new Date(nowD); // ye calendar header ke liye "kis month pe focus" hai
+
+  if (preset === "today") {
+    const t = fmtDate(nowD); setFromDate(t); setToDate(t); anchor = nowD;
+  }
+  else if (preset === "yesterday") {
+    const y = new Date(nowD); y.setDate(y.getDate() - 1);
+    const t = fmtDate(y); setFromDate(t); setToDate(t); anchor = y;
+  }
+  else if (preset === "last7Days") {
+    const past7Days = new Date(nowD); past7Days.setDate(nowD.getDate() - 6);
+    setFromDate(fmtDate(past7Days)); setToDate(fmtDate(nowD)); anchor = nowD;
+  }
+  else if (preset === "thisWeek") {
+    const dow = nowD.getDay(); const diff = dow === 0 ? 6 : dow - 1;
+    const mon = new Date(nowD); mon.setDate(mon.getDate() - diff);
+    setFromDate(fmtDate(mon)); setToDate(fmtDate(nowD)); anchor = nowD;
+  }
+  else if (preset === "thisMonth") {
+    const first = new Date(nowD.getFullYear(), nowD.getMonth(), 1);
+    const last = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0);
+    setFromDate(fmtDate(first)); setToDate(fmtDate(last)); anchor = nowD;
+  }
+  else if (preset === "lastMonth") {
+    const first = new Date(nowD.getFullYear(), nowD.getMonth() - 1, 1);
+    const last = new Date(nowD.getFullYear(), nowD.getMonth(), 0);
+    setFromDate(fmtDate(first)); setToDate(fmtDate(last));
+    anchor = new Date(nowD.getFullYear(), nowD.getMonth() - 1, 1); // ✅ pichhla month focus karo
+  }
+  else if (preset === "thisYear") {
+    const first = new Date(nowD.getFullYear(), 0, 1);
+    const last = new Date(nowD.getFullYear(), 11, 31);
+    setFromDate(fmtDate(first)); setToDate(fmtDate(last)); anchor = nowD;
+  }
+  else if (preset === "all") {
+    setFromDate(""); setToDate(""); anchor = nowD;
+  }
+
+  // ✅ selectedMonth/Year ko anchor se sync karo — calendar popup ab sahi month highlight karega
+  setSelectedMonth(anchor.getMonth() + 1);
+  setSelectedYear(anchor.getFullYear());
+};
 
   const handleClearAnalyticsFilters = () => {
     const t = fmtDate(new Date());
@@ -2125,19 +2176,19 @@ const computeBalance = (booking, totalPaid) => {
       }
     });
 
-    acc.clinic.total = acc.clinic.cash + acc.clinic.online;
-    acc.lab.total = acc.lab.cash + acc.lab.online;
-    acc.pharmacy.total = acc.pharmacy.cash + acc.pharmacy.online;
+    acc.clinic.total = acc.clinic.cash + acc.clinic.online + acc.clinic.due;
+    acc.lab.total = acc.lab.cash + acc.lab.online + acc.lab.due;
+    acc.pharmacy.total = acc.pharmacy.cash + acc.pharmacy.online + acc.pharmacy.due;
 
     const isRetailZeroTotal = (acc.retail.cash === 0 && acc.retail.online === 0 && acc.retail.footFall === 0);
     acc.wPharmacy.cash = isRetailZeroTotal ? 0 : (acc.retail.cash - acc.pharmacy.cash);
     acc.wPharmacy.online = isRetailZeroTotal ? 0 : (acc.retail.online - acc.pharmacy.online);
-    acc.wPharmacy.total = isRetailZeroTotal ? 0 : (acc.retail.total - acc.pharmacy.total);
+    acc.wPharmacy.total = isRetailZeroTotal ? 0 : (acc.retail.total - (acc.pharmacy.cash + acc.pharmacy.online));
     acc.wPharmacy.footFall = isRetailZeroTotal ? 0 : (acc.retail.footFall - acc.pharmacy.footFall);
     acc.wPharmacy.due = 0;
 
-    acc.grand.total = acc.grand.cash + acc.grand.online;
     acc.grand.due = acc.clinic.due + acc.lab.due + acc.pharmacy.due + acc.wPharmacy.due;
+    acc.grand.total = acc.grand.cash + acc.grand.online + acc.grand.due; // ✅ Cash + Online + Due
 
     acc.creditedDiff = acc.bankCredit - acc.grand.online;
     acc.cashDiff = acc.cashReceived - acc.grand.cash;
@@ -2348,13 +2399,13 @@ const computeBalance = (booking, totalPaid) => {
 
       const wCash = rRetail.cash - (Number(r.pharmacy.cash) || 0);
       const wOnline = rRetail.online - (Number(r.pharmacy.online) || 0);
-      const wTotal = rRetail.total - (Number(r.pharmacy.total) || 0);
+      const wTotal = rRetail.total - ((Number(r.pharmacy.cash) || 0) + (Number(r.pharmacy.online) || 0));
       const wFoot = rRetail.footFall - (Number(r.pharmacy.footFall) || 0);
 
       const rGrand = {
         cash: r.clinic.cash + r.lab.cash + r.pharmacy.cash + (rRetail.cash - (Number(r.pharmacy.cash) || 0)),
         online: r.clinic.online + r.lab.online + r.pharmacy.online + (rRetail.online - (Number(r.pharmacy.online) || 0)),
-        total: r.clinic.total + r.lab.total + r.pharmacy.total + (rRetail.total - (Number(r.pharmacy.total) || 0)),
+        total: (r.clinic.cash + r.clinic.online + (Number(r.clinic.due) || 0)) + (r.lab.cash + r.lab.online + (Number(r.lab.due) || 0)) + (r.pharmacy.cash + r.pharmacy.online + (Number(r.pharmacy.due) || 0)) + (rRetail.total - ((Number(r.pharmacy.cash) || 0) + (Number(r.pharmacy.online) || 0))),
         footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (rRetail.footFall - (Number(r.pharmacy.footFall) || 0)),
       };
 
@@ -2372,7 +2423,7 @@ const computeBalance = (booking, totalPaid) => {
       <td>${dateLabel}</td>
       <td>${r.clinic.cash}</td><td>${r.clinic.online}</td><td class="total-cell">${r.clinic.total}</td><td class="footfall">${r.clinic.footFall}</td>
       <td>${r.lab.cash}</td><td>${r.lab.online}</td><td class="total-cell">${r.lab.total}</td><td class="footfall">${r.lab.footFall}</td>
-      <td>${r.pharmacy.cash}</td><td>${r.pharmacy.online}</td><td class="total-cell">${r.pharmacy.total}</td><td class="footfall">${r.pharmacy.footFall}</td>
+      <td>${r.pharmacy.cash}</td><td>${r.pharmacy.online}</td><td class="total-cell">${(r.pharmacy.cash || 0) + (r.pharmacy.online || 0) + (r.pharmacy.due || 0)}</td><td class="footfall">${r.pharmacy.footFall}</td>
       
       <!-- W Pharmacy -->
       <td style="background:#e0f2fe;font-weight:bold;color:#0e7490;">${wCash}</td>
@@ -2573,7 +2624,7 @@ const computeBalance = (booking, totalPaid) => {
     const isRetailZero = (rCash === 0 && rOnline === 0 && rFoot === 0);
     const wCash = isRetailZero ? 0 : rCash - (Number(r.pharmacy.cash) || 0);
     const wOnline = isRetailZero ? 0 : rOnline - (Number(r.pharmacy.online) || 0);
-    const wTotal = isRetailZero ? 0 : rRetail.total - (Number(r.pharmacy.total) || 0);
+    const wTotal = isRetailZero ? 0 : rRetail.total - ((Number(r.pharmacy.cash) || 0) + (Number(r.pharmacy.online) || 0));
     const wFoot = isRetailZero ? 0 : rFoot - (Number(r.pharmacy.footFall) || 0);
     const wDue = 0;
 
@@ -2584,7 +2635,7 @@ const computeBalance = (booking, totalPaid) => {
     let rGrand = {
       cash: r.clinic.cash + r.lab.cash + r.pharmacy.cash + (isRetailZero ? 0 : wCash),
       online: r.clinic.online + r.lab.online + r.pharmacy.online + (isRetailZero ? 0 : wOnline),
-      total: r.clinic.total + r.lab.total + r.pharmacy.total + (isRetailZero ? 0 : wTotal),
+      total: (r.clinic.cash + r.clinic.online) + (r.lab.cash + r.lab.online) + (r.pharmacy.cash + r.pharmacy.online) + (isRetailZero ? 0 : wTotal),
       footFall: r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (isRetailZero ? 0 : wFoot),
       due: clinicDue + labDue + pharmacyDue + wDue,
     };
@@ -2598,6 +2649,9 @@ const computeBalance = (booking, totalPaid) => {
       rGrand.total += (cCash + cOnline);
       rGrand.footFall += cFoot;
     });
+
+    // ✅ Grand Total = Cash + Online + Due
+    rGrand.total = rGrand.cash + rGrand.online + rGrand.due;
 
     // Bank Credit Diff against ONLINE
     const rDiff = rBC - rGrand.online;
@@ -2656,7 +2710,7 @@ const computeBalance = (booking, totalPaid) => {
   ) : (
     <span className="text-slate-400">{fmt(clinicDue)}</span>
   )}
-</td>        <td className="px-2 py-3 text-center font-bold text-blue-700 border-r border-slate-100 bg-blue-50/40 text-xs">{fmt((r.clinic.cash || 0) + (r.clinic.online || 0))}</td>
+</td>        <td className="px-2 py-3 text-center font-bold text-blue-700 border-r border-slate-100 bg-blue-50/40 text-xs">{fmt((r.clinic.cash || 0) + (r.clinic.online || 0) + (r.clinic.due || 0))}</td>
         <td className="px-2 py-3 text-center font-bold text-blue-800 border-r border-slate-200 bg-blue-50/40 text-xs">{r.clinic.footFall}</td>
 
         <td className="px-2 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.lab.cash)}</td>
@@ -2675,7 +2729,7 @@ const computeBalance = (booking, totalPaid) => {
     <span className="text-slate-400">{fmt(labDue)}</span>
   )}
 </td>
-        <td className="px-2 py-3 text-center font-bold text-purple-700 border-r border-slate-100 bg-purple-50/40 text-xs">{fmt((r.lab.cash || 0) + (r.lab.online || 0))}</td>
+        <td className="px-2 py-3 text-center font-bold text-purple-700 border-r border-slate-100 bg-purple-50/40 text-xs">{fmt((r.lab.cash || 0) + (r.lab.online || 0) + (r.lab.due || 0))}</td>
         <td className="px-2 py-3 text-center font-bold text-purple-800 border-r border-slate-200 bg-purple-50/40 text-xs">{r.lab.footFall}</td>
 
         <td className="px-2 py-3 text-center font-semibold text-emerald-600 border-r border-slate-100 text-xs">{fmt(r.pharmacy.cash)}</td>
@@ -2694,7 +2748,7 @@ const computeBalance = (booking, totalPaid) => {
     <span className="text-slate-400">{fmt(pharmacyDue)}</span>
   )}
 </td>
-        <td className="px-2 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-emerald-50/40 text-xs">{fmt(r.pharmacy.total)}</td>
+        <td className="px-2 py-3 text-center font-bold text-emerald-700 border-r border-slate-100 bg-emerald-50/40 text-xs">{fmt((r.pharmacy.cash || 0) + (r.pharmacy.online || 0) + (r.pharmacy.due || 0))}</td>
         <td className="px-2 py-3 text-center font-bold text-emerald-800 border-r border-slate-200 bg-emerald-50/40 text-xs">{r.pharmacy.footFall}</td>
 
         {/* W Pharmacy */}
@@ -3475,17 +3529,17 @@ const computeBalance = (booking, totalPaid) => {
                                 <td className="px-2 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.clinic.cash)}</td>
                                 <td className="px-2 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.clinic.online)}</td>
                                 <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.clinic.due)}</td>
-                                <td className="px-2 py-2 text-center font-black text-blue-800 border-r border-indigo-100 bg-blue-100/30 text-[10px]">{fmt(r.clinic.total)}</td>
+                                <td className="px-2 py-2 text-center font-black text-blue-800 border-r border-indigo-100 bg-blue-100/30 text-[10px]">{fmt((r.clinic.cash || 0) + (r.clinic.online || 0) + (r.clinic.due || 0))}</td>
                                 <td className="px-2 py-2 text-center font-black text-blue-900 border-r border-indigo-100 bg-blue-100/30 text-[10px]">{r.clinic.footFall}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.lab.cash)}</td>
                                 <td className="px-2 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.lab.online)}</td>
                                 <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.lab.due)}</td>
-                                <td className="px-2 py-2 text-center font-black text-purple-800 border-r border-indigo-100 bg-purple-100/30 text-[10px]">{fmt(r.lab.total)}</td>
+                                <td className="px-2 py-2 text-center font-black text-purple-800 border-r border-indigo-100 bg-purple-100/30 text-[10px]">{fmt((r.lab.cash || 0) + (r.lab.online || 0) + (r.lab.due || 0))}</td>
                                 <td className="px-2 py-2 text-center font-black text-purple-900 border-r border-indigo-100 bg-purple-100/30 text-[10px]">{r.lab.footFall}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-700 border-r border-indigo-100 text-[10px]">{fmt(r.pharmacy.cash)}</td>
                                 <td className="px-2 py-2 text-center font-black text-sky-700 border-r border-indigo-100 text-[10px]">{fmt(r.pharmacy.online)}</td>
                                 <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">{fmt(r.pharmacy.due)}</td>
-                                <td className="px-2 py-2 text-center font-black text-emerald-800 border-r border-indigo-100 bg-emerald-100/30 text-[10px]">{fmt(r.pharmacy.total)}</td>
+                                <td className="px-2 py-2 text-center font-black text-emerald-800 border-r border-indigo-100 bg-emerald-100/30 text-[10px]">{fmt((r.pharmacy.cash || 0) + (r.pharmacy.online || 0) + (r.pharmacy.due || 0))}</td>
                                 <td className="px-2 py-2 text-center font-black text-emerald-900 border-r border-indigo-100 bg-emerald-100/30 text-[10px]">{r.pharmacy.footFall}</td>
                                 
                                 <td className="px-2 py-2 text-center font-black text-cyan-700 border-r border-indigo-100 bg-cyan-100/30 text-[10px]">{fmt((Number(rowInputs[rowKey]?.cash) || 0) - (Number(r.pharmacy.cash) || 0))}</td>
@@ -3518,7 +3572,11 @@ const computeBalance = (booking, totalPaid) => {
                                   {fmt((Number(r.clinic.due) || 0) + (Number(r.lab.due) || 0) + (Number(r.pharmacy.due) || 0))}
                                 </td>
                                 <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
-                                  {fmt(r.clinic.total + r.lab.total + r.pharmacy.total + (Number(rowInputs[rowKey]?.cash) || 0) + (Number(rowInputs[rowKey]?.online) || 0))}
+                                  {(() => {
+                                    const rc = Number(rowInputs[rowKey]?.cash) || 0, ro = Number(rowInputs[rowKey]?.online) || 0, rf = Number(rowInputs[rowKey]?.footFall) || 0;
+                                    const pharmacyPart = (rc === 0 && ro === 0 && rf === 0) ? (r.pharmacy.cash + r.pharmacy.online) : (rc + ro);
+                                    return fmt((r.clinic.cash + r.clinic.online) + (r.lab.cash + r.lab.online) + pharmacyPart + (Number(r.clinic.due) || 0) + (Number(r.lab.due) || 0) + (Number(r.pharmacy.due) || 0));
+                                  })()}
                                 </td>
                                 <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
                                   {r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (Number(rowInputs[rowKey]?.footFall) || 0)}
