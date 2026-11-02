@@ -127,7 +127,7 @@ const ITEM_PAYMENT_STATUS_OPTIONS = [
 const EMPTY_FORM = {
   title: "Mr.", name: "", dob: "", age: "", gender: "Male",
   phone: "", address: "", city: "", pincode: "",
-  serviceItems: [], paymentType: "cash", reason: "", paymentStatus: "Due",
+  serviceItems: [], paymentType: "", reason: "", paymentStatus: "Due",
   doctorId: "", slotId: "", appointmentDate: "", selectedServices: [],
   referredByCustomer: "", referredByDoctor: "", referralCustomerId: "",
   referralDoctorId: "", referralCommission: "", referralCommissionType: "",
@@ -1579,10 +1579,11 @@ export default function OpManagement() {
       if (isPaid && paidAmount === 0) paidAmount = netPrice;
       const dueAmount = Math.max(0, netPrice - paidAmount);
 
-      return {
+         return {
         serviceId: s.serviceId || s._id || "",
         name: s.name || `Lab Test ${idx + 1}`,
         price, discount, paidAmount, dueAmount,
+        discountType: s.discountType || "₹", // 👈 NAYA FIELD
         description: s.description || "",
         paymentMode: s.paymentMode === "N/A" ? "" : (s.paymentMode || ""),
         paymentStatus: s.paymentStatus || (isPaid ? "Paid" : "Due"),
@@ -1600,11 +1601,12 @@ export default function OpManagement() {
     if (Number(price) < 0) { showToast("Invalid amount", "error"); return; }
 
     const p = Number(price) || 0;
-    setLabItemsList((prev) => [...prev, {
+       setLabItemsList((prev) => [...prev, {
       serviceId: "",
       name: `Lab Test ${prev.length + 1}`,
       price: p,
       discount: 0,
+      discountType: "₹", // 👈 NAYA FIELD
       paidAmount: 0,
       dueAmount: p, // ✅ Add karte hi Due = Price
       description: "",
@@ -1622,18 +1624,19 @@ export default function OpManagement() {
 
 
 
-  const handleUpdateLabItemPrice = (index, newPrice) => {
+   const handleUpdateLabItemPrice = (index, newPrice) => {
     setLabItemsList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
         const price = Number(newPrice) || 0;
-        const discount = Number(s.discount) || 0;
-        const netPrice = Math.max(0, price - discount);
+        const discountVal = Number(s.discount) || 0;
+        const dType = s.discountType || "₹";
+        const discountAmt = dType === "%" ? (price * discountVal) / 100 : discountVal;
+        const netPrice = Math.max(0, price - discountAmt);
         const paid = Number(s.paidAmount) || 0;
         const due = Math.max(0, netPrice - paid);
 
         let newStatus = "Due";
-        // 👇 Condition lagayi: Status tabhi badlega jab Payment Type select ho
         if (s.paymentMode && s.paymentMode.trim() !== "") {
           if (paid > 0 && paid >= netPrice) newStatus = "Paid";
           else if (paid > 0 && paid < netPrice) newStatus = "Partial";
@@ -1643,13 +1646,18 @@ export default function OpManagement() {
       })
     );
   };
-  const handleUpdateLabItemPaidAmount = (index, newPaid) => {
+   const handleUpdateLabItemPaidAmount = (index, newPaid) => {
     setLabItemsList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
         const price = Number(s.price) || 0;
         const discount = Number(s.discount) || 0;
-        const netPrice = Math.max(0, price - discount);
+        const dType = s.discountType || "₹";
+        
+        // 👈 Naya calculation
+        const discountAmt = dType === "%" ? (price * discount) / 100 : discount;
+        const netPrice = Math.max(0, price - discountAmt);
+        
         const paid = Number(newPaid) || 0;
         const due = Math.max(0, netPrice - paid);
 
@@ -1672,19 +1680,19 @@ export default function OpManagement() {
 
 
 
-  // ✅ NEW: Update Lab Item Discount
-  const handleUpdateLabItemDiscount = (index, newDiscount) => {
+   const handleUpdateLabItemDiscount = (index, newDiscount) => {
     setLabItemsList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
         const price = Number(s.price) || 0;
         const discount = Number(newDiscount) || 0;
-        const netPrice = Math.max(0, price - discount);
+        const dType = s.discountType || "₹";
+        const discountAmt = dType === "%" ? (price * discount) / 100 : discount;
+        const netPrice = Math.max(0, price - discountAmt);
         const paid = Number(s.paidAmount) || 0;
         const due = Math.max(0, netPrice - paid);
 
         let newStatus = "Due";
-        // 👇 Condition lagayi
         if (s.paymentMode && s.paymentMode.trim() !== "") {
           if (paid > 0 && paid >= netPrice) newStatus = "Paid";
           else if (paid > 0 && paid < netPrice) newStatus = "Partial";
@@ -1694,7 +1702,6 @@ export default function OpManagement() {
       })
     );
   };
-
   // ✅ NEW: Update Pharmacy Item Discount
   const handleUpdatePharmacyItemDiscount = (index, newDiscount) => {
     setPharmacyItemsList((prev) =>
@@ -1718,13 +1725,41 @@ export default function OpManagement() {
     );
   };
 
-  const handleUpdateLabItemPaymentMode = (index, mode) => {
+  // ✅ NAYA FUNCTION: Lab Discount Type (₹ / %) change karne ke liye
+  const handleUpdateLabItemDiscountType = (index, newType) => {
     setLabItemsList((prev) =>
       prev.map((s, i) => {
         if (i !== index) return s;
         const price = Number(s.price) || 0;
-        const discount = Number(s.discount) || 0;
-        const netPrice = Math.max(0, price - discount);
+        const discountVal = Number(s.discount) || 0;
+        
+        // Naya type ke hisaab se discount amount calculate karo
+        const discountAmt = newType === "%" ? (price * discountVal) / 100 : discountVal;
+        const netPrice = Math.max(0, price - discountAmt);
+        const paid = Number(s.paidAmount) || 0;
+        const due = Math.max(0, netPrice - paid);
+
+        let newStatus = "Due";
+        if (s.paymentMode && s.paymentMode.trim() !== "") {
+          if (paid > 0 && paid >= netPrice) newStatus = "Paid";
+          else if (paid > 0 && paid < netPrice) newStatus = "Partial";
+        }
+
+        return { ...s, discountType: newType, dueAmount: due, paymentStatus: newStatus };
+      })
+    );
+  };
+
+
+    const handleUpdateLabItemPaymentMode = (index, mode) => {
+    setLabItemsList((prev) =>
+      prev.map((s, i) => {
+        if (i !== index) return s;
+        const price = Number(s.price) || 0;
+        const discountVal = Number(s.discount) || 0;
+        const dType = s.discountType || "₹";
+        const discountAmt = dType === "%" ? (price * discountVal) / 100 : discountVal;
+        const netPrice = Math.max(0, price - discountAmt);
         const paid = Number(s.paidAmount) || 0;
         const due = Math.max(0, netPrice - paid);
 
@@ -1738,8 +1773,6 @@ export default function OpManagement() {
       })
     );
   };
-
-
 
 
   const handleUpdateLabItemPaymentStatus = (index, status) => {
@@ -1793,10 +1826,15 @@ export default function OpManagement() {
         };
       });
 
-      const labItems = labItemsList.map((s) => {
+            const labItems = labItemsList.map((s) => {
         const price = Number(s.price) || 0;
         const discount = Number(s.discount) || 0;
-        const netPrice = Math.max(0, price - discount);
+        const dType = s.discountType || "₹";
+        
+        // 👈 Discount type ke hisaab se netPrice calculate karo
+        const discountAmt = dType === "%" ? (price * discount) / 100 : discount;
+        const netPrice = Math.max(0, price - discountAmt);
+        
         let paidAmount = Number(s.paidAmount) || 0;
         if (s.paymentStatus === "Paid" && paidAmount === 0) paidAmount = netPrice;
 
@@ -1805,6 +1843,7 @@ export default function OpManagement() {
           name: s.name || `Lab Test ${labItemsList.indexOf(s) + 1}`,
           price: price,
           discount: discount,
+          discountType: dType, // 👈 Ye add karo
           paidAmount: paidAmount,
           description: s.description || "",
           category: "lab",
@@ -1813,7 +1852,15 @@ export default function OpManagement() {
           transactionId: s.transactionId || "",
         };
       });
-      const labTotal = labItems.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+
+      // 👈 YAHAN CHANGE HAI: labTotal me netPrice ka sum lo
+      const labTotal = labItems.reduce((sum, s) => {
+        const price = Number(s.price) || 0;
+        const discountVal = Number(s.discount) || 0;
+        const dType = s.discountType || "₹";
+        const discountAmt = dType === "%" ? (price * discountVal) / 100 : discountVal;
+        return sum + Math.max(0, price - discountAmt);
+      }, 0);
 
       // ✅ EXPLICIT CATEGORY PAYMENT CALCULATION (Yahan fix hai)
       const safeCategoryPayment = {
@@ -2199,7 +2246,7 @@ export default function OpManagement() {
         allergies: b.patientAllergies || "",
         medications: b.patientMedications || "",
         reason: b.purpose || "",
-        paymentType: b.paymentType || "cash",
+        paymentType: b.paymentType || "",
         paymentStatus: normalizedPS,
         serviceItems: getBookingServices(b),
         referredByCustomer: b.referredByCustomer || "",
@@ -2224,9 +2271,7 @@ export default function OpManagement() {
     setFormData((prev) => ({ ...prev, appointmentDate: today }));
   }, []);
 
-  useEffect(() => {
-    // 🆕 Agar Reg date me sirf EK date select hui hai (from set, to empty)
-    // to fetch mat karo — user abhi dusri date select karega
+   useEffect(() => {
     const regDateIncomplete = !!fromDate && !toDate;
     const apptDateIncomplete = !!apptFromDate && !apptToDate;
     if (regDateIncomplete || apptDateIncomplete) return;
@@ -2236,8 +2281,18 @@ export default function OpManagement() {
   }, [
     timeFilter, fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
     doctorFilter, paymentTypeFilter, statusFilter,
-    bookingTypeFilter, revenueCategoryFilter, searchQuery
+    bookingTypeFilter, revenueCategoryFilter // 👈 searchQuery yahan se hata diya
   ]);
+
+  // 👇 Naya useEffect sirf Search ke liye (Debounce lagaya hai)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchBookings(); 
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   useEffect(() => {
     const isSpecificTimeFilter = timeFilter && timeFilter !== "All";
@@ -2499,12 +2554,13 @@ export default function OpManagement() {
           };
         });
 
-        const normalizedLabItems = Array.isArray(b.labItems)
+              const normalizedLabItems = Array.isArray(b.labItems)
           ? b.labItems.map((item) => ({
             serviceId: item.serviceId || item._id || "",
             name: item.name || "Lab Test",
             price: Number(item.price) || 0,
             discount: Number(item.discount) || 0,
+            discountType: item.discountType || "₹", // 👈 Ye add karo
             paidAmount: Number(item.paidAmount) || 0,
             dueAmount: Number(item.dueAmount) || 0,
             transactionId: item.transactionId || "",
@@ -2515,6 +2571,7 @@ export default function OpManagement() {
           }))
           : [];
 
+          
         const normalizedMedicineItems = Array.isArray(b.medicineItems)
           ? b.medicineItems.map((item) => ({
             serviceId: item.serviceId || item._id || "",
@@ -2575,7 +2632,7 @@ export default function OpManagement() {
           symptoms: b.symptoms || "",
           appointmentType: b.appointmentType || "Consultation",
           priority: b.priority || "Normal",
-          paymentType: b.paymentType || "cash",
+          paymentType: b.paymentType || "",
           paymentStatus: normalizedBookingPS,
           partialAmount: Number(b.partialAmount) || 0,
           subtotal, commissionAmount, discount, finalPayable, finalPayableAmount: finalPayable,
@@ -2828,7 +2885,7 @@ export default function OpManagement() {
       referralCommission: existingPatient.referralCommission || "",
       referralCommissionType: existingPatient.referralCommissionType || "",
       serviceItems: [], paymentStatus: "Due", partialAmount: "",
-      discount: "", discountType: "₹", paymentType: "cash",
+      discount: "", discountType: "₹", paymentType: "",
       doctorId: "", slotId: "", offerApplied: null,
     }));
     if (existingPatient.referralCustomerId) {
@@ -2994,7 +3051,7 @@ export default function OpManagement() {
       city: existingBooking?.patientCity || patient.city || "",
       pincode: existingBooking?.patientPincode || patient.pincode || "",
       serviceItems: getBookingServices(existingBooking),
-      paymentType: existingBooking?.paymentType || patient.paymentType || "cash",
+      paymentType: existingBooking?.paymentType || patient.paymentType || "",
       reason: existingBooking?.purpose || patient.reason || "",
       paymentStatus: normalizedPS,
       doctorId, slotId, bookingId, appointmentDate,
@@ -4417,14 +4474,19 @@ export default function OpManagement() {
       if (activeFilter === "active" && !isActive) return false;
       if (activeFilter === "inactive" && isActive) return false;
 
-      if (feeTypeFilter !== "All") {
-        const hasMatchingService = (p.serviceItems || []).some(
-          (s) => s.name && s.name.toLowerCase().includes(feeTypeFilter.toLowerCase())
-        );
-        if (!hasMatchingService) return false;
+      // 👇 SEARCH FILTER (Name, Phone, PID) 👇
+      if (searchQuery.trim()) {
+        const query = searchQuery.trim().toLowerCase();
+        const nameMatch = (p.name || "").toLowerCase().includes(query);
+        const phoneMatch = (p.phone || "").includes(query);
+        const pidMatch = (p.customPID || "").toLowerCase().includes(query);
+        
+        // Agar teeno mein se kuch match nahi hua, toh row hata do
+        if (!nameMatch && !phoneMatch && !pidMatch) return false; 
       }
+      // 👆 SEARCH FILTER KHATAM 👆
 
-      if (referredByFilter !== "All") {
+      if (feeTypeFilter !== "All") {
         const b = getMatchingBooking(p);
         if (referredByFilter.startsWith("customer::")) {
           const name = referredByFilter.replace("customer::", "");
@@ -4829,16 +4891,29 @@ export default function OpManagement() {
             <div className="relative flex-shrink-0">
               {/* Icon position thoda adjust kiya hai capsule ke hisaab se */}
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                className={`pl-8 pr-3 py-2 text-xs border border-gray-300 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 ease-in-out ${isSearchFocused ? "w-[220px]" : "w-[140px]"
-                  }`}
-              />
+ <input
+  type="text"
+  placeholder="Search Name, Phone..."
+  value={searchQuery}
+  onChange={(e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    if (val.length > 0) {
+      // Type karte waqt All dates par jao
+      setTimeFilter("All"); 
+      setFromDate("");
+      setToDate("");
+      setSelectedMonth("");
+    } else {
+      // 👈 Agar search clear ho jaye (khali ho jaye) toh wapas Today par le aao
+      setTimeFilter("today");
+    }
+  }}
+  onFocus={() => setIsSearchFocused(true)}
+  onBlur={() => setIsSearchFocused(false)}
+  className={`pl-8 pr-3 py-2 text-xs border border-gray-300 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 ease-in-out ${isSearchFocused ? "w-[220px]" : "w-[140px]"
+    }`}
+/>
             </div>
             <div className="flex items-center gap-0.5 bg-gray-100 p-1 rounded-lg border border-gray-200 flex-shrink-0">
               {TIME_FILTER_OPTIONS.map((opt) => {
@@ -5810,13 +5885,20 @@ export default function OpManagement() {
                               <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Payment Mode</label>
                               <select
                                 name="paymentType"
-                                value={formData.paymentType || "cash"}
+                                value={formData.paymentType || ""}
                                 onChange={handleInputChange}
                                 disabled={isEditMode}
-                                className={`w-full border rounded-lg px-2.5 py-2 text-sm font-medium ${isEditMode ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"}`}
+                                className={`w-full border rounded-lg px-2.5 py-2 text-sm font-medium ${isEditMode
+                                    ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+                                    : "bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                                  }`}
                               >
-                                <option value="">-- Select Mode --</option>
-                                {PAYMENT_TYPE_OPTIONS.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                                <option value="">Select Mode</option>
+                                {PAYMENT_TYPE_OPTIONS.map((o) => (
+                                  <option key={o.value} value={o.value}>
+                                    {o.label}
+                                  </option>
+                                ))}
                               </select>
                             </div>
 
@@ -6939,11 +7021,12 @@ export default function OpManagement() {
               <div className="flex-1 overflow-y-auto">
                 <table className="w-full text-xs">
                   <thead className="bg-gray-100 sticky top-0 z-10">
-                    <tr>
+                                       <tr>
                       <th className="px-3 py-2.5 text-center font-bold text-gray-600 w-10">#</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-32">Lab Name</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Amount</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-20">Disc.</th>
+                      <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Disc Type</th> {/* 👈 NAYA */}
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Payment</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-28">Payment Type</th>
                       <th className="px-3 py-2.5 text-left font-bold text-gray-600 w-24">Status</th>
@@ -6980,6 +7063,7 @@ export default function OpManagement() {
                                 min="0"
                               />
                             </td>
+                               {/* ✅ Discount Amount Input */}
                             <td className="px-3 py-2">
                               <input
                                 type="number"
@@ -6990,6 +7074,19 @@ export default function OpManagement() {
                                 className={`w-16 px-2 py-1.5 text-xs font-bold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "text-rose-700 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none"}`}
                                 min="0"
                               />
+                            </td>
+
+                            {/* ✅ Disc Type Dropdown (₹ / %) */}
+                            <td className="px-3 py-2">
+                              <select
+                                value={item.discountType || "₹"}
+                                onChange={(e) => handleUpdateLabItemDiscountType(i, e.target.value)}
+                                disabled={isPaid}
+                                className={`w-full px-2 py-1.5 text-[11px] font-semibold border rounded ${isPaid ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : "bg-white border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none"}`}
+                              >
+                                <option value="₹">₹</option>
+                                <option value="%">%</option>
+                              </select>
                             </td>
                             <td className="px-3 py-2">
                               <input
@@ -7069,7 +7166,7 @@ export default function OpManagement() {
                         <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-purple-800">₹{labItemsList.reduce((s, x) => s + (Number(x.price) || 0), 0)}</span></td>
                         <td className="px-3 py-2.5"><span className="text-sm font-extrabold text-rose-700">₹{labItemsList.reduce((s, x) => s + (Number(x.discount) || 0), 0)}</span></td>
                         <td className="px-3 py-2.5 text-center"><span className="text-sm font-extrabold text-emerald-700">₹{labItemsList.reduce((s, x) => s + (Number(x.paidAmount) || 0), 0)}</span></td>
-                        <td colSpan={3} className="px-3 py-2.5"></td>
+                                                <td colSpan={4} className="px-3 py-2.5"></td>
                         <td className="px-3 py-2.5 text-center bg-red-100/50"><span className="text-sm font-extrabold text-red-600">₹{labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0)}</span></td>
                         <td className="px-3 py-2.5 text-center">
                           {labItemsList.reduce((s, x) => s + (Number(x.dueAmount) || 0), 0) > 0 && (
