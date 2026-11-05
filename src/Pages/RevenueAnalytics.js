@@ -91,6 +91,19 @@ const getDaysInMonth = (year, month) => new Date(year, month, 0).getDate();
 const pad = (n) => String(n).padStart(2, "0");
 const fmtDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
+// ✅ Month expand summary row: collapsed month row jaisa hi Grand Total (Total Pharmacy me clinic pharmacy already included hai, to double count nahi)
+const getMonthSummaryRetail = (r) => {
+  const rc = Number(r.retailPharmacy?.cash) || 0;
+  const ro = Number(r.retailPharmacy?.online) || 0;
+  const rf = Number(r.retailPharmacy?.footFall) || 0;
+  const zero = rc === 0 && ro === 0 && rf === 0;
+  return {
+    wCash: zero ? 0 : rc - (Number(r.pharmacy?.cash) || 0),
+    wOnline: zero ? 0 : ro - (Number(r.pharmacy?.online) || 0),
+    wFoot: zero ? 0 : rf - (Number(r.pharmacy?.footFall) || 0),
+  };
+};
+
 const formatDateToDDMMYYYY = (dateStr) => {
   if (!dateStr) return "";
   try {
@@ -536,7 +549,7 @@ const GrandTotalCard = ({ total, cash, online, due, footFall, rangeTarget = 0, h
 /* ============================================================ */
 /* Add/Edit Target Modal                                        */
 /* ============================================================ */
-const AddTargetModal = ({ isOpen, onClose, onSave, saving, editTarget = null }) => {
+const AddTargetModal = ({ isOpen, onClose, onSave, saving, editTarget = null, allTargets = [] }) => {
   const isEditMode = !!editTarget;
   const defaultFYStart = isEditMode ? getFYStartForMonth(Number(editTarget.year), Number(editTarget.month)) : getCurrentFYStartYear();
   const [fyStartYear, setFyStartYear] = useState(defaultFYStart);
@@ -572,28 +585,60 @@ const AddTargetModal = ({ isOpen, onClose, onSave, saving, editTarget = null }) 
       } catch (e) { console.error(e); }
       const allCats = [...DEFAULT_CATEGORIES, ...savedCats];
       setCategories(allCats);
-      const emptyGrid = {};
-      FY_MONTH_ORDER.forEach((m) => {
-        emptyGrid[m] = {};
-        allCats.forEach((c) => { emptyGrid[m][c.key] = { amount: "", footFall: "" }; });
-      });
-      if (isEditMode && editTarget) {
-        const editMonth = Number(editTarget.month);
-        const editYear = Number(editTarget.year);
-        const editFYStart = getFYStartForMonth(editYear, editMonth);
-        if (editFYStart === defaultFYStart) {
-          allCats.forEach((cat) => {
-            const catData = editTarget.categories?.[cat.key];
-            if (catData) {
-              emptyGrid[editMonth][cat.key].amount = catData.amount > 0 ? (catData.amount / 100000).toFixed(2).replace(/\.00$/, '') : "";
-              emptyGrid[editMonth][cat.key].footFall = catData.footFall > 0 ? String(catData.footFall) : "";
-            }
-          });
-        }
-      }
-      setGrid(emptyGrid);
     }
-  }, [isOpen, editTarget]);
+  }, [isOpen, defaultFYStart]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let savedCats = [];
+    try {
+      const stored = localStorage.getItem("revenue_custom_segments");
+      if (stored) savedCats = JSON.parse(stored);
+    } catch (e) { console.error(e); }
+    const allCats = [...DEFAULT_CATEGORIES, ...savedCats];
+
+    const emptyGrid = {};
+    FY_MONTH_ORDER.forEach((m) => {
+      emptyGrid[m] = {};
+      allCats.forEach((c) => { emptyGrid[m][c.key] = { amount: "", footFall: "" }; });
+    });
+
+    // 1. Handle Edit Mode (Specific Month)
+    if (isEditMode && editTarget) {
+      const editMonth = Number(editTarget.month);
+      const editYear = Number(editTarget.year);
+      const editFYStart = getFYStartForMonth(editYear, editMonth);
+      if (editFYStart === fyStartYear) {
+        allCats.forEach((cat) => {
+          const catData = editTarget.categories?.[cat.key];
+          if (catData) {
+            emptyGrid[editMonth][cat.key].amount = catData.amount > 0 ? (catData.amount / 100000).toFixed(2).replace(/\.00$/, '') : "";
+            emptyGrid[editMonth][cat.key].footFall = catData.footFall > 0 ? String(catData.footFall) : "";
+          }
+        });
+      }
+    } 
+    // 2. Handle Fresh Open (Pre-fill from allTargets for SELECTED FY)
+    else if (!isEditMode && allTargets && allTargets.length > 0) {
+      allTargets.forEach(t => {
+        const tMonth = Number(t.month);
+        const tYear = Number(t.year);
+        const tFyStart = getFYStartForMonth(tYear, tMonth);
+        
+        if (tFyStart === fyStartYear && emptyGrid[tMonth] && emptyGrid[tMonth][t.category]) {
+          if (Number(t.amount) > 0) {
+            emptyGrid[tMonth][t.category].amount = (Number(t.amount) / 100000).toFixed(2).replace(/\.00$/, '');
+          }
+          if (Number(t.footFall) > 0) {
+            emptyGrid[tMonth][t.category].footFall = String(t.footFall);
+          }
+        }
+      });
+    }
+    
+    setGrid(emptyGrid);
+  }, [isOpen, fyStartYear, editTarget, allTargets, isEditMode]);
 
   if (!isOpen) return null;
 
@@ -1309,8 +1354,9 @@ const TargetTracker = ({ onSetTargetClick, onExportClick, allTargets, loadingAll
 /* Main Component                                                */
 /* ============================================================ */
 export default function RevenueAnalytics() {
-  const today = new Date().toISOString().split("T")[0];
+  // ✅ LOCAL (IST) date — toISOString() UTC deta hai, isse subah 5:30 baje se pehle kal ki date aati thi
   const now = new Date();
+  const today = fmtDate(now);
 
   const [fromDate, setFromDate] = useState(today);
   const [toDate, setToDate] = useState(today);
@@ -1404,7 +1450,7 @@ const openClearDueModal = async (rowKey, category) => {
   setClearDueCategory(category);
   setClearDuePaymentType("Cash");
   setClearDueTransactionId("");
-  setClearDuePaidDate(new Date().toISOString().split("T")[0]);
+  setClearDuePaidDate(fmtDate(new Date()));
   setClearDueRowKey(rowKey);
   setShowClearDueModal(true);
   setClearDueLoading(true);
@@ -1847,10 +1893,12 @@ const computeBalance = (booking, totalPaid) => {
     } finally { setDeletingTarget(false); }
   };
 
+  const fetchSeqRef = useRef(0);
   const fetchAnalytics = useCallback(async () => {
+    const seq = ++fetchSeqRef.current; // ✅ purani request ka response naye data ko overwrite na kare
     let queryFrom = fromDate;
     let queryTo = toDate;
-    if (activePreset === "all") { queryFrom = "2020-01-01"; queryTo = new Date().toISOString().split("T")[0]; }
+    if (activePreset === "all") { queryFrom = "2020-01-01"; queryTo = fmtDate(new Date()); }
     else if (!fromDate || !toDate) return;
 
     setLoading(true);
@@ -1865,6 +1913,7 @@ const computeBalance = (booking, totalPaid) => {
     try {
       const url = `${ANALYTICS_API_BASE}/revenue-analytics?from=${queryFrom}&to=${queryTo}`;
       const res = await axios.get(url);
+      if (seq !== fetchSeqRef.current) return;
       if (res.data?.success) {
         const normalized = normalizeAnalyticsData(res.data);
         setData(normalized);
@@ -1909,20 +1958,24 @@ const computeBalance = (booking, totalPaid) => {
         setData(null);
       }
     } catch (err) {
+      if (seq !== fetchSeqRef.current) return;
       setError(err.response?.data?.message || err.message || "Failed to fetch analytics");
       setData(null);
     } finally {
-      setLoading(false);
+      if (seq === fetchSeqRef.current) setLoading(false);
     }
   }, [fromDate, toDate]);
 
   useEffect(() => {
-    const nowD = new Date();
+    // ✅ fmtDate already local getters use karta hai — extra timezone shift nahi chahiye
+    const localToday = new Date();
+    const todayStr = fmtDate(localToday);
+
     setActivePreset("today");
-    setFromDate(fmtDate(nowD));
-    setToDate(fmtDate(nowD));
-    setSelectedMonth(nowD.getMonth() + 1);
-    setSelectedYear(nowD.getFullYear());
+    setFromDate(todayStr);
+    setToDate(todayStr);
+    setSelectedMonth(localToday.getMonth() + 1);
+    setSelectedYear(localToday.getFullYear());
   }, []);
 
   useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
@@ -2610,9 +2663,13 @@ const computeBalance = (booking, totalPaid) => {
     const rowKey = r.date || "__total__";
     const isTotal = rowKey === "__total__";
     const ri = rowInputs[rowKey] || {};
-    const rCash = isTotal ? (Number(retailInput.cash) || 0) : (Number(ri.cash) || 0);
-    const rOnline = isTotal ? (Number(retailInput.online) || 0) : (Number(ri.online) || 0);
-    const rFoot = isTotal ? (Number(retailInput.footFall) || 0) : (Number(ri.footFall) || 0);
+    
+    // 🔥 FIX: Agar row monthly hai (Year filter mein), toh uske andar ke inputs use karo, warna khud ka data use karo
+    const hasMonthData = r.monthData && r.monthData.length > 0;
+    
+    const rCash = hasMonthData ? r.retailPharmacy.cash : (isTotal ? (Number(retailInput.cash) || 0) : (Number(ri.cash) || 0));
+    const rOnline = hasMonthData ? r.retailPharmacy.online : (isTotal ? (Number(retailInput.online) || 0) : (Number(ri.online) || 0));
+    const rFoot = hasMonthData ? r.retailPharmacy.footFall : (isTotal ? (Number(retailInput.footFall) || 0) : (Number(ri.footFall) || 0));
     const rRetail = { cash: rCash, online: rOnline, total: rCash + rOnline, footFall: rFoot };
 
     // Bank Credit value
@@ -2640,9 +2697,9 @@ const computeBalance = (booking, totalPaid) => {
       due: clinicDue + labDue + pharmacyDue + wDue,
     };
     customSegments.forEach(cat => {
-      const cCash = isTotal ? (Number(retailInput[`${cat.key}_cash`]) || 0) : (Number(ri[cat.key]?.cash) || 0);
-      const cOnline = isTotal ? (Number(retailInput[`${cat.key}_online`]) || 0) : (Number(ri[cat.key]?.online) || 0);
-      const cFoot = isTotal ? (Number(retailInput[`${cat.key}_ff`]) || 0) : (Number(ri[cat.key]?.footFall) || 0);
+      const cCash = hasMonthData ? 0 : (isTotal ? (Number(retailInput[`${cat.key}_cash`]) || 0) : (Number(ri[cat.key]?.cash) || 0));
+      const cOnline = hasMonthData ? 0 : (isTotal ? (Number(retailInput[`${cat.key}_online`]) || 0) : (Number(ri[cat.key]?.online) || 0));
+      const cFoot = hasMonthData ? 0 : (isTotal ? (Number(retailInput[`${cat.key}_ff`]) || 0) : (Number(ri[cat.key]?.footFall) || 0));
 
       rGrand.cash += cCash;
       rGrand.online += cOnline;
@@ -2667,15 +2724,14 @@ const computeBalance = (booking, totalPaid) => {
 
     const isMonthly = r.year && r.month;
     const dateLabel = isTotal ? `${formatDateToDDMMYYYY(fromDate)} – ${formatDateToDDMMYYYY(toDate)}` : isMonthly ? `${MONTHS[r.month - 1].slice(0, 3)} ${r.year}` : formatDateToDDMMYYYY(r.date);
-    const hasMonthData = r.monthData && r.monthData.length > 0;
     const isExpanded = expandedMonths[rowKey];
 
-    const isRetailSaved = !isTotal && ri.savedRetail === true;
+    const isRetailSaved = !isTotal && (hasMonthData || ri.savedRetail === true);
     const isRetailSaving = savingRetailKey === rowKey;
 
-    const savedCash = Number(ri.savedRetailCash) || 0;
-    const savedOnline = Number(ri.savedRetailOnline) || 0;
-    const savedFoot = Number(ri.savedRetailFootFall) || 0;
+    const savedCash = hasMonthData ? rRetail.cash : (Number(ri.savedRetailCash) || 0);
+    const savedOnline = hasMonthData ? rRetail.online : (Number(ri.savedRetailOnline) || 0);
+    const savedFoot = hasMonthData ? rRetail.footFall : (Number(ri.savedRetailFootFall) || 0);
     const hasUnsavedRetailChange = rCash !== savedCash || rOnline !== savedOnline || rFoot !== savedFoot;
 
     return (
@@ -2761,7 +2817,7 @@ const computeBalance = (booking, totalPaid) => {
         {/* Total Pharmacy */}
         <td className="px-1 py-2 border-r border-slate-100 bg-amber-50/40 w-[75px]">
           <input type="number" min="0" placeholder="0" disabled={!isTotal && isRetailSaved}
-            value={isTotal ? retailInput.cash : (ri.cash || "")}
+            value={isTotal ? retailInput.cash : (hasMonthData ? rRetail.cash : (ri.cash || ""))}
             onChange={(e) => {
               const v = e.target.value;
               if (isTotal) setRetailInput((p) => ({ ...p, cash: v }));
@@ -2771,7 +2827,7 @@ const computeBalance = (booking, totalPaid) => {
         </td>
         <td className="px-1 py-2 border-r border-slate-100 bg-amber-50/40 w-[75px]">
           <input type="number" min="0" placeholder="0" disabled={!isTotal && isRetailSaved}
-            value={isTotal ? retailInput.online : (ri.online || "")}
+            value={isTotal ? retailInput.online : (hasMonthData ? rRetail.online : (ri.online || ""))}
             onChange={(e) => {
               const v = e.target.value;
               if (isTotal) setRetailInput((p) => ({ ...p, online: v }));
@@ -2799,7 +2855,7 @@ const computeBalance = (booking, totalPaid) => {
 
         <td className="px-1 py-2 border-r border-slate-200 bg-amber-50/40 w-[75px]">
           <input type="number" min="0" placeholder="0" disabled={!isTotal && isRetailSaved}
-            value={isTotal ? retailInput.footFall : (ri.footFall || "")}
+            value={isTotal ? retailInput.footFall : (hasMonthData ? rRetail.footFall : (ri.footFall || ""))}
             onChange={(e) => {
               const v = e.target.value;
               if (isTotal) setRetailInput((p) => ({ ...p, footFall: v }));
@@ -2809,15 +2865,15 @@ const computeBalance = (booking, totalPaid) => {
         </td>
 
         {customSegments.map(cat => {
-          const cCash = isTotal ? (Number(retailInput[`${cat.key}_cash`]) || 0) : (Number(ri[cat.key]?.cash) || 0);
-          const cOnline = isTotal ? (Number(retailInput[`${cat.key}_online`]) || 0) : (Number(ri[cat.key]?.online) || 0);
+          const cCash = hasMonthData ? 0 : (isTotal ? (Number(retailInput[`${cat.key}_cash`]) || 0) : (Number(ri[cat.key]?.cash) || 0));
+          const cOnline = hasMonthData ? 0 : (isTotal ? (Number(retailInput[`${cat.key}_online`]) || 0) : (Number(ri[cat.key]?.online) || 0));
           const cTotal = cCash + cOnline;
 
           return (
             <React.Fragment key={cat.key}>
               <td className="px-1 py-2 border-r border-slate-100 bg-white w-[70px]">
                 <input type="number" min="0" placeholder="0"
-                  value={isTotal ? (retailInput[`${cat.key}_cash`] || "") : (ri[cat.key]?.cash || "")}
+                  value={isTotal ? (retailInput[`${cat.key}_cash`] || "") : (hasMonthData ? "" : (ri[cat.key]?.cash || ""))}
                   onChange={(e) => {
                     const v = e.target.value;
                     if (isTotal) setRetailInput((p) => ({ ...p, [`${cat.key}_cash`]: v }));
@@ -2827,7 +2883,7 @@ const computeBalance = (booking, totalPaid) => {
               </td>
               <td className="px-1 py-2 border-r border-slate-100 bg-white w-[70px]">
                 <input type="number" min="0" placeholder="0"
-                  value={isTotal ? (retailInput[`${cat.key}_online`] || "") : (ri[cat.key]?.online || "")}
+                  value={isTotal ? (retailInput[`${cat.key}_online`] || "") : (hasMonthData ? "" : (ri[cat.key]?.online || ""))}
                   onChange={(e) => {
                     const v = e.target.value;
                     if (isTotal) setRetailInput((p) => ({ ...p, [`${cat.key}_online`]: v }));
@@ -2840,7 +2896,7 @@ const computeBalance = (booking, totalPaid) => {
               </td>
               <td className="px-1 py-2 border-r border-slate-100 bg-white w-[70px]">
                 <input type="number" min="0" placeholder="0"
-                  value={isTotal ? (retailInput[`${cat.key}_ff`] || "") : (ri[cat.key]?.footFall || "")}
+                  value={isTotal ? (retailInput[`${cat.key}_ff`] || "") : (hasMonthData ? "" : (ri[cat.key]?.footFall || ""))}
                   onChange={(e) => {
                     const v = e.target.value;
                     if (isTotal) setRetailInput((p) => ({ ...p, [`${cat.key}_ff`]: v }));
@@ -3065,7 +3121,7 @@ const computeBalance = (booking, totalPaid) => {
       <AddTargetModal isOpen={!!showAddTargetModal}
         onClose={() => { setShowAddTargetModal(false); setEditTargetData(null); }}
         onSave={(payload) => { if (payload.mode === "edit") handleUpdateTargets(payload); else if (payload.mode === "fy") handleSaveFYTargets(payload); }}
-        saving={savingTarget} editTarget={editTargetData} />
+        saving={savingTarget} editTarget={editTargetData} allTargets={allTargets} />
 
       {/* Save Bank Credit Confirmation Modal */}
       {showSaveConfirm && (
@@ -3563,23 +3619,26 @@ const computeBalance = (booking, totalPaid) => {
                                 ))}
 
                                 <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
-                                  {fmt(r.clinic.cash + r.lab.cash + r.pharmacy.cash + (Number(rowInputs[rowKey]?.cash) || 0))}
+                                  {fmt(r.clinic.cash + r.lab.cash + r.pharmacy.cash + getMonthSummaryRetail(r).wCash)}
                                 </td>
                                 <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
-                                  {fmt(r.clinic.online + r.lab.online + r.pharmacy.online + (Number(rowInputs[rowKey]?.online) || 0))}
+                                  {fmt(r.clinic.online + r.lab.online + r.pharmacy.online + getMonthSummaryRetail(r).wOnline)}
                                 </td>
                                 <td className="px-2 py-2 text-center font-black text-rose-600 border-r border-indigo-100 bg-rose-100/30 text-[10px]">
                                   {fmt((Number(r.clinic.due) || 0) + (Number(r.lab.due) || 0) + (Number(r.pharmacy.due) || 0))}
                                 </td>
                                 <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
                                   {(() => {
-                                    const rc = Number(rowInputs[rowKey]?.cash) || 0, ro = Number(rowInputs[rowKey]?.online) || 0, rf = Number(rowInputs[rowKey]?.footFall) || 0;
-                                    const pharmacyPart = (rc === 0 && ro === 0 && rf === 0) ? (r.pharmacy.cash + r.pharmacy.online) : (rc + ro);
-                                    return fmt((r.clinic.cash + r.clinic.online) + (r.lab.cash + r.lab.online) + pharmacyPart + (Number(r.clinic.due) || 0) + (Number(r.lab.due) || 0) + (Number(r.pharmacy.due) || 0));
+                                    const w = getMonthSummaryRetail(r);
+                                    return fmt(
+                                      (r.clinic.cash + r.lab.cash + r.pharmacy.cash + w.wCash) +
+                                      (r.clinic.online + r.lab.online + r.pharmacy.online + w.wOnline) +
+                                      (Number(r.clinic.due) || 0) + (Number(r.lab.due) || 0) + (Number(r.pharmacy.due) || 0)
+                                    );
                                   })()}
                                 </td>
                                 <td className="px-2 py-2 text-center font-black text-indigo-900 border-r border-indigo-100 bg-indigo-100 text-[10px]">
-                                  {r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + (Number(rowInputs[rowKey]?.footFall) || 0)}
+                                  {r.clinic.footFall + r.lab.footFall + r.pharmacy.footFall + getMonthSummaryRetail(r).wFoot}
                                 </td>
 
                                 {/* Cash Rcvd summary placeholders */}

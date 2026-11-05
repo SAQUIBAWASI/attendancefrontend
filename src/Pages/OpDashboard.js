@@ -1,5 +1,5 @@
-// OpDashboard.js — Fixed Total Patients Count to match OpManagement
-import React, { useState, useEffect, useRef } from "react";
+// OpDashboard.js — Fixed Dropdown to show FY Label
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
@@ -18,9 +18,6 @@ import {
 import "./EmployeeDashboard.css";
 import "./Dashboard.css";
 
-// ═══════════════════════════════════════════════════════
-// CACHE
-// ═══════════════════════════════════════════════════════
 const CACHE_KEYS = { DOCTORS: "op_dash_doctors_cache_v2" };
 const CACHE_TTL = 10 * 60 * 1000;
 
@@ -41,6 +38,13 @@ const COLORS = {
   primary: "#2563eb", success: "#10b981", warning: "#f59e0b",
   danger: "#ef4444", purple: "#8b5cf6", indigo: "#6366f1",
   pink: "#ec4899", cyan: "#06b6d4"
+};
+
+// Darker colors for better visibility
+const GRAPH_COLORS = {
+  clinic: "#60a5fa", // Medium Blue
+  lab: "#a78bfa",    // Medium Purple
+  pharmacy: "#34d399" // Medium Green
 };
 
 const BOOKING_TYPE_OPTIONS = [
@@ -76,9 +80,13 @@ const TIME_FILTER_OPTIONS = [
 
 const inr = (n) => `₹${Math.round(Number(n) || 0).toLocaleString("en-IN")}`;
 
-// ═══════════════════════════════════════════════════════
-// DATE RANGE POPUP
-// ═══════════════════════════════════════════════════════
+// Helper to get FY Label (e.g., 2026 -> FY 2025-26)
+const getFYLabel = (year) => {
+  const startYear = year - 1;
+  const endYear = String(year).slice(-2);
+  return `FY ${startYear}-${endYear}`;
+};
+
 const DateRangePopup = ({
   isOpen, position, fromDate, toDate, onFromChange, onToChange, onClear, onClose, dataAttr,
 }) => {
@@ -225,9 +233,6 @@ const DateRangePopup = ({
   );
 };
 
-// ═══════════════════════════════════════════════════════
-// COMPONENT
-// ═══════════════════════════════════════════════════════
 const OpDashboard = () => {
   const navigate = useNavigate();
 
@@ -261,9 +266,8 @@ const OpDashboard = () => {
   const [regPopupPos, setRegPopupPos] = useState({ top: 0, left: 0 });
   const [apptPopupPos, setApptPopupPos] = useState({ top: 0, left: 0 });
 
-  const [selectedTrendMonth, setSelectedTrendMonth] = useState(
-    new Date().toISOString().slice(0, 7)
-  );
+  // State for Graph
+  const [selectedTrendYear, setSelectedTrendYear] = useState(2026); 
   const [trendChartType, setTrendChartType] = useState("composed");
 
   const searchDebounceRef = useRef(null);
@@ -285,7 +289,6 @@ const OpDashboard = () => {
     const cached = readCache(CACHE_KEYS.DOCTORS);
     if (cached && cached.length) setDoctors(cached);
     fetchDoctorsData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -295,11 +298,10 @@ const OpDashboard = () => {
       return;
     }
     fetchDashboardData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     timeFilter, fromDate, toDate, apptFromDate, apptToDate, selectedMonth,
     doctorFilter, paymentTypeFilter, statusFilter, bookingTypeFilter,
-    revenueCategoryFilter, referredByFilter, debouncedSearch, selectedTrendMonth
+    revenueCategoryFilter, referredByFilter, debouncedSearch, selectedTrendYear
   ]);
 
   useEffect(() => {
@@ -331,11 +333,11 @@ const OpDashboard = () => {
       if (bookingTypeFilter !== "All") params.append("bookingType", bookingTypeFilter);
       if (revenueCategoryFilter !== "All") params.append("revenueCategory", revenueCategoryFilter);
       if (debouncedSearch.trim()) params.append("search", debouncedSearch.trim());
-      if (selectedTrendMonth) params.append("trendMonth", selectedTrendMonth);
+      
+      if (selectedTrendYear) params.append("trendYear", selectedTrendYear); 
 
       const baseUrl = `${API_BASE_URL}/appointment-slots`;
       
-      // ✅ FIX: Fetch both stats and raw bookings in parallel
       const [statsRes, bookingsRes] = await Promise.all([
         axios.get(`${baseUrl}/op-dashboard-stats?${params.toString()}`),
         axios.get(`${baseUrl}/getallbookings?${params.toString()}`)
@@ -349,10 +351,8 @@ const OpDashboard = () => {
 
         if (!finalData.stats) finalData.stats = {};
         
-        // ✅ Override totalPatients with exact booking row count (matches OpManagement)
         finalData.stats.totalPatients = bookingsList.length;
         
-        // ✅ Sync other stats if backend stats are available
         if (bStats) {
           finalData.stats.active = bStats.active || 0;
           finalData.stats.inactive = bStats.inactive || 0;
@@ -416,13 +416,63 @@ const OpDashboard = () => {
     { name: "Card", value: 0, color: COLORS.cyan },
   ];
 
-  const monthlyDailyTrend = dashboardData?.trend || {
-    monthLabel: "",
-    daysData: [],
-    totalMonthPatients: 0,
-    totalMonthRevenue: 0,
-    peakDay: "-",
-  };
+  // 🔥 FIXED: Directly use API data based on 'month' string
+  const monthlyTrendData = useMemo(() => {
+    const rawData = dashboardData?.trend?.daysData || [];
+    
+    const fyMonths = [
+      { label: "Apr" }, { label: "May" }, { label: "Jun" },
+      { label: "Jul" }, { label: "Aug" }, { label: "Sep" },
+      { label: "Oct" }, { label: "Nov" }, { label: "Dec" },
+      { label: "Jan" }, { label: "Feb" }, { label: "Mar" }
+    ];
+
+    const monthMap = {};
+    fyMonths.forEach((m) => {
+      monthMap[m.label] = { 
+        month: m.label, 
+        clinicRevenue: 0, 
+        labRevenue: 0, 
+        pharmacyRevenue: 0, 
+        totalRevenue: 0 
+      };
+    });
+
+    let maxTotal = 0;
+    let peakM = "-";
+
+    // API data loop
+    rawData.forEach(item => {
+      const mLabel = item.month; // Match by 'Sep', 'Oct' etc.
+      if (mLabel && monthMap[mLabel]) {
+        const cRev = item.clinicRevenue || 0;
+        const lRev = item.labRevenue || 0;
+        const pRev = item.pharmacyRevenue || 0;
+        
+        monthMap[mLabel].clinicRevenue = cRev;
+        monthMap[mLabel].labRevenue = lRev;
+        monthMap[mLabel].pharmacyRevenue = pRev;
+        monthMap[mLabel].totalRevenue = cRev + lRev + pRev;
+      }
+    });
+
+    const finalData = fyMonths.map(m => monthMap[m.label]);
+
+    let totalYearRevenue = 0;
+    finalData.forEach(d => {
+      totalYearRevenue += d.totalRevenue;
+      if (d.totalRevenue > maxTotal) {
+        maxTotal = d.totalRevenue;
+        peakM = d.month;
+      }
+    });
+
+    return {
+      monthsData: finalData,
+      totalYearRevenue,
+      peakMonth: peakM
+    };
+  }, [dashboardData]);
 
   const extras = dashboardData?.extras || {
     reviewedCount: 0, totalReviewServices: 0, offersCount: 0, totalOfferDeduction: 0,
@@ -444,7 +494,7 @@ const OpDashboard = () => {
     setPaymentTypeFilter("All"); setReferredByFilter("All");
     setFromDate(""); setToDate("");
     setApptFromDate(""); setApptToDate(""); setSelectedMonth("");
-    setTimeFilter("All"); // 👈 "All" KAR DO
+    setTimeFilter("All");
   };
 
   const handleTimeFilterChange = (value) => {
@@ -492,18 +542,18 @@ const OpDashboard = () => {
     return { customers: [], doctors: [] };
   };
 
-  const DailyTrendTooltip = ({ active, payload }) => {
+  // Custom Tooltip
+  const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const d = payload[0].payload;
       return (
-        <div className="bg-white p-3 rounded-xl shadow-xl border border-gray-200 text-xs space-y-1">
-          <div className="font-bold text-gray-900 border-b border-gray-100 pb-1 mb-1">📅 {d.dateLabel}</div>
-          <div className="flex justify-between gap-4 text-blue-700 font-semibold"><span>Total:</span><span>{d.patients}</span></div>
-          <div className="flex justify-between gap-4 text-emerald-600"><span>Paid:</span><span>{d.paidPatients}</span></div>
-          <div className="flex justify-between gap-4 text-amber-600"><span>Pending:</span><span>{d.pendingPatients}</span></div>
-          <div className="flex justify-between gap-4 text-purple-700 font-bold pt-1 border-t border-gray-100">
-            <span>Collected:</span><span>₹{(d.revenue || 0).toLocaleString()}</span>
-          </div>
+        <div className="bg-white p-3 rounded-xl shadow-xl border border-gray-200 text-xs space-y-1.5 min-w-[150px]">
+          <div className="font-bold text-gray-900 border-b border-gray-100 pb-1 mb-1">📅 {label} {selectedTrendYear}</div>
+          {payload.map((entry, index) => (
+            <div key={index} className="flex justify-between gap-4 font-semibold" style={{ color: entry.fill || entry.color }}>
+              <span>{entry.name}:</span>
+              <span>{inr(entry.value)}</span>
+            </div>
+          ))}
         </div>
       );
     }
@@ -511,36 +561,55 @@ const OpDashboard = () => {
   };
 
   const renderTrendGraph = () => {
-    const data = monthlyDailyTrend.daysData;
-    return (
-      <ComposedChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-        <defs>
-          <linearGradient id="opTrendGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.35} />
-            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 10, fontWeight: "600" }} />
-        <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: "#2563eb", fontSize: 10, fontWeight: "700" }} allowDecimals={false} />
-        <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: "#10b981", fontSize: 10, fontWeight: "700" }} allowDecimals={false} />
-        <Tooltip content={<DailyTrendTooltip />} />
+    const data = monthlyTrendData.monthsData;
+    
+    // Y-Axis Formatter
+    const formatYAxis = (value) => {
+      if (value === 0) return "0";
+      if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
+      if (value >= 1000) return `₹${(value / 1000).toFixed(0)}k`;
+      return `₹${value}`;
+    };
 
-        {trendChartType === "area" && (<>
-          <Area yAxisId="left" type="monotone" dataKey="patients" name="Bookings" stroke="#2563eb" strokeWidth={2.5} fill="url(#opTrendGradient)" dot={{ fill: "#2563eb", stroke: "#fff", strokeWidth: 1.5, r: 3.5 }} />
-          <Line yAxisId="right" type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" strokeWidth={2.5} dot={{ fill: "#10b981", stroke: "#fff", strokeWidth: 1.5, r: 3.5 }} />
-        </>)}
-        {trendChartType === "bar" && (<>
-          <Bar yAxisId="left" dataKey="patients" name="Bookings" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={16} />
-          <Bar yAxisId="right" dataKey="revenue" name="Revenue" fill="#10b981" radius={[4, 4, 0, 0]} barSize={16} />
-        </>)}
-        {trendChartType === "line" && (<>
-          <Line yAxisId="left" type="monotone" dataKey="patients" name="Bookings" stroke="#2563eb" strokeWidth={3} dot={{ fill: "#2563eb", stroke: "#fff", strokeWidth: 1.5, r: 4 }} />
-          <Line yAxisId="right" type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" strokeWidth={3} dot={{ fill: "#10b981", stroke: "#fff", strokeWidth: 1.5, r: 4 }} />
-        </>)}
+    return (
+      <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11, fontWeight: "600" }} />
+        <YAxis 
+          axisLine={false} 
+          tickLine={false} 
+          tick={{ fill: "#64748b", fontSize: 11, fontWeight: "600" }} 
+          tickFormatter={formatYAxis}
+          // 🔥 FIXED: Auto-scale domain so all bars fit
+          domain={[0, 'auto']} 
+        />
+        <Tooltip content={<CustomTooltip />} />
+        <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }}/>
+
+        {/* Using GRAPH_COLORS (Darker colors for visibility) */}
+
         {trendChartType === "composed" && (<>
-          <Bar yAxisId="left" dataKey="patients" name="Bookings" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
-          <Line yAxisId="right" type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" strokeWidth={3} dot={{ fill: "#10b981", stroke: "#fff", strokeWidth: 1.5, r: 4 }} />
+          <Bar dataKey="clinicRevenue" name="Clinic" fill={GRAPH_COLORS.clinic} radius={[4, 4, 0, 0]} barSize={15} />
+          <Bar dataKey="labRevenue" name="Lab" fill={GRAPH_COLORS.lab} radius={[4, 4, 0, 0]} barSize={15} />
+          <Bar dataKey="pharmacyRevenue" name="Pharmacy" fill={GRAPH_COLORS.pharmacy} radius={[4, 4, 0, 0]} barSize={15} />
+        </>)}
+
+        {trendChartType === "line" && (<>
+          <Line type="monotone" dataKey="clinicRevenue" name="Clinic" stroke={GRAPH_COLORS.clinic} strokeWidth={2.5} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="labRevenue" name="Lab" stroke={GRAPH_COLORS.lab} strokeWidth={2.5} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="pharmacyRevenue" name="Pharmacy" stroke={GRAPH_COLORS.pharmacy} strokeWidth={2.5} dot={{ r: 3 }} />
+        </>)}
+
+        {trendChartType === "bar" && (<>
+          <Bar dataKey="clinicRevenue" name="Clinic" fill={GRAPH_COLORS.clinic} radius={[4, 4, 0, 0]} barSize={20} />
+          <Bar dataKey="labRevenue" name="Lab" fill={GRAPH_COLORS.lab} radius={[4, 4, 0, 0]} barSize={20} />
+          <Bar dataKey="pharmacyRevenue" name="Pharmacy" fill={GRAPH_COLORS.pharmacy} radius={[4, 4, 0, 0]} barSize={20} />
+        </>)}
+        
+        {trendChartType === "area" && (<>
+          <Area type="monotone" dataKey="clinicRevenue" name="Clinic" stroke={GRAPH_COLORS.clinic} fill={GRAPH_COLORS.clinic} fillOpacity={0.5} />
+          <Area type="monotone" dataKey="labRevenue" name="Lab" stroke={GRAPH_COLORS.lab} fill={GRAPH_COLORS.lab} fillOpacity={0.5} />
+          <Area type="monotone" dataKey="pharmacyRevenue" name="Pharmacy" stroke={GRAPH_COLORS.pharmacy} fill={GRAPH_COLORS.pharmacy} fillOpacity={0.5} />
         </>)}
       </ComposedChart>
     );
@@ -564,7 +633,7 @@ const OpDashboard = () => {
         {/* Mobile Welcome Popup */}
         {showMobileWelcome && (
           <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 lg:hidden">
-            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 overflow-hidden">
+             <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-gray-200 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-4 text-white">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
@@ -607,7 +676,7 @@ const OpDashboard = () => {
           </div>
         )}
 
-        {/* ══════════ ROW 1 (Desktop) — ALWAYS VISIBLE ══════════ */}
+        {/* ══════════ ROW 1 (Desktop) ══════════ */}
         <div className="hidden lg:grid grid-cols-3 items-center gap-2 mb-3">
           <div className="flex items-center">
             <h1 className="emp-dash__greeting text-lg font-bold whitespace-nowrap">
@@ -652,10 +721,10 @@ const OpDashboard = () => {
           </div>
         </div>
 
-        {/* ROW 2 (Desktop) — Filters ONLY VISIBLE when Revenue Breakdown is shown */}
+        {/* ROW 2 (Desktop) — Filters */}
         {showRevenueBreakdown && (
           <div className="hidden lg:flex items-center gap-1.5 flex-nowrap mb-3 overflow-x-auto">
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
+             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 px-2 text-xs border border-gray-300 bg-white rounded-lg flex-shrink-0">
               <option value="All">All Payment</option>
               <option value="Pending">Pending</option>
               <option value="Partial">Partial</option>
@@ -932,7 +1001,7 @@ const OpDashboard = () => {
 
         {/* QUICK ACTIONS */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <button onClick={() => handleQuickAction("/doctor-management")}
+           <button onClick={() => handleQuickAction("/doctor-management")}
             className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all group">
             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100">
               <Stethoscope className="w-5 h-5 text-blue-600" />
@@ -1042,7 +1111,7 @@ const OpDashboard = () => {
           </div>
         </div>
 
-        {/* REVENUE BREAKDOWN — Toggle also controls Row 2 filters */}
+        {/* REVENUE BREAKDOWN */}
         <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
             <div className="flex items-center gap-2">
@@ -1141,15 +1210,16 @@ const OpDashboard = () => {
           <div className="lg:col-span-2 emp-dash__card p-4 md:p-5">
             <div className="mb-4">
               <h3 className="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2">
-                <Activity className="w-4 h-4 text-blue-600" /> Bookings &amp; Revenue Trend
+                <Activity className="w-4 h-4 text-blue-600" /> 
+                Bookings &amp; Revenue Trend <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs ml-1 border border-blue-200">{getFYLabel(selectedTrendYear)}</span>
               </h3>
-              <p className="text-xs text-gray-500">Daily booking volume and collected revenue</p>
+              <p className="text-xs text-gray-500">Monthly booking volume and collected revenue</p>
             </div>
-            {monthlyDailyTrend.daysData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-gray-400 text-xs">No trend data for selected month</div>
+            {monthlyTrendData.monthsData.length === 0 ? (
+              <div className="h-64 flex items-center justify-center text-gray-400 text-xs">No trend data for selected year</div>
             ) : (
-              <div style={{ width: "100%", height: 260, position: "relative" }}>
-                <ResponsiveContainer width="100%" height={260}>
+              <div style={{ width: "100%", height: 300, position: "relative" }}>
+                <ResponsiveContainer width="100%" height={300}>
                   {renderTrendGraph()}
                 </ResponsiveContainer>
               </div>
@@ -1282,14 +1352,14 @@ const OpDashboard = () => {
           </div>
         </div>
 
-        {/* MONTHLY TREND */}
+        {/* 🔥 FINANCIAL YEAR TREND GRAPH (No Dummy Data) */}
         <div className="emp-dash__card p-4 md:p-5">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
             <div>
               <h3 className="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2">
-                <BarChart2 className="w-4 h-4 text-blue-600" /> Daily Booking Trend ({monthlyDailyTrend.monthLabel || "—"})
+                <BarChart2 className="w-4 h-4 text-blue-600" /> Financial Year Trend ({selectedTrendYear})
               </h3>
-              <p className="text-xs text-gray-500">Day-by-day booking volume and collected revenue</p>
+              <p className="text-xs text-gray-500">Month-by-month (Apr-Mar) breakdown of Clinic, Lab & Pharmacy Revenue</p>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-200">
@@ -1300,29 +1370,40 @@ const OpDashboard = () => {
                   </button>
                 ))}
               </div>
-              <input type="month" value={selectedTrendMonth} onChange={(e) => setSelectedTrendMonth(e.target.value)}
-                className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg font-bold text-gray-700 bg-gray-50" />
+              
+              {/* 🔥 CHANGED: Dropdown with FY Label */}
+              <select 
+                value={selectedTrendYear} 
+                onChange={(e) => setSelectedTrendYear(parseInt(e.target.value))}
+                className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg font-bold text-gray-700 bg-gray-50"
+              >
+                {[2023, 2024, 2025, 2026, 2027].map(y => (
+                  <option key={y} value={y}>{getFYLabel(y)}</option>
+                ))}
+              </select>
             </div>
           </div>
-          <div style={{ width: "100%", height: 260 }}>
-            <ResponsiveContainer width="100%" height={260}>{renderTrendGraph()}</ResponsiveContainer>
+          
+          <div style={{ width: "100%", height: 320 }}>
+            <ResponsiveContainer width="100%" height={320}>{renderTrendGraph()}</ResponsiveContainer>
           </div>
+          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 mt-2 border-t border-gray-100 text-center text-xs">
             <div className="bg-slate-50 p-2 rounded-lg">
-              <span className="text-[10px] text-gray-500 font-bold uppercase block">Month</span>
-              <span className="font-bold text-gray-800">{monthlyDailyTrend.monthLabel || "—"}</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase block">Year</span>
+              <span className="font-bold text-gray-800">{getFYLabel(selectedTrendYear)}</span>
             </div>
             <div className="bg-blue-50 p-2 rounded-lg">
-              <span className="text-[10px] text-blue-700 font-bold uppercase block">Bookings</span>
-              <span className="font-extrabold text-blue-900 text-sm">{monthlyDailyTrend.totalMonthPatients || 0}</span>
+              <span className="text-[10px] text-blue-700 font-bold uppercase block">Total Revenue</span>
+              <span className="font-extrabold text-blue-900 text-sm">{inr(monthlyTrendData.totalYearRevenue || 0)}</span>
             </div>
             <div className="bg-emerald-50 p-2 rounded-lg">
-              <span className="text-[10px] text-emerald-700 font-bold uppercase block">Collected</span>
-              <span className="font-extrabold text-emerald-900 text-sm">{inr(monthlyDailyTrend.totalMonthRevenue || 0)}</span>
+              <span className="text-[10px] text-emerald-700 font-bold uppercase block">Peak Month</span>
+              <span className="font-bold text-emerald-900 truncate block">{monthlyTrendData.peakMonth || "-"}</span>
             </div>
             <div className="bg-purple-50 p-2 rounded-lg">
-              <span className="text-[10px] text-purple-700 font-bold uppercase block">Peak Day</span>
-              <span className="font-bold text-purple-900 truncate block">{monthlyDailyTrend.peakDay || "-"}</span>
+              <span className="text-[10px] text-purple-700 font-bold uppercase block">Categories</span>
+              <span className="font-bold text-purple-900 truncate block">Clinic, Lab, Pharmacy</span>
             </div>
           </div>
         </div>

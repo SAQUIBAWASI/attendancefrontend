@@ -50,6 +50,14 @@ import promiseBg from "../Images/s1.jpg"
 import TimelyNavbar from '../Components/TimelyNavbar'
 import TimelyFooter from './TimelyFooter'
 
+// Gradient text — Tailwind class kuch versions me nahi chalti, isliye inline style (har version/browser me kaam karta hai)
+const gradientTextStyle = {
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  color: "transparent",
+}
+
 const HomePage = () => {
   const [name, setName] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
@@ -288,7 +296,7 @@ const HomePage = () => {
           <div className="max-w-3xl">
             <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
               Trusted Healthcare,{' '}
-              <span className="bg-gradient-to-r from-emerald-300 via-teal-300 to-blue-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-emerald-300 via-teal-300 to-blue-300" style={gradientTextStyle}>
                 Just Around the Corner
               </span>
             </h1>
@@ -369,7 +377,7 @@ const HomePage = () => {
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-12">
             <span className="inline-block px-3 py-1 text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full mb-3 shadow-md tracking-wider">✦ OUR SERVICES</span>
-            <h2 className="text-3xl font-bold text-slate-800 sm:text-4xl">Comprehensive Care, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">All in One Place</span></h2>
+            <h2 className="text-3xl font-bold text-slate-800 sm:text-4xl">Comprehensive Care, <span className="bg-gradient-to-r from-emerald-600 to-blue-600" style={gradientTextStyle}>All in One Place</span></h2>
             <p className="mt-3 text-slate-500 max-w-2xl mx-auto text-base">From expert consultations to community wellness programs — we've got you covered.</p>
           </div>
 
@@ -419,7 +427,7 @@ const HomePage = () => {
               <span className="text-xs font-bold uppercase tracking-wider">WHY TIMELY HEALTH</span>
             </div>
             <h2 className="text-3xl font-bold sm:text-4xl lg:text-5xl">
-              Built for Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-yellow-200">Wellness Journey</span>
+              Built for Your <span className="bg-gradient-to-r from-emerald-200 to-yellow-200" style={gradientTextStyle}>Wellness Journey</span>
             </h2>
             <p className="mt-3 text-emerald-100/80 max-w-2xl mx-auto text-base">
               We're committed to providing the best healthcare experience with trust, transparency, and technology.
@@ -504,7 +512,7 @@ const HomePage = () => {
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 leading-tight">
             🏥 Free Health Camp
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-teal-200">For Your Community</span>
+            <span className="bg-gradient-to-r from-emerald-200 to-teal-200" style={gradientTextStyle}>For Your Community</span>
           </h2>
 
           <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto mb-8 leading-relaxed">
@@ -660,7 +668,7 @@ const HomePage = () => {
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-10">
             <span className="inline-block px-3 py-1 text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full mb-3 shadow-md tracking-wider">✦ TESTIMONIALS</span>
-            <h2 className="text-3xl font-bold text-slate-800 sm:text-4xl">What Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">Community Says</span></h2>
+            <h2 className="text-3xl font-bold text-slate-800 sm:text-4xl">What Our <span className="bg-gradient-to-r from-emerald-600 to-blue-600" style={gradientTextStyle}>Community Says</span></h2>
             <p className="mt-1 text-slate-500 text-base">Real stories from real people who trust Timely Health</p>
           </div>
 
@@ -832,7 +840,7 @@ const HomePage = () => {
             <span className="text-xs font-medium">Our Promise</span>
           </div>
           <h2 className="text-4xl font-bold sm:text-5xl mb-4 leading-tight">
-            "Care You Can Trust. <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-blue-200">Right Where You Are.</span>"
+            "Care You Can Trust. <br /><span className="bg-gradient-to-r from-emerald-200 to-blue-200" style={gradientTextStyle}>Right Where You Are.</span>"
           </h2>
           <p className="text-white/90 mb-6 max-w-2xl mx-auto text-base">We believe healthcare should be simple, local, and always within reach — for everyone.</p>
           <button

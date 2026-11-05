@@ -5,6 +5,14 @@ import TimelyFooter from './TimelyFooter'
 import partnersBg from "../Images/s2.jpg"
 import axios from 'axios'
 
+// Gradient text — Tailwind class kuch versions me nahi chalti, isliye inline style (har version/browser me kaam karta hai)
+const gradientTextStyle = {
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  color: "transparent",
+}
+
 const PartnersPage = () => {
   const [formData, setFormData] = useState({
     fullName: '',
@@ -228,7 +236,7 @@ const PartnersPage = () => {
               <span className="text-xs font-semibold text-white">✦ Grow With Us</span>
             </div>
             <h1 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl leading-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-blue-300">
+              <span className="bg-gradient-to-r from-emerald-300 to-blue-300" style={gradientTextStyle}>
                 Partners & Members
               </span>
             </h1>
@@ -336,7 +344,7 @@ const PartnersPage = () => {
               <span className="text-xs font-medium text-blue-800">✦ Partner Registration</span>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 font-calibri">
-              Become a <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Partner</span>
+              Become a <span className="bg-gradient-to-r from-blue-600 to-purple-600" style={gradientTextStyle}>Partner</span>
             </h2>
             <div className="w-16 h-1 mx-auto mt-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
             <p className="mt-3 text-sm text-gray-600 font-sans max-w-2xl mx-auto">
@@ -557,7 +565,7 @@ const PartnersPage = () => {
               <span className="text-xs font-medium text-purple-800">✦ Why Join Us</span>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 font-calibri">
-              Be Part of Something <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Bigger</span>
+              Be Part of Something <span className="bg-gradient-to-r from-blue-600 to-purple-600" style={gradientTextStyle}>Bigger</span>
             </h2>
             <div className="w-16 h-1 mx-auto mt-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
             <p className="mt-3 text-sm text-gray-600 font-sans max-w-2xl mx-auto">
@@ -610,7 +618,7 @@ const PartnersPage = () => {
           </div>
           
           <h2 className="mb-4 text-3xl font-bold text-white font-calibri md:text-4xl">
-            Let's Build a <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-orange-200">Healthier Future</span> Together
+            Let's Build a <span className="bg-gradient-to-r from-yellow-200 to-orange-200" style={gradientTextStyle}>Healthier Future</span> Together
           </h2>
           <p className="mb-8 text-base text-white/90 font-sans max-w-2xl mx-auto">
             Whether you want to partner with us or join as a member, we'd love to hear from you.

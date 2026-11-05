@@ -75,6 +75,14 @@ const productsData = [
   }
 ];
 
+// Gradient text — Tailwind class kuch versions me nahi chalti, isliye inline style (har version/browser me kaam karta hai)
+const gradientTextStyle = {
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  color: "transparent",
+};
+
 // Hero Section
 const HeroSection = () => (
   <section className="min-h-[60vh] flex flex-col items-center justify-center px-6 pt-20 md:pt-28 text-center relative">
@@ -97,7 +105,7 @@ const HeroSection = () => (
       <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] text-gray-900 mb-4 font-calibri">
         All Products.
         <br />
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">
+        <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600" style={gradientTextStyle}>
           One Bundle.
         </span>
       </h1>
@@ -286,7 +294,7 @@ const WhyChooseUs = () => (
         className="text-center mb-12"
       >
         <h2 className="text-3xl md:text-4xl font-bold font-calibri">
-          Why Choose <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Us</span>
+          Why Choose <span className="bg-gradient-to-r from-blue-600 to-purple-600" style={gradientTextStyle}>Us</span>
         </h2>
       </motion.div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -331,7 +339,7 @@ const FutureSection = () => (
         </div>
         <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold font-calibri">
           From Systems to <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-rose-600 to-orange-600">
+          <span className="bg-gradient-to-r from-pink-600 via-rose-600 to-orange-600" style={gradientTextStyle}>
             Intelligence
           </span>
         </h2>

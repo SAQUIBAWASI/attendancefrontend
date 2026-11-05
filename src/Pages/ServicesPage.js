@@ -8,6 +8,14 @@ import img2 from "../Images/h2.jpg"
 import img3 from "../Images/s3.jpg"
 import img4 from "../Images/s1.jpg"
 
+// Gradient text — Tailwind class kuch versions me nahi chalti, isliye inline style (har version/browser me kaam karta hai)
+const gradientTextStyle = {
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  color: "transparent",
+}
+
 const ServicesPage = () => {
   const navigate = useNavigate()
   
@@ -183,6 +191,15 @@ const ServicesPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Hover pe service title gradient text (inline style hover support nahi karta) */}
+      <style>{`
+        .group:hover .gh-clip {
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          color: transparent;
+        }
+      `}</style>
       <TimelyNavbar/>
       
       {/* Hero Section - with top padding */}
@@ -200,7 +217,7 @@ const ServicesPage = () => {
             </div>
             <h1 className="mb-3 text-3xl font-bold leading-tight md:text-4xl lg:text-5xl font-calibri text-gray-900">
               Healthcare{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-emerald-500 to-green-600">
+              <span className="bg-gradient-to-r from-blue-600 via-emerald-500 to-green-600" style={gradientTextStyle}>
                 That Comes to You
               </span>
             </h1>
@@ -298,7 +315,7 @@ const ServicesPage = () => {
               <span className="text-xs font-medium text-purple-800">✦ What We Offer</span>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 font-calibri">
-              Comprehensive <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">Healthcare Services</span>
+              Comprehensive <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600" style={gradientTextStyle}>Healthcare Services</span>
             </h2>
             <div className="w-20 h-1 mx-auto mt-3 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-full"></div>
             <p className="mt-3 text-base text-gray-600 font-sans max-w-2xl mx-auto">
@@ -410,7 +427,7 @@ const ServicesPage = () => {
                           {service.icon}
                         </div>
                         <div className="mt-1 text-center">
-                          <span className={`text-[9px] font-bold bg-gradient-to-r ${service.color} bg-clip-text text-transparent`}>
+                          <span className={`text-[9px] font-bold bg-gradient-to-r ${service.color}`} style={gradientTextStyle}>
                             {service.number}
                           </span>
                         </div>
@@ -418,7 +435,7 @@ const ServicesPage = () => {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 mb-1">
-                          <h3 className={`text-base font-bold font-calibri text-gray-900 group-hover:bg-gradient-to-r ${service.color} group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300 leading-tight`}>
+                          <h3 className={`text-base font-bold font-calibri text-gray-900 group-hover:bg-gradient-to-r ${service.color} gh-clip transition-all duration-300 leading-tight`}>
                             {service.title}
                           </h3>
                         </div>
@@ -439,7 +456,7 @@ const ServicesPage = () => {
                     </ul>
                     
                     <div className="flex items-center justify-between">
-                      <span className={`inline-flex items-center gap-1 text-[11px] font-semibold bg-gradient-to-r ${service.color} bg-clip-text text-transparent group-hover:gap-1.5 transition-all`}>
+                      <span className={`inline-flex items-center gap-1 text-[11px] font-semibold bg-gradient-to-r ${service.color} group-hover:gap-1.5 transition-all`} style={gradientTextStyle}>
                         <span>Explore Service</span>
                         <ArrowRight className="w-3 h-3" />
                       </span>
@@ -514,7 +531,7 @@ const ServicesPage = () => {
           </div>
           
           <h2 className="mb-4 text-3xl font-bold text-white font-calibri md:text-4xl">
-            Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-orange-200">Get Started?</span>
+            Ready to <span className="bg-gradient-to-r from-yellow-200 to-orange-200" style={gradientTextStyle}>Get Started?</span>
           </h2>
           <p className="mb-8 text-base text-white/90 font-sans max-w-2xl mx-auto">
             Choose the service that fits your needs and take the first step toward better health today.
@@ -566,7 +583,7 @@ const ServicesPage = () => {
           </div>
           
           <h2 className="mb-4 text-3xl font-bold text-gray-900 font-calibri">
-            Have Questions About <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">Our Services?</span>
+            Have Questions About <span className="bg-gradient-to-r from-blue-600 to-green-600" style={gradientTextStyle}>Our Services?</span>
           </h2>
           <p className="mb-6 text-base text-gray-600 font-sans max-w-2xl mx-auto">
             Our health advisors are ready to help you choose the right service for your needs.

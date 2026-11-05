@@ -153,6 +153,14 @@ const isToday = (date) => {
   return checkDate.getTime() === today.getTime();
 };
 
+// Gradient text — Tailwind class kuch versions me nahi chalti, isliye inline style (har version/browser me kaam karta hai)
+const gradientTextStyle = {
+  WebkitBackgroundClip: 'text',
+  backgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  color: 'transparent',
+};
+
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -858,7 +866,7 @@ const LoginPage = () => {
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-                Welcome, <span className="bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">{userName}</span>!
+                Welcome, <span className="bg-gradient-to-r from-emerald-600 to-blue-600" style={gradientTextStyle}>{userName}</span>!
               </h2>
 
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gray-100 border border-gray-200 text-gray-700 text-sm mb-4">
@@ -926,7 +934,7 @@ const LoginPage = () => {
               alt="TimelyHealth"
               className="w-32 h-auto mx-auto mb-4 object-contain"
             />
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text">LOG IN</h1>
+            <h1 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-emerald-600 to-blue-600" style={gradientTextStyle}>LOG IN</h1>
             <p className="mt-1 text-sm text-gray-500">Admin / Employee Login</p>
           </div>
 

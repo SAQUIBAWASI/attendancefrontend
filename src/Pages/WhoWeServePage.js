@@ -4,6 +4,14 @@ import img1 from "../Images/we2.jpg"
 import TimelyFooter from './TimelyFooter'
 import TimelyNavbar from '../Components/TimelyNavbar'
 
+// Gradient text — Tailwind class kuch versions me nahi chalti, isliye inline style (har version/browser me kaam karta hai)
+const gradientTextStyle = {
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  color: "transparent",
+}
+
 const WhoWeServePage = () => {
   const handleStrategyCall = () => {
     window.open(
@@ -146,6 +154,15 @@ const WhoWeServePage = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Hover pe audience title gradient text (inline style hover support nahi karta) */}
+      <style>{`
+        .group:hover .gh-clip {
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          color: transparent;
+        }
+      `}</style>
       <TimelyNavbar/>
       
       {/* Hero Section - with top padding */}
@@ -163,7 +180,7 @@ const WhoWeServePage = () => {
             </div>
             <h1 className="mb-4 text-3xl font-bold leading-tight md:text-4xl lg:text-5xl font-calibri text-gray-900">
               Personalized{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-green-600">
+              <span className="bg-gradient-to-r from-blue-600 via-purple-500 to-green-600" style={gradientTextStyle}>
                 Care for Every Community
               </span>
             </h1>
@@ -243,7 +260,7 @@ const WhoWeServePage = () => {
               <span className="text-xs font-medium text-purple-800">✦ Our Audiences</span>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 font-calibri">
-              Tailored Solutions for <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">Every Group</span>
+              Tailored Solutions for <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600" style={gradientTextStyle}>Every Group</span>
             </h2>
             <div className="w-20 h-1 mx-auto mt-3 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-full"></div>
             <p className="mt-3 text-base text-gray-600 font-sans max-w-2xl mx-auto">
@@ -266,10 +283,10 @@ const WhoWeServePage = () => {
                       {audience.icon}
                     </div>
                     <div>
-                      <span className={`text-[10px] font-bold bg-gradient-to-r ${audience.color} bg-clip-text text-transparent`}>
+                      <span className={`text-[10px] font-bold bg-gradient-to-r ${audience.color}`} style={gradientTextStyle}>
                         {audience.number}
                       </span>
-                      <h3 className={`text-base font-bold font-calibri text-gray-900 group-hover:bg-gradient-to-r ${audience.color} group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300`}>
+                      <h3 className={`text-base font-bold font-calibri text-gray-900 group-hover:bg-gradient-to-r ${audience.color} gh-clip transition-all duration-300`}>
                         {audience.title.split('(')[0].trim()}
                       </h3>
                     </div>
@@ -326,7 +343,7 @@ const WhoWeServePage = () => {
               <span className="text-xs font-medium text-yellow-800">✦ Testimonials</span>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 font-calibri">
-              What Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-orange-600">Community Says</span>
+              What Our <span className="bg-gradient-to-r from-yellow-600 to-orange-600" style={gradientTextStyle}>Community Says</span>
             </h2>
             <div className="w-20 h-1 mx-auto mt-3 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full"></div>
             <p className="mt-3 text-base text-gray-600 font-sans max-w-2xl mx-auto">
@@ -425,7 +442,7 @@ const WhoWeServePage = () => {
           </div>
           
           <h2 className="mb-4 text-3xl font-bold text-white font-calibri md:text-4xl">
-            Are you a <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-orange-200">Community Leader</span> or <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-orange-200">Corporate Wellness Head?</span>
+            Are you a <span className="bg-gradient-to-r from-yellow-200 to-orange-200" style={gradientTextStyle}>Community Leader</span> or <span className="bg-gradient-to-r from-yellow-200 to-orange-200" style={gradientTextStyle}>Corporate Wellness Head?</span>
           </h2>
           <p className="mb-8 text-base text-white/90 font-sans max-w-2xl mx-auto">
             Let's create a customized health engagement plan for your people.
@@ -456,7 +473,7 @@ const WhoWeServePage = () => {
           </div>
           
           <h2 className="mb-4 text-3xl font-bold text-gray-900 font-calibri">
-            Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Get Started?</span>
+            Ready to <span className="bg-gradient-to-r from-blue-600 to-purple-600" style={gradientTextStyle}>Get Started?</span>
           </h2>
           <p className="mb-6 text-base text-gray-600 font-sans max-w-2xl mx-auto">
             No matter which group you represent, we're here to create a healthcare solution

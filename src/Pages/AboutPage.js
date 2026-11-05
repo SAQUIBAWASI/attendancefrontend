@@ -3,6 +3,14 @@ import TimelyNavbar from '../Components/TimelyNavbar'
 import TimelyFooter from './TimelyFooter'
 import img2 from "../Images/s2 copy.jpg"
 
+// Gradient text — bg-clip-text class kuch Tailwind versions me nahi chalti, isliye inline style (har version/browser me kaam karta hai)
+const gradientTextStyle = {
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  color: "transparent",
+}
+
 const AboutPage = () => {
   const values = [
     {
@@ -87,7 +95,7 @@ const AboutPage = () => {
             </div>
             <h1 className="mb-6 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl font-calibri text-gray-900">
               Our Vision for a{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">
+              <span className="bg-gradient-to-r from-blue-600 to-green-600" style={gradientTextStyle}>
                 Healthier, Closer Future
               </span>
             </h1>
@@ -258,7 +266,7 @@ const AboutPage = () => {
                 
                 <div className={`relative h-full p-6 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 border ${value.borderColor} group-hover:border-transparent hover:scale-[1.05] flex flex-col items-center text-center`}>
                   <div className="absolute top-2 right-3">
-                    <span className={`text-2xl font-bold bg-gradient-to-r ${value.color} bg-clip-text text-transparent opacity-30 font-calibri`}>
+                    <span className={`text-2xl font-bold bg-gradient-to-r ${value.color} opacity-30 font-calibri`} style={gradientTextStyle}>
                       {value.number}
                     </span>
                   </div>
