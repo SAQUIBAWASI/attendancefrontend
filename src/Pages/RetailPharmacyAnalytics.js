@@ -5,11 +5,11 @@ import { API_BASE_URL } from "../config";
 import {
   FaPills, FaCalendarAlt, FaMoneyBillWave, FaGlobe, FaTimesCircle,
   FaArrowUp, FaArrowDown, FaSave, FaEdit, FaPlus, FaTrash,
-  FaChevronLeft, FaChevronRight, FaBullseye, FaCheckCircle
+  FaChevronLeft, FaChevronRight, FaBullseye, FaCheckCircle, FaExclamationTriangle
 } from "react-icons/fa";
 import {
   FiTrendingUp, FiAlertCircle, FiDownload, FiTarget, FiRefreshCw,
-  FiPieChart, FiCheckCircle, FiXCircle, FiX
+  FiPieChart, FiCheckCircle, FiXCircle, FiX, FiLock, FiAlertTriangle
 } from "react-icons/fi";
 
 /* ============================================================ */
@@ -53,6 +53,9 @@ const getCurrentFYStartYear = () => {
 const formatFY = (startYear) => `${startYear}-${String(startYear + 1).slice(-2)}`;
 const getFYStartForMonth = (calendarYear, calendarMonth) => calendarMonth >= 4 ? calendarYear : calendarYear - 1;
 
+/* Denomination values used in Cash popup */
+const DENOMINATIONS = [500, 200, 100, 50, 20, 10, 5, 2, 1];
+
 /* ============================================================ */
 /* Month-Year Picker Popup                                       */
 /* ============================================================ */
@@ -80,6 +83,248 @@ const MonthYearPickerPopup = ({ isOpen, position, month, year, onMonthSelect, on
             </button>
           );
         })}
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================ */
+/* Cash Denomination Popup                                       */
+/* ============================================================ */
+const CashDenominationPopup = ({ isOpen, onClose, onConfirm, initialAmount = "", initialBreakdown = [], rowLabel = "" }) => {
+  const [qtys, setQtys] = useState({});
+
+  useEffect(() => {
+    if (isOpen) {
+      const next = {};
+      DENOMINATIONS.forEach((d) => { next[d] = ""; });
+
+      if (Array.isArray(initialBreakdown) && initialBreakdown.length > 0) {
+        initialBreakdown.forEach((b) => {
+          const denom = Number(b?.denomination);
+          const qty = Number(b?.qty) || 0;
+          if (DENOMINATIONS.includes(denom) && qty > 0) next[denom] = String(qty);
+        });
+      } else {
+        const amt = Number(initialAmount) || 0;
+        if (amt > 0) {
+          let remaining = Math.round(amt);
+          DENOMINATIONS.forEach((d) => {
+            const count = Math.floor(remaining / d);
+            if (count > 0) { next[d] = String(count); remaining -= count * d; }
+          });
+        }
+      }
+      setQtys(next);
+    }
+  }, [isOpen, initialAmount, initialBreakdown]);
+
+  const total = useMemo(() => {
+    return DENOMINATIONS.reduce((sum, d) => sum + d * (Number(qtys[d]) || 0), 0);
+  }, [qtys]);
+
+  if (!isOpen) return null;
+
+  const handleChange = (denom, val) => setQtys((p) => ({ ...p, [denom]: val }));
+
+  const handleClear = () => {
+    const next = {};
+    DENOMINATIONS.forEach((d) => { next[d] = ""; });
+    setQtys(next);
+  };
+
+  const buildBreakdown = () =>
+    DENOMINATIONS
+      .map((d) => {
+        const q = Number(qtys[d]) || 0;
+        return q > 0 ? { denomination: d, qty: q, amount: d * q } : null;
+      })
+      .filter(Boolean);
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-emerald-200 overflow-hidden flex flex-col max-h-[95vh]">
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 text-white flex items-center gap-3 flex-shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+            <FaMoneyBillWave className="w-4 h-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-sm m-0">Cash Denomination</h3>
+            <p className="text-[10px] text-white/80 m-0 mt-0.5 truncate">
+              {rowLabel ? `Entry for ${rowLabel}` : "Enter note / coin counts"}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} className="w-7 h-7 rounded-md flex items-center justify-center text-white/80 hover:bg-white/20 hover:text-white">
+            <FiX className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-4 overflow-y-auto flex-1">
+          <div className="border border-emerald-200 rounded-lg overflow-hidden">
+            <table className="w-full border-collapse text-xs">
+              <thead>
+                <tr className="bg-emerald-50">
+                  <th className="px-2 py-1.5 text-left font-bold text-emerald-800 uppercase tracking-wider text-[9px] border-b border-emerald-200">Denomination</th>
+                  <th className="px-2 py-1.5 text-center font-bold text-emerald-800 uppercase tracking-wider text-[9px] border-b border-l border-emerald-200">Qty</th>
+                  <th className="px-2 py-1.5 text-right font-bold text-emerald-800 uppercase tracking-wider text-[9px] border-b border-l border-emerald-200">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DENOMINATIONS.map((d) => {
+                  const q = Number(qtys[d]) || 0;
+                  const amt = d * q;
+                  return (
+                    <tr key={d} className="hover:bg-emerald-50/40">
+                      <td className="px-2 py-1 border-b border-emerald-100 font-bold text-slate-700 whitespace-nowrap">
+                        ₹{d} <span className="text-slate-400 font-semibold">×</span>
+                      </td>
+                      <td className="px-1 py-1 border-b border-l border-emerald-100">
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={qtys[d] || ""}
+                          onChange={(e) => handleChange(d, e.target.value)}
+                          className="w-full text-center text-xs font-bold text-slate-800 border border-emerald-300 rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+                        />
+                      </td>
+                      <td className="px-2 py-1 border-b border-l border-emerald-100 text-right font-black text-emerald-700 whitespace-nowrap">
+                        {amt > 0 ? fmt(amt) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="bg-emerald-100">
+                  <td className="px-2 py-2 font-black text-emerald-900 uppercase tracking-wider text-[10px]" colSpan={2}>Total Cash</td>
+                  <td className="px-2 py-2 text-right font-black text-emerald-900 text-sm">{fmtAmt(total)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 border-t border-slate-200 flex-shrink-0">
+          <button type="button" onClick={handleClear}
+            className="px-3 py-2 text-[11px] font-bold text-rose-600 bg-white border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors">
+            Clear
+          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={onClose}
+              className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors">
+              Cancel
+            </button>
+            <button type="button" onClick={() => { onConfirm(total, buildBreakdown()); onClose(); }}
+              className="px-5 py-2 text-xs font-bold text-white rounded-lg shadow-md bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 flex items-center gap-1.5">
+              <FaCheckCircle className="w-3 h-3" /> Apply {fmtAmt(total)}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================ */
+/* Save Confirmation Popup                                       */
+/* ============================================================ */
+const SaveConfirmPopup = ({ isOpen, onClose, onConfirm, saving, rowLabel, payload }) => {
+  if (!isOpen || !payload) return null;
+
+  const { cash, online, footFall, cashDenominations, total } = payload;
+  const hasDenoms = Array.isArray(cashDenominations) && cashDenominations.length > 0;
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-amber-200 overflow-hidden flex flex-col max-h-[95vh]">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 text-white flex items-center gap-2.5 flex-shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+            <FaExclamationTriangle className="w-4 h-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-sm m-0">Please Re-check Your Entry</h3>
+            <p className="text-[10px] text-white/85 m-0 mt-0.5 truncate">
+              {rowLabel ? `Saving for ${rowLabel}` : "Confirm before saving"}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} disabled={saving}
+            className="w-7 h-7 rounded-md flex items-center justify-center text-white/80 hover:bg-white/20 hover:text-white disabled:opacity-50">
+            <FiX className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Body — summary */}
+        <div className="p-4 space-y-3 overflow-y-auto flex-1">
+          <div className="rounded-lg border border-slate-200 overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2 bg-emerald-50 border-b border-slate-200">
+              <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700">
+                <FaMoneyBillWave className="w-3 h-3" /> Cash
+              </span>
+              <span className="text-sm font-black text-emerald-700">{fmtAmt(cash)}</span>
+            </div>
+            <div className="flex items-center justify-between px-3 py-2 bg-sky-50 border-b border-slate-200">
+              <span className="flex items-center gap-1.5 text-[11px] font-bold text-sky-700">
+                <FaGlobe className="w-3 h-3" /> Online
+              </span>
+              <span className="text-sm font-black text-sky-700">{fmtAmt(online)}</span>
+            </div>
+            <div className="flex items-center justify-between px-3 py-2 bg-violet-50 border-b border-slate-200">
+              <span className="flex items-center gap-1.5 text-[11px] font-bold text-violet-700">
+                <FiTarget className="w-3 h-3" /> FootFall
+              </span>
+              <span className="text-sm font-black text-violet-700">{fmt(footFall)}</span>
+            </div>
+            <div className="flex items-center justify-between px-3 py-2 bg-indigo-50">
+              <span className="text-[11px] font-black uppercase tracking-wider text-indigo-700">Grand Total</span>
+              <span className="text-base font-black text-indigo-800">{fmtAmt(total)}</span>
+            </div>
+          </div>
+
+          {hasDenoms && (
+            <div className="rounded-lg border border-emerald-200 overflow-hidden">
+              <div className="px-3 py-1.5 bg-emerald-100 text-[10px] font-black uppercase tracking-wider text-emerald-800">
+                Cash Denomination Breakdown
+              </div>
+              <div className="max-h-36 overflow-y-auto">
+                <table className="w-full text-[11px]">
+                  <tbody>
+                    {cashDenominations.map((d) => (
+                      <tr key={d.denomination} className="border-b border-emerald-100 last:border-0">
+                        <td className="px-3 py-1 font-bold text-slate-700">₹{d.denomination} × {d.qty}</td>
+                        <td className="px-3 py-1 text-right font-black text-emerald-700">{fmt(d.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Warning */}
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-rose-50 border border-rose-200">
+            <FiLock className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+            <p className="text-[10px] leading-relaxed text-rose-700 font-medium m-0">
+              <span className="font-black uppercase">Important:</span> Once saved, this entry{" "}
+              <span className="font-black">cannot be edited</span>. If you need to make any changes later,{" "}
+              <span className="font-black">please contact your administrator</span>.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 px-4 py-3 bg-slate-50 border-t border-slate-200 flex-shrink-0">
+          <button type="button" onClick={onClose} disabled={saving}
+            className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50">
+            Go Back
+          </button>
+          <button type="button" onClick={onConfirm} disabled={saving}
+            className="px-5 py-2 text-xs font-bold text-white rounded-lg shadow-md bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 flex items-center gap-1.5 disabled:opacity-50">
+            {saving ? <FiRefreshCw className="w-3 h-3 animate-spin" /> : <FaCheckCircle className="w-3 h-3" />}
+            {saving ? "Saving..." : "Yes, Save Permanently"}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -325,6 +570,17 @@ export default function RetailPharmacyAnalytics() {
   const [rowInputs, setRowInputs] = useState({});
   const [savingRowKey, setSavingRowKey] = useState(null);
 
+  /* Cash denomination popup state */
+  const [cashPopupOpen, setCashPopupOpen] = useState(false);
+  const [cashPopupRowKey, setCashPopupRowKey] = useState(null);
+  const [cashPopupLabel, setCashPopupLabel] = useState("");
+  const [cashPopupInitial, setCashPopupInitial] = useState("");
+  const [cashPopupBreakdown, setCashPopupBreakdown] = useState([]);
+
+  /* Save confirmation popup state */
+  const [confirmPopupOpen, setConfirmPopupOpen] = useState(false);
+  const [confirmPayload, setConfirmPayload] = useState(null);
+
   const [allTargets, setAllTargets] = useState([]);
   const [loadingAllTargets, setLoadingAllTargets] = useState(false);
   const [showAddTargetModal, setShowAddTargetModal] = useState(false);
@@ -443,6 +699,9 @@ export default function RetailPharmacyAnalytics() {
               total: (Number(rp.cash) || 0) + (Number(rp.online) || 0),
             },
             bankCredit: r.bankCredit?.bankCredit != null ? Number(r.bankCredit.bankCredit) : null,
+            cashDenominations: Array.isArray(r.bankCredit?.cashDenominations)
+              ? r.bankCredit.cashDenominations
+              : [],
           };
         }) : [];
 
@@ -461,7 +720,8 @@ export default function RetailPharmacyAnalytics() {
             cash: r.retailPharmacy?.cash ? String(r.retailPharmacy.cash) : "",
             online: r.retailPharmacy?.online ? String(r.retailPharmacy.online) : "",
             footFall: r.retailPharmacy?.footFall ? String(r.retailPharmacy.footFall) : "",
-            saved: hasExistingData, // 🔥 Mark as saved if data exists
+            cashDenominations: r.cashDenominations || [],
+            saved: hasExistingData,
           };
         });
         setRowInputs(nextRowInputs);
@@ -609,29 +869,39 @@ export default function RetailPharmacyAnalytics() {
     { v: "all", l: "All" },
   ];
 
-  // 🔥 FIX: Preserve existing bankCredit and sent proper diff/status
-  const handleSaveRow = async (rowKey, customData = null) => {
-    let rCash, rOnline, rFoot, rTotal;
-    
-    if (customData) {
-      rCash = customData.cash; rOnline = customData.online; rFoot = customData.footFall; rTotal = rCash + rOnline;
-    } else {
-      const ri = rowInputs[rowKey] || {};
-      rCash = Number(ri.cash) || 0;
-      rOnline = Number(ri.online) || 0;
-      rFoot = Number(ri.footFall) || 0;
-      rTotal = rCash + rOnline;
-    }
+  /* ---------------------- Save flow with confirm ---------------------- */
+  // Step 1: user clicks Save on a row → build payload → open confirmation
+  const requestSaveRow = (rowKey, rowLabel) => {
+    const ri = rowInputs[rowKey] || {};
+    const rCash = Number(ri.cash) || 0;
+    const rOnline = Number(ri.online) || 0;
+    const rFoot = Number(ri.footFall) || 0;
+    const rDenoms = Array.isArray(ri.cashDenominations) ? ri.cashDenominations : [];
+    const rTotal = rCash + rOnline;
 
-    // Find existing bank credit for this row (to prevent overwriting to 0)
+    setConfirmPayload({
+      rowKey,
+      rowLabel,
+      cash: rCash,
+      online: rOnline,
+      footFall: rFoot,
+      total: rTotal,
+      cashDenominations: rDenoms,
+    });
+    setConfirmPopupOpen(true);
+  };
+
+  // Step 2: user confirms in popup → actual API save
+  const doSaveRow = async () => {
+    if (!confirmPayload) return;
+    const { rowKey, cash: rCash, online: rOnline, footFall: rFoot, total: rTotal, cashDenominations: rDenoms } = confirmPayload;
+
     const existingRow = data?.rows?.find(r => r.date === rowKey);
     const existingBC = existingRow?.bankCredit != null ? Number(existingRow.bankCredit) : 0;
 
-    // Calculate status if existing BC is present
     let diff = 0;
     let diffStatus = "—";
     if (existingBC > 0) {
-      // Since this page only cares about Retail Online, we compare it with existing BC
       diff = existingBC - rOnline;
       const absDiff = Math.abs(diff);
       if (absDiff < 0.5) diffStatus = "MATCHED";
@@ -641,17 +911,24 @@ export default function RetailPharmacyAnalytics() {
 
     setSavingRowKey(rowKey);
     try {
-      const res = await axios.post(`${ANALYTICS_API_BASE}/save-bank-credit`, {
-        fromDate: rowKey, toDate: rowKey, rowKey,
-        bankCredit: existingBC, grandTotal: rTotal,
-        creditedDiff: diff, diffStatus, savedBy: "Admin",
-        retailPharmacy: { cash: rCash, online: rOnline, footFall: rFoot, total: rTotal },
-      });
+const res = await axios.post(`${ANALYTICS_API_BASE}/save-bank-credit`, {
+  fromDate: rowKey,
+  toDate: rowKey,
+  rowKey,
+  bankCredit: existingBC,
+  grandTotal: rTotal,
+  creditedDiff: diff,
+  diffStatus,
+  cashDenominations: rDenoms,
+  savedBy: "Admin",
+  retailPharmacy: { cash: rCash, online: rOnline, footFall: rFoot, total: rTotal },
+});
       if (res.data?.success) {
-        // 🔥 Mark as saved locally so UI turns green immediately and inputs disable
         setRowInputs(p => ({ ...p, [rowKey]: { ...p[rowKey], saved: true } }));
         showToast("Row Saved!", "success");
-        fetchAnalytics(); // Refresh data to update top card sums
+        setConfirmPopupOpen(false);
+        setConfirmPayload(null);
+        fetchAnalytics();
       } else {
         showToast(res.data?.message || "Failed", "error");
       }
@@ -669,20 +946,49 @@ export default function RetailPharmacyAnalytics() {
       return Array.from({ length: 12 }).map((_, i) => {
         const m = i + 1;
         const monthStr = `${selectedYr}-${pad(m)}`;
-        // Find existing data for this month
         const existingRow = data?.rows?.find(r => r.date && r.date.startsWith(monthStr));
         
         return {
-          date: existingRow ? existingRow.date : `${monthStr}-01`, // Use 1st of month as key for new
+          date: existingRow ? existingRow.date : `${monthStr}-01`,
           label: `${MONTHS[i]} ${selectedYr}`,
           isMonthlyView: true,
           retailPharmacy: existingRow ? existingRow.retailPharmacy : { cash: 0, online: 0, footFall: 0, total: 0 },
         };
       });
     }
-    // Normal view (Today, etc.)
     return data?.rows || [];
   }, [data, activePreset, selectedYear]);
+
+  /* ---------- Open Cash popup for a row ---------- */
+  const openCashPopup = (rowKey, rowLabel) => {
+    const ri = rowInputs[rowKey] || {};
+    const existingRow = data?.rows?.find(r => r.date === rowKey);
+    const initial = ri.cash !== undefined
+      ? ri.cash
+      : (existingRow?.retailPharmacy?.cash || "");
+    const initialBreakdown = Array.isArray(ri.cashDenominations) && ri.cashDenominations.length > 0
+      ? ri.cashDenominations
+      : (Array.isArray(existingRow?.cashDenominations) ? existingRow.cashDenominations : []);
+
+    setCashPopupRowKey(rowKey);
+    setCashPopupLabel(rowLabel);
+    setCashPopupInitial(initial !== "" ? String(initial) : "");
+    setCashPopupBreakdown(initialBreakdown);
+    setCashPopupOpen(true);
+  };
+
+  const handleCashPopupConfirm = (totalCash, breakdown = []) => {
+    if (!cashPopupRowKey) return;
+    setRowInputs((p) => ({
+      ...p,
+      [cashPopupRowKey]: {
+        ...(p[cashPopupRowKey] || {}),
+        cash: String(totalCash),
+        cashDenominations: breakdown,
+        saved: false,
+      },
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-2 sm:p-3 lg:p-4">
@@ -699,6 +1005,24 @@ export default function RetailPharmacyAnalytics() {
         onSave={handleSaveTargets}
         saving={savingTarget}
         editTarget={editTargetData}
+      />
+
+      <CashDenominationPopup
+        isOpen={cashPopupOpen}
+        onClose={() => { setCashPopupOpen(false); setCashPopupRowKey(null); setCashPopupLabel(""); }}
+        onConfirm={handleCashPopupConfirm}
+        initialAmount={cashPopupInitial}
+        initialBreakdown={cashPopupBreakdown}
+        rowLabel={cashPopupLabel}
+      />
+
+      <SaveConfirmPopup
+        isOpen={confirmPopupOpen}
+        onClose={() => { if (!savingRowKey) { setConfirmPopupOpen(false); setConfirmPayload(null); } }}
+        onConfirm={doSaveRow}
+        saving={!!savingRowKey}
+        rowLabel={confirmPayload?.rowLabel}
+        payload={confirmPayload}
       />
 
       <div className="w-full">
@@ -859,20 +1183,23 @@ export default function RetailPharmacyAnalytics() {
                       const rF = ri.footFall !== undefined ? (Number(ri.footFall) || 0) : (r.retailPharmacy?.footFall || 0);
                       const tot = rC + rO;
 
-                      // Check if data is saved to show green button and disable inputs
                       const isSaved = ri.saved === true;
+                      const rowLabel = r.isMonthlyView ? r.label : formatDateToDDMMYYYY(r.date);
 
                       return (
                         <tr key={rowKey || idx} className="hover:bg-slate-50 border-b">
                           <td className="px-3 py-2 text-center font-bold text-slate-700 border">
-                            {r.isMonthlyView ? r.label : formatDateToDDMMYYYY(r.date)}
+                            {rowLabel}
                           </td>
                           <td className="px-1 py-1 border bg-emerald-50/20">
-                             <input type="number" 
+                             <input
+                               type="number"
                                disabled={isSaved}
-                               value={ri.cash !== undefined ? ri.cash : (r.retailPharmacy?.cash || "")} 
-                               onChange={e => setRowInputs(p => ({...p, [rowKey]: {...p[rowKey], cash: e.target.value, saved: false}}))} 
-                               className={`w-full text-center text-xs font-bold border rounded px-1 py-1 ${isSaved ? "bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed" : "border-emerald-300 bg-white"}`} placeholder="0" />
+                               value={ri.cash !== undefined ? ri.cash : (r.retailPharmacy?.cash || "")}
+                               onChange={e => setRowInputs(p => ({...p, [rowKey]: {...p[rowKey], cash: e.target.value, saved: false}}))}
+                               onFocus={() => { if (!isSaved) openCashPopup(rowKey, rowLabel); }}
+                               className={`w-full text-center text-xs font-bold border rounded px-1 py-1 ${isSaved ? "bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed" : "border-emerald-300 bg-white cursor-pointer"}`}
+                               placeholder="0" />
                           </td>
                           <td className="px-1 py-1 border bg-sky-50/20">
                              <input type="number" 
@@ -895,7 +1222,8 @@ export default function RetailPharmacyAnalytics() {
                                 <FaCheckCircle className="w-3 h-3" /> Saved
                               </button>
                             ) : (
-                              <button onClick={() => handleSaveRow(rowKey)} disabled={savingRowKey === rowKey} className="px-3 py-1 bg-amber-600 text-white rounded text-[10px] font-bold hover:bg-amber-700 disabled:opacity-50 w-full shadow-sm">
+                              <button onClick={() => requestSaveRow(rowKey, rowLabel)} disabled={savingRowKey === rowKey}
+                                className="px-3 py-1 bg-amber-600 text-white rounded text-[10px] font-bold hover:bg-amber-700 disabled:opacity-50 w-full shadow-sm">
                                  {savingRowKey === rowKey ? "Saving..." : "Save"}
                               </button>
                             )}
