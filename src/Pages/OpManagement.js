@@ -139,8 +139,8 @@ const EMPTY_FORM = {
 
 const CLINIC_INFO = {
   name: "TimelyHealth",
-  address: "Flat No: 301, 3rd Floor, Sri Sai Balaji Avenue, H. No: 1-98/9/25/p, Opp Style on Studio, VIP Hills, near Bank of Baroda, Arunodaya Colony, Sri Sai Nagar, Madhapur, Hyderabad, Telangana 500081",
-  contact: "9505397000"
+  address: "Flat No: 301, H.No: 1-68/22, Plot No. 54 & 55, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad, Telangana-500081",
+  contact: "90 1048 1048" // Helpline number bhi update kar diya
 };
 
 const REVIEW_WINDOW_DAYS = 3;
@@ -4113,7 +4113,7 @@ const handleAddCustomServiceItem = async () => {
     return b ? (b.isActive !== undefined ? b.isActive : true) : true;
   };
 
-  const buildBillHtml = async (bd, bk) => {
+   const buildBillHtml = async (bd, bk) => {
     // ✅ 1. Logo Base64
     let logoBase64 = "";
     try {
@@ -4158,7 +4158,7 @@ const handleAddCustomServiceItem = async () => {
 
     items.forEach((item, i) => {
       const amount = Number(item.amount) || 0;
-      const itemDiscount = 0; 
+      const itemDiscount = 0;
       const rowTotal = amount - itemDiscount;
 
       rowsHtml += `
@@ -4179,7 +4179,7 @@ const handleAddCustomServiceItem = async () => {
 
     const overallDiscount = Number(bd.discount) || 0;
     const finalNetAmount = calculatedGrossTotal - overallDiscount;
-    
+
     let actualPaymentType = "N/A";
     const svcList = Array.isArray(bk?.services) && bk.services.length > 0 ? bk.services : (Array.isArray(bk?.serviceItems) ? bk.serviceItems : []);
     const paidSvc = svcList.find(s => (s.paymentMode || "").trim() !== "" && s.paymentMode !== "N/A");
@@ -4188,7 +4188,7 @@ const handleAddCustomServiceItem = async () => {
       actualPaymentType = bk.paymentType.charAt(0).toUpperCase() + bk.paymentType.slice(1);
     }
 
-    let finalInvoiceNo = bd.invoiceNo; 
+    let finalInvoiceNo = bd.invoiceNo;
     if (bk?.appointmentDate && bk?.customPID) {
       const dateObj = new Date(bk.appointmentDate);
       if (!isNaN(dateObj.getTime())) {
@@ -4203,7 +4203,11 @@ const handleAddCustomServiceItem = async () => {
     const billedBy = localStorage.getItem('employeeName') || 'Admin';
     const dueAmount = Number(bd.balanceAmount) || 0;
 
-        // ✅ 4. FINAL HTML STRUCTURE (A4 Page, Content 148mm, No Extra Gaps)
+    // ✅ Default patient address (khali ho to ye dikhega, N/A nahi)
+    const DEFAULT_PATIENT_ADDRESS = "Sri Sai Nagar, Madhapur, Hyderabad, Telangana 500081";
+    const patientAddressText = (bk?.patientAddress || "").trim() || DEFAULT_PATIENT_ADDRESS;
+
+    // ✅ 4. FINAL HTML STRUCTURE (A4 Page, Content 148mm, No Extra Gaps)
     return `
       <!DOCTYPE html>
       <html>
@@ -4211,146 +4215,78 @@ const handleAddCustomServiceItem = async () => {
         <meta charset="UTF-8"/>
         <title>Invoice_${bk?.patientName || "Patient"}_${finalInvoiceNo}</title>
         <style>
-          /* ✅ A4 Page Size */
           @page { size: A4; margin: 0; }
-          
           * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-          
           body { background: #555; padding: 10px; display: flex; justify-content: center; align-items: flex-start; }
-          
-          /* ✅ A4 PAPER */
-          .a4-paper {
-            width: 210mm;
-            height: 297mm; 
-            background: #fff;
-            color: #000;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-          }
-          
-          /* ✅ 148mm Content Area with exactly 5mm margin */
-          .content-wrapper {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            height: 148mm; 
-            padding: 5mm;  
-          }
-          
-          /* Watermark */
-          .watermark-img {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90mm; 
-            opacity: 0.05; 
-            z-index: 0;
-            pointer-events: none;
-          }
-          
-          /* Header */
-          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-bottom: 4px; position: relative; }
-          .logo-section { width: 120px; }
-          .logo-section img { max-width: 100%; max-height: 35px; object-fit: contain; }
-          
-          .title-section { position: absolute; left: 50%; transform: translateX(-50%); top: 0; }
-          .title-section h1 { 
-            font-size: 16px; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            background-color: #1e3a8a;
-            color: #fff;
-            display: inline-block; 
-            padding: 4px 20px; 
-            letter-spacing: 1px; 
-          }
-          
-          .invoice-info { text-align: right; font-size: 10px; line-height: 1.2; font-weight: bold; margin-top: 0; }
-          .invoice-info div { margin-bottom: 1px; }
-          .invoice-info b { display: inline-block; width: 75px; text-align: right; margin-right: 5px; }
 
-          /* Bill To Section */
+          .a4-paper {
+            width: 210mm; height: 297mm; background: #fff; color: #000;
+            position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
+          }
+
+          .content-wrapper {
+            position: relative; z-index: 1; display: flex; flex-direction: column;
+            height: 148mm; padding: 5mm;
+          }
+
+          .watermark-img {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90mm; opacity: 0.05; z-index: 0; pointer-events: none;
+          }
+
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-bottom: 4px; position: relative; }
+          .logo-section { width: 160px; margin-top: 5px; }
+          .logo-section img { max-width: 100%; max-height: 55px; object-fit: contain; }
+
+          .title-section { position: absolute; left: 50%; transform: translateX(-50%); top: 0; }
+          .title-section h1 { font-size: 16px; font-weight: bold; text-transform: uppercase; background-color: #1e3a8a; color: #fff; display: inline-block; padding: 4px 20px; letter-spacing: 1px; }
+
+          .invoice-info { text-align: right; font-size: 10px; line-height: 1.3; font-weight: bold; margin-top: 0; }
+          .invoice-info div { margin-bottom: 1px; }
+
           .bill-to-section { margin: 2px 0 4px 0; }
           .bill-to-title { font-size: 10px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 1px; margin-bottom: 3px; letter-spacing: 0.5px; }
-          
+
           .bill-to-grid { display: flex; justify-content: space-between; }
           .bill-col-left { width: 55%; display: flex; flex-direction: column; gap: 1px; font-size: 10px; font-weight: bold; }
           .bill-col-right { width: 40%; display: flex; flex-direction: column; gap: 1px; font-size: 10px; font-weight: bold; align-items: flex-start; }
-          
-          .bill-field { display: flex; gap: 4px; }
-          .bill-field span { font-weight: normal; }
+          .bill-field { display: flex; gap: 4px; align-items: baseline; }
+          .bill-field span { font-weight: normal; font-size: 12px; }
 
-          /* Table */
           table { width: 100%; border-collapse: collapse; }
-          th { border-bottom: 1px solid #333; border-top: 1px solid #333; padding: 3px; font-size: 10px; font-weight: bold; text-align: center; }
-          td { font-size: 10px; }
-          
-          /* Total Row */
-          .calc-row td { 
-            padding: 3px 6px; 
-            font-size: 10px; 
-            font-weight: bold; 
-            text-align: center; 
-            border-bottom: 1px solid #ccc; 
-            border-top: 1px solid #ccc; 
-            background: rgba(249, 249, 249, 0.9); 
-          }
-          
-          /* NET PAYABLE (No Border/Box) & AMOUNT IN WORDS */
-          .net-payable-text { 
-            text-align: right; 
-            font-weight: bold; 
-            font-size: 11px;
-            color: #15803d; /* Green Color */
-            margin-top: 2px; 
-          }
-          .due-box { 
-            font-size: 10px; 
-            font-weight: bold; 
-            text-align: right; 
-            margin-top: 1px;
-            color: #d32f2f;
-          }
-          .amount-words-box {
-            font-size: 10px;
+          th { border-bottom: 1px solid #333; border-top: 1px solid #333; padding: 4px; font-size: 10px; font-weight: bold; text-align: center; }
+          td { font-size: 10px; padding: 4px; text-align: center; }
+
+          .calc-row td { padding: 4px; font-size: 10px; font-weight: bold; border-bottom: 1px solid #ccc; border-top: 1px solid #ccc; background: rgba(249, 249, 249, 0.9); text-align: center; }
+
+          .net-payable-text { text-align: right; font-weight: bold; font-size: 12px; color: #15803d; margin-top: 2px; }
+          .due-box { font-size: 11px; font-weight: bold; text-align: right; margin-top: 1px; color: #d32f2f; }
+          .amount-words-box { font-size: 10px; font-weight: bold; color: #333; margin-bottom: 2px; }
+
+          .bottom-section { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px; }
+          .bottom-left-prep { display: flex; flex-direction: column; gap: 2px; font-size: 10px; font-weight: bold; padding-bottom: 2px; }
+
+          /* ✅ Stamp Fix */
+          .stamp-section { text-align: center; display: flex; flex-direction: column; align-items: center; margin-bottom: 0; position: relative; }
+          .stamp-section img { width: 120px; opacity: 1; margin-bottom: -22px; }
+          .stamp-section .sign-line { font-size: 9px; font-weight: bold; width: 150px; margin: 0 auto; margin-top: -2px; }
+          .stamp-section .company-name { font-size: 8px; font-weight: bold; margin-top: 0px; color: #1e3a8a; }
+
+          .footer { border-top: 1px solid #ccc; margin-top: 6px; padding-top: 4px; font-size: 10px; }
+          .footer .address-line { font-size: 9.5px; line-height: 1.2; margin-bottom: 4px; white-space: normal; width: 100%; display: block; }
+
+          /* ✅ Need Help row */
+          .need-help-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11.5px;
             font-weight: bold;
-            color: #333;
-            margin-bottom: 2px;
+            color: #1e3a8a;
+            padding: 4px 25px 0 5px; /* left 5px, right 25px */
           }
-
-          /* Bottom Section */
-          .bottom-section { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-end; 
-            margin-top: 4px; 
-          }
-          
-          .bottom-left-prep { 
-            display: flex; 
-            flex-direction: column;
-            gap: 2px; 
-            font-size: 10px; 
-            font-weight: bold; 
-            padding-bottom: 2px;
-          }
-
-          /* Stamp section (Underlines Removed) */
-          .stamp-section { text-align: center; display: flex; flex-direction: column; align-items: center; margin-bottom: 0; }
-          .stamp-section img { width: 120px; opacity: 1; margin-bottom: 2px; }
-          .stamp-section .sign-line { font-size: 9px; font-weight: bold; width: 150px; margin: 0 auto; } /* border-top removed */
-          .stamp-section .company-name { font-size: 8px; font-weight: bold; margin-top: 1px; color: #1e3a8a; } /* underline removed */
-
-          /* Footer (Sticks directly below content) */
-          .footer { border-top: 1px solid #ccc; margin-top: 6px; padding-top: 3px; font-size: 9px; }
-          .footer .address-line { font-size: 8px; line-height: 1.1; margin-bottom: 2px; white-space: normal; width: 100%; }
-          
-          .need-help-row { display: flex; justify-content: space-between; font-size: 8px; font-weight: bold; color: #1e3a8a; padding-top: 2px; }
+          .need-help-row span { white-space: nowrap; }
 
           @media print {
             body { background: #fff; padding: 0; display: block; }
@@ -4374,8 +4310,9 @@ const handleAddCustomServiceItem = async () => {
                 <h1>BILL / INVOICE</h1>
               </div>
               <div class="invoice-info">
-                <div><b>Invoice No:</b> ${finalInvoiceNo}</div>
-                <div><b>Appt Date:</b> ${appointmentDateStr}</div>
+                <div>Invoice No: ${finalInvoiceNo}</div>
+                <div>Date: ${appointmentDateStr}</div>
+                <div>GST: 36AAJCT3528Q1ZN</div>
               </div>
             </div>
 
@@ -4383,10 +4320,10 @@ const handleAddCustomServiceItem = async () => {
             <div class="bill-to-section">
               <div class="bill-to-title">Bill To</div>
               <div class="bill-to-grid">
-                
+
                 <div class="bill-col-left">
                   <div class="bill-field">Name: <span>${bk?.patientTitle || ""} ${bk?.patientName || "N/A"}</span></div>
-                  <div class="bill-field">Address: <span>${bk?.patientAddress || "N/A"}</span></div>
+                  <div class="bill-field">Address: <span>${patientAddressText}</span></div>
                 </div>
 
                 <div class="bill-col-right">
@@ -4403,28 +4340,28 @@ const handleAddCustomServiceItem = async () => {
               <thead>
                 <tr>
                   <th style="width: 8%;">S.No</th>
-                  <th style="width: 45%;">Test/Services</th>
-                  <th style="width: 15%;">Amount</th>
+                  <th style="width: 40%; text-align: left;">Test/Services</th>
+                  <th style="width: 18%;">Amount</th>
                   <th style="width: 15%;">Disc</th>
-                  <th style="width: 17%;">Total</th>
+                  <th style="width: 19%;">Total</th>
                 </tr>
               </thead>
               <tbody>
                 ${rowsHtml}
-                
+
                 <!-- TOTAL ROW -->
                 <tr class="calc-row">
                   <td colspan="2" style="text-align: right; color: #555;">Total:</td>
-                  <td style="text-align: center;">₹ ${calculatedGrossTotal.toFixed(2)}</td>
-                  <td style="text-align: center;">₹ ${overallDiscount.toFixed(2)}</td>
-                  <td style="text-align: center;">₹ ${finalNetAmount.toFixed(2)}</td>
+                  <td>₹ ${calculatedGrossTotal.toFixed(2)}</td>
+                  <td>₹ ${overallDiscount.toFixed(2)}</td>
+                  <td>₹ ${finalNetAmount.toFixed(2)}</td>
                 </tr>
-                
-                <!-- NET PAYABLE (Text only) & AMOUNT IN WORDS -->
+
+                <!-- NET PAYABLE -->
                 <tr>
-                  <td colspan="5" style="padding-top: 2px; border-bottom: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%;">
-                      
+                  <td colspan="5" style="padding-top: 4px; border-bottom: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+
                       <!-- Left Side -->
                       <div style="width: 50%; text-align: left;">
                         <div class="amount-words-box">
@@ -4435,14 +4372,10 @@ const handleAddCustomServiceItem = async () => {
                         </div>
                       </div>
 
-                                          <!-- Right Side (No Box, No Padding) -->
-                      <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                        <div class="net-payable-text" style="width: 260px;">
-                          Net Payable: ₹ ${finalNetAmount.toFixed(2)}
-                        </div>
-                        <div class="due-box" style="width: 260px;">
-                          Balance / Due: ₹ ${dueAmount.toFixed(2)}
-                        </div>
+                      <!-- Right Side -->
+                      <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-end; padding-right: 7%;">
+                        <div class="net-payable-text">Net Payable: ₹ ${finalNetAmount.toFixed(2)}</div>
+                        <div class="due-box">Balance / Due: ₹ ${dueAmount.toFixed(2)}</div>
                       </div>
 
                     </div>
@@ -4468,12 +4401,12 @@ const handleAddCustomServiceItem = async () => {
               </div>
             </div>
 
-            <!-- FOOTER (No extra gap now) -->
+            <!-- FOOTER -->
             <div class="footer">
               <div class="address-line">
                 <b>Address:</b> <span style="font-weight: normal;">${CLINIC_INFO.address}</span>
               </div>
-              
+
               <div class="need-help-row">
                 <span><b>Need help?</b></span>
                 <span><b>Call:</b> <span style="font-weight: normal;">${CLINIC_INFO.contact}</span></span>
