@@ -4167,7 +4167,7 @@ const handleAddCustomServiceItem = async () => {
           <td style="padding:4px 6px; border-bottom: 1px solid #ccc; text-align:left; font-size:11px; font-weight:bold;">${item.name}</td>
           <td style="padding:4px 6px; border-bottom: 1px solid #ccc; text-align:center; font-size:11px;">₹ ${amount.toFixed(2)}</td>
           <td style="padding:4px 6px; border-bottom: 1px solid #ccc; text-align:center; font-size:11px;">₹ ${itemDiscount.toFixed(2)}</td>
-          <td style="padding:4px 6px; border-bottom: 1px solid #ccc; text-align:center; font-size:11px; font-weight:bold;">₹ ${rowTotal.toFixed(2)}</td>
+          <td style="padding:4px 6px; border-bottom: 1px solid #ccc; text-align:left; padding-left: 40px; font-size:11px; font-weight:bold;">₹ ${rowTotal.toFixed(2)}</td>
         </tr>`;
     });
 
@@ -4188,16 +4188,25 @@ const handleAddCustomServiceItem = async () => {
       actualPaymentType = bk.paymentType.charAt(0).toUpperCase() + bk.paymentType.slice(1);
     }
 
-    let finalInvoiceNo = bd.invoiceNo;
-    if (bk?.appointmentDate && bk?.customPID) {
-      const dateObj = new Date(bk.appointmentDate);
-      if (!isNaN(dateObj.getTime())) {
-        const dd = String(dateObj.getDate()).padStart(2, '0');
-        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const yyyy = dateObj.getFullYear();
-        finalInvoiceNo = `${dd}${mm}${yyyy}-${bk.customPID}`;
-      }
+    // ✅ NAYA INVOICE FORMAT: TH202601 (TH + Year + 2-digit Sequence)
+    // Ye har saal 1 Jan ko apne aap 01 se reset ho jayega
+    let currentYear = new Date().getFullYear();
+    if (bk?.appointmentDate) {
+      const d = new Date(bk.appointmentDate);
+      if (!isNaN(d.getTime())) currentYear = d.getFullYear();
     }
+
+    // LocalStorage se pichle invoice number ka data nikalo
+    const invKey = `invoiceCounter_${currentYear}`;
+    let currentCount = parseInt(localStorage.getItem(invKey) || "0", 10) + 1;
+
+    // Agar 99 se zyada ho jaye toh 3 digit dikhane ke liye padStart me 3 kar dena
+    const seqStr = String(currentCount).padStart(2, '0'); 
+
+    const finalInvoiceNo = `TH${currentYear}${seqStr}`;
+
+    // Agli baar ke liye counter save kar do
+    localStorage.setItem(invKey, String(currentCount));
 
     const appointmentDateStr = formatDateToDDMMYYYY(bk?.appointmentDate || bk?.date);
     const billedBy = localStorage.getItem('employeeName') || 'Admin';
@@ -4207,7 +4216,7 @@ const handleAddCustomServiceItem = async () => {
     const DEFAULT_PATIENT_ADDRESS = "Sri Sai Nagar, Madhapur, Hyderabad, Telangana 500081";
     const patientAddressText = (bk?.patientAddress || "").trim() || DEFAULT_PATIENT_ADDRESS;
 
-    // ✅ 4. FINAL HTML STRUCTURE (A4 Page, Content 148mm, No Extra Gaps)
+         // ✅ 4. FINAL HTML STRUCTURE (A4 Page, Content 148mm, No Extra Gaps)
     return `
       <!DOCTYPE html>
       <html>
@@ -4242,51 +4251,73 @@ const handleAddCustomServiceItem = async () => {
           .title-section { position: absolute; left: 50%; transform: translateX(-50%); top: 0; }
           .title-section h1 { font-size: 16px; font-weight: bold; text-transform: uppercase; background-color: #1e3a8a; color: #fff; display: inline-block; padding: 4px 20px; letter-spacing: 1px; }
 
-          .invoice-info { text-align: right; font-size: 10px; line-height: 1.3; font-weight: bold; margin-top: 0; }
+          .invoice-info { text-align: left; font-size: 10px; line-height: 1.3; font-weight: bold; margin-top: 0; }
           .invoice-info div { margin-bottom: 1px; }
 
           .bill-to-section { margin: 2px 0 4px 0; }
           .bill-to-title { font-size: 10px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 1px; margin-bottom: 3px; letter-spacing: 0.5px; }
 
           .bill-to-grid { display: flex; justify-content: space-between; }
-          .bill-col-left { width: 55%; display: flex; flex-direction: column; gap: 1px; font-size: 10px; font-weight: bold; }
-          .bill-col-right { width: 40%; display: flex; flex-direction: column; gap: 1px; font-size: 10px; font-weight: bold; align-items: flex-start; }
+          .bill-col-left { width: 60%; display: flex; flex-direction: column; gap: 2px; font-size: 10px; font-weight: bold; }
+          .bill-col-right { width: 35%; display: flex; flex-direction: column; gap: 2px; font-size: 10px; font-weight: bold; align-items: flex-start; }
+          
           .bill-field { display: flex; gap: 4px; align-items: baseline; }
           .bill-field span { font-weight: normal; font-size: 12px; }
+          
+          .bill-field .val-bold { font-weight: bold; font-size: 12px; }
+          
+          .address-val { display: inline-block; max-width: 220px; word-break: break-word; white-space: normal; line-height: 1.2; }
 
           table { width: 100%; border-collapse: collapse; }
           th { border-bottom: 1px solid #333; border-top: 1px solid #333; padding: 4px; font-size: 10px; font-weight: bold; text-align: center; }
           td { font-size: 10px; padding: 4px; text-align: center; }
 
-          .calc-row td { padding: 4px; font-size: 10px; font-weight: bold; border-bottom: 1px solid #ccc; border-top: 1px solid #ccc; background: rgba(249, 249, 249, 0.9); text-align: center; }
+          /* ✅ Total Size Increased & Bold */
+          .calc-row td { padding: 5px 4px; font-size: 12px; font-weight: 900; border-bottom: 1px solid #ccc; border-top: 1px solid #ccc; background: rgba(249, 249, 249, 0.9); text-align: center; }
 
           .net-payable-text { text-align: right; font-weight: bold; font-size: 12px; color: #15803d; margin-top: 2px; }
           .due-box { font-size: 11px; font-weight: bold; text-align: right; margin-top: 1px; color: #d32f2f; }
-          .amount-words-box { font-size: 10px; font-weight: bold; color: #333; margin-bottom: 2px; }
+          /* ✅ Amount in Words: Bada amount aane par automatic next line me break hoga */
+          .amount-words-box { 
+            font-size: 10px; 
+            font-weight: bold; 
+            color: #333; 
+            margin-bottom: 2px; 
+            max-width: 250px; 
+            white-space: normal; 
+            word-wrap: break-word; 
+            line-height: 1.3;
+          }
 
           .bottom-section { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px; }
-          .bottom-left-prep { display: flex; flex-direction: column; gap: 2px; font-size: 10px; font-weight: bold; padding-bottom: 2px; }
+          
+          /* ✅ Prepared by Size Increased */
+          .bottom-left-prep { display: flex; flex-direction: column; gap: 2px; font-size: 12px; font-weight: bold; padding-bottom: 2px; }
 
-          /* ✅ Stamp Fix */
           .stamp-section { text-align: center; display: flex; flex-direction: column; align-items: center; margin-bottom: 0; position: relative; }
           .stamp-section img { width: 120px; opacity: 1; margin-bottom: -22px; }
           .stamp-section .sign-line { font-size: 9px; font-weight: bold; width: 150px; margin: 0 auto; margin-top: -2px; }
           .stamp-section .company-name { font-size: 8px; font-weight: bold; margin-top: 0px; color: #1e3a8a; }
 
           .footer { border-top: 1px solid #ccc; margin-top: 6px; padding-top: 4px; font-size: 10px; }
-          .footer .address-line { font-size: 9.5px; line-height: 1.2; margin-bottom: 4px; white-space: normal; width: 100%; display: block; }
+          
+          /* ✅ Footer Address Size Increased */
+          .footer .address-line { font-size: 11px; line-height: 1.2; margin-bottom: 4px; white-space: normal; width: 100%; display: block; }
 
-          /* ✅ Need Help row */
           .need-help-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 11.5px;
-            font-weight: bold;
             color: #1e3a8a;
-            padding: 4px 25px 0 5px; /* left 5px, right 25px */
+            padding-top: 8px; 
+            padding-left: 5px;
+            padding-right: 25px;
           }
           .need-help-row span { white-space: nowrap; }
+          
+          .need-help-row .label-title { font-weight: bold; font-size: 11.5px; }
+          .need-help-row .data-val { font-weight: bold; font-size: 12px; } 
 
           @media print {
             body { background: #fff; padding: 0; display: block; }
@@ -4322,14 +4353,14 @@ const handleAddCustomServiceItem = async () => {
               <div class="bill-to-grid">
 
                 <div class="bill-col-left">
-                  <div class="bill-field">Name: <span>${bk?.patientTitle || ""} ${bk?.patientName || "N/A"}</span></div>
-                  <div class="bill-field">Address: <span>${patientAddressText}</span></div>
+                  <div class="bill-field">Name: <span class="val-bold">${bk?.patientTitle || ""} ${bk?.patientName || "N/A"}</span></div>
+                  <div class="bill-field">Address: <span class="address-val">${patientAddressText}</span></div>
                 </div>
 
                 <div class="bill-col-right">
-                  <div class="bill-field">Age/Gen: <span>${bk?.patientAge || "N/A"}/${bk?.patientGender || "N/A"}</span></div>
+                  <div class="bill-field">Age/Gen: <span class="val-bold">${bk?.patientAge || "N/A"}/${bk?.patientGender || "N/A"}</span></div>
                   <div class="bill-field">Phone: <span>${bk?.patientPhone || "N/A"}</span></div>
-                  <div class="bill-field">Ref Doctor: <span>${bd.doctorName || "N/A"}</span></div>
+                  <div class="bill-field">Doctor: <span>${bd.doctorName || "N/A"}</span></div>
                 </div>
 
               </div>
@@ -4343,18 +4374,18 @@ const handleAddCustomServiceItem = async () => {
                   <th style="width: 40%; text-align: left;">Test/Services</th>
                   <th style="width: 18%;">Amount</th>
                   <th style="width: 15%;">Disc</th>
-                  <th style="width: 19%;">Total</th>
+                  <th style="width: 19%; text-align: left; padding-left: 45px;">Total</th>
                 </tr>
               </thead>
               <tbody>
                 ${rowsHtml}
-
                 <!-- TOTAL ROW -->
                 <tr class="calc-row">
                   <td colspan="2" style="text-align: right; color: #555;">Total:</td>
                   <td>₹ ${calculatedGrossTotal.toFixed(2)}</td>
                   <td>₹ ${overallDiscount.toFixed(2)}</td>
-                  <td>₹ ${finalNetAmount.toFixed(2)}</td>
+                  <!-- 👇 Yahan padding-left: 25px ko badal kar apne hisaab se set karna -->
+                <td style="text-align: left; padding-left: 40px; font-weight: bold;">₹ ${finalNetAmount.toFixed(2)}</td>
                 </tr>
 
                 <!-- NET PAYABLE -->
@@ -4375,7 +4406,7 @@ const handleAddCustomServiceItem = async () => {
                       <!-- Right Side -->
                       <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-end; padding-right: 7%;">
                         <div class="net-payable-text">Net Payable: ₹ ${finalNetAmount.toFixed(2)}</div>
-                        <div class="due-box">Balance / Due: ₹ ${dueAmount.toFixed(2)}</div>
+<div class="due-box" style="padding-right: 4%;">Balance / Due: ₹ ${dueAmount.toFixed(2)}</div>
                       </div>
 
                     </div>
@@ -4407,11 +4438,12 @@ const handleAddCustomServiceItem = async () => {
                 <b>Address:</b> <span style="font-weight: normal;">${CLINIC_INFO.address}</span>
               </div>
 
+              <!-- ✅ Need Help Row -->
               <div class="need-help-row">
-                <span><b>Need help?</b></span>
-                <span><b>Call:</b> <span style="font-weight: normal;">${CLINIC_INFO.contact}</span></span>
-                <span><b>Email:</b> <span style="font-weight: normal;">support@timelyhealth.in</span></span>
-                <span><b>Web:</b> <span style="font-weight: normal;">www.timelyhealth.in</span></span>
+                <span class="label-title">Need help?</span>
+                <span>Call: <span class="data-val">${CLINIC_INFO.contact}</span></span>
+                <span>Email: <span class="data-val">support@timelyhealth.in</span></span>
+                <span>Web: <span class="data-val">www.timelyhealth.in</span></span>
               </div>
             </div>
 
